@@ -32,7 +32,6 @@ Catena is made available under the Creative Commons Attribution NoDerivatives 4.
 
 [https://creativecommons.org/licenses/by-nd/4.0/](https://creativecommons.org/licenses/by-nd/4.0/
 )
-
 [https://creativecommons.org/licenses/by-nd/4.0/legalcode](https://creativecommons.org/licenses/by-nd/4.0/legalcode)
 
  
