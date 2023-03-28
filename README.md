@@ -22,7 +22,11 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
 Work in progress
 
 ## Contribution Guide
-Work in progress
+This project uses the [GitFlow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) for branching and tagging.
+
+Merge requests should be made TBD.
+
+Otherwise: work in progress
 
 ## Discussions
 Work in progress
@@ -32,6 +36,7 @@ Catena is made available under the Creative Commons Attribution NoDerivatives 4.
 
 [https://creativecommons.org/licenses/by-nd/4.0/](https://creativecommons.org/licenses/by-nd/4.0/
 )
+
 [https://creativecommons.org/licenses/by-nd/4.0/legalcode](https://creativecommons.org/licenses/by-nd/4.0/legalcode)
 
  
