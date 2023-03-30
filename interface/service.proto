@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package catena;
+
+option java_multiple_files = true;
+option java_package = "catena.core";
+option java_outer_classname = "CatenaCore";
+
+option cc_enable_arenas = true;
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
+import "device.proto";
+import "param.proto";
+import "command.proto";
+import "language.proto";
+import "eo.proto";
+
+// Catena's API 
+//
+
+message GeneralRequest {
+  int32 slot_id = 1;
+}
+
+//TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
+message GeneralResponse {
+  int32 return_code = 1;  // 0 indicates success, non-zero a problem
+  Exception exception = 2;  // explains non-zero return codes
+}
+
+
+service catena {
+  rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
+
+  rpc ExecuteCommand(ExecuteCommandPayload) returns (stream CommandResponse);
+
+  rpc ExternalObjectRequest(ExternalObjectRequestPayload) returns (stream ExternalObjectPayload);
+
+  rpc BasicParamInfoRequest(BasicParamInfoRequestPayload) returns (stream BasicParamInfoResponse);
+
+  rpc SetValue(SetValuePayload) returns (google.protobuf.Empty);
+
+  rpc GetValue(GetValuePayload) returns (Value);
+
+  rpc MultiSetValue(MultiSetValuePayload) returns (google.protobuf.Empty);
+
+  rpc UpdateSubscriptions(UpdateSubscriptionsPayload) returns (stream DeviceComponent.ComponentParam);
+
+  rpc GetParam(GetParamPayload) returns (stream DeviceComponent.ComponentParam);
+
+  // The stream of PushUpdates is open-ended, terminating only when the 
+  // logical connection with the client is terminated.
+  //
+  rpc Connect(ConnectPayload) returns (stream PushUpdates);
+
+
+  // Multi-language support 
+  //
+  rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); //Optional capability to allow clients to provide additional language packs
+
+  rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
+
+  rpc ListLanguages(GeneralRequest) returns (LanguageList);
+
+
+
+}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package catena;
+
+import "param.proto";
+
+option java_multiple_files = true;
+option java_package = "catena.core";
+option java_outer_classname = "EOProtos";
+
+option cc_enable_arenas = true;
+option optimize_for = CODE_SIZE;
+
+message ExternalObjectRequestPayload {
+  uint32 slot = 1; // uniquely identifies the device at node scope.
+  string oid = 2;  // id external object being requested
+}
+
+message ExternalObjectPayload {
+  bool cachable = 1; // if false, do not cache the external object payload
+  DataPayload payload = 2;
+}

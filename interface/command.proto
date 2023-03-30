@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package catena;
+
+option java_multiple_files = true;
+option java_package = "catena.core";
+option java_outer_classname = "CommandProtos";
+
+option cc_enable_arenas = true;
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
+import "param.proto";
+import "language.proto";
+
+
+// Defines a command for a device. 
+// Commands provide a way to use device connection to execute commands from other devices. 
+//
+message Command {
+  Param definition = 1; // provides command's oid and input values
+  bool responds = 2; // true when the device will respond to the command, false otherwise.
+}
+
+// Command Descriptors
+// Each command is uniquely identified by its mapping key.
+//
+message CommandDescriptors {
+  map <string, Command> descriptors = 1;
+}
+
+// When streamed, only the value field will be used after the first message
+message ExecuteCommandPayload {
+  uint32 slot = 1; // slot id of the device
+  string oid = 2; // the object id of the command to execute relative to device.commands
+  Value value = 3; // the command's parameter value, if any
+  bool respond = 5; // set false to suppress responses from device
+}
+
+message Exception {
+  string type = 1;
+  PolyglotText error_message = 2;
+  string details = 3;
+}
+
+// When streamed, only the response field will be used after the first message
+message CommandResponse {
+  int32 return_code = 1;  // 0 indicates success, non-zero a problem
+  oneof kind {
+    google.protobuf.Empty no_response = 2;
+    Value response = 3;
+    Exception exception = 4;
+  }
+}
