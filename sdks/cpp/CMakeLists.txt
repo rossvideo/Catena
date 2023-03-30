@@ -21,7 +21,7 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 
 project(CPP_SDKs C CXX)
 
@@ -57,34 +57,50 @@ else()
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 endif()
 
-# Identify Catena proto files
+# Identify Catena proto folder as interface variable
 #
-get_filename_component(catena_service "../../interface/service.proto" ABSOLUTE)
-get_filename_component(catena_proto_path "${catena_service}" PATH)
-set(lang_proto ${catena_proto_path}/language.proto)
+set (relative_interface "../../interface/")
+cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
+cmake_path(SET catena_interface NORMALIZE ${interface})
+message(STATUS "*** catena_interface = ${catena_interface}")
 
-# Generated sources
-set(lang_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/language.pb.cc")
-set(lang_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/language.pb.h")
-set(lang_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/language.grpc.pb.cc")
-set(lang_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/language.grpc.pb.h")
-add_custom_command(
-    OUTPUT "${lang_proto_srcs}" "${lang_proto_hdrs}" "${lang_grpc_srcs}" "${lang_grpc_hdrs}"
+set(proto_stems 
+  "language"
+  "param"
+  "eo"
+  "command"
+  "constraint"
+  "device"
+  "menus"
+  "service"
+)
+
+message(STATUS "*** proto_stems = ${proto_stems}")
+set(sources "")
+foreach(_proto ${proto_stems})
+  # generated source & header files for _proto stem
+  set(proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.cc")
+  set(proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.h")
+  set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
+  set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
+  set(sources ${sources} "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
+
+  message(STATUS "*** ${sources}")
+  add_custom_command(
+    OUTPUT "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}"
     COMMAND ${_PROTOBUF_PROTOC}
     ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
     --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-    -I "${catena_proto_path}"
+    -I "${catena_interface}"
     --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-    "${lang_proto}"
-    DEPENDS "${lang_proto}")
+    "${catena_interface}${_proto}.proto"
+    DEPENDS "${catena_interface}${_proto}.proto")
+endforeach()
+
 
 # lang_grpc_proto
-add_library(lang_grpc_proto
-${lang_grpc_srcs}
-${lang_grpc_hdrs}
-${lang_proto_srcs}
-${lang_proto_hdrs})
-target_link_libraries(lang_grpc_proto
+add_library(catena_interface ${sources})
+target_link_libraries(catena_interface
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
