@@ -62,7 +62,6 @@ endif()
 set (relative_interface "../../interface/")
 cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
 cmake_path(SET catena_interface NORMALIZE ${interface})
-message(STATUS "*** catena_interface = ${catena_interface}")
 
 # this is the list of proto files to convert to implementations in
 # various languages
@@ -91,17 +90,18 @@ foreach(_proto ${proto_stems})
   set(_sources "${proto_srcs}" "${proto_hdrs}")
 
   # the servcice file contains grpc definitions, so a couple of extra
-  # file names are requried
+  # file names are required
   #
-  if(${_proto} EQUAL  "service")
+  if(_proto STREQUAL "service")
     set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
     set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
-    set(_sources ${_sources} "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
+    set(_sources ${_sources} "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
   endif()
 
   # accumulate list of all sources
   set(sources ${sources} ${_sources})
   
+  message(STATUS "sources for ${_proto}: ${_sources}")
   add_custom_command(
     OUTPUT ${_sources}
     COMMAND ${_PROTOBUF_PROTOC}
@@ -113,10 +113,12 @@ foreach(_proto ${proto_stems})
     DEPENDS "${catena_interface}${_proto}.proto")
 endforeach()
 
-
-# lang_grpc_proto
+# the catena interface library
 add_library(catena_interface ${sources})
 target_link_libraries(catena_interface
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
+
+# include the common part of the Catena C++ SDK
+add_subdirectory("common" EXCLUDE_FROM_ALL)
