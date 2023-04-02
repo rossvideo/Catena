@@ -41,7 +41,6 @@
 
     try {
         // read a json file into a DeviceModel object
-        //
         catena::DeviceModel dm(argv[1]);
 
         // write the device model to stdout
