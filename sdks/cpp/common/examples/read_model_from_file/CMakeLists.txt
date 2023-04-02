@@ -12,45 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# cmake build file for C++ SDKs and examples.
+# cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(COMMON C CXX)
-
-set(LIB_TARGET catena_common)
-set(LIB_SRC_DIR "src")
-set(LIB_INCLUDE_DIR "include")
-
-add_library(${LIB_TARGET})
 
 
-get_filename_component(PARENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
-message(STATUS "*** binary dir: ${PARENT_BINARY_DIR}")
-target_include_directories(${LIB_TARGET}
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
+
+add_executable(${TARGET})
+
+get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
+get_filename_component(CATENA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../ ABSOLUTE)
+set(CATENA_COMMON_INCLUDE ${CATENA_COMMON_DIR}/include)
+
+target_include_directories(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
         $<BUILD_INTERFACE:${PARENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )
 
-target_sources(${LIB_TARGET}
-    PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/utils.cpp>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/DeviceModel.cpp>
+target_sources(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>
 )
 
-target_link_libraries(${LIB_TARGET}
+message(STATUS "*** reflection: ${LIB_TARGET}")
+target_link_libraries(${TARGET}
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
     ${_PROTOBUF_LIBPROTOBUF}
+    ${LIB_TARGET}
+    catena_interface
 )
 
-target_compile_features(${LIB_TARGET}
+target_compile_features(${TARGET}
     PUBLIC
         cxx_std_17
 )
 
-add_subdirectory("examples")
