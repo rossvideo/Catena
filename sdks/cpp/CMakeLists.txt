@@ -64,6 +64,9 @@ cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
 cmake_path(SET catena_interface NORMALIZE ${interface})
 message(STATUS "*** catena_interface = ${catena_interface}")
 
+# this is the list of proto files to convert to implementations in
+# various languages
+#
 set(proto_stems 
   "language"
   "param"
@@ -75,19 +78,32 @@ set(proto_stems
   "service"
 )
 
-message(STATUS "*** proto_stems = ${proto_stems}")
+# identify the target file names that implement the messages and services
+# set a custom rule for each proto source to generate the implementations
+#
 set(sources "")
 foreach(_proto ${proto_stems})
-  # generated source & header files for _proto stem
+  # put names of generated source & header files for _proto stem
+  # into local variable _sources
+  #
   set(proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.cc")
   set(proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.h")
-  set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
-  set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
-  set(sources ${sources} "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
+  set(_sources "${proto_srcs}" "${proto_hdrs}")
 
-  message(STATUS "*** ${sources}")
+  # the servcice file contains grpc definitions, so a couple of extra
+  # file names are requried
+  #
+  if(${_proto} EQUAL  "service")
+    set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
+    set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
+    set(_sources ${_sources} "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
+  endif()
+
+  # accumulate list of all sources
+  set(sources ${sources} ${_sources})
+  
   add_custom_command(
-    OUTPUT "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}"
+    OUTPUT ${_sources}
     COMMAND ${_PROTOBUF_PROTOC}
     ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
     --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
