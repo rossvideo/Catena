@@ -23,7 +23,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(CPP_SDKs C CXX)
+project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
