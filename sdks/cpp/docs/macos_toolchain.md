@@ -1,6 +1,6 @@
 # macos Toolchain Installation {#macos_toolchain}
 
-This toolchain installation has been verified on macOS Ventura 13.2.1 
+This toolchain installation has been verified on macOS Ventura 13.2.1
 on a M1 Pro equipped macbook pro.
 
 ## Getting a C++ compiler
@@ -9,7 +9,7 @@ on a M1 Pro equipped macbook pro.
 
 verify with...
 
-```
+```{.sh}
 c++ --version
 Apple clang version 14.0.0 (clang-1400.0.29.202)
 Target: arm64-apple-darwin22.3.0
@@ -28,8 +28,8 @@ In `~/.zprofile` ...
 PATH="/Applications/CMake.app/Contents/bin":"$PATH"
 ```
 
-```
-$ source ~/.zprofile
+```{.sh}
+source ~/.zprofile
 ```
 
 ## Install and Build gRPC and Protobufs
@@ -48,7 +48,18 @@ Add it to your path, in `~/.zprofile` ...
 "/Applications/Doxygen.app/Contents/Resources/":"$PATH"
 ```
 
-```
-$ source ~/.zprofile
+```{.sh}
+source ~/.zprofile
 ```
 
+### graphviz installation
+
+Doxygen can add inheritance diagrams and call trees if the program called `dot`
+which is part of graphviz is installed.
+
+It needs to be installed using [brew](https://docs.brew.sh/Installation),
+which itself may need installation if not already present
+
+```{.sh}
+brew install graphviz
+```

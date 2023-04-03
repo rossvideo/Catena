@@ -5,4 +5,3 @@
 * [macos](@ref macos_toolchain)
 * Windows (to do)
 * Ubuntu 22.04 (to do)
-
