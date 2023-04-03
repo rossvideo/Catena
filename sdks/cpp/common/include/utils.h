@@ -35,7 +35,7 @@ namespace catena {
 /**
  * @brief prints a protobuf message as JSON
  *
- * @param m the protobuf message
+ * @param msg the protobuf message
  * @return std::string JSON representation of m
  */
 std::string printJSON(const google::protobuf::Message& msg);

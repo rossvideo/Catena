@@ -49,14 +49,14 @@ public:
 
    /**
     * @brief Assignment operator, makes deep copy of rhs's device model.
-    * @param rhs, the right hand side of the = operator
+    * @param rhs the right hand side of the = operator
     * 
     */
    DeviceModel& operator=(const DeviceModel& rhs);
 
    /**
     * @brief Move constructor, takes possession of other's state
-    * @param other, the donor object
+    * @param other the donor object
     */
    DeviceModel(DeviceModel&& other);
 
