@@ -121,7 +121,7 @@ target_link_libraries(catena_interface
   ${_PROTOBUF_LIBPROTOBUF})
 
 # include the common part of the Catena C++ SDK
-add_subdirectory("common" EXCLUDE_FROM_ALL)
+add_subdirectory("common")
 
 # doxygen
 #
