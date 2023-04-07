@@ -51,10 +51,39 @@
             "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
             "type": "object",
             "properties": {
-                "basic_param_info": {"$ref": "#/$defs/basic_param_info"}
+                "basic_param_info": {"$ref": "#/$defs/basic_param_info"},
+                "value": {"$ref": "#/$defs/value"}
             },
             "required": ["basic_param_info"],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "allOf": [
+                {"$ref": "#/$defs/apply_float32"}
+            ]
+        },
+        "value": {
+            "title": "Parameter value",
+            "description": "Value of the parameter. Its schema is polymorphic dependent on type."
+        },
+        "apply_float32": {
+            "title": "FLOAT32 specialism",
+            "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
+            "if": {"properties": {"type": {"const": "FLOAT32"} } },
+            "then": {"properties": {
+                "value": {"$ref": "#/$defs/float32"}
+            } }
+        },
+        "float32": {
+            "title": "FLOAT32",
+            "description": "Defines FLOAT32 as a primitive number type",
+            "type": "object",
+            "properties": {
+                "float32_value": {
+                    "type": "number",
+                    "minimum": -3.402823466385e38,
+                    "maximum": 3.402823466385e38,
+                    "default": 0
+                }
+            }  
         },
         "import": {
             "title": "Import directive",
@@ -97,7 +126,7 @@
             "title": "Object ID",
             "description": "An object ID within the device model scope. Can be an array element which is referenced by adding a 'dot' followed by the array index to the object id",
             "type": "string",
-            "pattern": "(^(?!_)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
+            "pattern": "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
         },
         "polyglot_text": {
             "title": "Polyglot Text",
