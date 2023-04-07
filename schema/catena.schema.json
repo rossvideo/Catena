@@ -87,7 +87,8 @@
             "type": "object",
             "properties": {
                 "oid": {"$ref": "#/$defs/oid"},
-                "name": {"$ref": "#/$defs/polyglot_text"}
+                "name": {"$ref": "#/$defs/polyglot_text"},
+                "type": {"$ref": "#/$defs/type"}
             },
             "required": ["oid"],
             "additionalProperties": false     
@@ -116,6 +117,35 @@
             "description": "If set true, parameter is read only",
             "type": "boolean",
             "default": false
+        },
+        "param_type": {
+            "title": "Parameter's data type",
+            "description": "The parameter's data type",
+            "type": "string",
+            "enum": [
+                "UNDEFINED",
+                "EMPTY",
+                "INT32",
+                "FLOAT32",
+                "STRING",
+                "STRUCT",
+                "INT32_ARRAY",
+                "FLOAT32_ARRAY",
+                "STRING_ARRAY",
+                "BINARY",
+                "STRUCT_ARRAY",
+                "DATA"
+            ],
+            "default": "UNDEFINED"
+        },
+        "type": {
+            "title": "Parameter type",
+            "description": "Could be defined in-line or by reference to another parameter",
+            "type": "object",
+            "properties": {
+                "param_type": {"$ref": "#/$defs/param_type"}
+            },
+            "additionalProperties": false
         }
     }
 }

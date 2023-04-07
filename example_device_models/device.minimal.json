@@ -10,10 +10,12 @@
                     "oid": "hello",
                     "name": {
                         "monoglot": "Greeting"
+                    },
+                    "type": {
+                        "param_type": "STRING"
                     }
                 }
-            },
-            { "$import": "goodbye"}
+            }
         ]
     }
 }
