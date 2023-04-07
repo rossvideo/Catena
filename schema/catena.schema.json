@@ -1,7 +1,33 @@
 {
-    "$schema": "https://json-schema.org/draft-07/schema",
+    "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Catena Device Model Schema",
     "description": "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
+    "type": "object",
+    "properties": {
+        "oid": {"$ref": "#/$defs/oid"},
+        "slot": {"$ref": "#/$defs/slot"},
+        "detail": {"$ref": "#/$defs/detail"},
+        "multi_set_enabled": {
+            "title": "Multi Set Message Enabled Flag",
+            "description": "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
+            "type": "boolean"
+        },
+        "subscriptions": {
+            "title": "Subscriptions Flag",
+            "description": "When true, indicates that the device supports subscription-based access to subsets of parameters.",
+            "type": "boolean"
+        },
+        "timeout": {
+            "title": "Timeout",
+            "description": "Time, in ms, after which device will timeout",
+            "$comment": "get help with the description",
+            "type": "integer",
+            "min": 0,
+            "max": 1000000
+        }
+    },
+    "required": ["slot"],
+    "additionalProperties": false,
     "$defs": {
         "import": {
             "title": "Import directive",
@@ -33,36 +59,6 @@
             "description": "An object ID within the device model scope. Can be an array element which is referenced by adding a 'dot' followed by the array index to the object id",
             "type": "string",
             "pattern": "(^(?!_)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
-        },
-        "device": {
-            "title": "Device Object",
-            "description": "Defines the Device Model",
-            "type": "object",
-            "properties": {
-                "oid": {"$ref": "#/$defs/oid"},
-                "slot": {"$ref": "#/$defs/slot"},
-                "detail": {"$ref": "#/$defs/detail"},
-                "multi_set_enabled": {
-                    "title": "Multi Set Message Enabled Flag",
-                    "description": "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
-                    "type": "boolean"
-                },
-                "subscriptions": {
-                    "title": "Subscriptions Flag",
-                    "description": "When true, indicates that the device supports subscription-based access to subsets of parameters.",
-                    "type": "boolean"
-                },
-                "timeout": {
-                    "title": "Timeout",
-                    "description": "Time, in ms, after which device will timeout",
-                    "$comment": "get help with the description",
-                    "type": "integer",
-                    "min": 0,
-                    "max": 1000000
-                }
-            },
-            "required": ["slot"],
-            "additionalProperties": false
         }
     }
 }

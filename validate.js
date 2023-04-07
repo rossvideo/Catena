@@ -69,19 +69,28 @@ function addSchemas (genus) {
     }
 }
 
+const kDeviceSchema = schemaName.indexOf('device') === 0;
+
 try {
     // the top-level schemas are under $defs, so add them
     addSchemas('$defs');
-    if (!(schemaName in schema.$defs)) {
+    if (!kDeviceSchema && !(schemaName in schema.$defs)) {
         throw {
-            error: -2,
+            error: 2,
             message: `Could not find ${schemaName} in schema definition file.`
         };
     }
 
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(testfile));
-    const valid = ajv.validate (schema.$defs[schemaName],data);
+    let valid = false;
+    if (kDeviceSchema){
+        const validate = ajv.compile(schema);
+        valid = validate(data);
+    } else {
+        valid = ajv.validate(schema.$defs[schemaName],data);
+    }
+    
     console.log (valid ? 'data was valid' : `errors: ${JSON.stringify(ajv.errors,null,2)}`);
 } catch (why) {
     console.log(why.message);
