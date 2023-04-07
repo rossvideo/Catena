@@ -24,17 +24,44 @@
             "type": "integer",
             "min": 0,
             "max": 1000000
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "descriptors": {"$ref": "#/$defs/param_descriptors"}
+            },
+            "required": ["descriptors"],
+            "additionalProperties": false
         }
     },
     "required": ["slot"],
     "additionalProperties": false,
     "$defs": {
+        "param_descriptors": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {"$ref": "#/$defs/import"},
+                    {"$ref": "#/$defs/param"}
+                ]
+            }
+        },
+        "param": {
+            "title": "Parameter Descriptor",
+            "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
+            "type": "object",
+            "properties": {
+                "basic_param_info": {"$ref": "#/$defs/basic_param_info"}
+            },
+            "required": ["basic_param_info"],
+            "additionalProperties": false
+        },
         "import": {
             "title": "Import directive",
             "description": "NOT part of the Catena schema, but provides the ability to build device models from multiple files.",
             "type": "object",
             "properties": {
-                "$import": {"$ref": "#/$defs/slot"}
+                "$import": {"$ref": "#/$defs/oid"}
             },
             "required": ["$import"],
             "additionalProperties": false
@@ -54,11 +81,41 @@
             "enum": ["FULL", "SUBSCRIPTIONS", "MINIMAL"],
             "default": "FULL"
         },
+        "basic_param_info": {
+            "title": "Basic Param Info",
+            "description": "Summary information about a parameter",
+            "type": "object",
+            "properties": {
+                "oid": {"$ref": "#/$defs/oid"},
+                "name": {"$ref": "#/$defs/polyglot_text"}
+            },
+            "required": ["oid"],
+            "additionalProperties": false     
+        },
         "oid": {
             "title": "Object ID",
             "description": "An object ID within the device model scope. Can be an array element which is referenced by adding a 'dot' followed by the array index to the object id",
             "type": "string",
             "pattern": "(^(?!_)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
+        },
+        "polyglot_text": {
+            "title": "Polyglot Text",
+            "description": "Text that a client can display in one of multiple languages",
+            "type": "object",
+            "properties": {
+                "monoglot": {
+                    "title": "Monoglot",
+                    "description": "Fallback for single-language devices",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "readonly": {
+            "title": "Parameter access mode",
+            "description": "If set true, parameter is read only",
+            "type": "boolean",
+            "default": false
         }
     }
 }

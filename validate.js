@@ -69,6 +69,20 @@ function addSchemas (genus) {
     }
 }
 
+// show errors
+function showErrors (errors) {
+    for (const err of errors) {
+        switch (err.keyword) {
+            case "maximum":
+                console.log(err.limit);
+                break;
+            default:
+                console.log(`${err.message} at ${err.instancePath}`);
+                break;
+        }
+    }
+}
+
 const kDeviceSchema = schemaName.indexOf('device') === 0;
 
 try {
@@ -83,15 +97,21 @@ try {
 
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(testfile));
-    let valid = false;
     if (kDeviceSchema){
         const validate = ajv.compile(schema);
-        valid = validate(data);
+        if(validate(data)) {
+            console.log('Device model is valid.');
+        } else {
+            showErrors(validate.errors);
+        }
     } else {
-        valid = ajv.validate(schema.$defs[schemaName],data);
+        if(ajv.validate(schema.$defs[schemaName],data)) {
+            console.log('data was valid.');
+        } else {
+            showErrors(ajv.errors);
+        }
     }
     
-    console.log (valid ? 'data was valid' : `errors: ${JSON.stringify(ajv.errors,null,2)}`);
 } catch (why) {
     console.log(why.message);
     process.exit(why.error);

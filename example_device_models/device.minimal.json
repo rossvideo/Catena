@@ -2,7 +2,20 @@
     "slot": 1,
     "multi_set_enabled": true,
     "timeout": 100,
-    "detail": "SUBSCRIPTIONS"
+    "detail": "SUBSCRIPTIONS",
+    "params": {
+        "descriptors": [
+            {
+                "basic_param_info": {
+                    "oid": "hello",
+                    "name": {
+                        "monoglot": "Greeting"
+                    }
+                }
+            },
+            { "$import": "goodbye"}
+        ]
+    }
 }
 
 
