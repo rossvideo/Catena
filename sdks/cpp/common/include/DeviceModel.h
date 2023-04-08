@@ -22,8 +22,10 @@
 //
 
  #include <device.pb.h>
+ #include <param.pb.h>
 
  #include <iostream>
+ #include <string>
 
  namespace catena {
 
@@ -34,6 +36,12 @@
 */
 class DeviceModel {
 public:
+   /**
+   * @brief Param Descriptor type
+   *
+   */
+   using PDesc_t = google::protobuf::RepeatedPtrField<catena::Param>;
+
    /**
    * @brief default constructor, creates an empty model.
    * 
@@ -72,7 +80,7 @@ public:
    * @brief construct from a catena protobuf Device object.
    *
    */
-  explicit DeviceModel(catena::Device& pbDevice);
+   explicit DeviceModel(catena::Device& pbDevice);
 
    /**
    * @brief Construct a new Device Model from a json file
@@ -87,6 +95,34 @@ public:
     * @return const catena::Device& 
     */
    const catena::Device& device() const;
+
+   /**
+    * @brief Get the Param object at path
+    * 
+    * @param path json_pointer to the parameter
+    * @return catena::Param& 
+    */
+   catena::Param& getParam(const std::string& path);
+
+   /**
+    * @brief Get the Value object
+    * 
+    * @tparam T type of the value to be retrieved
+    * @param ans [out] value retreived
+    * @param path unique oid to get
+    * @return catena::Param& at the path
+    */
+   template<typename T>
+   catena::Param& getValue(T& ans, const std::string& path);
+
+   /**
+    * @brief Set the param's value
+    * 
+    * @tparam T  value type of param
+    * @param param 
+    */
+   template<typename T>
+   void setValue(catena::Param& param, const T);
 
 private:
    catena::Device device_; /**< the protobuf device model */
