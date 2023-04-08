@@ -28,6 +28,7 @@
  */
 
  #include <DeviceModel.h>
+ #include <Path.h>
 
  #include <iostream>
  #include <stdexcept>
@@ -45,6 +46,24 @@
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
+
+        // get a value from the device model
+        float v{};
+        catena::Param& param = dm.getValue(v, "/hello");
+        std::cout << "param oid: '" << param.basic_param_info().oid() 
+            << "' has value: " << v << '\n';
+
+        // set a value in the device model
+        std::cout << "setting it to something different\n";
+        dm.setValue(param, 3.142f);
+
+        // write out the updated device model
+        std::cout << "Updated Device Model: " << dm << '\n';
+
+        std::string serialized;
+        dm.device().SerializeToString(&serialized);
+        std::cout << "Device model serializes to " << serialized.size() << " bytes\n";
+
     } catch (std::exception& why) {
         std::cerr << "Problem: " << why.what() << '\n';
         exit(EXIT_FAILURE);
