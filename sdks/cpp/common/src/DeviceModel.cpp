@@ -127,6 +127,13 @@ void catena::DeviceModel::setValue<float>(catena::Param& param, const float v) {
   param.mutable_value()->set_float32_value(v);
 }
 
+template<>
+catena::Param& catena::DeviceModel::setValue<float>(const std::string& path, const float v) {
+  catena::Param& param = getParam(path);
+  setValue(param, v);
+  return param;
+}
+
 std::ostream& operator<<(std::ostream& os, const catena::DeviceModel& dm) {
    os << printJSON(dm.device());
    return os;

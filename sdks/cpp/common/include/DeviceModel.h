@@ -124,6 +124,15 @@ public:
    template<typename T>
    void setValue(catena::Param& param, const T);
 
+   /**
+    * @brief Set value of param identified by path
+    * 
+    * @tparam T underlying value type of param
+    * @param path unique oid of param
+    */
+   template<typename T>
+   catena::Param& setValue(const std::string& path, const T);
+
 private:
    catena::Device device_; /**< the protobuf device model */
 };

@@ -55,7 +55,9 @@
 
         // set a value in the device model
         std::cout << "setting it to something different\n";
-        dm.setValue(param, 3.142f);
+        dm.setValue("/hello", 3.142f);
+        //dm.setValue(param, 3.142f); is preferable, more efficient
+
 
         // write out the updated device model
         std::cout << "Updated Device Model: " << dm << '\n';
