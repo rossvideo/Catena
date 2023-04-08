@@ -40,6 +40,7 @@ target_sources(${LIB_TARGET}
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/utils.cpp>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/DeviceModel.cpp>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/Path.cpp>
 )
 
 target_link_libraries(${LIB_TARGET}
