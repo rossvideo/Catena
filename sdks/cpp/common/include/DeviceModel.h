@@ -120,18 +120,21 @@ public:
     * 
     * @tparam T  value type of param
     * @param param 
+    * @param v value to set, passed by value for fundamental types, reference for others
     */
+
    template<typename T>
-   void setValue(catena::Param& param, const T);
+   void setValue(catena::Param& param, T v);
 
    /**
     * @brief Set value of param identified by path
     * 
     * @tparam T underlying value type of param
     * @param path unique oid of param
+    * @param v value to set, passed by value for fundamental types, reference for others
     */
    template<typename T>
-   catena::Param& setValue(const std::string& path, const T);
+   catena::Param& setValue(const std::string& path, T v);
 
 private:
    catena::Device device_; /**< the protobuf device model */

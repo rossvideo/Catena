@@ -123,12 +123,12 @@ catena::Param& catena::DeviceModel::getValue<float>(float& ans, const std::strin
 }
 
 template<>
-void catena::DeviceModel::setValue<float>(catena::Param& param, const float v) {
+void catena::DeviceModel::setValue<float>(catena::Param& param, float v) {
   param.mutable_value()->set_float32_value(v);
 }
 
 template<>
-catena::Param& catena::DeviceModel::setValue<float>(const std::string& path, const float v) {
+catena::Param& catena::DeviceModel::setValue<float>(const std::string& path, float v) {
   catena::Param& param = getParam(path);
   setValue(param, v);
   return param;
