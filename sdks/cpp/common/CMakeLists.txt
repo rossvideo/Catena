@@ -51,7 +51,7 @@ target_link_libraries(${LIB_TARGET}
 
 target_compile_features(${LIB_TARGET}
     PUBLIC
-        cxx_std_17
+        cxx_std_20
 )
 
 add_subdirectory("examples")
