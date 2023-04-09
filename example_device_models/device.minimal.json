@@ -17,6 +17,13 @@
                 },
                 "value": {
                     "float32_value": 0.1
+                },
+                "constraint": {
+                    "type": "FLOAT_RANGE",
+                    "float_range": {
+                        "min_value": 0.0,
+                        "max_value": 1.0
+                    }
                 }
             }
         ]

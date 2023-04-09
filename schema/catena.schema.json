@@ -52,7 +52,8 @@
             "type": "object",
             "properties": {
                 "basic_param_info": {"$ref": "#/$defs/basic_param_info"},
-                "value": {"$ref": "#/$defs/value"}
+                "value": {"$ref": "#/$defs/value"},
+                "constraint": {"$ref": "#/$defs/constraint"}
             },
             "required": ["basic_param_info"],
             "additionalProperties": false,
@@ -64,26 +65,52 @@
             "title": "Parameter value",
             "description": "Value of the parameter. Its schema is polymorphic dependent on type."
         },
-        "apply_float32": {
-            "title": "FLOAT32 specialism",
-            "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
-            "if": {"properties": {"type": {"const": "FLOAT32"} } },
-            "then": {"properties": {
-                "value": {"$ref": "#/$defs/float32"}
-            } }
-        },
         "float32": {
+            "type": "number",
+            "minimum": -3.402823466385e38,
+            "maximum": 3.402823466385e38,
+            "default": 0
+        },
+        "float32_value": {
             "title": "FLOAT32",
             "description": "Defines FLOAT32 as a primitive number type",
             "type": "object",
             "properties": {
-                "float32_value": {
-                    "type": "number",
-                    "minimum": -3.402823466385e38,
-                    "maximum": 3.402823466385e38,
-                    "default": 0
+                "float32_value": {"$ref": "#/$defs/float32"}
+            }
+        },
+        "float32_constraint": {
+            "title": "Float32 Constraint",
+            "description": "Range constraint with step size and display min/max",
+            "type": "object",
+            "properties": {
+                "type": {"const": "FLOAT_RANGE"},
+                "float_range": {
+                    "type": "object",
+                    "properties": {
+                        "min_value": {"$ref": "#/$defs/float32"},
+                        "max_value": {"$ref": "#/$defs/float32"},
+                        "step": {"$ref": "#/$defs/float32"},
+                        "display_min": {"$ref": "#/$defs/float32"},
+                        "display_max": {"$ref": "#/$defs/float32"}
+                    },
+                    "required": ["min_value", "max_value"],
+                    "additionalProperties": false
+                },
+                "required": ["min_value", "max_value"],
+                "additionalProperties": false
+            }
+        },
+        "apply_float32": {
+            "title": "FLOAT32 specialism",
+            "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
+            "if": {"properties": {"type": {"const": "FLOAT32"} } },
+            "then": {
+                "properties": {
+                    "value": {"$ref": "#/$defs/float32_value"},
+                    "constraint": {"$ref": "#/$defs/float32_constraint"}
                 }
-            }  
+            }
         },
         "import": {
             "title": "Import directive",
@@ -175,6 +202,25 @@
                 "param_type": {"$ref": "#/$defs/param_type"}
             },
             "additionalProperties": false
+        },
+        "constraint": {
+            "title": "Constraint to apply to parameter value",
+            "description": "onstraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
+            "type": "object",
+            "properties": {
+                "type": "string",
+                "enum": [
+                    "UNDEFINED",
+                    "INT_RANGE",
+                    "FLOAT_RANGE",
+                    "INT_CHOICE",
+                    "STRING_CHOICE",
+                    "STRING_STRING_CHOICE",
+                    "ALARM_TABLE"
+                ],
+                "default": "UNDEFINED"
+            },
+            "required": ["type"]
         }
     }
 }

@@ -129,6 +129,17 @@ float catena::getValue<float>(const catena::Param& param) {
 
 template<>
 void catena::setValue<float>(catena::Param& param, float v) {
+  if (param.has_constraint()){
+    // apply the constraint
+    float min = param.constraint().float_range().min_value();
+    float max = param.constraint().float_range().max_value();
+    if (v > max) {
+      v = max;
+    }
+    if (v < min) {
+      v = min;
+    }
+  }
   param.mutable_value()->set_float32_value(v);
 }
 
