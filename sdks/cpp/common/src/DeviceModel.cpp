@@ -123,18 +123,33 @@ catena::Param& catena::DeviceModel::getValue<float>(float& ans, const std::strin
 }
 
 template<>
-void catena::DeviceModel::setValue<float>(catena::Param& param, float v) {
+float catena::getValue<float>(const catena::Param& param) {
+  return param.value().float32_value();
+}
+
+template<>
+void catena::setValue<float>(catena::Param& param, float v) {
   param.mutable_value()->set_float32_value(v);
 }
 
 template<>
 catena::Param& catena::DeviceModel::setValue<float>(const std::string& path, float v) {
   catena::Param& param = getParam(path);
-  setValue(param, v);
+  catena::setValue(param, v);
   return param;
 }
 
 std::ostream& operator<<(std::ostream& os, const catena::DeviceModel& dm) {
    os << printJSON(dm.device());
    return os;
+}
+
+/**
+ * @brief convenience wrapper around catena::Param
+ * 
+ * @param param from which to retreive the oid
+ * @return param's object id
+ */
+const std::string& catena::getOid(const catena::Param& param) {
+  return param.basic_param_info().oid();
 }

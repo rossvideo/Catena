@@ -115,16 +115,6 @@ public:
    template<typename T>
    catena::Param& getValue(T& ans, const std::string& path);
 
-   /**
-    * @brief Set the param's value
-    * 
-    * @tparam T  value type of param
-    * @param param 
-    * @param v value to set, passed by value for fundamental types, reference for others
-    */
-
-   template<typename T>
-   void setValue(catena::Param& param, T v);
 
    /**
     * @brief Set value of param identified by path
@@ -136,9 +126,40 @@ public:
    template<typename T>
    catena::Param& setValue(const std::string& path, T v);
 
+
+
 private:
    catena::Device device_; /**< the protobuf device model */
 };
+
+/**
+ * @brief Get the Oid object
+ * 
+ * @param param from which to retrieve the oid
+ * @return const std::string& oid
+ */
+const std::string& getOid(const catena::Param& param);
+
+/**
+ * @brief Set the param's value
+ * 
+ * @tparam T  value type of param
+ * @param param 
+ * @param v value to set, passed by value for fundamental types, reference for others
+ */
+
+template<typename T>
+void setValue(catena::Param& param, T v);
+
+/**
+ * @brief get the param's value
+ * 
+ * @tparam T type of parameter's value
+ * @param param 
+ * @return value of param
+ */
+template<typename T>
+T getValue(const catena::Param& param);
 
 } // catena namespace
 
