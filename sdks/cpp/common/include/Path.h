@@ -26,7 +26,11 @@
  #include <string>
  #include <deque>
 
- namespace catena {
+namespace catena {
+/**
+ * @brief Handles Path objects used to uniquely identify and access OIDs
+ * 
+ */
 class Path {
 public:
     /**
