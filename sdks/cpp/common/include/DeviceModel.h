@@ -40,6 +40,13 @@
 * @tparam THREADSAFE controls whether the class asserts locks when being
 * accessed
 * 
+* The data model access methods all begin with code to assert a lock guard.
+* When THREADSAFE is true, this is of type std::lock_guard<std::recursive_mutex>.
+* When false, it is of type catena::FakeLockGuard<FakeMutex> which is an empty,
+* do-nothing struct that should be completely optimized out of the implementation.
+* Design motivation - small, single threaded devices shouldn't be asserting
+* locks pointlessly, they're resource bound enough.
+* 
 */
 template <bool THREADSAFE = true>
 class DeviceModel {
