@@ -24,8 +24,12 @@
  #include <device.pb.h>
  #include <param.pb.h>
 
+ #include <Fake.h>
+
  #include <iostream>
  #include <string>
+ #include <type_traits>
+
 
  namespace catena {
 
@@ -33,9 +37,30 @@
 * @brief Provide access to the Catena data model that's similar to the 
 * ogscript API in DashBoard.
 * 
+* @tparam THREADSAFE controls whether the class asserts locks when being
+* accessed
+* 
 */
+template <bool THREADSAFE = true>
 class DeviceModel {
 public:
+   using Mutex_t = typename std::conditional<
+      THREADSAFE, 
+      std::recursive_mutex,
+      FakeMutex
+   >::type;
+
+   /**
+    * @brief Choose the lock guard type depending on the value of the
+    * THREADSAFE tparam
+    * 
+    */
+   using LockGuard_t = typename std::conditional<
+      THREADSAFE, 
+      std::lock_guard<Mutex_t>,
+      FakeLockGuard<Mutex_t>
+   >::type;
+
    /**
    * @brief Param Descriptor type
    *
@@ -46,41 +71,47 @@ public:
    * @brief default constructor, creates an empty model.
    * 
    */
-   DeviceModel();
+   DeviceModel() {}
 
    /**
     * @brief Copy constructor, makes deep copy of other's device model.
-    * 
+    * @todo implementation
     * @param other the DeviceModel to copy.
     */
-   DeviceModel(const DeviceModel& other);
+   DeviceModel(const DeviceModel& other) {}
 
    /**
     * @brief Assignment operator, makes deep copy of rhs's device model.
     * @param rhs the right hand side of the = operator
     * 
     */
-   DeviceModel& operator=(const DeviceModel& rhs);
+   DeviceModel& operator=(const DeviceModel& rhs) {
+      LockGuard_t lock(mutex_);
+      return *this;
+   }
 
    /**
     * @brief Move constructor, takes possession of other's state
     * @param other the donor object
+    * @todo implementation
     */
-   DeviceModel(DeviceModel&& other);
+   DeviceModel(DeviceModel&& other){}
 
    /**
    * @brief Move assignment, takes possession of rhs's state
-   * 
+   * @todo implementation
    * @param rhs the right hand side of the = operator
    * @return DeviceModel 
    */
-   DeviceModel operator=(DeviceModel&& rhs);
+   DeviceModel operator=(DeviceModel&& rhs) {
+      return *this;
+   }
 
    /**
    * @brief construct from a catena protobuf Device object.
-   *
+   * @todo implementation
    */
-   explicit DeviceModel(catena::Device& pbDevice);
+   explicit DeviceModel(catena::Device& pbDevice) {}
 
    /**
    * @brief Construct a new Device Model from a json file
@@ -126,12 +157,6 @@ public:
    template<typename T>
    catena::Param& setValue(const std::string& path, T v);
 
-
-
-private:
-   catena::Device device_; /**< the protobuf device model */
-};
-
 /**
  * @brief Get the Oid object
  * 
@@ -159,7 +184,15 @@ void setValue(catena::Param& param, T v);
  * @return value of param
  */
 template<typename T>
-T getValue(const catena::Param& param);
+void getValue(T& ans, const catena::Param& param);
+
+
+private:
+   catena::Device device_; /**< the protobuf device model */
+   mutable Mutex_t mutex_; /**< used to mediate access */
+};
+
+
 
 } // catena namespace
 
@@ -171,4 +204,5 @@ T getValue(const catena::Param& param);
  * @param dm the device model to stream
  * @return updated os
  */
-std::ostream& operator<<(std::ostream& os, const catena::DeviceModel& dm);
+template<bool THREADSAFE = true>
+std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<THREADSAFE>& dm);

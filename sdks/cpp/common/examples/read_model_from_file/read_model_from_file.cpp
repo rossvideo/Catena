@@ -42,7 +42,9 @@
 
     try {
         // read a json file into a DeviceModel object
-        catena::DeviceModel dm(argv[1]);
+        // we don't need this one to be threadsafe, so use false
+        // as the template parameter
+        catena::DeviceModel<false> dm(argv[1]);
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
@@ -50,7 +52,7 @@
         // get a value from the device model
         float v{};
         catena::Param& param = dm.getValue(v, "/hello");
-        std::cout << "param oid: '" << catena::getOid(param) 
+        std::cout << "param oid: '" << dm.getOid(param) 
             << "' has value: " << v << '\n';
 
         // set a value in the device model

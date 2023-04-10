@@ -24,66 +24,28 @@
 #include <sstream>
 #include <stdexcept>
 
-/**
- * @brief default constructor, creates an empty model.
- *
- */
-catena::DeviceModel::DeviceModel() : device_{} {}
 
-/**
- * @brief copy constructor, makes deep copy of other's device model.
- */
-catena::DeviceModel::DeviceModel(const DeviceModel& other) {
-  // not implemented
-}
 
-/**
- * @brief assignment operator, makes deep copy of rhs's device model.
- * @todo implementation
- */
-catena::DeviceModel& catena::DeviceModel::operator=(
-    const catena::DeviceModel& rhs) {
-  return *this;
-}
 
-/**
- * @brief move constructor, takes possession of other's state.
- * @todo implementation
- */
-catena::DeviceModel::DeviceModel(DeviceModel&& other) {}
 
-/**
- * @brief move assignment, moves rhs's state into self.
- * @todo implementation
- */
-catena::DeviceModel catena::DeviceModel::operator=(
-    DeviceModel&& rhs) {
-  return *this;
-}
-
-/**
- * @brief construct from a catena protobuf Device object.
- *
- *
- */
-catena::DeviceModel::DeviceModel(catena::Device& pbDevice)
-    : device_(pbDevice) {}
-
-/**
- * @brief construct from a JSON file.
- * @todo implementation
- */
-catena::DeviceModel::DeviceModel(const std::string& filename)
+template<bool THREADSAFE>
+catena::DeviceModel<THREADSAFE>::DeviceModel(const std::string& filename)
     : device_{} {
   auto jpopts = google::protobuf::util::JsonParseOptions{};
   std::string file = catena::readFile(filename);
   google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
 }
 
-const catena::Device& catena::DeviceModel::device() const {return device_;}
+template<bool THREADSAFE>
+const catena::Device& catena::DeviceModel<THREADSAFE>::device() const {
+  LockGuard_t lock(mutex_);
+  return device_;
+}
 
-catena::Param& catena::DeviceModel::getParam(const std::string& path) {
+template<bool THREADSAFE>
+catena::Param& catena::DeviceModel<THREADSAFE>::getParam(const std::string& path) {
   // simple implementation for now, only handles flat params
+  LockGuard_t lock(mutex_);
   catena::Path path_(path);
   if (path_.size() != 1) {
     std::stringstream why;
@@ -115,42 +77,73 @@ catena::Param& catena::DeviceModel::getParam(const std::string& path) {
   return descs->at(pdx);
 }
 
-template<>
-catena::Param& catena::DeviceModel::getValue<float>(float& ans, const std::string& path) {
+template<bool THREADSAFE>
+template<typename T>
+catena::Param& catena::DeviceModel<THREADSAFE>::getValue(T& ans, const std::string& path) {
+  LockGuard_t lock(mutex_);
   catena::Param& param = getParam(path);
   ans = param.value().float32_value();
   return param;
 }
 
-template<>
-float catena::getValue<float>(const catena::Param& param) {
-  return param.value().float32_value();
-}
+template catena::Param& catena::DeviceModel<true>::getValue<float>(float& ans, const std::string& path);
+template catena::Param& catena::DeviceModel<false>::getValue<float>(float& ans, const std::string& path);
 
-template<>
-void catena::setValue<float>(catena::Param& param, float v) {
-  if (param.has_constraint()){
-    // apply the constraint
-    float min = param.constraint().float_range().min_value();
-    float max = param.constraint().float_range().max_value();
-    if (v > max) {
-      v = max;
-    }
-    if (v < min) {
-      v = min;
-    }
+template<bool THREADSAFE>
+template<typename T>
+void catena::DeviceModel<THREADSAFE>::getValue(T& ans, const catena::Param& param) {
+  LockGuard_t lock(mutex_);
+  
+  // N.B. function templates that are members of class templates
+  // cannot be specialized, so we have to use conditional compilation based
+  // on the tparam instead
+
+  if constexpr(std::is_same<float, T>::value) {
+    ans = param.value().float32_value();
   }
-  param.mutable_value()->set_float32_value(v);
 }
 
-template<>
-catena::Param& catena::DeviceModel::setValue<float>(const std::string& path, float v) {
+template<bool THREADSAFE>
+template<typename T>
+void catena::DeviceModel<THREADSAFE>::setValue(catena::Param& param, T v) {
+  LockGuard_t lock(mutex_);
+
+  // N.B. function templates that are members of class templates
+  // cannot be specialized, so we have to use conditional compilation based
+  // on the tparam instead
+
+  // specialize for float
+  if constexpr(std::is_same<T, float>::value) {
+
+    if (param.has_constraint()){
+      // apply the constraint
+      float min = param.constraint().float_range().min_value();
+      float max = param.constraint().float_range().max_value();
+      if (v > max) {
+        v = max;
+      }
+      if (v < min) {
+        v = min;
+      }
+    }
+    param.mutable_value()->set_float32_value(v);
+  }
+}
+
+template<bool THREADSAFE>
+template<typename T>
+catena::Param& catena::DeviceModel<THREADSAFE>::setValue(const std::string& path, T v) {
   catena::Param& param = getParam(path);
-  catena::setValue(param, v);
+  setValue(param, v);
   return param;
 }
 
-std::ostream& operator<<(std::ostream& os, const catena::DeviceModel& dm) {
+template catena::Param& catena::DeviceModel<true>::setValue<float>(const std::string& path, float v);
+template catena::Param& catena::DeviceModel<false>::setValue<float>(const std::string& path, float v);
+
+
+template<bool THREADSAFE>
+std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<THREADSAFE>& dm) {
    os << printJSON(dm.device());
    return os;
 }
@@ -161,6 +154,18 @@ std::ostream& operator<<(std::ostream& os, const catena::DeviceModel& dm) {
  * @param param from which to retreive the oid
  * @return param's object id
  */
-const std::string& catena::getOid(const catena::Param& param) {
+template<bool THREADSAFE>
+const std::string& catena::DeviceModel<THREADSAFE>::getOid(const catena::Param& param) {
+  LockGuard_t lock(mutex_);
   return param.basic_param_info().oid();
 }
+
+// instantiate the 2 versions of DeviceModel
+template class catena::DeviceModel<true>;
+template class catena::DeviceModel<false>;
+
+
+template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<true>& dm);
+
+
+template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<FALSE>& dm);
