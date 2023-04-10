@@ -44,6 +44,11 @@
 template <bool THREADSAFE = true>
 class DeviceModel {
 public:
+   /**
+    * @brief Choose the mutex type depending on the value of the
+    * THREADSAFE tparam
+    * 
+    */
    using Mutex_t = typename std::conditional<
       THREADSAFE, 
       std::recursive_mutex,
@@ -83,7 +88,7 @@ public:
    /**
     * @brief Assignment operator, makes deep copy of rhs's device model.
     * @param rhs the right hand side of the = operator
-    * 
+    * @todo implementation
     */
    DeviceModel& operator=(const DeviceModel& rhs) {
       LockGuard_t lock(mutex_);
@@ -130,13 +135,13 @@ public:
    /**
     * @brief Get the Param object at path
     * 
-    * @param path json_pointer to the parameter
+    * @param path uniquely locates the parameter
     * @return catena::Param& 
     */
    catena::Param& getParam(const std::string& path);
 
    /**
-    * @brief Get the Value object
+    * @brief Get the value of the parameter indicated by path
     * 
     * @tparam T type of the value to be retrieved
     * @param ans [out] value retreived
@@ -158,7 +163,7 @@ public:
    catena::Param& setValue(const std::string& path, T v);
 
 /**
- * @brief Get the Oid object
+ * @brief Get the param's oid
  * 
  * @param param from which to retrieve the oid
  * @return const std::string& oid
