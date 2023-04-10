@@ -97,7 +97,6 @@
                     "required": ["min_value", "max_value"],
                     "additionalProperties": false
                 },
-                "required": ["min_value", "max_value"],
                 "additionalProperties": false
             }
         },
@@ -208,17 +207,19 @@
             "description": "onstraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
             "type": "object",
             "properties": {
-                "type": "string",
-                "enum": [
-                    "UNDEFINED",
-                    "INT_RANGE",
-                    "FLOAT_RANGE",
-                    "INT_CHOICE",
-                    "STRING_CHOICE",
-                    "STRING_STRING_CHOICE",
-                    "ALARM_TABLE"
-                ],
-                "default": "UNDEFINED"
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "UNDEFINED",
+                        "INT_RANGE",
+                        "FLOAT_RANGE",
+                        "INT_CHOICE",
+                        "STRING_CHOICE",
+                        "STRING_STRING_CHOICE",
+                        "ALARM_TABLE"
+                    ],
+                    "default": "UNDEFINED"
+                }
             },
             "required": ["type"]
         }
