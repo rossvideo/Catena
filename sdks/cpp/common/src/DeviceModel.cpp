@@ -24,10 +24,6 @@
 #include <sstream>
 #include <stdexcept>
 
-
-
-
-
 template<bool THREADSAFE>
 catena::DeviceModel<THREADSAFE>::DeviceModel(const std::string& filename)
     : device_{} {
@@ -82,10 +78,20 @@ template<typename T>
 catena::Param& catena::DeviceModel<THREADSAFE>::getValue(T& ans, const std::string& path) {
   LockGuard_t lock(mutex_);
   catena::Param& param = getParam(path);
-  ans = param.value().float32_value();
+
+  // N.B. function templates that are members of class templates
+  // cannot be specialized, so we have to use conditional compilation based
+  // on the tparam instead
+
+  // specialize for float
+  if constexpr(std::is_same<float, T>::value) {
+    ans = param.value().float32_value();
+  }
+
   return param;
 }
 
+// instantiate the versions of getValue that have been implemented
 template catena::Param& catena::DeviceModel<true>::getValue<float>(float& ans, const std::string& path);
 template catena::Param& catena::DeviceModel<false>::getValue<float>(float& ans, const std::string& path);
 
@@ -98,6 +104,7 @@ void catena::DeviceModel<THREADSAFE>::getValue(T& ans, const catena::Param& para
   // cannot be specialized, so we have to use conditional compilation based
   // on the tparam instead
 
+  // specialize for float
   if constexpr(std::is_same<float, T>::value) {
     ans = param.value().float32_value();
   }
@@ -114,7 +121,6 @@ void catena::DeviceModel<THREADSAFE>::setValue(catena::Param& param, T v) {
 
   // specialize for float
   if constexpr(std::is_same<T, float>::value) {
-
     if (param.has_constraint()){
       // apply the constraint
       float min = param.constraint().float_range().min_value();
@@ -133,19 +139,21 @@ void catena::DeviceModel<THREADSAFE>::setValue(catena::Param& param, T v) {
 template<bool THREADSAFE>
 template<typename T>
 catena::Param& catena::DeviceModel<THREADSAFE>::setValue(const std::string& path, T v) {
+  LockGuard_t lock(mutex_);
   catena::Param& param = getParam(path);
   setValue(param, v);
   return param;
 }
 
+// instantiate the versions of setValue that have been implemented
 template catena::Param& catena::DeviceModel<true>::setValue<float>(const std::string& path, float v);
 template catena::Param& catena::DeviceModel<false>::setValue<float>(const std::string& path, float v);
 
 
 template<bool THREADSAFE>
 std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<THREADSAFE>& dm) {
-   os << printJSON(dm.device());
-   return os;
+  os << printJSON(dm.device());
+  return os;
 }
 
 /**
@@ -160,12 +168,8 @@ const std::string& catena::DeviceModel<THREADSAFE>::getOid(const catena::Param& 
   return param.basic_param_info().oid();
 }
 
-// instantiate the 2 versions of DeviceModel
+// instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::DeviceModel<true>;
 template class catena::DeviceModel<false>;
-
-
 template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<true>& dm);
-
-
 template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<FALSE>& dm);
