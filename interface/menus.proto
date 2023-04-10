@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package catena;
+
+import "language.proto";
+
+option java_multiple_files = true;
+option java_package = "catena.core";
+option java_outer_classname = "MenuProtos";
+
+option cc_enable_arenas = true;
+option optimize_for = CODE_SIZE;
+
+// Menu message.
+// Defines a logical grouping of commands and parameters that can be displayed
+// together in a GUI and have client access control applied.
+// Note that sub-parameters (and sub-sub-parameters) can be selected by 
+// specifying a JSON pointer relative to the device's "params" component.
+//
+message Menu {
+  // Menu id, must be unique within its group.
+  //
+  int32 id = 1;
+
+  // Display name for the Menu
+  //
+  PolyglotText name = 2;
+
+  // Whether the menu should be hidden in the client GUI.
+  //
+  bool hidden = 3;
+
+  // Whether the menu should be disabled (shown as read-only) in the client
+  // GUI.
+  //
+  bool disabled = 4;
+
+  // The menu's parameter members
+  //
+  repeated string param_oids = 5;
+
+  // The menu's command members
+  //
+  repeated string command_oids = 6;
+
+  // Locator for a device specific custom user interface descriptor
+  //
+  map <string, string> client_hints = 7; // additional properties to assist client including ui-url
+}
+
+
+// A group of thematically related menus.
+//
+message MenuGroup {
+  // menu group id, must be unique at device scope
+  //
+  int32 id = 1;
+
+  // the name of the menu group for display in client GUI
+  //
+  PolyglotText name = 2;
+
+  // The menus in the group
+  //
+  map <string, Menu> menus = 3;
+}
+
+message MenuGroups {
+  map <string, MenuGroup> menu_groups = 1;
+}
+

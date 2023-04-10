@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package catena;
+
+import "language.proto";
+
+option java_multiple_files = true;
+option java_package = "catena.core";
+option java_outer_classname = "ConstraintProtos";
+
+option cc_enable_arenas = true;
+option optimize_for = CODE_SIZE;
+
+message Alarm {
+  int32 bit_value = 1; // range 0 to 31
+
+  // Alarm severity
+  //
+    enum Severity {
+    INFO = 0;
+    WARNING = 1;
+    SEVERE = 2;
+    UNKNOWN = 3;
+    REFUSED = 4;
+  }
+  Severity severity = 2;
+
+  // Message to display in client GUI
+  //
+ PolyglotText description = 3;
+}
+
+// Alarm Table
+// Comprises a number of different Alarms.
+//
+message AlarmTableConstraint {
+  repeated Alarm alarm_table = 1;
+}
+
+
+// Codes integers for display in client GUI as values or members of a pick list
+//
+message Int32ChoiceConstraint {
+  message IntChoice {
+    int32 value = 1;
+    PolyglotText name = 2;
+  }
+  repeated IntChoice choices = 2;
+}
+
+// Range constraint including hard min & max values plus display min & max
+// 
+message Int32RangeConstraint {
+  int32 min_value = 1;
+  int32 max_value = 2;
+  int32 step = 3;
+  int32 display_min = 4;
+  int32 display_max = 5;
+}
+
+// Range constraint with hard min & max plus display min & max.
+//
+message FloatRangeConstraint {
+  float min_value = 1;
+  float max_value = 2;
+  float step = 3;
+  float display_min = 4;
+  float display_max = 5;
+}
+
+// A reference to a shared constraint
+//
+message ConstraintRef {
+  string oid = 1; // the constraint's object id in Device.type.constraints.oid
+}
+
+// A selection of strings for client GUI to use in pick list and other GUI
+// elements
+//
+message StringChoiceConstraint {
+  repeated PolyglotText choices = 1;
+}
+
+// A selection of human-friendly strings to display in client GUI that are 
+// used to select a string intended for machine use
+//
+message StringStringChoiceConstraint {
+  message StringStringChoice {
+    string value = 1;
+    PolyglotText name = 2;
+  }
+  repeated StringStringChoice choices = 1;
+  bool strict = 2;
+}
+
+message Constraint {
+  enum ConstraintType {
+    UNDEFINED = 0;
+    INT_RANGE = 2;
+    FLOAT_RANGE = 4;
+    INT_CHOICE = 5;
+    STRING_CHOICE = 40;
+    STRING_STRING_CHOICE = 6;
+    ALARM_TABLE = 7;
+  }
+  ConstraintType type = 1;
+  oneof kind {
+    // a reference to a shared constraint defined in device.types.constraints
+    ConstraintRef ref = 2;
+
+    // Int32 Constraints
+    AlarmTableConstraint alarm_table = 3;
+    Int32RangeConstraint int32_range = 4;
+    Int32ChoiceConstraint int32_choice = 5;
+
+    // Float Constraints
+    FloatRangeConstraint float_range = 6;
+    
+    // String Constraints
+    StringChoiceConstraint string_choice = 7;
+    StringStringChoiceConstraint string_string_choice = 8;
+  }
+}
+
+// A map of constraints intended for use as shared references
+//
+message ConstraintDescriptors {
+  map <string, Constraint> descriptors = 1;
+}
+
+
+

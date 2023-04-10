@@ -1,0 +1,226 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Catena Device Model Schema",
+    "description": "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
+    "type": "object",
+    "properties": {
+        "oid": {"$ref": "#/$defs/oid"},
+        "slot": {"$ref": "#/$defs/slot"},
+        "detail": {"$ref": "#/$defs/detail"},
+        "multi_set_enabled": {
+            "title": "Multi Set Message Enabled Flag",
+            "description": "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
+            "type": "boolean"
+        },
+        "subscriptions": {
+            "title": "Subscriptions Flag",
+            "description": "When true, indicates that the device supports subscription-based access to subsets of parameters.",
+            "type": "boolean"
+        },
+        "timeout": {
+            "title": "Timeout",
+            "description": "Time, in ms, after which device will timeout",
+            "$comment": "get help with the description",
+            "type": "integer",
+            "min": 0,
+            "max": 1000000
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "descriptors": {"$ref": "#/$defs/param_descriptors"}
+            },
+            "required": ["descriptors"],
+            "additionalProperties": false
+        }
+    },
+    "required": ["slot"],
+    "additionalProperties": false,
+    "$defs": {
+        "param_descriptors": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {"$ref": "#/$defs/import"},
+                    {"$ref": "#/$defs/param"}
+                ]
+            }
+        },
+        "param": {
+            "title": "Parameter Descriptor",
+            "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
+            "type": "object",
+            "properties": {
+                "basic_param_info": {"$ref": "#/$defs/basic_param_info"},
+                "value": {"$ref": "#/$defs/value"},
+                "constraint": {"$ref": "#/$defs/constraint"}
+            },
+            "required": ["basic_param_info"],
+            "additionalProperties": false,
+            "allOf": [
+                {"$ref": "#/$defs/apply_float32"}
+            ]
+        },
+        "value": {
+            "title": "Parameter value",
+            "description": "Value of the parameter. Its schema is polymorphic dependent on type."
+        },
+        "float32": {
+            "type": "number",
+            "minimum": -3.402823466385e38,
+            "maximum": 3.402823466385e38,
+            "default": 0
+        },
+        "float32_value": {
+            "title": "FLOAT32",
+            "description": "Defines FLOAT32 as a primitive number type",
+            "type": "object",
+            "properties": {
+                "float32_value": {"$ref": "#/$defs/float32"}
+            }
+        },
+        "float32_constraint": {
+            "title": "Float32 Constraint",
+            "description": "Range constraint with step size and display min/max",
+            "type": "object",
+            "properties": {
+                "type": {"const": "FLOAT_RANGE"},
+                "float_range": {
+                    "type": "object",
+                    "properties": {
+                        "min_value": {"$ref": "#/$defs/float32"},
+                        "max_value": {"$ref": "#/$defs/float32"},
+                        "step": {"$ref": "#/$defs/float32"},
+                        "display_min": {"$ref": "#/$defs/float32"},
+                        "display_max": {"$ref": "#/$defs/float32"}
+                    },
+                    "required": ["min_value", "max_value"],
+                    "additionalProperties": false
+                },
+                "required": ["min_value", "max_value"],
+                "additionalProperties": false
+            }
+        },
+        "apply_float32": {
+            "title": "FLOAT32 specialism",
+            "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
+            "if": {"properties": {"type": {"const": "FLOAT32"} } },
+            "then": {
+                "properties": {
+                    "value": {"$ref": "#/$defs/float32_value"},
+                    "constraint": {"$ref": "#/$defs/float32_constraint"}
+                }
+            }
+        },
+        "import": {
+            "title": "Import directive",
+            "description": "NOT part of the Catena schema, but provides the ability to build device models from multiple files.",
+            "type": "object",
+            "properties": {
+                "$import": {"$ref": "#/$defs/oid"}
+            },
+            "required": ["$import"],
+            "additionalProperties": false
+        },
+        "slot": {
+            "title": "Slot ID",
+            "description": "Uniquely identifies the device within the scope of its Catena connection",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535,
+            "default": 0
+        },
+        "detail": {
+            "title": "Level of Detail",
+            "description": "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, and 'subscription' reports the minimal set plus identified subscribed parameters.",
+            "type": "string",
+            "enum": ["FULL", "SUBSCRIPTIONS", "MINIMAL"],
+            "default": "FULL"
+        },
+        "basic_param_info": {
+            "title": "Basic Param Info",
+            "description": "Summary information about a parameter",
+            "type": "object",
+            "properties": {
+                "oid": {"$ref": "#/$defs/oid"},
+                "name": {"$ref": "#/$defs/polyglot_text"},
+                "type": {"$ref": "#/$defs/type"}
+            },
+            "required": ["oid"],
+            "additionalProperties": false     
+        },
+        "oid": {
+            "title": "Object ID",
+            "description": "An object ID within the device model scope. Can be an array element which is referenced by adding a 'dot' followed by the array index to the object id",
+            "type": "string",
+            "pattern": "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
+        },
+        "polyglot_text": {
+            "title": "Polyglot Text",
+            "description": "Text that a client can display in one of multiple languages",
+            "type": "object",
+            "properties": {
+                "monoglot": {
+                    "title": "Monoglot",
+                    "description": "Fallback for single-language devices",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "readonly": {
+            "title": "Parameter access mode",
+            "description": "If set true, parameter is read only",
+            "type": "boolean",
+            "default": false
+        },
+        "param_type": {
+            "title": "Parameter's data type",
+            "description": "The parameter's data type",
+            "type": "string",
+            "enum": [
+                "UNDEFINED",
+                "EMPTY",
+                "INT32",
+                "FLOAT32",
+                "STRING",
+                "STRUCT",
+                "INT32_ARRAY",
+                "FLOAT32_ARRAY",
+                "STRING_ARRAY",
+                "BINARY",
+                "STRUCT_ARRAY",
+                "DATA"
+            ],
+            "default": "UNDEFINED"
+        },
+        "type": {
+            "title": "Parameter type",
+            "description": "Could be defined in-line or by reference to another parameter",
+            "type": "object",
+            "properties": {
+                "param_type": {"$ref": "#/$defs/param_type"}
+            },
+            "additionalProperties": false
+        },
+        "constraint": {
+            "title": "Constraint to apply to parameter value",
+            "description": "onstraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
+            "type": "object",
+            "properties": {
+                "type": "string",
+                "enum": [
+                    "UNDEFINED",
+                    "INT_RANGE",
+                    "FLOAT_RANGE",
+                    "INT_CHOICE",
+                    "STRING_CHOICE",
+                    "STRING_STRING_CHOICE",
+                    "ALARM_TABLE"
+                ],
+                "default": "UNDEFINED"
+            },
+            "required": ["type"]
+        }
+    }
+}

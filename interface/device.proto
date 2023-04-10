@@ -1,0 +1,214 @@
+syntax = "proto3";
+
+package catena;
+
+import "constraint.proto";
+import "param.proto";
+import "menus.proto";
+import "command.proto";
+import "language.proto";
+import "eo.proto";
+
+option java_multiple_files = true;
+option java_package = "catena.core";
+option java_outer_classname = "DeviceProtos";
+
+option cc_enable_arenas = true;
+option optimize_for = CODE_SIZE;
+
+// Some parameters share sub-param descriptors and/or constraints.
+// They can be selected by reference into the Types message which
+// contains a map of each. The motivation is to improve the efficiency
+// of communications and memory footprint by avoiding the duplication
+// of commonly occuring constraints and parameter types.
+//
+message Types {
+  ConstraintDescriptors constraints = 1;
+  ParamDescriptors params = 2;
+}
+
+// Device model for Catena compatible devices.
+//
+message Device {
+  // id for the device, locally unique within the Catena connection.
+  //
+  uint32 slot = 1;
+
+  // how much of the device model to deliver.
+  //
+  enum DetailLevel {
+    FULL = 0;
+    SUBSCRIPTIONS = 1;
+    MINIMAL = 2;
+  }
+  DetailLevel detail = 2;
+
+  // whether multi-set message is supported
+  bool multi_set_enabled = 3;
+
+  // whether subscriptions are supported
+  bool subscriptions = 4;
+
+  // device's timeout, in ms
+  uint32 timeout = 5;
+
+  // the device's parameters
+  //
+  ParamDescriptors params = 6;
+
+  // the device's default editor UI definition and access scope definitions
+  //
+  MenuGroups menu_groups = 7;
+
+  // the device's available commands
+  //
+  CommandDescriptors commands = 8;
+
+  // the devices language packs
+  //
+  LanguagePacks languages = 9;
+
+  // the device's access scopes, a list of mutually unique strings
+  //
+  repeated string access_scopes = 10;
+
+  // the default scope, index into access_scopes to indicate which of them is the default.
+  //
+  uint32 default_scope = 11;
+}
+
+// The Device model broken into smaller pieces. 
+// Design intent is to allow very large Device Models to be delivered
+// to clients as a stream of DeviceComponents.
+//
+message DeviceComponent {
+
+  // A parameter or sub-parameter, or sub-sub-parameter, or ...
+  //
+  // These can be arbitrarily nested so a JSON pointer (RFC 6901) is used to 
+  // locate the component within the data model.
+  // This is to allow large parameter trees to be broken into smaller
+  // components.
+  //
+  // The json_pointer is relative to device["params"].
+  // Let's see how this could be arranged for an audio processing device 
+  // which has a monitor output mix that has gain and eq controls.
+  //
+  // monitor - top level object id. The json_pointer is an object id in this
+  // case. The whole multi-level parameter descriptor would form the body
+  // of the message.
+  //
+  // monitor/eq, monitor/level - sub-params of the top-level monitor
+  // parameter. The json_pointer is a cascade of object ids.
+  // Only the selected sub-param occupies the message body. Note that the eq
+  // param is likely an array of 4 objects. Without an index in the
+  // json_pointer, the whole array forms the body of the message.
+  //
+  // monitor/eq/1/f, monitor/eq/1/q, monitor/eq/1/gain sub-sub params of
+  // eq 2 in the monitor output audio processing.
+  // It's likely not practical to use messages this small to report device
+  // models, but this illustrates how it could be done if desirable.
+  // 
+  message ComponentParam {
+    string oid = 1;
+    Param param = 2;
+  }
+
+  // A menu.
+  // Note that menus are grouped into menu groups. They are uniquely identified
+  // by the json_pointer field which is relative to the Device's top-level
+  // menu-groups object thus: menu-group-name/menu-name.
+  // example: status/vendor_info
+  //
+  message ComponentMenu {
+    string oid = 1;
+    Menu menu = 2;
+  }
+
+  // A constraint descriptor.
+  // The oid is relative to the "constraints" child of the device's top-level 
+  // "types" object.
+  //
+  message ComponentConstraint {
+    string oid = 1;
+    Constraint constraint = 2;
+  }
+
+  // A command descriptor.
+  // Defines a command to be mapped to device.commands.oid
+  //
+  message ComponentCommand {
+    string oid = 1;
+    Command command = 2;
+  }
+
+  // A language pack.
+  //
+  message ComponentLanguagePack {
+    string language = 1; // language string is the language code that identifies the language e.g. en-uk
+    LanguagePack language_pack = 2;
+  }
+
+  // identifies device within server scope
+  //
+  uint32 slotid = 1;
+
+  // Small device models can be sent en bloc.
+  // Larger ones should be broken into a stream of smaller components.
+  //
+  oneof kind {
+    Device device = 2;
+    ComponentParam param = 3;
+    ComponentConstraint shared_constraint = 4;
+    ComponentMenu menu = 5;
+    ComponentCommand command = 6;
+    ComponentLanguagePack language = 7;
+  }
+}
+
+message DeviceRequestPayload {
+  uint32 slot = 1; // the slot id, must be included
+  string language = 2; // optionally specify the language for the response
+  Device.DetailLevel detail_level = 3; // optionally specify the detail level for the response
+}
+
+// Initial handshake between client and device
+message ConnectPayload {
+  string language = 1;
+  Device.DetailLevel default_detail_level = 2;
+  string user_agent = 3; // description of the client type and version
+  bool force_connection = 4; // true to request access if connection had been previously refused
+  // authn / authz should be handled by gRPC metadata
+}
+
+message TrapMessage {
+	string trap_type = 1;
+	repeated string trap_data = 2;
+}
+
+// messages that the device can push to the client
+message PushUpdates {
+  message PushExternalObject {
+    string oid = 1;
+	ExternalObjectPayload eo = 2;
+  }
+
+  message PushValue {
+    string oid = 1;
+	Value value = 2;
+  }
+
+  uint32 slot = 1;
+  oneof kind {
+    PushValue value = 2; // e.g. audio meters
+    Param param = 3; 
+    DeviceComponent.ComponentConstraint constraint = 4;
+    DeviceComponent device_component = 5;
+    Exception refused = 6;
+    string invalidated_external_object_id = 7;
+    TrapMessage trap = 8;
+    bool invalidate_device_model = 9;
+
+    PushExternalObject external_object = 10;
+  }
+}
