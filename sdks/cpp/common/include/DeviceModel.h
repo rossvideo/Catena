@@ -146,7 +146,9 @@ public:
     * @tparam T type of the value to be retrieved
     * @param ans [out] value retreived
     * @param path unique oid to get
-    * @return catena::Param& at the path
+    * @return catena::Param& at the path because finding params can be
+    * expensive and the client is likely to want to access the param 
+    * again after getting its value
     */
    template<typename T>
    catena::Param& getValue(T& ans, const std::string& path);
@@ -157,39 +159,41 @@ public:
     * 
     * @tparam T underlying value type of param
     * @param path unique oid of param
-    * @param v value to set, passed by value for fundamental types, reference for others
+    * @param v value to set
+    * @return the param indicated by path because finding params can be
+    * expensive and the client is likely to want to access the param 
+    * again after setting its value
     */
    template<typename T>
    catena::Param& setValue(const std::string& path, T v);
 
-/**
- * @brief Get the param's oid
- * 
- * @param param from which to retrieve the oid
- * @return const std::string& oid
- */
-const std::string& getOid(const catena::Param& param);
+   /**
+    * @brief Get the param's oid
+    * 
+    * @param param from which to retrieve the oid
+    * @return const std::string& oid
+    */
+   const std::string& getOid(const catena::Param& param);
 
-/**
- * @brief Set the param's value
- * 
- * @tparam T  value type of param
- * @param param 
- * @param v value to set, passed by value for fundamental types, reference for others
- */
+   /**
+    * @brief Set the param's value
+    * 
+    * @tparam T  value type of param
+    * @param param 
+    * @param v value to set, passed by value for fundamental types, reference for others
+    */
+   template<typename T>
+   void setValue(catena::Param& param, T v);
 
-template<typename T>
-void setValue(catena::Param& param, T v);
-
-/**
- * @brief get the param's value
- * 
- * @tparam T type of parameter's value
- * @param param 
- * @return value of param
- */
-template<typename T>
-void getValue(T& ans, const catena::Param& param);
+   /**
+    * @brief get the param's value
+    * 
+    * @tparam T type of parameter's value
+    * @param param 
+    * @return value of param
+    */
+   template<typename T>
+   void getValue(T& ans, const catena::Param& param);
 
 
 private:
