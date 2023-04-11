@@ -80,6 +80,88 @@ public:
    using PDesc_t = google::protobuf::RepeatedPtrField<catena::Param>;
 
    /**
+    * @brief Provides a way of sharing the device model's internal state
+    * with client programs without letting them directly access it.
+    * 
+    * Design Motivation - it can be expensive to retreive items from the
+    * data model. So, once acquired it's nice for a client program to 
+    * hold onto them yet still only use the device model interface to
+    * manipulate the state. N.B. the device model interface provides thread
+    * safety by locking every access to its state. Providing direct access
+    * of state items to clients would put the onus of guaranteeing thread 
+    * safety on the client which isn't a great idea.
+    * 
+    * This is achieved by CachedItem holding a private reference to the item
+    * of state that only DeviceModel can access by dint of its friendship with
+    * this class template.
+    * 
+    * @tparam T the type of the cached object 
+    */
+   template<typename T>
+   class CachedItem {
+   public:
+
+      /**
+       * @brief provide DeviceModel access to the private attribute.
+       * 
+       */
+      friend DeviceModel<true>;
+      friend DeviceModel<false>;
+
+      /**
+       * @brief CachedItems cannot be default constructed.
+       * 
+       */
+      CachedItem() = delete;
+
+      /**
+       * @brief CachedItems cannot be copy constructed.
+       * 
+       */
+      CachedItem(const CachedItem&) = delete;
+
+      /**
+       * @brief CachedItems cannot be copy assigned.
+       * 
+       * @return CachedItem& 
+       */
+      CachedItem& operator=(const CachedItem&) = delete;
+
+      /**
+       * @brief CachedItems have move semantics.
+       * 
+       * @param other 
+       */
+      CachedItem(CachedItem&& other) : theItem_{other.theItem_} {}
+
+      /**
+       * @brief CachedItems have move semantics.
+       * 
+       * @param rhs right hand side of the = sign
+       * @return CachedItem& 
+       */
+      CachedItem& operator=(CachedItem&& rhs) {
+         theItem_ = std::move(rhs.theItem_);
+         return *this;
+      };
+
+      /**
+       * @brief Main constructor
+       * 
+       * @param item reference to the item to cache
+       */
+      CachedItem(T& item) : theItem_{item}{};
+   private:
+      T& theItem_;
+   };
+
+   /**
+    * @brief a Cached catena::Param
+    * 
+    */
+   using CachedParam = CachedItem<catena::Param>;
+
+   /**
    * @brief default constructor, creates an empty model.
    * 
    */
@@ -99,6 +181,7 @@ public:
     */
    DeviceModel& operator=(const DeviceModel& rhs) {
       LockGuard_t lock(mutex_);
+      // not implemented
       return *this;
    }
 
@@ -107,7 +190,9 @@ public:
     * @param other the donor object
     * @todo implementation
     */
-   DeviceModel(DeviceModel&& other){}
+   DeviceModel(DeviceModel&& other){
+      // not implemented
+   }
 
    /**
    * @brief Move assignment, takes possession of rhs's state
@@ -116,6 +201,7 @@ public:
    * @return DeviceModel 
    */
    DeviceModel operator=(DeviceModel&& rhs) {
+      // not implemented
       return *this;
    }
 
@@ -123,7 +209,9 @@ public:
    * @brief construct from a catena protobuf Device object.
    * @todo implementation
    */
-   explicit DeviceModel(catena::Device& pbDevice) {}
+   explicit DeviceModel(catena::Device& pbDevice) {
+      // not implemented
+   }
 
    /**
    * @brief Construct a new Device Model from a json file
@@ -145,7 +233,7 @@ public:
     * @param path uniquely locates the parameter
     * @return catena::Param& 
     */
-   catena::Param& getParam(const std::string& path);
+   CachedItem<catena::Param> getParam(const std::string& path);
 
    /**
     * @brief Get the value of the parameter indicated by path
@@ -158,7 +246,7 @@ public:
     * again after getting its value
     */
    template<typename T>
-   catena::Param& getValue(T& ans, const std::string& path);
+   CachedParam getValue(T& ans, const std::string& path);
 
 
    /**
@@ -172,7 +260,7 @@ public:
     * again after setting its value
     */
    template<typename T>
-   catena::Param& setValue(const std::string& path, T v);
+   CachedParam setValue(const std::string& path, T v);
 
    /**
     * @brief Get the param's oid
@@ -180,7 +268,7 @@ public:
     * @param param from which to retrieve the oid
     * @return const std::string& oid
     */
-   const std::string& getOid(const catena::Param& param);
+   const std::string& getOid(const CachedParam& param);
 
    /**
     * @brief Set the param's value
@@ -190,7 +278,7 @@ public:
     * @param v value to set, passed by value for fundamental types, reference for others
     */
    template<typename T>
-   void setValue(catena::Param& param, T v);
+   void setValue(CachedParam& param, T v);
 
    /**
     * @brief get the param's value
@@ -200,7 +288,7 @@ public:
     * @return value of param
     */
    template<typename T>
-   void getValue(T& ans, const catena::Param& param);
+   void getValue(T& ans, const CachedParam& param);
 
 
 private:

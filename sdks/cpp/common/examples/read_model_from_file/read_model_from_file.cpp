@@ -51,7 +51,7 @@
 
         // get a value from the device model
         float v{};
-        catena::Param& param = dm.getValue(v, "/hello");
+        auto param = dm.getValue(v, "/hello");
         std::cout << "param oid: '" << dm.getOid(param) 
             << "' has value: " << v << '\n';
 
