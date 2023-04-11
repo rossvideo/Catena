@@ -89,7 +89,7 @@ public:
 
     /**
      * @brief take the front off the path and return it.
-     * 
+     * @throws std::range_error if there are no segments in the path.
      * @return unescaped component at front of the path
      */
     std::string pop_front();
