@@ -152,13 +152,31 @@ void catena::DeviceModel<THREADSAFE>::setValue(CachedParam& cp, T v) {
     catena::Param& param{cp.theItem_};
     if (param.has_constraint()){
       // apply the constraint
-      float min = param.constraint().int32_range().min_value();
-      float max = param.constraint().int32_range().max_value();
-      if (v > max) {
-        v = max;
-      }
-      if (v < min) {
-        v = min;
+      int constraint_type = param.constraint().type();
+      switch (constraint_type) {
+        case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_RANGE:
+          {
+            int min = param.constraint().int32_range().min_value();
+            int max = param.constraint().int32_range().max_value();
+            if (v > max) {
+              v = max;
+            }
+            if (v < min) {
+              v = min;
+            }
+          }
+          break;
+        case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_CHOICE:
+          // todo validate that v is one of the choices
+          // fallthru is purposeful for now
+        case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE:
+          // we can't validate alarm tables easily, so trust the client
+          break;
+        default:
+          std::stringstream why;
+          why << __PRETTY_FUNCTION__;
+          why << "invalid constraint for int32: " << constraint_type << '\n';
+          throw std::range_error(why.str());
       }
     }
     param.mutable_value()->set_int32_value(v);
