@@ -60,10 +60,10 @@
         dm.setValue("/hello", 3.142f);
         //dm.setValue(param, 3.142f); is preferable, more efficient
 
-
         // write out the updated device model
         std::cout << "Updated Device Model: " << dm << '\n';
 
+        // report the wire-size of the device model
         std::string serialized;
         dm.device().SerializeToString(&serialized);
         std::cout << "Device model serializes to " << serialized.size() << " bytes\n";
