@@ -49,11 +49,15 @@
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-        // get a value from the device model
-        float v{};
-        auto param = dm.getValue(v, "/hello");
-        std::cout << "param oid: '" << dm.getOid(param) 
-            << "' has value: " << v << '\n';
+        // get some values from the device model
+        float fv{};
+        int iv{};
+        auto fparam = dm.getValue(fv, "/hello");
+        auto iparam = dm.getValue(iv, "/world");
+        std::cout << "param oid: '" << dm.getOid(fparam) 
+            << "' has value: " << fv
+            << "\nparam oid: '" << dm.getOid(iparam)
+            << "' has value: " << iv << '\n';
 
         // set a value in the device model
         std::cout << "setting it to something different\n";

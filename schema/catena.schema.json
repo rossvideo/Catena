@@ -58,7 +58,8 @@
             "required": ["basic_param_info"],
             "additionalProperties": false,
             "allOf": [
-                {"$ref": "#/$defs/apply_float32"}
+                {"$ref": "#/$defs/apply_float32"},
+                {"$ref": "#/$defs/apply_int32"}
             ]
         },
         "value": {
@@ -96,18 +97,87 @@
                     },
                     "required": ["min_value", "max_value"],
                     "additionalProperties": false
-                },
-                "additionalProperties": false
-            }
+                }
+            },
+            "additionalProperties": false
         },
         "apply_float32": {
             "title": "FLOAT32 specialism",
             "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
-            "if": {"properties": {"type": {"const": "FLOAT32"} } },
+            "if": {
+                "properties": {
+                    "basic_param_info": {
+                        "properties":{
+                            "type": {
+                                "properties":{
+                                    "param_type": {"const": "FLOAT32"} 
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "then": {
                 "properties": {
                     "value": {"$ref": "#/$defs/float32_value"},
                     "constraint": {"$ref": "#/$defs/float32_constraint"}
+                }
+            }
+        },
+        "int32": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+        },
+        "int32_value": {
+            "title": "INT32",
+            "description": "Defines INT32 as a primitive number type",
+            "type": "object",
+            "properties": {
+                "int32_value": {"$ref": "#/$defs/int32"}
+            }
+        },
+        "int32_constraint": {
+            "title": "INT32 Constraint",
+            "description": "Range constraint with step size and display min/max",
+            "type": "object",
+            "properties": {
+                "type": {"const": "INT_RANGE"},
+                "int32_range": {
+                    "type": "object",
+                    "properties": {
+                        "min_value": {"$ref": "#/$defs/int32"},
+                        "max_value": {"$ref": "#/$defs/int32"},
+                        "step": {"$ref": "#/$defs/int32"},
+                        "display_min": {"$ref": "#/$defs/int32"},
+                        "display_max": {"$ref": "#/$defs/int32"}
+                    },
+                    "required": ["min_value", "max_value"],
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "apply_int32": {
+            "title": "INT32 specialism",
+            "description": "Applies INT32 values & constraints, disables properties that don't work with FLOAT32",
+            "if": {
+                "properties": {
+                    "basic_param_info": {
+                        "properties":{
+                            "type": {
+                                "properties":{
+                                    "param_type": {"const": "INT32"} 
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {"$ref": "#/$defs/int32_value"},
+                    "constraint": {"$ref": "#/$defs/int32_constraint"}
                 }
             }
         },
@@ -204,7 +274,7 @@
         },
         "constraint": {
             "title": "Constraint to apply to parameter value",
-            "description": "onstraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
+            "description": "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
             "type": "object",
             "properties": {
                 "type": {

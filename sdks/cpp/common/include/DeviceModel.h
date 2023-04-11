@@ -106,6 +106,11 @@ public:
        * 
        */
       friend DeviceModel<true>;
+
+      /**
+       * @brief provide DeviceModel access to the private attribute.
+       * 
+       */
       friend DeviceModel<false>;
 
       /**
@@ -233,7 +238,7 @@ public:
     * @param path uniquely locates the parameter
     * @return catena::Param& 
     */
-   CachedItem<catena::Param> getParam(const std::string& path);
+   CachedParam getParam(const std::string& path);
 
    /**
     * @brief Get the value of the parameter indicated by path
@@ -241,7 +246,7 @@ public:
     * @tparam T type of the value to be retrieved
     * @param ans [out] value retreived
     * @param path unique oid to get
-    * @return catena::Param& at the path because finding params can be
+    * @return param at the path because finding params can be
     * expensive and the client is likely to want to access the param 
     * again after getting its value
     */

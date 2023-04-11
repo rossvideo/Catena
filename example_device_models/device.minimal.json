@@ -2,14 +2,14 @@
     "slot": 1,
     "multi_set_enabled": true,
     "timeout": 100,
-    "detail": "MINIMAL",
+    "detail": "SUBSCRIPTIONS",
     "params": {
         "descriptors": [
             {
                 "basic_param_info": {
                     "oid": "hello",
                     "name": {
-                        "monoglot": "Greeting"
+                        "monoglot": "float example"
                     },
                     "type": {
                         "param_type": "FLOAT32"
@@ -23,6 +23,27 @@
                     "float_range": {
                         "min_value": 0.0,
                         "max_value": 1.0
+                    }
+                }
+            },
+            {
+                "basic_param_info": {
+                    "oid": "world",
+                    "name": {
+                        "monoglot": "int example"
+                    },
+                    "type": {
+                        "param_type": "INT32"
+                    }
+                },
+                "value": {
+                    "int32_value": 1
+                },
+                "constraint": {
+                    "type": "INT_RANGE",
+                    "int32_range": {
+                        "min_value": 0,
+                        "max_value": 100
                     }
                 }
             }

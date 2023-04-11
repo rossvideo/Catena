@@ -90,12 +90,21 @@ catena::DeviceModel<THREADSAFE>::getValue(T& ans, const std::string& path) {
     ans = param.theItem_.value().float32_value();
   }
 
+  // specialize for int
+  if constexpr(std::is_same<int, T>::value) {
+    ans = param.theItem_.value().int32_value();
+  }
+
   return param;
 }
 
 // instantiate the versions of getValue that have been implemented
 template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::getValue<float>(float& ans, const std::string& path);
 template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::getValue<float>(float& ans, const std::string& path);
+template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::getValue<int>(int& ans, const std::string& path);
+template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::getValue<int>(int& ans, const std::string& path);
+
+
 
 template<bool THREADSAFE>
 template<typename T>
