@@ -146,6 +146,23 @@ void catena::DeviceModel<THREADSAFE>::setValue(CachedParam& cp, T v) {
     }
     param.mutable_value()->set_float32_value(v);
   }
+
+  // specialize for int
+  if constexpr(std::is_same<T, int>::value) {
+    catena::Param& param{cp.theItem_};
+    if (param.has_constraint()){
+      // apply the constraint
+      float min = param.constraint().int32_range().min_value();
+      float max = param.constraint().int32_range().max_value();
+      if (v > max) {
+        v = max;
+      }
+      if (v < min) {
+        v = min;
+      }
+    }
+    param.mutable_value()->set_int32_value(v);
+  }
 }
 
 template<bool THREADSAFE>
@@ -161,7 +178,8 @@ catena::DeviceModel<THREADSAFE>::setValue(const std::string& path, T v) {
 // instantiate the versions of setValue that have been implemented
 template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::setValue<float>(const std::string& path, float v);
 template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::setValue<float>(const std::string& path, float v);
-
+template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::setValue<int>(const std::string& path, int v);
+template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::setValue<int>(const std::string& path, int v);
 
 template<bool THREADSAFE>
 std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<THREADSAFE>& dm) {
