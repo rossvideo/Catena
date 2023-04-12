@@ -23,6 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
 template<bool THREADSAFE>
 catena::DeviceModel<THREADSAFE>::DeviceModel(const std::string& filename)
@@ -121,66 +122,71 @@ void catena::DeviceModel<THREADSAFE>::getValue(T& ans, const CachedParam& cp) {
   }
 }
 
+/**
+ * @brief internal implementation of the setValue method
+ * 
+ * @tparam T underlying type of param to set value of
+ * @param p the param
+ * @param v the value
+ */
+template<typename T>
+void setValueImpl(catena::Param& p, T v);
+
+
+template<>
+void setValueImpl<float>(catena::Param& param, float v) {
+  if (param.has_constraint()){
+    // apply the constraint
+    v = std::clamp(v,
+      param.constraint().float_range().min_value(),
+      param.constraint().float_range().max_value()
+    );
+  }
+  param.mutable_value()->set_float32_value(v);
+}
+
+/**
+ * @brief specialize for int
+ * 
+ * @throws std::range_error if the constraint type isn't valid
+ * @tparam  
+ * @param param 
+ * @param v 
+ */
+template<>
+void setValueImpl<int>(catena::Param& param, int v) {
+  if (param.has_constraint()){
+    // apply the constraint
+    int constraint_type = param.constraint().type();
+    switch (constraint_type) {
+      case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_RANGE:
+        v = std::clamp(v, 
+          param.constraint().int32_range().min_value(),
+          param.constraint().int32_range().max_value()
+        );
+        break;
+      case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_CHOICE:
+        // todo validate that v is one of the choices
+        // fallthru is purposeful for now
+      case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE:
+        // we can't validate alarm tables easily, so trust the client
+        break;
+      default:
+        std::stringstream why;
+        why << __PRETTY_FUNCTION__;
+        why << "invalid constraint for int32: " << constraint_type << '\n';
+        throw std::range_error(why.str());
+    }
+  }
+  param.mutable_value()->set_int32_value(v);  
+}
+
 template<bool THREADSAFE>
 template<typename T>
 void catena::DeviceModel<THREADSAFE>::setValue(CachedParam& cp, T v) {
   LockGuard_t lock(mutex_);
-
-  // N.B. function templates that are members of class templates
-  // cannot be specialized, so we have to use conditional compilation based
-  // on the tparam instead
-
-  // specialize for float
-  if constexpr(std::is_same<T, float>::value) {
-    catena::Param& param{cp.theItem_};
-    if (param.has_constraint()){
-      // apply the constraint
-      float min = param.constraint().float_range().min_value();
-      float max = param.constraint().float_range().max_value();
-      if (v > max) {
-        v = max;
-      }
-      if (v < min) {
-        v = min;
-      }
-    }
-    param.mutable_value()->set_float32_value(v);
-  }
-
-  // specialize for int
-  if constexpr(std::is_same<T, int>::value) {
-    catena::Param& param{cp.theItem_};
-    if (param.has_constraint()){
-      // apply the constraint
-      int constraint_type = param.constraint().type();
-      switch (constraint_type) {
-        case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_RANGE:
-          {
-            int min = param.constraint().int32_range().min_value();
-            int max = param.constraint().int32_range().max_value();
-            if (v > max) {
-              v = max;
-            }
-            if (v < min) {
-              v = min;
-            }
-          }
-          break;
-        case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_CHOICE:
-          // todo validate that v is one of the choices
-          // fallthru is purposeful for now
-        case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE:
-          // we can't validate alarm tables easily, so trust the client
-          break;
-        default:
-          std::stringstream why;
-          why << __PRETTY_FUNCTION__;
-          why << "invalid constraint for int32: " << constraint_type << '\n';
-          throw std::range_error(why.str());
-      }
-    }
-    param.mutable_value()->set_int32_value(v);
-  }
+  catena::Param& param{cp.theItem_};
+  setValueImpl(param, v);
 }
 
 template<bool THREADSAFE>
