@@ -49,21 +49,25 @@
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-        // get a value from the device model
-        float v{};
-        catena::Param& param = dm.getValue(v, "/hello");
-        std::cout << "param oid: '" << dm.getOid(param) 
-            << "' has value: " << v << '\n';
+        // get some values from the device model
+        float fv{};
+        int iv{};
+        auto fparam = dm.getValue(fv, "/hello");
+        auto iparam = dm.getValue(iv, "/world");
+        std::cout << "param oid: '" << dm.getOid(fparam) 
+            << "' has value: " << fv
+            << "\nparam oid: '" << dm.getOid(iparam)
+            << "' has value: " << iv << '\n';
 
         // set a value in the device model
-        std::cout << "setting it to something different\n";
+        std::cout << "setting values to something different\n";
         dm.setValue("/hello", 3.142f);
-        //dm.setValue(param, 3.142f); is preferable, more efficient
-
+        dm.setValue(iparam, 2);
 
         // write out the updated device model
         std::cout << "Updated Device Model: " << dm << '\n';
 
+        // report the wire-size of the device model
         std::string serialized;
         dm.device().SerializeToString(&serialized);
         std::cout << "Device model serializes to " << serialized.size() << " bytes\n";

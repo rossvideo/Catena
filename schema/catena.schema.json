@@ -58,7 +58,8 @@
             "required": ["basic_param_info"],
             "additionalProperties": false,
             "allOf": [
-                {"$ref": "#/$defs/apply_float32"}
+                {"$ref": "#/$defs/apply_float32"},
+                {"$ref": "#/$defs/apply_int32"}
             ]
         },
         "value": {
@@ -96,18 +97,179 @@
                     },
                     "required": ["min_value", "max_value"],
                     "additionalProperties": false
-                },
-                "additionalProperties": false
-            }
+                }
+            },
+            "additionalProperties": false
         },
         "apply_float32": {
             "title": "FLOAT32 specialism",
             "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
-            "if": {"properties": {"type": {"const": "FLOAT32"} } },
+            "if": {
+                "properties": {
+                    "basic_param_info": {
+                        "properties":{
+                            "type": {
+                                "properties":{
+                                    "param_type": {"const": "FLOAT32"} 
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "then": {
                 "properties": {
                     "value": {"$ref": "#/$defs/float32_value"},
                     "constraint": {"$ref": "#/$defs/float32_constraint"}
+                }
+            }
+        },
+        "int32": {
+            "type": "integer",
+            "minimum": -2147483648,
+            "maximum": 2147483647
+        },
+        "int32_value": {
+            "title": "INT32",
+            "description": "Defines INT32 as a primitive number type",
+            "type": "object",
+            "properties": {
+                "int32_value": {"$ref": "#/$defs/int32"}
+            }
+        },
+        "int32_constraint": {
+            "title": "INT32 Constraint",
+            "description": "Range constraint with step size and display min/max",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "title": "INT32 Constraint types",
+                    "description": "Constraints for integers and integer arrays",
+                    "type": "string",
+                    "enum": ["INT_CHOICE", "INT_RANGE", "ALARM_TABLE"]
+                }
+            },
+            "required": ["type"],
+            "allOf": [
+                {
+                    "if": {"properties": {"type": {"const": "INT_RANGE"}}},
+                    "then": {
+                        "properties": {
+                            "type": {"const": "INT_RANGE"},
+                            "int32_range": {
+                                "type": "object",
+                                "properties": {
+                                    "min_value": {"$ref": "#/$defs/int32"},
+                                    "max_value": {"$ref": "#/$defs/int32"},
+                                    "step": {"$ref": "#/$defs/int32"},
+                                    "display_min": {"$ref": "#/$defs/int32"},
+                                    "display_max": {"$ref": "#/$defs/int32"}
+                                },
+                                "required": ["min_value", "max_value"],
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                {
+                    "if": {"properties": {"type": {"const": "INT_CHOICE"}}},
+                    "then": {
+                        "properties": {
+                            "type": {"const": "INT_CHOICE"},
+                            "int32_choice": {
+                                "type": "object",
+                                "properties": {
+                                    "choices": {
+                                        "type": "array",
+                                        "items": {"$ref": "#/$defs/int_choice"}
+                                    }
+                                },
+                                "required": ["choices"],
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                {
+                    "if": {"properties": {"type": {"const": "ALARM_TABLE"}}},
+                    "then": {
+                        "properties":{
+                            "type": {"const": "ALARM_TABLE"},
+                            "alarm_table": {
+                                "type": "object",
+                                "properties": {
+                                    "alarm_table": {
+                                        "type": "array",
+                                        "items": {"$ref": "#/$defs/alarm"},
+                                        "maxItems": 32
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            ]
+        },
+        "int_choice": {
+            "title": "int choice constraint",
+            "description": "maps strings intended for display in client to integers",
+            "type": "object",
+            "properties": {
+                "value": {"$ref": "#/$defs/int32"},
+                "name": {"$ref": "#/$defs/polyglot_text"}
+            },
+            "required": ["value", "name"],
+            "additionalProperties": false
+        },
+        "alarm": {
+            "title": "Alarm",
+            "description": "Occupies a bit position in an alarm table",
+            "type": "object",
+            "properties":{
+                "bit_value": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 31
+                },
+                "severity": {
+                    "type": "string",
+                    "enum": [
+                        "INFO",
+                        "WARNING",
+                        "SEVERE",
+                        "UNKNOWN",
+                        "REFUSED"
+                    ]
+                },
+                "description": {"$ref": "#/$defs/polyglot_text"}
+            },
+            "required": ["bit_value", "severity", "description"],
+            "additionalProperties": false
+        },
+        "apply_int32": {
+            "title": "INT32 specialism",
+            "description": "Applies INT32 values & constraints, disables properties that don't work with FLOAT32",
+            "if": {
+                "properties": {
+                    "basic_param_info": {
+                        "properties":{
+                            "type": {
+                                "properties":{
+                                    "param_type": {"const": "INT32"} 
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {"$ref": "#/$defs/int32_value"},
+                    "constraint": {"$ref": "#/$defs/int32_constraint"}
                 }
             }
         },
@@ -150,7 +312,7 @@
         },
         "oid": {
             "title": "Object ID",
-            "description": "An object ID within the device model scope. Can be an array element which is referenced by adding a 'dot' followed by the array index to the object id",
+            "description": "An object ID unique within the device model scope",
             "type": "string",
             "pattern": "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
         },
@@ -204,7 +366,7 @@
         },
         "constraint": {
             "title": "Constraint to apply to parameter value",
-            "description": "onstraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
+            "description": "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
             "type": "object",
             "properties": {
                 "type": {
