@@ -40,7 +40,7 @@ catena::DeviceModel<T>::DeviceModel(const std::string& filename)
 
 template<enum Threading T>
 const catena::Device& catena::DeviceModel<T>::device() const {
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   return device_;
 }
 
@@ -48,7 +48,7 @@ template<enum Threading T>
 typename catena::DeviceModel<T>::CachedParam
 catena::DeviceModel<T>::getParam(const std::string& path) {
   // simple implementation for now, only handles flat params
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   catena::Path path_(path);
   if (path_.size() != 1) {
     std::stringstream why;
@@ -60,7 +60,7 @@ catena::DeviceModel<T>::getParam(const std::string& path) {
   // get our oid and look for it in the array of params
   std::string oid = path_.pop_front();
   int nParams = device_.mutable_params()->descriptors_size();
-  PDesc_t* descs = device_.mutable_params()->mutable_descriptors();
+  PDesc* descs = device_.mutable_params()->mutable_descriptors();
   bool found = false;
   int pdx = 0; // param index
   while (pdx < nParams && !found) {
@@ -84,7 +84,7 @@ template<enum Threading T>
 template<typename V>
 typename catena::DeviceModel<T>::CachedParam
 catena::DeviceModel<T>::getValue(V& ans, const std::string& path) {
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   CachedParam param = getParam(path);
 
   // N.B. function templates that are members of class templates
@@ -115,7 +115,7 @@ template catena::DeviceModel<kSingle>::CachedParam catena::DeviceModel<kSingle>:
 template<enum Threading T>
 template<typename V>
 void catena::DeviceModel<T>::getValue(V& ans, const CachedParam& cp) {
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   
   // N.B. function templates that are members of class templates
   // cannot be specialized, so we have to use conditional compilation based
@@ -189,7 +189,7 @@ void setValueImpl<int>(catena::Param& param, int v) {
 template<enum Threading T>
 template<typename V>
 void catena::DeviceModel<T>::setValue(CachedParam& cp, V v) {
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   catena::Param& param{cp.theItem_};
   setValueImpl(param, v);
 }
@@ -198,7 +198,7 @@ template<enum Threading T>
 template<typename V>
 typename catena::DeviceModel<T>::CachedParam
 catena::DeviceModel<T>::setValue(const std::string& path, V v) {
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   CachedParam param = getParam(path);
   setValue(param, v);
   return param;
@@ -224,7 +224,7 @@ std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<T>& dm) {
  */
 template<enum Threading T>
 const std::string& catena::DeviceModel<T>::getOid(const CachedParam& param) {
-  LockGuard_t lock(mutex_);
+  LockGuard lock(mutex_);
   return param.theItem_.basic_param_info().oid();
 }
 

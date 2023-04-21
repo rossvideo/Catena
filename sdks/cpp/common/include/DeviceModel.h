@@ -64,7 +64,7 @@ public:
     * @brief Choose the mutex type
     * 
     */
-   using Mutex_t = typename std::conditional<
+   using Mutex = typename std::conditional<
       T == catena::Threading::kMultiThreaded, 
       std::recursive_mutex,
       FakeMutex
@@ -74,17 +74,17 @@ public:
     * @brief Choose the lock guard type 
     * 
     */
-   using LockGuard_t = typename std::conditional<
+   using LockGuard = typename std::conditional<
       T == catena::Threading::kMultiThreaded, 
-      std::lock_guard<Mutex_t>,
-      FakeLockGuard<Mutex_t>
+      std::lock_guard<Mutex>,
+      FakeLockGuard<Mutex>
    >::type;
 
    /**
    * @brief Param Descriptor type
    *
    */
-   using PDesc_t = google::protobuf::RepeatedPtrField<catena::Param>;
+   using PDesc = google::protobuf::RepeatedPtrField<catena::Param>;
 
    /**
     * @brief Provides a way of sharing the device model's internal state
@@ -192,7 +192,7 @@ public:
     * @todo implementation
     */
    DeviceModel& operator=(const DeviceModel& rhs) {
-      LockGuard_t lock(mutex_);
+      LockGuard lock(mutex_);
       // not implemented
       return *this;
    }
@@ -305,7 +305,7 @@ public:
 
 private:
    catena::Device device_; /**< the protobuf device model */
-   mutable Mutex_t mutex_; /**< used to mediate access */
+   mutable Mutex mutex_; /**< used to mediate access */
 };
 
 

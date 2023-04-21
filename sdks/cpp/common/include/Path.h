@@ -37,7 +37,7 @@ public:
      * @brief what we split the path into
      * 
      */
-    using Segments_t = std::deque<std::string>;
+    using Segments = std::deque<std::string>;
 
     /**
      * @brief used to signal one-past-the-end array size
@@ -71,21 +71,21 @@ public:
      *
      * @return std::vector::iterator
      */
-    inline Segments_t::iterator begin() { return segments_.begin(); }
+    inline Segments::iterator begin() { return segments_.begin(); }
 
     /**
      * @brief iterator to the end of our segmented Path.
      *
      * @return std::vector::iterator
      */
-    inline Segments_t::iterator end() { return segments_.end(); }
+    inline Segments::iterator end() { return segments_.end(); }
 
     /**
      * @brief return the number of segments in the Path
      *
      * @return number of segments
      */
-    inline Segments_t::size_type size() { return segments_.size(); }
+    inline Segments::size_type size() { return segments_.size(); }
 
     /**
      * @brief take the front off the path and return it.
@@ -95,7 +95,7 @@ public:
     std::string pop_front();
 
 private:
-    Segments_t segments_; /**< the path split into its components */
+    Segments segments_; /**< the path split into its components */
     
     /**
      * @brief replace / and ~ characters with ~1 & ~0
