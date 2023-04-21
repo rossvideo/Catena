@@ -55,6 +55,12 @@ class DeviceModel {
 public:
 
    /**
+    * @brief which threading model is active.
+    * 
+    */
+   const catena::Threading kThreading = T;
+
+   /**
     * @brief Choose the mutex type
     * 
     */
