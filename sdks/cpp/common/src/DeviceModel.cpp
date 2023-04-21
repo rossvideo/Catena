@@ -25,23 +25,28 @@
 #include <stdexcept>
 #include <algorithm>
 
-template<bool THREADSAFE>
-catena::DeviceModel<THREADSAFE>::DeviceModel(const std::string& filename)
+using catena::Threading;
+const auto kMulti = catena::Threading::kMultiThreaded;
+const auto kSingle = catena::Threading::kSingleThreaded;
+
+
+template<enum Threading T>
+catena::DeviceModel<T>::DeviceModel(const std::string& filename)
     : device_{} {
   auto jpopts = google::protobuf::util::JsonParseOptions{};
   std::string file = catena::readFile(filename);
   google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
 }
 
-template<bool THREADSAFE>
-const catena::Device& catena::DeviceModel<THREADSAFE>::device() const {
+template<enum Threading T>
+const catena::Device& catena::DeviceModel<T>::device() const {
   LockGuard_t lock(mutex_);
   return device_;
 }
 
-template<bool THREADSAFE>
-typename catena::DeviceModel<THREADSAFE>::CachedParam
-catena::DeviceModel<THREADSAFE>::getParam(const std::string& path) {
+template<enum Threading T>
+typename catena::DeviceModel<T>::CachedParam
+catena::DeviceModel<T>::getParam(const std::string& path) {
   // simple implementation for now, only handles flat params
   LockGuard_t lock(mutex_);
   catena::Path path_(path);
@@ -75,10 +80,10 @@ catena::DeviceModel<THREADSAFE>::getParam(const std::string& path) {
   return CachedParam(descs->at(pdx));
 }
 
-template<bool THREADSAFE>
-template<typename T>
-typename catena::DeviceModel<THREADSAFE>::CachedParam
-catena::DeviceModel<THREADSAFE>::getValue(T& ans, const std::string& path) {
+template<enum Threading T>
+template<typename V>
+typename catena::DeviceModel<T>::CachedParam
+catena::DeviceModel<T>::getValue(V& ans, const std::string& path) {
   LockGuard_t lock(mutex_);
   CachedParam param = getParam(path);
 
@@ -87,12 +92,12 @@ catena::DeviceModel<THREADSAFE>::getValue(T& ans, const std::string& path) {
   // on the tparam instead
 
   // specialize for float
-  if constexpr(std::is_same<float, T>::value) {
+  if constexpr(std::is_same<float, V>::value) {
     ans = param.theItem_.value().float32_value();
   }
 
   // specialize for int
-  if constexpr(std::is_same<int, T>::value) {
+  if constexpr(std::is_same<int, V>::value) {
     ans = param.theItem_.value().int32_value();
   }
 
@@ -100,16 +105,16 @@ catena::DeviceModel<THREADSAFE>::getValue(T& ans, const std::string& path) {
 }
 
 // instantiate the versions of getValue that have been implemented
-template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::getValue<float>(float& ans, const std::string& path);
-template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::getValue<float>(float& ans, const std::string& path);
-template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::getValue<int>(int& ans, const std::string& path);
-template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::getValue<int>(int& ans, const std::string& path);
+template catena::DeviceModel<kMulti>::CachedParam catena::DeviceModel<kMulti>::getValue<float>(float& ans, const std::string& path);
+template catena::DeviceModel<kSingle>::CachedParam catena::DeviceModel<kSingle>::getValue<float>(float& ans, const std::string& path);
+template catena::DeviceModel<kMulti>::CachedParam catena::DeviceModel<kMulti>::getValue<int>(int& ans, const std::string& path);
+template catena::DeviceModel<kSingle>::CachedParam catena::DeviceModel<kSingle>::getValue<int>(int& ans, const std::string& path);
 
 
 
-template<bool THREADSAFE>
-template<typename T>
-void catena::DeviceModel<THREADSAFE>::getValue(T& ans, const CachedParam& cp) {
+template<enum Threading T>
+template<typename V>
+void catena::DeviceModel<T>::getValue(V& ans, const CachedParam& cp) {
   LockGuard_t lock(mutex_);
   
   // N.B. function templates that are members of class templates
@@ -117,7 +122,7 @@ void catena::DeviceModel<THREADSAFE>::getValue(T& ans, const CachedParam& cp) {
   // on the tparam instead
 
   // specialize for float
-  if constexpr(std::is_same<float, T>::value) {
+  if constexpr(std::is_same<float, V>::value) {
     ans = cp.theItem_.value().float32_value();
   }
 }
@@ -181,18 +186,18 @@ void setValueImpl<int>(catena::Param& param, int v) {
   param.mutable_value()->set_int32_value(v);  
 }
 
-template<bool THREADSAFE>
-template<typename T>
-void catena::DeviceModel<THREADSAFE>::setValue(CachedParam& cp, T v) {
+template<enum Threading T>
+template<typename V>
+void catena::DeviceModel<T>::setValue(CachedParam& cp, V v) {
   LockGuard_t lock(mutex_);
   catena::Param& param{cp.theItem_};
   setValueImpl(param, v);
 }
 
-template<bool THREADSAFE>
-template<typename T>
-typename catena::DeviceModel<THREADSAFE>::CachedParam
-catena::DeviceModel<THREADSAFE>::setValue(const std::string& path, T v) {
+template<enum Threading T>
+template<typename V>
+typename catena::DeviceModel<T>::CachedParam
+catena::DeviceModel<T>::setValue(const std::string& path, V v) {
   LockGuard_t lock(mutex_);
   CachedParam param = getParam(path);
   setValue(param, v);
@@ -200,13 +205,13 @@ catena::DeviceModel<THREADSAFE>::setValue(const std::string& path, T v) {
 }
 
 // instantiate the versions of setValue that have been implemented
-template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::setValue<float>(const std::string& path, float v);
-template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::setValue<float>(const std::string& path, float v);
-template catena::DeviceModel<true>::CachedParam catena::DeviceModel<true>::setValue<int>(const std::string& path, int v);
-template catena::DeviceModel<false>::CachedParam catena::DeviceModel<false>::setValue<int>(const std::string& path, int v);
+template catena::DeviceModel<kMulti>::CachedParam catena::DeviceModel<kMulti>::setValue<float>(const std::string& path, float v);
+template catena::DeviceModel<kSingle>::CachedParam catena::DeviceModel<kSingle>::setValue<float>(const std::string& path, float v);
+template catena::DeviceModel<kMulti>::CachedParam catena::DeviceModel<kMulti>::setValue<int>(const std::string& path, int v);
+template catena::DeviceModel<kSingle>::CachedParam catena::DeviceModel<kSingle>::setValue<int>(const std::string& path, int v);
 
-template<bool THREADSAFE>
-std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<THREADSAFE>& dm) {
+template<enum Threading T>
+std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<T>& dm) {
   os << printJSON(dm.device());
   return os;
 }
@@ -217,14 +222,14 @@ std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<THREADSAFE>
  * @param param from which to retreive the oid
  * @return param's object id
  */
-template<bool THREADSAFE>
-const std::string& catena::DeviceModel<THREADSAFE>::getOid(const CachedParam& param) {
+template<enum Threading T>
+const std::string& catena::DeviceModel<T>::getOid(const CachedParam& param) {
   LockGuard_t lock(mutex_);
   return param.theItem_.basic_param_info().oid();
 }
 
 // instantiate the 2 versions of DeviceModel, and its streaming operator
-template class catena::DeviceModel<true>;
-template class catena::DeviceModel<false>;
-template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<true>& dm);
-template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<FALSE>& dm);
+template class catena::DeviceModel<Threading::kMultiThreaded>;
+template class catena::DeviceModel<Threading::kSingleThreaded>;
+template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<Threading::kMultiThreaded>& dm);
+template std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<Threading::kSingleThreaded>& dm);
