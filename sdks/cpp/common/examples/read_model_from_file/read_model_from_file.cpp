@@ -44,7 +44,7 @@
         // read a json file into a DeviceModel object
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
-        catena::DeviceModel<false> dm(argv[1]);
+        catena::DeviceModel<catena::Threading::kSingleThreaded> dm(argv[1]);
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
