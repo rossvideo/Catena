@@ -25,6 +25,8 @@
  #include <iostream>
  #include <string>
  #include <deque>
+ #include <optional>
+ #include <variant>
 
 namespace catena {
 /**
@@ -45,6 +47,14 @@ public:
      */
     static constexpr std::size_t kEnd = std::size_t(-1);
 
+    /**
+     * @brief Segments can be interpreted either as oids (strings), 
+     * or array indices (std::size_t). The "one past the end" index
+     * is flagged by the value kEnd.
+     * 
+     */
+    using Segment = typename std::variant<Segments::size_type, std::string>;
+
 
     Path() = default;
     Path(const Path& other) = default;
@@ -53,16 +63,19 @@ public:
     Path& operator=(Path&& rhs) = default;
 
     /**
-     * @brief Construct a new Path object
+     * @brief Construct a new Path object.
      * 
-     * @param path a json-pointer
+     * 
+     * @param path an escaped json-pointer, 
+     * i.e. '/' replaced by "~1" and '~' by "~0"
      */
     explicit Path(const std::string& path);
 
     /**
      * @brief Construct a new Path object
      * 
-     * @param literal 
+     * @param literal an escaped json-pointer, 
+     * i.e. '/' replaced by "~1" and '~' by "~0"
      */
     explicit Path(const char* literal);
 
@@ -89,10 +102,12 @@ public:
 
     /**
      * @brief take the front off the path and return it.
-     * @throws std::range_error if there are no segments in the path.
-     * @return unescaped component at front of the path
+     * @return unescaped component at front of the path, 
+     * design intent the returned value can be used as an oid lookup,
+     * or an array index.
+     * Will be empty (nullopt) if there was nothing to pop.
      */
-    std::string pop_front();
+    std::optional<Segment> pop_front();
 
 private:
     Segments segments_; /**< the path split into its components */

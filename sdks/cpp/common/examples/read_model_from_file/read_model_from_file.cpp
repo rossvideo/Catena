@@ -49,6 +49,25 @@
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
+        // test the path class a bit
+        catena::Path path("/one/-/two/3");
+        bool going = true;
+        while (going) {
+            auto s1 = path.pop_front();
+            if (s1) {
+                if (std::holds_alternative<std::string>(*s1)) {
+                    std::cout << std::get<std::string>(*s1) << '\n';
+                }
+                if (std::holds_alternative<std::size_t>(*s1)) {
+                    std::cout << std::get<std::size_t>(*s1) << '\n';
+                }
+            } else {
+                std::cout << "problem popping\n";
+                going = false;
+            }
+        }
+
+
         // get some values from the device model
         float fv{};
         int iv{};

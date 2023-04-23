@@ -29,31 +29,39 @@ catena::Path::Path(const std::string& path) : segments_{} {
     auto r_begin = std::sregex_iterator(path.begin(), path.end(), segment_regex);
     auto r_end = std::sregex_iterator();
     for (std::sregex_iterator it = r_begin; it != r_end; ++it) {
-    std::smatch match = *it;
-    if (it == r_begin && match.position(0) != 0) {
-        std::stringstream why;
-        why << __PRETTY_FUNCTION__ << "\n'" << path << "' must begin with '/'";
-        throw std::runtime_error(why.str());
-    }
+      std::smatch match = *it;
+      if (it == r_begin && match.position(0) != 0) {
+          std::stringstream why;
+          why << __PRETTY_FUNCTION__ << "\n'" << path << "' must begin with '/'";
+          throw std::runtime_error(why.str());
+      }
 
-    std::string txt = unescape(match.str());
-    // strip off the leading solidus '/'
-    segments_.push_back(txt.substr(1, std::string::npos));
+      std::string txt = unescape(match.str());
+      // strip off the leading solidus '/'
+      segments_.push_back(txt.substr(1, std::string::npos));
     }
-    std::cout << std::endl;
 }
 
 catena::Path::Path(const char* literal) : Path(std::string(literal)) {}
 
-std::string catena::Path::pop_front() {
+std::optional<catena::Path::Segment> catena::Path::pop_front() {
   if (segments_.size() >= 1) {
-    std::string ans = segments_[0];
+    Segment ans;
+    std::string seg = segments_[0];
     segments_.pop_front();
+    if (seg.compare("-") == 0) {
+      // the one-past-the-end array index
+      ans.emplace<std::size_t>(kEnd);
+    } else if (std::all_of(seg.begin(), seg.end(), ::isdigit)) {
+      // an array index
+      ans.emplace<std::size_t>(std::stoul(seg));
+    } else {
+      ans.emplace<std::string>(seg);
+    }
     return ans;
   } else {
-    std::stringstream why;
-    why << __PRETTY_FUNCTION__ << "\nAttempt to pop empty store.";
-    throw std::range_error(why.str());
+    /**<@todo write an error message to the @todo error logger*/
+    return std::nullopt;
   }
 }
 

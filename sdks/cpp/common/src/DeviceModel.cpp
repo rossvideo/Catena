@@ -58,11 +58,26 @@ catena::DeviceModel<T>::getParam(const std::string& path) {
   }
 
   // get our oid and look for it in the array of params
-  std::string oid = path_.pop_front();
+  std::optional<catena::Path::Segment> segment = path_.pop_front();
+  if (!segment) {
+    std::stringstream why;
+    why <<  __PRETTY_FUNCTION__;
+    why << "could not pop front of path";
+    throw std::runtime_error(why.str());
+  }
+
+  if (!std::holds_alternative<std::string>(*segment)) {
+    std::stringstream why;
+    why << __PRETTY_FUNCTION__;
+    why << "expected oid, got an index";
+    throw std::runtime_error(why.str());
+  }
+
   int nParams = device_.mutable_params()->descriptors_size();
   PDesc* descs = device_.mutable_params()->mutable_descriptors();
   bool found = false;
   int pdx = 0; // param index
+  const std::string& oid = std::get<std::string>(*segment);
   while (pdx < nParams && !found) {
     std::string match = descs->Get(pdx).basic_param_info().oid();
     if (oid.compare(match) == 0) {
