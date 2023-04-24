@@ -33,6 +33,8 @@
  #include <iostream>
  #include <stdexcept>
 
+ using Index = catena::Path::Index;
+
  int main(int argc, char** argv) {
     // process command line
     if (argc != 2) {
@@ -50,21 +52,24 @@
         std::cout << "Read Device Model: " << dm << '\n';
 
         // test the path class a bit
+        
         catena::Path path("/one/-/two/3");
         bool going = true;
         while (going) {
             auto s1 = path.pop_front();
-            if (s1) {
-                if (std::holds_alternative<std::string>(*s1)) {
-                    std::cout << std::get<std::string>(*s1) << '\n';
+
+            if (std::holds_alternative<std::string>(s1)) {
+                std::string oid(std::get<std::string>(s1));
+                if (oid.compare("") == 0) {
+                    going = false;
+                } else {
+                    std::cout << oid << '\n';
                 }
-                if (std::holds_alternative<std::size_t>(*s1)) {
-                    std::cout << std::get<std::size_t>(*s1) << '\n';
-                }
-            } else {
-                std::cout << "problem popping\n";
-                going = false;
             }
+            if (std::holds_alternative<Index>(s1)) {
+                std::cout << std::get<Index>(s1) << '\n';
+            }
+
         }
 
 

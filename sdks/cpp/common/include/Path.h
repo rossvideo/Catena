@@ -25,7 +25,6 @@
  #include <iostream>
  #include <string>
  #include <deque>
- #include <optional>
  #include <variant>
 
 namespace catena {
@@ -42,10 +41,16 @@ public:
     using Segments = std::deque<std::string>;
 
     /**
+     * @brief type of index path segments
+     * 
+     */
+    using Index = Segments::size_type;
+
+    /**
      * @brief used to signal one-past-the-end array size
      *
      */
-    static constexpr std::size_t kEnd = std::size_t(-1);
+    static constexpr Index kEnd = Index(-1);
 
     /**
      * @brief Segments can be interpreted either as oids (strings), 
@@ -53,7 +58,7 @@ public:
      * is flagged by the value kEnd.
      * 
      */
-    using Segment = typename std::variant<Segments::size_type, std::string>;
+    using Segment = typename std::variant<Index, std::string>;
 
 
     Path() = default;
@@ -98,16 +103,17 @@ public:
      *
      * @return number of segments
      */
-    inline Segments::size_type size() { return segments_.size(); }
+    inline Index size() { return segments_.size(); }
 
     /**
      * @brief take the front off the path and return it.
      * @return unescaped component at front of the path, 
      * design intent the returned value can be used as an oid lookup,
      * or an array index.
-     * Will be empty (nullopt) if there was nothing to pop.
+     * Will be empty string if nothing to pop, or the original path
+     * was "/", or "".
      */
-    std::optional<Segment> pop_front();
+    Segment pop_front() noexcept;
 
 private:
     Segments segments_; /**< the path split into its components */

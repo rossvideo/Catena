@@ -44,25 +44,26 @@ catena::Path::Path(const std::string& path) : segments_{} {
 
 catena::Path::Path(const char* literal) : Path(std::string(literal)) {}
 
-std::optional<catena::Path::Segment> catena::Path::pop_front() {
+catena::Path::Segment catena::Path::pop_front() noexcept {
+  Segment ans;
   if (segments_.size() >= 1) {
-    Segment ans;
     std::string seg = segments_[0];
     segments_.pop_front();
     if (seg.compare("-") == 0) {
       // the one-past-the-end array index
-      ans.emplace<std::size_t>(kEnd);
+      ans.emplace<Index>(kEnd);
     } else if (std::all_of(seg.begin(), seg.end(), ::isdigit)) {
-      // an array index
-      ans.emplace<std::size_t>(std::stoul(seg));
+      // segment is all digits, so convert to Index
+      ans.emplace<Index>(std::stoul(seg));
     } else {
+      // segment is a string
       ans.emplace<std::string>(seg);
     }
-    return ans;
   } else {
-    /**<@todo write an error message to the @todo error logger*/
-    return std::nullopt;
+    // return empty string
+    ans.emplace<std::string>("");
   }
+  return ans;
 }
 
 void catena::Path::escape (std::string& str) {
