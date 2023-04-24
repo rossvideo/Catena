@@ -58,41 +58,24 @@ catena::DeviceModel<T>::getParam(const std::string& path) {
   }
 
   // get our oid and look for it in the array of params
-  std::optional<catena::Path::Segment> segment = path_.pop_front();
-  if (!segment) {
-    std::stringstream why;
-    why <<  __PRETTY_FUNCTION__;
-    why << "could not pop front of path";
-    throw std::runtime_error(why.str());
-  }
+  catena::Path::Segment segment = path_.pop_front();
 
-  if (!std::holds_alternative<std::string>(*segment)) {
+  if (!std::holds_alternative<std::string>(segment)) {
     std::stringstream why;
     why << __PRETTY_FUNCTION__;
     why << "expected oid, got an index";
     throw std::runtime_error(why.str());
   }
+  std::string oid(std::get<std::string>(segment));
 
-  int nParams = device_.mutable_params()->descriptors_size();
-  PDesc* descs = device_.mutable_params()->mutable_descriptors();
-  bool found = false;
-  int pdx = 0; // param index
-  const std::string& oid = std::get<std::string>(*segment);
-  while (pdx < nParams && !found) {
-    std::string match = descs->Get(pdx).basic_param_info().oid();
-    if (oid.compare(match) == 0) {
-      found = true;
-    } else {
-      ++pdx;
-    }
-  }
-  if (!found) {
+  if (!device_.mutable_params()->contains(oid)){
     std::stringstream why;
-    why << __PRETTY_FUNCTION__;
-    why << "Failed to find oid '" << oid << "'\n";
+    why << __PRETTY_FUNCTION__ << ", " << __FILE__ << ':' << __LINE__;
+    why << "param " << std::quoted(oid) << " not found";
     throw std::runtime_error(why.str());
   }
-  return CachedParam(descs->at(pdx));
+
+  return CachedParam(device_.mutable_params()->at(oid));
 }
 
 template<enum Threading T>
