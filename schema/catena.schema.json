@@ -26,11 +26,13 @@
             "max": 1000000
         },
         "params": {
+            "title": "Params object",
+            "description": "Defines the collection of parameter descriptors for a device, or a subset if the payload of a 'params' message.",
             "type": "object",
-            "properties": {
-                "descriptors": {"$ref": "#/$defs/param_descriptors"}
+            "$comment": "patternProperties regex must be same as that defined in oid schema",
+            "patternProperties": {
+                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {"$ref": "#/$defs/param"}
             },
-            "required": ["descriptors"],
             "additionalProperties": false
         }
     },

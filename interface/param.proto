@@ -122,6 +122,10 @@ message Param {
   string access_scope = 9;
 
   map <string, string> client_hints = 10; // additional properties to assist client
+
+  // when present, indicates that the other fields in the Param message
+  // should be imported from an external file or url
+  ImportDirective import = 11;
 }
 
 enum UndefinedValue {
@@ -193,11 +197,11 @@ message Value {
 }
 
 
-// Map of Params
-// the key strings shall be locally unique
-//
-message ParamDescriptors {
-  repeated Param descriptors = 1;
+
+message ImportDirective {
+  string url = 1;
+  string oid = 2;
+  repeated string excludes = 3;
 }
 
 message GetParamPayload {

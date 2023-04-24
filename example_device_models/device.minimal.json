@@ -2,56 +2,55 @@
     "slot": 1,
     "multi_set_enabled": true,
     "timeout": 100,
-    "detail": "SUBSCRIPTIONS",
+    "detail": "MINIMAL",
     "params": {
-        "descriptors": [
-            {
-                "basic_param_info": {
-                    "oid": "hello",
-                    "name": {
-                        "monoglot": "float example"
-                    },
-                    "type": {
-                        "param_type": "FLOAT32"
-                    }
+        "hello": {
+            "basic_param_info": {
+                "oid": "hello",
+                "name": {
+                    "monoglot": "float example"
                 },
-                "value": {
-                    "float32_value": 0.1
-                },
-                "constraint": {
-                    "type": "FLOAT_RANGE",
-                    "float_range": {
-                        "min_value": 0.0,
-                        "max_value": 1.0
-                    }
+                "type": {
+                    "param_type": "FLOAT32"
                 }
             },
-            {
-                "basic_param_info": {
-                    "oid": "world",
-                    "name": {
-                        "monoglot": "int example"
-                    },
-                    "type": {
-                        "param_type": "INT32"
-                    }
-                },
-                "value": {
-                    "int32_value": 1
-                },
-                "constraint": {
-                    "type": "ALARM_TABLE",
-                    "alarm_table": {
-                        "alarm_table": [
-                            {
-                                "bit_value": 31, 
-                                "severity": "INFO", 
-                                "description": {"monoglot": "hello"}
-                            }
-                    ]}
+            "value": {
+                "float32_value": 0.1
+            },
+            "constraint": {
+                "type": "FLOAT_RANGE",
+                "float_range": {
+                    "min_value": 0.0,
+                    "max_value": 1.0
                 }
             }
-        ]
+        },
+        "world": {
+            "basic_param_info": {
+                "oid": "world",
+                "name": {
+                    "monoglot": "int example"
+                },
+                "type": {
+                    "param_type": "INT32"
+                }
+            },
+            "value": {
+                "int32_value": 1
+            },
+            "constraint": {
+                "type": "ALARM_TABLE",
+                "alarm_table": {
+                    "alarm_table": [
+                        {
+                            "bit_value": 31, 
+                            "severity": "INFO", 
+                            "description": {"monoglot": "hello"}
+                        }
+                ]}
+            }
+        }
+
     }
 }
 

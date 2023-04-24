@@ -24,7 +24,7 @@ option optimize_for = CODE_SIZE;
 //
 message Types {
   ConstraintDescriptors constraints = 1;
-  ParamDescriptors params = 2;
+  map<string, Param> params = 2;
 }
 
 // Device model for Catena compatible devices.
@@ -54,7 +54,7 @@ message Device {
 
   // the device's parameters
   //
-  ParamDescriptors params = 6;
+  map <string, Param> params = 6;
 
   // the device's default editor UI definition and access scope definitions
   //
