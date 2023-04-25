@@ -243,6 +243,10 @@ public:
     * @brief Get the Param object at path
     * 
     * @param path uniquely locates the parameter
+    * @throws catena::not_implemented if the code to navigate
+    * to the requested fully qualified oid has not been implemented.
+    * @throws std::runtime_error if the requested oid is not present in the 
+    * device model
     * @return catena::Param& 
     */
    CachedParam getParam(const std::string& path);
