@@ -49,6 +49,32 @@
                         }
                 ]}
             }
+        },
+        "my_struct": {
+            "basic_param_info": {
+                "oid": "my_struct",
+                "name": {
+                    "monoglot": "example of structured data"
+                },
+                "type": {
+                    "param_type": "STRUCT"
+                }
+            },
+            "value": {
+                "struct_value": {
+                   "field1": {
+                        "param": {
+                            "basic_param_info": {
+                                "oid": "field1",
+                                "name": "first field in struct",
+                                "type": {
+                                    "param_type": "FLOAT32"
+                                }
+                            }
+                        }
+                   }
+                }
+            }
         }
 
     }
