@@ -28,6 +28,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 namespace catena {
 
@@ -67,5 +68,12 @@ std::string readFile(std::filesystem::path path);
  * @param rep in sequence to replace the match
  */
 void subs(std::string& str, const std::string& seq, const std::string& rep);
+
+/**
+ * @brief exception to throw when a client attempts to invoke unimplemented 
+ * parts of the catena feature set.
+ * 
+ */
+class not_implemented : public std::exception {};
 
 }  // namespace catena

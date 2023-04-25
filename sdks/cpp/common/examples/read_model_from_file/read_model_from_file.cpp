@@ -31,6 +31,7 @@
  #include <Path.h>
 
  #include <iostream>
+ #include <iomanip>
  #include <stdexcept>
 
  using Index = catena::Path::Index;
@@ -63,13 +64,12 @@
                 if (oid.compare("") == 0) {
                     going = false;
                 } else {
-                    std::cout << oid << '\n';
+                    std::cout << std::quoted(oid) << '\n';
                 }
             }
             if (std::holds_alternative<Index>(s1)) {
                 std::cout << std::get<Index>(s1) << '\n';
             }
-
         }
 
 
