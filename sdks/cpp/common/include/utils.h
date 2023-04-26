@@ -79,4 +79,13 @@ public:
     not_implemented(const std::string& why) : std::runtime_error(why) {}
 };
 
+#define EXCEPTION(msg, except) \
+do { \
+    std::stringstream why; \
+    why << __PRETTY_FUNCTION__ << __FILE__ << ':' << __LINE__ << '\n'; \
+    why << msg; \
+    throw except(why.str());\
+} while (false)
+
+
 }  // namespace catena
