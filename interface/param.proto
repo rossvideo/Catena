@@ -148,7 +148,7 @@ message StringList {
 // the values of the struct members, or a definition of 
 // the struct members via a param descriptor
 //
-message StructInner {
+message StructField {
   oneof kind {
     Value value = 1;
     Param param = 2;
@@ -158,7 +158,7 @@ message StructInner {
 // Values
 //
 message StructValue {
-	map<string, StructInner inner = 1;
+	map<string, StructField> fields = 1;
 } 
 
 

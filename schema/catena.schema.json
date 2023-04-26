@@ -81,7 +81,8 @@
             "type": "object",
             "properties": {
                 "float32_value": {"$ref": "#/$defs/float32"}
-            }
+            },
+            "required": ["float32_value"]
         },
         "float32_constraint": {
             "title": "Float32 Constraint",
@@ -280,32 +281,52 @@
         },
         "struct_value": {
             "title": "STRUCT",
-            "description": "Wrapper round the struct_inner schema.",
+            "description": "Wrapper round the struct_fields schema.",
             "type": "object",
             "$comment": "pattern properties must be same regex as for oid",
             "properties":{
                 "struct_value": {
                     "type": "object",
-                    "patternProperties":{
-                        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {"$ref": "#/$defs/struct_inner"}
+                    "properties":{
+                        "fields": {"$ref": "#/$defs/struct_fields"}
                     },
                     "additionalProperties": false
                 }
             },
             "additionalProperties": false
         },
-        "struct_inner": {
+        "struct_fields": {
             "title": "struct definition",
             "description": "holds struct data fields, or their descriptors, or a mix",
             "type": "object",
-            "oneOf": [
-                {"properties": {
-                    "value": {"$ref": "#/$defs/value"}
-                }},
-                {"properties": {
-                    "param": {"$ref": "#/$defs/param"}
-                }}
-            ]
+            "patternProperties": {
+                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "oneOf": [                                       
+                                        {"$ref": "#/$defs/float32_value"},
+                                        {"$ref": "#/$defs/int32_value"}                                       
+                                    ]
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["value"]                         
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "param": {"$ref": "#/$defs/param"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["param"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false
         },
         "apply_struct": {
             "title": "STRUCT specialism",
@@ -327,6 +348,28 @@
                 "properties": {
                     "value": {"$ref": "#/$defs/struct_value"}
                 }
+            }
+        },
+        "apply_float32_value": {
+            "if": {
+                "properties": {"value": {"$ref": "#/$defs/float32_value"}}
+            },
+            "then": true,
+            "else": false
+        },
+        "apply_int32_value": {
+            "if": {
+                "properties": {"value": {"$ref": "#/$defs/int32_value"}}
+            },
+            "then": true,
+            "else": false
+        },
+        "apply_struct_value": {
+            "if": {
+                "properties": {"value": {"struct_value": true}}
+            },
+            "then": {
+                "properties": {"value": {"$ref": "#/$defs/struct_value"}}
             }
         },
         "import": {

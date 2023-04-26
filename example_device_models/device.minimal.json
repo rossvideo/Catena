@@ -15,7 +15,7 @@
                 }
             },
             "value": {
-                "float32_value": 0.1
+                "float32_value": 12.3
             },
             "constraint": {
                 "type": "FLOAT_RANGE",
@@ -52,31 +52,43 @@
         },
         "my_struct": {
             "basic_param_info": {
-                "oid": "my_struct",
-                "name": {
-                    "monoglot": "example of structured data"
-                },
-                "type": {
-                    "param_type": "STRUCT"
-                }
+             "oid": "my_struct",
+             "name": {
+              "monoglot": "example struct"
+             },
+             "type": {
+              "param_type": "STRUCT"
+             }
             },
             "value": {
                 "struct_value": {
-                   "field1": {
-                        "param": {
-                            "basic_param_info": {
-                                "oid": "field1",
-                                "name": "first field in struct",
-                                "type": {
-                                    "param_type": "FLOAT32"
-                                }
+                    "fields": {
+                        "int_field": {
+                            "value": {
+                                "int32_value": 1
                             }
-                        }
-                   }
+                        },
+                        "float_field": {
+                            "value": {
+                                "float32_value": 1
+                            }
+                        },
+                        "int_param": {
+                            "param": {
+                               "basic_param_info": {
+                                "name": {"monoglot": "sub param"},
+                                "oid": "int_param",
+                                "type": {"param_type": "INT32"}
+                               },
+                               "value": {
+                                "int32_value": 123
+                               }
+                            }
+                        }                       
+                    }
                 }
             }
         }
-
     }
 }
 

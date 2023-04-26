@@ -33,6 +33,7 @@
  #include <iostream>
  #include <iomanip>
  #include <stdexcept>
+ #include <utility>
 
  using Index = catena::Path::Index;
 
@@ -87,6 +88,21 @@
         std::cout << "setting values to something different\n";
         dm.setValue("/hello", 3.142f);
         dm.setValue(iparam, 2);
+
+        // add a struct param the hard way
+        catena::Param sparam{};
+        catena::BasicParamInfo info{};
+        *(info.mutable_name()->mutable_monoglot()) = "struct param";
+        *(info.mutable_oid()) = "sparam";
+        info.mutable_type()->set_param_type(catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT);
+        *(sparam.mutable_basic_param_info()) = info;
+
+        catena::Value fval;
+        fval.set_float32_value(1.23);
+        catena::Value struct_val;
+        (*(*struct_val.mutable_struct_value()->mutable_fields())["float_field"].mutable_value()) = fval;
+        (*sparam.mutable_value()) = struct_val;
+        dm.addParam("/sparam", std::move(sparam));
 
         // write out the updated device model
         std::cout << "Updated Device Model: " << dm << '\n';
