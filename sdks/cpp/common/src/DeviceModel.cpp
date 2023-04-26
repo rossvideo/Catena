@@ -46,36 +46,98 @@ const catena::Device& catena::DeviceModel<T>::device() const {
 
 template<enum Threading T>
 typename catena::DeviceModel<T>::CachedParam
-catena::DeviceModel<T>::getParam(const std::string& path) {
+catena::DeviceModel<T>::getParam(const std::string& jptr) {
   // simple implementation for now, only handles flat params
   LockGuard lock(mutex_);
-  catena::Path path_(path);
-  if (path_.size() != 1) {
-    std::stringstream why;
-    why << __PRETTY_FUNCTION__ << " implementation limit, can only handle"
-      "flat parameter structures at this time.";
-    throw std::runtime_error(why.str());
-  }
+  catena::Path path_(jptr);
 
   // get our oid and look for it in the array of params
   catena::Path::Segment segment = path_.pop_front();
 
   if (!std::holds_alternative<std::string>(segment)) {
-    std::stringstream why;
-    why << __PRETTY_FUNCTION__;
-    why << "expected oid, got an index";
-    throw std::runtime_error(why.str());
+    EXCEPTION(
+      "expected oid, got an index",
+      std::runtime_error
+    );
   }
   std::string oid(std::get<std::string>(segment));
 
   if (!device_.mutable_params()->contains(oid)){
-    std::stringstream why;
-    why << __PRETTY_FUNCTION__ << ", " << __FILE__ << ':' << __LINE__;
-    why << "param " << std::quoted(oid) << " not found";
-    throw std::runtime_error(why.str());
+    std::stringstream msg;
+    msg << "param " << std::quoted(oid) << " not found";
+    EXCEPTION(
+      (msg.str()),
+      std::runtime_error
+    );
   }
 
-  return CachedParam(device_.mutable_params()->at(oid));
+  catena::Param* ans = &device_.mutable_params()->at(oid);
+  while (path_.size()) {
+    ans = getSubparam(path_, *ans);
+  }
+
+  return CachedParam(*ans);
+}
+
+template<enum Threading T>
+catena::Param* catena::DeviceModel<T>::getSubparam(catena::Path& path, catena::Param& parent) {
+
+  // validate the param type
+  catena::ParamType_ParamTypes type = parent.basic_param_info().type().param_type();
+  switch (type){
+    case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT:
+      // this is ok
+    break;
+    case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT_ARRAY:
+      EXCEPTION(
+        "sub-param navigation for STRUCT_ARRAY not implemented, sorry",
+        catena::not_implemented
+      );
+    break;
+    default:
+      std::stringstream err;
+      err << "cannot sub-param param of type: " << type;
+      EXCEPTION(
+        (err.str()),
+        std::invalid_argument
+      );
+
+  }
+
+  // validate sub-param exists
+
+  // first - is there a value field? It's optional, after all.
+  if (!parent.has_value()) {
+    EXCEPTION(
+      "value field is missing",
+      std::runtime_error
+    );
+  }
+
+  // second, is there a struct-value field?
+  if (!parent.value().has_struct_value()) {
+    EXCEPTION(
+      "struct_value field is missing",
+      std::runtime_error
+    );
+  }
+
+  // third, is our oid a string?
+  auto seg = path.pop_front();
+  if (!std::holds_alternative<std::string>(seg)) {
+    EXCEPTION("expected oid, got index", std::invalid_argument);
+  }
+
+  // fourth, is the oid in the value.struct_value.fields object?
+  std::string oid(std::get<std::string>(seg));
+  if(!parent.value().struct_value().fields().contains(oid)) {
+    std::stringstream err;
+    err << oid << " not found";
+    EXCEPTION((err.str()), std::invalid_argument);
+  }
+  
+  return parent.mutable_value()->mutable_struct_value()->mutable_fields()->at(oid).mutable_param();
+
 }
 
 template<enum Threading T>

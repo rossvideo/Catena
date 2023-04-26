@@ -320,6 +320,19 @@ public:
 private:
    catena::Device device_; /**< the protobuf device model */
    mutable Mutex mutex_; /**< used to mediate access */
+
+
+   /**
+     * @brief Get the parent's sub-param at front of path
+     * 
+     * @param path [in|out] path to the sub-param, the first segment will be consumed.
+     * @param parent param
+     * @return child param indicated by front of path
+     * @throws catena::not_implemented if parent type is STRUCT_ARRAY
+     * @throws std::invalid_argument if parent is not a sub-param supporting param type
+     * 
+     */
+    catena::Param* getSubparam(catena::Path& path, catena::Param& parent);
 };
 
 

@@ -74,15 +74,16 @@
         }
 
 
-        // get some values from the device model
+        // print out some values from the device model
         float fv{};
-        int iv{};
+        int iv{}, siv{};
         auto fparam = dm.getValue(fv, "/hello");
         auto iparam = dm.getValue(iv, "/world");
+        auto my_struct = dm.getValue(siv,"/my_struct/int_param");
         std::cout << "param oid: '" << dm.getOid(fparam) 
             << "' has value: " << fv
-            << "\nparam oid: '" << dm.getOid(iparam)
-            << "' has value: " << iv << '\n';
+            << "\nparam oid: '" << dm.getOid(iparam) << "' has value: " << iv << '\n'
+            << "struct param has value: " << siv << '\n';
 
         // set a value in the device model
         std::cout << "setting values to something different\n";
