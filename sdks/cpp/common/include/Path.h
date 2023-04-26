@@ -103,7 +103,7 @@ public:
      *
      * @return number of segments
      */
-    inline Index size() { return segments_.size(); }
+    inline Index size() const { return segments_.size(); }
 
     /**
      * @brief take the front off the path and return it.
