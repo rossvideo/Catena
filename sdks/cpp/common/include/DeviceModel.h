@@ -25,6 +25,7 @@
  #include <param.pb.h>
 
  #include <Fake.h>
+ #include <Path.h>
  #include <Threading.h>
 
  #include <iostream>
@@ -306,6 +307,15 @@ public:
    template<typename V>
    void getValue(V& ans, const CachedParam& param);
 
+   /**
+    * @brief moves the param into the device model
+    * 
+    * @param jptr - json pointer to the place to insert the param, must be escaped.
+    * @param param the param to be added to the device model
+    * @returns cached version of param which client can use 
+    * for ongoing access to the param in a threadsafe way
+    */
+   CachedParam addParam(const std::string& jptr, catena::Param&& param);
 
 private:
    catena::Device device_; /**< the protobuf device model */

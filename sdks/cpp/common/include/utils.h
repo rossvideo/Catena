@@ -74,6 +74,9 @@ void subs(std::string& str, const std::string& seq, const std::string& rep);
  * parts of the catena feature set.
  * 
  */
-class not_implemented : public std::exception {};
+class not_implemented : public std::runtime_error {
+public:
+    not_implemented(const std::string& why) : std::runtime_error(why) {}
+};
 
 }  // namespace catena

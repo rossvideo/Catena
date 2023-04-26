@@ -214,16 +214,42 @@ std::ostream& operator<<(std::ostream& os, const catena::DeviceModel<T>& dm) {
   return os;
 }
 
-/**
- * @brief convenience wrapper around catena::Param
- * 
- * @param param from which to retreive the oid
- * @return param's object id
- */
+
 template<enum Threading T>
 const std::string& catena::DeviceModel<T>::getOid(const CachedParam& param) {
   LockGuard lock(mutex_);
   return param.theItem_.basic_param_info().oid();
+}
+
+template<enum Threading T>
+typename catena::DeviceModel<T>::CachedParam
+catena::DeviceModel<T>::addParam(const std::string& jptr, catena::Param&& param){
+  catena::Path path(jptr);
+  LockGuard lock(mutex_);
+  if (path.size() > 1) {
+    std::stringstream why;
+    why << __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__ << '\n';
+    why << "implementation only supports adding params to top level";
+    throw catena::not_implemented(why.str());
+  }
+  if (path.size() == 0) {
+    std::stringstream why;
+    why << __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__ << '\n';
+    why << "empty path is invalid in this context";
+    throw std::invalid_argument(why.str());
+  }
+  catena::Param p(param);
+  auto seg = path.pop_front();
+  if (!std::holds_alternative<std::string>(seg)){
+    std::stringstream why;
+    why << __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__ << '\n';
+    why << "invalid path: " << std::quoted(jptr);
+    throw std::invalid_argument(why.str());
+  }
+  std::string oid(std::get<std::string>(seg));
+  
+  (*device_.mutable_params())[oid] = p;
+  return CachedParam(device_.mutable_params()->at(oid));
 }
 
 // instantiate the 2 versions of DeviceModel, and its streaming operator

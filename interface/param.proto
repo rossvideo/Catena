@@ -144,23 +144,26 @@ message StringList {
   repeated string strings = 1;
 }
 
+// the inner part of struct values can be either
+// the values of the struct members, or a definition of 
+// the struct members via a param descriptor
+//
+message StructField {
+  oneof kind {
+    Value value = 1;
+    Param param = 2;
+  }
+}
 // Structured object comprising named fields that map to dynamically typed
 // Values
 //
 message StructValue {
-	string suboid = 1;
-	oneof kind {
-		Value value = 2;
-		Param param = 3;
-	}
+	map<string, StructField> fields = 1;
 } 
 
-message StructElement {
-	repeated StructValue struct_values = 1;
-}
 
 message StructList {
-  repeated StructElement struct_elements = 1;
+  repeated StructValue struct_values = 1;
 }
 
 // Represents a dynamically typed value with straightforward mapping to
@@ -181,7 +184,7 @@ message Value {
 
     string string_value = 5;
 
-    StructElement struct_value = 6;
+    StructValue struct_value = 6;
 
     Int32List int32_array_values = 7;
 

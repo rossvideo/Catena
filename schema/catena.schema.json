@@ -61,7 +61,8 @@
             "additionalProperties": false,
             "allOf": [
                 {"$ref": "#/$defs/apply_float32"},
-                {"$ref": "#/$defs/apply_int32"}
+                {"$ref": "#/$defs/apply_int32"},
+                {"$ref": "#/$defs/apply_struct"}
             ]
         },
         "value": {
@@ -80,7 +81,8 @@
             "type": "object",
             "properties": {
                 "float32_value": {"$ref": "#/$defs/float32"}
-            }
+            },
+            "required": ["float32_value"]
         },
         "float32_constraint": {
             "title": "Float32 Constraint",
@@ -137,7 +139,9 @@
             "type": "object",
             "properties": {
                 "int32_value": {"$ref": "#/$defs/int32"}
-            }
+            },
+            "required": ["int32_value"],
+            "additionalProperties": false
         },
         "int32_constraint": {
             "title": "INT32 Constraint",
@@ -254,7 +258,7 @@
         },
         "apply_int32": {
             "title": "INT32 specialism",
-            "description": "Applies INT32 values & constraints, disables properties that don't work with FLOAT32",
+            "description": "Applies INT32 values & constraints, disables properties that don't work with this type",
             "if": {
                 "properties": {
                     "basic_param_info": {
@@ -275,9 +279,102 @@
                 }
             }
         },
+        "struct_value": {
+            "title": "STRUCT",
+            "description": "Wrapper round the struct_fields schema.",
+            "type": "object",
+            "$comment": "pattern properties must be same regex as for oid",
+            "properties":{
+                "struct_value": {
+                    "type": "object",
+                    "properties":{
+                        "fields": {"$ref": "#/$defs/struct_fields"}
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "struct_fields": {
+            "title": "struct definition",
+            "description": "holds struct data fields, or their descriptors, or a mix",
+            "type": "object",
+            "patternProperties": {
+                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "oneOf": [                                       
+                                        {"$ref": "#/$defs/float32_value"},
+                                        {"$ref": "#/$defs/int32_value"}                                       
+                                    ]
+                                }
+                            },
+                            "additionalProperties": false,
+                            "required": ["value"]                         
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "param": {"$ref": "#/$defs/param"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["param"]
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false
+        },
+        "apply_struct": {
+            "title": "STRUCT specialism",
+            "description": "Applies STRUCT values & constraints, disables properties that don't work with this specialism",
+            "if": {
+                "properties": {
+                    "basic_param_info": {
+                        "properties":{
+                            "type": {
+                                "properties":{
+                                    "param_type": {"const": "STRUCT"} 
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {"$ref": "#/$defs/struct_value"}
+                }
+            }
+        },
+        "apply_float32_value": {
+            "if": {
+                "properties": {"value": {"$ref": "#/$defs/float32_value"}}
+            },
+            "then": true,
+            "else": false
+        },
+        "apply_int32_value": {
+            "if": {
+                "properties": {"value": {"$ref": "#/$defs/int32_value"}}
+            },
+            "then": true,
+            "else": false
+        },
+        "apply_struct_value": {
+            "if": {
+                "properties": {"value": {"struct_value": true}}
+            },
+            "then": {
+                "properties": {"value": {"$ref": "#/$defs/struct_value"}}
+            }
+        },
         "import": {
             "title": "Import directive",
-            "description": "NOT part of the Catena schema, but provides the ability to build device models from multiple files.",
+            "description": "Provides the ability to build device models from multiple files.",
             "type": "object",
             "properties": {
                 "$import": {"$ref": "#/$defs/oid"}
