@@ -5,7 +5,7 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0 
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -23,10 +23,7 @@ namespace catena {
 
 /**
  * @brief indicates threading model
- * 
+ *
  */
-enum class Threading {
-    kSingleThreaded,
-    kMultiThreaded
-};
-}
+enum class Threading { kSingleThreaded, kMultiThreaded };
+} // namespace catena

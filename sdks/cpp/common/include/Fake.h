@@ -7,7 +7,7 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0 
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -21,23 +21,20 @@
 // limitations under the License.
 //
 
-
-namespace catena{
+namespace catena {
 
 /**
  * @brief a do-nothing Mutex that only exists to get optimized out.
- * 
+ *
  */
-struct FakeMutex {
-};
+struct FakeMutex {};
 
 /**
  * @brief a do-nothing lock guard that only exists to get optimized out.
- * 
+ *
  */
-template <typename MTX>
-class FakeLockGuard {
+template <typename MTX> class FakeLockGuard {
 public:
-    explicit FakeLockGuard(MTX& mtx) {}
+  explicit FakeLockGuard(MTX &mtx) {}
 };
 } // namespace catena
