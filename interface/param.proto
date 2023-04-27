@@ -78,7 +78,14 @@ message DataPayload {
   }
 }
 
-// Param Descriptor
+message ParamDescriptor {
+  oneof kind {
+    Param param = 1;
+    ImportDirective import = 2;
+  }
+}
+
+// Param
 //
 message Param {
 
@@ -122,10 +129,6 @@ message Param {
   string access_scope = 9;
 
   map <string, string> client_hints = 10; // additional properties to assist client
-
-  // when present, indicates that the other fields in the Param message
-  // should be imported from an external file or url
-  ImportDirective import = 11;
 }
 
 enum UndefinedValue {
@@ -152,6 +155,7 @@ message StructField {
   oneof kind {
     Value value = 1;
     Param param = 2;
+    ImportDirective import = 3;
   }
 }
 // Structured object comprising named fields that map to dynamically typed

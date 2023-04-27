@@ -26,14 +26,47 @@
 #include <stdexcept>
 
 using catena::Threading;
+using google::protobuf::Map;
+
 const auto kMulti = catena::Threading::kMultiThreaded;
 const auto kSingle = catena::Threading::kSingleThreaded;
 
 template <enum Threading T>
 catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
   auto jpopts = google::protobuf::util::JsonParseOptions{};
-  std::string file = catena::readFile(filename);
-  google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
+  // read in the top level file
+  {
+    std::string file = catena::readFile(filename);
+    google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
+  }
+
+  // read in imported params
+
+  // the top-level ones will come from path/to/device/params
+  std::filesystem::path current_folder(filename);
+  current_folder = current_folder.remove_filename() /= "params";
+
+  for (auto it = device_.mutable_params()->begin();
+       it != device_.mutable_params()->end(); ++it) {
+    std::cout << it->first << '\n';
+    catena::ParamDescriptor& pdesc = device_.mutable_params()->at(it->first);
+    if (pdesc.has_import()) {
+      // create path to file to import
+      std::filesystem::path to_import(current_folder);
+      std::stringstream fn;
+      fn << "param." << it->first << ".json";
+      to_import /= fn.str();
+      std::cout << "importing: " << to_import << '\n';
+
+      // import the file
+      std::string imported = readFile(to_import);
+
+      // clear the "import" typing of the current param
+      // and overwrite with what we just imported
+      pdesc.clear_import(); 
+      google::protobuf::util::JsonStringToMessage(ans, pdesc.mutable_param(), jpopts);       
+    }
+  }
 }
 
 template <enum Threading T>
@@ -63,7 +96,7 @@ catena::DeviceModel<T>::getParam(const std::string &jptr) {
     EXCEPTION((msg.str()), std::runtime_error);
   }
 
-  catena::Param *ans = &device_.mutable_params()->at(oid);
+  catena::Param *ans = device_.mutable_params()->at(oid).mutable_param();
   while (path_.size()) {
     ans = getSubparam(path_, *ans);
   }
@@ -297,8 +330,8 @@ catena::DeviceModel<T>::addParam(const std::string &jptr,
   }
   std::string oid(std::get<std::string>(seg));
 
-  (*device_.mutable_params())[oid] = p;
-  return CachedParam(device_.mutable_params()->at(oid));
+  *(*device_.mutable_params())[oid].mutable_param() = p;
+  return CachedParam(*device_.mutable_params()->at(oid).mutable_param());
 }
 
 // instantiate the 2 versions of DeviceModel, and its streaming operator

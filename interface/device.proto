@@ -54,7 +54,7 @@ message Device {
 
   // the device's parameters
   //
-  map <string, Param> params = 6;
+  map <string, ParamDescriptor> params = 6;
 
   // the device's default editor UI definition and access scope definitions
   //
