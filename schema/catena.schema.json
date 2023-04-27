@@ -31,7 +31,26 @@
             "type": "object",
             "$comment": "patternProperties regex must be same as that defined in oid schema",
             "patternProperties": {
-                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {"$ref": "#/$defs/param"}
+                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "import": {"$ref": "#/$defs/import_directive"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["import"]                         
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "param": {"$ref": "#/$defs/param"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["param"]
+                        }
+                    ]
+                }
             },
             "additionalProperties": false
         }
@@ -39,15 +58,6 @@
     "required": ["slot"],
     "additionalProperties": false,
     "$defs": {
-        "param_descriptors": {
-            "type": "array",
-            "items": {
-                "oneOf": [
-                    {"$ref": "#/$defs/import"},
-                    {"$ref": "#/$defs/param"}
-                ]
-            }
-        },
         "param": {
             "title": "Parameter Descriptor",
             "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
@@ -322,6 +332,14 @@
                             },
                             "additionalProperties": false,
                             "required": ["param"]
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "import": {"$ref": "#/$defs/import_directive"}
+                            },
+                            "additionalProperties": false,
+                            "required": ["import"]                         
                         }
                     ]
                 }
@@ -372,14 +390,13 @@
                 "properties": {"value": {"$ref": "#/$defs/struct_value"}}
             }
         },
-        "import": {
+        "import_directive": {
             "title": "Import directive",
             "description": "Provides the ability to build device models from multiple files.",
             "type": "object",
             "properties": {
-                "$import": {"$ref": "#/$defs/oid"}
+                "url": {"type": "string"}
             },
-            "required": ["$import"],
             "additionalProperties": false
         },
         "slot": {
