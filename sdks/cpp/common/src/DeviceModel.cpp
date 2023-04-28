@@ -41,8 +41,8 @@ catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
   }
 
   // read in imported params
-
   // the top-level ones will come from path/to/device/params
+  //
   std::filesystem::path current_folder(filename);
   current_folder = current_folder.remove_filename() /= "params";
 
@@ -51,20 +51,27 @@ catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
     std::cout << it->first << '\n';
     catena::ParamDescriptor& pdesc = device_.mutable_params()->at(it->first);
     if (pdesc.has_import()) {
-      // create path to file to import
-      std::filesystem::path to_import(current_folder);
-      std::stringstream fn;
-      fn << "param." << it->first << ".json";
-      to_import /= fn.str();
-      std::cout << "importing: " << to_import << '\n';
+      std::string imported;
+      if (pdesc.import().url().compare("") != 0) {
+        /** @todo implement url imports*/ 
+        EXCEPTION ("Cannot (yet) import from urls, sorry.", catena::not_implemented);
+      } else  {
+        // there's no url specified, so do a local import using the oid
+        // to create the filename
+        std::filesystem::path to_import(current_folder);
+        std::stringstream fn;
+        fn << "param." << it->first << ".json";
+        to_import /= fn.str();
+        std::cout << "importing: " << to_import << '\n';
 
-      // import the file
-      std::string imported = readFile(to_import);
+        // import the file
+        imported = readFile(to_import);
+      }
 
       // clear the "import" typing of the current param
       // and overwrite with what we just imported
       pdesc.clear_import(); 
-      google::protobuf::util::JsonStringToMessage(ans, pdesc.mutable_param(), jpopts);       
+      google::protobuf::util::JsonStringToMessage(imported, pdesc.mutable_param(), jpopts);       
     }
   }
 }
@@ -98,14 +105,14 @@ catena::DeviceModel<T>::getParam(const std::string &jptr) {
 
   catena::Param *ans = device_.mutable_params()->at(oid).mutable_param();
   while (path_.size()) {
-    ans = getSubparam(path_, *ans);
+    ans = getSubparam_(path_, *ans);
   }
 
   return CachedParam(*ans);
 }
 
 template <enum Threading T>
-catena::Param *catena::DeviceModel<T>::getSubparam(catena::Path &path,
+catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
                                                    catena::Param &parent) {
 
   // validate the param type
@@ -116,6 +123,7 @@ catena::Param *catena::DeviceModel<T>::getSubparam(catena::Path &path,
     // this is ok
     break;
   case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT_ARRAY:
+    /** @todo implement sub-param navigation for STRUCT_ARRAY */
     EXCEPTION("sub-param navigation for STRUCT_ARRAY not implemented, sorry",
               catena::not_implemented);
     break;
@@ -125,19 +133,19 @@ catena::Param *catena::DeviceModel<T>::getSubparam(catena::Path &path,
     EXCEPTION((err.str()), std::invalid_argument);
   }
 
-  // validate sub-param exists
+  // validate path argument and the parameter
 
-  // first - is there a value field? It's optional, after all.
+  // is there a value field? It's optional, after all.
   if (!parent.has_value()) {
     EXCEPTION("value field is missing", std::runtime_error);
   }
 
-  // second, is there a struct-value field?
+  // is there a struct-value field?
   if (!parent.value().has_struct_value()) {
-    EXCEPTION("struct_value field is missing", std::runtime_error);
+    EXCEPTION("struct_value field is missing", catena::schema_error);
   }
 
-  // third, is our oid a string?
+  // is our oid a string?
   auto seg = path.pop_front();
   if (!std::holds_alternative<std::string>(seg)) {
     EXCEPTION("expected oid, got index", std::invalid_argument);
@@ -148,7 +156,7 @@ catena::Param *catena::DeviceModel<T>::getSubparam(catena::Path &path,
   if (!parent.value().struct_value().fields().contains(oid)) {
     std::stringstream err;
     err << oid << " not found";
-    EXCEPTION((err.str()), std::invalid_argument);
+    EXCEPTION((err.str()), catena::schema_error);
   }
 
   return parent.mutable_value()
@@ -309,6 +317,7 @@ catena::DeviceModel<T>::addParam(const std::string &jptr,
   catena::Path path(jptr);
   LockGuard lock(mutex_);
   if (path.size() > 1) {
+    /** @todo implement ability to add parameters below /params */
     std::stringstream why;
     why << __FILE__ << ":" << __LINE__ << "\n" << __PRETTY_FUNCTION__ << '\n';
     why << "implementation only supports adding params to top level";
