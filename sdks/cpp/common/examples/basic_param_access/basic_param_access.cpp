@@ -23,7 +23,7 @@
  * false for booleans, ...) will be stripped from the model that's output.
  * 
  * @author John R. Naylor (john.naylor@rossvideo.com)
- * @file read_model_from_file.cpp
+ * @file basic_param_access.cpp
  * @copyright Copyright © 2023, Ross Video Ltd
  */
 
@@ -53,27 +53,7 @@
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-        // test the path class a bit
-        
-        catena::Path path("/one/-/two/3");
-        bool going = true;
-        while (going) {
-            auto s1 = path.pop_front();
-
-            if (std::holds_alternative<std::string>(s1)) {
-                std::string oid(std::get<std::string>(s1));
-                if (oid.compare("") == 0) {
-                    going = false;
-                } else {
-                    std::cout << std::quoted(oid) << '\n';
-                }
-            }
-            if (std::holds_alternative<Index>(s1)) {
-                std::cout << std::get<Index>(s1) << '\n';
-            }
-        }
-
-
+    
         // print out some values from the device model
         float fv{};
         int iv{}, siv{};

@@ -21,5 +21,6 @@ cmake_minimum_required(VERSION 3.20)
 project(CATENA_EXAMPLES C CXX)
 
 add_subdirectory("serdes")
+add_subdirectory("basic_param_access")
 
 
