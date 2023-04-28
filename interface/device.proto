@@ -5,7 +5,6 @@ package catena;
 import "constraint.proto";
 import "param.proto";
 import "menus.proto";
-import "command.proto";
 import "language.proto";
 import "eo.proto";
 
@@ -62,7 +61,7 @@ message Device {
 
   // the device's available commands
   //
-  CommandDescriptors commands = 8;
+  map <string, ParamDescriptor> commands = 8;
 
   // the devices language packs
   //

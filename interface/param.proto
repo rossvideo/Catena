@@ -81,7 +81,7 @@ message DataPayload {
 message ParamDescriptor {
   oneof kind {
     Param param = 1;
-    ImportDirective import = 2;
+    Import import = 2;
   }
 }
 
@@ -128,7 +128,17 @@ message Param {
   // if not a child parameter, the access scope is the default for the device.
   string access_scope = 9;
 
-  map <string, string> client_hints = 10; // additional properties to assist client
+  // additional properties to assist client
+  map <string, string> client_hints = 10; 
+
+  // if this is an imported sub-device, it can have a set of commands too
+  //
+  map <string, ParamDescriptor> commands = 11;
+
+  // meaningful when this message is used as a command descriptor
+  // true if the command provides a response when executed
+  //
+  bool response = 12;
 }
 
 enum UndefinedValue {
@@ -155,7 +165,7 @@ message StructField {
   oneof kind {
     Value value = 1;
     Param param = 2;
-    ImportDirective import = 3;
+    Import import = 3;
   }
 }
 // Structured object comprising named fields that map to dynamically typed
@@ -203,12 +213,9 @@ message Value {
   }
 }
 
-
-
-message ImportDirective {
+message Import {
   string url = 1;
-  string oid = 2;
-  repeated string excludes = 3;
+  repeated string excluding = 2;
 }
 
 message GetParamPayload {
@@ -255,4 +262,36 @@ message UpdateSubscriptionsPayload {
 	uint32 slot = 1; // uniquely identifies the device at node scope.
 	repeated string oids_added = 2;
 	repeated string oids_removed = 3;
+}
+
+// Defines a command for a device. 
+// Commands provide a way to use device connection to execute commands from other devices. 
+//
+message Command {
+  Param definition = 1; // provides command's input values
+  bool responds = 2; // true when the device will respond to the command, false otherwise.
+}
+
+// When streamed, only the value field will be used after the first message
+message ExecuteCommandPayload {
+  uint32 slot = 1; // slot id of the device
+  string oid = 2; // the object id of the command to execute relative to device.commands
+  Value value = 3; // the command's parameter value, if any
+  bool respond = 5; // set false to suppress responses from device
+}
+
+message Exception {
+  string type = 1;
+  PolyglotText error_message = 2;
+  string details = 3;
+}
+
+// When streamed, only the response field will be used after the first message
+message CommandResponse {
+  int32 return_code = 1;  // 0 indicates success, non-zero a problem
+  oneof kind {
+    google.protobuf.Empty no_response = 2;
+    Value response = 3;
+    Exception exception = 4;
+  }
 }
