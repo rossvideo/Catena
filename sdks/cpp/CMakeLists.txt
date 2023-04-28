@@ -70,7 +70,6 @@ set(proto_stems
   "language"
   "param"
   "eo"
-  "command"
   "constraint"
   "device"
   "menus"

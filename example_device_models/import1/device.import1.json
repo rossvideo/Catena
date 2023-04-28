@@ -30,8 +30,13 @@
         "world": {
             "import": {}
         },
-        "my_struct": {
-            "import": {}
+        "tape_transport": {
+            "import": {
+                "excluding": [
+                    "/commands/eject",
+                    "/commands/load"
+                ]
+            }
         }
     }
 }

@@ -78,6 +78,16 @@ public:
   not_implemented(const std::string &why) : std::runtime_error(why) {}
 };
 
+/**
+ * @brief exception to throw when a part of the model doesn't comply with
+ * the schema
+ *
+ */
+class schema_error : public std::runtime_error {
+public:
+  schema_error(const std::string &why) : std::runtime_error(why) {}
+};
+
 #define EXCEPTION(msg, except)                                                 \
   do {                                                                         \
     std::stringstream why;                                                     \

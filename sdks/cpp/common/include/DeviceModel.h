@@ -321,10 +321,11 @@ private:
    * @return child param indicated by front of path
    * @throws catena::not_implemented if parent type is STRUCT_ARRAY
    * @throws std::invalid_argument if parent is not a sub-param supporting param
+   * @throws std::invalid_argument if param doesn't have a values object
    * type
    *
    */
-  catena::Param *getSubparam(catena::Path &path, catena::Param &parent);
+  catena::Param *getSubparam_(catena::Path &path, catena::Param &parent);
 };
 
 } // namespace catena
