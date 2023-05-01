@@ -163,10 +163,88 @@ public:
   };
 
   /**
-   * @brief a Cached catena::Param
+   * @brief wrapper around a catena::Param stored in the device model
+   *
+   * Provides convenient accessor methods that are made threadsafe using
+   * the DeviceModel's mutex.
    *
    */
-  using CachedParam = CachedItem<catena::Param>;
+  class Param {
+    friend DeviceModel; /**< access to private state is useful */
+
+  public:
+    /**
+     * @brief Construct a new Param object
+     *
+     * @param dm the parent device model.
+     * @param p the parameter owned by the device model.
+     */
+    Param(DeviceModel &dm, catena::Param &p) noexcept
+        : deviceModel_{dm}, param_{p} {}
+
+    /**
+     * @brief Param has no default constructor.
+     *
+     */
+    Param() = delete;
+
+    /**
+     * @brief Param doesn't have copy semantics.
+     *
+     * @param other
+     */
+    Param(const Param &other) = delete;
+
+    /**
+     * @brief Param doesn't have copy semantics.
+     *
+     * @param rhs
+     */
+    Param &operator=(const Param &rhs) = delete;
+
+    /**
+     * @brief Param has move semantics
+     *
+     * @param other
+     */
+    inline Param(Param &&other) noexcept = default;
+
+    /**
+     * @brief Param has move semantics
+     *
+     * @param rhs, right hand side of the equals sign
+     */
+    inline Param &operator=(Param &&rhs) noexcept = default;
+
+    inline ~Param() { // nothing to do
+    }
+
+    /**
+     * @brief Get the value stored by the catena::Param
+     *
+     * Typesafe because it asserts the DeviceModel's mutex.
+     *
+     * @tparam V value type of param
+     * @return V value of parameter
+     */
+    template <typename V> V getValue();
+
+    /**
+     * @brief Set the value of the stored catena::Param.
+     *
+     * Typesafe because it asserts the DeviceModel's mutex.
+     *
+     * @tparam V type of the value stored by the param.
+     * @param v value to set.
+     */
+    template <typename V> void setValue(V v);
+
+  private:
+    DeviceModel& deviceModel_;
+    catena::Param& param_;
+  };
+
+  friend Param; /**< used for accessing mutex_ attribute.*/
 
   /**
    * @brief default constructor, creates an empty model.
@@ -242,9 +320,9 @@ public:
    * to the requested fully qualified oid has not been implemented.
    * @throws std::runtime_error if the requested oid is not present in the
    * device model
-   * @return catena::Param&
+   * @return DeviceModel Param
    */
-  CachedParam getParam(const std::string &path);
+  Param getParam(const std::string &path);
 
   /**
    * @brief Get the value of the parameter indicated by path
@@ -256,7 +334,7 @@ public:
    * expensive and the client is likely to want to access the param
    * again after getting its value
    */
-  template <typename V> CachedParam getValue(V &ans, const std::string &path);
+  template <typename V> void getValue(V &ans, const std::string &path);
 
   /**
    * @brief Set value of param identified by path
@@ -268,7 +346,7 @@ public:
    * expensive and the client is likely to want to access the param
    * again after setting its value
    */
-  template <typename V> CachedParam setValue(const std::string &path, V v);
+  template <typename V> void setValue(const std::string &path, V v);
 
   /**
    * @brief Get the param's oid
@@ -276,7 +354,7 @@ public:
    * @param param from which to retrieve the oid
    * @return const std::string& oid
    */
-  const std::string &getOid(const CachedParam &param);
+  const std::string &getOid(const Param &param);
 
   /**
    * @brief Set the param's value
@@ -286,7 +364,7 @@ public:
    * @param v value to set, passed by value for fundamental types, reference for
    * others
    */
-  template <typename V> void setValue(CachedParam &param, V v);
+  template <typename V> void setValue(Param &param, V v);
 
   /**
    * @brief get the param's value
@@ -295,7 +373,7 @@ public:
    * @param param
    * @return value of param
    */
-  template <typename V> void getValue(V &ans, const CachedParam &param);
+  template <typename V> void getValue(V &ans, const Param &param);
 
   /**
    * @brief moves the param into the device model
@@ -306,7 +384,7 @@ public:
    * @returns cached version of param which client can use
    * for ongoing access to the param in a threadsafe way
    */
-  CachedParam addParam(const std::string &jptr, catena::Param &&param);
+  Param addParam(const std::string &jptr, catena::Param &&param);
 
 private:
   catena::Device device_; /**< the protobuf device model */
