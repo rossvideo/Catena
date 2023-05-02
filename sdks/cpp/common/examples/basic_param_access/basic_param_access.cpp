@@ -52,8 +52,7 @@ int main(int argc, char **argv) {
     // write the device model to stdout
     std::cout << "Read Device Model: " << dm << '\n';
 
-    // cache a param and get values using methods that, sadly, don't
-    // have type inference
+    // cache a param and get its value
     Param helloParam = dm.param("/hello");
     std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 
