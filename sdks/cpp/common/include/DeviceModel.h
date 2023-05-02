@@ -31,6 +31,7 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <functional>
 
 namespace catena {
 
@@ -45,8 +46,9 @@ namespace catena {
  * When threadsafe mode is selected, this is of type
  * std::lock_guard<std::recursive_mutex>.
  * When false, it is of type catena::FakeLockGuard<FakeMutex> which is an empty,
- * do-nothing struct that should be completely optimized out of the
- * implementation. Design motivation - small, single threaded devices shouldn't
+ * do-nothing struct that is completely optimized out of the
+ * implementation by asserting the -O1 (or higher) compiler option. 
+ * Design motivation - small, single threaded devices shouldn't
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
@@ -82,91 +84,94 @@ public:
    */
   using PDesc = google::protobuf::RepeatedPtrField<catena::Param>;
 
-  /**
-   * @brief Provides a way of sharing the device model's internal state
-   * with client programs without letting them directly access it.
-   *
-   * Design Motivation - it can be expensive to retreive items from the
-   * data model. So, once acquired it's nice for a client program to
-   * hold onto them yet still only use the device model interface to
-   * manipulate the state. N.B. the device model interface provides thread
-   * safety by locking every access to its state. Providing direct access
-   * of state items to clients would put the onus of guaranteeing thread
-   * safety on the client which isn't a great idea.
-   *
-   * This is achieved by CachedItem holding a private reference to the item
-   * of state that only DeviceModel can access by dint of its friendship with
-   * this class template.
-   *
-   * @tparam T the type of the cached object
-   */
-  template <typename I> class CachedItem {
-  public:
-    /**
-     * @brief provide DeviceModel access to the private attribute.
-     *
-     */
-    friend DeviceModel<Threading::kSingleThreaded>;
+  // /**
+  //  * @brief Provides a way of sharing the device model's internal state
+  //  * with client programs without letting them directly access it.
+  //  *
+  //  * Design Motivation - it can be expensive to retreive items from the
+  //  * data model. So, once acquired it's nice for a client program to
+  //  * hold onto them yet still only use the device model interface to
+  //  * manipulate the state. N.B. the device model interface provides thread
+  //  * safety by locking every access to its state. Providing direct access
+  //  * of state items to clients would put the onus of guaranteeing thread
+  //  * safety on the client which isn't a great idea.
+  //  *
+  //  * This is achieved by CachedItem holding a private reference to the item
+  //  * of state that only DeviceModel can access by dint of its friendship with
+  //  * this class template.
+  //  *
+  //  * @tparam T the type of the cached object
+  //  */
+  // template <typename I> class CachedItem {
+  // public:
+  //   /**
+  //    * @brief provide DeviceModel access to the private attribute.
+  //    *
+  //    */
+  //   friend DeviceModel<Threading::kSingleThreaded>;
 
-    /**
-     * @brief provide DeviceModel access to the private attribute.
-     *
-     */
-    friend DeviceModel<Threading::kMultiThreaded>;
+  //   /**
+  //    * @brief provide DeviceModel access to the private attribute.
+  //    *
+  //    */
+  //   friend DeviceModel<Threading::kMultiThreaded>;
 
-    /**
-     * @brief CachedItems cannot be default constructed.
-     *
-     */
-    CachedItem() = delete;
+  //   /**
+  //    * @brief CachedItems cannot be default constructed.
+  //    *
+  //    */
+  //   CachedItem() = delete;
 
-    /**
-     * @brief CachedItems cannot be copy constructed.
-     *
-     */
-    CachedItem(const CachedItem &) = delete;
+  //   /**
+  //    * @brief CachedItems cannot be copy constructed.
+  //    *
+  //    */
+  //   CachedItem(const CachedItem &) = delete;
 
-    /**
-     * @brief CachedItems cannot be copy assigned.
-     *
-     * @return CachedItem&
-     */
-    CachedItem &operator=(const CachedItem &) = delete;
+  //   /**
+  //    * @brief CachedItems cannot be copy assigned.
+  //    *
+  //    * @return CachedItem&
+  //    */
+  //   CachedItem &operator=(const CachedItem &) = delete;
 
-    /**
-     * @brief CachedItems have move semantics.
-     *
-     * @param other
-     */
-    CachedItem(CachedItem &&other) : theItem_{other.theItem_} {}
+  //   /**
+  //    * @brief CachedItems have move semantics.
+  //    *
+  //    * @param other
+  //    */
+  //   CachedItem(CachedItem &&other) : theItem_{other.theItem_} {}
 
-    /**
-     * @brief CachedItems have move semantics.
-     *
-     * @param rhs right hand side of the = sign
-     * @return CachedItem&
-     */
-    CachedItem &operator=(CachedItem &&rhs) {
-      theItem_ = std::move(rhs.theItem_);
-      return *this;
-    };
+  //   /**
+  //    * @brief CachedItems have move semantics.
+  //    *
+  //    * @param rhs right hand side of the = sign
+  //    * @return CachedItem&
+  //    */
+  //   CachedItem &operator=(CachedItem &&rhs) {
+  //     theItem_ = std::move(rhs.theItem_);
+  //     return *this;
+  //   };
+  //
+  //   /**
+  //    * @brief Main constructor
+  //    *
+  //    * @param item reference to the item to cache
+  //    */
+  //   CachedItem(I &item) : theItem_{item} {};
 
-    /**
-     * @brief Main constructor
-     *
-     * @param item reference to the item to cache
-     */
-    CachedItem(I &item) : theItem_{item} {};
-
-  private:
-    I &theItem_;
-  };
+  // private:
+  //   I &theItem_;
+  // };
 
   /**
    * @brief wrapper around a catena::Param stored in the device model
    *
    * Provides convenient accessor methods that are made threadsafe using
    * the DeviceModel's mutex.
+   * 
+   * Enables client programs to "cache" a param without having to use a 
+   * method involving potentially expensive searches.
    *
    */
   class Param {
@@ -189,32 +194,32 @@ public:
     Param() = delete;
 
     /**
-     * @brief Param doesn't have copy semantics.
+     * @brief Param has copy semantics.
      *
      * @param other
      */
-    Param(const Param &other) = delete;
+    Param(const Param &other) = default;
 
     /**
-     * @brief Param doesn't have copy semantics.
+     * @brief Param has copy semantics.
      *
      * @param rhs
      */
-    Param &operator=(const Param &rhs) = delete;
+    Param &operator=(const Param &rhs) = default;
 
     /**
-     * @brief Param has move semantics
+     * @brief Param does not have move semantics.
      *
      * @param other
      */
-    inline Param(Param &&other) noexcept = default;
+    inline Param(Param &&other) noexcept = delete;
 
     /**
-     * @brief Param has move semantics
+     * @brief Param does not have move semantics
      *
      * @param rhs, right hand side of the equals sign
      */
-    inline Param &operator=(Param &&rhs) noexcept = default;
+    inline Param &operator=(Param &&rhs) noexcept = delete;
 
     inline ~Param() { // nothing to do
     }
@@ -240,8 +245,8 @@ public:
     template <typename V> void setValue(V v);
 
   private:
-    DeviceModel& deviceModel_;
-    catena::Param& param_;
+    std::reference_wrapper<DeviceModel> deviceModel_;
+    std::reference_wrapper<catena::Param> param_;
   };
 
   friend Param; /**< used for accessing mutex_ attribute.*/

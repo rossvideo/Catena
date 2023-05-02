@@ -273,7 +273,7 @@ template <enum Threading T>
 template <typename V>
 void catena::DeviceModel<T>::setValue(Param &cp, V v) {
   LockGuard lock(mutex_);
-  catena::Param &param{cp.param_};
+  catena::Param &param{cp.param_.get()};
   setValueImpl(param, v);
 }
 
@@ -305,7 +305,7 @@ std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
 template <enum Threading T>
 const std::string &catena::DeviceModel<T>::getOid(const Param &param) {
   LockGuard lock(mutex_);
-  return param.param_.basic_param_info().oid();
+  return param.param_.get().basic_param_info().oid();
 }
 
 template <enum Threading T>
@@ -355,13 +355,13 @@ template <enum Threading T>
 template <typename V>
 V catena::DeviceModel<T>::Param::getValue() {
   using W = typename std::remove_reference<V>::type;
-  DeviceModel::LockGuard(deviceModel_.mutex_);
+  DeviceModel::LockGuard(deviceModel_.get().mutex_);
   if constexpr (std::is_same<W, float>::value) {
-    return getValueImpl<float>(param_);
+    return getValueImpl<float>(param_.get());
   }
 
   if constexpr (std::is_same<W, int>::value) {
-    return getValueImpl<int>(param_);
+    return getValueImpl<int>(param_.get());
   }
 }
 
@@ -373,8 +373,8 @@ template int catena::DeviceModel<kSingle>::Param::getValue<int>();
 template <enum Threading T>
 template <typename V>
 void catena::DeviceModel<T>::Param::setValue(V v) {
-  LockGuard lock(deviceModel_.mutex_);
-  setValueImpl(param_, v);
+  LockGuard lock(deviceModel_.get().mutex_);
+  setValueImpl(param_.get(), v);
 }
 
 
