@@ -86,7 +86,7 @@ const catena::Device &catena::DeviceModel<T>::device() const {
 
 template <enum Threading T>
 typename catena::DeviceModel<T>::Param
-catena::DeviceModel<T>::getParam(const std::string &jptr) {
+catena::DeviceModel<T>::param(const std::string &jptr) {
   // simple implementation for now, only handles flat params
   LockGuard lock(mutex_);
   catena::Path path_(jptr);
@@ -172,7 +172,7 @@ template <enum Threading T>
 template <typename V>
 void catena::DeviceModel<T>::getValue(V &ans, const std::string &path) {
   LockGuard lock(mutex_);
-  catena::Param& param_ = getParam(path).param_;
+  catena::Param& param_ = param(path).param_;
 
   // N.B. function templates that are members of class templates
   // cannot be specialized, so we have to use conditional compilation based
@@ -282,8 +282,7 @@ template <typename V>
 void
 catena::DeviceModel<T>::setValue(const std::string &path, V v) {
   LockGuard lock(mutex_);
-  Param param = getParam(path);
-  setValue(param, v);
+  setValue(param(path), v);
 }
 
 // instantiate the versions of setValue that have been implemented

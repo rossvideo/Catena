@@ -48,8 +48,6 @@
 
     try {
         // read a json file into a DeviceModel object
-        // we don't need this one to be threadsafe, so use false
-        // as the template parameter
         DeviceModel dm(argv[1]);
 
         // write the device model to stdout
@@ -68,8 +66,7 @@
 
         // cache a param and get values using methods that, sadly, don't 
         // have type inference
-        Param helloParam = dm.getParam("/hello");
-        // Param copy = std::move(helloParam);
+        Param helloParam = dm.param("/hello");
         std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
         auto hpv = helloParam.getValue<float>();
 
@@ -78,7 +75,7 @@
         std::cout << "setting values to something different\n";
         helloParam.setValue(3.142f);    // example using cached param
         dm.setValue("/world", 2);       // example using path name
-        dm.getParam("/world").setValue(3); // example using chaining
+        dm.param("/world").setValue(3); // example using chaining
 
         std::cout << "new get value: " << helloParam.getValue<float>() << '\n';
 

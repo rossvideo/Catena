@@ -327,7 +327,7 @@ public:
    * device model
    * @return DeviceModel Param
    */
-  Param getParam(const std::string &path);
+  Param param(const std::string &path);
 
   /**
    * @brief Get the value of the parameter indicated by path
