@@ -36,6 +36,8 @@
  #include <utility>
 
  using Index = catena::Path::Index;
+ using DeviceModel = catena::DeviceModel<catena::Threading::kSingleThreaded>;
+ using Param = DeviceModel::Param;
 
  int main(int argc, char** argv) {
     // process command line
@@ -46,29 +48,36 @@
 
     try {
         // read a json file into a DeviceModel object
-        // we don't need this one to be threadsafe, so use false
-        // as the template parameter
-        catena::DeviceModel<catena::Threading::kSingleThreaded> dm(argv[1]);
+        DeviceModel dm(argv[1]);
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
-
     
-        // print out some values from the device model
+        // print out some values from the device model using methods that
+        // have type inference
         float fv{};
         int iv{}, siv{};
-        auto fparam = dm.getValue(fv, "/hello");
-        auto iparam = dm.getValue(iv, "/world");
-        auto my_struct = dm.getValue(siv,"/my_struct/int_param");
-        std::cout << "param oid: '" << dm.getOid(fparam) 
-            << "' has value: " << fv
-            << "\nparam oid: '" << dm.getOid(iparam) << "' has value: " << iv << '\n'
-            << "struct param has value: " << siv << '\n';
+        dm.getValue(fv, "/hello");
+        dm.getValue(iv, "/world");
+        dm.getValue(siv,"/my_struct/int_param");
+        std::cout << "/hello: " << fv
+            << "\n/world: " << iv
+            << "\nstruct param : " << siv << '\n';
 
-        // set a value in the device model
+        // cache a param and get values using methods that, sadly, don't 
+        // have type inference
+        Param helloParam = dm.param("/hello");
+        std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
+        auto hpv = helloParam.getValue<float>();
+
+        // set some values in the device model using a cached param
+        // and a path. N.B. types can be inferred
         std::cout << "setting values to something different\n";
-        dm.setValue("/hello", 3.142f);
-        dm.setValue(iparam, 2);
+        helloParam.setValue(3.142f);    // example using cached param
+        dm.setValue("/world", 2);       // example using path name
+        dm.param("/world").setValue(3); // example using chaining
+
+        std::cout << "new get value: " << helloParam.getValue<float>() << '\n';
 
         // add a struct param the hard way
         catena::Param sparam{};

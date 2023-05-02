@@ -49,13 +49,14 @@ catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
   for (auto it = device_.mutable_params()->begin();
        it != device_.mutable_params()->end(); ++it) {
     std::cout << it->first << '\n';
-    catena::ParamDescriptor& pdesc = device_.mutable_params()->at(it->first);
+    catena::ParamDescriptor &pdesc = device_.mutable_params()->at(it->first);
     if (pdesc.has_import()) {
       std::string imported;
       if (pdesc.import().url().compare("") != 0) {
-        /** @todo implement url imports*/ 
-        EXCEPTION ("Cannot (yet) import from urls, sorry.", catena::not_implemented);
-      } else  {
+        /** @todo implement url imports*/
+        EXCEPTION("Cannot (yet) import from urls, sorry.",
+                  catena::not_implemented);
+      } else {
         // there's no url specified, so do a local import using the oid
         // to create the filename
         std::filesystem::path to_import(current_folder);
@@ -70,8 +71,9 @@ catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
 
       // clear the "import" typing of the current param
       // and overwrite with what we just imported
-      pdesc.clear_import(); 
-      google::protobuf::util::JsonStringToMessage(imported, pdesc.mutable_param(), jpopts);       
+      pdesc.clear_import();
+      google::protobuf::util::JsonStringToMessage(
+          imported, pdesc.mutable_param(), jpopts);
     }
   }
 }
@@ -83,8 +85,8 @@ const catena::Device &catena::DeviceModel<T>::device() const {
 }
 
 template <enum Threading T>
-typename catena::DeviceModel<T>::CachedParam
-catena::DeviceModel<T>::getParam(const std::string &jptr) {
+typename catena::DeviceModel<T>::Param
+catena::DeviceModel<T>::param(const std::string &jptr) {
   // simple implementation for now, only handles flat params
   LockGuard lock(mutex_);
   catena::Path path_(jptr);
@@ -108,12 +110,12 @@ catena::DeviceModel<T>::getParam(const std::string &jptr) {
     ans = getSubparam_(path_, *ans);
   }
 
-  return CachedParam(*ans);
+  return Param(*this, *ans);
 }
 
 template <enum Threading T>
 catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
-                                                   catena::Param &parent) {
+                                                    catena::Param &parent) {
 
   // validate the param type
   catena::ParamType_ParamTypes type =
@@ -168,10 +170,9 @@ catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
 
 template <enum Threading T>
 template <typename V>
-typename catena::DeviceModel<T>::CachedParam
-catena::DeviceModel<T>::getValue(V &ans, const std::string &path) {
+void catena::DeviceModel<T>::getValue(V &ans, const std::string &path) {
   LockGuard lock(mutex_);
-  CachedParam param = getParam(path);
+  catena::Param& param_ = param(path).param_;
 
   // N.B. function templates that are members of class templates
   // cannot be specialized, so we have to use conditional compilation based
@@ -179,32 +180,30 @@ catena::DeviceModel<T>::getValue(V &ans, const std::string &path) {
 
   // specialize for float
   if constexpr (std::is_same<float, V>::value) {
-    ans = param.theItem_.value().float32_value();
+    ans = param_.value().float32_value();
   }
 
   // specialize for int
   if constexpr (std::is_same<int, V>::value) {
-    ans = param.theItem_.value().int32_value();
+    ans = param_.value().int32_value();
   }
-
-  return param;
 }
 
 // instantiate the versions of getValue that have been implemented
-template catena::DeviceModel<kMulti>::CachedParam
+template void
 catena::DeviceModel<kMulti>::getValue<float>(float &ans,
                                              const std::string &path);
-template catena::DeviceModel<kSingle>::CachedParam
+template void
 catena::DeviceModel<kSingle>::getValue<float>(float &ans,
                                               const std::string &path);
-template catena::DeviceModel<kMulti>::CachedParam
+template void
 catena::DeviceModel<kMulti>::getValue<int>(int &ans, const std::string &path);
-template catena::DeviceModel<kSingle>::CachedParam
+template void
 catena::DeviceModel<kSingle>::getValue<int>(int &ans, const std::string &path);
 
 template <enum Threading T>
 template <typename V>
-void catena::DeviceModel<T>::getValue(V &ans, const CachedParam &cp) {
+void catena::DeviceModel<T>::getValue(V &ans, const Param &cp) {
   LockGuard lock(mutex_);
 
   // N.B. function templates that are members of class templates
@@ -213,7 +212,7 @@ void catena::DeviceModel<T>::getValue(V &ans, const CachedParam &cp) {
 
   // specialize for float
   if constexpr (std::is_same<float, V>::value) {
-    ans = cp.theItem_.value().float32_value();
+    ans = cp.param_.value().float32_value();
   }
 }
 
@@ -272,30 +271,28 @@ template <> void setValueImpl<int>(catena::Param &param, int v) {
 
 template <enum Threading T>
 template <typename V>
-void catena::DeviceModel<T>::setValue(CachedParam &cp, V v) {
+void catena::DeviceModel<T>::setValue(Param &cp, V v) {
   LockGuard lock(mutex_);
-  catena::Param &param{cp.theItem_};
+  catena::Param &param{cp.param_.get()};
   setValueImpl(param, v);
 }
 
 template <enum Threading T>
 template <typename V>
-typename catena::DeviceModel<T>::CachedParam
+void
 catena::DeviceModel<T>::setValue(const std::string &path, V v) {
   LockGuard lock(mutex_);
-  CachedParam param = getParam(path);
-  setValue(param, v);
-  return param;
+  setValue(param(path), v);
 }
 
 // instantiate the versions of setValue that have been implemented
-template catena::DeviceModel<kMulti>::CachedParam
+template void
 catena::DeviceModel<kMulti>::setValue<float>(const std::string &path, float v);
-template catena::DeviceModel<kSingle>::CachedParam
+template void
 catena::DeviceModel<kSingle>::setValue<float>(const std::string &path, float v);
-template catena::DeviceModel<kMulti>::CachedParam
+template void
 catena::DeviceModel<kMulti>::setValue<int>(const std::string &path, int v);
-template catena::DeviceModel<kSingle>::CachedParam
+template void
 catena::DeviceModel<kSingle>::setValue<int>(const std::string &path, int v);
 
 template <enum Threading T>
@@ -305,13 +302,13 @@ std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
 }
 
 template <enum Threading T>
-const std::string &catena::DeviceModel<T>::getOid(const CachedParam &param) {
+const std::string &catena::DeviceModel<T>::getOid(const Param &param) {
   LockGuard lock(mutex_);
-  return param.theItem_.basic_param_info().oid();
+  return param.param_.get().basic_param_info().oid();
 }
 
 template <enum Threading T>
-typename catena::DeviceModel<T>::CachedParam
+typename catena::DeviceModel<T>::Param
 catena::DeviceModel<T>::addParam(const std::string &jptr,
                                  catena::Param &&param) {
   catena::Path path(jptr);
@@ -340,8 +337,50 @@ catena::DeviceModel<T>::addParam(const std::string &jptr,
   std::string oid(std::get<std::string>(seg));
 
   *(*device_.mutable_params())[oid].mutable_param() = p;
-  return CachedParam(*device_.mutable_params()->at(oid).mutable_param());
+  return Param(*this, *device_.mutable_params()->at(oid).mutable_param());
 }
+
+template <typename V> V getValueImpl(const catena::Param &p);
+
+template <> float getValueImpl<float>(const catena::Param &p) {
+  return p.value().float32_value();
+}
+
+template <> int getValueImpl<int>(const catena::Param &p) {
+  return p.value().int32_value();
+}
+
+template <enum Threading T>
+template <typename V>
+V catena::DeviceModel<T>::Param::getValue() {
+  using W = typename std::remove_reference<V>::type;
+  DeviceModel::LockGuard(deviceModel_.get().mutex_);
+  if constexpr (std::is_same<W, float>::value) {
+    return getValueImpl<float>(param_.get());
+  }
+
+  if constexpr (std::is_same<W, int>::value) {
+    return getValueImpl<int>(param_.get());
+  }
+}
+
+template float catena::DeviceModel<kMulti>::Param::getValue<float>();
+template float catena::DeviceModel<kSingle>::Param::getValue<float>();
+template int catena::DeviceModel<kMulti>::Param::getValue<int>();
+template int catena::DeviceModel<kSingle>::Param::getValue<int>();
+
+template <enum Threading T>
+template <typename V>
+void catena::DeviceModel<T>::Param::setValue(V v) {
+  LockGuard lock(deviceModel_.get().mutex_);
+  setValueImpl(param_.get(), v);
+}
+
+
+template void catena::DeviceModel<kMulti>::Param::setValue<float>(float);
+template void catena::DeviceModel<kSingle>::Param::setValue<float>(float);
+template void catena::DeviceModel<kMulti>::Param::setValue<int>(int);
+template void catena::DeviceModel<kSingle>::Param::setValue<int>(int);
 
 // instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::DeviceModel<Threading::kMultiThreaded>;
