@@ -362,25 +362,6 @@ public:
   const std::string &getOid(const Param &param);
 
   /**
-   * @brief Set the param's value
-   *
-   * @tparam V  value type of param
-   * @param param
-   * @param v value to set, passed by value for fundamental types, reference for
-   * others
-   */
-  template <typename V> void setValue(Param &param, V v);
-
-  /**
-   * @brief get the param's value
-   *
-   * @tparam V type of parameter's value
-   * @param param
-   * @return value of param
-   */
-  template <typename V> void getValue(V &ans, const Param &param);
-
-  /**
    * @brief moves the param into the device model
    *
    * @param jptr - json pointer to the place to insert the param, must be
