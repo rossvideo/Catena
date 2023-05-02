@@ -13,13 +13,8 @@
 //
 
 /**
- * @brief Reads a catena device model from a JSON file and writes it to stdout.
- *
- * Design intent: provide a handy way to validate (potentially) human-
- * authored device models. If the model is empty, the input is faulty.
- *
- * Note that items in the input model that have default values (0 for ints,
- * false for booleans, ...) will be stripped from the model that's output.
+ * @brief Reads a catena device model from a JSON file and exercises the
+ * parameter getValue, setValue methods.
  *
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @file basic_param_access.cpp
