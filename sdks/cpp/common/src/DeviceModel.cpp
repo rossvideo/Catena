@@ -230,22 +230,22 @@ std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
 }
 
 template <>
-void setValueImpl<catena::Value>(catena::Param &p,
-                                         catena::Value v) {
+void setValueImpl<catena::Value const *>(catena::Param &p,
+                                         catena::Value const *v) {
   auto type = p.basic_param_info().type().param_type();
   switch (type) {
   case catena::ParamType_ParamTypes_FLOAT32:
-    if (!v.has_float32_value()) {
+    if (!v->has_float32_value()) {
       BAD_STATUS("expected float value", grpc::StatusCode::INVALID_ARGUMENT);
     }
-    setValueImpl<float>(p, v.float32_value());
+    setValueImpl<float>(p, v->float32_value());
     break;
 
   case catena::ParamType_ParamTypes_INT32:
-    if (!v.has_int32_value()) {
+    if (!v->has_int32_value()) {
       BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
     }
-    setValueImpl<int>(p, v.int32_value());
+    setValueImpl<int>(p, v->int32_value());
     break;
 
   default: {
@@ -268,10 +268,11 @@ template void catena::DeviceModel<kSingle>::Param::setValue<float>(float);
 template void catena::DeviceModel<kMulti>::Param::setValue<int>(int);
 template void catena::DeviceModel<kSingle>::Param::setValue<int>(int);
 template void
-    catena::DeviceModel<kMulti>::Param::setValue<catena::Value>(catena::Value);
+catena::DeviceModel<kMulti>::Param::setValue<catena::Value const *>(
+    catena::Value const *);
 template void
-    catena::DeviceModel<kSingle>::Param::setValue<catena::Value>(catena::Value);
-
+catena::DeviceModel<kSingle>::Param::setValue<catena::Value const *>(
+    catena::Value const *);
 
 template <enum Threading T>
 template <typename V>
@@ -280,8 +281,11 @@ void catena::DeviceModel<T>::Param::setValueAt(V v, size_t idx) {
   BAD_STATUS("not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
 }
 
-template void catena::DeviceModel<kMulti>::Param::setValueAt<catena::Value>(catena::Value, size_t);
-template void catena::DeviceModel<kSingle>::Param::setValueAt<catena::Value>(catena::Value, size_t);
+template void
+    catena::DeviceModel<kMulti>::Param::setValueAt<catena::Value>(catena::Value,
+                                                                  size_t);
+template void catena::DeviceModel<kSingle>::Param::setValueAt<catena::Value>(
+    catena::Value, size_t);
 
 template <enum Threading T>
 const std::string &catena::DeviceModel<T>::getOid(const Param &param) {

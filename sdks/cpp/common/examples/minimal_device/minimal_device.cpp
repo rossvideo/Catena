@@ -24,13 +24,6 @@
 #include <DeviceModel.h>
 #include <Path.h>
 
-#include <iomanip>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <utility>
-
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/strings/str_format.h"
@@ -40,6 +33,14 @@
 #include <grpcpp/health_check_service_interface.h>
 
 #include <service.grpc.pb.h>
+
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -59,13 +60,17 @@ class CatenaServiceImpl final : public catena::catena::Service {
     try {
       DeviceModel::Param p = dm_.get().param(req->oid());
       *res = *p.getValue<catena::Value *>();
+      std::cout << "GetValue: " << req->oid() << std::endl;
       return Status::OK;
+
     } catch (catena::exception_with_status &why) {
       std::cerr << why.what() << std::endl;
       return Status(why.status, "GetValue failed", why.what());
-    } catch (std::exception &why) {
+
+    } catch (std::exception &unhandled) {
+      std::cerr << "unhandled exception: " << unhandled.what() << std::endl;
       return Status(grpc::StatusCode::INTERNAL, "Unhandled exception",
-                    why.what());
+                    unhandled.what());
     }
   }
 
@@ -76,10 +81,11 @@ class CatenaServiceImpl final : public catena::catena::Service {
       if (req->element_index()) {
         p.setValueAt(req->value(), req->element_index());
       } else {
-        p.setValue(req->value());
+        p.setValue(&req->value());
       }
+      std::cout << "SetValue: " << req->oid() << std::endl;
       return Status::OK;
-      
+
     } catch (catena::exception_with_status& why) {
       std::cerr << why.what() << std::endl;
       return Status(why.status, "SetValue failed", why.what());
