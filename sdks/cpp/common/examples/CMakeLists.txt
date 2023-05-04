@@ -22,5 +22,6 @@ project(CATENA_EXAMPLES C CXX)
 
 add_subdirectory("serdes")
 add_subdirectory("basic_param_access")
+add_subdirectory("minimal_device")
 
 
