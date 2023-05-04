@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @brief Enum to switch between single & multithreading
  * @file Threading.h

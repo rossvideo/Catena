@@ -68,32 +68,5 @@ std::string readFile(std::filesystem::path path);
  */
 void subs(std::string &str, const std::string &seq, const std::string &rep);
 
-/**
- * @brief exception to throw when a client attempts to invoke unimplemented
- * parts of the catena feature set.
- *
- */
-class not_implemented : public std::runtime_error {
-public:
-  not_implemented(const std::string &why) : std::runtime_error(why) {}
-};
-
-/**
- * @brief exception to throw when a part of the model doesn't comply with
- * the schema
- *
- */
-class schema_error : public std::runtime_error {
-public:
-  schema_error(const std::string &why) : std::runtime_error(why) {}
-};
-
-#define EXCEPTION(msg, except)                                                 \
-  do {                                                                         \
-    std::stringstream why;                                                     \
-    why << __PRETTY_FUNCTION__ << __FILE__ << ':' << __LINE__ << '\n';         \
-    why << msg;                                                                \
-    throw except(why.str());                                                   \
-  } while (false)
 
 } // namespace catena
