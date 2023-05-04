@@ -134,9 +134,6 @@ int main(int argc, char **argv) {
     // read a json file into a DeviceModel object
     DeviceModel dm("../../../example_device_models/device.minimal.json");
 
-    // write the device model to stdout
-    std::cout << "Read Device Model: " << dm << '\n';
-
     RunServer(absl::GetFlag(FLAGS_port), dm);
 
   } catch (std::exception &why) {
