@@ -54,8 +54,8 @@ catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
       std::string imported;
       if (pdesc.import().url().compare("") != 0) {
         /** @todo implement url imports*/
-        EXCEPTION("Cannot (yet) import from urls, sorry.",
-                  catena::not_implemented);
+        BAD_STATUS("Cannot (yet) import from urls, sorry.",
+                   grpc::StatusCode::UNIMPLEMENTED);
       } else {
         // there's no url specified, so do a local import using the oid
         // to create the filename
@@ -96,14 +96,15 @@ catena::DeviceModel<T>::param(const std::string &jptr) {
   catena::Path::Segment segment = path_.pop_front();
 
   if (!std::holds_alternative<std::string>(segment)) {
-    EXCEPTION("expected oid, got an index", std::invalid_argument);
+    BAD_STATUS("expected oid, got an index",
+               grpc::StatusCode::INVALID_ARGUMENT);
   }
   std::string oid(std::get<std::string>(segment));
 
   if (!device_.mutable_params()->contains(oid)) {
     std::stringstream msg;
     msg << "param " << std::quoted(oid) << " not found";
-    EXCEPTION((msg.str()), std::runtime_error);
+    BAD_STATUS(msg.str(), grpc::StatusCode::NOT_FOUND);
   }
 
   catena::Param *ans = device_.mutable_params()->at(oid).mutable_param();
@@ -127,31 +128,32 @@ catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
     break;
   case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT_ARRAY:
     /** @todo implement sub-param navigation for STRUCT_ARRAY */
-    EXCEPTION("sub-param navigation for STRUCT_ARRAY not implemented, sorry",
-              catena::not_implemented);
+    BAD_STATUS("sub-param navigation for STRUCT_ARRAY not implemented, sorry",
+               grpc::StatusCode::UNIMPLEMENTED);
     break;
   default:
     std::stringstream err;
     err << "cannot sub-param param of type: " << type;
-    EXCEPTION((err.str()), std::invalid_argument);
+    BAD_STATUS((err.str()), grpc::StatusCode::INVALID_ARGUMENT);
   }
 
   // validate path argument and the parameter
 
   // is there a value field? It's optional, after all.
   if (!parent.has_value()) {
-    EXCEPTION("value field is missing", std::runtime_error);
+    BAD_STATUS("value field is missing", grpc::StatusCode::FAILED_PRECONDITION);
   }
 
   // is there a struct-value field?
   if (!parent.value().has_struct_value()) {
-    EXCEPTION("struct_value field is missing", catena::schema_error);
+    BAD_STATUS("struct_value field is missing",
+               grpc::StatusCode::FAILED_PRECONDITION);
   }
 
   // is our oid a string?
   auto seg = path.pop_front();
   if (!std::holds_alternative<std::string>(seg)) {
-    EXCEPTION("expected oid, got index", std::invalid_argument);
+    BAD_STATUS("expected oid, got index", grpc::StatusCode::INVALID_ARGUMENT);
   }
 
   // fourth, is the oid in the value.struct_value.fields object?
@@ -159,7 +161,7 @@ catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
   if (!parent.value().struct_value().fields().contains(oid)) {
     std::stringstream err;
     err << oid << " not found";
-    EXCEPTION((err.str()), catena::schema_error);
+    BAD_STATUS((err.str()), grpc::StatusCode::FAILED_PRECONDITION);
   }
 
   return parent.mutable_value()
@@ -215,7 +217,7 @@ template <> void setValueImpl<int>(catena::Param &param, int v) {
     default:
       std::stringstream err;
       err << "invalid constraint for int32: " << constraint_type << '\n';
-      EXCEPTION(err.str(), std::range_error);
+      BAD_STATUS((err.str()), grpc::StatusCode::OUT_OF_RANGE);
     }
   }
   param.mutable_value()->set_int32_value(v);
@@ -226,6 +228,60 @@ std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
   os << printJSON(dm.device());
   return os;
 }
+
+template <>
+void setValueImpl<catena::Value>(catena::Param &p,
+                                         catena::Value v) {
+  auto type = p.basic_param_info().type().param_type();
+  switch (type) {
+  case catena::ParamType_ParamTypes_FLOAT32:
+    if (!v.has_float32_value()) {
+      BAD_STATUS("expected float value", grpc::StatusCode::INVALID_ARGUMENT);
+    }
+    setValueImpl<float>(p, v.float32_value());
+    break;
+
+  case catena::ParamType_ParamTypes_INT32:
+    if (!v.has_int32_value()) {
+      BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
+    }
+    setValueImpl<int>(p, v.int32_value());
+    break;
+
+  default: {
+    std::stringstream err;
+    err << "Unimplemented value type: " << type;
+    BAD_STATUS(err.str(), grpc::StatusCode::UNIMPLEMENTED);
+  }
+  }
+}
+
+template <enum Threading T>
+template <typename V>
+void catena::DeviceModel<T>::Param::setValue(V v) {
+  LockGuard lock(deviceModel_.get().mutex_);
+  setValueImpl(param_.get(), v);
+}
+
+template void catena::DeviceModel<kMulti>::Param::setValue<float>(float);
+template void catena::DeviceModel<kSingle>::Param::setValue<float>(float);
+template void catena::DeviceModel<kMulti>::Param::setValue<int>(int);
+template void catena::DeviceModel<kSingle>::Param::setValue<int>(int);
+template void
+    catena::DeviceModel<kMulti>::Param::setValue<catena::Value>(catena::Value);
+template void
+    catena::DeviceModel<kSingle>::Param::setValue<catena::Value>(catena::Value);
+
+
+template <enum Threading T>
+template <typename V>
+void catena::DeviceModel<T>::Param::setValueAt(V v, size_t idx) {
+  /// @todo implement DeviceModel::Param::setValueAt
+  BAD_STATUS("not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
+}
+
+template void catena::DeviceModel<kMulti>::Param::setValueAt<catena::Value>(catena::Value, size_t);
+template void catena::DeviceModel<kSingle>::Param::setValueAt<catena::Value>(catena::Value, size_t);
 
 template <enum Threading T>
 const std::string &catena::DeviceModel<T>::getOid(const Param &param) {
@@ -241,18 +297,19 @@ catena::DeviceModel<T>::addParam(const std::string &jptr,
   LockGuard lock(mutex_);
   if (path.size() > 1) {
     /** @todo implement ability to add parameters below /params */
-    EXCEPTION("implementation only supports adding params to top level",
-              catena::not_implemented);
+    BAD_STATUS("implementation only supports adding params to top level",
+               grpc::StatusCode::UNIMPLEMENTED);
   }
   if (path.size() == 0) {
-    EXCEPTION("empty path is invalid in this context", std::invalid_argument);
+    BAD_STATUS("empty path is invalid in this context",
+               grpc::StatusCode::INVALID_ARGUMENT);
   }
   catena::Param p(param);
   auto seg = path.pop_front();
   if (!std::holds_alternative<std::string>(seg)) {
     std::stringstream err;
     err << "invalid path: " << std::quoted(jptr);
-    EXCEPTION(err.str(), std::invalid_argument);
+    BAD_STATUS(err.str(), grpc::StatusCode::INVALID_ARGUMENT);
   }
   std::string oid(std::get<std::string>(seg));
 
@@ -280,21 +337,26 @@ V catena::DeviceModel<T>::Param::getValue() {
   if constexpr (std::is_same<W, float>::value) {
     if (cp.basic_param_info().type().param_type() !=
         catena::ParamType::ParamTypes::ParamType_ParamTypes_FLOAT32) {
-      EXCEPTION("expected param of FLOAT32 type", catena::schema_error);
+      BAD_STATUS("expected param of FLOAT32 type",
+                 grpc::StatusCode::FAILED_PRECONDITION);
     }
     return getValueImpl<float>(cp);
 
   } else if constexpr (std::is_same<W, int>::value) {
     if (cp.basic_param_info().type().param_type() !=
         catena::ParamType::ParamTypes::ParamType_ParamTypes_INT32) {
-      EXCEPTION("expected param of INT32 type", catena::schema_error);
+      BAD_STATUS("expected param of INT32 type",
+                 grpc::StatusCode::FAILED_PRECONDITION);
     }
     return getValueImpl<int>(param_.get());
+
+  } else if constexpr (std::is_same<W, catena::Value *>::value) {
+    return cp.mutable_value();
 
   } else {
     /** @todo complete support for all param types in
      * DeviceModel::Param::getValue */
-    EXCEPTION("Unsupported Param type", catena::not_implemented);
+    BAD_STATUS("Unsupported Param type", grpc::StatusCode::UNIMPLEMENTED);
   }
 }
 
@@ -302,18 +364,10 @@ template float catena::DeviceModel<kMulti>::Param::getValue<float>();
 template float catena::DeviceModel<kSingle>::Param::getValue<float>();
 template int catena::DeviceModel<kMulti>::Param::getValue<int>();
 template int catena::DeviceModel<kSingle>::Param::getValue<int>();
-
-template <enum Threading T>
-template <typename V>
-void catena::DeviceModel<T>::Param::setValue(V v) {
-  LockGuard lock(deviceModel_.get().mutex_);
-  setValueImpl(param_.get(), v);
-}
-
-template void catena::DeviceModel<kMulti>::Param::setValue<float>(float);
-template void catena::DeviceModel<kSingle>::Param::setValue<float>(float);
-template void catena::DeviceModel<kMulti>::Param::setValue<int>(int);
-template void catena::DeviceModel<kSingle>::Param::setValue<int>(int);
+template catena::Value *
+catena::DeviceModel<kMulti>::Param::getValue<catena::Value *>();
+template catena::Value *
+catena::DeviceModel<kSingle>::Param::getValue<catena::Value *>();
 
 // instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::DeviceModel<Threading::kMultiThreaded>;

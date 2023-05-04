@@ -27,6 +27,7 @@
 #include <Fake.h>
 #include <Path.h>
 #include <Threading.h>
+#include <Status.h>
 
 #include <iostream>
 #include <string>
@@ -52,7 +53,7 @@ namespace catena {
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
-template <enum catena::Threading T = catena::Threading::kMultiThreaded>
+template <enum Threading T = Threading::kMultiThreaded>
 class DeviceModel {
 public:
   /**
@@ -243,6 +244,15 @@ public:
      * @param v value to set.
      */
     template <typename V> void setValue(V v);
+
+    /**
+     * @brief Set value of the stored catena::Param at index idx.
+     * 
+     * @tparam V type of the value stored
+     * @param v value to set
+     * @param idx index into the array
+     */
+    template <typename V> void setValueAt(V v, size_t idx);
 
   private:
     std::reference_wrapper<DeviceModel> deviceModel_;
