@@ -22,7 +22,7 @@
                     "type": "FLOAT_RANGE",
                     "float_range": {
                         "min_value": 0.0,
-                        "max_value": 1.0
+                        "max_value": 10.0
                     }
                 }
             }
@@ -119,7 +119,14 @@
                 }
             }
         }
-    }
+    },
+    "access_scopes": [
+        "monitor",
+        "operate",
+        "configure",
+        "admin"
+    ],
+    "default_scope": 0
 }
 
 

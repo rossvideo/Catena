@@ -52,6 +52,7 @@ message Device {
   uint32 timeout = 5;
 
   // the device's parameters
+  // a map of ParamDescriptors, keyed by their object ids (OIDs)
   //
   map <string, ParamDescriptor> params = 6;
 

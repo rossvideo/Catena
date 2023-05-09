@@ -26,7 +26,26 @@
             "max": 1000000
         },
         "params": {"$ref": "#/$defs/param_map"},
-        "commands": {"$ref": "#/$defs/param_map"}
+        "commands": {"$ref": "#/$defs/param_map"},
+        "access_scopes": {
+            "title": "Access Scopes",
+            "description": "The access scopes recognised by this device",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "uniqueItems": true,
+                "maxItems": 5,
+                "$comment": "discussion needed on min & max items"
+            },
+            "additionalItems": false
+        },
+        "default_scope": {
+            "$id": "Default Access Scope",
+            "description": "Objects in the model will have this access scope unless overridden explicitly, or implicitly by inheritance",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+        }
     },
     "required": ["slot"],
     "additionalProperties": false,
@@ -68,7 +87,8 @@
                 "basic_param_info": {"$ref": "#/$defs/basic_param_info"},
                 "value": {"$ref": "#/$defs/value"},
                 "constraint": {"$ref": "#/$defs/constraint"},
-                "commands": {"$ref": "#/$defs/param_map"}
+                "commands": {"$ref": "#/$defs/param_map"},
+                "access_scope": {"type": "string"}
             },
             "additionalProperties": false,
             "allOf": [
@@ -394,13 +414,15 @@
         },
         "import": {
             "title": "Import directive",
-            "description": "Provides the ability to build device models from multiple files.",
+            "description": "Provides the ability to build device models from multiple files. If a URL is provided, the import will be attempted from there. When absent, the import will be a local file named <schema>.<oid>.json.",
             "type": "object",
             "properties": {
                 "url": {"type": "string"},
                 "excluding": {
                     "type": "array",
-                    "items": "string",
+                    "items": {
+                        "type": "string"
+                    },
                     "uniqueItems": true
                 }
             },

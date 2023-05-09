@@ -115,6 +115,20 @@ public:
      */
     Segment pop_front() noexcept;
 
+    /**
+     * @brief escapes the oid then adds it to the end of the path.
+     * 
+     * @param oid 
+     */
+    void push_back(const std::string& oid);
+
+    /**
+     * @brief return a fully qualified, albeit escaped oid
+     * 
+     * @return std::string 
+     */
+    std::string fqoid();
+
 private:
     Segments segments_; /**< the path split into its components */
     

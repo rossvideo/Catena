@@ -46,6 +46,7 @@ catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
   std::filesystem::path current_folder(filename);
   current_folder = current_folder.remove_filename() /= "params";
 
+  catena::Path jptr{};
   for (auto it = device_.mutable_params()->begin();
        it != device_.mutable_params()->end(); ++it) {
     std::cout << it->first << '\n';
