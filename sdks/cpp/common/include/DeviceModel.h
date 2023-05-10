@@ -213,14 +213,14 @@ public:
      *
      * @param other
      */
-    inline Param(Param &&other) noexcept = delete;
+    Param(Param &&other) = delete;
 
     /**
      * @brief Param does not have move semantics
      *
      * @param rhs, right hand side of the equals sign
      */
-    inline Param &operator=(Param &&rhs) noexcept = delete;
+    Param &operator=(Param &&rhs) = delete;
 
     inline ~Param() { // nothing to do
     }
@@ -331,9 +331,9 @@ public:
    * @brief Get the Param object at path
    *
    * @param path uniquely locates the parameter
-   * @throws catena::not_implemented if the code to navigate
+   * @throws catena::exception_with_status if the code to navigate
    * to the requested fully qualified oid has not been implemented.
-   * @throws std::runtime_error if the requested oid is not present in the
+   * @throws catena::exception_with_status if the requested oid is not present in the
    * device model
    * @return DeviceModel Param
    */
@@ -393,9 +393,9 @@ private:
    * consumed.
    * @param parent param
    * @return child param indicated by front of path
-   * @throws catena::not_implemented if parent type is STRUCT_ARRAY
-   * @throws std::invalid_argument if parent is not a sub-param supporting param
-   * @throws std::invalid_argument if param doesn't have a values object
+   * @throws catena::exception_with_status if is STRUCT_ARRAY
+   * @throws catena::exception_with_status if parent is not a sub-param supporting param
+   * @throws catena::exception_with_status if param doesn't have a values object
    * type
    *
    */
