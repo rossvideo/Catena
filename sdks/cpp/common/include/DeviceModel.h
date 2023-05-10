@@ -228,7 +228,7 @@ public:
     /**
      * @brief Get the value stored by the catena::Param
      *
-     * Typesafe because it asserts the DeviceModel's mutex.
+     * Threadsafe because it asserts the DeviceModel's mutex.
      *
      * @tparam V value type of param
      * @return V value of parameter
@@ -238,7 +238,7 @@ public:
     /**
      * @brief Set the value of the stored catena::Param.
      *
-     * Typesafe because it asserts the DeviceModel's mutex.
+     * Threadsafe because it asserts the DeviceModel's mutex.
      *
      * @tparam V type of the value stored by the param.
      * @param v value to set.
