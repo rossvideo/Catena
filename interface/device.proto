@@ -139,7 +139,7 @@ message DeviceComponent {
   //
   message ComponentCommand {
     string oid = 1;
-    Command command = 2;
+    Param command = 2;
   }
 
   // A language pack.

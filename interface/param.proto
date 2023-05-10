@@ -266,11 +266,11 @@ message UpdateSubscriptionsPayload {
 
 // Defines a command for a device. 
 // Commands provide a way to use device connection to execute commands from other devices. 
-//
-message Command {
-  Param definition = 1; // provides command's input values
-  bool responds = 2; // true when the device will respond to the command, false otherwise.
-}
+// Superseded by just addting a `responds` field to the Param message.
+// message Command {
+//   Param definition = 1; // provides command's input values
+//   bool responds = 2; // true when the device will respond to the command, false otherwise.
+// }
 
 // When streamed, only the value field will be used after the first message
 message ExecuteCommandPayload {
