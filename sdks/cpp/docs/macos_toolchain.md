@@ -41,7 +41,7 @@ or [these](https://github.com/grpc/grpc/blob/master/BUILDING.md) which are a bit
 After upgrading to MacOS 13.3, these instructions no longer worked. I had to run this command to create the build folder.
 
 ```{.sh}
-jnaylor@L-REMJNAYL1-MAC build % cmake ../.. -DgRPC_INSTALL=ON                \
+% cmake ../.. -DgRPC_INSTALL=ON                \
               -DCMAKE_BUILD_TYPE=Release       \
               -DgRPC_ABSL_PROVIDER=package     \
               -DgRPC_CARES_PROVIDER=package    \
