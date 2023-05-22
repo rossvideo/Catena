@@ -12,7 +12,7 @@ The C++ SDK includes an example program, `minimal_device.cpp` which implements t
 
 ## With no security
 
-Start `minimial_device` with no options:
+Start `minimal_device` with no options:
 
 Example output:
 
@@ -114,7 +114,7 @@ Rpc succeeded with OK status
 jnaylor@L-REMJNAYL1-MAC build
 ```
 
-Note that, trying to use the insecure invocation of `grpc_cli` as in our first example will cause error messages to be logged by both the client (`ServerReflectionInfo rpc failed. Error code: 14, ...`) and the server (`OPENSSL_internal:WRONG_VERSION_NUMBER`).
+Note that, trying to use the insecure invocation of `grpc_cli` as in our first example will cause error messages to be logged by both the client `ServerReflectionInfo rpc failed. Error code: 14, ...` and the server `OPENSSL_internal:WRONG_VERSION_NUMBER`.
 
 ## Mutual Authentication
 
@@ -134,4 +134,4 @@ float32_value: 12.3
 Rpc succeeded with OK status
 ```
 
-Note that calling `grpc_cli` without specifying the location of the client key and certificate will cause errors to be logged both at the client (`ServerReflectionInfo rpc failed. Error code: 14, ...`) and the server (`OPENSSL_internal:PEER_DID_NOT_RETURN_A_CERTIFICATE.`).
+Note that calling `grpc_cli` without specifying the location of the client key and certificate will cause errors to be logged both at the client `ServerReflectionInfo rpc failed. Error code: 14, ...` and the server `OPENSSL_internal:PEER_DID_NOT_RETURN_A_CERTIFICATE.`.
