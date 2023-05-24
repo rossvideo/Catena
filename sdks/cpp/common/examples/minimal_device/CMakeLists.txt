@@ -20,6 +20,11 @@ cmake_minimum_required(VERSION 3.20)
 
 
 
+list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local/cmake")
+message(STATUS "***cmake prefix path: ${CMAKE_PREFIX_PATH}")
+
+find_package(jwt-cpp CONFIG REQUIRED)
+
 get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
 
@@ -29,7 +34,7 @@ get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
 get_filename_component(CATENA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../ ABSOLUTE)
 set(CATENA_COMMON_INCLUDE ${CATENA_COMMON_DIR}/include)
 
-message(STATUS "***cmake prefix path: ${CMAKE_PREFIX_PATH}")
+
 
 target_include_directories(${TARGET}
     PUBLIC
@@ -51,6 +56,7 @@ target_link_libraries(${TARGET}
     ${LIB_TARGET}
     catena_interface
     absl::flags_parse
+    jwt-cpp::jwt-cpp
 )
 
 target_compile_features(${TARGET}
