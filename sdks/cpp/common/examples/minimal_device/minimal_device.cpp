@@ -63,7 +63,8 @@ ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
 ABSL_FLAG(std::string, secure_comms, "off",
           "Specify type of secure comms, options are: \
   \"off\", \"ssl\", \"tls\"");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
+ABSL_FLAG(bool, mutual_authc, false,
+          "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
 
 // expand env variables
@@ -91,10 +92,9 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     std::string server_key = catena::readFile(path_to_certs + "/server.key");
     std::string server_cert = catena::readFile(path_to_certs + "/server.crt");
     grpc::SslServerCredentialsOptions ssl_opts(
-      absl::GetFlag(FLAGS_mutual_authc) ? 
-      GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY :
-      GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE
-    );
+        absl::GetFlag(FLAGS_mutual_authc)
+            ? GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY
+            : GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
     ssl_opts.pem_root_certs = root_cert;
     ssl_opts.pem_key_cert_pairs.push_back(
         grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key,
@@ -113,50 +113,37 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
   return ans;
 }
 
+// if authz is enabled, inspect the bearer token to decide whether to grant
+// access.
+// 
+// right now, it just tests that a token exists, decodes it and prints it out
+// much work required to actually validate the token
+void authorize(grpc::ServerContext* context, Param &p) {
+  if (absl::GetFlag(FLAGS_authz)) {
+    auto authz = context->client_metadata();
+    auto it = authz.find("authorization");
+    if (it == authz.end()) {
+      BAD_STATUS("No authorization token found",
+                 grpc::StatusCode::PERMISSION_DENIED);
+    }
+
+    // remove the 'Bearer ' text from the beginning
+    grpc::string_ref t = it->second.substr(7);
+    std::string token(t.begin(), t.end());
+    std::cout << "authz: " << token << '\n';
+    auto decoded = jwt::decode(token);
+    for (auto &e : decoded.get_payload_json()) {
+      std::cout << e.first << ": " << e.second << '\n';
+    }
+  }
+}
+
 class CatenaServiceImpl final : public catena::catena::Service {
   Status GetValue(ServerContext *context, const ::catena::GetValuePayload *req,
                   ::catena::Value *res) override {
-    // auto auth = context->auth_context();
-    // std::cout << (auth->IsPeerAuthenticated() ? "" : "not ")
-    //           << "peer authenticated " << context->peer() << '\n';
-    // for (auto it = auth->begin(); it != auth->end(); ++it) {
-    //   std::cout << (*it).first << ": " << (*it).second << '\n';
-    // }
-    // auto peer_id = auth->GetPeerIdentity();
-    // if (peer_id.size() == 0) {
-    //   std::cout << "peer id is zero length" << '\n';
-    // } else {
-    //   for (auto it = peer_id.begin(); it != peer_id.end(); ++it) {
-    //     std::cout << *it << '\n';
-    //   }
-    // }
-    // auto &client_metadata = context->client_metadata();
-    // if (client_metadata.size() == 0) {
-    //   std::cout << "client metadata is zero length" << '\n';
-    // } else {
-    //   for (auto it = client_metadata.begin(); it != client_metadata.end();
-    //        ++it) {
-    //     std::cout << (*it).first << ", " << (*it).second << '\n';
-    //   }
-    // }
-
     try {
       DeviceModel::Param p = dm_.get().param(req->oid());
-      if (absl::GetFlag(FLAGS_authz)) {
-        auto authz = context->client_metadata();
-        auto it = authz.find("authorization");
-        if (it == authz.end()) {
-          BAD_STATUS("No authorization token found", grpc::StatusCode::PERMISSION_DENIED);
-        }
-        
-        grpc::string_ref t = it->second.substr(7);
-        std::string token(t.begin(), t.end());
-        std::cout << "authz: " << token << '\n';
-        auto decoded = jwt::decode(token);
-        for (auto& e : decoded.get_payload_json()) {
-          std::cout << e.first << ": " << e.second << '\n';
-        }
-      }
+      authorize(context, p);
       *res = *p.getValue<catena::Value *>();
       std::cout << "GetValue: " << req->oid() << std::endl;
       return Status::OK;
@@ -165,10 +152,9 @@ class CatenaServiceImpl final : public catena::catena::Service {
       std::cerr << why.what() << std::endl;
       return Status(why.status, "GetValue failed", why.what());
 
-    } catch (std::exception &unhandled) {
-      std::cerr << "unhandled exception: " << unhandled.what() << std::endl;
-      return Status(grpc::StatusCode::INTERNAL, "Unhandled exception",
-                    unhandled.what());
+    } catch (...) {
+      std::cerr << "unhandled exception: " << std::endl;
+      return Status(grpc::StatusCode::INTERNAL, "Unhandled exception");
     }
   }
 
@@ -188,8 +174,8 @@ class CatenaServiceImpl final : public catena::catena::Service {
       std::cerr << why.what() << std::endl;
       return Status(why.status, "SetValue failed", why.what());
 
-    } catch (std::exception &unhandled) {
-      std::cerr << "unhandled exception: " << unhandled.what() << std::endl;
+    } catch (...) {
+      std::cerr << "unhandled exception: " << std::endl;
       return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
     }
   }
