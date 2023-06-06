@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @brief Fake multi-threading classes
- * @file DeviceModel.h
+ * @brief Enum to switch between single & multithreading
+ * @file Threading.h
  * @copyright Copyright © 2023 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
@@ -24,17 +24,8 @@
 namespace catena {
 
 /**
- * @brief a do-nothing Mutex that only exists to get optimized out.
+ * @brief indicates threading model
  *
  */
-struct FakeMutex {};
-
-/**
- * @brief a do-nothing lock guard that only exists to get optimized out.
- *
- */
-template <typename MTX> class FakeLockGuard {
-public:
-  explicit FakeLockGuard(MTX &mtx) {}
-};
+enum class Threading { kSingleThreaded, kMultiThreaded };
 } // namespace catena

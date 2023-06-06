@@ -36,6 +36,32 @@ source ~/.zprofile
 
 Carefully follow [these steps](https://grpc.io/docs/languages/cpp/quickstart/)
 
+or [these](https://github.com/grpc/grpc/blob/master/BUILDING.md) which are a bit different.
+
+After upgrading to MacOS 13.3, these instructions no longer worked. I had to run this command to create the build folder.
+
+```{.sh}
+% cmake ../.. -DgRPC_INSTALL=ON                \
+              -DCMAKE_BUILD_TYPE=Release       \
+              -DgRPC_ABSL_PROVIDER=package     \
+              -DgRPC_CARES_PROVIDER=package    \
+              -DgRPC_PROTOBUF_PROVIDER=package \
+              -DgRPC_RE2_PROVIDER=package      \
+              -DgRPC_SSL_PROVIDER=package      \
+              -DgRPC_ZLIB_PROVIDER=package \
+              -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk \
+              -DCMAKE_PREFIX_PATH=/Users/$USER/.local 
+```
+
+Another change necessary to prevent linker warnings on the examples was to make a symbolic link thus:
+
+```{.sh}
+sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk\
+    /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk
+```
+
+because the linker flags insisted on using MacOSX13.1 for a non-obvious reason.
+
 ## Optionally install doxygen
 
 Note that this app isn't signed so, by default it cannot be installed.

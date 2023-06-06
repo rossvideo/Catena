@@ -20,5 +20,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_EXAMPLES C CXX)
 
-add_subdirectory("read_model_from_file")
+add_subdirectory("serdes")
+add_subdirectory("basic_param_access")
+add_subdirectory("minimal_device")
+
 

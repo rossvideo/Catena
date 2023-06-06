@@ -12,7 +12,6 @@ option optimize_for = CODE_SIZE;
 import "google/protobuf/empty.proto";
 import "device.proto";
 import "param.proto";
-import "command.proto";
 import "language.proto";
 import "eo.proto";
 

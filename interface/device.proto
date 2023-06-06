@@ -5,7 +5,6 @@ package catena;
 import "constraint.proto";
 import "param.proto";
 import "menus.proto";
-import "command.proto";
 import "language.proto";
 import "eo.proto";
 
@@ -24,7 +23,7 @@ option optimize_for = CODE_SIZE;
 //
 message Types {
   ConstraintDescriptors constraints = 1;
-  ParamDescriptors params = 2;
+  map<string, Param> params = 2;
 }
 
 // Device model for Catena compatible devices.
@@ -53,8 +52,9 @@ message Device {
   uint32 timeout = 5;
 
   // the device's parameters
+  // a map of ParamDescriptors, keyed by their object ids (OIDs)
   //
-  ParamDescriptors params = 6;
+  map <string, ParamDescriptor> params = 6;
 
   // the device's default editor UI definition and access scope definitions
   //
@@ -62,7 +62,7 @@ message Device {
 
   // the device's available commands
   //
-  CommandDescriptors commands = 8;
+  map <string, ParamDescriptor> commands = 8;
 
   // the devices language packs
   //
@@ -139,7 +139,7 @@ message DeviceComponent {
   //
   message ComponentCommand {
     string oid = 1;
-    Command command = 2;
+    Param command = 2;
   }
 
   // A language pack.

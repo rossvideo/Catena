@@ -7,7 +7,7 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0 
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -27,10 +27,10 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace catena {
-
 
 /**
  * @brief prints a protobuf message as JSON
@@ -38,7 +38,7 @@ namespace catena {
  * @param msg the protobuf message
  * @return std::string JSON representation of m
  */
-std::string printJSON(const google::protobuf::Message& msg);
+std::string printJSON(const google::protobuf::Message &msg);
 
 /**
  * @brief parses protobuf message to JSON
@@ -46,7 +46,7 @@ std::string printJSON(const google::protobuf::Message& msg);
  * @param msg JSON message to parse
  * @param m output protobuf message
  */
-void parseJSON(const std::string& msg, google::protobuf::Message& m);
+void parseJSON(const std::string &msg, google::protobuf::Message &m);
 
 /**
  * @brief reads a file into a std::string
@@ -66,6 +66,7 @@ std::string readFile(std::filesystem::path path);
  * @param seq in sequence to match
  * @param rep in sequence to replace the match
  */
-void subs(std::string& str, const std::string& seq, const std::string& rep);
+void subs(std::string &str, const std::string &seq, const std::string &rep);
 
-}  // namespace catena
+
+} // namespace catena

@@ -23,7 +23,7 @@
  * false for booleans, ...) will be stripped from the model that's output.
  * 
  * @author John R. Naylor (john.naylor@rossvideo.com)
- * @file read_model_from_file.cpp
+ * @file serdes.cpp
  * @copyright Copyright © 2023, Ross Video Ltd
  */
 
@@ -31,7 +31,11 @@
  #include <Path.h>
 
  #include <iostream>
+ #include <iomanip>
  #include <stdexcept>
+ #include <utility>
+
+ using Index = catena::Path::Index;
 
  int main(int argc, char** argv) {
     // process command line
@@ -44,28 +48,10 @@
         // read a json file into a DeviceModel object
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
-        catena::DeviceModel<false> dm(argv[1]);
+        catena::DeviceModel<catena::Threading::kSingleThreaded> dm(argv[1]);
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
-
-        // get some values from the device model
-        float fv{};
-        int iv{};
-        auto fparam = dm.getValue(fv, "/hello");
-        auto iparam = dm.getValue(iv, "/world");
-        std::cout << "param oid: '" << dm.getOid(fparam) 
-            << "' has value: " << fv
-            << "\nparam oid: '" << dm.getOid(iparam)
-            << "' has value: " << iv << '\n';
-
-        // set a value in the device model
-        std::cout << "setting values to something different\n";
-        dm.setValue("/hello", 3.142f);
-        dm.setValue(iparam, 2);
-
-        // write out the updated device model
-        std::cout << "Updated Device Model: " << dm << '\n';
 
         // report the wire-size of the device model
         std::string serialized;

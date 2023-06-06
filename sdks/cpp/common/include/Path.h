@@ -25,6 +25,7 @@
  #include <iostream>
  #include <string>
  #include <deque>
+ #include <variant>
 
 namespace catena {
 /**
@@ -37,13 +38,27 @@ public:
      * @brief what we split the path into
      * 
      */
-    using Segments_t = std::deque<std::string>;
+    using Segments = std::deque<std::string>;
+
+    /**
+     * @brief type of index path segments
+     * 
+     */
+    using Index = Segments::size_type;
 
     /**
      * @brief used to signal one-past-the-end array size
      *
      */
-    static constexpr std::size_t kEnd = std::size_t(-1);
+    static constexpr Index kEnd = Index(-1);
+
+    /**
+     * @brief Segments can be interpreted either as oids (strings), 
+     * or array indices (std::size_t). The "one past the end" index
+     * is flagged by the value kEnd.
+     * 
+     */
+    using Segment = typename std::variant<Index, std::string>;
 
 
     Path() = default;
@@ -53,16 +68,19 @@ public:
     Path& operator=(Path&& rhs) = default;
 
     /**
-     * @brief Construct a new Path object
+     * @brief Construct a new Path object.
      * 
-     * @param path a json-pointer
+     * 
+     * @param path an escaped json-pointer, 
+     * i.e. '/' replaced by "~1" and '~' by "~0"
      */
     explicit Path(const std::string& path);
 
     /**
      * @brief Construct a new Path object
      * 
-     * @param literal 
+     * @param literal an escaped json-pointer, 
+     * i.e. '/' replaced by "~1" and '~' by "~0"
      */
     explicit Path(const char* literal);
 
@@ -71,31 +89,48 @@ public:
      *
      * @return std::vector::iterator
      */
-    inline Segments_t::iterator begin() { return segments_.begin(); }
+    inline Segments::iterator begin() { return segments_.begin(); }
 
     /**
      * @brief iterator to the end of our segmented Path.
      *
      * @return std::vector::iterator
      */
-    inline Segments_t::iterator end() { return segments_.end(); }
+    inline Segments::iterator end() { return segments_.end(); }
 
     /**
      * @brief return the number of segments in the Path
      *
      * @return number of segments
      */
-    inline Segments_t::size_type size() { return segments_.size(); }
+    inline Index size() const { return segments_.size(); }
 
     /**
      * @brief take the front off the path and return it.
-     * @throws std::range_error if there are no segments in the path.
-     * @return unescaped component at front of the path
+     * @return unescaped component at front of the path, 
+     * design intent the returned value can be used as an oid lookup,
+     * or an array index.
+     * Will be empty string if nothing to pop, or the original path
+     * was "/", or "".
      */
-    std::string pop_front();
+    Segment pop_front() noexcept;
+
+    /**
+     * @brief escapes the oid then adds it to the end of the path.
+     * 
+     * @param oid 
+     */
+    void push_back(const std::string& oid);
+
+    /**
+     * @brief return a fully qualified, albeit escaped oid
+     * 
+     * @return std::string 
+     */
+    std::string fqoid();
 
 private:
-    Segments_t segments_; /**< the path split into its components */
+    Segments segments_; /**< the path split into its components */
     
     /**
      * @brief replace / and ~ characters with ~1 & ~0
