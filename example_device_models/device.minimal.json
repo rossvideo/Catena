@@ -6,14 +6,11 @@
     "params": {
         "hello": {
             "param": {
-                "basic_param_info": {
-                    "oid": "hello",
-                    "name": {
-                        "monoglot": "float example"
-                    },
-                    "type": {
-                        "param_type": "FLOAT32"
-                    }
+                "name": {
+                    "monoglot": "float example"
+                },
+                "type": {
+                    "param_type": "FLOAT32"
                 },
                 "value": {
                     "float32_value": 12.3
@@ -29,92 +26,49 @@
         },
         "world": {
             "param": {
-                "basic_param_info": {
-                    "oid": "world",
-                    "name": {
-                        "monoglot": "int example"
+                "name": {"monoglot": "int32 example"},
+                "type": {"param_type": "INT32"},
+                "value": {"int32_value": 0}
+            }
+        },
+        "location": {
+            "param": {
+                "name": {"monoglot": "struct example"},
+                "type": {"param_type": "STRUCT"},
+                "params": {
+                    "latitude": {
+                            "param": {
+                            "name": {"monoglot": "Latitude"},
+                            "type": {"param_type": "FLOAT32"},
+                            "constraint": {
+                                "type": "FLOAT_RANGE",
+                                "float_range": {
+                                    "min_value": -90.0,
+                                    "max_value": 90.0
+                                }
+                            }
+                        }
                     },
-                    "type": {
-                        "param_type": "INT32"
-                    }
-                },
-                "value": {
-                    "int32_value": 1
-                },
-                "constraint": {
-                    "type": "INT_CHOICE",
-                    "int32_choice": {
-                        "choices": [
-                            {"name": {"monoglot": "choice1"}, "value": 1}
-                        ]
+                    "longitude": {
+                        "param": {
+                        "name": {"monoglot": "Longitude"},
+                        "type": {"param_type": "FLOAT32"},
+                        "constraint": {
+                            "type": "FLOAT_RANGE",
+                            "float_range": {
+                                "min_value": -180.0,
+                                "max_value": 180.0
+                            }
+                        }
                     }
                 }
-            }
-        },     
-        "my_struct": {
-            "param": {
-                "basic_param_info": {
-                    "oid": "my_struct",
-                    "name": {
-                     "monoglot": "example struct"
-                    },
-                    "type": {
-                     "param_type": "STRUCT"
-                    }
                 },
                 "value": {
                     "struct_value": {
                         "fields": {
-                            "int_field": {
-                                "value": {
-                                    "int32_value": 1
-                                }
-                            },
-                            "float_field": {
-                                "value": {
-                                    "float32_value": 1
-                                }
-                            },
-                            "int_param": {
-                                "param": {
-                                    "basic_param_info": {
-                                    "name": {"monoglot": "sub param"},
-                                    "oid": "int_param",
-                                    "type": {"param_type": "INT32"}
-                                    },
-                                    "value": {
-                                    "int32_value": 123
-                                    }
-                                }
-                            }                       
+                            "latitude": {"float32_value": 1.0},
+                            "longitude": {"float32_value": 2.0}
                         }
-                    }
-                }                
-            }     
-        }
-    },
-    "commands": {
-        "play": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "Play speed"
-                    },
-                    "type": {
-                        "param_type": "FLOAT32"
-                    }
-                },
-                "value": {
-                    "float32_value": 1.0
-                },
-                "constraint": {
-                    "type": "FLOAT_RANGE",
-                    "float_range": {
-                        "min_value": 0.1,
-                        "max_value": 2.0,
-                        "display_min": 0.0,
-                        "display_max": 2.0,
-                        "step": 0.1
                     }
                 }
             }

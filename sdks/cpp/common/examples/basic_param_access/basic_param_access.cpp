@@ -64,21 +64,19 @@ int main(int argc, char **argv) {
     std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
 
     // add a struct param the hard way
-    catena::Param sparam{};
-    catena::BasicParamInfo info{};
-    *(info.mutable_name()->mutable_monoglot()) = "struct param";
-    *(info.mutable_oid()) = "sparam";
-    info.mutable_type()->set_param_type(
-        catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT);
-    *(sparam.mutable_basic_param_info()) = info;
+    // catena::Param sparam{};
+    // *(sparam.mutable_name()->mutable_monoglot()) = "struct param";
+    // *(sparam.mutable_fqoid()) = "sparam";
+    // sparam.mutable_type()->set_param_type(
+    //     catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT);
 
-    catena::Value fval;
-    fval.set_float32_value(1.23);
-    catena::Value struct_val;
-    (*(*struct_val.mutable_struct_value()->mutable_fields())["float_field"]
-          .mutable_value()) = fval;
-    (*sparam.mutable_value()) = struct_val;
-    dm.addParam("/sparam", std::move(sparam));
+    // catena::Value fval;
+    // fval.set_float32_value(1.23);
+    // catena::Value struct_val;
+    // (*(*struct_val.mutable_struct_value()->mutable_fields())["float_field"]
+    //       .mutable_value()) = fval;
+    // (*sparam.mutable_value()) = struct_val;
+    // dm.addParam("/sparam", std::move(sparam));
 
     // write out the updated device model
     std::cout << "Updated Device Model: " << dm << '\n';

@@ -121,7 +121,7 @@ catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
 
   // validate the param type
   catena::ParamType_ParamTypes type =
-      parent.basic_param_info().type().param_type();
+      parent.type().param_type();
   switch (type) {
   case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT:
     // this is ok
@@ -139,15 +139,9 @@ catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
 
   // validate path argument and the parameter
 
-  // is there a value field? It's optional, after all.
-  if (!parent.has_value()) {
-    BAD_STATUS("value field is missing", grpc::StatusCode::FAILED_PRECONDITION);
-  }
-
-  // is there a struct-value field?
-  if (!parent.value().has_struct_value()) {
-    BAD_STATUS("struct_value field is missing",
-               grpc::StatusCode::FAILED_PRECONDITION);
+  // is there a params field to define the sub-params?
+  if (!parent.params_size() > 0) {
+    BAD_STATUS("params field is missing", grpc::StatusCode::FAILED_PRECONDITION);
   }
 
   // is our oid a string?
@@ -156,19 +150,15 @@ catena::Param *catena::DeviceModel<T>::getSubparam_(catena::Path &path,
     BAD_STATUS("expected oid, got index", grpc::StatusCode::INVALID_ARGUMENT);
   }
 
-  // fourth, is the oid in the value.struct_value.fields object?
+  // is the oid defined?
   std::string oid(std::get<std::string>(seg));
-  if (!parent.value().struct_value().fields().contains(oid)) {
+  if (!parent.params().contains(oid)) {
     std::stringstream err;
     err << oid << " not found";
     BAD_STATUS((err.str()), grpc::StatusCode::FAILED_PRECONDITION);
   }
 
-  return parent.mutable_value()
-      ->mutable_struct_value()
-      ->mutable_fields()
-      ->at(oid)
-      .mutable_param();
+  return parent.mutable_params()->at(oid).mutable_param();
 }
 
 /**
@@ -232,7 +222,7 @@ std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
 template <>
 void setValueImpl<catena::Value const *>(catena::Param &p,
                                          catena::Value const *v) {
-  auto type = p.basic_param_info().type().param_type();
+  auto type = p.type().param_type();
   switch (type) {
   case catena::ParamType_ParamTypes_FLOAT32:
     if (!v->has_float32_value()) {
@@ -290,7 +280,7 @@ template void catena::DeviceModel<kSingle>::Param::setValueAt<catena::Value>(
 template <enum Threading T>
 const std::string &catena::DeviceModel<T>::getOid(const Param &param) {
   LockGuard lock(mutex_);
-  return param.param_.get().basic_param_info().oid();
+  return param.param_.get().fqoid();
 }
 
 template <enum Threading T>
@@ -339,7 +329,7 @@ V catena::DeviceModel<T>::Param::getValue() {
   catena::Param &cp = param_.get();
 
   if constexpr (std::is_same<W, float>::value) {
-    if (cp.basic_param_info().type().param_type() !=
+    if (cp.type().param_type() !=
         catena::ParamType::ParamTypes::ParamType_ParamTypes_FLOAT32) {
       BAD_STATUS("expected param of FLOAT32 type",
                  grpc::StatusCode::FAILED_PRECONDITION);
@@ -347,7 +337,7 @@ V catena::DeviceModel<T>::Param::getValue() {
     return getValueImpl<float>(cp);
 
   } else if constexpr (std::is_same<W, int>::value) {
-    if (cp.basic_param_info().type().param_type() !=
+    if (cp.type().param_type() !=
         catena::ParamType::ParamTypes::ParamType_ParamTypes_INT32) {
       BAD_STATUS("expected param of INT32 type",
                  grpc::StatusCode::FAILED_PRECONDITION);

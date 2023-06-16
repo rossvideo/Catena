@@ -89,56 +89,72 @@ message ParamDescriptor {
 //
 message Param {
 
-  BasicParamInfo basic_param_info = 1;
+  // fully qualified object id, a JSON pointer referenced to the top-level params field in the device.
+  // note that this information can be inferred from authored device models (JSON files) and should be
+  // left out of those. Devices / Services should populate this information. Whether this is done in eager
+  // or lazy fashion is up to the device.
+  //
+  string fqoid = 1;
+
+  // the parameter's name
+  PolyglotText name = 2;
+
+  // the parameter's type
+  ParamType type = 3;
 
   // Read only flag. Clients shall style the param's widget as read only
   // when true.
   //
-  bool read_only = 2;
+  bool read_only = 4;
 
   // Widget - identifies the GUI elements to display and adjust the parameter
   // value.
   //
-  string widget = 3;
+  string widget = 5;
 
   // For float params, how many digits to display
   //
-  uint32 precision = 4;
+  uint32 precision = 6;
 
   // The parameter's value
   //
-  Value value = 5;
+  Value value = 7;
 
   // The constraint's on the parameters' value
   // Can be a reference to a shared constraint or defined in-line
   //
-  Constraint constraint = 6;
+  Constraint constraint = 8;
 
   // For string params, the maximum length of the string
+  // @todo - is this really needed? the proto encoding of strings includes their length
   //
-  uint32 max_length = 7;
+  uint32 max_length = 9;
 
   // for string array params, the total length of all the strings
   // in the array
+  // @todo - is this really needed? doesn't proto give us this info?
   //
-  uint32 total_length = 8;
+  uint32 total_length = 10;
 
   // access scope
   // if not present, the parameter's access scope is that of its parent.
   // if not a child parameter, the access scope is the default for the device.
-  string access_scope = 9;
+  string access_scope = 11;
 
   // additional properties to assist client
-  map <string, string> client_hints = 10; 
+  map <string, string> client_hints = 12; 
 
   // if this is an imported sub-device, it can have a set of commands too
   //
-  map <string, ParamDescriptor> commands = 11;
+  map <string, ParamDescriptor> commands = 13;
+
+  // if this is a STRUCT or STRUCT_ARRAY Param it's sub-params are defined here
+  map <string, ParamDescriptor> params = 14;
 
   // meaningful when this message is used as a command descriptor
   // true if the command provides a response when executed
   //
-  bool response = 12;
+  bool response = 15;
 }
 
 enum UndefinedValue {
@@ -157,22 +173,13 @@ message StringList {
   repeated string strings = 1;
 }
 
-// the inner part of struct values can be either
-// the values of the struct members, or a definition of 
-// the struct members via a param descriptor
-//
-message StructField {
-  oneof kind {
-    Value value = 1;
-    Param param = 2;
-    Import import = 3;
-  }
-}
+
 // Structured object comprising named fields that map to dynamically typed
-// Values
+// Values. Needed for the STRUCT_ARRAY param type because proto doesn't
+// support repeated maps, or for maps to appear in oneof unions.
 //
 message StructValue {
-	map<string, StructField> fields = 1;
+	map<string, Value> fields = 1;
 } 
 
 
