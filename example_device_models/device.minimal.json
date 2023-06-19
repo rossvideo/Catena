@@ -33,11 +33,13 @@
         },
         "location": {
             "param": {
+                "fqoid": "/location",
                 "name": {"monoglot": "struct example"},
                 "type": {"param_type": "STRUCT"},
                 "params": {
                     "latitude": {
-                            "param": {
+                        "param": {
+                            "fqoid": "/location/latitude",
                             "name": {"monoglot": "Latitude"},
                             "type": {"param_type": "FLOAT32"},
                             "constraint": {
@@ -51,16 +53,16 @@
                     },
                     "longitude": {
                         "param": {
-                        "name": {"monoglot": "Longitude"},
-                        "type": {"param_type": "FLOAT32"},
-                        "constraint": {
-                            "type": "FLOAT_RANGE",
-                            "float_range": {
-                                "min_value": -180.0,
-                                "max_value": 180.0
+                            "name": {"monoglot": "Longitude"},
+                            "type": {"param_type": "FLOAT32"},
+                            "constraint": {
+                                "type": "FLOAT_RANGE",
+                                "float_range": {
+                                    "min_value": -180.0,
+                                    "max_value": 180.0
+                                }
                             }
                         }
-                    }
                 }
                 },
                 "value": {
