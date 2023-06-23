@@ -15,7 +15,7 @@ option optimize_for = CODE_SIZE;
 message ParamType {
 
   // Parameter types can be simple, structures, or binary.
-  enum ParamTypes {
+  enum ParamType {
     UNDEFINED = 0;
     EMPTY = 1;
     INT32 = 4;
@@ -42,7 +42,7 @@ message ParamType {
    * Can be defined in-line
    * or reference a shared type definition from device.types.params
    */
-  ParamTypes param_type = 1;
+  ParamType param_type = 1;
 
   // Non-relative JSON pointer to a param elsewhere in the model.
   string param_ref = 2;

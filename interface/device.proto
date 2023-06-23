@@ -36,7 +36,7 @@ message Device {
     SUBSCRIPTIONS = 1;
     MINIMAL = 2;
   }
-  DetailLevel detail = 2;
+  DetailLevel detail_level = 2;
 
   // Whether multi-set message is supported
   bool multi_set_enabled = 3;
@@ -57,7 +57,7 @@ message Device {
   map<string, ParamDescriptor> commands = 8;
 
   // The devices language packs
-  LanguagePacks languages = 9;
+  LanguagePacks language_packs = 9;
 
   // The device's access scopes, a list of mutually unique strings
   repeated string access_scopes = 10;
@@ -128,7 +128,7 @@ message DeviceComponent {
    */
   message ComponentCommand {
     string oid = 1;
-    Param command = 2;
+    Param param = 2;
   }
 
   /* A language pack. */
@@ -138,7 +138,7 @@ message DeviceComponent {
   }
 
   // Identifies device within server scope
-  uint32 slotid = 1;
+  uint32 slot = 1;
 
   /* Small device models can be sent in block.
    * Larger ones should be broken into a stream of smaller components.
@@ -149,7 +149,7 @@ message DeviceComponent {
     ComponentConstraint shared_constraint = 4;
     ComponentMenu menu = 5;
     ComponentCommand command = 6;
-    ComponentLanguagePack language = 7;
+    ComponentLanguagePack language_pack = 7;
   }
 }
 
@@ -162,7 +162,7 @@ message DeviceRequestPayload {
 /* Initial handshake between client and device. */
 message ConnectPayload {
   string language = 1;
-  Device.DetailLevel default_detail_level = 2;
+  Device.DetailLevel detail_level = 2;
   string user_agent = 3; // Description of the client type and version
   bool force_connection = 4; // True to request access if connection had been previously refused
   // authn / authz should be handled by gRPC metadata
@@ -177,7 +177,7 @@ message TrapMessage {
 message PushUpdates {
   message PushExternalObject {
     string oid = 1;
-	ExternalObjectPayload eo = 2;
+	ExternalObjectPayload external_object = 2;
   }
 
   message PushValue {
@@ -190,10 +190,10 @@ message PushUpdates {
     PushValue value = 2; // e.g. audio meters
     Param param = 3;
     DeviceComponent.ComponentConstraint constraint = 4;
-    DeviceComponent device_component = 5;
+    DeviceComponent device = 5;
     Exception refused = 6;
     string invalidated_external_object_id = 7;
-    TrapMessage trap = 8;
+    TrapMessage trap_message = 8;
     bool invalidate_device_model = 9;
 
     PushExternalObject external_object = 10;

@@ -17,7 +17,7 @@ import "eo.proto";
 // Catena's API
 
 message GeneralRequest {
-  int32 slot_id = 1;
+  int32 slot = 1;
 }
 
 // TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
