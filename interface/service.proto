@@ -6,7 +6,6 @@ option java_multiple_files = true;
 option java_package = "catena.core";
 option java_outer_classname = "CatenaCore";
 
-option cc_enable_arenas = true;
 option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
@@ -15,7 +14,7 @@ import "param.proto";
 import "language.proto";
 import "eo.proto";
 
-// Catena's API 
+// Catena's API
 //
 
 message GeneralRequest {
@@ -48,20 +47,17 @@ service catena {
 
   rpc GetParam(GetParamPayload) returns (stream DeviceComponent.ComponentParam);
 
-  // The stream of PushUpdates is open-ended, terminating only when the 
+  // The stream of PushUpdates is open-ended, terminating only when the
   // logical connection with the client is terminated.
   //
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
 
-  // Multi-language support 
+  // Multi-language support
   //
   rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); //Optional capability to allow clients to provide additional language packs
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
 
   rpc ListLanguages(GeneralRequest) returns (LanguageList);
-
-
-
 }

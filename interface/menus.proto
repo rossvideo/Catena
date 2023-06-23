@@ -8,13 +8,12 @@ option java_multiple_files = true;
 option java_package = "catena.core";
 option java_outer_classname = "MenuProtos";
 
-option cc_enable_arenas = true;
 option optimize_for = CODE_SIZE;
 
 // Menu message.
 // Defines a logical grouping of commands and parameters that can be displayed
 // together in a GUI and have client access control applied.
-// Note that sub-parameters (and sub-sub-parameters) can be selected by 
+// Note that sub-parameters (and sub-sub-parameters) can be selected by
 // specifying a JSON pointer relative to the device's "params" component.
 //
 message Menu {
@@ -68,4 +67,3 @@ message MenuGroup {
 message MenuGroups {
   map <string, MenuGroup> menu_groups = 1;
 }
-

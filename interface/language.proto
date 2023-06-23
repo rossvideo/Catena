@@ -6,7 +6,6 @@ option java_multiple_files = true;
 option java_package = "catena.core";
 option java_outer_classname = "LanguageProtos";
 
-option cc_enable_arenas = true;
 option optimize_for = CODE_SIZE;
 
 // Language Pack
@@ -21,7 +20,7 @@ message LanguagePack {
 // Language Packs
 // A map of language identifiers to resource dictionaries or language packs
 // for each language supported.
-// The keys shall be patterned on those defined in 
+// The keys shall be patterned on those defined in
 // https://www.mesaonline.org/language-metadata-table, e.g.
 // "es" for Global Spanish.
 // "es-CO" for Colombian Spanish.
@@ -55,7 +54,7 @@ message LanguagePacks {
 //
 // Neither the polyglot or key members need be used.
 //
-// The monoglot member is provided to allow use of this message type 
+// The monoglot member is provided to allow use of this message type
 // without or before multi-language support being available. And use
 // of clients that do not provide multi-language support.
 // It should always be provided.
@@ -85,13 +84,13 @@ message LanguagePackRequestPayload {
 
 // Language List
 // The list of language tags that the device supports.
-// 
+//
 // e.g.
 // [
 //    "en",
 //    "es",
 //    "fr"
-// ] // support for english, spanish & french
+// ] // support for English, Spanish & French
 //
 // e.g.
 // [] // no multi-lingual support
