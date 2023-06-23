@@ -29,7 +29,7 @@ message Alarm {
 
 /* Alarm Table. Comprises a number of different Alarms. */
 message AlarmTableConstraint {
-  repeated Alarm alarm_table = 1;
+  repeated Alarm alarms = 1;
 }
 
 /* Codes integers for display in client GUI as values or members of a pick list. */

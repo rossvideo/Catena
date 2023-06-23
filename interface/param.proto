@@ -61,7 +61,7 @@ message BasicParamInfo {
   // JSON pointer to a param that defines the structure of this param
   string template_oid = 4;
 
-  repeated string oid_alias = 5;
+  repeated string oid_aliases = 5;
 
 }
 
@@ -207,7 +207,7 @@ message Value {
 
 message Import {
   string url = 1;
-  repeated string excluding = 2;
+  repeated string excludes = 2;
 }
 
 message GetParamPayload {
@@ -254,13 +254,13 @@ message MultiSetValuePayload {
 
 message UpdateSubscriptionsPayload {
 	uint32 slot = 1; // Uniquely identifies the device at node scope.
-	repeated string oids_added = 2;
-	repeated string oids_removed = 3;
+	repeated string added_oids = 2;
+	repeated string removed_oids = 3;
 }
 
 /* Defines a command for a device.
  * Commands provide a way to use device connection to execute commands from other devices.
- * Superseded by just addting a `responds` field to the Param message.
+ * Superseded by just adding a `responds` field to the Param message.
  * message Command {
  *   Param definition = 1; // provides command's input values
  *   bool responds = 2; // true when the device will respond to the command, false otherwise.
