@@ -27,13 +27,8 @@ message ParamType {
     STRING_ARRAY = 17;
     BINARY = 18;
     STRUCT_ARRAY = 32;
-    DATA = 50; // used to allow commands to accept files
+    DATA = 50; // Used to allow commands to accept files
   }
-
-   /* Defines the parameter type.
-    * Can be defined in-line
-    * or reference a shared type definition from device.types.params
-    */
 
    /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
     *  ParamTypes param_type = 1;
@@ -42,6 +37,11 @@ message ParamType {
     * string param_ref = 2;
     * }
     */
+
+  /* Defines the parameter type.
+   * Can be defined in-line
+   * or reference a shared type definition from device.types.params
+   */
   ParamTypes param_type = 1;
 
   // Non-relative JSON pointer to a param elsewhere in the model.
@@ -79,7 +79,7 @@ message DataPayload {
 
   oneof kind {
   	string url = 3; // URL containing data for the payload
-  	bytes payload = 4; // data for the payload
+  	bytes payload = 4; // Data for the payload
   }
 }
 

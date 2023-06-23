@@ -13,7 +13,7 @@ option optimize_for = CODE_SIZE;
 message Alarm {
   int32 bit_value = 1; // range 0 to 31
 
-  // Alarm severity
+  /* The severity of an Alarm. */
   enum Severity {
     INFO = 0;
     WARNING = 1;
