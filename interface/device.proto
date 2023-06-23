@@ -170,7 +170,7 @@ message ConnectPayload {
 
 message TrapMessage {
 	string trap_type = 1;
-	repeated string messages = 2;
+	repeated string trap_data = 2;
 }
 
 /* Messages that the device can push to the client. */
