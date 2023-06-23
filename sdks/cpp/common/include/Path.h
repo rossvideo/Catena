@@ -26,6 +26,7 @@
  #include <string>
  #include <deque>
  #include <variant>
+ #include <memory>
 
 namespace catena {
 /**
