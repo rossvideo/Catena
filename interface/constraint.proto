@@ -38,7 +38,7 @@ message Int32ChoiceConstraint {
     int32 value = 1;
     PolyglotText name = 2;
   }
-  repeated IntChoice choice = 1;
+  repeated IntChoice choices = 1;
 }
 
 /* Range constraint including hard min & max values plus display min & max. */
