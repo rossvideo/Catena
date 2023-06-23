@@ -3,5 +3,5 @@
 ## Toolchain Recommendations
 
 * [macos](@ref macos_toolchain)
-* Windows (to do)
+* Windows (@ref windows_toolchain)
 * Ubuntu 22.04 (to do)
