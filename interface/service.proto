@@ -28,7 +28,7 @@ message GeneralResponse {
 }
 
 
-service catena {
+service CatenaService {
   rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
 
   rpc ExecuteCommand(ExecuteCommandPayload) returns (stream CommandResponse);
