@@ -11,11 +11,11 @@ option java_outer_classname = "EOProtos";
 option optimize_for = CODE_SIZE;
 
 message ExternalObjectRequestPayload {
-  uint32 slot = 1; // uniquely identifies the device at node scope.
-  string oid = 2;  // id external object being requested
+  uint32 slot = 1; // Uniquely identifies the device at node scope.
+  string oid = 2;  // ID of external object being requested
 }
 
 message ExternalObjectPayload {
-  bool cachable = 1; // if false, do not cache the external object payload
+  bool cachable = 1; // If false, do not cache the external object payload
   DataPayload payload = 2;
 }

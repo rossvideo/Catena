@@ -15,18 +15,16 @@ import "language.proto";
 import "eo.proto";
 
 // Catena's API
-//
 
 message GeneralRequest {
   int32 slot_id = 1;
 }
 
-//TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
+// TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
 message GeneralResponse {
   int32 return_code = 1;  // 0 indicates success, non-zero a problem
-  Exception exception = 2;  // explains non-zero return codes
+  Exception exception = 2;  // Explains non-zero return codes
 }
-
 
 service CatenaService {
   rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
@@ -49,13 +47,10 @@ service CatenaService {
 
   // The stream of PushUpdates is open-ended, terminating only when the
   // logical connection with the client is terminated.
-  //
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
-
   // Multi-language support
-  //
-  rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); //Optional capability to allow clients to provide additional language packs
+  rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); // Optional capability to allow clients to provide additional language packs
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
 
