@@ -140,7 +140,7 @@ message DeviceComponent {
   // Identifies device within server scope
   uint32 slot = 1;
 
-  /* Small device models can be sent in block.
+  /* Small device models can be sent as a whole.
    * Larger ones should be broken into a stream of smaller components.
    */
   oneof kind {
@@ -195,7 +195,6 @@ message PushUpdates {
     string invalidated_external_object_id = 7;
     TrapMessage trap_message = 8;
     bool invalidate_device_model = 9;
-
     PushExternalObject external_object = 10;
   }
 }
