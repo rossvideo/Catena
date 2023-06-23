@@ -27,13 +27,12 @@ message Alarm {
   PolyglotText description = 3;
 }
 
-// Alarm Table
-// Comprises a number of different Alarms.
+/* Alarm Table. Comprises a number of different Alarms. */
 message AlarmTableConstraint {
   repeated Alarm alarm_table = 1;
 }
 
-// Codes integers for display in client GUI as values or members of a pick list
+/* Codes integers for display in client GUI as values or members of a pick list. */
 message Int32ChoiceConstraint {
   message IntChoice {
     int32 value = 1;
@@ -42,7 +41,7 @@ message Int32ChoiceConstraint {
   repeated IntChoice choices = 2;
 }
 
-// Range constraint including hard min & max values plus display min & max
+/* Range constraint including hard min & max values plus display min & max. */
 message Int32RangeConstraint {
   int32 min_value = 1;
   int32 max_value = 2;
@@ -51,7 +50,7 @@ message Int32RangeConstraint {
   int32 display_max = 5;
 }
 
-// Range constraint with hard min & max plus display min & max.
+/* Range constraint with hard min & max plus display min & max. */
 message FloatRangeConstraint {
   float min_value = 1;
   float max_value = 2;
@@ -60,19 +59,19 @@ message FloatRangeConstraint {
   float display_max = 5;
 }
 
-// A reference to a shared constraint
+/* A reference to a shared constraint. */
 message ConstraintRef {
   string oid = 1; // The constraint's object id in Device.type.constraints.oid
 }
 
-// A selection of strings for client GUI to use in pick list and other GUI
-// elements
+/* A selection of strings for client GUI to use in pick list and other GUI elements. */
 message StringChoiceConstraint {
   repeated PolyglotText choices = 1;
 }
 
-// A selection of human-friendly strings to display in client GUI that are
-// used to select a string intended for machine use
+/* A selection of human-friendly strings to display in client GUI that are
+ * used to select a string intended for machine use.
+ */
 message StringStringChoiceConstraint {
   message StringStringChoice {
     string value = 1;
@@ -112,7 +111,7 @@ message Constraint {
   }
 }
 
-// A map of constraints intended for use as shared references
+/* A map of constraints intended for use as shared references. */
 message ConstraintDescriptors {
   map<string, Constraint> descriptors = 1;
 }

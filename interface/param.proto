@@ -30,16 +30,22 @@ message ParamType {
     DATA = 50; // used to allow commands to accept files
   }
 
-  // Defines the parameter type.
-  // Can be defined in-line
-  // or reference a shared type definition from device.types.params
+   /* Defines the parameter type.
+    * Can be defined in-line
+    * or reference a shared type definition from device.types.params
+    */
 
-  // oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
+   /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
+    *  ParamTypes param_type = 1;
+    *
+    * // Non-relative JSON pointer to a param elsewhere in the model.
+    * string param_ref = 2;
+    * }
+    */
   ParamTypes param_type = 1;
 
-    // Non-relative JSON pointer to a param elsewhere in the model.
-    string param_ref = 2;
-  // }
+  // Non-relative JSON pointer to a param elsewhere in the model.
+  string param_ref = 2;
 }
 
 message BasicParamInfo {
@@ -59,7 +65,7 @@ message BasicParamInfo {
 
 }
 
-// When streamed, only the payload field will be used after the first message
+/* When streamed, only the payload field will be used after the first message. */
 message DataPayload {
   string mime_type = 1; // MIME type of the data in the payload
 
@@ -84,17 +90,14 @@ message ParamDescriptor {
   }
 }
 
-// Param
 message Param {
 
   BasicParamInfo basic_param_info = 1;
 
-  // Read only flag. Clients shall style the param's widget as read only
-  // when true.
+  // Read only flag. Clients shall style the param's widget as read only when true.
   bool read_only = 2;
 
-  // Widget - identifies the GUI elements to display and adjust the parameter
-  // value.
+  // Identifies the GUI elements to display and adjust the parameter value.
   string widget = 3;
 
   // For float params, how many digits to display
@@ -103,20 +106,21 @@ message Param {
   // The parameter's value
   Value value = 5;
 
-  // The constraint's on the parameters' value
-  // Can be a reference to a shared constraint or defined in-line
+  /* The constraint's on the parameters' value.
+   * Can be a reference to a shared constraint or defined in-line.
+   */
   Constraint constraint = 6;
 
   // For string params, the maximum length of the string
   uint32 max_length = 7;
 
-  // For string array params, the total length of all the strings
-  // in the array
+  // For string array params, the total length of all the strings in the array
   uint32 total_length = 8;
 
-  // Access scope
-  // if not present, the parameter's access scope is that of its parent.
-  // if not a child parameter, the access scope is the default for the device.
+  /* Access scope
+   * if not present, the parameter's access scope is that of its parent.
+   * if not a child parameter, the access scope is the default for the device.
+   */
   string access_scope = 9;
 
   // Additional properties to assist client
@@ -125,8 +129,9 @@ message Param {
   // If this is an imported sub-device, it can have a set of commands too
   map<string, ParamDescriptor> commands = 11;
 
-  // Meaningful when this message is used as a command descriptor
-  // true if the command provides a response when executed
+  /* Meaningful when this message is used as a command descriptor
+   * true if the command provides a response when executed.
+   */
   bool response = 12;
 }
 
@@ -146,9 +151,10 @@ message StringList {
   repeated string strings = 1;
 }
 
-// The inner part of struct values can be either
-// the values of the struct members, or a definition of
-// the struct members via a param descriptor
+/* The inner part of struct values can be either
+ * the values of the struct members, or a definition of
+ * the struct members via a param descriptor.
+ */
 message StructField {
   oneof kind {
     Value value = 1;
@@ -157,8 +163,7 @@ message StructField {
   }
 }
 
-// Structured object comprising named fields that map to dynamically typed
-// Values
+/* Structured object comprising named fields that map to dynamically typed Values. */
 message StructValue {
 	map<string, StructField> fields = 1;
 }
@@ -167,10 +172,11 @@ message StructList {
   repeated StructValue struct_values = 1;
 }
 
-// Represents a dynamically typed value with straightforward mapping to
-// OGP/JSON.
-// Note that sfixed32 types are used to prefer marshalling performance
-// to wire size.
+/* Represents a dynamically typed value with straightforward mapping to
+ * OGP/JSON.
+ * Note that sfixed32 types are used to prefer marshalling performance
+ * to wire size.
+ */
 message Value {
   oneof kind {
 
@@ -214,13 +220,15 @@ message BasicParamInfoResponse {
 	uint32 array_length = 2; // If this BasicParamInfoResponse is for an array parameter, include the length of the array
 }
 
-// Specifies the OID and potentially its subtree of
-// child parameters if the recursive flag is set.
+/* Specifies the OID and potentially its subtree of
+ * child parameters if the recursive flag is set.
+ */
 message BasicParamInfoRequestPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
 
-  // Uniquely identifies starting parameter relative to device.params
-  // Specifying "" selects all top-level parameters.
+  /* Uniquely identifies starting parameter relative to device.params
+   * Specifying "" selects all top-level parameters.
+   */
   string oid_prefix = 2;
 
   // Selects whether the param's child parameters should also be returned.
@@ -250,15 +258,16 @@ message UpdateSubscriptionsPayload {
 	repeated string oids_removed = 3;
 }
 
-// Defines a command for a device.
-// Commands provide a way to use device connection to execute commands from other devices.
-// Superseded by just addting a `responds` field to the Param message.
-// message Command {
-//   Param definition = 1; // provides command's input values
-//   bool responds = 2; // true when the device will respond to the command, false otherwise.
-// }
-
-// When streamed, only the value field will be used after the first message
+/* Defines a command for a device.
+ * Commands provide a way to use device connection to execute commands from other devices.
+ * Superseded by just addting a `responds` field to the Param message.
+ * message Command {
+ *   Param definition = 1; // provides command's input values
+ *   bool responds = 2; // true when the device will respond to the command, false otherwise.
+ * }
+ *
+ * When streamed, only the value field will be used after the first message.
+*/
 message ExecuteCommandPayload {
   uint32 slot = 1; // Slot id of the device
   string oid = 2; // The object id of the command to execute relative to device.commands
@@ -272,7 +281,7 @@ message Exception {
   string details = 3;
 }
 
-// When streamed, only the response field will be used after the first message
+/* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
   int32 return_code = 1;  // 0 indicates success, non-zero a problem
   oneof kind {

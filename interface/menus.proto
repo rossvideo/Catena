@@ -10,11 +10,12 @@ option java_outer_classname = "MenuProtos";
 
 option optimize_for = CODE_SIZE;
 
-// Menu message.
-// Defines a logical grouping of commands and parameters that can be displayed
-// together in a GUI and have client access control applied.
-// Note that sub-parameters (and sub-sub-parameters) can be selected by
-// specifying a JSON pointer relative to the device's "params" component.
+/* Menu message.
+ * Defines a logical grouping of commands and parameters that can be displayed
+ * together in a GUI and have client access control applied.
+ * Note that sub-parameters (and sub-sub-parameters) can be selected by
+ * specifying a JSON pointer relative to the device's "params" component.
+ */
 message Menu {
   // Menu id, must be unique within its group.
   int32 id = 1;
@@ -25,8 +26,7 @@ message Menu {
   // Whether the menu should be hidden in the client GUI.
   bool hidden = 3;
 
-  // Whether the menu should be disabled (shown as read-only) in the client
-  // GUI.
+  // Whether the menu should be disabled (shown as read-only) in the client GUI.
   bool disabled = 4;
 
   // The menu's parameter members
@@ -35,11 +35,13 @@ message Menu {
   // The menu's command members
   repeated string command_oids = 6;
 
-  // Locator for a device specific custom user interface descriptor
-  map<string, string> client_hints = 7; // Additional properties to assist client including ui-url
+  /* Locator for a device specific custom user interface descriptor.
+   * Additional properties to assist client including ui-url
+   */
+  map<string, string> client_hints = 7;
 }
 
-// A group of 'theme' related menus.
+/* A group of 'theme' related menus. */
 message MenuGroup {
   // Menu group id, must be unique at device scope
   int32 id = 1;

@@ -45,8 +45,9 @@ service CatenaService {
 
   rpc GetParam(GetParamPayload) returns (stream DeviceComponent.ComponentParam);
 
-  // The stream of PushUpdates is open-ended, terminating only when the
-  // logical connection with the client is terminated.
+  /* The stream of PushUpdates is open-ended, terminating only when the
+   * logical connection with the client is terminated.
+   */
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
   // Multi-language support
