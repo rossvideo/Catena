@@ -2,6 +2,6 @@
 
 ## Toolchain Recommendations
 
-* [macos](@ref macos_toolchain)
+* [Ubuntu 22.04](@ref%20linux_toolchain)
+* [macos](@ref%20macos_toolchain)
 * Windows (to do)
-* Ubuntu 22.04 (to do)
