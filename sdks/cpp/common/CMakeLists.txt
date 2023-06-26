@@ -41,6 +41,7 @@ target_sources(${LIB_TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/utils.cpp>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/DeviceModel.cpp>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/Path.cpp>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/ParamAccessor.cpp>
 )
 
 target_link_libraries(${LIB_TARGET}

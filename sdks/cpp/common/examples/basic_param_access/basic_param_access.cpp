@@ -22,6 +22,7 @@
  */
 
 #include <DeviceModel.h>
+#include <ParamAccessor.h>
 #include <Path.h>
 
 #include <iomanip>
@@ -31,7 +32,8 @@
 
 using Index = catena::Path::Index;
 using DeviceModel = catena::DeviceModel<catena::Threading::kSingleThreaded>;
-using Param = DeviceModel::Param;
+using Param = catena::Param;
+using ParamAccessor = catena::ParamAccessor<DeviceModel>;
 
 int main(int argc, char **argv) {
   // process command line
@@ -48,12 +50,12 @@ int main(int argc, char **argv) {
     std::cout << "Read Device Model: " << dm << '\n';
 
     // cache a param and get its value
-    Param helloParam = dm.param("/hello");
+    ParamAccessor helloParam = dm.param("/hello");
     std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 
     // access a param directly
-    std::cout << "mystruct.int_param: "
-              << dm.param("/my_struct/int_param").getValue<int>() << '\n';
+    std::cout << "location.latitude: "
+              << dm.param("/location/latitude").getValue<float>() << '\n';
 
     // set some values in the device model using a cached param
     // and a path. N.B. types can be inferred
