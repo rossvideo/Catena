@@ -75,6 +75,17 @@
                     }
                 }
             }
+        },
+        "primes": {
+            "param": {
+                "type": {"type": "INT32_ARRAY"},
+                "name": {"monoglot": "The first few primes"},
+                "value": {
+                    "int32_array_values": {
+                        "ints": [1,2,3,5,7,11,13]
+                    }
+                }
+            }
         }
     }
 }

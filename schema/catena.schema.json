@@ -103,7 +103,8 @@
             "allOf": [
                 {"$ref": "#/$defs/apply_float32"},
                 {"$ref": "#/$defs/apply_int32"},
-                {"$ref": "#/$defs/apply_struct"}
+                {"$ref": "#/$defs/apply_struct"},
+                {"$ref": "#/$defs/apply_int32_array"}
             ]
         },
         "value": {
@@ -308,6 +309,48 @@
             "then": {
                 "properties": {
                     "value": {"$ref": "#/$defs/int32_value"},
+                    "constraint": {"$ref": "#/$defs/int32_constraint"}
+                }
+            }
+        },
+        "int32_array_values": {
+            "title": "INT32_ARRAY",
+            "description": "Defines INT32 array as a type",
+            "type": "object",
+            "properties": {
+                "int32_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "ints": {
+                            "type": "array",
+                            "items": {"$ref": "#/$defs/int32"}
+                        },
+                        "additionalItems": false
+                    },
+                    "required": ["ints"],
+                    "additionalProperties": false
+                },
+                "required": ["int32_array_values"],
+                "additionalProperties": false
+            },
+            "required": ["int32_array_values"],
+            "additionalProperties": false
+        },
+        "apply_int32_array": {
+            "title": "INT32 ARRAY specialism",
+            "description": "Applies INT32 ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties":{
+                            "type": {"const": "INT32_ARRAY"} 
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {"$ref": "#/$defs/int32_array_values"},
                     "constraint": {"$ref": "#/$defs/int32_constraint"}
                 }
             }
