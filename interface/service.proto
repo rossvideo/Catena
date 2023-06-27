@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+// change this to the smpte doc name once a st-# has been assigned
+// for example smpte_st_major_minor_year
 package catena;
 
 option java_multiple_files = true;

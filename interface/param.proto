@@ -78,7 +78,7 @@ message DataPayload {
   PayloadEncoding payload_encoding = 2;
 
   oneof kind {
-  	string url = 3; // URL containing data for the payload
+  	string url = 3;    // URL containing data for the payload
   	bytes payload = 4; // Data for the payload
   }
 }
@@ -92,47 +92,65 @@ message ParamDescriptor {
 
 message Param {
 
-  BasicParamInfo basic_param_info = 1;
+  // fully qualified object id, a JSON pointer referenced to the top-level
+  // params field in the device. note that this information can be inferred from
+  // authored device models (JSON files) and should be left out of those.
+  // Devices / Services should populate this information. Whether this is done
+  // in eager or lazy fashion is up to the device.
+  //
+  string fqoid = 1;
+
+  // the parameter's name
+  PolyglotText name = 2;
+
+  // the parameter's type
+  ParamType type = 3;
 
   // Read only flag. Clients shall style the param's widget as read only when true.
-  bool read_only = 2;
+  bool read_only = 4;
 
   // Identifies the GUI elements to display and adjust the parameter value.
-  string widget = 3;
+  string widget = 5;
 
   // For float params, how many digits to display
-  uint32 precision = 4;
+  uint32 precision = 6;
 
   // The parameter's value
-  Value value = 5;
+  Value value = 7;
 
   /* The constraint's on the parameters' value.
    * Can be a reference to a shared constraint or defined in-line.
    */
-  Constraint constraint = 6;
+  Constraint constraint = 8;
 
-  // For string params, the maximum length of the string
-  uint32 max_length = 7;
+  /* For string params, the maximum length of the string
+   * @todo - is this really needed? the proto encoding of strings includes their
+   * length
+   */
+  uint32 max_length = 9;
 
   // For string array params, the total length of all the strings in the array
-  uint32 total_length = 8;
+  uint32 total_length = 10;
 
   /* Access scope
    * if not present, the parameter's access scope is that of its parent.
    * if not a child parameter, the access scope is the default for the device.
    */
-  string access_scope = 9;
+  string access_scope = 11;
 
   // Additional properties to assist client
-  map<string, string> client_hints = 10;
+  map<string, string> client_hints = 12;
 
-  // If this is an imported sub-device, it can have a set of commands too
-  map<string, ParamDescriptor> commands = 11;
+  // If this is an imported sub-device, it can have a set of commands too.
+  map<string, ParamDescriptor> commands = 13;
+
+  // If this is a STRUCT or STRUCT_ARRAY Param its sub-params are defined here.
+  map<string, ParamDescriptor> params = 14;
 
   /* Meaningful when this message is used as a command descriptor
    * true if the command provides a response when executed.
    */
-  bool response = 12;
+  bool response = 15;
 }
 
 enum UndefinedValue {
@@ -151,21 +169,12 @@ message StringList {
   repeated string strings = 1;
 }
 
-/* The inner part of struct values can be either
- * the values of the struct members, or a definition of
- * the struct members via a param descriptor.
+/* Structured object comprising named fields that map to dynamically typed Values.
+ * Needed for the STRUCT_ARRAY param type because proto doesn't
+ * support repeated maps, or for maps to appear in oneof unions.
  */
-message StructField {
-  oneof kind {
-    Value value = 1;
-    Param param = 2;
-    Import import = 3;
-  }
-}
-
-/* Structured object comprising named fields that map to dynamically typed Values. */
 message StructValue {
-	map<string, StructField> fields = 1;
+	map<string, Value> fields = 1;
 }
 
 message StructList {
@@ -211,13 +220,13 @@ message Import {
 }
 
 message GetParamPayload {
-	uint32 slot = 1; // Uniquely identifies the device at node scope.
-	string oid = 2; // Uniquely identifies the param at device scope
+  uint32 slot = 1; // Uniquely identifies the device at node scope.
+  string oid = 2;  // Uniquely identifies the param at device scope
 }
 
 message BasicParamInfoResponse {
-	BasicParamInfo info = 1;
-	uint32 array_length = 2; // If this BasicParamInfoResponse is for an array parameter, include the length of the array
+  BasicParamInfo info = 1;
+  uint32 array_length = 2; // If this BasicParamInfoResponse is for an array parameter, include the length of the array
 }
 
 /* Specifies the OID and potentially its subtree of
@@ -236,15 +245,15 @@ message BasicParamInfoRequestPayload {
 }
 
 message SetValuePayload {
-  uint32 slot = 1; // Uniquely identifies the device at node scope.
-  string oid = 2; // Uniquely identifies the param at device scope
+  uint32 slot = 1;          // Uniquely identifies the device at node scope.
+  string oid = 2;           // Uniquely identifies the param at device scope
   uint32 element_index = 3; // When setting single elements of array parameters, the element in the array to update
-  Value value = 4;  // The value to apply
+  Value value = 4;          // The value to apply
 }
 
 message GetValuePayload {
-  uint32 slot = 1; // Uniquely identifies the device at node scope.
-  string oid = 2; // Uniquely identifies the param at device scope
+  uint32 slot = 1;          // Uniquely identifies the device at node scope.
+  string oid = 2;           // Uniquely identifies the param at device scope
   uint32 element_index = 3; // When requesting single elements of array parameters, the element in the array to get
 }
 
@@ -253,9 +262,9 @@ message MultiSetValuePayload {
 }
 
 message UpdateSubscriptionsPayload {
-	uint32 slot = 1; // Uniquely identifies the device at node scope.
-	repeated string added_oids = 2;
-	repeated string removed_oids = 3;
+  uint32 slot = 1; // Uniquely identifies the device at node scope.
+  repeated string added_oids = 2;
+  repeated string removed_oids = 3;
 }
 
 /* Defines a command for a device.
@@ -263,15 +272,15 @@ message UpdateSubscriptionsPayload {
  * Superseded by just adding a `responds` field to the Param message.
  * message Command {
  *   Param definition = 1; // provides command's input values
- *   bool responds = 2; // true when the device will respond to the command, false otherwise.
+ *   bool responds = 2;    // true when the device will respond to the command, false otherwise.
  * }
  *
  * When streamed, only the value field will be used after the first message.
 */
 message ExecuteCommandPayload {
-  uint32 slot = 1; // Slot id of the device
-  string oid = 2; // The object id of the command to execute relative to device.commands
-  Value value = 3; // The command's parameter value, if any
+  uint32 slot = 1;  // Slot id of the device
+  string oid = 2;   // The object id of the command to execute relative to device.commands
+  Value value = 3;  // The command's parameter value, if any
   bool respond = 5; // Set false to suppress responses from device
 }
 
@@ -283,7 +292,7 @@ message Exception {
 
 /* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
-  int32 return_code = 1;  // 0 indicates success, non-zero a problem
+  int32 return_code = 1; // 0 indicates success, non-zero a problem
   oneof kind {
     google.protobuf.Empty no_response = 2;
     Value response = 3;

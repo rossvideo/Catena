@@ -84,13 +84,22 @@
             "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
             "type": "object",
             "properties": {
-                "basic_param_info": {"$ref": "#/$defs/basic_param_info"},
+                "fqoid": {
+                    "title": "Fully Qualified Object ID",
+                    "description": "JSON pointer to this parameter descriptor, relative to the top-level /params object",
+                    "type": "string",
+                    "format": "json-pointer"
+                },
+                "type": {"$ref": "#/$defs/type"},
                 "value": {"$ref": "#/$defs/value"},
+                "name": {"$ref": "#/$defs/polyglot_text"},
                 "constraint": {"$ref": "#/$defs/constraint"},
+                "params": {"$ref": "#/$defs/param_map"},
                 "commands": {"$ref": "#/$defs/param_map"},
                 "access_scope": {"type": "string"}
             },
             "additionalProperties": false,
+            "required": ["type"],
             "allOf": [
                 {"$ref": "#/$defs/apply_float32"},
                 {"$ref": "#/$defs/apply_int32"},
@@ -141,14 +150,10 @@
             "title": "FLOAT32 specialism",
             "description": "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
             "if": {
-                "properties": {
-                    "basic_param_info": {
+                "properties": {    
+                    "type": {
                         "properties":{
-                            "type": {
-                                "properties":{
-                                    "param_type": {"const": "FLOAT32"} 
-                                }
-                            }
+                            "param_type": {"const": "FLOAT32"} 
                         }
                     }
                 }
@@ -293,13 +298,9 @@
             "description": "Applies INT32 values & constraints, disables properties that don't work with this type",
             "if": {
                 "properties": {
-                    "basic_param_info": {
+                    "type": {
                         "properties":{
-                            "type": {
-                                "properties":{
-                                    "param_type": {"const": "INT32"} 
-                                }
-                            }
+                            "param_type": {"const": "INT32"} 
                         }
                     }
                 }
@@ -329,42 +330,17 @@
         },
         "struct_fields": {
             "title": "struct definition",
-            "description": "holds struct data fields, or their descriptors, or a mix",
+            "description": "holds struct data fields",
             "type": "object",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "value": {
-                                    "oneOf": [                                       
-                                        {"$ref": "#/$defs/float32_value"},
-                                        {"$ref": "#/$defs/int32_value"}                                       
-                                    ]
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": ["value"]                         
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "param": {"$ref": "#/$defs/param"}
-                            },
-                            "additionalProperties": false,
-                            "required": ["param"]
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "import": {"$ref": "#/$defs/import"}
-                            },
-                            "additionalProperties": false,
-                            "required": ["import"]                         
-                        }
+                    "oneOf": [                                       
+                        {"$ref": "#/$defs/float32_value"},
+                        {"$ref": "#/$defs/int32_value"},
+                        {"$ref": "#/$defs/struct_value"}                                    
                     ]
-                }
+                },
+                "additionalProperties": false
             },
             "additionalProperties": false
         },
@@ -373,13 +349,9 @@
             "description": "Applies STRUCT values & constraints, disables properties that don't work with this specialism",
             "if": {
                 "properties": {
-                    "basic_param_info": {
+                    "type": {
                         "properties":{
-                            "type": {
-                                "properties":{
-                                    "param_type": {"const": "STRUCT"} 
-                                }
-                            }
+                            "param_type": {"const": "STRUCT"} 
                         }
                     }
                 }
