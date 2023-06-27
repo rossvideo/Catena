@@ -34,12 +34,22 @@ constexpr auto kSingle = catena::Threading::kSingleThreaded;
  * @brief internal implementation of the setValue method
  *
  * @tparam T underlying type of param to set value of
- * @param p the param
+ * @param p the param descriptor
+ * @param val the param's value object
  * @param v the value
  */
 template <typename T>
 void setValueImpl(catena::Param &p, catena::Value &val, T v);
 
+
+/**
+ * @brief specialize for float
+ *
+ * @tparam
+ * @param param the param descriptor
+ * @param val the param's value object
+ * @param v the value to set
+ */
 template <>
 void setValueImpl<float>(catena::Param &param, catena::Value &val, float v) {
   if (param.has_constraint()) {
@@ -53,10 +63,11 @@ void setValueImpl<float>(catena::Param &param, catena::Value &val, float v) {
 /**
  * @brief specialize for int
  *
- * @throws std::range_error if the constraint type isn't valid
+ * @throws OUT_OF_RANGE if the constraint type isn't valid
  * @tparam
- * @param param
- * @param v
+ * @param param the param descriptor
+ * @param val the param's value object
+ * @param v the value to set
  */
 template <>
 void setValueImpl<int>(catena::Param &param, catena::Value &val, int v) {
@@ -85,6 +96,16 @@ void setValueImpl<int>(catena::Param &param, catena::Value &val, int v) {
   val.set_int32_value(v);
 }
 
+/**
+ * @brief specialize for catena::Param
+ *
+ * @throws INVALID_ARGUMENT if the value type doesn't match the param type.
+ * @throws UNIMPLEMENTED if support for param type not implemented.
+ * @tparam
+ * @param param the param descriptor
+ * @param val the param's value object
+ * @param v the value to set
+ */
 template <>
 void setValueImpl<catena::Value const *>(catena::Param &p, catena::Value &val,
                                          catena::Value const *v) {
