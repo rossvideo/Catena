@@ -86,14 +86,11 @@ public:
   /**
    * @brief Param Accessor Data
    * 
+   * Yes, this could be a std::pair, but I've a hunch that we'll need to add
+   * a pointer to catena::Constraint too in the near future because constraints
+   * can be referenced and not only defined in-line.
    */
   using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
-
-  /**
-   * @brief Param Descriptor type
-   *
-   */
-  using PDesc = google::protobuf::RepeatedPtrField<catena::Param>;
 
   /**
    * @brief default constructor, creates an empty model.
