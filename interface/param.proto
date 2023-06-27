@@ -62,7 +62,6 @@ message BasicParamInfo {
   string template_oid = 4;
 
   repeated string oid_aliases = 5;
-
 }
 
 /* When streamed, only the payload field will be used after the first message. */
@@ -92,12 +91,12 @@ message ParamDescriptor {
 
 message Param {
 
-  // fully qualified object id, a JSON pointer referenced to the top-level
-  // params field in the device. note that this information can be inferred from
-  // authored device models (JSON files) and should be left out of those.
-  // Devices / Services should populate this information. Whether this is done
-  // in eager or lazy fashion is up to the device.
-  //
+  /* Fully qualified object id, a JSON pointer referenced to the top-level
+   * params field in the device. note that this information can be inferred from
+   * authored device models (JSON files) and should be left out of those.
+   * Devices / Services should populate this information. Whether this is done
+   * in eager or lazy fashion is up to the device.
+   */
   string fqoid = 1;
 
   // the parameter's name
@@ -159,17 +158,11 @@ enum UndefinedValue {
   UNDEFINED_VALUE = 0;
 }
 
-message Int32List {
-  repeated sfixed32 ints = 1;
-}
+message Int32List { repeated sfixed32 ints = 1; }
 
-message FloatList {
-  repeated float floats = 1;
-}
+message FloatList { repeated float floats = 1; }
 
-message StringList {
-  repeated string strings = 1;
-}
+message StringList { repeated string strings = 1; }
 
 /* Structured object comprising named fields that map to dynamically typed Values.
  * Needed for the STRUCT_ARRAY param type because proto doesn't
@@ -179,9 +172,7 @@ message StructValue {
   map<string, Value> fields = 1;
 }
 
-message StructList {
-  repeated StructValue struct_values = 1;
-}
+message StructList { repeated StructValue struct_values = 1; }
 
 /* Represents a dynamically typed value with straightforward mapping to
  * OGP/JSON.
@@ -212,7 +203,6 @@ message Value {
     StructList struct_array_values = 10;
 
     DataPayload data_payload = 11; // Used for commands that accept or return data blobs
-
   }
 }
 
@@ -259,9 +249,7 @@ message GetValuePayload {
   uint32 element_index = 3; // When requesting single elements of array parameters, the element in the array to get
 }
 
-message MultiSetValuePayload {
-  repeated SetValuePayload values = 1;
-}
+message MultiSetValuePayload { repeated SetValuePayload values = 1; }
 
 message UpdateSubscriptionsPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
