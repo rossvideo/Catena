@@ -22,6 +22,7 @@
  */
 
 #include <DeviceModel.h>
+#include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>
 
@@ -55,7 +56,7 @@ using grpc::Status;
 using Index = catena::Path::Index;
 using DeviceModel =
     typename catena::DeviceModel<catena::Threading::kMultiThreaded>;
-using Param = DeviceModel::Param;
+using ParamAccessor = typename catena::ParamAccessor<DeviceModel>;
 
 // set up the command line parameters
 ABSL_FLAG(uint16_t, port, 5255, "Catena service port");
@@ -118,7 +119,7 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 // 
 // right now, it just tests that a token exists, decodes it and prints it out
 // much work required to actually validate the token
-void authorize(grpc::ServerContext* context, Param &p) {
+void authorize(grpc::ServerContext* context /*catena::Param &p*/) {
   if (absl::GetFlag(FLAGS_authz)) {
     auto authz = context->client_metadata();
     auto it = authz.find("authorization");
@@ -138,12 +139,12 @@ void authorize(grpc::ServerContext* context, Param &p) {
   }
 }
 
-class CatenaServiceImpl final : public catena::catena::Service {
+class CatenaServiceImpl final : public catena::CatenaService::Service {
   Status GetValue(ServerContext *context, const ::catena::GetValuePayload *req,
                   ::catena::Value *res) override {
     try {
-      DeviceModel::Param p = dm_.get().param(req->oid());
-      authorize(context, p);
+      ParamAccessor p = dm_.get().param(req->oid());
+      authorize(context);
       *res = *p.getValue<catena::Value *>();
       std::cout << "GetValue: " << req->oid() << std::endl;
       return Status::OK;
@@ -161,9 +162,9 @@ class CatenaServiceImpl final : public catena::catena::Service {
   Status SetValue(ServerContext *context, const ::catena::SetValuePayload *req,
                   ::google::protobuf::Empty *res) override {
     try {
-      DeviceModel::Param p = dm_.get().param(req->oid());
+      auto p = dm_.get().param(req->oid());
       if (req->element_index()) {
-        p.setValueAt(req->value(), req->element_index());
+        p.setValueAt(&req->value(), static_cast<size_t>(req->element_index()));
       } else {
         p.setValue(&req->value());
       }
@@ -182,7 +183,7 @@ class CatenaServiceImpl final : public catena::catena::Service {
 
 public:
   inline explicit CatenaServiceImpl(DeviceModel &dm)
-      : catena::catena::Service{}, dm_{dm} {}
+      : catena::CatenaService::Service{}, dm_{dm} {}
 
   ~CatenaServiceImpl() {}
 
