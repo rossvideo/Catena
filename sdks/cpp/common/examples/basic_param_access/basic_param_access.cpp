@@ -62,8 +62,14 @@ int main(int argc, char **argv) {
     std::cout << "setting values to something different\n";
     helloParam.setValue(3.142f);    // example using cached param
     dm.param("/world").setValue(3); // example using chaining
-
     std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
+
+    // demo caching a sub-param
+    ParamAccessor longitudeParam = dm.param("/location/longitude");
+    std::cout << "Longitude: " << longitudeParam.getValue<float>() << '\n';
+    longitudeParam.setValue(30.0f);
+    std::cout << "Updated Longitude: " << longitudeParam.getValue<float>() << '\n';   
+    
 
     // add a struct param the hard way
     // catena::Param sparam{};
