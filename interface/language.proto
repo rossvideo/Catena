@@ -62,9 +62,9 @@ message LanguagePacks {
  * e.g. monoglot = "Hello"
  */
 message PolyglotText {
-  string monoglot = 1; // Fallback for non-multilingual devices/clients
+  string monoglot = 1;             // Fallback for non-multilingual devices/clients
   map<string, string> strings = 2; // In-line language definition
-  string key = 3; // Look up in a Language Pack
+  string key = 3;                  // Look up in a Language Pack
 }
 
 /* AddLanguagePayload
@@ -79,8 +79,8 @@ message AddLanguagePayload {
  * Requests a language pack from the device.
  */
 message LanguagePackRequestPayload {
-  uint32 slot = 1; // Uniquely identifies the device at node scope.
-  string language = 2;  // e.g. "es" Global Spanish.
+  uint32 slot = 1;     // Uniquely identifies the device at node scope.
+  string language = 2; // e.g. "es" Global Spanish.
 }
 
 /* Language List

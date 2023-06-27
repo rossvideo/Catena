@@ -154,8 +154,8 @@ message DeviceComponent {
 }
 
 message DeviceRequestPayload {
-  uint32 slot = 1; // The slot id, must be included
-  string language = 2; // Optionally specify the language for the response
+  uint32 slot = 1;                     // The slot id, must be included
+  string language = 2;                 // Optionally specify the language for the response
   Device.DetailLevel detail_level = 3; // Optionally specify the detail level for the response
 }
 
@@ -163,8 +163,8 @@ message DeviceRequestPayload {
 message ConnectPayload {
   string language = 1;
   Device.DetailLevel detail_level = 2;
-  string user_agent = 3; // Description of the client type and version
-  bool force_connection = 4; // True to request access if connection had been previously refused
+  string user_agent = 3;               // Description of the client type and version
+  bool force_connection = 4;           // True to request access if connection had been previously refused
   // authn / authz should be handled by gRPC metadata
 }
 

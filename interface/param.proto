@@ -129,7 +129,9 @@ message Param {
    */
   uint32 max_length = 9;
 
-  // For string array params, the total length of all the strings in the array
+  /* For string array params, the total length of all the strings in the array.
+   * @todo - is this really needed? doesn't proto give us this info?
+   */
   uint32 total_length = 10;
 
   /* Access scope
@@ -174,7 +176,7 @@ message StringList {
  * support repeated maps, or for maps to appear in oneof unions.
  */
 message StructValue {
-	map<string, Value> fields = 1;
+  map<string, Value> fields = 1;
 }
 
 message StructList {
