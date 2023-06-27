@@ -135,12 +135,12 @@ typename catena::DeviceModel<T>::ParamAccessorData catena::DeviceModel<T>::getSu
   auto [ parent, value ] = pad;
 
   // validate the param type
-  catena::ParamType_ParamTypes type = parent->type().param_type();
+  catena::ParamType_Type type = parent->type().type();
   switch (type) {
-  case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT:
+  case catena::ParamType_Type::ParamType_Type_STRUCT:
     // this is ok
     break;
-  case catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT_ARRAY:
+  case catena::ParamType_Type::ParamType_Type_STRUCT_ARRAY:
     /** @todo implement sub-param navigation for STRUCT_ARRAY */
     BAD_STATUS("sub-param navigation for STRUCT_ARRAY not implemented, sorry",
                grpc::StatusCode::UNIMPLEMENTED);

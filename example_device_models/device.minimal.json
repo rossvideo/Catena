@@ -2,23 +2,21 @@
     "slot": 1,
     "multi_set_enabled": true,
     "timeout": 100,
-    "detail": "MINIMAL",
+    "detail_level": "MINIMAL",
+    "access_scopes": ["monitor", "operate", "configure", "adminster"],
+    "default_scope": 1,
     "params": {
         "hello": {
             "param": {
-                "name": {
-                    "monoglot": "float example"
-                },
-                "type": {
-                    "param_type": "FLOAT32"
-                },
+                "type": {"type": "FLOAT32"},
+                "name": {"monoglot": "Example Float Parameter"},
                 "value": {
-                    "float32_value": 12.3
+                    "float32_value": 1.23
                 },
                 "constraint": {
                     "type": "FLOAT_RANGE",
                     "float_range": {
-                        "min_value": 0.0,
+                        "min_value": 1.0,
                         "max_value": 10.0
                     }
                 }
@@ -26,63 +24,59 @@
         },
         "world": {
             "param": {
-                "name": {"monoglot": "int32 example"},
-                "type": {"param_type": "INT32"},
-                "value": {"int32_value": 0}
+                "type": {"type": "INT32"},
+                "name": {"monoglot": "Example int32 Parameter"},
+                "value": {
+                    "int32_value": 123
+                },
+                "constraint": {
+                    "type": "INT_CHOICE",
+                    "int32_choice": {
+                        "choices": [
+                            {"name": {"monoglot": "one"}, "value": 1},
+                            {"name": {"monoglot": "two"}, "value": 2}
+                        ]
+                    }
+                }
             }
         },
         "location": {
             "param": {
-                "fqoid": "/location",
-                "name": {"monoglot": "struct example"},
-                "type": {"param_type": "STRUCT"},
+                "type": {"type": "STRUCT"},
+                "name": {"monoglot": "Example struct parameter"},
                 "params": {
                     "latitude": {
                         "param": {
-                            "fqoid": "/location/latitude",
-                            "name": {"monoglot": "Latitude"},
-                            "type": {"param_type": "FLOAT32"},
+                            "type": {"type": "FLOAT32"},
+                            "name": {"monoglot": "Latitude, Degrees"},
                             "constraint": {
-                                "type": "FLOAT_RANGE",
-                                "float_range": {
-                                    "min_value": -90.0,
-                                    "max_value": 90.0
-                                }
+                                "type": "FLOAT_RANGE", 
+                                "float_range": {"min_value": -90.0, "max_value": 90.0}
                             }
                         }
                     },
                     "longitude": {
                         "param": {
-                            "name": {"monoglot": "Longitude"},
-                            "type": {"param_type": "FLOAT32"},
+                            "type": {"type": "FLOAT32"},
+                            "name": {"monoglot": "Longitude, Degrees"},
                             "constraint": {
-                                "type": "FLOAT_RANGE",
-                                "float_range": {
-                                    "min_value": -180.0,
-                                    "max_value": 180.0
-                                }
+                                "type": "FLOAT_RANGE", 
+                                "float_range": {"min_value": -180.0, "max_value": 180.0}
                             }
                         }
-                }
+                    }
                 },
                 "value": {
                     "struct_value": {
                         "fields": {
-                            "latitude": {"float32_value": 1.0},
-                            "longitude": {"float32_value": 2.0}
+                            "latitude": {"float32_value": 10.0},
+                            "longitude": {"float32_value": -20.0}
                         }
                     }
                 }
             }
         }
-    },
-    "access_scopes": [
-        "monitor",
-        "operate",
-        "configure",
-        "admin"
-    ],
-    "default_scope": 0
+    }
 }
 
 

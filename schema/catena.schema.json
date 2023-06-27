@@ -6,7 +6,7 @@
     "properties": {
         "oid": {"$ref": "#/$defs/oid"},
         "slot": {"$ref": "#/$defs/slot"},
-        "detail": {"$ref": "#/$defs/detail"},
+        "detail_level": {"$ref": "#/$defs/detail_level"},
         "multi_set_enabled": {
             "title": "Multi Set Message Enabled Flag",
             "description": "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
@@ -153,7 +153,7 @@
                 "properties": {    
                     "type": {
                         "properties":{
-                            "param_type": {"const": "FLOAT32"} 
+                            "type": {"const": "FLOAT32"} 
                         }
                     }
                 }
@@ -300,7 +300,7 @@
                 "properties": {
                     "type": {
                         "properties":{
-                            "param_type": {"const": "INT32"} 
+                            "type": {"const": "INT32"} 
                         }
                     }
                 }
@@ -351,7 +351,7 @@
                 "properties": {
                     "type": {
                         "properties":{
-                            "param_type": {"const": "STRUCT"} 
+                            "type": {"const": "STRUCT"} 
                         }
                     }
                 }
@@ -408,7 +408,7 @@
             "maximum": 65535,
             "default": 0
         },
-        "detail": {
+        "detail_level": {
             "title": "Level of Detail",
             "description": "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, and 'subscription' reports the minimal set plus identified subscribed parameters.",
             "type": "string",
@@ -477,7 +477,7 @@
             "description": "Could be defined in-line or by reference to another parameter",
             "type": "object",
             "properties": {
-                "param_type": {"$ref": "#/$defs/param_type"}
+                "type": {"$ref": "#/$defs/param_type"}
             },
             "additionalProperties": false
         },

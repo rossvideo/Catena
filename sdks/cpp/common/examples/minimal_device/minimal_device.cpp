@@ -139,7 +139,7 @@ void authorize(grpc::ServerContext* context /*catena::Param &p*/) {
   }
 }
 
-class CatenaServiceImpl final : public catena::catena::Service {
+class CatenaServiceImpl final : public catena::CatenaService::Service {
   Status GetValue(ServerContext *context, const ::catena::GetValuePayload *req,
                   ::catena::Value *res) override {
     try {
@@ -183,7 +183,7 @@ class CatenaServiceImpl final : public catena::catena::Service {
 
 public:
   inline explicit CatenaServiceImpl(DeviceModel &dm)
-      : catena::catena::Service{}, dm_{dm} {}
+      : catena::CatenaService::Service{}, dm_{dm} {}
 
   ~CatenaServiceImpl() {}
 

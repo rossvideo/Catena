@@ -109,16 +109,16 @@ void setValueImpl<int>(catena::Param &param, catena::Value &val, int v) {
 template <>
 void setValueImpl<catena::Value const *>(catena::Param &p, catena::Value &val,
                                          catena::Value const *v) {
-  auto type = p.type().param_type();
+  auto type = p.type().type();
   switch (type) {
-  case catena::ParamType_ParamTypes_FLOAT32:
+  case catena::ParamType_Type_FLOAT32:
     if (!v->has_float32_value()) {
       BAD_STATUS("expected float value", grpc::StatusCode::INVALID_ARGUMENT);
     }
     setValueImpl<float>(p, val, v->float32_value());
     break;
 
-  case catena::ParamType_ParamTypes_INT32:
+  case catena::ParamType_Type_INT32:
     if (!v->has_int32_value()) {
       BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
     }
@@ -184,16 +184,16 @@ V catena::ParamAccessor<DM>::getValue() {
   catena::Value &v = value_.get();
 
   if constexpr (std::is_same<W, float>::value) {
-    if (cp.type().param_type() !=
-        catena::ParamType::ParamTypes::ParamType_ParamTypes_FLOAT32) {
+    if (cp.type().type() !=
+        catena::ParamType::Type::ParamType_Type_FLOAT32) {
       BAD_STATUS("expected param of FLOAT32 type",
                  grpc::StatusCode::FAILED_PRECONDITION);
     }
     return getValueImpl<float>(v);
 
   } else if constexpr (std::is_same<W, int>::value) {
-    if (cp.type().param_type() !=
-        catena::ParamType::ParamTypes::ParamType_ParamTypes_INT32) {
+    if (cp.type().type() !=
+        catena::ParamType::Type::ParamType_Type_INT32) {
       BAD_STATUS("expected param of INT32 type",
                  grpc::StatusCode::FAILED_PRECONDITION);
     }
