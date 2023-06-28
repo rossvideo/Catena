@@ -68,5 +68,4 @@ std::string readFile(std::filesystem::path path);
  */
 void subs(std::string &str, const std::string &seq, const std::string &rep);
 
-
 } // namespace catena
