@@ -40,9 +40,9 @@ struct exception_with_status : public std::runtime_error {
 /**
  * @brief creates a catena::exception_with_status object and throws it.
  * @todo condition whether __FILE__ and __LINE__ are reported on the build type
- * this info should be restricted to dev and dbg builds and not go into 
+ * this info should be restricted to dev and dbg builds and not go into
  * release / production ones.
- * 
+ *
  */
 #define BAD_STATUS(msg, status)                                                \
   do {                                                                         \

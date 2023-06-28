@@ -1,95 +1,148 @@
 {
-    "slot": 1,
-    "multi_set_enabled": true,
-    "timeout": 100,
-    "detail_level": "MINIMAL",
-    "access_scopes": ["monitor", "operate", "configure", "adminster"],
-    "default_scope": 1,
-    "params": {
-        "hello": {
-            "param": {
-                "type": {"type": "FLOAT32"},
-                "name": {"monoglot": "Example Float Parameter"},
-                "value": {
-                    "float32_value": 1.23
-                },
-                "constraint": {
-                    "type": "FLOAT_RANGE",
-                    "float_range": {
-                        "min_value": 1.0,
-                        "max_value": 10.0
-                    }
-                }
-            }
+  "slot": 1,
+  "multi_set_enabled": true,
+  "timeout": 100,
+  "detail_level": "MINIMAL",
+  "access_scopes": [
+    "monitor",
+    "operate",
+    "configure",
+    "adminster"
+  ],
+  "default_scope": 1,
+  "params": {
+    "hello": {
+      "param": {
+        "type": {
+          "type": "FLOAT32"
         },
-        "world": {
-            "param": {
-                "type": {"type": "INT32"},
-                "name": {"monoglot": "Example int32 Parameter"},
-                "value": {
-                    "int32_value": 123
-                },
-                "constraint": {
-                    "type": "INT_CHOICE",
-                    "int32_choice": {
-                        "choices": [
-                            {"name": {"monoglot": "one"}, "value": 1},
-                            {"name": {"monoglot": "two"}, "value": 2}
-                        ]
-                    }
-                }
-            }
+        "name": {
+          "monoglot": "Example Float Parameter"
         },
-        "location": {
-            "param": {
-                "type": {"type": "STRUCT"},
-                "name": {"monoglot": "Example struct parameter"},
-                "params": {
-                    "latitude": {
-                        "param": {
-                            "type": {"type": "FLOAT32"},
-                            "name": {"monoglot": "Latitude, Degrees"},
-                            "constraint": {
-                                "type": "FLOAT_RANGE", 
-                                "float_range": {"min_value": -90.0, "max_value": 90.0}
-                            }
-                        }
-                    },
-                    "longitude": {
-                        "param": {
-                            "type": {"type": "FLOAT32"},
-                            "name": {"monoglot": "Longitude, Degrees"},
-                            "constraint": {
-                                "type": "FLOAT_RANGE", 
-                                "float_range": {"min_value": -180.0, "max_value": 180.0}
-                            }
-                        }
-                    }
-                },
-                "value": {
-                    "struct_value": {
-                        "fields": {
-                            "latitude": {"float32_value": 10.0},
-                            "longitude": {"float32_value": -20.0}
-                        }
-                    }
-                }
-            }
+        "value": {
+          "float32_value": 1.23
         },
-        "primes": {
-            "param": {
-                "type": {"type": "INT32_ARRAY"},
-                "name": {"monoglot": "The first few primes"},
-                "value": {
-                    "int32_array_values": {
-                        "ints": [1,2,3,5,7,11,13]
-                    }
-                }
-            }
+        "constraint": {
+          "type": "FLOAT_RANGE",
+          "float_range": {
+            "min_value": 1.0,
+            "max_value": 10.0
+          }
         }
+      }
+    },
+    "world": {
+      "param": {
+        "type": {
+          "type": "INT32"
+        },
+        "name": {
+          "monoglot": "Example int32 Parameter"
+        },
+        "value": {
+          "int32_value": 123
+        },
+        "constraint": {
+          "type": "INT_CHOICE",
+          "int32_choice": {
+            "choices": [
+              {
+                "name": {
+                  "monoglot": "one"
+                },
+                "value": 1
+              },
+              {
+                "name": {
+                  "monoglot": "two"
+                },
+                "value": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "location": {
+      "param": {
+        "type": {
+          "type": "STRUCT"
+        },
+        "name": {
+          "monoglot": "Example struct parameter"
+        },
+        "params": {
+          "latitude": {
+            "param": {
+              "type": {
+                "type": "FLOAT32"
+              },
+              "name": {
+                "monoglot": "Latitude, Degrees"
+              },
+              "constraint": {
+                "type": "FLOAT_RANGE",
+                "float_range": {
+                  "min_value": -90.0,
+                  "max_value": 90.0
+                }
+              }
+            }
+          },
+          "longitude": {
+            "param": {
+              "type": {
+                "type": "FLOAT32"
+              },
+              "name": {
+                "monoglot": "Longitude, Degrees"
+              },
+              "constraint": {
+                "type": "FLOAT_RANGE",
+                "float_range": {
+                  "min_value": -180.0,
+                  "max_value": 180.0
+                }
+              }
+            }
+          }
+        },
+        "value": {
+          "struct_value": {
+            "fields": {
+              "latitude": {
+                "float32_value": 10.0
+              },
+              "longitude": {
+                "float32_value": -20.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "primes": {
+      "param": {
+        "type": {
+          "type": "INT32_ARRAY"
+        },
+        "name": {
+          "monoglot": "The first few primes"
+        },
+        "value": {
+          "int32_array_values": {
+            "ints": [
+              1,
+              2,
+              3,
+              5,
+              7,
+              11,
+              13
+            ]
+          }
+        }
+      }
     }
+  }
 }
-
-
-
-  
