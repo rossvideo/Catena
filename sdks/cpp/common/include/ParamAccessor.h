@@ -53,8 +53,8 @@ template <typename DM> class ParamAccessor {
   static_assert(
       std::is_same_v<DM,
                      catena::DeviceModel<catena::Threading::kMultiThreaded>> ||
-          std::is_same_v<
-              DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,
+          std::is_same_v < DM,
+      catena::DeviceModel<catena::Threading::kSingleThreaded>>,
       "Class Template Parameter must be of type DeviceModel<T>");
 
 public:

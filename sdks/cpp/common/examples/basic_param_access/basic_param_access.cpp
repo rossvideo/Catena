@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
     ParamAccessor longitudeParam = dm.param("/location/longitude");
     std::cout << "Longitude: " << longitudeParam.getValue<float>() << '\n';
     longitudeParam.setValue(30.0f);
-    std::cout << "Updated Longitude: " << longitudeParam.getValue<float>()
-              << '\n';
+    std::cout << "Updated Longitude: " << longitudeParam.getValue<float>() << '\n';   
+    
 
     // add a struct param the hard way
     // catena::Param sparam{};
