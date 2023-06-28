@@ -5,6 +5,7 @@ package catena;
 import "language.proto";
 import "constraint.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 option java_package = "catena.core";
@@ -77,8 +78,8 @@ message DataPayload {
   PayloadEncoding payload_encoding = 2;
 
   oneof kind {
-  	string url = 3;    // URL containing data for the payload
-  	bytes payload = 4; // Data for the payload
+  	google.protobuf.StringValue url = 3;    // URL containing data for the payload
+  	google.protobuf.BytesValue payload = 4; // Data for the payload
   }
 }
 
@@ -154,9 +155,7 @@ message Param {
   bool response = 15;
 }
 
-enum UndefinedValue {
-  UNDEFINED_VALUE = 0;
-}
+message SFixedInt32Value { sfixed32 value = 1; }
 
 message Int32List { repeated sfixed32 ints = 1; }
 
@@ -181,16 +180,15 @@ message StructList { repeated StructValue struct_values = 1; }
  */
 message Value {
   oneof kind {
-
-    UndefinedValue undefined_value = 1;
+    google.protobuf.Empty undefined_value = 1;
 
     google.protobuf.Empty empty_value = 2; // Used for zero-argument commands
 
-    sfixed32 int32_value = 3;
+    SFixedInt32Value int32_value = 3;
 
-    float float32_value = 4;
+    google.protobuf.FloatValue float32_value = 4;
 
-    string string_value = 5;
+    google.protobuf.StringValue string_value = 5;
 
     StructValue struct_value = 6;
 
