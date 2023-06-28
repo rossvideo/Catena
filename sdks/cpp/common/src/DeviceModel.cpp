@@ -27,11 +27,10 @@
 #include <stdexcept>
 #include <tuple>
 
-
-using google::protobuf::Map;
 using catena::DeviceModel;
 using catena::ParamAccessor;
 using catena::Threading;
+using google::protobuf::Map;
 
 template <enum Threading T>
 DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
@@ -97,7 +96,8 @@ const catena::Device &catena::DeviceModel<T>::device() const {
 template <enum Threading T> catena::Value catena::DeviceModel<T>::noValue_;
 
 template <enum Threading T>
-catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(const std::string &jptr) {
+catena::ParamAccessor<catena::DeviceModel<T>>
+catena::DeviceModel<T>::param(const std::string &jptr) {
   LockGuard lock(mutex_);
   catena::Path path_(jptr);
 
@@ -117,7 +117,7 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
   }
 
   ParamAccessorData ans;
-  catena::Param* p = device_.mutable_params()->at(oid).mutable_param();
+  catena::Param *p = device_.mutable_params()->at(oid).mutable_param();
   std::get<0>(ans) = p;
   std::get<1>(ans) = (p->has_value() ? p->mutable_value() : &noValue_);
   while (path_.size()) {
@@ -128,11 +128,12 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
 }
 
 template <enum Threading T>
-typename catena::DeviceModel<T>::ParamAccessorData catena::DeviceModel<T>::getSubparam_(
+typename catena::DeviceModel<T>::ParamAccessorData
+catena::DeviceModel<T>::getSubparam_(
     catena::Path &path, catena::DeviceModel<T>::ParamAccessorData &pad) {
 
   // destructure the param-value pair
-  auto [ parent, value ] = pad;
+  auto [parent, value] = pad;
 
   // validate the param type
   catena::ParamType_Type type = parent->type().type();
@@ -245,7 +246,6 @@ std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
 //   *(*device_.mutable_params())[oid].mutable_param() = p;
 //   return Param(*this, *device_.mutable_params()->at(oid).mutable_param());
 // }
-
 
 // instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::DeviceModel<Threading::kMultiThreaded>;

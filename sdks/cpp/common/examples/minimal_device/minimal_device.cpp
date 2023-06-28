@@ -116,10 +116,10 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 
 // if authz is enabled, inspect the bearer token to decide whether to grant
 // access.
-// 
+//
 // right now, it just tests that a token exists, decodes it and prints it out
 // much work required to actually validate the token
-void authorize(grpc::ServerContext* context /*catena::Param &p*/) {
+void authorize(grpc::ServerContext *context /*catena::Param &p*/) {
   if (absl::GetFlag(FLAGS_authz)) {
     auto authz = context->client_metadata();
     auto it = authz.find("authorization");
