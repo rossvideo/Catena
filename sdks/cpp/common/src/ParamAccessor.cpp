@@ -41,6 +41,7 @@ constexpr auto kSingle = catena::Threading::kSingleThreaded;
 template <typename T>
 void setValueImpl(catena::Param &p, catena::Value &val, T v);
 
+
 /**
  * @brief specialize for float
  *
@@ -183,14 +184,16 @@ V catena::ParamAccessor<DM>::getValue() {
   catena::Value &v = value_.get();
 
   if constexpr (std::is_same<W, float>::value) {
-    if (cp.type().type() != catena::ParamType::Type::ParamType_Type_FLOAT32) {
+    if (cp.type().type() !=
+        catena::ParamType::Type::ParamType_Type_FLOAT32) {
       BAD_STATUS("expected param of FLOAT32 type",
                  grpc::StatusCode::FAILED_PRECONDITION);
     }
     return getValueImpl<float>(v);
 
   } else if constexpr (std::is_same<W, int>::value) {
-    if (cp.type().type() != catena::ParamType::Type::ParamType_Type_INT32) {
+    if (cp.type().type() !=
+        catena::ParamType::Type::ParamType_Type_INT32) {
       BAD_STATUS("expected param of INT32 type",
                  grpc::StatusCode::FAILED_PRECONDITION);
     }

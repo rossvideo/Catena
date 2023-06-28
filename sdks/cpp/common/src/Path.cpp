@@ -78,7 +78,7 @@ std::string catena::Path::unescape(const std::string &str) {
   return ans;
 }
 
-void catena::Path::push_back(const std::string &oid) {
+void catena::Path::push_back(const std::string& oid) {
   std::string back{oid};
   escape(back);
   segments_.push_back(back);
@@ -96,3 +96,4 @@ std::unique_ptr<catena::Path> operator"" _path(const char *lit,
                                                std::size_t sz) {
   return std::make_unique<catena::Path>(lit);
 }
+
