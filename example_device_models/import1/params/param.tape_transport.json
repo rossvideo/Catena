@@ -8,74 +8,18 @@
         }
     },
     "commands": {
-        "play": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": ">"
-                    }
-                }
-            }
-        },
-        "stop": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "[]"
-                    }
-                }
-            }
-        },
-        "pause": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "||"
-                    }
-                }
-            }
-        },
-        "eject": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "^"
-                    }
-                }
-            }
-        },
-        "load": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "v"
-                    }
-                }
-            }
-        },
-        "rewind": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "<<"
-                    }
-                }
-            }
-        },
-        "fast_forward": {
-            "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": ">>"
-                    }
-                }
-            }
-        }
+        "play": {"param": {"basic_param_info": {"name": {"monoglot": ">"}}}},
+        "stop": {"param": {"basic_param_info": {"name": {"monoglot": "[]"}}}},
+        "pause": {"param": {"basic_param_info": {"name": {"monoglot": "||"}}}},
+        "eject": {"param": {"basic_param_info": {"name": {"monoglot": "^"}}}},
+        "load": {"param": {"basic_param_info": {"name": {"monoglot": "v"}}}},
+        "rewind": {"param": {"basic_param_info": {"name": {"monoglot": "<<"}}}},
+        "fast_forward": {"param": {"basic_param_info": {"name": {"monoglot": ">>"}}}}
     },
     "value": {
         "struct_value": {
             "fields": {
-                "play_mode": {
+                "play_mode":{
                     "param": {
                         "basic_param_info": {
                             "name": {
@@ -92,18 +36,8 @@
                             "type": "INT_CHOICE",
                             "int32_choice": {
                                 "choices": [
-                                    {
-                                        "name": {
-                                            "monoglot": "Stop"
-                                        },
-                                        "value": 0
-                                    },
-                                    {
-                                        "name": {
-                                            "monoglot": "Loop"
-                                        },
-                                        "value": 1
-                                    }
+                                    {"name": {"monoglot": "Stop"}, "value": 0},
+                                    {"name": {"monoglot": "Loop"}, "value": 1}
                                 ]
                             }
                         }
@@ -152,7 +86,7 @@
                         "value": {
                             "float32_value": 1.0
                         },
-                        "constraint": {
+                        "constraint":{
                             "type": "FLOAT_RANGE",
                             "float_range": {
                                 "min_value": -2.0,

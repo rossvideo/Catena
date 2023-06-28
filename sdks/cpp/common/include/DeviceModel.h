@@ -55,115 +55,119 @@ namespace catena {
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
-template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
-  public:
-    /**
+template <enum Threading T = Threading::kMultiThreaded>
+class DeviceModel {
+public:
+  /**
    * @brief which threading model is active.
    *
    */
-    const catena::Threading kThreading = T;
+  const catena::Threading kThreading = T;
 
-    /**
+  /**
    * @brief Choose the mutex type
    *
    */
-    using Mutex = typename std::conditional<T == catena::Threading::kMultiThreaded, std::recursive_mutex,
-                                            FakeMutex>::type;
+  using Mutex =
+      typename std::conditional<T == catena::Threading::kMultiThreaded,
+                                std::recursive_mutex, FakeMutex>::type;
 
-    /**
+  /**
    * @brief Choose the lock guard type
    *
    */
-    using LockGuard = typename std::conditional<T == catena::Threading::kMultiThreaded,
-                                                std::lock_guard<Mutex>, FakeLockGuard<Mutex>>::type;
+  using LockGuard =
+      typename std::conditional<T == catena::Threading::kMultiThreaded,
+                                std::lock_guard<Mutex>,
+                                FakeLockGuard<Mutex>>::type;
 
-    /**
+  /**
    * @brief Param Descriptor type
    *
    */
-    using PDesc = google::protobuf::RepeatedPtrField<catena::Param>;
+  using PDesc = google::protobuf::RepeatedPtrField<catena::Param>;
 
-    // /**
-    //  * @brief Provides a way of sharing the device model's internal state
-    //  * with client programs without letting them directly access it.
-    //  *
-    //  * Design Motivation - it can be expensive to retreive items from the
-    //  * data model. So, once acquired it's nice for a client program to
-    //  * hold onto them yet still only use the device model interface to
-    //  * manipulate the state. N.B. the device model interface provides thread
-    //  * safety by locking every access to its state. Providing direct access
-    //  * of state items to clients would put the onus of guaranteeing thread
-    //  * safety on the client which isn't a great idea.
-    //  *
-    //  * This is achieved by CachedItem holding a private reference to the item
-    //  * of state that only DeviceModel can access by dint of its friendship with
-    //  * this class template.
-    //  *
-    //  * @tparam T the type of the cached object
-    //  */
-    // template <typename I> class CachedItem {
-    // public:
-    //   /**
-    //    * @brief provide DeviceModel access to the private attribute.
-    //    *
-    //    */
-    //   friend DeviceModel<Threading::kSingleThreaded>;
+  // /**
+  //  * @brief Provides a way of sharing the device model's internal state
+  //  * with client programs without letting them directly access it.
+  //  *
+  //  * Design Motivation - it can be expensive to retreive items from the
+  //  * data model. So, once acquired it's nice for a client program to
+  //  * hold onto them yet still only use the device model interface to
+  //  * manipulate the state. N.B. the device model interface provides thread
+  //  * safety by locking every access to its state. Providing direct access
+  //  * of state items to clients would put the onus of guaranteeing thread
+  //  * safety on the client which isn't a great idea.
+  //  *
+  //  * This is achieved by CachedItem holding a private reference to the item
+  //  * of state that only DeviceModel can access by dint of its friendship with
+  //  * this class template.
+  //  *
+  //  * @tparam T the type of the cached object
+  //  */
+  // template <typename I> class CachedItem {
+  // public:
+  //   /**
+  //    * @brief provide DeviceModel access to the private attribute.
+  //    *
+  //    */
+  //   friend DeviceModel<Threading::kSingleThreaded>;
 
-    //   /**
-    //    * @brief provide DeviceModel access to the private attribute.
-    //    *
-    //    */
-    //   friend DeviceModel<Threading::kMultiThreaded>;
+  //   /**
+  //    * @brief provide DeviceModel access to the private attribute.
+  //    *
+  //    */
+  //   friend DeviceModel<Threading::kMultiThreaded>;
 
-    //   /**
-    //    * @brief CachedItems cannot be default constructed.
-    //    *
-    //    */
-    //   CachedItem() = delete;
+  //   /**
+  //    * @brief CachedItems cannot be default constructed.
+  //    *
+  //    */
+  //   CachedItem() = delete;
 
-    //   /**
-    //    * @brief CachedItems cannot be copy constructed.
-    //    *
-    //    */
-    //   CachedItem(const CachedItem &) = delete;
+  //   /**
+  //    * @brief CachedItems cannot be copy constructed.
+  //    *
+  //    */
+  //   CachedItem(const CachedItem &) = delete;
 
-    //   /**
-    //    * @brief CachedItems cannot be copy assigned.
-    //    *
-    //    * @return CachedItem&
-    //    */
-    //   CachedItem &operator=(const CachedItem &) = delete;
+  //   /**
+  //    * @brief CachedItems cannot be copy assigned.
+  //    *
+  //    * @return CachedItem&
+  //    */
+  //   CachedItem &operator=(const CachedItem &) = delete;
 
-    //   /**
-    //    * @brief CachedItems have move semantics.
-    //    *
-    //    * @param other
-    //    */
-    //   CachedItem(CachedItem &&other) : theItem_{other.theItem_} {}
+  //   /**
+  //    * @brief CachedItems have move semantics.
+  //    *
+  //    * @param other
+  //    */
+  //   CachedItem(CachedItem &&other) : theItem_{other.theItem_} {}
 
-    //   /**
-    //    * @brief CachedItems have move semantics.
-    //    *
-    //    * @param rhs right hand side of the = sign
-    //    * @return CachedItem&
-    //    */
-    //   CachedItem &operator=(CachedItem &&rhs) {
-    //     theItem_ = std::move(rhs.theItem_);
-    //     return *this;
-    //   };
-    //
-    //   /**
-    //    * @brief Main constructor
-    //    *
-    //    * @param item reference to the item to cache
-    //    */
-    //   CachedItem(I &item) : theItem_{item} {};
+  //   /**
+  //    * @brief CachedItems have move semantics.
+  //    *
+  //    * @param rhs right hand side of the = sign
+  //    * @return CachedItem&
+  //    */
+  //   CachedItem &operator=(CachedItem &&rhs) {
+  //     theItem_ = std::move(rhs.theItem_);
+  //     return *this;
+  //   };
+  //
+  //   /**
+  //    * @brief Main constructor
+  //    *
+  //    * @param item reference to the item to cache
+  //    */
+  //   CachedItem(I &item) : theItem_{item} {};
 
-    // private:
-    //   I &theItem_;
-    // };
+  // private:
+  //   I &theItem_;
+  // };
 
-    /**
+  /**
    * @brief wrapper around a catena::Param stored in the device model
    *
    * Provides convenient accessor methods that are made threadsafe using
@@ -173,56 +177,57 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * method involving potentially expensive searches.
    *
    */
-    class Param {
-        friend DeviceModel; /**< access to private state is useful */
+  class Param {
+    friend DeviceModel; /**< access to private state is useful */
 
-      public:
-        /**
+  public:
+    /**
      * @brief Construct a new Param object
      *
      * @param dm the parent device model.
      * @param p the parameter owned by the device model.
      */
-        Param(DeviceModel &dm, catena::Param &p) noexcept : deviceModel_{dm}, param_{p} {}
+    Param(DeviceModel &dm, catena::Param &p) noexcept
+        : deviceModel_{dm}, param_{p} {}
 
-        /**
+    /**
      * @brief Param has no default constructor.
      *
      */
-        Param() = delete;
+    Param() = delete;
 
-        /**
+    /**
      * @brief Param has copy semantics.
      *
      * @param other
      */
-        Param(const Param &other) = default;
+    Param(const Param &other) = default;
 
-        /**
+    /**
      * @brief Param has copy semantics.
      *
      * @param rhs
      */
-        Param &operator=(const Param &rhs) = default;
+    Param &operator=(const Param &rhs) = default;
 
-        /**
+    /**
      * @brief Param does not have move semantics.
      *
      * @param other
      */
-        Param(Param &&other) = delete;
+    Param(Param &&other) = delete;
 
-        /**
+    /**
      * @brief Param does not have move semantics
      *
      * @param rhs, right hand side of the equals sign
      */
-        Param &operator=(Param &&rhs) = delete;
+    Param &operator=(Param &&rhs) = delete;
 
-        inline ~Param() {  // nothing to do
-        }
+    inline ~Param() { // nothing to do
+    }
 
-        /**
+    /**
      * @brief Get the value stored by the catena::Param
      *
      * Threadsafe because it asserts the DeviceModel's mutex.
@@ -230,9 +235,9 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
      * @tparam V value type of param
      * @return V value of parameter
      */
-        template <typename V> V getValue();
+    template <typename V> V getValue();
 
-        /**
+    /**
      * @brief Set the value of the stored catena::Param.
      *
      * Threadsafe because it asserts the DeviceModel's mutex.
@@ -240,91 +245,91 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
      * @tparam V type of the value stored by the param.
      * @param v value to set.
      */
-        template <typename V> void setValue(V v);
+    template <typename V> void setValue(V v);
 
-        /**
+    /**
      * @brief Set value of the stored catena::Param at index idx.
      * 
      * @tparam V type of the value stored
      * @param v value to set
      * @param idx index into the array
      */
-        template <typename V> void setValueAt(V v, size_t idx);
+    template <typename V> void setValueAt(V v, size_t idx);
 
-      private:
-        std::reference_wrapper<DeviceModel> deviceModel_;
-        std::reference_wrapper<catena::Param> param_;
-    };
+  private:
+    std::reference_wrapper<DeviceModel> deviceModel_;
+    std::reference_wrapper<catena::Param> param_;
+  };
 
-    friend Param; /**< used for accessing mutex_ attribute.*/
+  friend Param; /**< used for accessing mutex_ attribute.*/
 
-    /**
+  /**
    * @brief default constructor, creates an empty model.
    *
    */
-    DeviceModel() {}
+  DeviceModel() {}
 
-    /**
+  /**
    * @brief Copy constructor, makes deep copy of other's device model.
    * @todo implementation
    * @param other the DeviceModel to copy.
    */
-    DeviceModel(const DeviceModel &other) {}
+  DeviceModel(const DeviceModel &other) {}
 
-    /**
+  /**
    * @brief Assignment operator, makes deep copy of rhs's device model.
    * @param rhs the right hand side of the = operator
    * @todo implementation
    */
-    DeviceModel &operator=(const DeviceModel &rhs) {
-        LockGuard lock(mutex_);
-        // not implemented
-        return *this;
-    }
+  DeviceModel &operator=(const DeviceModel &rhs) {
+    LockGuard lock(mutex_);
+    // not implemented
+    return *this;
+  }
 
-    /**
+  /**
    * @brief Move constructor, takes possession of other's state
    * @param other the donor object
    * @todo implementation
    */
-    DeviceModel(DeviceModel &&other) {
-        // not implemented
-    }
+  DeviceModel(DeviceModel &&other) {
+    // not implemented
+  }
 
-    /**
+  /**
    * @brief Move assignment, takes possession of rhs's state
    * @todo implementation
    * @param rhs the right hand side of the = operator
    * @return DeviceModel
    */
-    DeviceModel operator=(DeviceModel &&rhs) {
-        // not implemented
-        return *this;
-    }
+  DeviceModel operator=(DeviceModel &&rhs) {
+    // not implemented
+    return *this;
+  }
 
-    /**
+  /**
    * @brief construct from a catena protobuf Device object.
    * @todo implementation
    */
-    explicit DeviceModel(catena::Device &pbDevice) {
-        // not implemented
-    }
+  explicit DeviceModel(catena::Device &pbDevice) {
+    // not implemented
+  }
 
-    /**
+  /**
    * @brief Construct a new Device Model from a json file
    *
    * @param filename
    */
-    explicit DeviceModel(const std::string &filename);
+  explicit DeviceModel(const std::string &filename);
 
-    /**
+  /**
    * @brief read access to the protobuf Device
    *
    * @return const catena::Device&
    */
-    const catena::Device &device() const;
+  const catena::Device &device() const;
 
-    /**
+  /**
    * @brief Get the Param object at path
    *
    * @param path uniquely locates the parameter
@@ -334,9 +339,9 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * device model
    * @return DeviceModel Param
    */
-    Param param(const std::string &path);
+  Param param(const std::string &path);
 
-    /**
+  /**
    * @brief Get the value of the parameter indicated by path
    *
    * @tparam V type of the value to be retrieved
@@ -346,9 +351,9 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * expensive and the client is likely to want to access the param
    * again after getting its value
    */
-    template <typename V> void getValue(V &ans, const std::string &path);
+  template <typename V> void getValue(V &ans, const std::string &path);
 
-    /**
+  /**
    * @brief Set value of param identified by path
    *
    * @tparam V underlying value type of param
@@ -358,17 +363,17 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * expensive and the client is likely to want to access the param
    * again after setting its value
    */
-    template <typename V> void setValue(const std::string &path, V v);
+  template <typename V> void setValue(const std::string &path, V v);
 
-    /**
+  /**
    * @brief Get the param's oid
    *
    * @param param from which to retrieve the oid
    * @return const std::string& oid
    */
-    const std::string &getOid(const Param &param);
+  const std::string &getOid(const Param &param);
 
-    /**
+  /**
    * @brief moves the param into the device model
    *
    * @param jptr - json pointer to the place to insert the param, must be
@@ -377,13 +382,13 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * @returns cached version of param which client can use
    * for ongoing access to the param in a threadsafe way
    */
-    Param addParam(const std::string &jptr, catena::Param &&param);
+  Param addParam(const std::string &jptr, catena::Param &&param);
 
-  private:
-    catena::Device device_; /**< the protobuf device model */
-    mutable Mutex mutex_;   /**< used to mediate access */
+private:
+  catena::Device device_; /**< the protobuf device model */
+  mutable Mutex mutex_;   /**< used to mediate access */
 
-    /**
+  /**
    * @brief Get the parent's sub-param at front of path
    *
    * @param path [in|out] path to the sub-param, the first segment will be
@@ -396,10 +401,10 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * type
    *
    */
-    catena::Param *getSubparam_(catena::Path &path, catena::Param &parent);
+  catena::Param *getSubparam_(catena::Path &path, catena::Param &parent);
 };
 
-}  // namespace catena
+} // namespace catena
 
 /**
  * @brief operator << for DeviceModel
