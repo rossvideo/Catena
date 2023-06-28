@@ -19,28 +19,41 @@
 	<build>
 		<plugins>
 			<!-- Used to copy the proto files into the project. -->
-	      <plugin>
-	        <artifactId>maven-resources-plugin</artifactId>
-	        <version>3.3.1</version>
-	        <executions>
-	          <execution>
-	            <phase>initialize</phase>
-	            <goals>
-	              <goal>copy-resources</goal>
-	            </goals>
-	            <configuration>
-	              <outputDirectory>${proto.files.location}</outputDirectory>
-	              <resources>          
-	                <resource>
-	                  <directory>${project.basedir}/../../interface</directory> <!-- Until we determine where the proto files will reside. -->
-	                  <filtering>true</filtering>
-	                </resource>
-	              </resources>              
-	            </configuration>            
-	          </execution>
-	        </executions>
-	      </plugin>
-	      
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${proto.files.location}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/../../interface</directory> <!--Until we determine where the proto fileswill reside. -->
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Used to remove the protobuf generated code. -->
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>src/main/java/catena</directory>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -101,11 +114,7 @@
 			<artifactId>grpc-stub</artifactId>
 			<version>${io.grpc.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
-            <version>${io.grpc.version}</version>
-        </dependency>
+
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
@@ -116,10 +125,11 @@
 			<artifactId>protobuf-java-util</artifactId>
 			<version>${com.google.protobuf.version}</version>
 		</dependency>
+
 		<dependency>
-		    <groupId>javax.annotation</groupId>
-		    <artifactId>javax.annotation-api</artifactId>
-		    <version>1.3.2</version>
+			<groupId>javax.annotation</groupId>
+			<artifactId>javax.annotation-api</artifactId>
+			<version>1.3.2</version>
 		</dependency>
 
 	</dependencies>
