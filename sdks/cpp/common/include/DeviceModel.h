@@ -26,17 +26,18 @@
 
 #include <Fake.h>
 #include <Path.h>
-#include <Status.h>
 #include <Threading.h>
+#include <Status.h>
 
-#include <functional>
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <functional>
 
 namespace catena {
 
-template <typename DM> class ParamAccessor; // forward reference
+template <typename DM>
+class ParamAccessor; // forward reference
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
@@ -50,14 +51,14 @@ template <typename DM> class ParamAccessor; // forward reference
  * std::lock_guard<std::recursive_mutex>.
  * When false, it is of type catena::FakeLockGuard<FakeMutex> which is an empty,
  * do-nothing struct that is completely optimized out of the
- * implementation by asserting the -O1 (or higher) compiler option.
+ * implementation by asserting the -O1 (or higher) compiler option. 
  * Design motivation - small, single threaded devices shouldn't
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
-template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
+template <enum Threading T = Threading::kMultiThreaded>
+class DeviceModel {
   friend ParamAccessor<DeviceModel>;
-
 public:
   /**
    * @brief which threading model is active.
@@ -84,7 +85,7 @@ public:
 
   /**
    * @brief Param Accessor Data
-   *
+   * 
    * Yes, this could be a std::pair, but I've a hunch that we'll need to add
    * a pointer to catena::Constraint too in the near future because constraints
    * can be referenced and not only defined in-line.
@@ -163,8 +164,8 @@ public:
    * @param path uniquely locates the parameter
    * @throws catena::exception_with_status if the code to navigate
    * to the requested fully qualified oid has not been implemented.
-   * @throws catena::exception_with_status if the requested oid is not present
-   * in the device model
+   * @throws catena::exception_with_status if the requested oid is not present in the
+   * device model
    * @return DeviceModel Param
    */
   ParamAccessor<DeviceModel> param(const std::string &path);
@@ -205,8 +206,8 @@ public:
   // Param addParam(const std::string &jptr, catena::Param &&param);
 
 private:
-  catena::Device device_;        /**< the protobuf device model */
-  mutable Mutex mutex_;          /**< used to mediate access */
+  catena::Device device_; /**< the protobuf device model */
+  mutable Mutex mutex_;   /**< used to mediate access */
   static catena::Value noValue_; /**< to flag undefined values */
 
   /**
@@ -217,8 +218,7 @@ private:
    * @param parent param
    * @return child param indicated by front of path
    * @throws catena::exception_with_status if is STRUCT_ARRAY
-   * @throws catena::exception_with_status if parent is not a sub-param
-   * supporting param
+   * @throws catena::exception_with_status if parent is not a sub-param supporting param
    * @throws catena::exception_with_status if param doesn't have a values object
    * type
    *
