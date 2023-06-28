@@ -27,6 +27,64 @@
                 }
             }
         },
+        "hello2": {
+            "param": {
+                "basic_param_info": {
+                    "oid": "hello2",
+                    "name": {
+                        "monoglot": "string example"
+                    },
+                    "type": {
+                        "param_type": "STRING"
+                    }
+                },
+                "value": {
+                    "string_value": "test"
+                },
+                "constraint": {
+                    "type": "STRING_CHOICE",
+                    "string_choice": {
+                        "choices": [
+                            {
+                                "monoglot": "test"
+                            },
+                            {
+                                "monoglot": "test"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "hello3": {
+            "param": {
+                "basic_param_info": {
+                    "oid": "hello3",
+                    "name": {
+                        "monoglot": "string example"
+                    },
+                    "type": {
+                        "param_type": "STRING"
+                    }
+                },
+                "value": {
+                    "string_value": "test"
+                },
+                "constraint": {
+                    "type": "STRING_STRING_CHOICE",
+                    "string_string_choice": {
+                        "choices": [
+                            {
+                                "monoglot": "test"
+                            },
+                            {
+                                "monoglot": "test"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "world": {
             "param": {
                 "basic_param_info": {
@@ -45,21 +103,26 @@
                     "type": "INT_CHOICE",
                     "int32_choice": {
                         "choices": [
-                            {"name": {"monoglot": "choice1"}, "value": 1}
+                            {
+                                "name": {
+                                    "monoglot": "choice1"
+                                },
+                                "value": 1
+                            }
                         ]
                     }
                 }
             }
-        },     
+        },
         "my_struct": {
             "param": {
                 "basic_param_info": {
                     "oid": "my_struct",
                     "name": {
-                     "monoglot": "example struct"
+                        "monoglot": "example struct"
                     },
                     "type": {
-                     "param_type": "STRUCT"
+                        "param_type": "STRUCT"
                     }
                 },
                 "value": {
@@ -78,19 +141,23 @@
                             "int_param": {
                                 "param": {
                                     "basic_param_info": {
-                                    "name": {"monoglot": "sub param"},
-                                    "oid": "int_param",
-                                    "type": {"param_type": "INT32"}
+                                        "name": {
+                                            "monoglot": "sub param"
+                                        },
+                                        "oid": "int_param",
+                                        "type": {
+                                            "param_type": "INT32"
+                                        }
                                     },
                                     "value": {
-                                    "int32_value": 123
+                                        "int32_value": 123
                                     }
                                 }
-                            }                       
+                            }
                         }
                     }
-                }                
-            }     
+                }
+            }
         }
     },
     "commands": {

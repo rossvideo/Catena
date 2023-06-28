@@ -4,9 +4,15 @@
     "description": "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
     "type": "object",
     "properties": {
-        "oid": {"$ref": "#/$defs/oid"},
-        "slot": {"$ref": "#/$defs/slot"},
-        "detail": {"$ref": "#/$defs/detail"},
+        "oid": {
+            "$ref": "#/$defs/oid"
+        },
+        "slot": {
+            "$ref": "#/$defs/slot"
+        },
+        "detail": {
+            "$ref": "#/$defs/detail"
+        },
         "multi_set_enabled": {
             "title": "Multi Set Message Enabled Flag",
             "description": "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
@@ -25,8 +31,12 @@
             "min": 0,
             "max": 1000000
         },
-        "params": {"$ref": "#/$defs/param_map"},
-        "commands": {"$ref": "#/$defs/param_map"},
+        "params": {
+            "$ref": "#/$defs/param_map"
+        },
+        "commands": {
+            "$ref": "#/$defs/param_map"
+        },
         "access_scopes": {
             "title": "Access Scopes",
             "description": "The access scopes recognised by this device",
@@ -47,7 +57,9 @@
             "maximum": 4
         }
     },
-    "required": ["slot"],
+    "required": [
+        "slot"
+    ],
     "additionalProperties": false,
     "$defs": {
         "param_map": {
@@ -61,18 +73,26 @@
                         {
                             "type": "object",
                             "properties": {
-                                "import": {"$ref": "#/$defs/import"}
+                                "import": {
+                                    "$ref": "#/$defs/import"
+                                }
                             },
                             "additionalProperties": false,
-                            "required": ["import"]                         
+                            "required": [
+                                "import"
+                            ]
                         },
                         {
                             "type": "object",
                             "properties": {
-                                "param": {"$ref": "#/$defs/param"}
+                                "param": {
+                                    "$ref": "#/$defs/param"
+                                }
                             },
                             "additionalProperties": false,
-                            "required": ["param"]
+                            "required": [
+                                "param"
+                            ]
                         }
                     ]
                 }
@@ -84,17 +104,36 @@
             "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
             "type": "object",
             "properties": {
-                "basic_param_info": {"$ref": "#/$defs/basic_param_info"},
-                "value": {"$ref": "#/$defs/value"},
-                "constraint": {"$ref": "#/$defs/constraint"},
-                "commands": {"$ref": "#/$defs/param_map"},
-                "access_scope": {"type": "string"}
+                "basic_param_info": {
+                    "$ref": "#/$defs/basic_param_info"
+                },
+                "value": {
+                    "$ref": "#/$defs/value"
+                },
+                "constraint": {
+                    "$ref": "#/$defs/constraint"
+                },
+                "commands": {
+                    "$ref": "#/$defs/param_map"
+                },
+                "access_scope": {
+                    "type": "string"
+                }
             },
             "additionalProperties": false,
             "allOf": [
-                {"$ref": "#/$defs/apply_float32"},
-                {"$ref": "#/$defs/apply_int32"},
-                {"$ref": "#/$defs/apply_struct"}
+                {
+                    "$ref": "#/$defs/apply_float32"
+                },
+                {
+                    "$ref": "#/$defs/apply_int32"
+                },
+                {
+                    "$ref": "#/$defs/apply_struct"
+                },
+                {
+                    "$ref": "#/$defs/apply_string"
+                }
             ]
         },
         "value": {
@@ -112,26 +151,45 @@
             "description": "Defines FLOAT32 as a primitive number type",
             "type": "object",
             "properties": {
-                "float32_value": {"$ref": "#/$defs/float32"}
+                "float32_value": {
+                    "$ref": "#/$defs/float32"
+                }
             },
-            "required": ["float32_value"]
+            "required": [
+                "float32_value"
+            ]
         },
         "float32_constraint": {
             "title": "Float32 Constraint",
             "description": "Range constraint with step size and display min/max",
             "type": "object",
             "properties": {
-                "type": {"const": "FLOAT_RANGE"},
+                "type": {
+                    "const": "FLOAT_RANGE"
+                },
                 "float_range": {
                     "type": "object",
                     "properties": {
-                        "min_value": {"$ref": "#/$defs/float32"},
-                        "max_value": {"$ref": "#/$defs/float32"},
-                        "step": {"$ref": "#/$defs/float32"},
-                        "display_min": {"$ref": "#/$defs/float32"},
-                        "display_max": {"$ref": "#/$defs/float32"}
+                        "min_value": {
+                            "$ref": "#/$defs/float32"
+                        },
+                        "max_value": {
+                            "$ref": "#/$defs/float32"
+                        },
+                        "step": {
+                            "$ref": "#/$defs/float32"
+                        },
+                        "display_min": {
+                            "$ref": "#/$defs/float32"
+                        },
+                        "display_max": {
+                            "$ref": "#/$defs/float32"
+                        }
                     },
-                    "required": ["min_value", "max_value"],
+                    "required": [
+                        "min_value",
+                        "max_value"
+                    ],
                     "additionalProperties": false
                 }
             },
@@ -143,10 +201,12 @@
             "if": {
                 "properties": {
                     "basic_param_info": {
-                        "properties":{
+                        "properties": {
                             "type": {
-                                "properties":{
-                                    "param_type": {"const": "FLOAT32"} 
+                                "properties": {
+                                    "param_type": {
+                                        "const": "FLOAT32"
+                                    }
                                 }
                             }
                         }
@@ -155,8 +215,12 @@
             },
             "then": {
                 "properties": {
-                    "value": {"$ref": "#/$defs/float32_value"},
-                    "constraint": {"$ref": "#/$defs/float32_constraint"}
+                    "value": {
+                        "$ref": "#/$defs/float32_value"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/float32_constraint"
+                    }
                 }
             }
         },
@@ -170,9 +234,13 @@
             "description": "Defines INT32 as a primitive number type",
             "type": "object",
             "properties": {
-                "int32_value": {"$ref": "#/$defs/int32"}
+                "int32_value": {
+                    "$ref": "#/$defs/int32"
+                }
             },
-            "required": ["int32_value"],
+            "required": [
+                "int32_value"
+            ],
             "additionalProperties": false
         },
         "int32_constraint": {
@@ -184,26 +252,53 @@
                     "title": "INT32 Constraint types",
                     "description": "Constraints for integers and integer arrays",
                     "type": "string",
-                    "enum": ["INT_CHOICE", "INT_RANGE", "ALARM_TABLE"]
+                    "enum": [
+                        "INT_CHOICE",
+                        "INT_RANGE",
+                        "ALARM_TABLE"
+                    ]
                 }
             },
-            "required": ["type"],
+            "required": [
+                "type"
+            ],
             "allOf": [
                 {
-                    "if": {"properties": {"type": {"const": "INT_RANGE"}}},
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "INT_RANGE"
+                            }
+                        }
+                    },
                     "then": {
                         "properties": {
-                            "type": {"const": "INT_RANGE"},
+                            "type": {
+                                "const": "INT_RANGE"
+                            },
                             "int32_range": {
                                 "type": "object",
                                 "properties": {
-                                    "min_value": {"$ref": "#/$defs/int32"},
-                                    "max_value": {"$ref": "#/$defs/int32"},
-                                    "step": {"$ref": "#/$defs/int32"},
-                                    "display_min": {"$ref": "#/$defs/int32"},
-                                    "display_max": {"$ref": "#/$defs/int32"}
+                                    "min_value": {
+                                        "$ref": "#/$defs/int32"
+                                    },
+                                    "max_value": {
+                                        "$ref": "#/$defs/int32"
+                                    },
+                                    "step": {
+                                        "$ref": "#/$defs/int32"
+                                    },
+                                    "display_min": {
+                                        "$ref": "#/$defs/int32"
+                                    },
+                                    "display_max": {
+                                        "$ref": "#/$defs/int32"
+                                    }
                                 },
-                                "required": ["min_value", "max_value"],
+                                "required": [
+                                    "min_value",
+                                    "max_value"
+                                ],
                                 "additionalProperties": false
                             }
                         },
@@ -211,19 +306,31 @@
                     }
                 },
                 {
-                    "if": {"properties": {"type": {"const": "INT_CHOICE"}}},
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "INT_CHOICE"
+                            }
+                        }
+                    },
                     "then": {
                         "properties": {
-                            "type": {"const": "INT_CHOICE"},
+                            "type": {
+                                "const": "INT_CHOICE"
+                            },
                             "int32_choice": {
                                 "type": "object",
                                 "properties": {
                                     "choices": {
                                         "type": "array",
-                                        "items": {"$ref": "#/$defs/int_choice"}
+                                        "items": {
+                                            "$ref": "#/$defs/int_choice"
+                                        }
                                     }
                                 },
-                                "required": ["choices"],
+                                "required": [
+                                    "choices"
+                                ],
                                 "additionalProperties": false
                             }
                         },
@@ -231,16 +338,26 @@
                     }
                 },
                 {
-                    "if": {"properties": {"type": {"const": "ALARM_TABLE"}}},
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "ALARM_TABLE"
+                            }
+                        }
+                    },
                     "then": {
-                        "properties":{
-                            "type": {"const": "ALARM_TABLE"},
+                        "properties": {
+                            "type": {
+                                "const": "ALARM_TABLE"
+                            },
                             "alarm_table": {
                                 "type": "object",
                                 "properties": {
                                     "alarm_table": {
                                         "type": "array",
-                                        "items": {"$ref": "#/$defs/alarm"},
+                                        "items": {
+                                            "$ref": "#/$defs/alarm"
+                                        },
                                         "maxItems": 32
                                     }
                                 },
@@ -252,22 +369,142 @@
                 }
             ]
         },
+        "string_value": {
+            "title": "STRING",
+            "description": "Defines STRING as a primitive string type",
+            "type": "object",
+            "properties": {
+                "string_value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "string_value"
+            ],
+            "additionalProperties": false
+        },
+        "string_constraint": {
+            "title": "STRING Constraint",
+            "description": "String constraint",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "title": "STRING Constraint types",
+                    "description": "Constraints for string arrays",
+                    "type": "string",
+                    "enum": [
+                        "STRING_CHOICE",
+                        "STRING_STRING_CHOICE"
+                    ]
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_CHOICE"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_CHOICE"
+                            },
+                            "string_choice": {
+                                "type": "object",
+                                "properties": {
+                                    "choices": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/$defs/polyglot_text"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "choices"
+                                ],
+                                "additionalProperties": true
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_STRING_CHOICE"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_STRING_CHOICE"
+                            },
+                            "string_string_choice": {
+                                "type": "object",
+                                "properties": {
+                                    "choices": {
+                                        "items": {
+                                            "$ref": "#/$defs/string_string_choice"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "strict": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            ]
+        },
+        "string_string_choice": {
+            "properties": {
+                "value": {
+                    "type": "string"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "String String Choice"
+        },
         "int_choice": {
             "title": "int choice constraint",
             "description": "maps strings intended for display in client to integers",
             "type": "object",
             "properties": {
-                "value": {"$ref": "#/$defs/int32"},
-                "name": {"$ref": "#/$defs/polyglot_text"}
+                "value": {
+                    "$ref": "#/$defs/int32"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text"
+                }
             },
-            "required": ["value", "name"],
+            "required": [
+                "value",
+                "name"
+            ],
             "additionalProperties": false
         },
         "alarm": {
             "title": "Alarm",
             "description": "Occupies a bit position in an alarm table",
             "type": "object",
-            "properties":{
+            "properties": {
                 "bit_value": {
                     "type": "integer",
                     "minimum": 0,
@@ -283,9 +520,15 @@
                         "REFUSED"
                     ]
                 },
-                "description": {"$ref": "#/$defs/polyglot_text"}
+                "description": {
+                    "$ref": "#/$defs/polyglot_text"
+                }
             },
-            "required": ["bit_value", "severity", "description"],
+            "required": [
+                "bit_value",
+                "severity",
+                "description"
+            ],
             "additionalProperties": false
         },
         "apply_int32": {
@@ -294,10 +537,12 @@
             "if": {
                 "properties": {
                     "basic_param_info": {
-                        "properties":{
+                        "properties": {
                             "type": {
-                                "properties":{
-                                    "param_type": {"const": "INT32"} 
+                                "properties": {
+                                    "param_type": {
+                                        "const": "INT32"
+                                    }
                                 }
                             }
                         }
@@ -306,8 +551,41 @@
             },
             "then": {
                 "properties": {
-                    "value": {"$ref": "#/$defs/int32_value"},
-                    "constraint": {"$ref": "#/$defs/int32_constraint"}
+                    "value": {
+                        "$ref": "#/$defs/int32_value"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/int32_constraint"
+                    }
+                }
+            }
+        },
+        "apply_string": {
+            "title": "STRING specialism",
+            "description": "Applies STRING values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "basic_param_info": {
+                        "properties": {
+                            "type": {
+                                "properties": {
+                                    "param_type": {
+                                        "const": "STRING"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/string_value"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/string_constraint"
+                    }
                 }
             }
         },
@@ -316,11 +594,13 @@
             "description": "Wrapper round the struct_fields schema.",
             "type": "object",
             "$comment": "pattern properties must be same regex as for oid",
-            "properties":{
+            "properties": {
                 "struct_value": {
                     "type": "object",
-                    "properties":{
-                        "fields": {"$ref": "#/$defs/struct_fields"}
+                    "properties": {
+                        "fields": {
+                            "$ref": "#/$defs/struct_fields"
+                        }
                     },
                     "additionalProperties": false
                 }
@@ -338,30 +618,44 @@
                             "type": "object",
                             "properties": {
                                 "value": {
-                                    "oneOf": [                                       
-                                        {"$ref": "#/$defs/float32_value"},
-                                        {"$ref": "#/$defs/int32_value"}                                       
+                                    "oneOf": [
+                                        {
+                                            "$ref": "#/$defs/float32_value"
+                                        },
+                                        {
+                                            "$ref": "#/$defs/int32_value"
+                                        }
                                     ]
                                 }
                             },
                             "additionalProperties": false,
-                            "required": ["value"]                         
+                            "required": [
+                                "value"
+                            ]
                         },
                         {
                             "type": "object",
                             "properties": {
-                                "param": {"$ref": "#/$defs/param"}
+                                "param": {
+                                    "$ref": "#/$defs/param"
+                                }
                             },
                             "additionalProperties": false,
-                            "required": ["param"]
+                            "required": [
+                                "param"
+                            ]
                         },
                         {
                             "type": "object",
                             "properties": {
-                                "import": {"$ref": "#/$defs/import"}
+                                "import": {
+                                    "$ref": "#/$defs/import"
+                                }
                             },
                             "additionalProperties": false,
-                            "required": ["import"]                         
+                            "required": [
+                                "import"
+                            ]
                         }
                     ]
                 }
@@ -374,10 +668,12 @@
             "if": {
                 "properties": {
                     "basic_param_info": {
-                        "properties":{
+                        "properties": {
                             "type": {
-                                "properties":{
-                                    "param_type": {"const": "STRUCT"} 
+                                "properties": {
+                                    "param_type": {
+                                        "const": "STRUCT"
+                                    }
                                 }
                             }
                         }
@@ -386,30 +682,48 @@
             },
             "then": {
                 "properties": {
-                    "value": {"$ref": "#/$defs/struct_value"}
+                    "value": {
+                        "$ref": "#/$defs/struct_value"
+                    }
                 }
             }
         },
         "apply_float32_value": {
             "if": {
-                "properties": {"value": {"$ref": "#/$defs/float32_value"}}
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/float32_value"
+                    }
+                }
             },
             "then": true,
             "else": false
         },
         "apply_int32_value": {
             "if": {
-                "properties": {"value": {"$ref": "#/$defs/int32_value"}}
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/int32_value"
+                    }
+                }
             },
             "then": true,
             "else": false
         },
         "apply_struct_value": {
             "if": {
-                "properties": {"value": {"struct_value": true}}
+                "properties": {
+                    "value": {
+                        "struct_value": true
+                    }
+                }
             },
             "then": {
-                "properties": {"value": {"$ref": "#/$defs/struct_value"}}
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/struct_value"
+                    }
+                }
             }
         },
         "import": {
@@ -417,7 +731,9 @@
             "description": "Provides the ability to build device models from multiple files. If a URL is provided, the import will be attempted from there. When absent, the import will be a local file named <schema>.<oid>.json.",
             "type": "object",
             "properties": {
-                "url": {"type": "string"},
+                "url": {
+                    "type": "string"
+                },
                 "excluding": {
                     "type": "array",
                     "items": {
@@ -440,7 +756,11 @@
             "title": "Level of Detail",
             "description": "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, and 'subscription' reports the minimal set plus identified subscribed parameters.",
             "type": "string",
-            "enum": ["FULL", "SUBSCRIPTIONS", "MINIMAL"],
+            "enum": [
+                "FULL",
+                "SUBSCRIPTIONS",
+                "MINIMAL"
+            ],
             "default": "FULL"
         },
         "basic_param_info": {
@@ -448,12 +768,18 @@
             "description": "Summary information about a parameter",
             "type": "object",
             "properties": {
-                "oid": {"$ref": "#/$defs/oid"},
-                "name": {"$ref": "#/$defs/polyglot_text"},
-                "type": {"$ref": "#/$defs/type"}
+                "oid": {
+                    "$ref": "#/$defs/oid"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text"
+                },
+                "type": {
+                    "$ref": "#/$defs/type"
+                }
             },
             "$comment": "not having oid as required is correct because this schema is used in 2 places - param which would be duplicative, and as a message payload where it's needed",
-            "additionalProperties": false     
+            "additionalProperties": false
         },
         "oid": {
             "title": "Object ID",
@@ -505,7 +831,9 @@
             "description": "Could be defined in-line or by reference to another parameter",
             "type": "object",
             "properties": {
-                "param_type": {"$ref": "#/$defs/param_type"}
+                "param_type": {
+                    "$ref": "#/$defs/param_type"
+                }
             },
             "additionalProperties": false
         },
@@ -528,7 +856,9 @@
                     "default": "UNDEFINED"
                 }
             },
-            "required": ["type"]
+            "required": [
+                "type"
+            ]
         }
     }
 }
