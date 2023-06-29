@@ -7,7 +7,6 @@ import "param.proto";
 import "menus.proto";
 import "language.proto";
 import "eo.proto";
-import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 option java_package = "catena.core";
@@ -193,9 +192,9 @@ message PushUpdates {
     DeviceComponent.ComponentConstraint constraint = 4;
     DeviceComponent device = 5;
     Exception refused = 6;
-    google.protobuf.StringValue invalidated_external_object_id = 7;
+    string invalidated_external_object_id = 7;
     TrapMessage trap_message = 8;
-    google.protobuf.BoolValue invalidate_device_model = 9;
+    bool invalidate_device_model = 9;
     PushExternalObject external_object = 10;
   }
 }

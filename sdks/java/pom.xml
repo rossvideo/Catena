@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -12,11 +11,18 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<io.grpc.version>1.56.0</io.grpc.version>
-		<com.google.protobuf.version>3.23.3</com.google.protobuf.version>
+		<com.google.protobuf.version>3.22.3</com.google.protobuf.version>
 		<proto.files.location>${project.build.directory}/src/main/proto</proto.files.location>
 	</properties>
 
 	<build>
+		<extensions>
+			<extension>
+				<groupId>kr.motd.maven</groupId>
+				<artifactId>os-maven-plugin</artifactId>
+				<version>1.7.1</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<!-- Used to copy the proto files into the project. -->
 			<plugin>
@@ -41,19 +47,6 @@
 				</executions>
 			</plugin>
 
-			<!-- Used to remove the protobuf generated code. -->
-			<plugin>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.3.1</version>
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>src/main/java/catena</directory>
-						</fileset>
-					</filesets>
-				</configuration>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -63,34 +56,56 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-			
-			<!-- Used to generate the Java code from the proto files and generate a jar. -->
+
 			<plugin>
-				<groupId>com.github.os72</groupId>
-				<artifactId>protoc-jar-maven-plugin</artifactId>
-				<version>3.11.4</version>
+				<groupId>org.xolstice.maven.plugins</groupId>
+				<artifactId>protobuf-maven-plugin</artifactId>
+				<version>0.6.1</version>
+				<configuration>
+					<protocArtifact>
+						com.google.protobuf:protoc:${com.google.protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+					<pluginId>grpc-java</pluginId>
+					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${io.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+					<protoSourceRoot>${proto.files.location}</protoSourceRoot>
+					<outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
+				</configuration>
 				<executions>
 					<execution>
-						<phase>generate-sources</phase>
+						<id>generate-message-classes</id>
 						<goals>
-							<goal>run</goal>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-service-classes</id>
+						<configuration>
+							<!-- Required otherwise some classes do not get generated. -->
+							<!-- The 'compile' goal generates the messages classes and this one the services. -->
+							<!-- If the output directory is cleared then files are missing. -->
+							<!-- See https://github.com/xolstice/protobuf-maven-plugin/issues/35 -->
+							<clearOutputDirectory>false</clearOutputDirectory>
+						</configuration>
+						<goals>
+							<goal>compile-custom</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.4.1</version>
+				<executions>
+					<execution>
+						<id>enforce</id>
+						<goals>
+							<goal>enforce</goal>
 						</goals>
 						<configuration>
-							<inputDirectories>
-								<include>${proto.files.location}</include>
-							</inputDirectories>
-							<includeStdTypes>true</includeStdTypes>
-							<outputTargets>
-								<outputTarget>
-									<type>java</type>
-									<outputDirectory>src/main/java</outputDirectory>
-								</outputTarget>
-								<outputTarget>
-									<type>grpc-java</type>
-									<pluginArtifact>io.grpc:protoc-gen-grpc-java:${io.grpc.version}</pluginArtifact>
-									<outputDirectory>src/main/java</outputDirectory>
-								</outputTarget>
-							</outputTargets>
+							<rules>
+								<requireUpperBoundDeps />
+							</rules>
 						</configuration>
 					</execution>
 				</executions>
@@ -129,6 +144,17 @@
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java-util</artifactId>
 			<version>${com.google.protobuf.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10.1</version> <!-- prevent downgrade via protobuf-java-util -->
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>31.1-jre</version> <!-- prevent downgrade of version in protobuf-java-util -->
 		</dependency>
 
 		<dependency>
