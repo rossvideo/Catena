@@ -50,13 +50,13 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 			return;
 		}
 		
-		Device device = Device.newBuilder().setSlot(this.slot).putAllParams(getAllParameters()).build();
+		Device device = Device.newBuilder().setSlot(this.slot).putAllParams(buildAllParamDescriptors()).build();
 		DeviceComponent deviceComponent = DeviceComponent.newBuilder().setDevice(device).build();
 		responseObserver.onNext(deviceComponent);
 		responseObserver.onCompleted();
 	}
 	
-	private Map<String, ParamDescriptor> getAllParameters() {
+	private Map<String, ParamDescriptor> buildAllParamDescriptors() {
 		Map<String, ParamDescriptor> parameters = new HashMap<>();
 		parameters.put(FLOAT_OID, buildParamDescriptor(FLOAT_OID, "float parameter", Type.FLOAT32, false, 1, floatValue));
 		parameters.put(INT_OID, buildParamDescriptor(INT_OID, "int parameter", Type.INT32, false, 1, intValue));
