@@ -73,12 +73,13 @@
                 "constraint": {
                     "type": "STRING_STRING_CHOICE",
                     "string_string_choice": {
+                        "strict": true,
                         "choices": [
                             {
-                                "monoglot": "test"
+                                "value": "sdf"
                             },
                             {
-                                "monoglot": "test"
+                                "value": "test"
                             }
                         ]
                     }
