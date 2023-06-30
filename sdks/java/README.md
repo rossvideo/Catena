@@ -13,8 +13,8 @@ This directory contains a maven project which:
 2. The latest version of [maven](https://maven.apache.org/download.cgi) installed.
 
 ## Compiling and generating the jars
-Simply run: `mvn clean package` in the Catena/sdks/java directory.  
-Resulting jars will be in Catena/sdks/java/target directory.
+Simply run: `mvn clean package` in the `Catena/sdks/java` directory.  
+Resulting jars will be in `Catena/sdks/java/target` directory.
 
 ## Running the test applications
 
@@ -22,7 +22,7 @@ Resulting jars will be in Catena/sdks/java/target directory.
 The Client application connect to a server on the localhost and performs some predefined operations on it.
 
 1. Open a terminal
-2. Navigate to `Catena/sdks/java/target`
+2. Navigate to `Catena/sdks/java`
 3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerMain`  
 The server will wait for a connection from a client.  Use Ctrl+C to exit.
 
@@ -30,7 +30,7 @@ The server will wait for a connection from a client.  Use Ctrl+C to exit.
 The Client application connect to a server on the localhost and performs some predefined operations on it.
 
 1. Open a terminal
-2. Navigate to `Catena/sdks/java/target`
+2. Navigate to `Catena/sdks/java`
 3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ClientMain`  
 The Client will try to connect to the server, perform operations and exit.
 
@@ -38,7 +38,7 @@ The Client will try to connect to the server, perform operations and exit.
 This single application launches in separate threads, a server and a client.  The client connects to the server to perform predefined operations.  
 Once complete the server and client are shutdown.
 1. Open a terminal
-2. Navigate to `Catena/sdks/java/target`
+2. Navigate to `Catena/sdks/java`
 3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerClientMain`  
 
 
