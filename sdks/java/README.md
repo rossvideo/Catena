@@ -39,6 +39,6 @@ This single application launches in separate threads, a server and a client.  Th
 Once complete the server and client are shutdown.
 1. Open a terminal
 2. Navigate to `Catena/sdks/java/target`
-3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ClientMain`  
+3. Run `java -cp target/catena-java-0.0.1-SNAPSHOT-shaded.jar com.rossvideo.catena.example.main.ServerClientMain`  
 
 
