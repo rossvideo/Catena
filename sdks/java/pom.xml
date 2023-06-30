@@ -12,7 +12,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<io.grpc.version>1.56.0</io.grpc.version>
 		<com.google.protobuf.version>3.22.3</com.google.protobuf.version>
-		<proto.files.location>${project.build.directory}/src/main/proto</proto.files.location>
 	</properties>
 
 	<build>
@@ -24,27 +23,11 @@
 			</extension>
 		</extensions>
 		<plugins>
-			<!-- Used to copy the proto files into the project. -->
+
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>3.3.1</version>
-				<executions>
-					<execution>
-						<phase>initialize</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${proto.files.location}</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${project.basedir}/../../interface</directory> <!--Until we determine where the proto fileswill reside. -->
-									<filtering>true</filtering>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 
 			<plugin>
@@ -66,7 +49,7 @@
 						com.google.protobuf:protoc:${com.google.protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
 					<pluginId>grpc-java</pluginId>
 					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${io.grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
-					<protoSourceRoot>${proto.files.location}</protoSourceRoot>
+					<protoSourceRoot>${project.basedir}/../../interface</protoSourceRoot>
 					<outputDirectory>${project.build.directory}/generated-sources/protobuf/java</outputDirectory>
 				</configuration>
 				<executions>
@@ -94,8 +77,32 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								</transformer>
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>1.4.1</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<id>enforce</id>
