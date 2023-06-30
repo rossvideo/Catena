@@ -451,10 +451,10 @@
                                 "type": "object",
                                 "properties": {
                                     "choices": {
+                                        "type": "array",
                                         "items": {
                                             "$ref": "#/$defs/string_string_choice"
-                                        },
-                                        "type": "array"
+                                        }
                                     },
                                     "strict": {
                                         "type": "boolean"
