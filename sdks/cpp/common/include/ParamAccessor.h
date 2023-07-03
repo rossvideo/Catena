@@ -34,8 +34,21 @@
 #include <iostream>
 #include <string>
 #include <type_traits>
+#include <memory>
 
 namespace catena {
+
+/**
+ * @brief type for indexing into parameters
+ *
+ */
+using ParamIndex = uint32_t;
+
+/**
+ * @brief special index value
+ *
+ */
+static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 
 /**
  * @brief wrapper around a catena::ParamAccessor stored in the device model
@@ -53,8 +66,8 @@ template <typename DM> class ParamAccessor {
   static_assert(
       std::is_same_v<DM,
                      catena::DeviceModel<catena::Threading::kMultiThreaded>> ||
-          std::is_same_v < DM,
-      catena::DeviceModel<catena::Threading::kSingleThreaded>>,
+          std::is_same_v<
+              DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,
       "Class Template Parameter must be of type DeviceModel<T>");
 
 public:
@@ -111,33 +124,43 @@ public:
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
    *
+   * @param idx index into the array if parameter is an array type, set to kEnd
+   * to return all array elements.
    * @tparam V value type of param
    * @return V value of parameter
    */
-  template <typename V> V getValue();
+  template <typename V> V getValue([[maybe_unused]] ParamIndex idx = kParamEnd);
+
+  std::shared_ptr<catena::Value> getValueAt(catena::Value& v, ParamIndex idx);
 
   /**
    * @brief Set the value of the stored catena::ParamAccessor.
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
-   *
+   * @param idx index into the array if parameter is an array type.
    * @tparam V type of the value stored by the param.
    * @param v value to set.
    */
-  template <typename V> void setValue(V v);
-
-  /**
-   * @brief Set value of the stored catena::ParamAccessor at index idx.
-   *
-   * @tparam V type of the value stored
-   * @param v value to set
-   * @param idx index into the array
-   */
-  template <typename V> void setValueAt(V v, uint32_t idx);
+  template <typename V>
+  void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
 
 private:
   std::reference_wrapper<DM> deviceModel_;
   std::reference_wrapper<catena::Param> param_;
   std::reference_wrapper<catena::Value> value_;
 };
+
+/**
+ * @brief true if v is a list
+ *
+ * @param v
+ * @return true if v is a list type
+ * @return false otherwise
+ */
+inline static bool isList(const catena::Value &v) {
+  bool ans = false;
+  ans = v.has_float32_array_values() || v.has_int32_array_values() ||
+        v.has_string_array_values() || v.has_struct_array_values();
+  return ans;
+}
 } // namespace catena
