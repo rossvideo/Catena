@@ -131,7 +131,7 @@ public:
    */
   template <typename V> V getValue([[maybe_unused]] ParamIndex idx = kParamEnd);
 
-  std::shared_ptr<catena::Value> getValueAt(catena::Value& v, ParamIndex idx);
+  catena::Value getValueAt(catena::Value& v, ParamIndex idx);
 
   /**
    * @brief Set the value of the stored catena::ParamAccessor.
@@ -151,7 +151,7 @@ private:
 };
 
 /**
- * @brief true if v is a list
+ * @brief true if v is a list type
  *
  * @param v
  * @return true if v is a list type

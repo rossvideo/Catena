@@ -145,7 +145,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
     try {
       ParamAccessor p = dm_.get().param(req->oid());
       authorize(context);
-      *res = *p.getValue<std::shared_ptr<catena::Value>>(req->element_index());
+      *res = p.getValue<catena::Value>(req->element_index());
       std::cout << "GetValue: " << req->oid() << std::endl;
       return Status::OK;
 
@@ -163,7 +163,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
                   ::google::protobuf::Empty *res) override {
     try {
       auto p = dm_.get().param(req->oid());
-      p.setValue(&req->value(), req->element_index());
+      p.setValue(req->value(), req->element_index());
       std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
       return Status::OK;
 
