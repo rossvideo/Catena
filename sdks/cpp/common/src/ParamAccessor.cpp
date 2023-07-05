@@ -66,18 +66,7 @@ void setValueImpl(catena::Param &param, catena::Value &val, float v,
   val.set_float32_value(v);
 }
 
-/**
- * @brief specialize for int
- *
- * @throws OUT_OF_RANGE if the constraint type isn't valid
- * @tparam
- * @param param the param descriptor
- * @param val the param's value object
- * @param v the value to set
- */
-template <>
-void setValueImpl(catena::Param &param, catena::Value &val, int v,
-                       ParamIndex idx) {
+int applyIntConstraint(catena::Param &param, int v) {
   if (param.has_constraint()) {
     // apply the constraint
     int constraint_type = param.constraint().type();
@@ -100,8 +89,23 @@ void setValueImpl(catena::Param &param, catena::Value &val, int v,
       BAD_STATUS((err.str()), grpc::StatusCode::OUT_OF_RANGE);
     }
   }
-  val.set_int32_value(v);
+  return v;
 }
+/**
+ * @brief specialize for int
+ *
+ * @throws OUT_OF_RANGE if the constraint type isn't valid
+ * @tparam
+ * @param param the param descriptor
+ * @param val the param's value object
+ * @param v the value to set
+ */
+template <>
+void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex idx) {
+  dst.set_int32_value(applyIntConstraint(param, src));
+}
+
+
 
 /**
  * @brief override (not specialize) for catena::Value
@@ -113,30 +117,30 @@ void setValueImpl(catena::Param &param, catena::Value &val, int v,
  * @param v the value to set
  * @param idx index into array types
  */
-void setValueImpl(catena::Param &p, catena::Value &val,
-                                         const catena::Value &v,
+void setValueImpl(catena::Param &p, catena::Value &dst,
+                                         const catena::Value &src,
                                          ParamIndex idx) {
   auto type = p.type().type();
   switch (type) {
   case catena::ParamType_Type_FLOAT32:
-    if (!v.has_float32_value()) {
+    if (!src.has_float32_value()) {
       BAD_STATUS("expected float value", grpc::StatusCode::INVALID_ARGUMENT);
     }
-    setValueImpl(p, val, v.float32_value());
+    setValueImpl(p, dst, src.float32_value());
     break;
 
   case catena::ParamType_Type_INT32:
-    if (!v.has_int32_value()) {
+    if (!src.has_int32_value()) {
       BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
     }
-    setValueImpl(p, val, v.int32_value());
+    setValueImpl(p, dst, src.int32_value());
     break;
 
   case catena::ParamType_Type_INT32_ARRAY: {
-    if (!val.has_int32_array_values()) {
+    if (!dst.has_int32_array_values()) {
       BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
     }
-    catena::Int32List *arr = val.mutable_int32_array_values();
+    catena::Int32List *arr = dst.mutable_int32_array_values();
     if (idx >= arr->ints_size()) {
       std::stringstream err;
       err << "array index is out of bounds, " << idx
@@ -144,7 +148,7 @@ void setValueImpl(catena::Param &p, catena::Value &val,
       BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
     }
     // @todo apply int constraint
-    arr->set_ints(idx, v.int32_value());
+    arr->set_ints(idx, src.int32_value());
   } break;
   default: {
     std::stringstream err;
