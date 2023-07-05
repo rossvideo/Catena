@@ -32,38 +32,23 @@ constexpr auto kMulti = catena::Threading::kMultiThreaded;
 constexpr auto kSingle = catena::Threading::kSingleThreaded;
 using PAM = catena::ParamAccessor<catena::DeviceModel<kMulti>>;
 using PAS = catena::ParamAccessor<catena::DeviceModel<kSingle>>;
-using VP = catena::Value*; // shared value pointer
+using VP = catena::Value *; // shared value pointer
 
 /**
- * @brief internal implementation of the setValue method
+ * @brief set float value override
  *
- * @tparam T underlying type of param to set value of
- * @param p the param descriptor
- * @param val the param's value object
- * @param v the value
- */
-template <typename T>
-void setValueImpl(catena::Param &p, catena::Value &val, T v,
-                  [[maybe_unused]] ParamIndex idx = 0);
-
-
-/**
- * @brief specialize for float
- *
- * @tparam
  * @param param the param descriptor
- * @param val the param's value object
- * @param v the value to set
+ * @param dst the param's value object
+ * @param src the value to set
  */
-template <>
-void setValueImpl(catena::Param &param, catena::Value &val, float v,
-                         ParamIndex idx) {
+void setValueImpl(catena::Param &param, catena::Value &dst, float src,
+                  [[maybe_unused]] ParamIndex idx = 0) {
   if (param.has_constraint()) {
     // apply the constraint
-    v = std::clamp(v, param.constraint().float_range().min_value(),
-                   param.constraint().float_range().max_value());
+    src = std::clamp(src, param.constraint().float_range().min_value(),
+                     param.constraint().float_range().max_value());
   }
-  val.set_float32_value(v);
+  dst.set_float32_value(src);
 }
 
 int applyIntConstraint(catena::Param &param, int v) {
@@ -91,8 +76,9 @@ int applyIntConstraint(catena::Param &param, int v) {
   }
   return v;
 }
+
 /**
- * @brief specialize for int
+ * @brief override for int
  *
  * @throws OUT_OF_RANGE if the constraint type isn't valid
  * @tparam
@@ -100,15 +86,13 @@ int applyIntConstraint(catena::Param &param, int v) {
  * @param val the param's value object
  * @param v the value to set
  */
-template <>
-void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex idx) {
+void setValueImpl(catena::Param &param, catena::Value &dst, int src,
+                  ParamIndex idx = 0) {
   dst.set_int32_value(applyIntConstraint(param, src));
 }
 
-
-
 /**
- * @brief override (not specialize) for catena::Value
+ * @brief override for catena::Value
  *
  * @throws INVALID_ARGUMENT if the value type doesn't match the param type.
  * @throws UNIMPLEMENTED if support for param type not implemented.
@@ -118,8 +102,7 @@ void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex 
  * @param idx index into array types
  */
 void setValueImpl(catena::Param &p, catena::Value &dst,
-                                         const catena::Value &src,
-                                         ParamIndex idx) {
+                  const catena::Value &src, ParamIndex idx = 0) {
   auto type = p.type().type();
   switch (type) {
   case catena::ParamType_Type_FLOAT32:
@@ -141,14 +124,19 @@ void setValueImpl(catena::Param &p, catena::Value &dst,
       BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
     }
     catena::Int32List *arr = dst.mutable_int32_array_values();
-    if (idx >= arr->ints_size()) {
+    if (idx == catena::kParamEnd) {
+      // special case, add to end of the array
+      arr->add_ints(applyIntConstraint(p, src.int32_value()));
+    } else if (arr->ints_size() < idx) {
+      // range error
       std::stringstream err;
       err << "array index is out of bounds, " << idx
           << " >= " << arr->ints_size();
       BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+    } else {
+      // update array element
+      arr->set_ints(idx, applyIntConstraint(p, src.int32_value()));
     }
-    // @todo apply int constraint
-    arr->set_ints(idx, src.int32_value());
   } break;
   default: {
     std::stringstream err;
@@ -171,7 +159,6 @@ template void PAM::setValue<int>(int, ParamIndex);
 template void PAS::setValue<int>(int, ParamIndex);
 template void PAM::setValue<catena::Value>(catena::Value, ParamIndex);
 template void PAS::setValue<catena::Value>(catena::Value, ParamIndex);
-
 
 /**
  * @brief Function template to implement getValue
@@ -281,7 +268,8 @@ V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
 }
 
 template <typename DM>
-catena::Value catena::ParamAccessor<DM>::getValueAt(catena::Value &v, ParamIndex idx) {
+catena::Value catena::ParamAccessor<DM>::getValueAt(catena::Value &v,
+                                                    ParamIndex idx) {
   if (!isList(v)) {
     std::stringstream err;
     err << "Expected list value";
