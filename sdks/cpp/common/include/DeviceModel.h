@@ -28,6 +28,8 @@
 #include <Path.h>
 #include <Threading.h>
 #include <Status.h>
+#include <mutex>
+#include <memory>
 
 #include <iostream>
 #include <string>
