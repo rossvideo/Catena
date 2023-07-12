@@ -32,9 +32,9 @@
 
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <type_traits>
-#include <memory>
 
 namespace catena {
 
@@ -45,7 +45,10 @@ namespace catena {
 using ParamIndex = uint32_t;
 
 /**
- * @brief special index value
+ * @brief index value used to trigger special behaviors.
+ *
+ * getValue with this value specified as the index will get all values of an
+ * array. setValue will append the value to the array
  *
  */
 static constexpr ParamIndex kParamEnd = ParamIndex(-1);
@@ -120,18 +123,31 @@ public:
   }
 
   /**
-   * @brief Get the value stored by the catena::ParamAccessor
+   * @brief Get the value of the param referenced by this object
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
    *
-   * @param idx index into the array if parameter is an array type, set to kEnd
-   * to return all array elements.
-   * @tparam V value type of param
+   * @param idx index into the array if parameter is an array type kParamEnd
+   * will return all array elements.
+   * @tparam V underlying value type of param
    * @return V value of parameter
+   * @throws catena::exception_with_status if a type mismatch is detected, or
+   * support for the type used has not been implemented.
    */
-  template <typename V> V getValue([[maybe_unused]] ParamIndex idx = kParamEnd);
+  template <typename V> V getValue([[maybe_unused]] ParamIndex idx = 0);
 
-  catena::Value getValueAt(catena::Value& v, ParamIndex idx);
+  /**
+   * @brief Get the value of the array-type param referenced by this object
+   *
+   * Threadsafe because it asserts the DeviceModel's mutex.
+   * @param idx index into the array
+   * @throws catena::exception_with_status if idx is out of range, or value
+   * referenced by this object is not a list type, or if support for the type
+   * has not been implemented
+   * @return V catena::Value set to type matching that of the param referenced
+   * by this object.
+   */
+  catena::Value getValueAt(ParamIndex idx);
 
   /**
    * @brief Set the value of the stored catena::ParamAccessor.

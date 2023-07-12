@@ -254,7 +254,7 @@ V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
   } else if constexpr (std::is_same<W, catena::Value>::value) {
 
     if (isList(v) && idx != kParamEnd) {
-      return getValueAt(v, idx);
+      return getValueAt(idx);
     } else {
       // return the whole parameter
       return v;
@@ -268,13 +268,17 @@ V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
 }
 
 template <typename DM>
-catena::Value catena::ParamAccessor<DM>::getValueAt(catena::Value &v,
-                                                    ParamIndex idx) {
+catena::Value catena::ParamAccessor<DM>::getValueAt(ParamIndex idx) {
+  typename DM::LockGuard(deviceModel_.get().mutex_);
+  auto v = value_.get();
   if (!isList(v)) {
     std::stringstream err;
     err << "Expected list value";
     BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
   }
+
+  /** @todo when we add support for the next array type, use a factory or static
+   * map of functions to handle each type */
   if (v.has_int32_array_values()) {
     auto &arr = v.int32_array_values();
     if (arr.ints_size() < idx) {
