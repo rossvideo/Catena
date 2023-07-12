@@ -22,6 +22,65 @@
                 }
             }
         },
+        "hello2": {
+            "param": {
+                "basic_param_info": {
+                    "oid": "hello2",
+                    "name": {
+                        "monoglot": "string example"
+                    },
+                    "type": {
+                        "param_type": "STRING"
+                    }
+                },
+                "value": {
+                    "string_value": "test"
+                },
+                "constraint": {
+                    "type": "STRING_CHOICE",
+                    "string_choice": {
+                        "choices": [
+                            {
+                                "monoglot": "test"
+                            },
+                            {
+                                "monoglot": "test"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "hello3": {
+            "param": {
+                "basic_param_info": {
+                    "oid": "hello3",
+                    "name": {
+                        "monoglot": "string example"
+                    },
+                    "type": {
+                        "param_type": "STRING"
+                    }
+                },
+                "value": {
+                    "string_value": "test"
+                },
+                "constraint": {
+                    "type": "STRING_STRING_CHOICE",
+                    "string_string_choice": {
+                        "strict": true,
+                        "choices": [
+                            {
+                                "value": "sdf"
+                            },
+                            {
+                                "value": "test"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "world": {
             "param": {
                 "type": {"type": "INT32"},
@@ -75,8 +134,6 @@
                     }
                 }
             }
-        },
-        "primes": {
             "param": {
                 "type": {"type": "INT32_ARRAY"},
                 "name": {"monoglot": "The first few primes"},
