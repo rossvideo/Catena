@@ -1,4 +1,4 @@
-# Linux Toolchain Installation {#Linux_toolchain}
+# Linux Toolchain Installation
 
 This toolchain installation has been verified on x64 Ubuntu 22.04.2 LTS
 

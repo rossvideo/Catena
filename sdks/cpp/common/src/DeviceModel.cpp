@@ -13,6 +13,7 @@
 //
 
 #include <DeviceModel.h>
+#include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>
 
@@ -24,12 +25,14 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 
-using catena::Threading;
+
 using google::protobuf::Map;
+using catena::DeviceModel;
+using catena::ParamAccessor;
+using catena::Threading;
 
-const auto kMulti = catena::Threading::kMultiThreaded;
-const auto kSingle = catena::Threading::kSingleThreaded;
 
 template <enum Threading T> catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
     auto jpopts = google::protobuf::util::JsonParseOptions{};
@@ -58,8 +61,8 @@ template <enum Threading T> catena::DeviceModel<T>::DeviceModel(const std::strin
                 // to create the filename
                 std::filesystem::path to_import(current_folder);
                 std::stringstream fn;
-                /** @todo escape the filename, it->first in case it includes a solidus
-         */
+                /// @todo escape the filename, it->first in case it includes a solidus
+              
                 fn << "param." << it->first << ".json";
                 to_import /= fn.str();
                 std::cout << "importing: " << to_import << '\n';
@@ -81,7 +84,11 @@ template <enum Threading T> const catena::Device &catena::DeviceModel<T>::device
     return device_;
 }
 
+// for parameters that do not have values
+template <enum Threading T> catena::Value catena::DeviceModel<T>::noValue_;
+
 template <enum Threading T>
+
 typename catena::DeviceModel<T>::Param catena::DeviceModel<T>::param(const std::string &jptr) {
     LockGuard lock(mutex_);
     catena::Path path_(jptr);

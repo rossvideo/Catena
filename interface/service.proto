@@ -1,12 +1,13 @@
 syntax = "proto3";
 
+// change this to the smpte doc name once a st-# has been assigned
+// for example smpte_st_major_minor_year
 package catena;
 
 option java_multiple_files = true;
 option java_package = "catena.core";
 option java_outer_classname = "CatenaCore";
 
-option cc_enable_arenas = true;
 option optimize_for = CODE_SIZE;
 
 import "google/protobuf/empty.proto";
@@ -15,21 +16,19 @@ import "param.proto";
 import "language.proto";
 import "eo.proto";
 
-// Catena's API 
-//
+// Catena's API
 
 message GeneralRequest {
-  int32 slot_id = 1;
+  int32 slot = 1;
 }
 
-//TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
+// TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
 message GeneralResponse {
   int32 return_code = 1;  // 0 indicates success, non-zero a problem
-  Exception exception = 2;  // explains non-zero return codes
+  Exception exception = 2;  // Explains non-zero return codes
 }
 
-
-service catena {
+service CatenaService {
   rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
 
   rpc ExecuteCommand(ExecuteCommandPayload) returns (stream CommandResponse);
@@ -48,20 +47,15 @@ service catena {
 
   rpc GetParam(GetParamPayload) returns (stream DeviceComponent.ComponentParam);
 
-  // The stream of PushUpdates is open-ended, terminating only when the 
-  // logical connection with the client is terminated.
-  //
+  /* The stream of PushUpdates is open-ended, terminating only when the
+   * logical connection with the client is terminated.
+   */
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
-
-  // Multi-language support 
-  //
-  rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); //Optional capability to allow clients to provide additional language packs
+  // Multi-language support
+  rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); // Optional capability to allow clients to provide additional language packs
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
 
   rpc ListLanguages(GeneralRequest) returns (LanguageList);
-
-
-
 }

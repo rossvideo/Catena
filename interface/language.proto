@@ -6,95 +6,96 @@ option java_multiple_files = true;
 option java_package = "catena.core";
 option java_outer_classname = "LanguageProtos";
 
-option cc_enable_arenas = true;
 option optimize_for = CODE_SIZE;
 
-// Language Pack
-// A map of string identifiers, e.g. "greeting" to strings which are all
-// in the same language.
-//
+/* Language Pack
+ * A map of string identifiers, e.g. "greeting" to strings which are all
+ * in the same language.
+ */
 message LanguagePack {
   string name = 1;
-  map <string, string> words = 2;
+  map<string, string> words = 2;
 }
 
-// Language Packs
-// A map of language identifiers to resource dictionaries or language packs
-// for each language supported.
-// The keys shall be patterned on those defined in 
-// https://www.mesaonline.org/language-metadata-table, e.g.
-// "es" for Global Spanish.
-// "es-CO" for Colombian Spanish.
-// "pl" for Jezyk polski
+/* Language Packs
+ * A map of language identifiers to resource dictionaries or language packs
+ * for each language supported.
+ * The keys shall be patterned on those defined in
+ * https://www.mesaonline.org/language-metadata-table, e.g.
+ * "es" for Global Spanish.
+ * "es-CO" for Colombian Spanish.
+ * "pl" for Jezyk polski
+ */
 message LanguagePacks {
-  map <string, LanguagePack> packs = 1;
+  map<string, LanguagePack> packs = 1;
 }
 
-// PolyglotText
-// Text that a client can display in one of multiple languages.
-// The different options can either be defined inline for each
-// instance of this message, or they can reference a LanguagePack,
-// or they can be defined as not having multi-language support.
-//
-// When defined inline, the keys shall be patterned on those defined at
-// https://www.mesaonline.org/language-metadata-table with "example"
-// substituted by "catena".
-//
-// Inline definition example:
-// {
-//    "en": "Hello",  // global English
-//    "es": "Hola",  // global Spanish
-//    "fr": "Bonjour", // global French
-//    "fr-CA": "Bonjour", // Canadian French
-// }
-//
-// And when defined by reference to a language pack the key property
-// is used to provide a look-up into the supported LanguagePack(s)
-// e.g. key = "greeting" could index to "Hello", "Hola" or "Bonjour"
-// depending on which LanguagePack was active in the client.
-//
-// Neither the polyglot or key members need be used.
-//
-// The monoglot member is provided to allow use of this message type 
-// without or before multi-language support being available. And use
-// of clients that do not provide multi-language support.
-// It should always be provided.
-// e.g. monoglot = "Hello".
-//
+/* PolyglotText
+ * Text that a client can display in one of multiple languages.
+ * The different options can either be defined in-line for each
+ * instance of this message, or they can reference a LanguagePack,
+ * or they can be defined as not having multi-language support.
+ *
+ * When defined in-line, the keys shall be patterned on those defined at
+ * https://www.mesaonline.org/language-metadata-table with "example"
+ * substituted by "catena".
+ *
+ * In-line definition example:
+ * {
+ *    "en": "Hello",  // global English
+ *    "es": "Hola",  // global Spanish
+ *    "fr": "Bonjour", // global French
+ *    "fr-CA": "Bonjour", // Canadian French
+ * }
+ *
+ * And when defined by reference to a language pack the key property
+ * is used to provide a look-up into the supported LanguagePack(s)
+ * e.g. key = "greeting" could index to "Hello", "Hola" or "Bonjour"
+ * depending on which LanguagePack was active in the client.
+ *
+ * Neither the polyglot or key members need be used.
+ *
+ * The monoglot member is provided to allow use of this message type
+ * without or before multi-language support being available. And use
+ * of clients that do not provide multi-language support.
+ * It should always be provided.
+ * e.g. monoglot = "Hello"
+ */
 message PolyglotText {
-  string monoglot = 1; // fallback for non-multilingual devices/clients
-  map <string, string> strings = 2; // inline language definition
-  string key = 3; // look up in a Language Pack
+  string monoglot = 1;             // Fallback for non-multilingual devices/clients
+  map<string, string> strings = 2; // In-line language definition
+  string key = 3;                  // Look up in a Language Pack
 }
 
-// AddLanguagePayload
-// Used by a client to request that a device adds support for a language pack.
-//
+/* AddLanguagePayload
+ * Used by a client to request that a device adds support for a language pack.
+ */
 message AddLanguagePayload {
   uint32 slot = 1;
   LanguagePack language_pack = 2;
 }
 
-// LanguagePackRequestPayload
-// Requests a language pack from the device.
-//
+/* LanguagePackRequestPayload
+ * Requests a language pack from the device.
+ */
 message LanguagePackRequestPayload {
-  uint32 slot = 1; // uniquely identifies the device at node scope.
-  string language = 2;  // e.g. "es" Global Spanish.
+  uint32 slot = 1;     // Uniquely identifies the device at node scope.
+  string language = 2; // e.g. "es" Global Spanish.
 }
 
-// Language List
-// The list of language tags that the device supports.
-// 
-// e.g.
-// [
-//    "en",
-//    "es",
-//    "fr"
-// ] // support for english, spanish & french
-//
-// e.g.
-// [] // no multi-lingual support
+/* Language List
+ * The list of language tags that the device supports.
+ *
+ * e.g.
+ * [
+ *    "en",
+ *    "es",
+ *    "fr"
+ * ] // Support for English, Spanish & French
+ *
+ * e.g.
+ * [] // No multi-lingual support
+ */
 message LanguageList {
   repeated string languages = 1;
 }
