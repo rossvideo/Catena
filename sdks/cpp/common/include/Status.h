@@ -28,14 +28,13 @@
 
 namespace catena {
 struct exception_with_status : public std::runtime_error {
-  inline explicit exception_with_status(const std::string &why,
-                                        grpc::StatusCode s)
-      : std::runtime_error{why}, status{s} {}
+    inline explicit exception_with_status(const std::string &why, grpc::StatusCode s)
+        : std::runtime_error{why}, status{s} {}
 
-  const grpc::StatusCode status;
+    const grpc::StatusCode status;
 };
 
-} // namespace catena
+}  // namespace catena
 
 /**
  * @brief creates a catena::exception_with_status object and throws it.
@@ -44,11 +43,10 @@ struct exception_with_status : public std::runtime_error {
  * release / production ones.
  * 
  */
-#define BAD_STATUS(msg, status)                                                \
-  do {                                                                         \
-    static_assert(status != grpc::StatusCode::OK,                              \
-                  "Only use with error status codes");                         \
-    std::stringstream why;                                                     \
-    why << __FILE__ << ':' << __LINE__ << '\n' << msg;                         \
-    throw catena::exception_with_status(why.str(), status);                    \
-  } while (false)
+#define BAD_STATUS(msg, status)                                                                              \
+    do {                                                                                                     \
+        static_assert(status != grpc::StatusCode::OK, "Only use with error status codes");                   \
+        std::stringstream why;                                                                               \
+        why << __FILE__ << ':' << __LINE__ << '\n' << msg;                                                   \
+        throw catena::exception_with_status(why.str(), status);                                              \
+    } while (false)
