@@ -65,64 +65,60 @@ static constexpr ParamIndex kParamEnd = ParamIndex(-1);
  */
 template <typename DM> class ParamAccessor {
 
-  // prevent use of this class outside of DeviceModel
-  static_assert(
-      std::is_same_v<DM,
-                     catena::DeviceModel<catena::Threading::kMultiThreaded>> ||
-          std::is_same_v<
-              DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,
-      "Class Template Parameter must be of type DeviceModel<T>");
+    // prevent use of this class outside of DeviceModel
+    static_assert(std::is_same_v<DM, catena::DeviceModel<catena::Threading::kMultiThreaded>> ||
+                    std::is_same_v<DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,
+                  "Class Template Parameter must be of type DeviceModel<T>");
 
-public:
-  /**
+  public:
+    /**
    * @brief Construct a new ParamAccessor object
    *
    * @param dm the parent device model.
    * @param p the parameter owned by the device model.
    */
 
-  ParamAccessor(DM &dm, typename DM::ParamAccessorData &pad) noexcept
-      : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)} {
-  }
+    ParamAccessor(DM &dm, typename DM::ParamAccessorData &pad) noexcept
+        : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)} {}
 
-  /**
+    /**
    * @brief ParamAccessor has no default constructor.
    *
    */
-  ParamAccessor() = delete;
+    ParamAccessor() = delete;
 
-  /**
+    /**
    * @brief ParamAccessor has copy semantics.
    *
    * @param other
    */
-  ParamAccessor(const ParamAccessor &other) = default;
+    ParamAccessor(const ParamAccessor &other) = default;
 
-  /**
+    /**
    * @brief ParamAccessor has copy semantics.
    *
    * @param rhs
    */
-  ParamAccessor &operator=(const ParamAccessor &rhs) = default;
+    ParamAccessor &operator=(const ParamAccessor &rhs) = default;
 
-  /**
+    /**
    * @brief ParamAccessor does not have move semantics.
    *
    * @param other
    */
-  ParamAccessor(ParamAccessor &&other) = delete;
+    ParamAccessor(ParamAccessor &&other) = delete;
 
-  /**
+    /**
    * @brief ParamAccessor does not have move semantics
    *
    * @param rhs, right hand side of the equals sign
    */
-  ParamAccessor &operator=(ParamAccessor &&rhs) = delete;
+    ParamAccessor &operator=(ParamAccessor &&rhs) = delete;
 
-  inline ~ParamAccessor() { // nothing to do
-  }
+    inline ~ParamAccessor() {  // nothing to do
+    }
 
-  /**
+    /**
    * @brief Get the value of the param referenced by this object
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
@@ -134,9 +130,9 @@ public:
    * @throws catena::exception_with_status if a type mismatch is detected, or
    * support for the type used has not been implemented.
    */
-  template <typename V> V getValue([[maybe_unused]] ParamIndex idx = 0);
+    template <typename V> V getValue([[maybe_unused]] ParamIndex idx = 0);
 
-  /**
+    /**
    * @brief Get the value of the array-type param referenced by this object
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
@@ -147,9 +143,9 @@ public:
    * @return V catena::Value set to type matching that of the param referenced
    * by this object.
    */
-  catena::Value getValueAt(ParamIndex idx);
+    catena::Value getValueAt(ParamIndex idx);
 
-  /**
+    /**
    * @brief Set the value of the stored catena::ParamAccessor.
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
@@ -157,13 +153,12 @@ public:
    * @tparam V type of the value stored by the param.
    * @param v value to set.
    */
-  template <typename V>
-  void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
+    template <typename V> void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
 
-private:
-  std::reference_wrapper<DM> deviceModel_;
-  std::reference_wrapper<catena::Param> param_;
-  std::reference_wrapper<catena::Value> value_;
+  private:
+    std::reference_wrapper<DM> deviceModel_;
+    std::reference_wrapper<catena::Param> param_;
+    std::reference_wrapper<catena::Value> value_;
 };
 
 /**
@@ -174,9 +169,9 @@ private:
  * @return false otherwise
  */
 inline static bool isList(const catena::Value &v) {
-  bool ans = false;
-  ans = v.has_float32_array_values() || v.has_int32_array_values() ||
-        v.has_string_array_values() || v.has_struct_array_values();
-  return ans;
+    bool ans = false;
+    ans = v.has_float32_array_values() || v.has_int32_array_values() || v.has_string_array_values() ||
+          v.has_struct_array_values();
+    return ans;
 }
-} // namespace catena
+}  // namespace catena
