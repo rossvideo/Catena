@@ -156,6 +156,7 @@
                 {
                     "$ref": "#/$defs/apply_string"
                 },
+                {
                     "$ref": "#/$defs/apply_int32_array"
                 }
             ]
@@ -504,6 +505,32 @@
             "type": "object",
             "title": "String String Choice"
         },
+        "apply_string": {
+            "title": "STRING specialism",
+            "description":
+              "Applies STRING values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/string_value"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/string_constraint"
+                    }
+                }
+            }
+        },
         "int_choice": {
             "title": "int choice constraint",
             "description": "maps strings intended for display in client to integers",
@@ -600,11 +627,7 @@
                         "ints"
                     ],
                     "additionalProperties": false
-                },
-                "required": [
-                    "int32_array_values"
-                ],
-                "additionalProperties": false
+                }
             },
             "required": [
                 "int32_array_values"

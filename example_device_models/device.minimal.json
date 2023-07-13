@@ -33,14 +33,11 @@
         },
         "hello2": {
             "param": {
-                "basic_param_info": {
-                    "oid": "hello2",
-                    "name": {
-                        "monoglot": "string example"
-                    },
-                    "type": {
-                        "param_type": "STRING"
-                    }
+                "name": {
+                    "monoglot": "string example"
+                },
+                "type": {
+                    "type": "STRING"
                 },
                 "value": {
                     "string_value": "test"
@@ -62,14 +59,11 @@
         },
         "hello3": {
             "param": {
-                "basic_param_info": {
-                    "oid": "hello3",
-                    "name": {
-                        "monoglot": "string example"
-                    },
-                    "type": {
-                        "param_type": "STRING"
-                    }
+                "type": {
+                    "type": "STRING"
+                },
+                "name": {
+                    "monoglot": "string example"
                 },
                 "value": {
                     "string_value": "test"

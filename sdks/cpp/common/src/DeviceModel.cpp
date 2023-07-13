@@ -46,14 +46,6 @@ template <enum Threading T> DeviceModel<T>::DeviceModel(const std::string &filen
         google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
     }
 
-template <enum Threading T> catena::DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
-    auto jpopts = google::protobuf::util::JsonParseOptions{};
-    // read in the top level file
-    {
-        std::string file = catena::readFile(filename);
-        google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
-    }
-
     // read in imported params
     // the top-level ones will come from path/to/device/params
     //
@@ -154,6 +146,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
     }
 
     // validate path argument and the parameter
+
     // is there a params field to define the sub-params?
     if (parent->params_size() == 0) {
         BAD_STATUS("params field is missing", grpc::StatusCode::FAILED_PRECONDITION);
@@ -244,13 +237,12 @@ template <enum Threading T> std::ostream &operator<<(std::ostream &os, const cat
 //   return Param(*this, *device_.mutable_params()->at(oid).mutable_param());
 // }
 
+
 // instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::DeviceModel<Threading::kMultiThreaded>;
-
 template class catena::DeviceModel<Threading::kSingleThreaded>;
 
 // instantiate the ostream operators
 template std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<Threading::kMultiThreaded> &dm);
-
 template std::ostream &operator<<(std::ostream &os,
                                   const catena::DeviceModel<Threading::kSingleThreaded> &dm);
