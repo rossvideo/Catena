@@ -162,7 +162,8 @@
             "then": {
                 "properties": {
                     "value": {"$ref": "#/$defs/float32_value"},
-                    "constraint": {"$ref": "#/$defs/float32_constraint"}
+                    "constraint": {"$ref": "#/$defs/float32_constraint"},
+                    "params": false
                 }
             }
         },
@@ -309,7 +310,8 @@
             "then": {
                 "properties": {
                     "value": {"$ref": "#/$defs/int32_value"},
-                    "constraint": {"$ref": "#/$defs/int32_constraint"}
+                    "constraint": {"$ref": "#/$defs/int32_constraint"},
+                    "params": false
                 }
             }
         },
@@ -351,7 +353,8 @@
             "then": {
                 "properties": {
                     "value": {"$ref": "#/$defs/int32_array_values"},
-                    "constraint": {"$ref": "#/$defs/int32_constraint"}
+                    "constraint": {"$ref": "#/$defs/int32_constraint"},
+                    "params": false
                 }
             }
         },
@@ -380,7 +383,8 @@
                     "oneOf": [                                       
                         {"$ref": "#/$defs/float32_value"},
                         {"$ref": "#/$defs/int32_value"},
-                        {"$ref": "#/$defs/struct_value"}                                    
+                        {"$ref": "#/$defs/struct_value"},
+                        {"$ref": "#/$defs/int32_array_values"}                                  
                     ]
                 },
                 "additionalProperties": false
