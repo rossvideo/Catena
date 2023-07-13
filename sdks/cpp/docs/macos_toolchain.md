@@ -1,4 +1,4 @@
-# macos Toolchain Installation {#macos_toolchain}
+# macos Toolchain Installation
 
 This toolchain installation has been verified on macOS Ventura 13.2.1
 on a M1 Pro equipped macbook pro.

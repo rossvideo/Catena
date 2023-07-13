@@ -2,26 +2,30 @@
     "slot": 1,
     "multi_set_enabled": true,
     "timeout": 100,
-    "detail": "MINIMAL",
+    "detail_level": "MINIMAL",
+    "access_scopes": [
+        "monitor",
+        "operate",
+        "configure",
+        "adminster"
+    ],
+    "default_scope": 1,
     "params": {
         "hello": {
             "param": {
-                "basic_param_info": {
-                    "oid": "hello",
-                    "name": {
-                        "monoglot": "float example"
-                    },
-                    "type": {
-                        "param_type": "FLOAT32"
-                    }
+                "type": {
+                    "type": "FLOAT32"
+                },
+                "name": {
+                    "monoglot": "Example Float Parameter"
                 },
                 "value": {
-                    "float32_value": 12.3
+                    "float32_value": 1.23
                 },
                 "constraint": {
                     "type": "FLOAT_RANGE",
                     "float_range": {
-                        "min_value": 0.0,
+                        "min_value": 1.0,
                         "max_value": 10.0
                     }
                 }
@@ -88,17 +92,14 @@
         },
         "world": {
             "param": {
-                "basic_param_info": {
-                    "oid": "world",
-                    "name": {
-                        "monoglot": "int example"
-                    },
-                    "type": {
-                        "param_type": "INT32"
-                    }
+                "type": {
+                    "type": "INT32"
+                },
+                "name": {
+                    "monoglot": "Example int32 Parameter"
                 },
                 "value": {
-                    "int32_value": 1
+                    "int32_value": 123
                 },
                 "constraint": {
                     "type": "INT_CHOICE",
@@ -106,93 +107,101 @@
                         "choices": [
                             {
                                 "name": {
-                                    "monoglot": "choice1"
+                                    "monoglot": "one"
                                 },
                                 "value": 1
+                            },
+                            {
+                                "name": {
+                                    "monoglot": "two"
+                                },
+                                "value": 2
                             }
                         ]
                     }
                 }
             }
         },
-        "my_struct": {
+        "location": {
             "param": {
-                "basic_param_info": {
-                    "oid": "my_struct",
-                    "name": {
-                        "monoglot": "example struct"
+                "type": {
+                    "type": "STRUCT"
+                },
+                "name": {
+                    "monoglot": "Example struct parameter"
+                },
+                "params": {
+                    "latitude": {
+                        "param": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "monoglot": "Latitude, Degrees"
+                            },
+                            "constraint": {
+                                "type": "FLOAT_RANGE",
+                                "float_range": {
+                                    "min_value": -90.0,
+                                    "max_value": 90.0
+                                }
+                            }
+                        }
                     },
-                    "type": {
-                        "param_type": "STRUCT"
+                    "longitude": {
+                        "param": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "monoglot": "Longitude, Degrees"
+                            },
+                            "constraint": {
+                                "type": "FLOAT_RANGE",
+                                "float_range": {
+                                    "min_value": -180.0,
+                                    "max_value": 180.0
+                                }
+                            }
+                        }
                     }
                 },
                 "value": {
                     "struct_value": {
                         "fields": {
-                            "int_field": {
-                                "value": {
-                                    "int32_value": 1
-                                }
+                            "latitude": {
+                                "float32_value": 10.0
                             },
-                            "float_field": {
-                                "value": {
-                                    "float32_value": 1
-                                }
-                            },
-                            "int_param": {
-                                "param": {
-                                    "basic_param_info": {
-                                        "name": {
-                                            "monoglot": "sub param"
-                                        },
-                                        "oid": "int_param",
-                                        "type": {
-                                            "param_type": "INT32"
-                                        }
-                                    },
-                                    "value": {
-                                        "int32_value": 123
-                                    }
-                                }
+                            "longitude": {
+                                "float32_value": -20.0
                             }
                         }
                     }
                 }
             }
-        }
-    },
-    "commands": {
-        "play": {
+        },
+        "primes": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "Play speed"
-                    },
-                    "type": {
-                        "param_type": "FLOAT32"
-                    }
+                "type": {
+                    "type": "INT32_ARRAY"
+                },
+                "name": {
+                    "monoglot": "The first few primes"
                 },
                 "value": {
-                    "float32_value": 1.0
-                },
-                "constraint": {
-                    "type": "FLOAT_RANGE",
-                    "float_range": {
-                        "min_value": 0.1,
-                        "max_value": 2.0,
-                        "display_min": 0.0,
-                        "display_max": 2.0,
-                        "step": 0.1
+                    "int32_array_values": {
+                        "ints": [
+                            2,
+                            3,
+                            5,
+                            7,
+                            11,
+                            13,
+                            17
+                        ]
                     }
                 }
             }
         }
-    },
-    "access_scopes": [
-        "monitor",
-        "operate",
-        "configure",
-        "admin"
-    ],
-    "default_scope": 0
+    }
 }
