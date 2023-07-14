@@ -1,0 +1,61 @@
+{
+    "example1": {
+        "param": {
+            "name": {
+                "monoglot": "string example"
+            },
+            "type": {
+                "type": "STRING"
+            },
+            "value": {
+                "string_value": "test_value"
+            },
+            "constraint": {
+                "type": "STRING_CHOICE",
+                "string_choice": {
+                    "choices": [
+                        {
+                            "monoglot": "test1"
+                        },
+                        {
+                            "monoglot": "test2"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "example2": {
+        "param": {
+            "type": {
+                "type": "STRING"
+            },
+            "name": {
+                "monoglot": "string example"
+            },
+            "value": {
+                "string_value": "test_value"
+            },
+            "constraint": {
+                "type": "STRING_STRING_CHOICE",
+                "string_string_choice": {
+                    "strict": true,
+                    "choices": [
+                        {
+                            "name": {
+                                "monoglot": "test_name"
+                            },
+                            "value": "test1"
+                        },
+                        {
+                            "name": {
+                                "monoglot": "test_name2"
+                            },
+                            "value": "test2"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
