@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
         std::cout << "setting values to something different\n";
         helloParam.setValue(3.142f);     // example using cached param
         dm.param("/world").setValue(3);  // example using chaining
+      
         std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
 
         // demo caching a sub-param

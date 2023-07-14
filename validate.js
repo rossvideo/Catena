@@ -1,4 +1,3 @@
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -20,6 +19,8 @@
 
 const Ajv = require('ajv');
 const ajv = new Ajv({strict: false});  // our use of "strict" as a schema interferes with ajv's strict mode.
+
+const jsonMap = require('json-source-map');
 
 'use strict';
 const path = require('node:path');
@@ -59,25 +60,36 @@ console.log(`applying: ${schemaName} schema to input file ${testfile}`);
 
 // adds schemas to the avj engine
 function addSchemas(genus) {
+    let schemaMap = jsonMap.stringify(schema, null, 2)
+
     for (species in schema[genus]) {
         if (species.indexOf('$comment') === 0) {
             // ignore comments
         } else {
             // treat as a schema
-            ajv.addSchema(schema[genus][species], `#/${genus}/${species}`);
+            try {
+                ajv.addSchema(schema[genus][species], `#/${genus}/${species}`);
+            } catch (why) {
+                let errorPointer = schemaMap.pointers[`/${genus}/${species}`];
+
+                throw Error(`${why} at #/${genus}/${species} on lines ${errorPointer.value.line}-${
+                  errorPointer.valueEnd.line}`)
+            }
         }
     }
 }
 
 // show errors
-function showErrors(errors) {
+function showErrors(errors, sourceMap) {
     for (const err of errors) {
         switch (err.keyword) {
             case "maximum":
                 console.log(err.limit);
                 break;
             default:
-                console.log(`${err.message} at ${err.instancePath}`);
+                let errorPointer = sourceMap.pointers[err.instancePath];
+                console.log(`${err.message} at ${err.instancePath} on lines ${errorPointer.value.line}-${
+                  errorPointer.valueEnd.line}`);
                 break;
         }
     }
@@ -94,18 +106,20 @@ try {
 
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(testfile));
+    const map = jsonMap.stringify(data, null, 2);
+
     if (kDeviceSchema) {
         const validate = ajv.compile(schema);
         if (validate(data)) {
             console.log('Device model is valid.');
         } else {
-            showErrors(validate.errors);
+            showErrors(validate.errors, map);
         }
     } else {
         if (ajv.validate(schema.$defs[schemaName], data)) {
             console.log('data was valid.');
         } else {
-            showErrors(ajv.errors);
+            showErrors(ajv.errors, map);
         }
     }
 

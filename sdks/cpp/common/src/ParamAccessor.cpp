@@ -25,6 +25,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 using catena::ParamIndex;
 using catena::Threading;
@@ -74,6 +75,26 @@ int applyIntConstraint(catena::Param &param, int v) {
     return v;
 }
 
+std::string applyStringConstraint(catena::Param &param, std::string v) {
+    if (param.has_constraint()) {
+        // apply the constraint
+        int constraint_type = param.constraint().type();
+
+        switch (constraint_type) {
+            case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_CHOICE:
+                /** @todo: validate string choice */
+                break;
+            case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
+                /** @todo validate that v is string string choice */
+            default:
+                std::stringstream err;
+                err << "invalid constraint for string: " << constraint_type << '\n';
+                BAD_STATUS((err.str()), grpc::StatusCode::OUT_OF_RANGE);
+        }
+    }
+    return v;
+}
+
 /**
  * @brief override for int
  *
@@ -85,6 +106,19 @@ int applyIntConstraint(catena::Param &param, int v) {
  */
 void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex idx = 0) {
     dst.set_int32_value(applyIntConstraint(param, src));
+}
+
+/**
+ * @brief override for string
+ *
+ * @throws OUT_OF_RANGE if the constraint type isn't valid
+ * @tparam
+ * @param param the param descriptor
+ * @param val the param's value object
+ * @param v the value to set
+ */
+void setValueImpl(catena::Param &param, catena::Value &dst, std::string src, ParamIndex idx = 0) {
+    dst.set_string_value(applyStringConstraint(param, std::move(src)));
 }
 
 /**
@@ -100,6 +134,13 @@ void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex 
 void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src, ParamIndex idx = 0) {
     auto type = p.type().type();
     switch (type) {
+        case catena::ParamType_Type_STRING:
+            if (~src.has_string_value()) {
+                BAD_STATUS("expected string value", grpc::StatusCode::INVALID_ARGUMENT);
+            }
+            setValueImpl(p, dst, src.string_value());
+            break;
+
         case catena::ParamType_Type_FLOAT32:
             if (!src.has_float32_value()) {
                 BAD_STATUS("expected float value", grpc::StatusCode::INVALID_ARGUMENT);
@@ -145,6 +186,8 @@ template <typename DM> template <typename V> void catena::ParamAccessor<DM>::set
     setValueImpl(param_.get(), value_.get(), v, idx);
 }
 
+template void PAM::setValue<std::string>(std::string, ParamIndex);
+template void PAS::setValue<std::string>(std::string, ParamIndex);
 template void PAM::setValue<float>(float, ParamIndex);
 template void PAS::setValue<float>(float, ParamIndex);
 template void PAM::setValue<int>(int, ParamIndex);
@@ -160,6 +203,15 @@ template void PAS::setValue<catena::Value>(catena::Value, ParamIndex);
  * @return V
  */
 template <typename V> V getValueImpl(const catena::Value &v);
+
+/**
+ * @brief specialize for string
+ *
+ * @tparam
+ * @param v
+ * @return std::string
+ */
+template <> std::string getValueImpl<std::string>(const catena::Value &v) { return v.string_value(); }
 
 /**
  * @brief specialize for float
@@ -219,7 +271,13 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
     catena::Param &cp = param_.get();
     catena::Value &v = value_.get();
 
-    if constexpr (std::is_same<W, float>::value) {
+    if constexpr (std::is_same<W, std::string>::value) {
+        if (cp.type().type() != catena::ParamType::Type::ParamType_Type_STRING) {
+            BAD_STATUS("expected param of string type", grpc::StatusCode::FAILED_PRECONDITION);
+        }
+        return getValueImpl<std::string>(v);
+
+    } else if constexpr (std::is_same<W, float>::value) {
         if (cp.type().type() != catena::ParamType::Type::ParamType_Type_FLOAT32) {
             BAD_STATUS("expected param of FLOAT32 type", grpc::StatusCode::FAILED_PRECONDITION);
         }
@@ -279,6 +337,8 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
 }
 
 // instantiate all the getValues
+template std::string PAM::getValue<std::string>(ParamIndex);
+template std::string PAS::getValue<std::string>(ParamIndex);
 template float PAM::getValue<float>(ParamIndex);
 template float PAS::getValue<float>(ParamIndex);
 template int PAM::getValue<int>(ParamIndex);

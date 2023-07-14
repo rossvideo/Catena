@@ -154,6 +154,9 @@
                     "$ref": "#/$defs/apply_struct"
                 },
                 {
+                    "$ref": "#/$defs/apply_string"
+                },
+                {
                     "$ref": "#/$defs/apply_int32_array"
                 }
             ]
@@ -389,6 +392,145 @@
                 }
             ]
         },
+        "string_value": {
+            "title": "STRING",
+            "description": "Defines STRING as a primitive string type",
+            "type": "object",
+            "properties": {
+                "string_value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "string_value"
+            ],
+            "additionalProperties": false
+        },
+        "string_constraint": {
+            "title": "STRING Constraint",
+            "description": "String constraint",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "title": "STRING Constraint types",
+                    "description": "Constraints for string arrays",
+                    "type": "string",
+                    "enum": [
+                        "STRING_CHOICE",
+                        "STRING_STRING_CHOICE"
+                    ]
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_CHOICE"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_CHOICE"
+                            },
+                            "string_choice": {
+                                "type": "object",
+                                "properties": {
+                                    "choices": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/$defs/polyglot_text"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "choices"
+                                ],
+                                "additionalProperties": true
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_STRING_CHOICE"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_STRING_CHOICE"
+                            },
+                            "string_string_choice": {
+                                "type": "object",
+                                "properties": {
+                                    "choices": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/$defs/string_string_choice"
+                                        }
+                                    },
+                                    "strict": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            ]
+        },
+        "string_string_choice": {
+            "properties": {
+                "value": {
+                    "type": "string"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text",
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "String String Choice"
+        },
+        "apply_string": {
+            "title": "STRING specialism",
+            "description":
+              "Applies STRING values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/string_value"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/string_constraint"
+                    }
+                }
+            }
+        },
         "int_choice": {
             "title": "int choice constraint",
             "description": "maps strings intended for display in client to integers",
@@ -485,11 +627,7 @@
                         "ints"
                     ],
                     "additionalProperties": false
-                },
-                "required": [
-                    "int32_array_values"
-                ],
-                "additionalProperties": false
+                }
             },
             "required": [
                 "int32_array_values"

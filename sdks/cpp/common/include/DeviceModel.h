@@ -59,7 +59,7 @@ template <typename DM> class ParamAccessor;  // forward reference
  */
 template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
     friend ParamAccessor<DeviceModel>;
-
+  
   public:
     /**
    * @brief which threading model is active.
