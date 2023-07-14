@@ -86,6 +86,7 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
                 /** @todo validate that v is string string choice */
+                break;
             default:
                 std::stringstream err;
                 err << "invalid constraint for string: " << constraint_type << '\n';
@@ -135,7 +136,7 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
     auto type = p.type().type();
     switch (type) {
         case catena::ParamType_Type_STRING:
-            if (~src.has_string_value()) {
+            if (!src.has_string_value()) {
                 BAD_STATUS("expected string value", grpc::StatusCode::INVALID_ARGUMENT);
             }
             setValueImpl(p, dst, src.string_value());
