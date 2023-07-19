@@ -64,7 +64,6 @@ static constexpr ParamIndex kParamEnd = ParamIndex(-1);
  *
  */
 template <typename DM> class ParamAccessor {
-
     // prevent use of this class outside of DeviceModel
     static_assert(std::is_same_v<DM, catena::DeviceModel<catena::Threading::kMultiThreaded>> ||
                     std::is_same_v<DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,

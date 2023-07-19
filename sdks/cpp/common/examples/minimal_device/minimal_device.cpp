@@ -113,7 +113,6 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 //
 // right now, it just tests that a token exists, decodes it and prints it out
 // much work required to actually validate the token
-
 void authorize(grpc::ServerContext *context /*catena::Param &p*/) {
     if (absl::GetFlag(FLAGS_authz)) {
         auto authz = context->client_metadata();
