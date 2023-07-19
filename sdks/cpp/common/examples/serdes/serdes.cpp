@@ -1,4 +1,4 @@
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0 
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -27,17 +27,17 @@
  * @copyright Copyright © 2023, Ross Video Ltd
  */
 
- #include <DeviceModel.h>
- #include <Path.h>
+#include <DeviceModel.h>
+#include <Path.h>
 
- #include <iostream>
- #include <iomanip>
- #include <stdexcept>
- #include <utility>
+#include <iostream>
+#include <iomanip>
+#include <stdexcept>
+#include <utility>
 
- using Index = catena::Path::Index;
+using Index = catena::Path::Index;
 
- int main(int argc, char** argv) {
+int main(int argc, char** argv) {
     // process command line
     if (argc != 2) {
         std::cout << "usage: " << argv[0] << " path/to/input-file.json\n";
@@ -63,4 +63,4 @@
         exit(EXIT_FAILURE);
     }
     return EXIT_SUCCESS;
- }
+}

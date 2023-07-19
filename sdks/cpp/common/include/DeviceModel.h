@@ -28,6 +28,8 @@
 #include <Path.h>
 #include <Threading.h>
 #include <Status.h>
+#include <mutex>
+#include <memory>
 
 #include <iostream>
 #include <string>
@@ -36,8 +38,7 @@
 
 namespace catena {
 
-template <typename DM>
-class ParamAccessor; // forward reference
+template <typename DM> class ParamAccessor;  // forward reference
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
@@ -56,109 +57,106 @@ class ParamAccessor; // forward reference
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
-template <enum Threading T = Threading::kMultiThreaded>
-class DeviceModel {
-  friend ParamAccessor<DeviceModel>;
-public:
-  /**
+template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
+    friend ParamAccessor<DeviceModel>;
+  
+  public:
+    /**
    * @brief which threading model is active.
    *
    */
-  const catena::Threading kThreading = T;
+    const catena::Threading kThreading = T;
 
-  /**
+    /**
    * @brief Choose the mutex type
    *
    */
-  using Mutex =
-      typename std::conditional<T == catena::Threading::kMultiThreaded,
-                                std::recursive_mutex, FakeMutex>::type;
+    using Mutex = typename std::conditional<T == catena::Threading::kMultiThreaded, std::recursive_mutex,
+                                            FakeMutex>::type;
 
-  /**
+    /**
    * @brief Choose the lock guard type
    *
    */
-  using LockGuard =
-      typename std::conditional<T == catena::Threading::kMultiThreaded,
-                                std::lock_guard<Mutex>,
-                                FakeLockGuard<Mutex>>::type;
+    using LockGuard = typename std::conditional<T == catena::Threading::kMultiThreaded,
+                                                std::lock_guard<Mutex>, FakeLockGuard<Mutex>>::type;
 
-  /**
+    /**
    * @brief Param Accessor Data
    * 
    * Yes, this could be a std::pair, but I've a hunch that we'll need to add
    * a pointer to catena::Constraint too in the near future because constraints
    * can be referenced and not only defined in-line.
    */
-  using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
+    using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
 
-  /**
+    /**
    * @brief default constructor, creates an empty model.
    *
    */
-  DeviceModel() {}
+    DeviceModel() {}
 
-  /**
+    /**
    * @brief Copy constructor, makes deep copy of other's device model.
    * @todo implementation
    * @param other the DeviceModel to copy.
    */
-  DeviceModel(const DeviceModel &other) {}
+    DeviceModel(const DeviceModel &other) {}
 
-  /**
+    /**
    * @brief Assignment operator, makes deep copy of rhs's device model.
    * @param rhs the right hand side of the = operator
    * @todo implementation
    */
-  DeviceModel &operator=(const DeviceModel &rhs) {
-    LockGuard lock(mutex_);
-    // not implemented
-    return *this;
-  }
+    DeviceModel &operator=(const DeviceModel &rhs) {
+        LockGuard lock(mutex_);
+        // not implemented
+        return *this;
+    }
 
-  /**
+    /**
    * @brief Move constructor, takes possession of other's state
    * @param other the donor object
    * @todo implementation
    */
-  DeviceModel(DeviceModel &&other) {
-    // not implemented
-  }
+    DeviceModel(DeviceModel &&other) {
+        // not implemented
+    }
 
-  /**
+    /**
    * @brief Move assignment, takes possession of rhs's state
    * @todo implementation
    * @param rhs the right hand side of the = operator
    * @return DeviceModel
    */
-  DeviceModel operator=(DeviceModel &&rhs) {
-    // not implemented
-    return *this;
-  }
+    DeviceModel operator=(DeviceModel &&rhs) {
+        // not implemented
+        return *this;
+    }
 
-  /**
+    /**
    * @brief construct from a catena protobuf Device object.
    * @todo implementation
    */
-  explicit DeviceModel(catena::Device &pbDevice) {
-    // not implemented
-  }
+    explicit DeviceModel(catena::Device &pbDevice) {
+        // not implemented
+    }
 
-  /**
+    /**
    * @brief Construct a new Device Model from a json file
    *
    * @param filename
    */
-  explicit DeviceModel(const std::string &filename);
+    explicit DeviceModel(const std::string &filename);
 
-  /**
+    /**
    * @brief read access to the protobuf Device
    *
    * @return const catena::Device&
    */
-  const catena::Device &device() const;
+    const catena::Device &device() const;
 
-  /**
+    /**
    * @brief Get the Param object at path
    *
    * @param path uniquely locates the parameter
@@ -168,9 +166,9 @@ public:
    * device model
    * @return DeviceModel Param
    */
-  ParamAccessor<DeviceModel> param(const std::string &path);
+    ParamAccessor<DeviceModel> param(const std::string &path);
 
-  /**
+    /**
    * @brief Get the value of the parameter indicated by path
    *
    * @tparam V type of the value to be retrieved
@@ -180,9 +178,9 @@ public:
    * expensive and the client is likely to want to access the param
    * again after getting its value
    */
-  template <typename V> void getValue(V &ans, const std::string &path);
+    template <typename V> void getValue(V &ans, const std::string &path);
 
-  /**
+    /**
    * @brief Set value of param identified by path
    *
    * @tparam V underlying value type of param
@@ -192,9 +190,9 @@ public:
    * expensive and the client is likely to want to access the param
    * again after setting its value
    */
-  template <typename V> void setValue(const std::string &path, V v);
+    template <typename V> void setValue(const std::string &path, V v);
 
-  /**
+    /**
    * @brief moves the param into the device model
    *
    * @param jptr - json pointer to the place to insert the param, must be
@@ -203,14 +201,14 @@ public:
    * @returns cached version of param which client can use
    * for ongoing access to the param in a threadsafe way
    */
-  // Param addParam(const std::string &jptr, catena::Param &&param);
+    // Param addParam(const std::string &jptr, catena::Param &&param);
 
-private:
-  catena::Device device_; /**< the protobuf device model */
-  mutable Mutex mutex_;   /**< used to mediate access */
-  static catena::Value noValue_; /**< to flag undefined values */
+  private:
+    catena::Device device_;        /**< the protobuf device model */
+    mutable Mutex mutex_;          /**< used to mediate access */
+    static catena::Value noValue_; /**< to flag undefined values */
 
-  /**
+    /**
    * @brief Get the parent's sub-param at front of path
    *
    * @param path [in|out] path to the sub-param, the first segment will be
@@ -223,10 +221,10 @@ private:
    * type
    *
    */
-  ParamAccessorData getSubparam_(catena::Path &path, ParamAccessorData &pad);
+    ParamAccessorData getSubparam_(catena::Path &path, ParamAccessorData &pad);
 };
 
-} // namespace catena
+}  // namespace catena
 
 /**
  * @brief operator << for DeviceModel
