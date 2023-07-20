@@ -1,73 +1,57 @@
 {
-    "basic_param_info": {
-        "name": {
-            "monoglot": "Tape Transport as example of re-used or reference sub-device."
-        },
-        "type": {
-            "param_type": "STRUCT"
-        }
+    "name": {
+        "monoglot": "Tape Transport as example of re-used or reference sub-device."
+    },
+    "type": {
+        "type": "STRUCT"
     },
     "commands": {
         "play": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": ">"
-                    }
+                "name": {
+                    "monoglot": ">"
                 }
             }
         },
         "stop": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "[]"
-                    }
+                "name": {
+                    "monoglot": "[]"
                 }
             }
         },
         "pause": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "||"
-                    }
+                "name": {
+                    "monoglot": "||"
                 }
             }
         },
         "eject": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "^"
-                    }
+                "name": {
+                    "monoglot": "^"
                 }
             }
         },
         "load": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "v"
-                    }
+                "name": {
+                    "monoglot": "v"
                 }
             }
         },
         "rewind": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": "<<"
-                    }
+                "name": {
+                    "monoglot": "<<"
                 }
             }
         },
         "fast_forward": {
             "param": {
-                "basic_param_info": {
-                    "name": {
-                        "monoglot": ">>"
-                    }
+                "name": {
+                    "monoglot": ">>"
                 }
             }
         }
@@ -77,13 +61,11 @@
             "fields": {
                 "play_mode": {
                     "param": {
-                        "basic_param_info": {
-                            "name": {
-                                "monoglot": "Play Mode"
-                            },
-                            "type": {
-                                "param_type": "INT32"
-                            }
+                        "name": {
+                            "monoglot": "Play Mode"
+                        },
+                        "type": {
+                            "type": "INT32"
                         },
                         "value": {
                             "int32_value": 0
@@ -111,13 +93,11 @@
                 },
                 "inpoint": {
                     "param": {
-                        "basic_param_info": {
-                            "name": {
-                                "monoglot": "In Point"
-                            },
-                            "type": {
-                                "param_type": "INT32"
-                            }
+                        "name": {
+                            "monoglot": "In Point"
+                        },
+                        "type": {
+                            "type": "INT32"
                         },
                         "value": {
                             "int32_value": 0
@@ -126,13 +106,11 @@
                 },
                 "outpoint": {
                     "param": {
-                        "basic_param_info": {
-                            "name": {
-                                "monoglot": "Out Point"
-                            },
-                            "type": {
-                                "param_type": "INT32"
-                            }
+                        "name": {
+                            "monoglot": "Out Point"
+                        },
+                        "type": {
+                            "type": "INT32"
                         },
                         "value": {
                             "int32_value": 0
@@ -141,13 +119,11 @@
                 },
                 "play_speed": {
                     "param": {
-                        "basic_param_info": {
-                            "name": {
-                                "monoglot": "Play Speed"
-                            },
-                            "type": {
-                                "param_type": "FLOAT32"
-                            }
+                        "name": {
+                            "monoglot": "Play Speed"
+                        },
+                        "type": {
+                            "type": "FLOAT32"
                         },
                         "value": {
                             "float32_value": 1.0
