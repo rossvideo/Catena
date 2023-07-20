@@ -34,7 +34,7 @@ struct FakeMutex {};
  *
  */
 template <typename MTX> class FakeLockGuard {
-public:
-  explicit FakeLockGuard(MTX &mtx) {}
+  public:
+    explicit FakeLockGuard(MTX &mtx) {}
 };
-} // namespace catena
+}  // namespace catena

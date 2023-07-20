@@ -7,7 +7,7 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0 
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at:
@@ -22,10 +22,11 @@
 //
 
 
- #include <iostream>
- #include <string>
- #include <deque>
- #include <variant>
+#include <iostream>
+#include <string>
+#include <deque>
+#include <variant>
+#include <memory>
 
 namespace catena {
 /**
@@ -33,7 +34,7 @@ namespace catena {
  * 
  */
 class Path {
-public:
+  public:
     /**
      * @brief what we split the path into
      * 
@@ -129,15 +130,15 @@ public:
      */
     std::string fqoid();
 
-private:
+  private:
     Segments segments_; /**< the path split into its components */
-    
+
     /**
      * @brief replace / and ~ characters with ~1 & ~0
      * 
      * @param str in|out
      */
-    void escape (std::string& str);
+    void escape(std::string& str);
 
     /**
      * @brief replace ~0 and ~1 with ~ and /
@@ -145,8 +146,8 @@ private:
      * @param str 
      * @return unescaped version of str
      */
-    std::string unescape (const std::string& str);
+    std::string unescape(const std::string& str);
 };
-} // namespace catena
+}  // namespace catena
 
 std::unique_ptr<catena::Path> operator"" _path(const char* lit, std::size_t sz);

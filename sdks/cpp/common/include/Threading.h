@@ -28,4 +28,4 @@ namespace catena {
  *
  */
 enum class Threading { kSingleThreaded, kMultiThreaded };
-} // namespace catena
+}  // namespace catena
