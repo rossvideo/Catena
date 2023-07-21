@@ -6,8 +6,10 @@ import catena.core.DeviceRequestPayload;
 import catena.core.GetValuePayload;
 import catena.core.SetValuePayload;
 import catena.core.Value;
+import io.grpc.ChannelCredentials;
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 public class MyCatenaClient implements AutoCloseable {
@@ -29,8 +31,8 @@ public class MyCatenaClient implements AutoCloseable {
 
 	public void start() {
 		if (channel == null) {
-			ManagedChannelBuilder<?> channelBuilder = ManagedChannelBuilder.forAddress(hostname, port).usePlaintext();
-			channel = channelBuilder.build();
+			ChannelCredentials credentials = InsecureChannelCredentials.create(); // TODO: Create proper credentials.
+			channel = Grpc.newChannelBuilderForAddress(hostname, port, credentials).build();
 			stub = CatenaServiceGrpc.newBlockingStub(channel);
 		}
 	}
