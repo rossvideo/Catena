@@ -34,7 +34,7 @@ public class ServerClientMain {
 		}).start();
 
 		Thread.sleep(2000); // Let some time for the server to start first
-		
+
 		new Thread(() -> {
 
 			try (MyCatenaClient client = new MyCatenaClient("localhost", port)) {

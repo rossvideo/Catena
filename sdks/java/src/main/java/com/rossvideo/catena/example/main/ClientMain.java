@@ -7,7 +7,7 @@ public class ClientMain {
 
 	private static int port = 5255;
 	private static int slotNumber = 1;
-	
+
 	public static void main(String[] args) {
 		try (MyCatenaClient client = new MyCatenaClient("127.0.0.1", port)) {
 			client.start();

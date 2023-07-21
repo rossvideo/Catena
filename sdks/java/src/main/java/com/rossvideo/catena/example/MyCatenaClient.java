@@ -49,12 +49,12 @@ public class MyCatenaClient implements AutoCloseable {
 		printSetValueMessage("int", value);
 		setValue(oid, slotNumber, Value.newBuilder().setInt32Value(value).build());
 	}
-	
+
 	public void setValue(String oid, int slotNumber, float value) {
 		printSetValueMessage("float", value);
 		setValue(oid, slotNumber, Value.newBuilder().setFloat32Value(value).build());
 	}
-	
+
 	public void setValue(String oid, int slotNumber, Value newValue) {
 		try {
 			stub.setValue(SetValuePayload.newBuilder().setOid(oid).setSlot(slotNumber).setValue(newValue).build());
@@ -62,40 +62,41 @@ public class MyCatenaClient implements AutoCloseable {
 			printStatusRuntimeException("setValue", exception);
 		}
 	}
-	
+
 	public Value getValue(String oid, int slotNumber) {
 		try {
 			Value value = stub.getValue(GetValuePayload.newBuilder().setOid(oid).setSlot(slotNumber).build());
 			printGetValueResult("Value", value);
 			return value;
-		}  catch (StatusRuntimeException exception) {
+		} catch (StatusRuntimeException exception) {
 			printStatusRuntimeException("getValue", exception);
 		}
 		return null;
 	}
-	
+
 	public void getDevice(int slotNumber) {
 		try {
-			stub.deviceRequest(DeviceRequestPayload.newBuilder().setSlot(slotNumber).build()).forEachRemaining(deviceComponent -> {
-				printGetValueResult("DeviceComponent", deviceComponent);
-			});
-			
-		}  catch (StatusRuntimeException exception) {
+			stub.deviceRequest(DeviceRequestPayload.newBuilder().setSlot(slotNumber).build())
+					.forEachRemaining(deviceComponent -> {
+						printGetValueResult("DeviceComponent", deviceComponent);
+					});
+
+		} catch (StatusRuntimeException exception) {
 			printStatusRuntimeException("getDevice", exception);
 		}
 	}
-	
+
 	private void printSetValueMessage(String valueType, Object value) {
 		System.out.println("CLIENT: Setting " + valueType + " value: " + value);
 	}
-	
+
 	private void printGetValueResult(String valueType, Object result) {
 		System.out.println("CLIENT: Received " + valueType + ": " + result);
 	}
-	
+
 	private void printStatusRuntimeException(String methodName, StatusRuntimeException exception) {
 		System.err.println("CLIENT: " + methodName + " RPC failed: " + exception.getStatus() + '\n');
 		System.err.flush();
 	}
-	
+
 }

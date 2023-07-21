@@ -28,9 +28,9 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 
 	public static final String INT_OID = "integer";
 	public static final String FLOAT_OID = "float";
-	
+
 	private static final AtomicInteger deviceId = new AtomicInteger(1);
-	
+
 	private Value intValue = Value.newBuilder().setInt32Value(0).build();
 	private Value floatValue = Value.newBuilder().setFloat32Value(0F).build();
 
@@ -49,16 +49,17 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 			responseObserver.onError(new InvalidSlotNumberException(slot));
 			return;
 		}
-		
+
 		Device device = Device.newBuilder().setSlot(this.slot).putAllParams(buildAllParamDescriptors()).build();
 		DeviceComponent deviceComponent = DeviceComponent.newBuilder().setDevice(device).build();
 		responseObserver.onNext(deviceComponent);
 		responseObserver.onCompleted();
 	}
-	
+
 	private Map<String, ParamDescriptor> buildAllParamDescriptors() {
 		Map<String, ParamDescriptor> parameters = new HashMap<>();
-		parameters.put(FLOAT_OID, buildParamDescriptor(FLOAT_OID, "float parameter", Type.FLOAT32, false, 1, floatValue));
+		parameters.put(FLOAT_OID,
+				buildParamDescriptor(FLOAT_OID, "float parameter", Type.FLOAT32, false, 1, floatValue));
 		parameters.put(INT_OID, buildParamDescriptor(INT_OID, "int parameter", Type.INT32, false, 1, intValue));
 		return parameters;
 	}
@@ -74,7 +75,7 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 				.build();
 		return ParamDescriptor.newBuilder().setParam(param).build();
 	}
-	
+
 	@Override
 	public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver) {
 		System.out.println("SERVER: setValue request:");
