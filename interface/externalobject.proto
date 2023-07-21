@@ -1,13 +1,13 @@
 /*
 Copyright © 2023 Ross Video Limited, All Rights Reserved.
- 
+
 Licensed under the Creative Commons Attribution NoDerivatives 4.0
 International Licensing (CC-BY-ND-4.0);
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at:
- 
+
 https://creativecommons.org/licenses/by-nd/4.0/
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,8 @@ package catena;
 import "param.proto";
 
 option java_multiple_files = true;
-option java_package = "catena.core";
-option java_outer_classname = "EOProtos";
+option java_package = "catena.core.externalobject";
+option java_outer_classname = "ExternalObjectProtos";
 
 option optimize_for = CODE_SIZE;
 
