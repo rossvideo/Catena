@@ -177,7 +177,7 @@ enum UndefinedValue {
 
 message Int32List { repeated sfixed32 ints = 1; }
 
-message FloatList { repeated float floats = 1; }
+message Float32List { repeated float floats = 1; }
 
 message StringList { repeated string strings = 1; }
 
@@ -213,7 +213,7 @@ message Value {
 
     Int32List int32_array_values = 7;
 
-    FloatList float32_array_values = 8;
+    Float32List float32_array_values = 8;
 
     StringList string_array_values = 9;
 
