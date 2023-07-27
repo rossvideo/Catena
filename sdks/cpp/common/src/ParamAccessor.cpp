@@ -322,8 +322,8 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
 
     auto &fac = catena::ArrayAccessor::Factory::getInstance();
     if (fac.canMake(v.kind_case())) {
-        ArrayAccessor *aa = fac.makeProduct(v.kind_case(), v);
-        return aa->operator[](idx);
+        ArrayAccessor &aa = *fac.makeProduct(v.kind_case(), v);
+        return aa[idx];
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
@@ -331,7 +331,8 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
 
 using int_array = catena::ConcreteArrayAccessor<int>;
 using float_array = catena::ConcreteArrayAccessor<float>;
-template <> bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
+template <>
+bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
 template <>
 bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
 

@@ -51,7 +51,8 @@ int main(int argc, char **argv) {
 
         // cache a param and get its value
         ParamAccessor helloParam1 = dm.param("/primes");
-        std::cout << "Hello Param: " << helloParam1.getValueAt(0) << '\n';
+
+        std::cout << "Hello Param111: " << helloParam1.getValueAt(1).int32_value() << '\n';
 
         // cache a param and get its value
         ParamAccessor helloParam = dm.param("/hello");

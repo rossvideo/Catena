@@ -51,12 +51,6 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
 
     catena::Value operator[](std::size_t idx) override;
 
-    /*
-   * Factory components must register themselves with the factory,
-   * so we made it part of the class.
-   * This method generates a key based on a template parameter
-   * and will register 2 different types of Dog with the factory.
-   */
     static bool registerWithFactory(int key) {
         Factory& fac = Factory::getInstance();
 
@@ -72,20 +66,28 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
 // float implementation
 template <> catena::Value ConcreteArrayAccessor<float>::operator[](std::size_t idx) {
     auto& arr = _in.get().float32_array_values();
-    if (arr.floats_size() < idx) {  // range error}
-        catena::Value ans{};
-        ans.set_float32_value(arr.floats(idx));
-        return ans;
-    }
+        if (arr.floats_size() >= idx) {
+            catena::Value ans{};
+            ans.set_float32_value(arr.floats(idx));
+            return ans;
+        } else {
+            std::stringstream err;
+            err << "Index is out of range: " << idx << " >= " << arr.floats_size();
+            BAD_STATUS("Range Error", grpc::StatusCode::OUT_OF_RANGE);
+        }
 }
 
 // int implementation
 template <> catena::Value ConcreteArrayAccessor<int>::operator[](std::size_t idx) {
     auto& arr = _in.get().int32_array_values();
-    if (arr.ints_size() < idx) {  // range error}
+    if (arr.ints_size() >= idx) {
         catena::Value ans{};
         ans.set_int32_value(arr.ints(idx));
         return ans;
+    } else {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.ints_size();
+        BAD_STATUS("Range Error", grpc::StatusCode::OUT_OF_RANGE);
     }
 }
 }  // namespace catena
