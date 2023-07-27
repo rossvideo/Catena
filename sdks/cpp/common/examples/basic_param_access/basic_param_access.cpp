@@ -50,6 +50,10 @@ int main(int argc, char **argv) {
         std::cout << "Read Device Model: " << dm << '\n';
 
         // cache a param and get its value
+        ParamAccessor helloParam1 = dm.param("/primes");
+        std::cout << "Hello Param: " << helloParam1.getValueAt(0) << '\n';
+
+        // cache a param and get its value
         ParamAccessor helloParam = dm.param("/hello");
         std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 
@@ -61,7 +65,7 @@ int main(int argc, char **argv) {
         std::cout << "setting values to something different\n";
         helloParam.setValue(3.142f);     // example using cached param
         dm.param("/world").setValue(3);  // example using chaining
-      
+
         std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
 
         // demo caching a sub-param

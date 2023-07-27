@@ -24,7 +24,8 @@ set(LIB_TARGET catena_common)
 set(LIB_SRC_DIR "src")
 set(LIB_INCLUDE_DIR "include")
 
-add_library(${LIB_TARGET})
+add_library(${LIB_TARGET}
+        include/ArrayAccessor.h)
 
 
 get_filename_component(PARENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)

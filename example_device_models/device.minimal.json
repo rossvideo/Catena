@@ -31,59 +31,6 @@
                 }
             }
         },
-        "hello2": {
-            "param": {
-                "name": {
-                    "monoglot": "string example"
-                },
-                "type": {
-                    "type": "STRING"
-                },
-                "value": {
-                    "string_value": "test"
-                },
-                "constraint": {
-                    "type": "STRING_CHOICE",
-                    "string_choice": {
-                        "choices": [
-                            {
-                                "monoglot": "test"
-                            },
-                            {
-                                "monoglot": "test"
-                            }
-                        ]
-                    }
-                }
-            }
-        },
-        "hello3": {
-            "param": {
-                "type": {
-                    "type": "STRING"
-                },
-                "name": {
-                    "monoglot": "string example"
-                },
-                "value": {
-                    "string_value": "test"
-                },
-                "constraint": {
-                    "type": "STRING_STRING_CHOICE",
-                    "string_string_choice": {
-                        "strict": true,
-                        "choices": [
-                            {
-                                "value": "sdf"
-                            },
-                            {
-                                "value": "test"
-                            }
-                        ]
-                    }
-                }
-            }
-        },
         "world": {
             "param": {
                 "type": {
@@ -92,8 +39,6 @@
                 "name": {
                     "monoglot": "Example int32 Parameter"
                 },
-                "type": {"type": "INT32"},
-                "name": {"monoglot": "Example int32 Parameter"},
                 "value": {
                     "int32_value": 123
                 },

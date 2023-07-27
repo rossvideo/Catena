@@ -16,6 +16,7 @@
 #include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>
+#include <ArrayAccessor.h>
 
 #include <google/protobuf/map.h>
 #include <google/protobuf/util/json_util.h>
@@ -319,23 +320,20 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
         BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
     }
 
-    /** @todo when we add support for the next array type, use a factory or static
-   * map of functions to handle each type */
-    if (v.has_int32_array_values()) {
-        auto &arr = v.int32_array_values();
-        if (arr.ints_size() < idx) {
-            // range error
-            std::stringstream err;
-            err << "Index is out of range: " << idx << " >= " << arr.ints_size();
-            BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
-        }
-        catena::Value ans{};
-        ans.set_int32_value(arr.ints(idx));
-        return ans;
+    auto &fac = catena::ArrayAccessor::Factory::getInstance();
+    if (fac.canMake(v.kind_case())) {
+        ArrayAccessor *aa = fac.makeProduct(v.kind_case(), v);
+        return aa->operator[](idx);
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
 }
+
+using int_array = catena::ConcreteArrayAccessor<int>;
+using float_array = catena::ConcreteArrayAccessor<float>;
+template <> bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
+template <>
+bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);
