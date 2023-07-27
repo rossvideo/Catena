@@ -329,12 +329,16 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
     }
 }
 
+
+// instantiate all arrays
 using int_array = catena::ConcreteArrayAccessor<int>;
 using float_array = catena::ConcreteArrayAccessor<float>;
-template <>
-bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
+using string_array = catena::ConcreteArrayAccessor<std::string>;
+template <> bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
 template <>
 bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
+template <>
+bool string_array::_added = string_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);
