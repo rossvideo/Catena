@@ -29,8 +29,17 @@ namespace catena {
 
 class ArrayAccessor {
   public:
+    /**
+    * @brief define factory for ArrayAccessor (int for key type)
+    *
+    */
     using Factory = rv::patterns::GenericFactory<ArrayAccessor, int, catena::Value&>;
 
+    /**
+    * @brief override array accessor operator
+    * @param idx index of array
+    * @return catena value
+    */
     virtual catena::Value operator[](std::size_t idx) = 0;
 };
 
@@ -38,19 +47,39 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
   private:
     std::reference_wrapper<catena::Value> _in;
 
+    /**
+    * @brief create a concrete array accessor using a value
+    * @param v the catena value
+    * @return ConcreteArrayAccessor
+    */
     static ArrayAccessor* makeOne(catena::Value& v) { return new ConcreteArrayAccessor(v); }
 
     /*
-   * This is the key attribute that Classes to be created via a
-   * GenericFactory must declare & define.
-   */
+    * This is the key attribute that Classes to be created via a
+    * GenericFactory must declare & define.
+    */
     static bool _added;
 
   public:
+    /**
+    * @brief constructor for the concrete array accessor
+    * @param in catena value
+    */
     ConcreteArrayAccessor(catena::Value& in) : _in{in} {};
 
+    /**
+    * @brief override array accessor operator
+    * @param idx index of array
+    * @erturn catena value
+    */
     catena::Value operator[](std::size_t idx) override;
 
+
+    /**
+     * @brief register a product
+     * @param key key of product
+     * @return true if product was able to be made
+     */
     static bool registerWithFactory(int key) {
         Factory& fac = Factory::getInstance();
 
@@ -104,4 +133,7 @@ template <> catena::Value ConcreteArrayAccessor<std::string>::operator[](std::si
         BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
     }
 }
+
+/// @todo: add struct implementation
+
 }  // namespace catena

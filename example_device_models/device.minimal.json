@@ -143,6 +143,52 @@
                     }
                 }
             }
+        },
+        "primes_str": {
+            "param": {
+                "type": {
+                    "type": "STRING_ARRAY"
+                },
+                "name": {
+                    "monoglot": "The first few primes as strings"
+                },
+                "value": {
+                    "string_array_values": {
+                        "strings": [
+                            "2",
+                            "3",
+                            "5",
+                            "7",
+                            "11",
+                            "13",
+                            "17"
+                        ]
+                    }
+                }
+            }
+        },
+        "primes_float": {
+            "param": {
+                "type": {
+                    "type": "FLOAT32_ARRAY"
+                },
+                "name": {
+                    "monoglot": "The first few primes as float32"
+                },
+                "value": {
+                    "float32_array_values": {
+                        "floats": [
+                            2.0,
+                            3.0,
+                            5.0,
+                            7.0,
+                            11.0,
+                            13.0,
+                            17.0
+                        ]
+                    }
+                }
+            }
         }
     }
 }

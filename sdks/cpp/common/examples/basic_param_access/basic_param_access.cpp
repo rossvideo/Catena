@@ -50,11 +50,6 @@ int main(int argc, char **argv) {
         std::cout << "Read Device Model: " << dm << '\n';
 
         // cache a param and get its value
-        ParamAccessor helloParam1 = dm.param("/primes");
-
-        std::cout << "Hello Param111: " << helloParam1.getValueAt(1).int32_value() << '\n';
-
-        // cache a param and get its value
         ParamAccessor helloParam = dm.param("/hello");
         std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 

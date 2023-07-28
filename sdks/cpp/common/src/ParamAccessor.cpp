@@ -338,7 +338,7 @@ template <> bool int_array::_added = int_array::registerWithFactory(Value::KindC
 template <>
 bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
 template <>
-bool string_array::_added = string_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
+bool string_array::_added = string_array ::registerWithFactory(Value::KindCase::kStringArrayValues);
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);

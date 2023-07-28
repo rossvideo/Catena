@@ -158,6 +158,12 @@
                 },
                 {
                     "$ref": "#/$defs/apply_int32_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_float32_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_string_array"
                 }
             ]
         },
@@ -656,6 +662,114 @@
                     },
                     "constraint": {
                         "$ref": "#/$defs/int32_constraint"
+                    },
+                    "params": false
+                }
+            }
+        },
+        "float32_array_values": {
+            "title": "FLOAT32_ARRAY",
+            "description": "Defines FLOAT32 array as a type",
+            "type": "object",
+            "properties": {
+                "float32_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "floats": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/float32"
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "floats"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "float32_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_float32_array": {
+            "title": "FLOAT32 ARRAY specialism",
+            "description":
+              "Applies FLOAT32 ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "FLOAT32_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/float32_array_values"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/int32_constraint"
+                    },
+                    "params": false
+                }
+            }
+        },
+        "string_array_values": {
+            "title": "STRING_ARRAY",
+            "description": "Defines STRING array as a type",
+            "type": "object",
+            "properties": {
+                "string_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "strings": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "strings"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "string_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_string_array": {
+            "title": "STRING ARRAY specialism",
+            "description":
+              "Applies STRING ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/string_array_values"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/string_constraint"
                     },
                     "params": false
                 }
