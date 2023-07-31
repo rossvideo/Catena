@@ -1,13 +1,13 @@
 /*
 Copyright © 2023 Ross Video Limited, All Rights Reserved.
- 
+
 Licensed under the Creative Commons Attribution NoDerivatives 4.0
 International Licensing (CC-BY-ND-4.0);
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at:
- 
+
 https://creativecommons.org/licenses/by-nd/4.0/
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ import "constraint.proto";
 import "google/protobuf/empty.proto";
 
 option java_multiple_files = true;
-option java_package = "catena.core";
+option java_package = "catena.core.parameter";
 option java_outer_classname = "ParamProtos";
 
 option optimize_for = CODE_SIZE;
@@ -177,7 +177,7 @@ enum UndefinedValue {
 
 message Int32List { repeated sfixed32 ints = 1; }
 
-message FloatList { repeated float floats = 1; }
+message Float32List { repeated float floats = 1; }
 
 message StringList { repeated string strings = 1; }
 
@@ -213,7 +213,7 @@ message Value {
 
     Int32List int32_array_values = 7;
 
-    FloatList float32_array_values = 8;
+    Float32List float32_array_values = 8;
 
     StringList string_array_values = 9;
 
