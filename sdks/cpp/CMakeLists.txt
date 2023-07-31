@@ -69,10 +69,10 @@ cmake_path(SET catena_interface NORMALIZE ${interface})
 set(proto_stems 
   "language"
   "param"
-  "eo"
+  "externalobject"
   "constraint"
   "device"
-  "menus"
+  "menu"
   "service"
 )
 
