@@ -1,6 +1,6 @@
 package com.rossvideo.catena.example.error;
 
-import catena.core.Value.KindCase;
+import catena.core.parameter.Value.KindCase;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 

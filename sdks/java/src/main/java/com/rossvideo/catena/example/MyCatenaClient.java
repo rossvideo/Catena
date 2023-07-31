@@ -1,11 +1,11 @@
 package com.rossvideo.catena.example;
 
-import catena.core.CatenaServiceGrpc;
-import catena.core.CatenaServiceGrpc.CatenaServiceBlockingStub;
-import catena.core.DeviceRequestPayload;
-import catena.core.GetValuePayload;
-import catena.core.SetValuePayload;
-import catena.core.Value;
+import catena.core.device.DeviceRequestPayload;
+import catena.core.parameter.GetValuePayload;
+import catena.core.parameter.SetValuePayload;
+import catena.core.parameter.Value;
+import catena.core.service.CatenaServiceGrpc;
+import catena.core.service.CatenaServiceGrpc.CatenaServiceBlockingStub;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;

@@ -9,19 +9,19 @@ import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
 
-import catena.core.CatenaServiceGrpc.CatenaServiceImplBase;
-import catena.core.Device;
-import catena.core.DeviceComponent;
-import catena.core.DeviceRequestPayload;
-import catena.core.GetValuePayload;
-import catena.core.Param;
-import catena.core.ParamDescriptor;
-import catena.core.ParamType;
-import catena.core.ParamType.Type;
-import catena.core.PolyglotText;
-import catena.core.SetValuePayload;
-import catena.core.Value;
-import catena.core.Value.KindCase;
+import catena.core.device.Device;
+import catena.core.device.DeviceComponent;
+import catena.core.device.DeviceRequestPayload;
+import catena.core.language.PolyglotText;
+import catena.core.parameter.GetValuePayload;
+import catena.core.parameter.Param;
+import catena.core.parameter.ParamDescriptor;
+import catena.core.parameter.ParamType;
+import catena.core.parameter.ParamType.Type;
+import catena.core.parameter.SetValuePayload;
+import catena.core.parameter.Value;
+import catena.core.parameter.Value.KindCase;
+import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
 import io.grpc.stub.StreamObserver;
 
 public class MyCatenaDevice extends CatenaServiceImplBase {
