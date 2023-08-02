@@ -135,9 +135,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
             // this is ok
             break;
         case catena::ParamType_Type::ParamType_Type_STRUCT_ARRAY:
-            /** @todo implement sub-param navigation for STRUCT_ARRAY */
-            BAD_STATUS("sub-param navigation for STRUCT_ARRAY not implemented, sorry",
-                       grpc::StatusCode::UNIMPLEMENTED);
+            // this is ok
             break;
         default:
             std::stringstream err;

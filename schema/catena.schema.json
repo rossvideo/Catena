@@ -164,6 +164,9 @@
                 },
                 {
                     "$ref": "#/$defs/apply_string_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_struct_array"
                 }
             ]
         },
@@ -715,7 +718,7 @@
                         "$ref": "#/$defs/float32_array_values"
                     },
                     "constraint": {
-                        "$ref": "#/$defs/int32_constraint"
+                        "$ref": "#/$defs/float32_constraint"
                     },
                     "params": false
                 }
@@ -775,6 +778,61 @@
                 }
             }
         },
+        "struct_array_values": {
+            "title": "STRUCT_ARRAY",
+            "description": "Defines STRUCT array as a type",
+            "type": "object",
+            "properties": {
+                "struct_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "struct_values": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "fields": {
+                                        "$ref": "#/$defs/struct_fields"
+                                    }
+                                }
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "struct_values"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "struct_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_struct_array": {
+            "title": "STRUCT ARRAY specialism",
+            "description":
+              "Applies STRUCT ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "STRUCT_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/struct_array_values"
+                    },
+                    "params": true
+                }
+            }
+        },
         "struct_value": {
             "title": "STRUCT",
             "description": "Wrapper round the struct_fields schema.",
@@ -811,6 +869,15 @@
                         },
                         {
                             "$ref": "#/$defs/int32_array_values"
+                        },
+                        {
+                            "$ref": "#/$defs/float32_array_values"
+                        },
+                        {
+                            "$ref": "#/$defs/string_array_values"
+                        },
+                        {
+                            "$ref": "#/$defs/struct_array_values"
                         }
                     ]
                 },

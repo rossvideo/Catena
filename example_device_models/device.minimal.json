@@ -66,7 +66,7 @@
         "location": {
             "param": {
                 "type": {
-                    "type": "STRUCT"
+                    "type": "STRUCT_ARRAY"
                 },
                 "name": {
                     "monoglot": "Example struct parameter"
@@ -108,15 +108,29 @@
                     }
                 },
                 "value": {
-                    "struct_value": {
-                        "fields": {
-                            "latitude": {
-                                "float32_value": 10.0
+                    "struct_array_values": {
+                        "struct_values": [
+                            {
+                                "fields": {
+                                    "latitude": {
+                                        "float32_value": 10.0
+                                    },
+                                    "longitude": {
+                                        "float32_value": -20.0
+                                    }
+                                }
                             },
-                            "longitude": {
-                                "float32_value": -20.0
+                            {
+                                "fields": {
+                                    "latitude": {
+                                        "float32_value": 1
+                                    },
+                                    "longitude": {
+                                        "float32_value": -2
+                                    }
+                                }
                             }
-                        }
+                        ]
                     }
                 }
             }
