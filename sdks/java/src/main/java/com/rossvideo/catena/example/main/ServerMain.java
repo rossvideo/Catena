@@ -9,20 +9,21 @@ import io.grpc.ServerCredentials;
 
 public class ServerMain {
 
-	private static int port = 5255;
-	private static int slotNumber = 1;
+    private static int port = 5255;
+    private static int slotNumber = 1;
 
-	public static void main(String[] args) {
-		try {
-			ServerCredentials credentials = InsecureServerCredentials.create(); // TODO: Create proper credentials.
-			Server server = Grpc.newServerBuilderForPort(port, credentials)
-					.addService(new MyCatenaDevice(slotNumber))
-					.build();
-			server.start();
-			System.out.println("SERVER: Server started.");
-			server.awaitTermination();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    public static void main(String[] args) {
+        try {
+            ServerCredentials credentials =
+              InsecureServerCredentials.create();  // TODO: Create proper credentials.
+            Server server = Grpc.newServerBuilderForPort(port, credentials)
+                              .addService(new MyCatenaDevice(slotNumber))
+                              .build();
+            server.start();
+            System.out.println("SERVER: Server started.");
+            server.awaitTermination();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
