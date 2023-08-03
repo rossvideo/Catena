@@ -274,16 +274,26 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
     catena::Value &v = value_.get();
 
     if constexpr (std::is_same<W, std::string>::value) {
-        if (cp.type().type() != catena::ParamType::Type::ParamType_Type_STRING) {
-            BAD_STATUS("expected param of string type", grpc::StatusCode::FAILED_PRECONDITION);
+        catena::ParamType_Type t = cp.type().type();
+
+        if (t == catena::ParamType::Type::ParamType_Type_STRING) {
+            return getValueImpl<std::string>(v);
+        } else if (t == catena::ParamType::Type::ParamType_Type_STRING_ARRAY) {
+            return getValueImpl<std::string>(v, idx);
+        } else {
+            BAD_STATUS("expected param of STRING type", grpc::StatusCode::FAILED_PRECONDITION);
         }
-        return getValueImpl<std::string>(v);
 
     } else if constexpr (std::is_same<W, float>::value) {
-        if (cp.type().type() != catena::ParamType::Type::ParamType_Type_FLOAT32) {
+        catena::ParamType_Type t = cp.type().type();
+
+        if (t == catena::ParamType::Type::ParamType_Type_FLOAT32) {
+            return getValueImpl<float>(v);
+        } else if (t == catena::ParamType::Type::ParamType_Type_FLOAT32_ARRAY) {
+            return getValueImpl<float>(v, idx);
+        } else {
             BAD_STATUS("expected param of FLOAT32 type", grpc::StatusCode::FAILED_PRECONDITION);
         }
-        return getValueImpl<float>(v);
 
     } else if constexpr (std::is_same<W, int>::value) {
         catena::ParamType_Type t = cp.type().type();
