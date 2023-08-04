@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Catena Device Model Schema",
     "description":
-      "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
+    "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
     "type": "object",
     "properties": {
         "oid": {
@@ -17,13 +17,13 @@
         "multi_set_enabled": {
             "title": "Multi Set Message Enabled Flag",
             "description":
-              "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
+            "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
             "type": "boolean"
         },
         "subscriptions": {
             "title": "Subscriptions Flag",
             "description":
-              "When true, indicates that the device supports subscription-based access to subsets of parameters.",
+            "When true, indicates that the device supports subscription-based access to subsets of parameters.",
             "type": "boolean"
         },
         "timeout": {
@@ -55,10 +55,15 @@
         "default_scope": {
             "$id": "Default Access Scope",
             "description":
-              "Objects in the model will have this access scope unless overridden explicitly, or implicitly by inheritance",
+            "Objects in the model will have this access scope unless overridden explicitly, or implicitly by inheritance",
             "type": "integer",
             "minimum": 0,
             "maximum": 4
+        },
+        "language_packs": {
+            "$ref": "#/$defs/language_packs",
+            "additionalProperties": true,
+            "description": "The devices language packs"
         }
     },
     "required": [
@@ -66,10 +71,42 @@
     ],
     "additionalProperties": false,
     "$defs": {
+        "language_pack": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "words": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Language Pack",
+            "description": "Language Pack A map of string identifiers, e.g. \"greeting\" to strings which are all in the same language."
+        },
+        "language_packs": {
+            "properties": {
+                "packs": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/language_pack",
+                        "additionalProperties": true
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Language Packs",
+            "description": "Language Packs A map of language identifiers to resource dictionaries or language packs for each language supported. The keys shall be patterned on those defined in https://www.mesaonline.org/language-metadata-table, e.g. \"es\" for Global Spanish. \"es-CO\" for Colombian Spanish. \"pl\" for Jezyk polski"
+        },
         "param_map": {
             "title": "map of params used for top-level params and commands objects",
             "description":
-              "Defines the collection of parameter and command descriptors for a device, or a subset if the payload of a 'params' message.",
+            "Defines the collection of parameter and command descriptors for a device, or a subset if the payload of a 'params' message.",
             "type": "object",
             "$comment": "patternProperties regex must be same as that defined in oid schema",
             "patternProperties": {
@@ -107,13 +144,13 @@
         "param": {
             "title": "Parameter Descriptor",
             "description":
-              "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
+            "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
             "type": "object",
             "properties": {
                 "fqoid": {
                     "title": "Fully Qualified Object ID",
                     "description":
-                      "JSON pointer to this parameter descriptor, relative to the top-level /params object",
+                    "JSON pointer to this parameter descriptor, relative to the top-level /params object",
                     "type": "string",
                     "format": "json-pointer"
                 },
@@ -158,6 +195,15 @@
                 },
                 {
                     "$ref": "#/$defs/apply_int32_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_float32_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_string_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_struct_array"
                 }
             ]
         },
@@ -223,7 +269,7 @@
         "apply_float32": {
             "title": "FLOAT32 specialism",
             "description":
-              "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
+            "Applies FLOAT32 values & constraints, disables properties that don't work with FLOAT32",
             "if": {
                 "properties": {
                     "type": {
@@ -508,7 +554,7 @@
         "apply_string": {
             "title": "STRING specialism",
             "description":
-              "Applies STRING values & constraints, disables properties that don't work with this type",
+            "Applies STRING values & constraints, disables properties that don't work with this type",
             "if": {
                 "properties": {
                     "type": {
@@ -583,7 +629,7 @@
         "apply_int32": {
             "title": "INT32 specialism",
             "description":
-              "Applies INT32 values & constraints, disables properties that don't work with this type",
+            "Applies INT32 values & constraints, disables properties that don't work with this type",
             "if": {
                 "properties": {
                     "type": {
@@ -637,7 +683,7 @@
         "apply_int32_array": {
             "title": "INT32 ARRAY specialism",
             "description":
-              "Applies INT32 ARRAY values & constraints, disables properties that don't work with this type",
+            "Applies INT32 ARRAY values & constraints, disables properties that don't work with this type",
             "if": {
                 "properties": {
                     "type": {
@@ -658,6 +704,169 @@
                         "$ref": "#/$defs/int32_constraint"
                     },
                     "params": false
+                }
+            }
+        },
+        "float32_array_values": {
+            "title": "FLOAT32_ARRAY",
+            "description": "Defines FLOAT32 array as a type",
+            "type": "object",
+            "properties": {
+                "float32_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "floats": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/float32"
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "floats"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "float32_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_float32_array": {
+            "title": "FLOAT32 ARRAY specialism",
+            "description":
+            "Applies FLOAT32 ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "FLOAT32_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/float32_array_values"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/float32_constraint"
+                    },
+                    "params": false
+                }
+            }
+        },
+        "string_array_values": {
+            "title": "STRING_ARRAY",
+            "description": "Defines STRING array as a type",
+            "type": "object",
+            "properties": {
+                "string_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "strings": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "strings"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "string_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_string_array": {
+            "title": "STRING ARRAY specialism",
+            "description":
+            "Applies STRING ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "STRING_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/string_array_values"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/string_constraint"
+                    },
+                    "params": false
+                }
+            }
+        },
+        "struct_array_values": {
+            "title": "STRUCT_ARRAY",
+            "description": "Defines STRUCT array as a type",
+            "type": "object",
+            "properties": {
+                "struct_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "struct_values": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "fields": {
+                                        "$ref": "#/$defs/struct_fields"
+                                    }
+                                }
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "struct_values"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "struct_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_struct_array": {
+            "title": "STRUCT ARRAY specialism",
+            "description":
+            "Applies STRUCT ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "STRUCT_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/struct_array_values"
+                    },
+                    "params": true
                 }
             }
         },
@@ -697,6 +906,15 @@
                         },
                         {
                             "$ref": "#/$defs/int32_array_values"
+                        },
+                        {
+                            "$ref": "#/$defs/float32_array_values"
+                        },
+                        {
+                            "$ref": "#/$defs/string_array_values"
+                        },
+                        {
+                            "$ref": "#/$defs/struct_array_values"
                         }
                     ]
                 },
@@ -707,7 +925,7 @@
         "apply_struct": {
             "title": "STRUCT specialism",
             "description":
-              "Applies STRUCT values & constraints, disables properties that don't work with this specialism",
+            "Applies STRUCT values & constraints, disables properties that don't work with this specialism",
             "if": {
                 "properties": {
                     "type": {
@@ -768,7 +986,7 @@
         "import": {
             "title": "Import directive",
             "description":
-              "Provides the ability to build device models from multiple files. If a URL is provided, the import will be attempted from there. When absent, the import will be a local file named <schema>.<oid>.json.",
+            "Provides the ability to build device models from multiple files. If a URL is provided, the import will be attempted from there. When absent, the import will be a local file named <schema>.<oid>.json.",
             "type": "object",
             "properties": {
                 "url": {
@@ -795,7 +1013,7 @@
         "detail_level": {
             "title": "Level of Detail",
             "description":
-              "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, and 'subscription' reports the minimal set plus identified subscribed parameters.",
+            "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, and 'subscription' reports the minimal set plus identified subscribed parameters.",
             "type": "string",
             "enum": [
                 "FULL",
@@ -820,7 +1038,7 @@
                 }
             },
             "$comment":
-              "not having oid as required is correct because this schema is used in 2 places - param which would be duplicative, and as a message payload where it's needed",
+            "not having oid as required is correct because this schema is used in 2 places - param which would be duplicative, and as a message payload where it's needed",
             "additionalProperties": false
         },
         "oid": {
@@ -882,7 +1100,7 @@
         "constraint": {
             "title": "Constraint to apply to parameter value",
             "description":
-              "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
+            "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
             "type": "object",
             "properties": {
                 "type": {
