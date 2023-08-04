@@ -59,6 +59,11 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 4
+        },
+        "language_packs": {
+            "$ref": "#/$defs/language_packs",
+            "additionalProperties": true,
+            "description": "The devices language packs"
         }
     },
     "required": [
@@ -66,6 +71,40 @@
     ],
     "additionalProperties": false,
     "$defs": {
+        "language_pack": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "words": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Language Pack",
+            "description":
+              "Language Pack A map of string identifiers, e.g. \"greeting\" to strings which are all in the same language."
+        },
+        "language_packs": {
+            "properties": {
+                "packs": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/language_pack",
+                        "additionalProperties": true
+                    },
+                    "type": "object"
+                }
+            },
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Language Packs",
+            "description":
+              "Language Packs A map of language identifiers to resource dictionaries or language packs for each language supported. The keys shall be patterned on those defined in https://www.mesaonline.org/language-metadata-table, e.g. \"es\" for Global Spanish. \"es-CO\" for Colombian Spanish. \"pl\" for Jezyk polski"
+        },
         "param_map": {
             "title": "map of params used for top-level params and commands objects",
             "description":
