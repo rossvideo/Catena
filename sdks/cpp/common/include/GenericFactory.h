@@ -112,16 +112,16 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
    * Thread safe.
    * @param[in] key unique identfier for component to be made.
    * @param[in] args parameter pack to pass to maker function
-   * @return pointer to newly created Product
+   * @return shared pointer to newly created Product
    * @throws std::runtime_error if key doesn't exist.
    * @since 1.0.0
    */
-    P* makeProduct(const K key, Ms&&... args) {
+    std::shared_ptr<P> makeProduct(const K key, Ms&&... args) {
         LockGuard lock(_mtx);
-        P* ans;
+        std::shared_ptr<P> ans(nullptr);
         auto it = _registry.find(key);
         if (it != _registry.end()) {
-            ans = it->second(std::forward<Ms>(args)...);
+            ans.reset(it->second(std::forward<Ms>(args)...));
         } else {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;

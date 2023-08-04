@@ -267,6 +267,50 @@ template <> int getValueImpl<int>(const catena::Value &v, ParamIndex idx) {
     return arr.ints(idx);
 }
 
+/**
+ * @brief specialize for float
+ *
+ * @tparam
+ * @param v
+ * @return float
+ */
+template <> float getValueImpl<float>(const catena::Value &v, ParamIndex idx) {
+    if (!v.has_float32_array_values()) {
+        std::stringstream err;
+        err << "expected Catena::Value of Float32List";
+        BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
+    }
+    auto &arr = v.float32_array_values();
+    if (idx >= arr.floats_size()) {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.floats_size();
+        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+    }
+    return arr.floats(idx);
+}
+
+/**
+ * @brief specialize for string
+ *
+ * @tparam
+ * @param v
+ * @return string
+ */
+template <> std::string getValueImpl<std::string>(const catena::Value &v, ParamIndex idx) {
+    if (!v.has_string_array_values()) {
+        std::stringstream err;
+        err << "expected Catena::Value of StringList";
+        BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
+    }
+    auto &arr = v.string_array_values();
+    if (idx >= arr.strings_size()) {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.strings_size();
+        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+    }
+    return arr.strings(idx);
+}
+
 template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
     using W = typename std::remove_reference<V>::type;
     typename DM::LockGuard(deviceModel_.get().mutex_);
@@ -332,8 +376,8 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
 
     auto &fac = catena::ArrayAccessor::Factory::getInstance();
     if (fac.canMake(v.kind_case())) {
-        ArrayAccessor &aa = *fac.makeProduct(v.kind_case(), v);
-        return aa[idx];
+        auto ptr = fac.makeProduct(v.kind_case(), v);
+        return ptr->operator[](idx);
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
