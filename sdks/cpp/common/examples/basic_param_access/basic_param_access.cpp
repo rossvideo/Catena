@@ -53,6 +53,11 @@ int main(int argc, char **argv) {
         ParamAccessor helloParam = dm.param("/hello");
         std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 
+        // cache a array param and get its value using two methods
+        ParamAccessor strArrayParam= dm.param("/primes_str");
+        std::cout << "Prime String Param using getValueAt: " << strArrayParam.getValueAt(0).string_value() << '\n';
+        std::cout << "Prime String Param using getValue: " << strArrayParam.getValue<std::string>() << '\n';
+
         // access a param directly
         std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
 
