@@ -415,7 +415,7 @@
                             "alarm_table": {
                                 "type": "object",
                                 "properties": {
-                                    "alarm_table": {
+                                    "alarms": {
                                         "type": "array",
                                         "items": {
                                             "$ref": "#/$defs/alarm"
