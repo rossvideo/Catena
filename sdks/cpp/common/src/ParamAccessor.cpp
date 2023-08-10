@@ -61,12 +61,15 @@ int applyIntConstraint(catena::Param &param, int v) {
                                param.constraint().int32_range().max_value());
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_CHOICE:
-                if (std::find_if(param.constraint().int32_choice().choices().begin(), param.constraint().int32_choice().choices().end(),
-                                       [&] (catena::Int32ChoiceConstraint_IntChoice const& c) { return c.value()  == v; }) != param.constraint().int32_choice().choices().end()) {
+                if (std::find_if(param.constraint().int32_choice().choices().begin(),
+                                 param.constraint().int32_choice().choices().end(),
+                                 [&](catena::Int32ChoiceConstraint_IntChoice const &c) {
+                                     return c.value() == v;
+                                 }) != param.constraint().int32_choice().choices().end()) {
                     // valid
                 }
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE:
-                for (const auto & it : param.constraint().alarm_table().alarms()) {
+                for (const auto &it : param.constraint().alarm_table().alarms()) {
                     if ((v >> it.bit_value()) & 1) {
                         // valid
                     }
@@ -88,13 +91,21 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 
         switch (constraint_type) {
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_CHOICE:
-                if (std::find_if(param.constraint().string_choice().choices().begin(), param.constraint().string_choice().choices().end(),
-                                 [&] (catena::PolyglotText const& c) { return c.monoglot() == v; }) != param.constraint().string_choice().choices().end()) {
+                if (std::find_if(param.constraint().string_choice().choices().begin(),
+                                 param.constraint().string_choice().choices().end(),
+                                 [&](catena::PolyglotText const &c) { return c.monoglot() == v; }) !=
+                    param.constraint().string_choice().choices().end()) {
                     // valid
                 }
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
-                /** @todo validate that v is string string choice */
+                if (std::find_if(param.constraint().string_string_choice().choices().begin(),
+                                 param.constraint().string_string_choice().choices().end(),
+                                 [&](catena::StringStringChoiceConstraint_StringStringChoice const &c) {
+                                     return c.value() == v;
+                                 }) != param.constraint().string_string_choice().choices().end()) {
+                    // valid
+                }
                 break;
             default:
                 std::stringstream err;
