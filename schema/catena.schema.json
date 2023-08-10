@@ -176,6 +176,9 @@
                 },
                 "access_scope": {
                     "type": "string"
+                },
+                "widget": {
+                    "type": "string"
                 }
             },
             "additionalProperties": false,
