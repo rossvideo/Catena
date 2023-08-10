@@ -65,12 +65,6 @@
                 "name": {
                     "monoglot": "Example int32 Parameter"
                 },
-                "type": {
-                    "type": "INT32"
-                },
-                "name": {
-                    "monoglot": "Example int32 Parameter"
-                },
                 "value": {
                     "int32_value": 123
                 },
@@ -153,6 +147,78 @@
                 }
             }
         },
+        "locations": {
+            "param": {
+                "type": {
+                    "type": "STRUCT_ARRAY"
+                },
+                "name": {
+                    "monoglot": "Example struct array parameter"
+                },
+                "params": {
+                    "latitude": {
+                        "param": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "monoglot": "Latitude, Degrees"
+                            },
+                            "constraint": {
+                                "type": "FLOAT_RANGE",
+                                "float_range": {
+                                    "min_value": -90.0,
+                                    "max_value": 90.0
+                                }
+                            }
+                        }
+                    },
+                    "longitude": {
+                        "param": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "monoglot": "Longitude, Degrees"
+                            },
+                            "constraint": {
+                                "type": "FLOAT_RANGE",
+                                "float_range": {
+                                    "min_value": -180.0,
+                                    "max_value": 180.0
+                                }
+                            }
+                        }
+                    }
+                },
+                "value": {
+                    "struct_array_values": {
+                        "struct_values": [
+                            {
+                                "fields": {
+                                    "latitude": {
+                                        "float32_value": 10.0
+                                    },
+                                    "longitude": {
+                                        "float32_value": -20.0
+                                    }
+                                }
+                            },
+                            {
+                                "fields": {
+                                    "latitude": {
+                                        "float32_value": 1
+                                    },
+                                    "longitude": {
+                                        "float32_value": -2
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "primes": {
             "param": {
                 "type": {
@@ -171,6 +237,52 @@
                             11,
                             13,
                             17
+                        ]
+                    }
+                }
+            }
+        },
+        "primes_str": {
+            "param": {
+                "type": {
+                    "type": "STRING_ARRAY"
+                },
+                "name": {
+                    "monoglot": "The first few primes as strings"
+                },
+                "value": {
+                    "string_array_values": {
+                        "strings": [
+                            "2",
+                            "3",
+                            "5",
+                            "7",
+                            "11",
+                            "13",
+                            "17"
+                        ]
+                    }
+                }
+            }
+        },
+        "primes_float": {
+            "param": {
+                "type": {
+                    "type": "FLOAT32_ARRAY"
+                },
+                "name": {
+                    "monoglot": "The first few primes as float32"
+                },
+                "value": {
+                    "float32_array_values": {
+                        "floats": [
+                            2.0,
+                            3.0,
+                            5.0,
+                            7.0,
+                            11.0,
+                            13.0,
+                            17.0
                         ]
                     }
                 }

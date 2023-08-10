@@ -16,6 +16,7 @@
 #include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>
+#include <ArrayAccessor.h>
 
 #include <google/protobuf/map.h>
 #include <google/protobuf/util/json_util.h>
@@ -266,6 +267,50 @@ template <> int getValueImpl<int>(const catena::Value &v, ParamIndex idx) {
     return arr.ints(idx);
 }
 
+/**
+ * @brief specialize for float
+ *
+ * @tparam
+ * @param v
+ * @return float
+ */
+template <> float getValueImpl<float>(const catena::Value &v, ParamIndex idx) {
+    if (!v.has_float32_array_values()) {
+        std::stringstream err;
+        err << "expected Catena::Value of Float32List";
+        BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
+    }
+    auto &arr = v.float32_array_values();
+    if (idx >= arr.floats_size()) {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.floats_size();
+        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+    }
+    return arr.floats(idx);
+}
+
+/**
+ * @brief specialize for string
+ *
+ * @tparam
+ * @param v
+ * @return string
+ */
+template <> std::string getValueImpl<std::string>(const catena::Value &v, ParamIndex idx) {
+    if (!v.has_string_array_values()) {
+        std::stringstream err;
+        err << "expected Catena::Value of StringList";
+        BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
+    }
+    auto &arr = v.string_array_values();
+    if (idx >= arr.strings_size()) {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.strings_size();
+        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+    }
+    return arr.strings(idx);
+}
+
 template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
     using W = typename std::remove_reference<V>::type;
     typename DM::LockGuard(deviceModel_.get().mutex_);
@@ -273,16 +318,26 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
     catena::Value &v = value_.get();
 
     if constexpr (std::is_same<W, std::string>::value) {
-        if (cp.type().type() != catena::ParamType::Type::ParamType_Type_STRING) {
-            BAD_STATUS("expected param of string type", grpc::StatusCode::FAILED_PRECONDITION);
+        catena::ParamType_Type t = cp.type().type();
+
+        if (t == catena::ParamType::Type::ParamType_Type_STRING) {
+            return getValueImpl<std::string>(v);
+        } else if (t == catena::ParamType::Type::ParamType_Type_STRING_ARRAY) {
+            return getValueImpl<std::string>(v, idx);
+        } else {
+            BAD_STATUS("expected param of STRING type", grpc::StatusCode::FAILED_PRECONDITION);
         }
-        return getValueImpl<std::string>(v);
 
     } else if constexpr (std::is_same<W, float>::value) {
-        if (cp.type().type() != catena::ParamType::Type::ParamType_Type_FLOAT32) {
+        catena::ParamType_Type t = cp.type().type();
+
+        if (t == catena::ParamType::Type::ParamType_Type_FLOAT32) {
+            return getValueImpl<float>(v);
+        } else if (t == catena::ParamType::Type::ParamType_Type_FLOAT32_ARRAY) {
+            return getValueImpl<float>(v, idx);
+        } else {
             BAD_STATUS("expected param of FLOAT32 type", grpc::StatusCode::FAILED_PRECONDITION);
         }
-        return getValueImpl<float>(v);
 
     } else if constexpr (std::is_same<W, int>::value) {
         catena::ParamType_Type t = cp.type().type();
@@ -319,23 +374,28 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
         BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
     }
 
-    /** @todo when we add support for the next array type, use a factory or static
-   * map of functions to handle each type */
-    if (v.has_int32_array_values()) {
-        auto &arr = v.int32_array_values();
-        if (arr.ints_size() < idx) {
-            // range error
-            std::stringstream err;
-            err << "Index is out of range: " << idx << " >= " << arr.ints_size();
-            BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
-        }
-        catena::Value ans{};
-        ans.set_int32_value(arr.ints(idx));
-        return ans;
+    auto &fac = catena::ArrayAccessor::Factory::getInstance();
+    if (fac.canMake(v.kind_case())) {
+        auto ptr = fac.makeProduct(v.kind_case(), v);
+        return ptr->operator[](idx);
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
 }
+
+
+// instantiate all arrays
+using int_array = catena::ConcreteArrayAccessor<int>;
+using float_array = catena::ConcreteArrayAccessor<float>;
+using string_array = catena::ConcreteArrayAccessor<std::string>;
+using struct_array = catena::ConcreteArrayAccessor<catena::StructList>;
+template <> bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
+template <>
+bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
+template <>
+bool string_array::_added = string_array ::registerWithFactory(Value::KindCase::kStringArrayValues);
+template <>
+bool struct_array::_added = string_array ::registerWithFactory(Value::KindCase::kStructArrayValues);
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);
