@@ -53,6 +53,7 @@ void setValueImpl(catena::Param &param, catena::Value &dst, float src, [[maybe_u
 }
 
 int applyIntConstraint(catena::Param &param, int v) {
+    /// @todo: add warning log for invalid constraint
     if (param.has_constraint()) {
         // apply the constraint
         int constraint_type = param.constraint().type();
@@ -100,6 +101,7 @@ int applyIntConstraint(catena::Param &param, int v) {
 }
 
 std::string applyStringConstraint(catena::Param &param, std::string v) {
+    /// @todo: add warning log for invalid constraint
     if (param.has_constraint()) {
         // apply the constraint
         int constraint_type = param.constraint().type();
@@ -421,8 +423,9 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
 
     auto &fac = catena::ArrayAccessor::Factory::getInstance();
     if (fac.canMake(v.kind_case())) {
-        auto ptr = fac.makeProduct(v.kind_case(), v);
-        return ptr->operator[](idx);
+        std::shared_ptr<ArrayAccessor> ptr = fac.makeProduct(v.kind_case(), v);
+        auto &arr = *ptr;
+        return arr[idx];
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
