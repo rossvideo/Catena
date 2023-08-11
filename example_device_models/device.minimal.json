@@ -35,8 +35,40 @@
             }
         }
     },
-
     "params": {
+        "string_example": {
+            "param": {
+                "type": {
+                    "type": "STRING"
+                },
+                "name": {
+                    "monoglot": "string example"
+                },
+                "value": {
+                    "string_value": "test_value"
+                },
+                "constraint": {
+                    "type": "STRING_STRING_CHOICE",
+                    "string_string_choice": {
+                        "strict": true,
+                        "choices": [
+                            {
+                                "name": {
+                                    "monoglot": "test_name"
+                                },
+                                "value": "test1"
+                            },
+                            {
+                                "name": {
+                                    "monoglot": "test_name2"
+                                },
+                                "value": "test2"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "hello": {
             "param": {
                 "type": {
@@ -65,30 +97,26 @@
                 "name": {
                     "monoglot": "Example int32 Parameter"
                 },
-                "type": {
-                    "type": "INT32"
-                },
-                "name": {
-                    "monoglot": "Example int32 Parameter"
-                },
                 "value": {
-                    "int32_value": 123
+                    "int32_value": 10
                 },
                 "constraint": {
-                    "type": "INT_CHOICE",
-                    "int32_choice": {
-                        "choices": [
+                    "type": "ALARM_TABLE",
+                    "alarm_table": {
+                        "alarms": [
                             {
-                                "name": {
-                                    "monoglot": "one"
+                                "bit_value": 3,
+                                "description": {
+                                    "monoglot": "test"
                                 },
-                                "value": 1
+                                "severity": "INFO"
                             },
                             {
-                                "name": {
-                                    "monoglot": "two"
+                                "bit_value": 1,
+                                "description": {
+                                    "monoglot": "tesst"
                                 },
-                                "value": 2
+                                "severity": "INFO"
                             }
                         ]
                     }

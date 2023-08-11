@@ -72,7 +72,6 @@ int applyIntConstraint(catena::Param &param, int v) {
                     v = param.constraint().int32_choice().choices(0).value();
                 }
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE: {
-
                 // e.g. for bit_value of 1 and 3, bit_location = 1010
                 int bit_location = 0;
                 for (const auto &it : param.constraint().alarm_table().alarms()) {
@@ -88,7 +87,8 @@ int applyIntConstraint(catena::Param &param, int v) {
                  */
 
                 v = (bit_location & v) | ((~bit_location) & param.value().int32_value());
-            };
+
+            }; break;
             default:
                 std::stringstream err;
                 err << "invalid constraint for int32: " << constraint_type << '\n';

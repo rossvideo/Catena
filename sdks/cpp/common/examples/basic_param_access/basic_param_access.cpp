@@ -49,9 +49,15 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
+
         // cache a param and get its value
         ParamAccessor helloParam = dm.param("/hello");
         std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
+
+        ParamAccessor helloParam2 = dm.param("/string_example");
+        std::stringstream ss;
+        ss << "test_name2";
+        helloParam2.setValue(ss.str());
 
         // access a param directly
         std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
@@ -60,7 +66,7 @@ int main(int argc, char **argv) {
         // and a path. N.B. types can be inferred
         std::cout << "setting values to something different\n";
         helloParam.setValue(3.142f);     // example using cached param
-        dm.param("/world").setValue(3);  // example using chaining
+        dm.param("/world").setValue(7);  // example using chaining
 
         std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
 
