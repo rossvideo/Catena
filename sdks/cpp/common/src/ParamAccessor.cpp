@@ -55,7 +55,6 @@ int applyIntConstraint(catena::Param &param, int v) {
     if (param.has_constraint()) {
         // apply the constraint
         int constraint_type = param.constraint().type();
-        int bit_location;
 
         switch (constraint_type) {
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_RANGE:
@@ -72,10 +71,10 @@ int applyIntConstraint(catena::Param &param, int v) {
                     // if value is not in constraint, choose first item in list
                     v = param.constraint().int32_choice().choices(0).value();
                 }
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE:
+            case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE: {
 
-                // eg. for bit_value of 1 and 3, bit_location = 1010
-                bit_location = 0;
+                // e.g. for bit_value of 1 and 3, bit_location = 1010
+                int bit_location = 0;
                 for (const auto &it : param.constraint().alarm_table().alarms()) {
                     bit_location |= (1 << it.bit_value());
                 }
@@ -87,7 +86,9 @@ int applyIntConstraint(catena::Param &param, int v) {
                  *
                  * so result = 0010
                  */
-                return (bit_location & v) | ((~bit_location) & param.value().int32_value());
+
+                v = (bit_location & v) | ((~bit_location) & param.value().int32_value());
+            };
             default:
                 std::stringstream err;
                 err << "invalid constraint for int32: " << constraint_type << '\n';
@@ -113,13 +114,15 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
                 }
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
-                if (std::find_if(param.constraint().string_string_choice().choices().begin(),
-                                 param.constraint().string_string_choice().choices().end(),
-                                 [&](catena::StringStringChoiceConstraint_StringStringChoice const &c) {
-                                     return c.value() == v;
-                                 }) == param.constraint().string_string_choice().choices().end()) {
+                if (param.constraint().string_string_choice().strict()) {
+                    if (std::find_if(param.constraint().string_string_choice().choices().begin(),
+                                     param.constraint().string_string_choice().choices().end(),
+                                     [&](catena::StringStringChoiceConstraint_StringStringChoice const &c) {
+                                         return c.value() == v;
+                                     }) == param.constraint().string_string_choice().choices().end()) {
 
-                    v = param.constraint().string_string_choice().choices(0).value();
+                        v = param.constraint().string_string_choice().choices(0).value();
+                    }
                 }
                 break;
             default:
