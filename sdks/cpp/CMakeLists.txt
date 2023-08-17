@@ -30,8 +30,12 @@ project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
+
+if (WIN32)
+ELSE()
 set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
 set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl")
+ENDIF()
 
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)

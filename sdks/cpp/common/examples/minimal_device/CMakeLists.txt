@@ -18,8 +18,6 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-
-
 list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local/cmake")
 message(STATUS "***cmake prefix path: ${CMAKE_PREFIX_PATH}")
 
@@ -27,6 +25,10 @@ find_package(jwt-cpp CONFIG REQUIRED)
 
 get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
+
+if (WIN32)
+    find_package(absl CONFIG REQUIRED)
+ENDIF()
 
 add_executable(${TARGET})
 

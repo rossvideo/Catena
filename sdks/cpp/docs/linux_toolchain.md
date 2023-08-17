@@ -8,7 +8,7 @@ This toolchain installation has been verified on x64 Ubuntu 22.04.2 LTS
 
 ## Installing cmake
 
-1. `sudo apt-get install cmake`
+* `sudo apt-get install cmake`
 
 ## Install and Build gRPC and Protobufs
 
