@@ -2,10 +2,6 @@
 
 This toolchain installation has been verified on x64 Windows 10
 
-## Important
-
-> Use forward slashes for all paths (works better with cmake)
-
 ## Getting a C++ compiler
 
 * Install [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/)
@@ -38,8 +34,6 @@ vcpkg integrate install
 5. Run `cmake .. -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL%/scripts/buildsystems/vcpkg.cmake -DCMAKE_PREFIX_PATH=<jwt-cpp-install>/build` where `<jwt-cpp-install>` is path of jwt-cpp build folder
 6. Open a developer command prompt for vs and navigate to build directory
 7. Run `msbuild CATENA_CPP_SDK.sln` twice (proto files get built on first run)
-
-> I also had to add `-DOPENSSL_ROOT_DIR="C:/Program Files/OpenSSL-Win64" -DOPENSSL_CRYPTO_LIBRARY="C:/Program Files/OpenSSL-Win64/lib/libssl.a" -DOPENSSL_INCLUDE_DIR="C:/Program Files/OpenSSL-Win64/include" -DOPENSSL_VERSION=3.1.2`
 
 ## Optionally Install doxygen
 
