@@ -73,6 +73,7 @@ int applyIntConstraint(catena::Param &param, int v) {
                     // if value is not in constraint, choose first item in list
                     v = param.constraint().int32_choice().choices(0).value();
                 }
+                break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE: {
                 // e.g. for bit_value of 1 and 3, bit_location = 1010
                 int bit_location = 0;
