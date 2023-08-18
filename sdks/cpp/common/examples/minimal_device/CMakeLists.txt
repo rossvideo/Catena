@@ -27,8 +27,8 @@ get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
 
 if (WIN32)
-    find_package(absl CONFIG REQUIRED)
-ENDIF()
+find_package(absl CONFIG REQUIRED)
+endif()
 
 add_executable(${TARGET})
 
