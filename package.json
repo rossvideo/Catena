@@ -5,6 +5,8 @@
     },
     "scripts": {
         "clang-format":
-          "find . -regex '.*\\.\\(cpp\\|h\\|js\\|json\\|java\\)' -exec clang-format -style=file -i {} \\;"
+          "find . -regex '.*\\.\\(cpp\\|h\\|js\\|json\\|java\\)' -exec clang-format -style=file -i {} \\;",
+        "clang-format-windows":
+          "powershell -NoProfile -ExecutionPolicy Unrestricted -Command scripts/clang-format.ps1"
     }
 }

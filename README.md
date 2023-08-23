@@ -22,6 +22,10 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
 
 ## Getting Started
 
+1. Install [nodejs](https://nodejs.org/en)
+2. Run `npm install`
+3. Install [clang-format](https://llvm.org/builds/)
+
 ### Building SDK and Examples
 
 #### CPP
@@ -32,11 +36,27 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
 
 * todo
 
+### Breakdown
+
+* `/docs/`: Documentation and images
+* `/example_device_models/`: Example json device models 
+  * `/import1/`: Device model with external param imports
+* `/interface/`: Contains the Catena protobuf source
+* `./schema/catena.schema.json`: JSON schema for Catena device models
+* `/scripts/`: Collection of useful scripts
+  * `./validate.js`: Tool to validate device models using schema
+* `/sdks/`: SDK source
+  * `/sdks/cpp`: C++ implementation
+  * `/sdk/java`: Java implementation
+* `./package.json`: NPM package with scripts
+
 ## Contribution Guide
 
 This project uses the [GitFlow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) for branching and tagging.
 
 Merge requests should be made TBD.
+
+Run `npm run clang-format` or `npm run clang-format-windows` in root of project before pushing code to MR
 
 Otherwise: work in progress
 
