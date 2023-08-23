@@ -22,7 +22,15 @@ Learn more about Ross Video [here](https://www.rossvideo.com/company/about-ross/
 
 ## Getting Started
 
-Work in progress
+### Building SDK and Examples
+
+#### CPP
+
+* Follow the steps in [here](./sdks/cpp/docs/cpp_sdk_main_page.md).
+
+#### Java
+
+* todo
 
 ## Contribution Guide
 
