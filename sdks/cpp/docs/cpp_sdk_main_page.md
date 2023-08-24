@@ -6,4 +6,4 @@
 * [Mac OS](macos_toolchain.md)
 * [Windows MSVS](windows_toolchain.md)
 
-Once toolchain is configured, use cmake to build 'makefiles' and then compiler to build targets.
+Once toolchain is configured, use cmake to build 'makefiles' and then compiler (make, xcode, msbuild) to build targets.
