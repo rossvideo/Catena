@@ -53,20 +53,45 @@ void setValueImpl(catena::Param &param, catena::Value &dst, float src, [[maybe_u
 }
 
 int applyIntConstraint(catena::Param &param, int v) {
+    /// @todo: add warning log for invalid constraint
     if (param.has_constraint()) {
         // apply the constraint
         int constraint_type = param.constraint().type();
+
         switch (constraint_type) {
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_RANGE:
                 v = std::clamp(v, param.constraint().int32_range().min_value(),
                                param.constraint().int32_range().max_value());
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_CHOICE:
-                /** @todo validate that v is one of the choices fallthru is
-       * intentional for now */
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE:
-                // we can't validate alarm tables easily, so trust the client
+                if (std::find_if(param.constraint().int32_choice().choices().begin(),
+                                 param.constraint().int32_choice().choices().end(),
+                                 [&](catena::Int32ChoiceConstraint_IntChoice const &c) {
+                                     return c.value() == v;
+                                 }) == param.constraint().int32_choice().choices().end()) {
+
+                    // if value is not in constraint, choose first item in list
+                    v = param.constraint().int32_choice().choices(0).value();
+                }
                 break;
+            case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE: {
+                // e.g. for bit_value of 1 and 3, bit_location = 1010
+                int bit_location = 0;
+                for (const auto &it : param.constraint().alarm_table().alarms()) {
+                    bit_location |= (1 << it.bit_value());
+                }
+
+                /*
+                 * assume you have three binary numbers, x=1010, y=0111 and t=1010
+                 * if the corresponding bit in t is 1 then take the corresponding bit in x,
+                 * if the corresponding bit in t is 0, then take the corresponding bit in y
+                 *
+                 * so result = 0010
+                 */
+
+                v = (bit_location & v) | ((~bit_location) & param.value().int32_value());
+
+            }; break;
             default:
                 std::stringstream err;
                 err << "invalid constraint for int32: " << constraint_type << '\n';
@@ -77,16 +102,32 @@ int applyIntConstraint(catena::Param &param, int v) {
 }
 
 std::string applyStringConstraint(catena::Param &param, std::string v) {
+    /// @todo: add warning log for invalid constraint
     if (param.has_constraint()) {
         // apply the constraint
         int constraint_type = param.constraint().type();
 
         switch (constraint_type) {
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_CHOICE:
-                /** @todo: validate string choice */
+                if (std::find_if(param.constraint().string_choice().choices().begin(),
+                                 param.constraint().string_choice().choices().end(),
+                                 [&](catena::PolyglotText const &c) { return c.monoglot() == v; }) ==
+                    param.constraint().string_choice().choices().end()) {
+
+                    v = param.constraint().string_choice().choices(0).monoglot();
+                }
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
-                /** @todo validate that v is string string choice */
+                if (param.constraint().string_string_choice().strict()) {
+                    if (std::find_if(param.constraint().string_string_choice().choices().begin(),
+                                     param.constraint().string_string_choice().choices().end(),
+                                     [&](catena::StringStringChoiceConstraint_StringStringChoice const &c) {
+                                         return c.value() == v;
+                                     }) == param.constraint().string_string_choice().choices().end()) {
+
+                        v = param.constraint().string_string_choice().choices(0).value();
+                    }
+                }
                 break;
             default:
                 std::stringstream err;
@@ -189,12 +230,19 @@ template <typename DM> template <typename V> void catena::ParamAccessor<DM>::set
 }
 
 template void PAM::setValue<std::string>(std::string, ParamIndex);
+
 template void PAS::setValue<std::string>(std::string, ParamIndex);
+
 template void PAM::setValue<float>(float, ParamIndex);
+
 template void PAS::setValue<float>(float, ParamIndex);
+
 template void PAM::setValue<int>(int, ParamIndex);
+
 template void PAS::setValue<int>(int, ParamIndex);
+
 template void PAM::setValue<catena::Value>(catena::Value, ParamIndex);
+
 template void PAS::setValue<catena::Value>(catena::Value, ParamIndex);
 
 /**
@@ -376,8 +424,9 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
 
     auto &fac = catena::ArrayAccessor::Factory::getInstance();
     if (fac.canMake(v.kind_case())) {
-        auto ptr = fac.makeProduct(v.kind_case(), v);
-        return ptr->operator[](idx);
+        std::shared_ptr<ArrayAccessor> ptr = fac.makeProduct(v.kind_case(), v);
+        auto &arr = *ptr;
+        return arr[idx];
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
@@ -399,15 +448,23 @@ bool struct_array::_added = string_array ::registerWithFactory(Value::KindCase::
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);
+
 template std::string PAS::getValue<std::string>(ParamIndex);
+
 template float PAM::getValue<float>(ParamIndex);
+
 template float PAS::getValue<float>(ParamIndex);
+
 template int PAM::getValue<int>(ParamIndex);
+
 template int PAS::getValue<int>(ParamIndex);
+
 template catena::Value PAM::getValue<catena::Value>(ParamIndex);
+
 template catena::Value PAS::getValue<catena::Value>(ParamIndex);
 
 // instantiate the 2 ParamAccessors
 // instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::ParamAccessor<catena::DeviceModel<Threading::kMultiThreaded>>;
+
 template class catena::ParamAccessor<catena::DeviceModel<Threading::kSingleThreaded>>;
