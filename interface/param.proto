@@ -185,9 +185,18 @@ message StringList { repeated string strings = 1; }
  * Needed for the STRUCT_ARRAY param type because proto doesn't
  * support repeated maps, or for maps to appear in oneof unions.
  */
-message StructValue {
-  map<string, Value> fields = 1;
+message StructField {
+  oneof kind {
+    Value value = 1;
+    Param param = 2;
+  }
 }
+// Structured object comprising named fields that map to dynamically typed
+// Values
+//
+message StructValue {
+	map<string, StructField> fields = 1;
+} 
 
 message StructList { repeated StructValue struct_values = 1; }
 
