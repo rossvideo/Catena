@@ -32,7 +32,9 @@ PATH="/Applications/CMake.app/Contents/bin":"$PATH"
 source ~/.zprofile
 ```
 
-## Install and Build gRPC and Protobufs
+## Dependencies
+
+### Install and Build gRPC and Protobufs
 
 Carefully follow [these steps](https://grpc.io/docs/languages/cpp/quickstart/)
 
@@ -61,6 +63,13 @@ sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk\
 ```
 
 because the linker flags insisted on using MacOSX13.1 for a non-obvious reason.
+
+### Install and Build jwt-cpp
+
+1. Install openSSL eg. `brew install openssl`
+2. Run `git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build`
+3. Run `cmake -DCMAKE_BUILD_TYPE=Release ..`
+4. Build and add to path
 
 ## Optionally install doxygen
 
