@@ -11,6 +11,8 @@ This directory contains a maven project which:
 ## Requirements
 1. Java 8 or higher installed on the computer.
 2. The latest version of [maven](https://maven.apache.org/download.cgi) installed.
+3. **Eclipse IDE users only:**  
+   Download into your `eclipse/dropins` folder the [os-maven-plugin-x.y.z.jar](https://repo1.maven.org/maven2/kr/motd/maven/os-maven-plugin/).
 
 ## Compiling and generating the jars
 Simply run: `mvn clean package` in the `Catena/sdks/java` directory.  
