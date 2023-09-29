@@ -1,0 +1,31 @@
+{
+    "name": {
+        "monoglot": "structured parameter example"
+    },
+    "type": {
+        "type": "STRUCT"
+    },
+    "params": {
+        "latitude":{
+            "param": {
+                "name": {
+                    "monoglot": "latitude"
+                },
+                "type": {
+                    "type": "FLOAT"
+                }
+            }
+        }
+    },
+    "value": {
+        "struct_value": {
+            "fields": {
+                "latitude": {
+                    "value": {
+                        "float_value": 37.422
+                    }
+                }
+            }
+        }
+    }
+}
