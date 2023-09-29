@@ -361,7 +361,7 @@ template <> std::string getValueImpl<std::string>(const catena::Value &v, ParamI
 
 template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
     using W = typename std::remove_reference<V>::type;
-    typename DM::LockGuard(deviceModel_.get().mutex_);
+    typename DM::LockGuard lock(deviceModel_.get().mutex_);
     catena::Param &cp = param_.get();
     catena::Value &v = value_.get();
 
@@ -414,7 +414,7 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
 }
 
 template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(ParamIndex idx) {
-    typename DM::LockGuard(deviceModel_.get().mutex_);
+    typename DM::LockGuard lock(deviceModel_.get().mutex_);
     auto v = value_.get();
     if (!isList(v)) {
         std::stringstream err;

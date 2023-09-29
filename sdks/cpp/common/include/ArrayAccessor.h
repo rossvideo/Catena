@@ -24,6 +24,7 @@
 #include <device.pb.h>
 #include <param.pb.h>
 #include <GenericFactory.h>
+#include <Status.h>
 
 namespace catena {
 
@@ -41,6 +42,11 @@ class ArrayAccessor {
         * @return catena value
         */
     virtual catena::Value operator[](std::size_t idx) = 0;
+
+    /**
+    * @brief virtual destructor
+    */
+    virtual ~ArrayAccessor() = default;
 };
 
 template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
@@ -66,6 +72,12 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
         * @param in catena value
         */
     ConcreteArrayAccessor(catena::Value &in) : _in{in} {};
+
+    /**
+     * @brief destructor
+     * 
+     */
+    ~ConcreteArrayAccessor() = default;
 
     /**
         * @brief override array accessor operator

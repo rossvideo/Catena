@@ -181,7 +181,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
                 // but terminate further descent
                 v = &noValue_;
             } else {
-                v = &value->mutable_struct_value()->mutable_fields()->at(oid);
+                v = value->mutable_struct_value()->mutable_fields()->at(oid).mutable_value();
             }
         }
 

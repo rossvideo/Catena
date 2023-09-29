@@ -52,9 +52,6 @@ target_sources(${TARGET}
 
 message(STATUS "*** reflection: ${LIB_TARGET}")
 target_link_libraries(${TARGET}
-    ${_REFLECTION}
-    ${_GRPC_GRPCPP}
-    ${_PROTOBUF_LIBPROTOBUF}
     ${LIB_TARGET}
     catena_interface
     absl::flags_parse
