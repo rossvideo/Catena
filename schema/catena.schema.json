@@ -895,7 +895,23 @@
         },
         "struct_fields": {
             "title": "struct definition",
-            "description": "holds struct data fields",
+            "description": "holds struct data fields or params",
+            "type": "object",
+            "Properties": {
+                "oneOf": [
+                    {
+                        "$ref": "#/$defs/field_value"
+                    },
+                    {
+                        "$ref": "#/$defs/param"
+                    }
+                ]
+            },
+            "additionalProperties": false
+        },
+        "field_value": { // need to finish this
+            "title": "______________",
+            "description": "holds struct data field",
             "type": "object",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
