@@ -46,6 +46,10 @@ public class ClientMain {
             System.out.println("TEST: Setting int value on a float type OID.");
             client.setValue(MyCatenaDevice.FLOAT_OID, slotNumber, 42);
 
+            // Tests for commands
+            System.out.println("TEST: Execute command \"foo('bar')\" with string value");
+            client.executeCommand("foo", slotNumber, "bar", true);
+
             // Tests for getDevice
             System.out.println("TEST: GetDevice for slot: " + slotNumber);
             client.getDevice(slotNumber);

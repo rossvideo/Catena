@@ -1,6 +1,10 @@
 package com.rossvideo.catena.example;
 
+import java.util.Iterator;
+
 import catena.core.device.DeviceRequestPayload;
+import catena.core.parameter.CommandResponse;
+import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
@@ -58,6 +62,46 @@ public class MyCatenaClient implements AutoCloseable {
               SetValuePayload.newBuilder().setOid(oid).setSlot(slotNumber).setValue(newValue).build());
         } catch (StatusRuntimeException exception) {
             printStatusRuntimeException("setValue", exception);
+        }
+    }
+    
+    public void executeCommand(String oid, int slot, int value, boolean respond) {
+        executeCommand(oid, slot, Value.newBuilder().setInt32Value(value).build(), respond);
+    }
+    
+    public void executeCommand(String oid, int slot, String value, boolean respond) {
+        executeCommand(oid, slot, Value.newBuilder().setStringValue(value).build(), respond);
+    }
+    
+    public void executeCommand(String oid, int slot, Value value, boolean respond) {
+        try {
+            Iterator<CommandResponse> response = stub.executeCommand(ExecuteCommandPayload.newBuilder().setOid(oid).setSlot(slot).setValue(value).setRespond(respond).build());
+            if (!respond)
+            {
+                return;
+            }
+            while (response.hasNext())
+            {
+                CommandResponse responsePart = response.next();
+                switch (responsePart.getKindCase())
+                {
+                    case EXCEPTION:
+                        break;
+                    case KIND_NOT_SET:
+                        break;
+                    case NO_RESPONSE:
+                        break;
+                    case RESPONSE:
+                        printGetValueResult("Response", responsePart.getResponse());
+                        break;
+                    default:
+                        break;
+                    
+                }
+                
+            }
+        } catch (StatusRuntimeException exception) {
+            printStatusRuntimeException("executeCommand", exception);
         }
     }
 
