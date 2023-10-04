@@ -897,24 +897,26 @@
             "title": "struct definition",
             "description": "holds struct data fields or params",
             "type": "object",
-            "Properties": {
-                "oneOf": [
-                    {
-                        "$ref": "#/$defs/field_value"
-                    },
-                    {
-                        "$ref": "#/$defs/param"
-                    }
-                ]
+            "patternProperties": {
+                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "oneOf": [
+                        { 
+                            "$ref": "#/$defs/field_value"
+                        },
+                        {
+                            "$ref": "#/$defs/param"
+                        }
+                    ]
+                }
             },
             "additionalProperties": false
         },
-        "field_value": { // need to finish this
+        "field_value": {
             "title": "______________",
             "description": "holds struct data field",
             "type": "object",
-            "patternProperties": {
-                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+            "properties": {
+                "value": {
                     "oneOf": [
                         {
                             "$ref": "#/$defs/float32_value"
@@ -938,8 +940,7 @@
                             "$ref": "#/$defs/struct_array_values"
                         }
                     ]
-                },
-                "additionalProperties": false
+                }
             },
             "additionalProperties": false
         },
