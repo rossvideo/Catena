@@ -895,10 +895,28 @@
         },
         "struct_fields": {
             "title": "struct definition",
-            "description": "holds struct data fields",
+            "description": "holds struct data fields or params",
             "type": "object",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "oneOf": [
+                        { 
+                            "$ref": "#/$defs/field_value"
+                        },
+                        {
+                            "$ref": "#/$defs/param"
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false
+        },
+        "field_value": {
+            "title": "______________",
+            "description": "holds struct data field",
+            "type": "object",
+            "properties": {
+                "value": {
                     "oneOf": [
                         {
                             "$ref": "#/$defs/float32_value"
@@ -922,8 +940,7 @@
                             "$ref": "#/$defs/struct_array_values"
                         }
                     ]
-                },
-                "additionalProperties": false
+                }
             },
             "additionalProperties": false
         },
