@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
+import com.rossvideo.catena.example.command.ExecuteCommandPayloadHandler;
 import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
@@ -97,41 +98,9 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
         return ParamDescriptor.newBuilder().setParam(param).build();
     }
     
-    
-
     @Override
-    public void executeCommand(ExecuteCommandPayload request, StreamObserver<CommandResponse> responseObserver)
-    {
-        System.out.println("SERVER: executeCommand request:");
-        System.out.println("\tslot:  " + request.getSlot());
-        System.out.println("\toid:   " + request.getOid());
-        System.out.println("\tvalue: " + request.getValue());
-        int slot = request.getSlot();
-        if (this.slot != slot) {
-            responseObserver.onError(new InvalidSlotNumberException(slot));
-            return;
-        }
-        
-        String oid = request.getOid();
-        Value value = request.getValue();
-        KindCase valueKindCase = value.getKindCase();
-        switch (oid) {
-            case CMD_FOO_OID:
-                if (valueKindCase != KindCase.STRING_VALUE) {
-                    responseObserver.onError(
-                      new WrongValueTypeException(oid, valueKindCase, KindCase.INT32_VALUE));
-                    return;
-                }
-                break;
-            default:
-                responseObserver.onError(new UnknownOidException(oid));
-                return;
-        }
-
-        responseObserver.onNext(CommandResponse.newBuilder()
-                .setReturnCode(0)
-                .setResponse(Value.newBuilder().setStringValue("YOU SENT \"" + value.getStringValue() + "\"").build()).build());
-        responseObserver.onCompleted();
+    public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
+        return new ExecuteCommandPayloadHandler(slot, responseObserver);
     }
 
     @Override
