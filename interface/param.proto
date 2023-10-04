@@ -196,7 +196,7 @@ message StructField {
 //
 message StructValue {
 	map<string, StructField> fields = 1;
-} 
+}
 
 message StructList { repeated StructValue struct_values = 1; }
 
@@ -297,7 +297,7 @@ message ExecuteCommandPayload {
   uint32 slot = 1;  // Slot id of the device
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
-  bool respond = 5; // Set false to suppress responses from device
+  bool respond = 4; // Set false to suppress responses from device
 }
 
 message Exception {
