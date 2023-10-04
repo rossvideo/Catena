@@ -21,7 +21,10 @@ limitations under the License.
 //
 
 const Ajv = require('ajv');
+const addFormats = require('ajv-formats').default;
+
 const ajv = new Ajv({strict: false});  // our use of "strict" as a schema interferes with ajv's strict mode.
+addFormats(ajv);
 
 const jsonMap = require('json-source-map');
 
@@ -42,7 +45,7 @@ if (testfile === undefined) {
 
 // verify input file exists
 if (!fs.existsSync(testfile)) {
-    console.log('Cannot open file at ${testfile}');
+    console.log(`Cannot open file at ${testfile}`);
     process.exit(1);
 }
 
