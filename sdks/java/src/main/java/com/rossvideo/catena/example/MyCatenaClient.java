@@ -92,11 +92,11 @@ public class MyCatenaClient implements AutoCloseable {
             // TODO: use a for-loop if you have more than one ExecuteCommandPayload to send.
             commandPayloadStream.onNext(ExecuteCommandPayload.newBuilder().setOid(oid).setSlot(slot).setValue(value)
                     .setRespond(respond).build());
+            commandPayloadStream.onCompleted();
         } catch (StatusRuntimeException e) {
             printStatusRuntimeException("executeCommand", e);
             commandPayloadStream.onError(e);
         }
-        commandPayloadStream.onCompleted();
     }
 
     public Value getValue(String oid, int slotNumber) {
