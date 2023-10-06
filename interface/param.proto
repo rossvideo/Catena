@@ -196,7 +196,7 @@ message StructField {
 //
 message StructValue {
 	map<string, StructField> fields = 1;
-} 
+}
 
 message StructList { repeated StructValue struct_values = 1; }
 
@@ -285,10 +285,10 @@ message UpdateSubscriptionsPayload {
 
 /* Defines a command for a device.
  * Commands provide a way to use device connection to execute commands from other devices.
- * Superseded by just adding a `responds` field to the Param message.
+ * Superseded by just adding a `respond` field to the Param message.
  * message Command {
  *   Param definition = 1; // provides command's input values
- *   bool responds = 2;    // true when the device will respond to the command, false otherwise.
+ *   bool respond = 2;     // true when the device will respond to the command, false otherwise.
  * }
  *
  * When streamed, only the value field will be used after the first message.
@@ -297,7 +297,7 @@ message ExecuteCommandPayload {
   uint32 slot = 1;  // Slot id of the device
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
-  bool respond = 5; // Set false to suppress responses from device
+  bool respond = 4; // false if Server/Device should not send any responses.
 }
 
 message Exception {
@@ -308,10 +308,9 @@ message Exception {
 
 /* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
-  int32 return_code = 1; // 0 indicates success, non-zero a problem
   oneof kind {
-    google.protobuf.Empty no_response = 2;
-    Value response = 3;
-    Exception exception = 4;
+    google.protobuf.Empty no_response = 1; // Server/Device does not have a response for the command.
+    Value response = 2;
+    Exception exception = 3;  // This is for Server/Device error executing the command.
   }
 }

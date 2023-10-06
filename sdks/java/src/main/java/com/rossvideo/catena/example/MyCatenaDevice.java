@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
+import com.rossvideo.catena.example.command.ExecuteCommandPayloadHandler;
 import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
@@ -13,6 +14,8 @@ import catena.core.device.Device;
 import catena.core.device.DeviceComponent;
 import catena.core.device.DeviceRequestPayload;
 import catena.core.language.PolyglotText;
+import catena.core.parameter.CommandResponse;
+import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.Param;
 import catena.core.parameter.ParamDescriptor;
@@ -28,6 +31,7 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 
     public static final String INT_OID = "integer";
     public static final String FLOAT_OID = "float";
+    public static final String CMD_FOO_OID = "foo";
 
     private static final AtomicInteger deviceId = new AtomicInteger(1);
 
@@ -50,7 +54,9 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
         }
 
         Device device =
-          Device.newBuilder().setSlot(this.slot).putAllParams(buildAllParamDescriptors()).build();
+          Device.newBuilder().setSlot(this.slot).putAllParams(buildAllParamDescriptors())
+          .putAllCommands(buildAllCommandDescriptors())
+          .build();
         DeviceComponent deviceComponent = DeviceComponent.newBuilder().setDevice(device).build();
         responseObserver.onNext(deviceComponent);
         responseObserver.onCompleted();
@@ -64,9 +70,22 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
                        buildParamDescriptor(INT_OID, "int parameter", Type.INT32, false, 1, intValue));
         return parameters;
     }
-
+    
+    private Map<String, ParamDescriptor> buildAllCommandDescriptors() {
+        Map<String, ParamDescriptor> commands = new HashMap<>();
+        commands.put(
+          CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", Type.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
+        return commands;
+    }
+    
     private ParamDescriptor buildParamDescriptor(String oid, String name, Type type, boolean readonly,
-                                                 int precision, Value value) {
+            int precision, Value value) {
+                return buildParamDescriptor(oid, name, type, readonly, precision, value, false);
+    
+    }
+    
+    private ParamDescriptor buildParamDescriptor(String oid, String name, Type type, boolean readonly,
+                                                 int precision, Value value, boolean response) {
         Param param = Param.newBuilder()
                         .setFqoid(deviceName + '.' + oid)
                         .setName(PolyglotText.newBuilder().setMonoglot(name).build())
@@ -74,15 +93,21 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
                         .setReadOnly(readonly)
                         .setPrecision(precision)
                         .setValue(value)
+                        .setResponse(response)
                         .build();
         return ParamDescriptor.newBuilder().setParam(param).build();
+    }
+    
+    @Override
+    public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
+        return new ExecuteCommandPayloadHandler(slot, responseObserver);
     }
 
     @Override
     public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver) {
         System.out.println("SERVER: setValue request:");
-        System.out.println("\toid:   " + request.getOid());
         System.out.println("\tslot:  " + request.getSlot());
+        System.out.println("\toid:   " + request.getOid());
         System.out.println("\tvalue: " + request.getValue());
         int slot = request.getSlot();
         if (this.slot != slot) {

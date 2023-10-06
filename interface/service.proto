@@ -48,7 +48,7 @@ message GeneralResponse {
 service CatenaService {
   rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
 
-  rpc ExecuteCommand(ExecuteCommandPayload) returns (stream CommandResponse);
+  rpc ExecuteCommand(stream ExecuteCommandPayload) returns (stream CommandResponse);
 
   rpc ExternalObjectRequest(ExternalObjectRequestPayload) returns (stream ExternalObjectPayload);
 
