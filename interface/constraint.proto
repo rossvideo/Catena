@@ -27,6 +27,8 @@ option java_outer_classname = "ConstraintProtos";
 
 option optimize_for = CODE_SIZE;
 
+
+
 message Alarm {
   int32 bit_value = 1; // range 0 to 31
 
@@ -58,6 +60,14 @@ message Int32ChoiceConstraint {
   repeated IntChoice choices = 1;
 }
 
+/* Range constraints can specify a growth type to specify how the
+ * step value should be interpreted. If not defined, 'linear' will be assumed.
+ */
+enum GrowthType {
+    LINEAR = 0; // each valid value will be the sum of the previous value and the 'step' value
+    EXPONENTIAL = 1; // each valid value will be the multiplication of the previous value and the 'step' value
+}
+
 /* Range constraint including hard min & max values plus display min & max. */
 message Int32RangeConstraint {
   int32 min_value = 1;
@@ -65,6 +75,7 @@ message Int32RangeConstraint {
   int32 step = 3;
   int32 display_min = 4;
   int32 display_max = 5;
+  GrowthType growth_type = 6;
 }
 
 /* Range constraint with hard min & max plus display min & max. */
@@ -74,6 +85,7 @@ message FloatRangeConstraint {
   float step = 3;
   float display_min = 4;
   float display_max = 5;
+  GrowthType growth_type = 6;
 }
 
 /* A reference to a shared constraint. */
