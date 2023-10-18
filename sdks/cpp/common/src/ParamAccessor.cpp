@@ -584,6 +584,8 @@ template catena::Value PAM::getValue<catena::Value>(ParamIndex);
 
 template catena::Value PAS::getValue<catena::Value>(ParamIndex);
 
+// TODO: check if I need a structValue version here
+
 // instantiate the 2 ParamAccessors
 // instantiate the 2 versions of DeviceModel, and its streaming operator
 template class catena::ParamAccessor<catena::DeviceModel<Threading::kMultiThreaded>>;
