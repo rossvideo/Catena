@@ -260,6 +260,9 @@
                         },
                         "display_max": {
                             "$ref": "#/$defs/float32"
+                        },
+                        "growth_type": {
+                            "$ref": "#/$defs/growth_type"
                         }
                     },
                     "required": [
@@ -367,7 +370,10 @@
                                     },
                                     "display_max": {
                                         "$ref": "#/$defs/int32"
-                                    }
+                                    },
+			                        "growth_type": {
+			                            "$ref": "#/$defs/growth_type"
+			                        }
                                 },
                                 "required": [
                                     "min_value",
@@ -1142,6 +1148,19 @@
             "required": [
                 "type"
             ]
+        },
+        "growth_type": {
+            "title": "Growth type to apply to INT32 and FLOAT32 range constraints",
+            "description":
+              "Growth type for range constraints defines how the 'step' field is interpreted.",
+            "type": {
+                "type": "string",
+                "enum": [
+                    "LINEAR",
+                    "EXPONENTIAL"
+                ],
+                "default": "LINEAR"
+            }
         }
     }
 }
