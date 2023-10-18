@@ -165,6 +165,9 @@
                 "name": {
                     "$ref": "#/$defs/polyglot_text"
                 },
+                "help": {
+                    "$ref": "#/$defs/polyglot_text"
+                },
                 "constraint": {
                     "$ref": "#/$defs/constraint"
                 },

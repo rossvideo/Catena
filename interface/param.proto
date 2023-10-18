@@ -83,7 +83,7 @@ message BasicParamInfo {
 
 /* When streamed, only the payload field will be used after the first message. */
 message DataPayload {
-  string mime_type = 1; // MIME type of the data in the payload
+  map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
 
   enum PayloadEncoding {
     UNCOMPRESSED = 0;
@@ -169,6 +169,9 @@ message Param {
    * true if the command provides a response when executed.
    */
   bool response = 15;
+
+  // Optional additional information about the usage of the parameter
+  PolyglotText help = 16;
 }
 
 enum UndefinedValue {
