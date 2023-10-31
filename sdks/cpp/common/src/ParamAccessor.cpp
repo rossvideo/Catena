@@ -138,19 +138,6 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
     return v;
 }
 
-// TODO: create an applyConstraint function for struct
-catena::StructValue applyStructConstraint(catena::Param &param, catena::StructValue v) {
-    /// @todo: add warning log for invalid constraint
-    if (param.has_constraint()) {
-        // apply the constraint
-        int constraint_type = param.constraint().type();
-
-        switch (constraint_type) {
-            // TODO: check if there are any applicable constraints for struct
-        }
-    }
-}
-
 /**
  * @brief override for int
  *
@@ -187,10 +174,7 @@ void setValueImpl(catena::Param &param, catena::Value &dst, std::string src, Par
  * @param src the value to set
  */
 void setValueImpl(catena::Param &param, catena::Value &dst, catena::StructValue src, ParamIndex idx = 0) {
-    // TODO: find way to set struct value
-    // dst.set_struct_value(applyStructConstraint(param, src));
-
-    dst.struct_value().mutable_fields() = src.fields();
+    dst.mutable_struct_value()->CopyFrom(src);
 }
 
 /**
@@ -273,25 +257,25 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
             }
         } break;
 
-        case catena::ParamType_Type_STRUCT_ARRAY: {
-            if (!dst.has_struct_array_values()) {
-                BAD_STATUS("expected struct value", grpc::StatusCode::INVALID_ARGUMENT);
-            }
-            catena::StructList *arr = dst.mutable_struct_array_values();
-            if (idx == catena::kParamEnd) {
-                // special case, add to end of the array
-                arr->add_struct_values(applyStructConstraint(p, src.struct_value()));
-            } else if (arr->struct_values_size() < idx) {
-                // range error
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx << " >= " << arr->struct_values_size();
-                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
-            } else {
-                // update array element
-                // TODO: find way to set struct value
-                arr->set_structs(idx, applyStructConstraint(p, src.struct_value()));
-            }
-        } break;
+        // case catena::ParamType_Type_STRUCT_ARRAY: {
+        //     if (!dst.has_struct_array_values()) {
+        //         BAD_STATUS("expected struct value", grpc::StatusCode::INVALID_ARGUMENT);
+        //     }
+        //     catena::StructList *arr = dst.mutable_struct_array_values();
+        //     if (idx == catena::kParamEnd) {
+        //         // special case, add to end of the array
+        //         arr->add_struct_values(p, src.struct_value());
+        //     } else if (arr->struct_values_size() < idx) {
+        //         // range error
+        //         std::stringstream err;
+        //         err << "array index is out of bounds, " << idx << " >= " << arr->struct_values_size();
+        //         BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+        //     } else {
+        //         // update array element
+        //         // TODO: find way to set struct value
+        //         arr->set_structs(idx, p, src.struct_value());
+        //     }
+        // } break;
 
         default: {
             std::stringstream err;
@@ -583,8 +567,6 @@ template int PAS::getValue<int>(ParamIndex);
 template catena::Value PAM::getValue<catena::Value>(ParamIndex);
 
 template catena::Value PAS::getValue<catena::Value>(ParamIndex);
-
-// TODO: check if I need a structValue version here
 
 // instantiate the 2 ParamAccessors
 // instantiate the 2 versions of DeviceModel, and its streaming operator
