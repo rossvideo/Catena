@@ -144,8 +144,8 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
  * @throws OUT_OF_RANGE if the constraint type isn't valid
  * @tparam
  * @param param the param descriptor
- * @param val the param's value object
- * @param v the value to set
+ * @param dst the param's value object
+ * @param src the value to set
  */
 void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex idx = 0) {
     dst.set_int32_value(applyIntConstraint(param, src));
@@ -157,11 +157,24 @@ void setValueImpl(catena::Param &param, catena::Value &dst, int src, ParamIndex 
  * @throws OUT_OF_RANGE if the constraint type isn't valid
  * @tparam
  * @param param the param descriptor
- * @param val the param's value object
- * @param v the value to set
+ * @param dst the param's value object
+ * @param src the value to set
  */
 void setValueImpl(catena::Param &param, catena::Value &dst, std::string src, ParamIndex idx = 0) {
     dst.set_string_value(applyStringConstraint(param, std::move(src)));
+}
+
+/**
+ * @brief override for structure
+ *
+ * @throws OUT_OF_RANGE if the constraint type isn't valid
+ * @tparam
+ * @param param the param descriptor
+ * @param dst the param's value object
+ * @param src the value to set
+ */
+void setValueImpl(catena::Param &param, catena::Value &dst, catena::StructValue src, ParamIndex idx = 0) {
+    dst.mutable_struct_value()->CopyFrom(src);
 }
 
 /**
@@ -170,8 +183,8 @@ void setValueImpl(catena::Param &param, catena::Value &dst, std::string src, Par
  * @throws INVALID_ARGUMENT if the value type doesn't match the param type.
  * @throws UNIMPLEMENTED if support for param type not implemented.
  * @param param the param descriptor
- * @param val the param's value object
- * @param v the value to set
+ * @param dst the param's value object
+ * @param src the value to set
  * @param idx index into array types
  */
 void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src, ParamIndex idx = 0) {
@@ -198,6 +211,32 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
             setValueImpl(p, dst, src.int32_value());
             break;
 
+        case catena::ParamType_Type_STRUCT:
+            if (!src.has_struct_value()) {
+                BAD_STATUS("expected struct value", grpc::StatusCode::INVALID_ARGUMENT);
+            }
+            setValueImpl(p, dst, src.struct_value());
+            break;
+
+        case catena::ParamType_Type_STRING_ARRAY: {
+            if (!dst.has_string_array_values ()) {
+                BAD_STATUS("expected string value", grpc::StatusCode::INVALID_ARGUMENT);
+            }
+            catena::StringList *arr = dst.mutable_string_array_values();
+            if (idx == catena::kParamEnd) {
+                // special case, add to end of the array
+                arr->add_strings(applyStringConstraint(p, std::move(src.string_value())));
+            } else if (arr->strings_size() < idx) {
+                // range error
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx << " >= " << arr->strings_size();
+                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+            } else {
+                // update array element
+                arr->set_strings(idx, applyStringConstraint(p, std::move(src.string_value())));
+            }
+        } break;
+
         case catena::ParamType_Type_INT32_ARRAY: {
             if (!dst.has_int32_array_values()) {
                 BAD_STATUS("expected int32 value", grpc::StatusCode::INVALID_ARGUMENT);
@@ -216,6 +255,26 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
                 arr->set_ints(idx, applyIntConstraint(p, src.int32_value()));
             }
         } break;
+
+        case catena::ParamType_Type_STRUCT_ARRAY: {
+            if (!dst.has_struct_array_values()) {
+                BAD_STATUS("expected struct value", grpc::StatusCode::INVALID_ARGUMENT);
+            }
+            catena::StructList *arr = dst.mutable_struct_array_values();
+            if (idx == catena::kParamEnd) {
+                // special case, add to end of the array
+                arr->add_struct_values()->CopyFrom(src.struct_value());
+            } else if (arr->struct_values_size() < idx) {
+                // range error
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx << " >= " << arr->struct_values_size();
+                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+            } else {
+                // update array element
+                arr->mutable_struct_values(idx)->CopyFrom(src.struct_value());
+            }
+        } break;
+
         default: {
             std::stringstream err;
             err << "Unimplemented value type: " << type;
@@ -280,6 +339,15 @@ template <> float getValueImpl<float>(const catena::Value &v) { return v.float32
  * @return int
  */
 template <> int getValueImpl<int>(const catena::Value &v) { return v.int32_value(); }
+
+/**
+ * @brief specialize for structure
+ *
+ * @tparam
+ * @param v
+ * @return StructValue
+ */
+template <> catena::StructValue getValueImpl<catena::StructValue>(const catena::Value &v) { return v.struct_value(); }
 
 /**
  * @brief function template to implement getValue for array types
@@ -359,6 +427,28 @@ template <> std::string getValueImpl<std::string>(const catena::Value &v, ParamI
     return arr.strings(idx);
 }
 
+/**
+ * @brief specialize for structure
+ *
+ * @tparam
+ * @param v
+ * @return StructValue
+ */
+template <> catena::StructValue getValueImpl<catena::StructValue>(const catena::Value &v, ParamIndex idx) {
+    if (!v.has_struct_array_values()) {
+        std::stringstream err;
+        err << "expected Catena::Value of StructList";
+        BAD_STATUS(err.str(), grpc::StatusCode::FAILED_PRECONDITION);
+    }
+    auto &arr = v.struct_array_values();
+    if (idx >= arr.struct_values_size()) {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.struct_values_size();
+        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+    }
+    return arr.struct_values(idx);
+}
+
 template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
     using W = typename std::remove_reference<V>::type;
     typename DM::LockGuard lock(deviceModel_.get().mutex_);
@@ -389,12 +479,25 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
 
     } else if constexpr (std::is_same<W, int>::value) {
         catena::ParamType_Type t = cp.type().type();
+        
         if (t == catena::ParamType::Type::ParamType_Type_INT32) {
             return getValueImpl<int>(v);
         } else if (t == catena::ParamType::Type::ParamType_Type_INT32_ARRAY) {
             return getValueImpl<int>(v, idx);
         } else {
             BAD_STATUS("expected param of INT32 type", grpc::StatusCode::FAILED_PRECONDITION);
+        }
+
+    } else if constexpr (std::is_same<W, catena::StructValue>::value) {
+        catena::ParamType_Type t = cp.type().type();
+        
+        if (t == catena::ParamType::Type::ParamType_Type_STRUCT) {
+            return getValueImpl<catena::StructValue>(v);
+        } else if (t == catena::ParamType::Type::ParamType_Type_STRUCT_ARRAY) {
+            // TODO: need to add validation for struct array through json
+            return getValueImpl<catena::StructValue>(v, idx);
+        } else {
+            BAD_STATUS("expected param of STRUCT type", grpc::StatusCode::FAILED_PRECONDITION);
         }
 
     } else if constexpr (std::is_same<W, catena::Value>::value) {

@@ -45,10 +45,15 @@ catena::Path::Path(const std::string &path) : segments_{} {
 catena::Path::Path(const char *literal) : Path(std::string(literal)) {}
 
 catena::Path::Segment catena::Path::pop_front() noexcept {
+    Segment ans = front();
+    segments_.pop_front();
+    return ans;
+}
+
+catena::Path::Segment catena::Path::front() noexcept {
     Segment ans;
     if (segments_.size() >= 1) {
         std::string seg = segments_[0];
-        segments_.pop_front();
         if (seg.compare("-") == 0) {
             // the one-past-the-end array index
             ans.emplace<Index>(kEnd);

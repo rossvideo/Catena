@@ -114,11 +114,100 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
     catena::Param *p = device_.mutable_params()->at(oid).mutable_param();
     std::get<0>(ans) = p;
     std::get<1>(ans) = (p->has_value() ? p->mutable_value() : &noValue_);
+
     while (path_.size()) {
-        ans = getSubparam_(path_, ans);
+        if (std::holds_alternative<std::string>(path_.front()) ) {
+            ans = getSubparam_(path_, ans);
+        } else if (std::holds_alternative<std::deque<std::string>::size_type>(path_.front())) {
+            ans = indexIntoParam_(path_, ans);
+        } else {
+            BAD_STATUS("expected oid or index", grpc::StatusCode::INVALID_ARGUMENT);
+        }
     }
 
     return ParamAccessor(*this, ans);
+}
+
+template <enum Threading T>
+typename catena::DeviceModel<T>::ParamAccessorData
+catena::DeviceModel<T>::indexIntoParam_(catena::Path &path, catena::DeviceModel<T>::ParamAccessorData &pad) {
+
+    // destructure the param-value pair
+    auto [parent, value] = pad;
+
+    auto idx = std::get<0>(path.pop_front());
+    catena::Value *v = &noValue_;
+    
+    if (!parent->has_value()) {
+        BAD_STATUS("param does not have a value", grpc::StatusCode::FAILED_PRECONDITION);
+    }
+
+    // validate the param type
+    catena::ParamType_Type type = parent->type().type();
+    switch (type) {
+        case catena::ParamType_Type::ParamType_Type_FLOAT32_ARRAY:
+            if (!value->has_float32_array_values()) {
+                BAD_STATUS("value must be of type float32_array_value",
+                        grpc::StatusCode::FAILED_PRECONDITION);
+            }
+
+            if (idx >= value->float32_array_values().floats_size()) {
+                // range error
+                std::stringstream err;
+                err << "Index is out of range: " << idx << " >= " << value->float32_array_values().floats_size();
+                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+            }
+            v->set_float32_value(value->mutable_float32_array_values()->floats(idx));
+            break;
+        case catena::ParamType_Type::ParamType_Type_STRUCT_ARRAY:
+            if (!value->has_struct_array_values()) {
+                BAD_STATUS("value must be of type struct_array_value",
+                        grpc::StatusCode::FAILED_PRECONDITION);
+            }
+
+            if (idx >= value->struct_array_values().struct_values_size()) {
+                // range error
+                std::stringstream err;
+                err << "Index is out of range: " << idx << " >= " << value->struct_array_values().struct_values_size();
+                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+            }
+            v->mutable_struct_value()->CopyFrom(value->mutable_struct_array_values()->struct_values(idx));
+            break;
+        case catena::ParamType_Type::ParamType_Type_STRING_ARRAY:
+            if (!value->has_string_array_values()) {
+                BAD_STATUS("value must be of type string_array_value",
+                        grpc::StatusCode::FAILED_PRECONDITION);
+            }
+
+            if (idx >= value->string_array_values().strings_size()) {
+                // range error
+                std::stringstream err;
+                err << "Index is out of range: " << idx << " >= " << value->string_array_values().strings_size();
+                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+            }
+            v->set_string_value(value->mutable_string_array_values()->strings(idx));
+            break;
+        case catena::ParamType_Type::ParamType_Type_INT32_ARRAY:
+            if (!value->has_int32_array_values()) {
+                BAD_STATUS("value must be of type int32_array_value",
+                        grpc::StatusCode::FAILED_PRECONDITION);
+            }
+
+            if (idx >= value->int32_array_values().ints_size()) {
+                // range error
+                std::stringstream err;
+                err << "Index is out of range: " << idx << " >= " << value->int32_array_values().ints_size();
+                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+            }
+            v->set_int32_value(value->mutable_int32_array_values()->ints(idx));
+            break;
+        default:
+            std::stringstream err;
+            err << "cannot index into param of type: " << type;
+            BAD_STATUS((err.str()), grpc::StatusCode::INVALID_ARGUMENT);
+    }    
+
+    return ParamAccessorData(parent, v);
 }
 
 template <enum Threading T>

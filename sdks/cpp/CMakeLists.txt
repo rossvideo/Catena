@@ -137,8 +137,8 @@ find_package(Doxygen OPTIONAL_COMPONENTS dot)
 
 if (DOXYGEN_FOUND AND BUILD_DOC)
 # set input and output files
-set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
-set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxyfile.in)
+set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
 
 # find out if graphviz is installed
 if (DOXYGEN_DOT_EXECUTABLE STREQUAL "DOXYGEN_DOT_EXECUTABLE-NOTFOUND")
