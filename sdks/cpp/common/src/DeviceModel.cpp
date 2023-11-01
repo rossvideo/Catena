@@ -193,11 +193,6 @@ catena::DeviceModel<T>::indexIntoParam_(catena::Path &path, catena::DeviceModel<
                         grpc::StatusCode::FAILED_PRECONDITION);
             }
 
-            // if (idx == kParamEnd) {
-            //     std::cout << "end of array\n";
-            //     return ParamAccessorData(parent, value);
-            // }
-
             if (idx >= value->int32_array_values().ints_size()) {
                 // range error
                 std::stringstream err;
