@@ -50,6 +50,8 @@ int main(int argc, char** argv) {
         // as the template parameter
         catena::DeviceModel<catena::Threading::kSingleThreaded> dm(argv[1]);
 
+        
+
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 

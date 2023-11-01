@@ -1,0 +1,74 @@
+{
+    "params": {
+        "types": {
+            "name": {"monoglot": "Param Type Definitions"},
+            "type": "STRUCT",
+            "params": {
+                "port": {
+                    "name": {"monoglot": "Port"},
+                    "type": "STRUCT",
+                    "params": {
+                        "async_audio": {},
+                        "audio_presence": {},
+                        "audio_signal": {},
+                        "connector_type": {},
+                        "eq_enabled": {},
+                        "eq_level": {},
+                        "framesync_delay": {},
+                        "framesync_los": {},
+                        "gearbox": {},
+                        "gearbox_quadpkg": {},
+                        "gearbox_text": {},
+                        "id": {},
+                        "label": {},
+                        "loss_signal_type:": {},
+                        "lsync_delay": {},
+                        "lsync_enable": {},
+                        "lsync_ref": {},
+                        "lsync_status": {},
+                        "signal_medic": {},
+                        "signal_medic_text": {},
+                        "signal_presence": {},
+                        "signals": {},
+                        "timing_line": {},
+                        "timing_pixel": {},
+                        "tpg_color": {},
+                        "tpg_option": {},
+                        "tpg_video_format": {},
+                        "transition_duration": {},
+                        "transition_type": {},
+                        "trigger": {},
+                        "type": {},
+                        "video_signal": {}
+                    }
+                },
+                "channel": {
+                    "type": "STRUCT",
+                    "params": {
+                        "id": {},
+                        "label": {}
+                    },
+                    "variants": {
+                        "audiochannel": {
+                            "type": "STRUCT",
+                            "params": {
+                                "delay": {},
+                                "gain": {},
+                                "invert": {},
+                                "signal": {},
+                                "sum": {},
+                                "tonefreq": {},
+                                "tonemode": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "frameslots": {
+            "name": {"monoglot": "Frame Slots"},
+            "type": "STRUCT_ARRAY",
+            "constra"
+        }
+    }
+}
