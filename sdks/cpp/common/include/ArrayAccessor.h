@@ -153,11 +153,11 @@ template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](
     if (arr.struct_values_size() >= idx) {
         auto &sv = arr.struct_values(idx);
 
-        catena::StructValue *out{};
+        catena::StructValue out{};
         catena::Value ans{};
 
-        out->mutable_fields()->insert(sv.fields().begin(), sv.fields().end());
-        ans.set_allocated_struct_value(out);
+        out.mutable_fields()->insert(sv.fields().begin(), sv.fields().end());
+        *(ans.mutable_struct_value()) = out;
 
         return ans;
     } else {

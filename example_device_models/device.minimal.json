@@ -277,6 +277,78 @@
                     }
                 }
             }
+        },
+        "locations": {
+            "param": {
+                "type": {
+                    "type": "STRUCT_ARRAY"
+                },
+                "name": {
+                    "monoglot": "Locations"
+                },
+                "params": {
+                    "latitude": {
+                        "param": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "monoglot": "Latitude"
+                            },
+                            "value": {
+                                "float32_value": 37.7749
+                            }
+                        }
+                    },
+                    "longitude": {
+                        "param": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "monoglot": "Longitude"
+                            },
+                            "value": {
+                                "float32_value": -122.4194
+                            }
+                        }
+                    }
+                },
+                "value": {
+                    "struct_array_values": {
+                        "struct_values": [
+                            {
+                                "fields": {
+                                    "latitude": {
+                                        "value":{
+                                            "float32_value": 37.7749
+                                        }
+                                    },
+                                    "longitude": {
+                                        "value":{
+                                            "float32_value": -122.4194
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "fields": {
+                                    "latitude": {
+                                        "value":{
+                                            "float32_value": 37.7749
+                                        }
+                                    },
+                                    "longitude": {
+                                        "value":{
+                                            "float32_value": -122.4194
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
         }
     }
 }

@@ -222,6 +222,21 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    *
    */
     ParamAccessorData getSubparam_(catena::Path &path, ParamAccessorData &pad);
+    
+    /**
+   * @brief Set the param accessor index to the value indicated in the json string
+   *
+   * @param path [in|out] path to the sub-param, the first segment will be
+   * consumed.
+   * @param parent param
+   * @return indexed value indicated by front of path
+   * @throws catena::exception_with_status if is not an array
+   * @throws catena::exception_with_status if param doesn't have a values object
+   * type
+   * @throws catena::exception_with_status if the index is out of range
+   *
+   */
+    ParamAccessorData indexIntoParam_(catena::Path &path, ParamAccessorData &pad);
 };
 
 }  // namespace catena

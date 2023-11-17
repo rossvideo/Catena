@@ -120,6 +120,15 @@ class Path {
      */
     Segment pop_front() noexcept;
 
+      /**
+     * @brief return the front of the path.
+     * @return unescaped component at front of the path, 
+     * design intent the returned value can be used as an oid lookup,
+     * or an array index.
+     * Will be empty string if path is "/", or "".
+     */
+    Segment front() noexcept;
+
     /**
      * @brief escapes the oid then adds it to the end of the path.
      * 
