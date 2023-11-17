@@ -528,8 +528,7 @@ template <typename DM> catena::Value catena::ParamAccessor<DM>::getValueAt(Param
     auto &fac = catena::ArrayAccessor::Factory::getInstance();
     if (fac.canMake(v.kind_case())) {
         std::shared_ptr<ArrayAccessor> ptr = fac.makeProduct(v.kind_case(), v);
-        auto &arr = *ptr;
-        return arr[idx];
+        return ptr.get()->operator[](idx);
     } else {
         BAD_STATUS("Not implemented, sorry", grpc::StatusCode::UNIMPLEMENTED);
     }
@@ -547,7 +546,7 @@ bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kF
 template <>
 bool string_array::_added = string_array ::registerWithFactory(Value::KindCase::kStringArrayValues);
 template <>
-bool struct_array::_added = string_array ::registerWithFactory(Value::KindCase::kStructArrayValues);
+bool struct_array::_added = struct_array ::registerWithFactory(Value::KindCase::kStructArrayValues);
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);
