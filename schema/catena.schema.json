@@ -1083,13 +1083,48 @@
             "description": "Text that a client can display in one of multiple languages",
             "type": "object",
             "properties": {
-                "monoglot": {
-                    "title": "Monoglot",
-                    "description": "Fallback for single-language devices",
+                "strings": {
+                    "type": "object",
+                    "anyOf": [
+                        {"$ref": "#/$defs/language_metadata_table"},
+                        {"$ref": "#/$defs/language_pack_reference"}
+                    ],
+                    "minProperties": 1
+                },
+                "additionalProperties": false
+            }
+        },
+        "language_metadata_table": {
+            "title": "Language Metadata Table",
+            "description": "A table of language codes",
+            "$comment": "The language codes must be valid Language Metadata Table language codes. The validation could be done as one super-long regex, but, for readabilty, we've split them into language groups.",
+            "type": "object",
+            "patternProperties": {
+                "^(en|en-AU|en-CA|en-HK|en-IE|en-MY)$": {
+                    "title": "English Language Group",
+                    "$comment": "@todo complete the regex",
+                    "type": "string"
+                },
+                "^(es|es-ES|es-AR|es-BO|es-CL|es-CO)$" : {
+                    "title": "Spanish Language Group",
+                    "$comment": "@todo complete the regex",
                     "type": "string"
                 }
             },
             "additionalProperties": false
+        },
+        "language_pack_reference": {
+            "title": "Language Pack Reference",
+            "description": "A key to look up text in a language pack",
+            "type": "object",
+            "properties": {
+                "$key": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "$key"
+            ]
         },
         "readonly": {
             "title": "Parameter access mode",
@@ -1156,13 +1191,15 @@
             "title": "Growth type to apply to INT32 and FLOAT32 range constraints",
             "description":
               "Growth type for range constraints defines how the 'step' field is interpreted.",
-            "type": {
-                "type": "string",
-                "enum": [
-                    "LINEAR",
-                    "EXPONENTIAL"
-                ],
-                "default": "LINEAR"
+              "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "LINEAR",
+                        "EXPONENTIAL"
+                    ],
+                    "default": "LINEAR"
+                }
             }
         }
     }
