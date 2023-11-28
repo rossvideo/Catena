@@ -77,7 +77,7 @@ message LanguagePacks {
  *
  */
 message PolyglotText {
-  map<string, string> strings = 1; // In-line language definition
+  map<string, string> display_strings = 1; // In-line language definition
 }
 
 /* AddLanguagePayload

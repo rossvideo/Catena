@@ -504,8 +504,11 @@
                                     "choices": {
                                         "type": "array",
                                         "items": {
-                                            "$ref": "#/$defs/polyglot_text"
+                                           "type": "string"
                                         }
+                                    },
+                                    "strict": {
+                                        "type": "boolean"
                                     }
                                 },
                                 "required": [
@@ -921,7 +924,7 @@
             "additionalProperties": false
         },
         "field_value": {
-            "title": "______________",
+            "title": "Struct Field Value",
             "description": "holds struct data field",
             "type": "object",
             "properties": {
@@ -1083,7 +1086,7 @@
             "description": "Text that a client can display in one of multiple languages",
             "type": "object",
             "properties": {
-                "strings": {
+                "display_strings": {
                     "type": "object",
                     "anyOf": [
                         {"$ref": "#/$defs/language_metadata_table"},
@@ -1092,7 +1095,8 @@
                     "minProperties": 1
                 },
                 "additionalProperties": false
-            }
+            },
+            "additionalProperties": false
         },
         "language_metadata_table": {
             "title": "Language Metadata Table",

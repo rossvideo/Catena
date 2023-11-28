@@ -42,7 +42,7 @@
                     "type": "STRING"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "string example"
                     }
                 },
@@ -56,7 +56,7 @@
                         "choices": [
                             {
                                 "name": {
-                                    "strings": {
+                                    "display_strings": {
                                         "en": "example_name"
                                     }
                                 },
@@ -64,7 +64,7 @@
                             },
                             {
                                 "name": {
-                                    "strings": {
+                                    "display_strings": {
                                         "en": "example_name2"
                                     }
                                 },
@@ -81,7 +81,7 @@
                     "type": "FLOAT32"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "Example Float Parameter"
                     }
                 },
@@ -103,7 +103,7 @@
                     "type": "INT32"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "Example int32 Parameter"
                     }
                 },
@@ -116,7 +116,7 @@
                         "choices": [
                             {
                                 "name": {
-                                    "strings": {
+                                    "display_strings": {
                                         "en": "one"
                                     }
                                 },
@@ -124,7 +124,7 @@
                             },
                             {
                                 "name": {
-                                    "strings": {
+                                    "display_strings": {
                                         "en": "two"
                                     }
                                 },
@@ -141,7 +141,7 @@
                     "type": "INT32"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "Example int32 Parameter as alarm table"
                     }
                 },
@@ -155,7 +155,7 @@
                             {
                                 "bit_value": 1,
                                 "description": {
-                                    "strings": {
+                                    "display_strings": {
                                         "en": "warning"
                                     }
                                 },
@@ -164,7 +164,7 @@
                             {
                                 "bit_value": 3,
                                 "description": {
-                                    "strings": {
+                                    "display_strings": {
                                         "en": "severe"
                                     }
                                 },
@@ -181,7 +181,7 @@
                     "type": "INT32_ARRAY"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "The first few primes"
                     }
                 },
@@ -206,7 +206,7 @@
                     "type": "STRING_ARRAY"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "The first few primes as strings"
                     }
                 },
@@ -231,7 +231,7 @@
                     "type": "FLOAT32_ARRAY"
                 },
                 "name": {
-                    "strings": {
+                    "display_strings": {
                         "en": "The first few primes as float32"
                     }
                 },
@@ -256,7 +256,7 @@
                     "type": "STRUCT"
                 },
                 "name": {
-                    "strings": {    
+                    "display_strings": {    
                         "en": "Location"
                     }
                 },
@@ -267,7 +267,7 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "strings": {
+                                "display_strings": {
                                     "en": "Latitude"
                                 }
                             },
@@ -282,7 +282,7 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "strings": {
+                                "display_strings": {
                                     "en": "Longitude"
                                 }
                             },
@@ -316,7 +316,7 @@
                     "type": "STRUCT_ARRAY"
                 },
                 "name": {
-                    "strings": {    
+                    "display_strings": {    
                         "en": "Locations"
                     }
                 },
@@ -327,7 +327,7 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "strings": {
+                                "display_strings": {
                                     "en": "Latitude"
                                 }
                             },
@@ -342,7 +342,7 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "strings": {
+                                "display_strings": {
                                     "en": "Longitude"
                                 }
                             },
