@@ -109,12 +109,15 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 
         switch (constraint_type) {
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_CHOICE:
-                if (std::find_if(param.constraint().string_choice().choices().begin(),
-                                 param.constraint().string_choice().choices().end(),
-                                 [&](catena::PolyglotText const &c) { return c.monoglot() == v; }) ==
-                    param.constraint().string_choice().choices().end()) {
-
-                    v = param.constraint().string_choice().choices(0).monoglot();
+                if(param.constraint().string_choice().strict()) {
+                    if (std::find_if(param.constraint().string_choice().choices().begin(),
+                                    param.constraint().string_choice().choices().end(),
+                                    [&](std::string const &c) { return c == v; }) ==
+                        param.constraint().string_choice().choices().end()) {
+                        
+                        // if value is not in constraint, choose first item in list
+                        v = param.constraint().string_choice().choices(0);
+                    }
                 }
                 break;
             case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
@@ -124,7 +127,7 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
                                      [&](catena::StringStringChoiceConstraint_StringStringChoice const &c) {
                                          return c.value() == v;
                                      }) == param.constraint().string_string_choice().choices().end()) {
-
+                        // if value is not in constraint, choose first item in list
                         v = param.constraint().string_string_choice().choices(0).value();
                     }
                 }

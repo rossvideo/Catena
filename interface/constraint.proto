@@ -95,7 +95,8 @@ message ConstraintRef {
 
 /* A selection of strings for client GUI to use in pick list and other GUI elements. */
 message StringChoiceConstraint {
-  repeated PolyglotText choices = 1;
+  repeated string choices = 1;
+  bool strict = 2;
 }
 
 /* A selection of human-friendly strings to display in client GUI that are

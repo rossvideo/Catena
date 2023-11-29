@@ -42,7 +42,9 @@
                     "type": "STRING"
                 },
                 "name": {
-                    "monoglot": "string example"
+                    "display_strings": {
+                        "en": "string example"
+                    }
                 },
                 "value": {
                     "string_value": "example"
@@ -54,13 +56,17 @@
                         "choices": [
                             {
                                 "name": {
-                                    "monoglot": "example_name"
+                                    "display_strings": {
+                                        "en": "example_name"
+                                    }
                                 },
                                 "value": "example"
                             },
                             {
                                 "name": {
-                                    "monoglot": "example_name2"
+                                    "display_strings": {
+                                        "en": "example_name2"
+                                    }
                                 },
                                 "value": "example2"
                             }
@@ -75,7 +81,9 @@
                     "type": "FLOAT32"
                 },
                 "name": {
-                    "monoglot": "Example Float Parameter"
+                    "display_strings": {
+                        "en": "Example Float Parameter"
+                    }
                 },
                 "value": {
                     "float32_value": 1.23
@@ -95,7 +103,9 @@
                     "type": "INT32"
                 },
                 "name": {
-                    "monoglot": "Example int32 Parameter"
+                    "display_strings": {
+                        "en": "Example int32 Parameter"
+                    }
                 },
                 "value": {
                     "int32_value": 123
@@ -106,13 +116,17 @@
                         "choices": [
                             {
                                 "name": {
-                                    "monoglot": "one"
+                                    "display_strings": {
+                                        "en": "one"
+                                    }
                                 },
                                 "value": 1
                             },
                             {
                                 "name": {
-                                    "monoglot": "two"
+                                    "display_strings": {
+                                        "en": "two"
+                                    }
                                 },
                                 "value": 2
                             }
@@ -127,7 +141,9 @@
                     "type": "INT32"
                 },
                 "name": {
-                    "monoglot": "Example int32 Parameter as alarm table"
+                    "display_strings": {
+                        "en": "Example int32 Parameter as alarm table"
+                    }
                 },
                 "value": {
                     "int32_value": 13
@@ -139,14 +155,18 @@
                             {
                                 "bit_value": 1,
                                 "description": {
-                                    "monoglot": "warning"
+                                    "display_strings": {
+                                        "en": "warning"
+                                    }
                                 },
                                 "severity": "WARNING"
                             },
                             {
                                 "bit_value": 3,
                                 "description": {
-                                    "monoglot": "severe"
+                                    "display_strings": {
+                                        "en": "severe"
+                                    }
                                 },
                                 "severity": "SEVERE"
                             }
@@ -161,7 +181,9 @@
                     "type": "INT32_ARRAY"
                 },
                 "name": {
-                    "monoglot": "The first few primes"
+                    "display_strings": {
+                        "en": "The first few primes"
+                    }
                 },
                 "value": {
                     "int32_array_values": {
@@ -184,7 +206,9 @@
                     "type": "STRING_ARRAY"
                 },
                 "name": {
-                    "monoglot": "The first few primes as strings"
+                    "display_strings": {
+                        "en": "The first few primes as strings"
+                    }
                 },
                 "value": {
                     "string_array_values": {
@@ -207,7 +231,9 @@
                     "type": "FLOAT32_ARRAY"
                 },
                 "name": {
-                    "monoglot": "The first few primes as float32"
+                    "display_strings": {
+                        "en": "The first few primes as float32"
+                    }
                 },
                 "value": {
                     "float32_array_values": {
@@ -230,7 +256,9 @@
                     "type": "STRUCT"
                 },
                 "name": {
-                    "monoglot": "Location"
+                    "display_strings": {    
+                        "en": "Location"
+                    }
                 },
                 "params": {
                     "latitude": {
@@ -239,7 +267,9 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "monoglot": "Latitude"
+                                "display_strings": {
+                                    "en": "Latitude"
+                                }
                             },
                             "value": {
                                 "float32_value": 37.7749
@@ -252,7 +282,9 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "monoglot": "Longitude"
+                                "display_strings": {
+                                    "en": "Longitude"
+                                }
                             },
                             "value": {
                                 "float32_value": -122.4194
@@ -284,7 +316,9 @@
                     "type": "STRUCT_ARRAY"
                 },
                 "name": {
-                    "monoglot": "Locations"
+                    "display_strings": {    
+                        "en": "Locations"
+                    }
                 },
                 "params": {
                     "latitude": {
@@ -293,7 +327,9 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "monoglot": "Latitude"
+                                "display_strings": {
+                                    "en": "Latitude"
+                                }
                             },
                             "value": {
                                 "float32_value": 37.7749
@@ -306,7 +342,9 @@
                                 "type": "FLOAT32"
                             },
                             "name": {
-                                "monoglot": "Longitude"
+                                "display_strings": {
+                                    "en": "Longitude"
+                                }
                             },
                             "value": {
                                 "float32_value": -122.4194

@@ -30,8 +30,8 @@ option optimize_for = CODE_SIZE;
  * in the same language.
  */
 message LanguagePack {
-  string name = 1;
-  map<string, string> words = 2;
+  string name = 1; // e.g. "Global Spanish"
+  map<string, string> words = 2; // e.g. "greeting" -> "Hola"
 }
 
 /* Language Packs
@@ -50,8 +50,7 @@ message LanguagePacks {
 /* PolyglotText
  * Text that a client can display in one of multiple languages.
  * The different options can either be defined in-line for each
- * instance of this message, or they can reference a LanguagePack,
- * or they can be defined as not having multi-language support.
+ * instance of this message, or they can reference a LanguagePack.
  *
  * When defined in-line, the keys shall be patterned on those defined at
  * https://www.mesaonline.org/language-metadata-table with "example"
@@ -62,26 +61,23 @@ message LanguagePacks {
  *    "en": "Hello",  // global English
  *    "es": "Hola",  // global Spanish
  *    "fr": "Bonjour", // global French
- *    "fr-CA": "Bonjour", // Canadian French
- * }
+ *    "en-CA": "Eh?", // Canadian English
+ * },
  *
- * And when defined by reference to a language pack the key property
+ * LanguagePack referencing example:
+ * {
+ *    "$key": "greeting"
+ * }
+ * 
+ *
+ * And when defined by reference to a language pack the $key value
  * is used to provide a look-up into the supported LanguagePack(s)
- * e.g. key = "greeting" could index to "Hello", "Hola" or "Bonjour"
+ * e.g. $key = "greeting" could index to "Hello", "Hola" or "Bonjour"
  * depending on which LanguagePack was active in the client.
  *
- * Neither the polyglot or key members need be used.
- *
- * The monoglot member is provided to allow use of this message type
- * without or before multi-language support being available. And use
- * of clients that do not provide multi-language support.
- * It should always be provided.
- * e.g. monoglot = "Hello"
  */
 message PolyglotText {
-  string monoglot = 1;             // Fallback for non-multilingual devices/clients
-  map<string, string> strings = 2; // In-line language definition
-  string key = 3;                  // Look up in a Language Pack
+  map<string, string> display_strings = 1; // In-line language definition
 }
 
 /* AddLanguagePayload
