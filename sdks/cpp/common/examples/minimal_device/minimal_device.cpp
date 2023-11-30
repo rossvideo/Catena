@@ -118,7 +118,7 @@ void authorize(grpc::ServerContext *context /*catena::Param &p*/) {
         auto authz = context->client_metadata();
         auto it = authz.find("authorization");
         if (it == authz.end()) {
-            BAD_STATUS("No authorization token found", grpc::StatusCode::PERMISSION_DENIED);
+            BAD_STATUS("No authorization token found", catena::StatusCode::PERMISSION_DENIED);
         }
 
         // remove the 'Bearer ' text from the beginning
@@ -145,7 +145,8 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
 
         } catch (catena::exception_with_status &why) {
             std::cerr << why.what() << std::endl;
-            return Status(why.status, "GetValue failed", why.what());
+            grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
+            return Status(gs, "GetValue failed", why.what());
 
         } catch (...) {
             std::cerr << "unhandled exception: " << std::endl;
@@ -163,7 +164,8 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
 
         } catch (catena::exception_with_status &why) {
             std::cerr << why.what() << std::endl;
-            return Status(why.status, "SetValue failed", why.what());
+            grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
+            return Status(gs, "SetValue failed", why.what());
 
         } catch (...) {
             std::cerr << "unhandled exception: " << std::endl;

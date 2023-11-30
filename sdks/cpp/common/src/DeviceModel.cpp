@@ -59,7 +59,7 @@ template <enum Threading T> DeviceModel<T>::DeviceModel(const std::string &filen
             std::string imported;
             if (pdesc.import().url().compare("") != 0) {
                 /** @todo implement url imports*/
-                BAD_STATUS("Cannot (yet) import from urls, sorry.", grpc::StatusCode::UNIMPLEMENTED);
+                BAD_STATUS("Cannot (yet) import from urls, sorry.", catena::StatusCode::UNIMPLEMENTED);
             } else {
                 // there's no url specified, so do a local import using the oid
                 // to create the filename
@@ -100,14 +100,14 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
     catena::Path::Segment segment = path_.pop_front();
 
     if (!std::holds_alternative<std::string>(segment)) {
-        BAD_STATUS("expected oid, got an index", grpc::StatusCode::INVALID_ARGUMENT);
+        BAD_STATUS("expected oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
     }
     std::string oid(std::get<std::string>(segment));
 
     if (!device_.mutable_params()->contains(oid)) {
         std::stringstream msg;
         msg << "param " << std::quoted(oid) << " not found";
-        BAD_STATUS(msg.str(), grpc::StatusCode::NOT_FOUND);
+        BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
     }
 
     ParamAccessorData ans;
@@ -121,7 +121,7 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
         } else if (std::holds_alternative<std::deque<std::string>::size_type>(path_.front())) {
             ans = indexIntoParam_(path_, ans);
         } else {
-            BAD_STATUS("expected oid or index", grpc::StatusCode::INVALID_ARGUMENT);
+            BAD_STATUS("expected oid or index", catena::StatusCode::INVALID_ARGUMENT);
         }
     }
 
@@ -139,7 +139,7 @@ catena::DeviceModel<T>::indexIntoParam_(catena::Path &path, catena::DeviceModel<
     catena::Value *v = &noValue_;
     
     if (!parent->has_value()) {
-        BAD_STATUS("param does not have a value", grpc::StatusCode::FAILED_PRECONDITION);
+        BAD_STATUS("param does not have a value", catena::StatusCode::FAILED_PRECONDITION);
     }
 
     // validate the param type
@@ -148,63 +148,63 @@ catena::DeviceModel<T>::indexIntoParam_(catena::Path &path, catena::DeviceModel<
         case catena::ParamType_Type::ParamType_Type_FLOAT32_ARRAY:
             if (!value->has_float32_array_values()) {
                 BAD_STATUS("value must be of type float32_array_value",
-                        grpc::StatusCode::FAILED_PRECONDITION);
+                        catena::StatusCode::FAILED_PRECONDITION);
             }
 
             if (idx >= value->float32_array_values().floats_size()) {
                 // range error
                 std::stringstream err;
                 err << "Index is out of range: " << idx << " >= " << value->float32_array_values().floats_size();
-                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
             v->set_float32_value(value->mutable_float32_array_values()->floats(idx));
             break;
         case catena::ParamType_Type::ParamType_Type_STRUCT_ARRAY:
             if (!value->has_struct_array_values()) {
                 BAD_STATUS("value must be of type struct_array_value",
-                        grpc::StatusCode::FAILED_PRECONDITION);
+                        catena::StatusCode::FAILED_PRECONDITION);
             }
 
             if (idx >= value->struct_array_values().struct_values_size()) {
                 // range error
                 std::stringstream err;
                 err << "Index is out of range: " << idx << " >= " << value->struct_array_values().struct_values_size();
-                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
             v->mutable_struct_value()->CopyFrom(value->mutable_struct_array_values()->struct_values(idx));
             break;
         case catena::ParamType_Type::ParamType_Type_STRING_ARRAY:
             if (!value->has_string_array_values()) {
                 BAD_STATUS("value must be of type string_array_value",
-                        grpc::StatusCode::FAILED_PRECONDITION);
+                        catena::StatusCode::FAILED_PRECONDITION);
             }
 
             if (idx >= value->string_array_values().strings_size()) {
                 // range error
                 std::stringstream err;
                 err << "Index is out of range: " << idx << " >= " << value->string_array_values().strings_size();
-                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
             v->set_string_value(value->mutable_string_array_values()->strings(idx));
             break;
         case catena::ParamType_Type::ParamType_Type_INT32_ARRAY:
             if (!value->has_int32_array_values()) {
                 BAD_STATUS("value must be of type int32_array_value",
-                        grpc::StatusCode::FAILED_PRECONDITION);
+                        catena::StatusCode::FAILED_PRECONDITION);
             }
 
             if (idx >= value->int32_array_values().ints_size()) {
                 // range error
                 std::stringstream err;
                 err << "Index is out of range: " << idx << " >= " << value->int32_array_values().ints_size();
-                BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
             v->set_int32_value(value->mutable_int32_array_values()->ints(idx));
             break;
         default:
             std::stringstream err;
             err << "cannot index into param of type: " << type;
-            BAD_STATUS((err.str()), grpc::StatusCode::INVALID_ARGUMENT);
+            BAD_STATUS((err.str()), catena::StatusCode::INVALID_ARGUMENT);
     }    
 
     return ParamAccessorData(parent, v);
@@ -229,20 +229,20 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
         default:
             std::stringstream err;
             err << "cannot sub-param param of type: " << type;
-            BAD_STATUS((err.str()), grpc::StatusCode::INVALID_ARGUMENT);
+            BAD_STATUS((err.str()), catena::StatusCode::INVALID_ARGUMENT);
     }
 
     // validate path argument and the parameter
 
     // is there a params field to define the sub-params?
     if (parent->params_size() == 0) {
-        BAD_STATUS("params field is missing", grpc::StatusCode::FAILED_PRECONDITION);
+        BAD_STATUS("params field is missing", catena::StatusCode::FAILED_PRECONDITION);
     }
 
     // is our oid a string?
     auto seg = path.pop_front();
     if (!std::holds_alternative<std::string>(seg)) {
-        BAD_STATUS("expected oid, got index", grpc::StatusCode::INVALID_ARGUMENT);
+        BAD_STATUS("expected oid, got index", catena::StatusCode::INVALID_ARGUMENT);
     }
 
     // is the oid defined?
@@ -250,7 +250,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
     if (!parent->params().contains(oid)) {
         std::stringstream err;
         err << oid << " not found";
-        BAD_STATUS((err.str()), grpc::StatusCode::FAILED_PRECONDITION);
+        BAD_STATUS((err.str()), catena::StatusCode::FAILED_PRECONDITION);
     }
 
     // descend the value tree to find the value matching the oid
@@ -258,7 +258,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
     if (value != &noValue_) {
         if (!(value->has_struct_value() || value->has_struct_array_values())) {
             BAD_STATUS("value must be of type struct_value or struct_array_value",
-                       grpc::StatusCode::FAILED_PRECONDITION);
+                       catena::StatusCode::FAILED_PRECONDITION);
         }
 
         if (value->has_struct_value()) {
@@ -277,7 +277,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
         if (value->has_struct_array_values()) {
             /** @todo implement value navigation for STRUCT_ARRAY */
             BAD_STATUS("value navigation for struct_array_value not implemented, sorry",
-                       grpc::StatusCode::UNIMPLEMENTED);
+                       catena::StatusCode::UNIMPLEMENTED);
         }
     }
 
@@ -305,18 +305,18 @@ template <enum Threading T> std::ostream &operator<<(std::ostream &os, const cat
 //   if (path.size() > 1) {
 //     /** @todo implement ability to add parameters below /params */
 //     BAD_STATUS("implementation only supports adding params to top level",
-//                grpc::StatusCode::UNIMPLEMENTED);
+//                catena::StatusCode::UNIMPLEMENTED);
 //   }
 //   if (path.size() == 0) {
 //     BAD_STATUS("empty path is invalid in this context",
-//                grpc::StatusCode::INVALID_ARGUMENT);
+//                catena::StatusCode::INVALID_ARGUMENT);
 //   }
 //   catena::Param p(param);
 //   auto seg = path.pop_front();
 //   if (!std::holds_alternative<std::string>(seg)) {
 //     std::stringstream err;
 //     err << "invalid path: " << std::quoted(jptr);
-//     BAD_STATUS(err.str(), grpc::StatusCode::INVALID_ARGUMENT);
+//     BAD_STATUS(err.str(), catena::StatusCode::INVALID_ARGUMENT);
 //   }
 //   std::string oid(std::get<std::string>(seg));
 
