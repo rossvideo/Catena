@@ -114,7 +114,7 @@ template <> catena::Value ConcreteArrayAccessor<float>::operator[](std::size_t i
     } else {
         std::stringstream err;
         err << "Index is out of range: " << idx << " >= " << arr.floats_size();
-        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
     }
 }
 
@@ -128,7 +128,7 @@ template <> catena::Value ConcreteArrayAccessor<int>::operator[](std::size_t idx
     } else {
         std::stringstream err;
         err << "Index is out of range: " << idx << " >= " << arr.ints_size();
-        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
     }
 }
 
@@ -142,7 +142,7 @@ template <> catena::Value ConcreteArrayAccessor<std::string>::operator[](std::si
     } else {
         std::stringstream err;
         err << "Index is out of range: " << idx << " >= " << arr.strings_size();
-        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
     }
 }
 
@@ -163,7 +163,7 @@ template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](
     } else {
         std::stringstream err;
         err << "Index is out of range: " << idx << " >= " << arr.struct_values_size();
-        BAD_STATUS(err.str(), grpc::StatusCode::OUT_OF_RANGE);
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
     }
 }
 
