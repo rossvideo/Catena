@@ -1047,12 +1047,14 @@
         "detail_level": {
             "title": "Level of Detail",
             "description":
-              "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, and 'subscription' reports the minimal set plus identified subscribed parameters.",
+              "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, 'subscription' reports the minimal set plus identified subscribed parameters, 'commands' reports only descriptors for commands and not for parameters, and 'none' indicates that no parameters or commands should be automatically reported by the device (parameter descriptors, command descriptors, and values can still be pulled). ",
             "type": "string",
             "enum": [
                 "FULL",
                 "SUBSCRIPTIONS",
-                "MINIMAL"
+                "MINIMAL",
+                "COMMANDS",
+                "NONE"
             ],
             "default": "FULL"
         },

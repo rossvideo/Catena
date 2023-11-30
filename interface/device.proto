@@ -52,6 +52,8 @@ message Device {
     FULL = 0;
     SUBSCRIPTIONS = 1;
     MINIMAL = 2;
+    COMMANDS = 3;
+    NONE = 4;
   }
   DetailLevel detail_level = 2;
 
