@@ -156,6 +156,13 @@
                     "type": "string",
                     "format": "json-pointer"
                 },
+                "template_oid": {
+                    "title": "Template Object ID",
+                    "description":
+                      "JSON pointer to a parameter descriptor that to provide default information for all fields of this parameter.",
+                    "type": "string",
+                    "format": "json-pointer"
+                },
                 "type": {
                     "$ref": "#/$defs/type"
                 },
@@ -182,6 +189,16 @@
                 },
                 "widget": {
                     "type": "string"
+                },
+                "oid_aliases": {
+                    "title": "Object ID Aliases",
+                    "description":
+                      "Additional Object IDs that this parameter has had. This allows a client to locate a parameter that may previously have been known by another Object ID",
+                    "type": "array",
+                    "items": {
+						"type": "string"
+					},
+                    "format": "json-pointer"
                 }
             },
             "additionalProperties": false,

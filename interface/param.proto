@@ -75,10 +75,6 @@ message BasicParamInfo {
   // The parameter's type
   ParamType type = 3;
 
-  // JSON pointer to a param that defines the structure of this param
-  string template_oid = 4;
-
-  repeated string oid_aliases = 5;
 }
 
 /* When streamed, only the payload field will be used after the first message. */
@@ -116,62 +112,70 @@ message Param {
    */
   string fqoid = 1;
 
+  // JSON pointer to a param that defines the structure of this param
+  string template_oid = 2;
+
   // the parameter's name
-  PolyglotText name = 2;
+  PolyglotText name = 3;
 
   // the parameter's type
-  ParamType type = 3;
+  ParamType type = 4;
 
   // Read only flag. Clients shall style the param's widget as read only when true.
-  bool read_only = 4;
+  bool read_only = 5;
 
   // Identifies the GUI elements to display and adjust the parameter value.
-  string widget = 5;
+  string widget = 6;
 
   // For float params, how many digits to display
-  uint32 precision = 6;
+  uint32 precision = 7;
 
   // The parameter's value
-  Value value = 7;
+  Value value = 8;
 
   /* The constraint's on the parameters' value.
    * Can be a reference to a shared constraint or defined in-line.
    */
-  Constraint constraint = 8;
+  Constraint constraint = 9;
 
   /* For string params, the maximum length of the string
    * @todo - is this really needed? the proto encoding of strings includes their
    * length
    */
-  uint32 max_length = 9;
+  uint32 max_length = 10;
 
   /* For string array params, the total length of all the strings in the array.
    * @todo - is this really needed? doesn't proto give us this info?
    */
-  uint32 total_length = 10;
+  uint32 total_length = 11;
 
   /* Access scope
    * if not present, the parameter's access scope is that of its parent.
    * if not a child parameter, the access scope is the default for the device.
    */
-  string access_scope = 11;
+  string access_scope = 12;
 
   // Additional properties to assist client
-  map<string, string> client_hints = 12;
+  map<string, string> client_hints = 13;
 
   // If this is an imported sub-device, it can have a set of commands too.
-  map<string, ParamDescriptor> commands = 13;
+  map<string, ParamDescriptor> commands = 14;
 
   // If this is a STRUCT or STRUCT_ARRAY Param its sub-params are defined here.
-  map<string, ParamDescriptor> params = 14;
+  map<string, ParamDescriptor> params = 15;
 
   /* Meaningful when this message is used as a command descriptor
    * true if the command provides a response when executed.
    */
-  bool response = 15;
+  bool response = 16;
 
   // Optional additional information about the usage of the parameter
-  PolyglotText help = 16;
+  PolyglotText help = 17;
+
+  /* Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
+   * The aliases must be fully-qualitfied.
+   */
+  repeated string oid_aliases = 18;
 }
 
 enum UndefinedValue {
