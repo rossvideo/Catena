@@ -20,6 +20,11 @@ cmake_minimum_required(VERSION 3.20)
 
 project(COMMON C CXX)
 
+if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+endif(APPLE)
+message(STATUS "*** CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
+
 set(LIB_TARGET catena_common)
 set(LIB_SRC_DIR "src")
 set(LIB_INCLUDE_DIR "include")
@@ -28,6 +33,7 @@ add_library(${LIB_TARGET}
         include/ArrayAccessor.h
 )
 
+add_dependencies(${LIB_TARGET} catena_interface)
 
 get_filename_component(PARENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
 message(STATUS "*** binary dir: ${PARENT_BINARY_DIR}")
