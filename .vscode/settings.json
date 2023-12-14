@@ -5,5 +5,13 @@
     "cmake.buildBeforeRun": false,
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/sdks/cpp/build"
+    ],
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/example_device_models/device.*.json"
+            ],
+            "url": "./schema/catena.schema.json"
+        }
     ]
 }
