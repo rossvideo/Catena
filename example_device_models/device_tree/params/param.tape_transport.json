@@ -9,50 +9,46 @@
         "play": {
             "param": {
                 "name": {
-                    "monoglot": ">"
+                    "display_strings": {"en": ">"}
                 }
             }
         },
         "stop": {
             "param": {
                 "name": {
-                    "monoglot": "[]"
+                    "display_strings": {"en": "[]"}
                 }
             }
         },
         "pause": {
             "param": {
                 "name": {
-                    "monoglot": "||"
+                    "display_strings": {"en": "||"}
                 }
             }
         },
         "eject": {
             "param": {
                 "name": {
-                    "monoglot": "^"
+                    "display_strings": {"en": "^"}
                 }
             }
         },
         "load": {
             "param": {
                 "name": {
-                    "monoglot": "v"
+                    "display_strings": {"en": "v"}
                 }
             }
         },
         "rewind": {
             "param": {
-                "name": {
-                    "monoglot": "<<"
-                }
+                "display_strings": {"en": "<<"}
             }
         },
         "fast_forward": {
             "param": {
-                "name": {
-                    "monoglot": ">>"
-                }
+                "display_strings": {"en": ">>"}
             }
         }
     },
@@ -107,7 +103,7 @@
                 "outpoint": {
                     "param": {
                         "name": {
-                            "monoglot": "Out Point"
+                            "display_strings": {"en": "Out Point"}
                         },
                         "type": {
                             "type": "INT32"
@@ -120,7 +116,7 @@
                 "play_speed": {
                     "param": {
                         "name": {
-                            "monoglot": "Play Speed"
+                            "display_strings": {"en": "Play Speed"}
                         },
                         "type": {
                             "type": "FLOAT32"
