@@ -51,18 +51,10 @@ After upgrading to MacOS 13.3, these instructions no longer worked. I had to run
               -DgRPC_RE2_PROVIDER=package      \
               -DgRPC_SSL_PROVIDER=package      \
               -DgRPC_ZLIB_PROVIDER=package \
-              -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk \
+              -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
               -DCMAKE_PREFIX_PATH=/Users/$USER/.local 
 ```
 
-Another change necessary to prevent linker warnings on the examples was to make a symbolic link thus:
-
-```{.sh}
-sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk\
-    /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk
-```
-
-because the linker flags insisted on using MacOSX13.1 for a non-obvious reason.
 
 ### Install and Build jwt-cpp
 
