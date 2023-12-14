@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "cppdbg",
+        "name": "Debug with CMake/Ninja",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/common/examples/full_service/full_service",
+        "cwd": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      }
+    ]
+}
