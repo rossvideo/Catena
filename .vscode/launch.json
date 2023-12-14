@@ -6,11 +6,11 @@
         "name": "Debug with CMake/Ninja",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service",
+        "args": ["--device_model", "${workspaceFolder}/example_device_models/device.minimal.json"],
         "cwd": "${workspaceFolder}/sdks/cpp/build",
         "preLaunchTask": "",
         "externalConsole": true,
-        "MIMode": "lldb",
-        "args": ["--helpfull"]
+        "MIMode": "lldb"
       }
     ]
 }
