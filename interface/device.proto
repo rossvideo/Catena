@@ -66,14 +66,14 @@ message Device {
   // Device's timeout, in ms
   uint32 timeout = 5;
 
-  // The device's parameters. A map of ParamDescriptors, keyed by their object ids (OIDs).
-  map<string, ParamDescriptor> params = 6;
+  // The device's parameters. A map of Param, keyed by their object ids (OIDs).
+  map<string, Param> params = 6;
 
   // The device's default editor UI definition and access scope definitions
   MenuGroups menu_groups = 7;
 
-  // The device's available commands
-  map<string, ParamDescriptor> commands = 8;
+  // The device's available commands, keyed by their object ids (OIDs).
+  map<string, Param> commands = 8;
 
   // The devices language packs
   LanguagePacks language_packs = 9;
