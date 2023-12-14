@@ -25,6 +25,9 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 
+# export compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
@@ -35,8 +38,13 @@ if (WIN32)
 # Windows toolchain and prefix_path are set through cl args
 else()
 set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
-set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl")
-endif()
+set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
+endif(WIN32)
+
+if (APPLE)
+  set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
+  set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+endif(APPLE)
 
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
@@ -91,21 +99,14 @@ foreach(_proto ${proto_stems})
   #
   set(proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.cc")
   set(proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.h")
-  set(_sources "${proto_srcs}" "${proto_hdrs}")
-
-  # the servcice file contains grpc definitions, so a couple of extra
-  # file names are required
-  #
-  if(_proto STREQUAL "service")
-    set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
-    set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
-    set(_sources ${_sources} "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
-  endif()
+  set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
+  set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
+  set(_sources "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
 
   # accumulate list of all sources
   set(sources ${sources} ${_sources})
   
-  message(STATUS "sources for ${_proto}: ${_sources}")
+  # message(STATUS "sources for ${_proto}: ${_sources}")
   add_custom_command(
     OUTPUT ${_sources}
     PRE_BUILD
@@ -124,6 +125,11 @@ target_link_libraries(catena_interface
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
+
+# add clean target for the protobuf generated files
+add_custom_target(clean-proto
+  COMMAND ${CMAKE_COMMAND} -E rm ${sources}
+  COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
 add_subdirectory("common")
