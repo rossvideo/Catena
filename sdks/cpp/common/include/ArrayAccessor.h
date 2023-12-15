@@ -107,7 +107,7 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
 // float implementation
 template <> catena::Value ConcreteArrayAccessor<float>::operator[](std::size_t idx) {
     auto &arr = _in.get().float32_array_values();
-    if (arr.floats_size() >= idx) {
+    if (arr.floats_size() > idx) {
         catena::Value ans{};
         ans.set_float32_value(arr.floats(idx));
         return ans;
@@ -121,7 +121,7 @@ template <> catena::Value ConcreteArrayAccessor<float>::operator[](std::size_t i
 // int implementation
 template <> catena::Value ConcreteArrayAccessor<int>::operator[](std::size_t idx) {
     auto &arr = _in.get().int32_array_values();
-    if (arr.ints_size() >= idx) {
+    if (arr.ints_size() > idx) {
         catena::Value ans{};
         ans.set_int32_value(arr.ints(idx));
         return ans;
@@ -135,7 +135,7 @@ template <> catena::Value ConcreteArrayAccessor<int>::operator[](std::size_t idx
 // string implementation
 template <> catena::Value ConcreteArrayAccessor<std::string>::operator[](std::size_t idx) {
     auto &arr = _in.get().string_array_values();
-    if (arr.strings_size() >= idx) {
+    if (arr.strings_size() > idx) {
         catena::Value ans{};
         ans.set_string_value(arr.strings(idx));
         return ans;
@@ -150,7 +150,7 @@ template <> catena::Value ConcreteArrayAccessor<std::string>::operator[](std::si
 template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](std::size_t idx) {
     auto &arr = _in.get().struct_array_values();
 
-    if (arr.struct_values_size() >= idx) {
+    if (arr.struct_values_size() > idx) {
         auto &sv = arr.struct_values(idx);
 
         catena::StructValue out{};
