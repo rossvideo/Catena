@@ -41,7 +41,7 @@ class ArrayAccessor {
         * @param idx index of array
         * @return catena value
         */
-    virtual catena::Value operator[](std::size_t idx) = 0;
+    virtual catena::Value operator[](std::size_t idx) const = 0;
 
     /**
     * @brief virtual destructor
@@ -80,11 +80,11 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
     ~ConcreteArrayAccessor() = default;
 
     /**
-        * @brief override array accessor operator
+        * @brief read an array element
         * @param idx index of array
-        * @erturn catena value
+        * @return value of element at idx, packaged as a catena::Value
         */
-    catena::Value operator[](std::size_t idx) override;
+    catena::Value operator[](std::size_t idx) const override;
 
 
     /**
@@ -103,68 +103,5 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
         }
     }
 };
-
-// float implementation
-template <> catena::Value ConcreteArrayAccessor<float>::operator[](std::size_t idx) {
-    auto &arr = _in.get().float32_array_values();
-    if (arr.floats_size() > idx) {
-        catena::Value ans{};
-        ans.set_float32_value(arr.floats(idx));
-        return ans;
-    } else {
-        std::stringstream err;
-        err << "Index is out of range: " << idx << " >= " << arr.floats_size();
-        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-    }
-}
-
-// int implementation
-template <> catena::Value ConcreteArrayAccessor<int>::operator[](std::size_t idx) {
-    auto &arr = _in.get().int32_array_values();
-    if (arr.ints_size() > idx) {
-        catena::Value ans{};
-        ans.set_int32_value(arr.ints(idx));
-        return ans;
-    } else {
-        std::stringstream err;
-        err << "Index is out of range: " << idx << " >= " << arr.ints_size();
-        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-    }
-}
-
-// string implementation
-template <> catena::Value ConcreteArrayAccessor<std::string>::operator[](std::size_t idx) {
-    auto &arr = _in.get().string_array_values();
-    if (arr.strings_size() > idx) {
-        catena::Value ans{};
-        ans.set_string_value(arr.strings(idx));
-        return ans;
-    } else {
-        std::stringstream err;
-        err << "Index is out of range: " << idx << " >= " << arr.strings_size();
-        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-    }
-}
-
-// struct implementation
-template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](std::size_t idx) {
-    auto &arr = _in.get().struct_array_values();
-
-    if (arr.struct_values_size() > idx) {
-        auto &sv = arr.struct_values(idx);
-
-        catena::StructValue out{};
-        catena::Value ans{};
-
-        out.mutable_fields()->insert(sv.fields().begin(), sv.fields().end());
-        *(ans.mutable_struct_value()) = out;
-
-        return ans;
-    } else {
-        std::stringstream err;
-        err << "Index is out of range: " << idx << " >= " << arr.struct_values_size();
-        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-    }
-}
 
 }  // namespace catena
