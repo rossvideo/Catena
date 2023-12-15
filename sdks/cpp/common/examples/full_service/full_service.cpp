@@ -64,6 +64,7 @@ ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, optio
   \"off\", \"ssl\", \"tls\"");
 ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
+ABSL_FLAG(std::string, device_model, "../../../example_device_models/device.minimal.json", "Specify the JSON device model to use.");
 
 // expand env variables
 void expandEnvVariables(std::string &str) {
@@ -209,7 +210,7 @@ int main(int argc, char **argv) {
     std::cout << path << '\n';
     try {
         // read a json file into a DeviceModel object
-        DeviceModel dm("../../../example_device_models/device.minimal.json");
+        DeviceModel dm(absl::GetFlag(FLAGS_device_model));
 
         RunServer(absl::GetFlag(FLAGS_port), dm);
 

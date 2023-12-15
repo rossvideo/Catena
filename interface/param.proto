@@ -95,23 +95,7 @@ message DataPayload {
   }
 }
 
-message ParamDescriptor {
-  oneof kind {
-    Param param = 1;
-    Import import = 2;
-  }
-}
-
 message Param {
-
-  /* Fully qualified object id, a JSON pointer referenced to the top-level
-   * params field in the device. note that this information can be inferred from
-   * authored device models (JSON files) and should be left out of those.
-   * Devices / Services should populate this information. Whether this is done
-   * in eager or lazy fashion is up to the device.
-   */
-  string fqoid = 1;
-
   // JSON pointer to a param that defines the structure of this param
   string template_oid = 2;
 
@@ -159,10 +143,10 @@ message Param {
   map<string, string> client_hints = 13;
 
   // If this is an imported sub-device, it can have a set of commands too.
-  map<string, ParamDescriptor> commands = 14;
+  map<string, Param> commands = 14;
 
   // If this is a STRUCT or STRUCT_ARRAY Param its sub-params are defined here.
-  map<string, ParamDescriptor> params = 15;
+  map<string, Param> params = 15;
 
   /* Meaningful when this message is used as a command descriptor
    * true if the command provides a response when executed.
@@ -172,10 +156,13 @@ message Param {
   // Optional additional information about the usage of the parameter
   PolyglotText help = 17;
 
+  // Import directive
+  Import import = 18;
+
   /* Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
    * The aliases must be fully-qualitfied.
    */
-  repeated string oid_aliases = 18;
+  repeated string oid_aliases = 19;
 }
 
 enum UndefinedValue {
@@ -241,7 +228,13 @@ message Value {
 
 message Import {
   string url = 1;
-  repeated string excludes = 2;
+  string digest = 2;
+
+  enum DigestAlgorithm {
+    UNDEFINED = 0;
+    SHA256 = 1;
+  }
+  DigestAlgorithm method = 3;
 }
 
 message GetParamPayload {

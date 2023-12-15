@@ -43,7 +43,12 @@ template <enum Threading T> DeviceModel<T>::DeviceModel(const std::string &filen
     // read in the top level file
     {
         std::string file = catena::readFile(filename);
-        google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
+        auto status = google::protobuf::util::JsonStringToMessage(file, &device_, jpopts);
+        if (!status.ok()) {
+            std::stringstream err;
+            err << "error parsing " << filename << ": " << status.message();
+            BAD_STATUS(err.str(), catena::StatusCode::INVALID_ARGUMENT);
+        }
     }
 
     // read in imported params
@@ -54,31 +59,33 @@ template <enum Threading T> DeviceModel<T>::DeviceModel(const std::string &filen
 
     for (auto it = device_.mutable_params()->begin(); it != device_.mutable_params()->end(); ++it) {
         std::cout << it->first << '\n';
-        catena::ParamDescriptor &pdesc = device_.mutable_params()->at(it->first);
+        catena::Param &pdesc = device_.mutable_params()->at(it->first);
         if (pdesc.has_import()) {
-            std::string imported;
-            if (pdesc.import().url().compare("") != 0) {
-                /** @todo implement url imports*/
-                BAD_STATUS("Cannot (yet) import from urls, sorry.", catena::StatusCode::UNIMPLEMENTED);
-            } else {
-                // there's no url specified, so do a local import using the oid
-                // to create the filename
+            if (pdesc.import().url().compare("include") == 0) {
+                // this is a local import, use the oid to create the filename
                 std::filesystem::path to_import(current_folder);
                 std::stringstream fn;
-                /** @todo escape the filename, it->first in case it includes a solidus
-         */
+                std::string imported;
                 fn << "param." << it->first << ".json";
                 to_import /= fn.str();
                 std::cout << "importing: " << to_import << '\n';
 
                 // import the file
                 imported = readFile(to_import);
+                // clear the "import" typing of the current param
+                // and overwrite with what we just imported
+                pdesc.clear_import();
+                auto status = google::protobuf::util::JsonStringToMessage(imported, &pdesc, jpopts);
+                if (!status.ok()) {
+                    std::stringstream err;
+                    err << "error importing " << to_import << ": " << status.message();
+                    BAD_STATUS(err.str(), catena::StatusCode::INVALID_ARGUMENT);
+                }
             }
-
-            // clear the "import" typing of the current param
-            // and overwrite with what we just imported
-            pdesc.clear_import();
-            google::protobuf::util::JsonStringToMessage(imported, pdesc.mutable_param(), jpopts);
+            else if (pdesc.import().url().compare("") != 0) {
+                /** @todo implement url imports*/
+                BAD_STATUS("Cannot (yet) import from urls, sorry.", catena::StatusCode::UNIMPLEMENTED);
+            }
         }
     }
 }
@@ -111,9 +118,9 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
     }
 
     ParamAccessorData ans;
-    catena::Param *p = device_.mutable_params()->at(oid).mutable_param();
-    std::get<0>(ans) = p;
-    std::get<1>(ans) = (p->has_value() ? p->mutable_value() : &noValue_);
+    catena::Param &p = device_.mutable_params()->at(oid);
+    std::get<0>(ans) = &p;
+    std::get<1>(ans) = (p.has_value() ? p.mutable_value() : &noValue_);
 
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front()) ) {
@@ -281,8 +288,8 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
         }
     }
 
-    catena::Param *p = parent->mutable_params()->at(oid).mutable_param();
-    return ParamAccessorData(p, v);
+    catena::Param &p = parent->mutable_params()->at(oid);
+    return ParamAccessorData(&p, v);
 }
 
 template <enum Threading T> std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {

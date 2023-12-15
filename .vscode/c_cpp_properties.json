@@ -6,10 +6,14 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang",
+            "macFrameworkPath": [
+                "/System/Library/Frameworks"
+            ],
             "cStandard": "c17",
-            "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-arm64",
+            "compileCommands": "/Users/jnaylor/Projects/Catena/sdks/cpp/build/compile_commands.json",
+            "compilerPath": "/usr/bin/clang++",
+            "cppStandard": "c++20",
             "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],

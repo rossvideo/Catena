@@ -2,7 +2,7 @@
     "slot": 1,
     "multi_set_enabled": true,
     "timeout": 100,
-    "detail_level": "MINIMAL",
+    "detail_level": "FULL",
     "access_scopes": [
         "monitor",
         "operate",
@@ -37,273 +37,253 @@
     },
     "params": {
         "string_example": {
-            "param": {
-                "type": {
-                    "type": "STRING"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "string example"
-                    }
-                },
-                "value": {
-                    "string_value": "example"
-                },
-                "constraint": {
-                    "type": "STRING_STRING_CHOICE",
-                    "string_string_choice": {
-                        "strict": true,
-                        "choices": [
-                            {
-                                "name": {
-                                    "display_strings": {
-                                        "en": "example_name"
-                                    }
-                                },
-                                "value": "example"
+            "type": {
+                "type": "STRING"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "string example"
+                }
+            },
+            "value": {
+                "string_value": "example"
+            },
+            "constraint": {
+                "type": "STRING_STRING_CHOICE",
+                "string_string_choice": {
+                    "strict": true,
+                    "choices": [
+                        {
+                            "name": {
+                                "display_strings": {
+                                    "en": "example_name"
+                                }
                             },
-                            {
-                                "name": {
-                                    "display_strings": {
-                                        "en": "example_name2"
-                                    }
-                                },
-                                "value": "example2"
-                            }
-                        ]
-                    }
+                            "value": "example"
+                        },
+                        {
+                            "name": {
+                                "display_strings": {
+                                    "en": "example_name2"
+                                }
+                            },
+                            "value": "example2"
+                        }
+                    ]
                 }
             }
         },
         "hello": {
-            "param": {
-                "type": {
-                    "type": "FLOAT32"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "Example Float Parameter"
-                    }
-                },
-                "value": {
-                    "float32_value": 1.23
-                },
-                "constraint": {
-                    "type": "FLOAT_RANGE",
-                    "float_range": {
-                        "min_value": 1.0,
-                        "max_value": 10.0
-                    }
+            "type": {
+                "type": "FLOAT32"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Example Float Parameter"
+                }
+            },
+            "value": {
+                "float32_value": 1.23
+            },
+            "constraint": {
+                "type": "FLOAT_RANGE",
+                "float_range": {
+                    "min_value": 1.0,
+                    "max_value": 10.0
                 }
             }
         },
         "world": {
-            "param": {
-                "type": {
-                    "type": "INT32"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "Example int32 Parameter"
-                    }
-                },
-                "value": {
-                    "int32_value": 123
-                },
-                "constraint": {
-                    "type": "INT_CHOICE",
-                    "int32_choice": {
-                        "choices": [
-                            {
-                                "name": {
-                                    "display_strings": {
-                                        "en": "one"
-                                    }
-                                },
-                                "value": 1
+            "type": {
+                "type": "INT32"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Example int32 Parameter"
+                }
+            },
+            "value": {
+                "int32_value": 123
+            },
+            "constraint": {
+                "type": "INT_CHOICE",
+                "int32_choice": {
+                    "choices": [
+                        {
+                            "name": {
+                                "display_strings": {
+                                    "en": "one"
+                                }
                             },
-                            {
-                                "name": {
-                                    "display_strings": {
-                                        "en": "two"
-                                    }
-                                },
-                                "value": 2
-                            }
-                        ]
-                    }
+                            "value": 1
+                        },
+                        {
+                            "name": {
+                                "display_strings": {
+                                    "en": "two"
+                                }
+                            },
+                            "value": 2
+                        }
+                    ]
                 }
             }
         },
         "alarm_table": {
-            "param": {
-                "type": {
-                    "type": "INT32"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "Example int32 Parameter as alarm table"
-                    }
-                },
-                "value": {
-                    "int32_value": 13
-                },
-                "constraint": {
-                    "type": "ALARM_TABLE",
-                    "alarm_table": {
-                        "alarms": [
-                            {
-                                "bit_value": 1,
-                                "description": {
-                                    "display_strings": {
-                                        "en": "warning"
-                                    }
-                                },
-                                "severity": "WARNING"
+            "type": {
+                "type": "INT32"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Example int32 Parameter as alarm table"
+                }
+            },
+            "value": {
+                "int32_value": 13
+            },
+            "constraint": {
+                "type": "ALARM_TABLE",
+                "alarm_table": {
+                    "alarms": [
+                        {
+                            "bit_value": 1,
+                            "description": {
+                                "display_strings": {
+                                    "en": "warning"
+                                }
                             },
-                            {
-                                "bit_value": 3,
-                                "description": {
-                                    "display_strings": {
-                                        "en": "severe"
-                                    }
-                                },
-                                "severity": "SEVERE"
-                            }
-                        ]
-                    }
+                            "severity": "WARNING"
+                        },
+                        {
+                            "bit_value": 3,
+                            "description": {
+                                "display_strings": {
+                                    "en": "severe"
+                                }
+                            },
+                            "severity": "SEVERE"
+                        }
+                    ]
                 }
             }
         },
         "primes": {
-            "param": {
-                "type": {
-                    "type": "INT32_ARRAY"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "The first few primes"
-                    }
-                },
-                "value": {
-                    "int32_array_values": {
-                        "ints": [
-                            2,
-                            3,
-                            5,
-                            7,
-                            11,
-                            13,
-                            17
-                        ]
-                    }
+            "type": {
+                "type": "INT32_ARRAY"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "The first few primes"
+                }
+            },
+            "value": {
+                "int32_array_values": {
+                    "ints": [
+                        2,
+                        3,
+                        5,
+                        7,
+                        11,
+                        13,
+                        17
+                    ]
                 }
             }
         },
         "primes_str": {
-            "param": {
-                "type": {
-                    "type": "STRING_ARRAY"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "The first few primes as strings"
-                    }
-                },
-                "value": {
-                    "string_array_values": {
-                        "strings": [
-                            "2",
-                            "3",
-                            "5",
-                            "7",
-                            "11",
-                            "13",
-                            "17"
-                        ]
-                    }
+            "type": {
+                "type": "STRING_ARRAY"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "The first few primes as strings"
+                }
+            },
+            "value": {
+                "string_array_values": {
+                    "strings": [
+                        "2",
+                        "3",
+                        "5",
+                        "7",
+                        "11",
+                        "13",
+                        "17"
+                    ]
                 }
             }
         },
         "primes_float": {
-            "param": {
-                "type": {
-                    "type": "FLOAT32_ARRAY"
-                },
-                "name": {
-                    "display_strings": {
-                        "en": "The first few primes as float32"
-                    }
-                },
-                "value": {
-                    "float32_array_values": {
-                        "floats": [
-                            2.0,
-                            3.0,
-                            5.0,
-                            7.0,
-                            11.0,
-                            13.0,
-                            17.0
-                        ]
-                    }
+            "type": {
+                "type": "FLOAT32_ARRAY"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "The first few primes as float32"
+                }
+            },
+            "value": {
+                "float32_array_values": {
+                    "floats": [
+                        2.0,
+                        3.0,
+                        5.0,
+                        7.0,
+                        11.0,
+                        13.0,
+                        17.0
+                    ]
                 }
             }
         },
         "location": {
-            "param": {
-                "type": {
-                    "type": "STRUCT"
-                },
-                "name": {
-                    "display_strings": {    
-                        "en": "Location"
-                    }
-                },
-                "params": {
-                    "latitude": {
-                        "param": {
-                            "type": {
-                                "type": "FLOAT32"
-                            },
-                            "name": {
-                                "display_strings": {
-                                    "en": "Latitude"
-                                }
-                            },
-                            "value": {
-                                "float32_value": 37.7749
-                            }
+            "type": {
+                "type": "STRUCT"
+            },
+            "name": {
+                "display_strings": {    
+                    "en": "Location"
+                }
+            },
+            "params": {
+                "latitude": {
+                    "type": {
+                        "type": "FLOAT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Latitude"
                         }
                     },
-                    "longitude": {
-                        "param": {
-                            "type": {
-                                "type": "FLOAT32"
-                            },
-                            "name": {
-                                "display_strings": {
-                                    "en": "Longitude"
-                                }
-                            },
-                            "value": {
-                                "float32_value": -122.4194
-                            }
-                        }
+                    "value": {
+                        "float32_value": 37.7749
                     }
                 },
-                "value": {
-                    "struct_value": {
-                        "fields": {
-                            "latitude": {
-                                "value":{
-                                    "float32_value": 37.7749
-                                }
-                            },
-                            "longitude": {
-                                "value":{
-                                    "float32_value": -122.4194
-                                }
+                "longitude": {
+                    "type": {
+                        "type": "FLOAT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Longitude"
+                        }
+                    },
+                    "value": {
+                        "float32_value": -122.4194
+                    }
+                }
+            },
+            "value": {
+                "struct_value": {
+                    "fields": {
+                        "latitude": {
+                            "value":{
+                                "float32_value": 37.7749
+                            }
+                        },
+                        "longitude": {
+                            "value":{
+                                "float32_value": -122.4194
                             }
                         }
                     }
@@ -311,80 +291,74 @@
             }
         },
         "locations": {
-            "param": {
-                "type": {
-                    "type": "STRUCT_ARRAY"
-                },
-                "name": {
-                    "display_strings": {    
-                        "en": "Locations"
-                    }
-                },
-                "params": {
-                    "latitude": {
-                        "param": {
-                            "type": {
-                                "type": "FLOAT32"
-                            },
-                            "name": {
-                                "display_strings": {
-                                    "en": "Latitude"
-                                }
-                            },
-                            "value": {
-                                "float32_value": 37.7749
-                            }
+            "type": {
+                "type": "STRUCT_ARRAY"
+            },
+            "name": {
+                "display_strings": {    
+                    "en": "Locations"
+                }
+            },
+            "params": {
+                "latitude": {
+                    "type": {
+                        "type": "FLOAT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Latitude"
                         }
                     },
-                    "longitude": {
-                        "param": {
-                            "type": {
-                                "type": "FLOAT32"
-                            },
-                            "name": {
-                                "display_strings": {
-                                    "en": "Longitude"
-                                }
-                            },
-                            "value": {
-                                "float32_value": -122.4194
-                            }
-                        }
+                    "value": {
+                        "float32_value": 37.7749
                     }
                 },
-                "value": {
-                    "struct_array_values": {
-                        "struct_values": [
-                            {
-                                "fields": {
-                                    "latitude": {
-                                        "value":{
-                                            "float32_value": 37.7749
-                                        }
-                                    },
-                                    "longitude": {
-                                        "value":{
-                                            "float32_value": -122.4194
-                                        }
+                "longitude": {
+                    "type": {
+                        "type": "FLOAT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Longitude"
+                        }
+                    },
+                    "value": {
+                        "float32_value": -122.4194
+                    }
+                }
+            },
+            "value": {
+                "struct_array_values": {
+                    "struct_values": [
+                        {
+                            "fields": {
+                                "latitude": {
+                                    "value":{
+                                        "float32_value": 37.7749
                                     }
-                                }
-                            },
-                            {
-                                "fields": {
-                                    "latitude": {
-                                        "value":{
-                                            "float32_value": 37.7749
-                                        }
-                                    },
-                                    "longitude": {
-                                        "value":{
-                                            "float32_value": -122.4194
-                                        }
+                                },
+                                "longitude": {
+                                    "value":{
+                                        "float32_value": -122.4194
                                     }
                                 }
                             }
-                        ]
-                    }
+                        },
+                        {
+                            "fields": {
+                                "latitude": {
+                                    "value":{
+                                        "float32_value": 37.7749
+                                    }
+                                },
+                                "longitude": {
+                                    "value":{
+                                        "float32_value": -122.4194
+                                    }
+                                }
+                            }
+                        }
+                    ]
                 }
             }
         }

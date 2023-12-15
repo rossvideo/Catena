@@ -29,13 +29,15 @@ std::string catena::printJSON(const google::protobuf::Message& m) {
     google::protobuf::util::JsonPrintOptions jopts{};
     jopts.add_whitespace = true;
     jopts.preserve_proto_field_names = true;
-    google::protobuf::util::MessageToJsonString(m, &str, jopts);
+    auto status = google::protobuf::util::MessageToJsonString(m, &str, jopts);
+    assert(status.ok());
     return str;
 }
 
 void catena::parseJSON(const std::string& msg, google::protobuf::Message& m) {
     google::protobuf::util::JsonParseOptions jopts{};
-    google::protobuf::util::JsonStringToMessage(msg, &m, jopts);
+    auto status = google::protobuf::util::JsonStringToMessage(msg, &m, jopts);
+    assert(status.ok());
 }
 
 std::string catena::readFile(std::filesystem::path path) {

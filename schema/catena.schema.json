@@ -113,35 +113,22 @@
             "$comment": "patternProperties regex must be same as that defined in oid schema",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "properties": {
-                                "import": {
-                                    "$ref": "#/$defs/import"
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": [
-                                "import"
-                            ]
-                        },
-                        {
-                            "type": "object",
-                            "properties": {
-                                "param": {
-                                    "$ref": "#/$defs/param"
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": [
-                                "param"
-                            ]
-                        }
-                    ]
+                    "$ref": "#/$defs/param"   
                 }
             },
             "additionalProperties": false
+        },
+        "response": {
+            "title": "Response Flag",
+            "description":
+              "When true, indicates that the command associated with the parameter produces a response to the client.",
+            "type": "boolean"
+        },
+        "minimal_set": {
+            "title": "Minimal Set Flag",
+            "description":
+              "When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device.",
+            "type": "boolean"
         },
         "param": {
             "title": "Parameter Descriptor",
@@ -149,13 +136,6 @@
               "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
             "type": "object",
             "properties": {
-                "fqoid": {
-                    "title": "Fully Qualified Object ID",
-                    "description":
-                      "JSON pointer to this parameter descriptor, relative to the top-level /params object",
-                    "type": "string",
-                    "format": "json-pointer"
-                },
                 "template_oid": {
                     "title": "Template Object ID",
                     "description":
@@ -163,42 +143,59 @@
                     "type": "string",
                     "format": "json-pointer"
                 },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text"
+                },
                 "type": {
                     "$ref": "#/$defs/type"
+                },
+                "readonly": {
+                    "$ref": "#/$defs/readonly"
+                },
+                "widget": {
+                    "$ref": "#/$defs/widget"
+                },
+                "precision": {
+                    "$ref": "#/$defs/precision"
                 },
                 "value": {
                     "$ref": "#/$defs/value"
                 },
-                "name": {
-                    "$ref": "#/$defs/polyglot_text"
-                },
-                "help": {
-                    "$ref": "#/$defs/polyglot_text"
-                },
                 "constraint": {
                     "$ref": "#/$defs/constraint"
                 },
-                "params": {
-                    "$ref": "#/$defs/param_map"
+                "max_length": {
+                    "$ref": "#/$defs/max_length"
+                },
+                "total_length": {
+                    "$ref": "#/$defs/total_length"
+                },
+                "access_scope": {
+                    "$ref": "#/$defs/access_scope"
+                },
+                "client_hints": {
+                    "$ref": "#/$defs/client_hints" 
                 },
                 "commands": {
                     "$ref": "#/$defs/param_map"
                 },
-                "access_scope": {
-                    "type": "string"
+                "params": {
+                    "$ref": "#/$defs/param_map"
                 },
-                "widget": {
-                    "type": "string"
+                "response": {
+                    "$ref": "#/$defs/response"
                 },
+                "minimal_set": {
+                    "$ref": "#/$defs/minimal_set"
+                },
+                "help": {
+                    "$ref": "#/$defs/polyglot_text"
+                },
+                "import": {
+                    "$ref": "#/$defs/import"
+                }, 
                 "oid_aliases": {
-                    "title": "Object ID Aliases",
-                    "description":
-                      "Additional Object IDs that this parameter has had. This allows a client to locate a parameter that may previously have been known by another Object ID",
-                    "type": "array",
-                    "items": {
-						"type": "string"
-					},
-                    "format": "json-pointer"
+                    "$ref": "#/$defs/oid_aliases"
                 }
             },
             "additionalProperties": false,
@@ -317,7 +314,10 @@
                     "constraint": {
                         "$ref": "#/$defs/float32_constraint"
                     },
-                    "params": false
+                    "params": false,
+                    "commands": false,
+                    "total_length": false,
+                    "max_length": false
                 }
             }
         },
@@ -469,6 +469,194 @@
                 }
             ]
         },
+        "int_choice": {
+            "title": "int choice constraint",
+            "description": "maps strings intended for display in client to integers",
+            "type": "object",
+            "properties": {
+                "value": {
+                    "$ref": "#/$defs/int32"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text"
+                }
+            },
+            "required": [
+                "value",
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "alarm": {
+            "title": "Alarm",
+            "description": "Occupies a bit position in an alarm table",
+            "type": "object",
+            "properties": {
+                "bit_value": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 31
+                },
+                "severity": {
+                    "type": "string",
+                    "enum": [
+                        "INFO",
+                        "WARNING",
+                        "SEVERE",
+                        "UNKNOWN",
+                        "REFUSED"
+                    ]
+                },
+                "description": {
+                    "$ref": "#/$defs/polyglot_text"
+                }
+            },
+            "required": [
+                "bit_value",
+                "severity",
+                "description"
+            ],
+            "additionalProperties": false
+        },
+        "apply_int32": {
+            "title": "INT32 specialism",
+            "description":
+              "Applies INT32 values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "INT32"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/int32_value"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/int32_constraint"
+                    },
+                    "params": false,
+                    "commands": false,
+                    "total_length": false,
+                    "max_length": false,
+                    "precision": false
+                }
+            }
+        },
+        "int32_array_values": {
+            "title": "INT32_ARRAY",
+            "description": "Defines INT32 array as a type",
+            "type": "object",
+            "properties": {
+                "int32_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "ints": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/int32"
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "ints"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "int32_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_int32_array": {
+            "title": "INT32 ARRAY specialism",
+            "description":
+              "Applies INT32 ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "INT32_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/int32_array_values"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/int32_constraint"
+                    },
+                    "params": false
+                }
+            }
+        },
+        "float32_array_values": {
+            "title": "FLOAT32_ARRAY",
+            "description": "Defines FLOAT32 array as a type",
+            "type": "object",
+            "properties": {
+                "float32_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "floats": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/$defs/float32"
+                            }
+                        },
+                        "additionalItems": false
+                    },
+                    "required": [
+                        "floats"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "float32_array_values"
+            ],
+            "additionalProperties": false
+        },
+        "apply_float32_array": {
+            "title": "FLOAT32 ARRAY specialism",
+            "description":
+              "Applies FLOAT32 ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "FLOAT32_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/float32_array_values"
+                    },
+                    "constraint": {
+                        "$ref": "#/$defs/float32_constraint"
+                    },
+                    "params": false
+                }
+            }
+        },
         "string_value": {
             "title": "STRING",
             "description": "Defines STRING as a primitive string type",
@@ -608,190 +796,6 @@
                     "constraint": {
                         "$ref": "#/$defs/string_constraint"
                     }
-                }
-            }
-        },
-        "int_choice": {
-            "title": "int choice constraint",
-            "description": "maps strings intended for display in client to integers",
-            "type": "object",
-            "properties": {
-                "value": {
-                    "$ref": "#/$defs/int32"
-                },
-                "name": {
-                    "$ref": "#/$defs/polyglot_text"
-                }
-            },
-            "required": [
-                "value",
-                "name"
-            ],
-            "additionalProperties": false
-        },
-        "alarm": {
-            "title": "Alarm",
-            "description": "Occupies a bit position in an alarm table",
-            "type": "object",
-            "properties": {
-                "bit_value": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "maximum": 31
-                },
-                "severity": {
-                    "type": "string",
-                    "enum": [
-                        "INFO",
-                        "WARNING",
-                        "SEVERE",
-                        "UNKNOWN",
-                        "REFUSED"
-                    ]
-                },
-                "description": {
-                    "$ref": "#/$defs/polyglot_text"
-                }
-            },
-            "required": [
-                "bit_value",
-                "severity",
-                "description"
-            ],
-            "additionalProperties": false
-        },
-        "apply_int32": {
-            "title": "INT32 specialism",
-            "description":
-              "Applies INT32 values & constraints, disables properties that don't work with this type",
-            "if": {
-                "properties": {
-                    "type": {
-                        "properties": {
-                            "type": {
-                                "const": "INT32"
-                            }
-                        }
-                    }
-                }
-            },
-            "then": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/int32_value"
-                    },
-                    "constraint": {
-                        "$ref": "#/$defs/int32_constraint"
-                    },
-                    "params": false
-                }
-            }
-        },
-        "int32_array_values": {
-            "title": "INT32_ARRAY",
-            "description": "Defines INT32 array as a type",
-            "type": "object",
-            "properties": {
-                "int32_array_values": {
-                    "type": "object",
-                    "properties": {
-                        "ints": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/$defs/int32"
-                            }
-                        },
-                        "additionalItems": false
-                    },
-                    "required": [
-                        "ints"
-                    ],
-                    "additionalProperties": false
-                }
-            },
-            "required": [
-                "int32_array_values"
-            ],
-            "additionalProperties": false
-        },
-        "apply_int32_array": {
-            "title": "INT32 ARRAY specialism",
-            "description":
-              "Applies INT32 ARRAY values & constraints, disables properties that don't work with this type",
-            "if": {
-                "properties": {
-                    "type": {
-                        "properties": {
-                            "type": {
-                                "const": "INT32_ARRAY"
-                            }
-                        }
-                    }
-                }
-            },
-            "then": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/int32_array_values"
-                    },
-                    "constraint": {
-                        "$ref": "#/$defs/int32_constraint"
-                    },
-                    "params": false
-                }
-            }
-        },
-        "float32_array_values": {
-            "title": "FLOAT32_ARRAY",
-            "description": "Defines FLOAT32 array as a type",
-            "type": "object",
-            "properties": {
-                "float32_array_values": {
-                    "type": "object",
-                    "properties": {
-                        "floats": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/$defs/float32"
-                            }
-                        },
-                        "additionalItems": false
-                    },
-                    "required": [
-                        "floats"
-                    ],
-                    "additionalProperties": false
-                }
-            },
-            "required": [
-                "float32_array_values"
-            ],
-            "additionalProperties": false
-        },
-        "apply_float32_array": {
-            "title": "FLOAT32 ARRAY specialism",
-            "description":
-              "Applies FLOAT32 ARRAY values & constraints, disables properties that don't work with this type",
-            "if": {
-                "properties": {
-                    "type": {
-                        "properties": {
-                            "type": {
-                                "const": "FLOAT32_ARRAY"
-                            }
-                        }
-                    }
-                }
-            },
-            "then": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/float32_array_values"
-                    },
-                    "constraint": {
-                        "$ref": "#/$defs/float32_constraint"
-                    },
-                    "params": false
                 }
             }
         },
@@ -1154,6 +1158,58 @@
             "description": "If set true, parameter is read only",
             "type": "boolean",
             "default": false
+        },
+        "widget": {
+            "title": "Widget",
+            "description": "Suggests the widget used to display the parameter in the UI",
+            "type": "string"      
+        },
+        "precision": {
+            "title": "Precision",
+            "description": "Number of decimal places to display",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10,
+            "default": 0
+        },
+        "max_length": {
+            "title": "Maximum Length",
+            "description": "Maximum number of characters in a string",
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+        },
+        "total_length": {
+            "title": "Total Length",
+            "description": "Total number of characters in a string array",
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+        },
+        "access_scope": {
+            "title": "Access Scope",
+            "description": "The access scope for this parameter",
+            "type": "string"
+        },
+        "client_hints": {
+            "title": "Client Hints",
+            "description": "Hints to the client about how to display the parameter",
+            "type": "object",
+            "patternProperties": {
+                "^\\w+$": {
+                    "type": "string"
+                }
+            }
+        },
+        "oid_aliases": {
+            "title": "Object ID Aliases",
+            "description":
+              "Additional Object IDs that this parameter has had. This allows a client to locate a parameter that may previously have been known by another Object ID",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "format": "json-pointer"
         },
         "param_type": {
             "title": "Parameter's data type",
