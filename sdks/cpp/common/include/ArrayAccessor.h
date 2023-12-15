@@ -104,5 +104,4 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
     }
 };
 
-
 }  // namespace catena
