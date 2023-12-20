@@ -45,6 +45,8 @@ message ParamType {
     BINARY = 18;
     STRUCT_ARRAY = 32;
     DATA = 50; // Used to allow commands to accept files
+    VARIANT = 60;
+    VARIANT_ARRAY = 61;
   }
 
    /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
@@ -163,6 +165,16 @@ message Param {
    * The aliases must be fully-qualitfied.
    */
   repeated string oid_aliases = 19;
+
+}
+
+message VariantValue {
+  string variant_type = 1;
+  Value value = 2;
+}
+
+message VariantList {
+  repeated VariantValue variants = 1;
 }
 
 enum UndefinedValue {
@@ -191,6 +203,7 @@ message StructField {
 message StructValue {
 	map<string, StructField> fields = 1;
 }
+
 
 message StructList { repeated StructValue struct_values = 1; }
 
@@ -223,6 +236,10 @@ message Value {
     StructList struct_array_values = 10;
 
     DataPayload data_payload = 11; // Used for commands that accept or return data blobs
+
+    VariantValue variant_value = 12;
+
+    VariantList variant_array_values = 13;
   }
 }
 
