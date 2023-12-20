@@ -4,25 +4,7 @@
     "timeout": 100,
     "detail_level": "MINIMAL",
     "params": {
-        "hello": {
-            "name": {
-                "display_strings": {"en": "example defined inline"}
-            },
-            "type": {
-                "type": "FLOAT32"
-            },
-            "value": {
-                "float32_value": 12.3
-            },
-            "constraint": {
-                "type": "FLOAT_RANGE",
-                "float_range": {
-                    "min_value": 0.0,
-                    "max_value": 1.0
-                }
-            }
-        },
-        "world": {
+        "variantlist_example": {
             "import": {"url": "include"},
             "type": {"type": "UNDEFINED"}
         }
