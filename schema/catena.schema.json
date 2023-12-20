@@ -5,9 +5,6 @@
       "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
     "type": "object",
     "properties": {
-        "oid": {
-            "$ref": "#/$defs/oid"
-        },
         "slot": {
             "$ref": "#/$defs/slot"
         },
@@ -137,11 +134,7 @@
             "type": "object",
             "properties": {
                 "template_oid": {
-                    "title": "Template Object ID",
-                    "description":
-                      "JSON pointer to a parameter descriptor that to provide default information for all fields of this parameter.",
-                    "type": "string",
-                    "format": "json-pointer"
+                    "$ref": "#/$defs/template_oid"
                 },
                 "name": {
                     "$ref": "#/$defs/polyglot_text"
@@ -226,8 +219,21 @@
                 },
                 {
                     "$ref": "#/$defs/apply_struct_array"
+                },
+                {
+                    "$ref": "#/$defs/apply_variant"
+                },
+                {
+                    "$ref": "#/$defs/apply_variant_array"
                 }
             ]
+        },
+        "template_oid": {
+            "title": "Template Object ID",
+            "description":
+                "JSON pointer to a parameter descriptor that to provide default information for all fields of this parameter.",
+            "type": "string",
+            "format": "json-pointer"
         },
         "value": {
             "title": "Parameter value",
@@ -903,9 +909,9 @@
                 "properties": {
                     "value": {
                         "$ref": "#/$defs/struct_array_values"
-                    },
-                    "params": true
-                }
+                    }
+                },
+                "additionalProperties": false
             }
         },
         "struct_value": {
@@ -996,46 +1002,12 @@
                 "properties": {
                     "value": {
                         "$ref": "#/$defs/struct_value"
-                    }
-                }
-            }
-        },
-        "apply_float32_value": {
-            "if": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/float32_value"
-                    }
-                }
-            },
-            "then": true,
-            "else": false
-        },
-        "apply_int32_value": {
-            "if": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/int32_value"
-                    }
-                }
-            },
-            "then": true,
-            "else": false
-        },
-        "apply_struct_value": {
-            "if": {
-                "properties": {
-                    "value": {
-                        "struct_value": true
-                    }
-                }
-            },
-            "then": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/struct_value"
-                    }
-                }
+                    },
+                    "total_length": false,
+                    "max_length": false,
+                    "precision": false
+                },
+                "additionalProperties": false
             }
         },
         "import": {
@@ -1227,7 +1199,9 @@
                 "STRING_ARRAY",
                 "BINARY",
                 "STRUCT_ARRAY",
-                "DATA"
+                "DATA",
+                "VARIANT",
+                "VARIANT_ARRAY"
             ],
             "default": "UNDEFINED"
         },
@@ -1278,6 +1252,143 @@
                         "EXPONENTIAL"
                     ],
                     "default": "LINEAR"
+                }
+            }
+        },
+        "apply_variant": {
+            "title": "VARIANT specialism",
+            "description":
+              "Applies VARIANT values & constraints, disables properties that don't work with this specialism",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "VARIANT"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/variant_value"
+                    },
+                    "total_length": false,
+                    "max_length": false,
+                    "precision": false
+                }
+            }
+        },
+        "variant_value": {
+            "title": "VARIANT",
+            "description": "Wrapper round the variant's value",
+            "type": "object",
+            "properties": {
+                "variant_value": {
+                    "type": "object",
+                    "properties": {
+                        "variant_type": {
+                            "$ref": "#/$defs/oid"
+                        },
+                        "value": {
+                            "$ref": "#/$defs/value"
+                        }
+                    },
+                    "required": [
+                        "variant_type",
+                        "value"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "apply_variant_value": {
+            "if": {
+                "properties": {
+                    "value": {
+                        "variant_value": true
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "$ref": "#/$defs/variant_value"
+                    }
+                }
+            }
+        },
+        "variant_array_values": {
+            "title": "VARIANT_ARRAY",
+            "description": "Defines how VARIANT ARRAY values are represented",
+            "type": "object",
+            "properties": {
+                "variant_array_values": {
+                    "type": "object",
+                    "properties": {
+                        "variants": {
+                            "type": "array",
+                            "items": {"$ref": "#/$defs/variant_value"}
+                        }
+                    },
+                    "additionalItems": false
+                },
+                "additionalProperties": false
+            },
+            "additionalProperties": false
+        },
+        "apply_variant_array": {
+            "title": "VARIANT ARRAY specialism",
+            "description":
+              "Applies VARIANT ARRAY values & constraints, disables properties that don't work with this type",
+            "if": {
+                "properties": {
+                    "type": {
+                        "properties": {
+                            "type": {
+                                "const": "VARIANT_ARRAY"
+                            }
+                        }
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "value": {
+                        "type": "object",
+                        "properties": {
+                            "variant_array_values": {
+                                "type": "object",
+                                "properties": {
+                                    "variants": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "variant_type": {
+                                                    "$ref": "#/$defs/oid"
+                                                },
+                                                "value": {
+                                                    "$ref": "#/$defs/value"
+                                                }
+                                            },
+                                            "required": [
+                                                "variant_type",
+                                                "value"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                    
                 }
             }
         }
