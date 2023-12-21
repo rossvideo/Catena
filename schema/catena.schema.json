@@ -191,7 +191,6 @@
                     "$ref": "#/$defs/oid_aliases"
                 }
             },
-            "additionalProperties": false,
             "required": [
                 "type"
             ],
@@ -226,7 +225,8 @@
                 {
                     "$ref": "#/$defs/apply_variant_array"
                 }
-            ]
+            ],
+            "additionalProperties": false
         },
         "template_oid": {
             "title": "Template Object ID",
@@ -1006,8 +1006,7 @@
                     "total_length": false,
                     "max_length": false,
                     "precision": false
-                },
-                "additionalProperties": false
+                }
             }
         },
         "import": {
@@ -1304,22 +1303,6 @@
                 }
             },
             "additionalProperties": false
-        },
-        "apply_variant_value": {
-            "if": {
-                "properties": {
-                    "value": {
-                        "variant_value": true
-                    }
-                }
-            },
-            "then": {
-                "properties": {
-                    "value": {
-                        "$ref": "#/$defs/variant_value"
-                    }
-                }
-            }
         },
         "variant_array_values": {
             "title": "VARIANT_ARRAY",
