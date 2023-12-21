@@ -4,6 +4,10 @@
     "timeout": 100,
     "detail_level": "MINIMAL",
     "params": {
+        "variant_example": {
+            "import": {"url": "include"},
+            "type": {"type": "UNDEFINED"}
+        },
         "variantlist_example": {
             "import": {"url": "include"},
             "type": {"type": "UNDEFINED"}
