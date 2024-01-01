@@ -353,6 +353,15 @@ template <> int getValueImpl<int>(const catena::Value &v) { return v.int32_value
 template <> catena::StructValue getValueImpl<catena::StructValue>(const catena::Value &v) { return v.struct_value(); }
 
 /**
+ * @brief specialize for variant
+ *
+ * @tparam
+ * @param v
+ * @return VariantValue
+ */
+template <> catena::VariantValue getValueImpl<catena::VariantValue>(const catena::Value &v) { return v.variant_value(); }
+
+/**
  * @brief function template to implement getValue for array types
  *
  * @tparam V
@@ -452,6 +461,29 @@ template <> catena::StructValue getValueImpl<catena::StructValue>(const catena::
     return arr.struct_values(idx);
 }
 
+/**
+ * @brief specialize for variant
+ *
+ * @tparam
+ * @param v
+ * @return VariantValue
+ */
+template <> catena::VariantValue getValueImpl<catena::VariantValue>(const catena::Value &v, ParamIndex idx) {
+    if (!v.has_variant_array_values()) {
+        std::stringstream err;
+        err << "expected Catena::Value of VariantList";
+        BAD_STATUS(err.str(), catena::StatusCode::FAILED_PRECONDITION);
+    }
+    auto &arr = v.variant_array_values();
+    if (idx >= arr.variants_size()) {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.variants_size();
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+    }
+    return arr.variants(idx);
+}
+
+
 template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getValue(ParamIndex idx) {
     using W = typename std::remove_reference<V>::type;
     typename DM::LockGuard lock(deviceModel_.get().mutex_);
@@ -503,6 +535,18 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
             BAD_STATUS("expected param of STRUCT type", catena::StatusCode::FAILED_PRECONDITION);
         }
 
+    } else if constexpr (std::is_same<W, catena::VariantValue>::value) {
+        catena::ParamType_Type t = cp.type().type();
+        
+        if (t == catena::ParamType::Type::ParamType_Type_VARIANT) {
+            return getValueImpl<catena::VariantValue>(v);
+        } else if (t == catena::ParamType::Type::ParamType_Type_VARIANT_ARRAY) {
+            // TODO: need to add validation for variant array through json
+            return getValueImpl<catena::VariantValue>(v, idx);
+        } else {
+            BAD_STATUS("expected param of VARIANT type", catena::StatusCode::FAILED_PRECONDITION);
+        }
+
     } else if constexpr (std::is_same<W, catena::Value>::value) {
 
         if (isList(v) && idx != kParamEnd) {
@@ -543,6 +587,7 @@ using int_array = catena::ConcreteArrayAccessor<int>;
 using float_array = catena::ConcreteArrayAccessor<float>;
 using string_array = catena::ConcreteArrayAccessor<std::string>;
 using struct_array = catena::ConcreteArrayAccessor<catena::StructList>;
+using variant_array = catena::ConcreteArrayAccessor<catena::VariantList>;
 template <> bool int_array::_added = int_array::registerWithFactory(Value::KindCase::kInt32ArrayValues);
 template <>
 bool float_array::_added = float_array ::registerWithFactory(Value::KindCase::kFloat32ArrayValues);
@@ -550,6 +595,8 @@ template <>
 bool string_array::_added = string_array ::registerWithFactory(Value::KindCase::kStringArrayValues);
 template <>
 bool struct_array::_added = struct_array ::registerWithFactory(Value::KindCase::kStructArrayValues);
+template <>
+bool variant_array::_added = variant_array ::registerWithFactory(Value::KindCase::kVariantArrayValues);
 
 // instantiate all the getValues
 template std::string PAM::getValue<std::string>(ParamIndex);
@@ -563,6 +610,10 @@ template float PAS::getValue<float>(ParamIndex);
 template int PAM::getValue<int>(ParamIndex);
 
 template int PAS::getValue<int>(ParamIndex);
+
+template catena::VariantValue PAM::getValue<catena::VariantValue>(ParamIndex);
+
+template catena::VariantValue PAS::getValue<catena::VariantValue>(ParamIndex);
 
 template catena::Value PAM::getValue<catena::Value>(ParamIndex);
 

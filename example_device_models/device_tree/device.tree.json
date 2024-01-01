@@ -7,10 +7,15 @@
         "variant_example": {
             "import": {"url": "include"},
             "type": {"type": "UNDEFINED"}
+           
         },
         "variantlist_example": {
             "import": {"url": "include"},
             "type": {"type": "UNDEFINED"}
+        },
+        "hello": {
+            "type": {"type": "STRING"},
+            "value": {"string_value": "Hello World!"}
         }
     }
 }

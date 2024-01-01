@@ -140,7 +140,6 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
             ParamAccessor p = dm_.get().param(req->oid());
             authorize(context);
             *res = p.getValue<catena::Value>(req->element_index());
-
             std::cout << "GetValue: " << req->oid() << std::endl;
             return Status::OK;
 

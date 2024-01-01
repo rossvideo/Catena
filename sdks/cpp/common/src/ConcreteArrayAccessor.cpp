@@ -41,7 +41,7 @@ INSTANTIATE(std::string, string_array_values, strings_size, set_string_value, st
 template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](std::size_t idx) const {
     auto &arr = _in.get().struct_array_values();
 
-    if (arr.struct_values_size() >= idx) {
+    if (arr.struct_values_size() > idx) {
         auto &sv = arr.struct_values(idx);
 
         catena::StructValue out{};
@@ -59,4 +59,17 @@ template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](
 }
 
 
+// variant implementation
+template <> catena::Value ConcreteArrayAccessor<catena::VariantList>::operator[](std::size_t idx) const {
+    auto &arr = _in.get().variant_array_values();
 
+    if (arr.variants_size() > idx) {
+        catena::Value ans{};
+        *(ans.mutable_variant_value()) = arr.variants(idx);
+        return ans;
+    } else {
+        std::stringstream err;
+        err << "Index is out of range: " << idx << " >= " << arr.variants_size();
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+    }
+}
