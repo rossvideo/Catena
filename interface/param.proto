@@ -168,11 +168,19 @@ message Param {
 
 }
 
+// A value that can be one of several types, even within the same array
+// The type to apply is determined by the variant_type field which must match one 
+// of the keys in the descriptor's params map
 message VariantValue {
+  // The type of the variant
   string variant_type = 1;
+
+  // The value of the variant
   Value value = 2;
 }
 
+// An array of Values, each of which can be one of several types defined in the
+// descriptor's params map
 message VariantList {
   repeated VariantValue variants = 1;
 }
