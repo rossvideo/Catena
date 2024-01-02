@@ -181,6 +181,18 @@ void setValueImpl(catena::Param &param, catena::Value &dst, catena::StructValue 
 }
 
 /**
+ * @brief override for variant
+ * 
+ * @param param the param descriptor
+ * @param dst the param's value object
+ * @param src the value to set
+ * @param idx index into array types
+ */
+void setValueImpl(catena::Param &param, catena::Value &dst, catena::VariantValue src, ParamIndex idx = 0) {
+    dst.mutable_variant_value()->CopyFrom(src);
+}
+
+/**
  * @brief override for catena::Value
  *
  * @throws INVALID_ARGUMENT if the value type doesn't match the param type.
@@ -219,6 +231,13 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
                 BAD_STATUS("expected struct value", catena::StatusCode::INVALID_ARGUMENT);
             }
             setValueImpl(p, dst, src.struct_value());
+            break;
+        
+        case catena::ParamType_Type_VARIANT:
+            if (!src.has_variant_value()) {
+                BAD_STATUS("expected variant value", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            setValueImpl(p, dst, src.variant_value());
             break;
 
         case catena::ParamType_Type_STRING_ARRAY: {
@@ -275,6 +294,25 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
             } else {
                 // update array element
                 arr->mutable_struct_values(idx)->CopyFrom(src.struct_value());
+            }
+        } break;
+
+        case catena::ParamType_Type_VARIANT_ARRAY: {
+            if (!dst.has_variant_array_values()) {
+                BAD_STATUS("expected variant array value", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            catena::VariantList *arr = dst.mutable_variant_array_values();
+            if (idx == catena::kParamEnd) {
+                // special case, add to end of the array
+                arr->add_variants()->CopyFrom(src.variant_value());
+            } else if (arr->variants_size() <= idx) {
+                // range error
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx << " >= " << arr->variants_size();
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            } else {
+                // update array element
+                arr->mutable_variants(idx)->CopyFrom(src.variant_value());
             }
         } break;
 
