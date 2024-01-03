@@ -158,6 +158,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
                     ::google::protobuf::Empty *res) override {
         try {
             auto p = dm_.get().param(req->oid());
+            authorize(context);
             p.setValue(req->value(), req->element_index());
             std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
             return Status::OK;
