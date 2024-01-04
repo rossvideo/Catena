@@ -170,7 +170,7 @@ template <typename DM> class ParamAccessor {
 inline static bool isList(const catena::Value &v) {
     bool ans = false;
     ans = v.has_float32_array_values() || v.has_int32_array_values() || v.has_string_array_values() ||
-          v.has_struct_array_values();
+          v.has_struct_array_values() || v.has_variant_array_values();
     return ans;
 }
 }  // namespace catena

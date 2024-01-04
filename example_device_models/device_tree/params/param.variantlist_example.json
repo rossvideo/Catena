@@ -1,0 +1,69 @@
+{
+    "type": {"type": "STRUCT_VARIANT_ARRAY"},
+    "params": {
+        "videochannel": {
+            "type": {"type": "STRUCT"},
+            "params": {
+                "id": {
+                    "type": {"type": "STRING"}
+                },
+                "label": {
+                    "type": {"type": "STRING"}
+                }
+            }
+        },
+        "audiochannel": {
+            "type": {"type": "STRUCT"},
+            "params": {
+                "id": {
+                    "type": {"type": "STRING"}
+                },
+                "label": {
+                    "type": {"type": "STRING"}
+                },
+                "gain": {
+                    "type": {"type": "FLOAT32"}
+                }
+            }
+        }
+    },
+    "value": {
+        "variant_array_values": {
+            "variants": [
+                {
+                    "variant_type": "audiochannel",
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "id": {
+                                    "value": {"string_value": "audio1"}
+                                },
+                                "label": {
+                                    "value": {"string_value": "Audio 1"}
+                                },
+                                "gain": {
+                                    "value": {"float32_value": 0.5}
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "variant_type": "videochannel",
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "id": {
+                                    "value": {"string_value": "video1"}
+                                },
+                                "label": {
+                                    "value": {"string_value": "Video 1"}
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

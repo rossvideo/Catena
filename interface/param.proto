@@ -39,11 +39,13 @@ message ParamType {
     FLOAT32 = 6;
     STRING = 7;
     STRUCT = 10;
+    STRUCT_VARIANT = 11;
     INT32_ARRAY = 14;
     FLOAT32_ARRAY = 16;
     STRING_ARRAY = 17;
     BINARY = 18;
     STRUCT_ARRAY = 32;
+    STRUCT_VARIANT_ARRAY = 33;
     DATA = 50; // Used to allow commands to accept files
   }
 
@@ -163,6 +165,24 @@ message Param {
    * The aliases must be fully-qualitfied.
    */
   repeated string oid_aliases = 19;
+
+}
+
+// A value that can be one of several types, even within the same array
+// The type to apply is determined by the variant_type field which must match one 
+// of the keys in the descriptor's params map
+message VariantValue {
+  // The type of the variant
+  string variant_type = 1;
+
+  // The value of the variant
+  Value value = 2;
+}
+
+// An array of Values, each of which can be one of several types defined in the
+// descriptor's params map
+message VariantList {
+  repeated VariantValue variants = 1;
 }
 
 enum UndefinedValue {
@@ -191,6 +211,7 @@ message StructField {
 message StructValue {
 	map<string, StructField> fields = 1;
 }
+
 
 message StructList { repeated StructValue struct_values = 1; }
 
@@ -223,6 +244,10 @@ message Value {
     StructList struct_array_values = 10;
 
     DataPayload data_payload = 11; // Used for commands that accept or return data blobs
+
+    VariantValue variant_value = 12;
+
+    VariantList variant_array_values = 13;
   }
 }
 

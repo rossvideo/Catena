@@ -95,7 +95,7 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
     static bool registerWithFactory(int key) {
         Factory &fac = Factory::getInstance();
 
-        if (Value::KindCase::kUndefinedValue < key && key < Value::KindCase::kDataPayload) {
+        if (key > Value::KindCase::kUndefinedValue < key) {
             std::cout << key << std::endl;
             return fac.addProduct(key, makeOne);
         } else {
