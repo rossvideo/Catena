@@ -220,10 +220,10 @@
                     "$ref": "#/$defs/apply_struct_array"
                 },
                 {
-                    "$ref": "#/$defs/apply_variant"
+                    "$ref": "#/$defs/apply_struct_variant"
                 },
                 {
-                    "$ref": "#/$defs/apply_variant_array"
+                    "$ref": "#/$defs/apply_struct_variant_array"
                 }
             ],
             "additionalProperties": false
@@ -1193,14 +1193,14 @@
                 "FLOAT32",
                 "STRING",
                 "STRUCT",
+                "STRUCT_VARIANT",
                 "INT32_ARRAY",
                 "FLOAT32_ARRAY",
                 "STRING_ARRAY",
                 "BINARY",
                 "STRUCT_ARRAY",
-                "DATA",
-                "VARIANT",
-                "VARIANT_ARRAY"
+                "STRUCT_VARIANT_ARRAY",
+                "DATA"
             ],
             "default": "UNDEFINED"
         },
@@ -1254,16 +1254,16 @@
                 }
             }
         },
-        "apply_variant": {
-            "title": "VARIANT specialism",
+        "apply_struct_variant": {
+            "title": "STRUCT_VARIANT specialism",
             "description":
-              "Applies VARIANT values & constraints, disables properties that don't work with this specialism",
+              "Applies STRUCT_VARIANT values & constraints, disables properties that don't work with this specialism",
             "if": {
                 "properties": {
                     "type": {
                         "properties": {
                             "type": {
-                                "const": "VARIANT"
+                                "const": "STRUCT_VARIANT"
                             }
                         }
                     }
@@ -1281,7 +1281,7 @@
             }
         },
         "variant_value": {
-            "title": "VARIANT",
+            "title": "Variant Value",
             "description": "Wrapper round the variant's value",
             "type": "object",
             "properties": {
@@ -1323,16 +1323,16 @@
             },
             "additionalProperties": false
         },
-        "apply_variant_array": {
-            "title": "VARIANT ARRAY specialism",
+        "apply_struct_variant_array": {
+            "title": "STRUCT VARIANT ARRAY specialism",
             "description":
-              "Applies VARIANT ARRAY values & constraints, disables properties that don't work with this type",
+              "Applies STRUCT VARIANT ARRAY values & constraints, disables properties that don't work with this type",
             "if": {
                 "properties": {
                     "type": {
                         "properties": {
                             "type": {
-                                "const": "VARIANT_ARRAY"
+                                "const": "STRUCT_VARIANT_ARRAY"
                             }
                         }
                     }

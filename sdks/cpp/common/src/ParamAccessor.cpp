@@ -233,7 +233,7 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
             setValueImpl(p, dst, src.struct_value());
             break;
         
-        case catena::ParamType_Type_VARIANT:
+        case catena::ParamType_Type_STRUCT_VARIANT:
             if (!src.has_variant_value()) {
                 BAD_STATUS("expected variant value", catena::StatusCode::INVALID_ARGUMENT);
             }
@@ -297,7 +297,7 @@ void setValueImpl(catena::Param &p, catena::Value &dst, const catena::Value &src
             }
         } break;
 
-        case catena::ParamType_Type_VARIANT_ARRAY: {
+        case catena::ParamType_Type_STRUCT_VARIANT_ARRAY: {
             if (!dst.has_variant_array_values()) {
                 BAD_STATUS("expected variant array value", catena::StatusCode::INVALID_ARGUMENT);
             }
@@ -576,9 +576,9 @@ template <typename DM> template <typename V> V catena::ParamAccessor<DM>::getVal
     } else if constexpr (std::is_same<W, catena::VariantValue>::value) {
         catena::ParamType_Type t = cp.type().type();
         
-        if (t == catena::ParamType::Type::ParamType_Type_VARIANT) {
+        if (t == catena::ParamType::Type::ParamType_Type_STRUCT_VARIANT) {
             return getValueImpl<catena::VariantValue>(v);
-        } else if (t == catena::ParamType::Type::ParamType_Type_VARIANT_ARRAY) {
+        } else if (t == catena::ParamType::Type::ParamType_Type_STRUCT_VARIANT_ARRAY) {
             // TODO: need to add validation for variant array through json
             return getValueImpl<catena::VariantValue>(v, idx);
         } else {
