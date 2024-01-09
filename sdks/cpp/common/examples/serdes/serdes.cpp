@@ -28,6 +28,7 @@
  */
 
 #include <DeviceModel.h>
+#include <ParamAccessor.h>
 #include <Path.h>
 
 #include <iostream>
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     }
 
     try {
+
         // read a json file into a DeviceModel object
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
@@ -54,6 +56,9 @@ int main(int argc, char** argv) {
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
+
+        auto p = dm.param("/location");
+        std::cout << "Size of Location: " << sizeof(p.getValue<catena::Value>()) << '\n';
 
         // report the wire-size of the device model
         std::string serialized;

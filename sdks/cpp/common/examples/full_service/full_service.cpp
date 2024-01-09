@@ -25,6 +25,7 @@
 #include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>
+#include <Reflect.h>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -56,6 +57,7 @@ using grpc::Status;
 using Index = catena::Path::Index;
 using DeviceModel = typename catena::DeviceModel<catena::Threading::kMultiThreaded>;
 using ParamAccessor = typename catena::ParamAccessor<DeviceModel>;
+
 
 // set up the command line parameters
 ABSL_FLAG(uint16_t, port, 5255, "Catena service port");

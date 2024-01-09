@@ -29,6 +29,7 @@
 #include <Path.h>
 #include <Status.h>
 #include <Threading.h>
+#include <TypeTraits.h>
 
 #include <functional>
 #include <iostream>
@@ -153,6 +154,20 @@ template <typename DM> class ParamAccessor {
    * @param v value to set.
    */
     template <typename V> void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
+
+    template <typename V> void setValueExperimental(const V& src) {
+      typename DM::LockGuard lock(deviceModel_.get().mutex_);
+      if constexpr(catena::has_getType<V>) {
+          const auto& typeInfo = src.getType();
+          const char* base = reinterpret_cast<const char*>(&src);
+          for (auto& field : typeInfo.fields) {
+            const char* srcAddr = base + field.offset;
+            auto dst_field = value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
+            auto kc = dst_field->kind_case();
+            dst_field->set_float32_value(*reinterpret_cast<const float*>(srcAddr));
+          }
+      }
+    }
 
   private:
     std::reference_wrapper<DM> deviceModel_;

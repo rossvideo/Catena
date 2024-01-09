@@ -24,16 +24,27 @@
 #include <DeviceModel.h>
 #include <ParamAccessor.h>
 #include <Path.h>
+#include <Reflect.h>
 
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <typeinfo>
 
 using Index = catena::Path::Index;
 using DeviceModel = catena::DeviceModel<catena::Threading::kSingleThreaded>;
 using Param = catena::Param;
 using ParamAccessor = catena::ParamAccessor<DeviceModel>;
+
+struct Location  {
+REFLECTABLE(
+    Location, 
+    (float) latitude, 
+    (float) longitude
+);
+};
+template void catena::ParamAccessor<DeviceModel>::setValueExperimental<Location>(Location const&);
 
 int main(int argc, char **argv) {
     // process command line
@@ -48,6 +59,17 @@ int main(int argc, char **argv) {
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
+
+        Location loc = {10.0f,20.0f};
+        ParamAccessor locParam = dm.param("/location");
+
+        if constexpr (catena::has_getType<Location>) {
+            locParam.setValueExperimental(loc);
+        } 
+
+        // write the device model to stdout
+        std::cout << "Updated Device Model: " << dm << '\n';
+
 
         // cache a param and get its value
         ParamAccessor helloParam = dm.param("/hello");
@@ -92,7 +114,7 @@ int main(int argc, char **argv) {
         // dm.addParam("/sparam", std::move(sparam));
 
         // write out the updated device model
-        std::cout << "Updated Device Model: " << dm << '\n';
+        // std::cout << "Updated Device Model: " << dm << '\n';
 
         // report the wire-size of the device model
         std::string serialized;

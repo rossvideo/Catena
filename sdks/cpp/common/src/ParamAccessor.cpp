@@ -17,6 +17,7 @@
 #include <Path.h>
 #include <utils.h>
 #include <ArrayAccessor.h>
+#include <TypeTraits.h>
 
 #include <google/protobuf/map.h>
 #include <google/protobuf/util/json_util.h>
@@ -328,6 +329,19 @@ template <typename DM> template <typename V> void catena::ParamAccessor<DM>::set
     typename DM::LockGuard lock(deviceModel_.get().mutex_);
     setValueImpl(param_.get(), value_.get(), v, idx);
 }
+
+// template <typename DM> template <typename V> void catena::ParamAccessor<DM>::setValueExperimental(const V& src) {
+//     typename DM::LockGuard lock(deviceModel_.get().mutex_);
+//     if constexpr(catena::has_getType<V>) {
+//         const auto& typeInfo = src.getType();
+//         Value& dst = value_.get();
+//         const char* base = &src;
+//         for (auto& field : typeInfo.fields) {
+//             const char* srcAddr = base + field.offset;
+//             auto& dst_field = dst.mutable_struct_value()->mutable_fields()->at(field.name);
+//         }
+//     }
+// }
 
 template void PAM::setValue<std::string>(std::string, ParamIndex);
 
