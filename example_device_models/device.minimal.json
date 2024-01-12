@@ -3,12 +3,7 @@
     "multi_set_enabled": true,
     "timeout": 100,
     "detail_level": "FULL",
-    "access_scopes": [
-        "monitor",
-        "operate",
-        "configure",
-        "adminster"
-    ],
+    "access_scopes": ["monitor", "operate", "configure", "administer"],
     "default_scope": 1,
     "language_packs": {
         "packs": {
@@ -87,6 +82,79 @@
                             }
                         }
                     }
+                }
+            }
+        },
+        "locations": {
+            "type": {
+                "type": "STRUCT_ARRAY"
+            },
+            "name": {
+                "display_strings": {    
+                    "en": "Location"
+                }
+            },
+            "params": {
+                "latitude": {
+                    "type": {
+                        "type": "FLOAT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Latitude"
+                        }
+                    },
+                    "value": {
+                        "float32_value": 37.7749
+                    }
+                },
+                "longitude": {
+                    "type": {
+                        "type": "FLOAT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Longitude"
+                        }
+                    },
+                    "value": {
+                        "float32_value": -122.4194
+                    }
+                }
+            },
+            "value": {
+                "struct_array_values": {
+                    "struct_values": [
+                        {
+                            "fields": {
+                                "latitude": {
+                                    "value":{
+                                        "float32_value": 37.7749
+                                    }
+                                },
+                                "longitude": {
+                                    "value":{
+                                        "float32_value": -122.4194
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "fields": {
+                                "latitude": {
+                                    "value":{
+                                        "float32_value": 37.7749
+                                    }
+                                },
+                                "longitude": {
+                                    "value":{
+                                        "float32_value": -122.4194
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                    
                 }
             }
         }
