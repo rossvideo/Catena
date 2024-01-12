@@ -676,3 +676,14 @@ template catena::Value PAS::getValue<catena::Value>(ParamIndex);
 template class catena::ParamAccessor<catena::DeviceModel<Threading::kMultiThreaded>>;
 
 template class catena::ParamAccessor<catena::DeviceModel<Threading::kSingleThreaded>>;
+
+
+
+
+template <typename DM>
+static bool floatSetter = catena::ParamAccessor<DM>::registerSetter(catena::Value::KindCase::kFloat32Value, [](const char *srcAddr, catena::Value *dst) {
+    dst->set_float32_value(*reinterpret_cast<const float *>(srcAddr));
+});
+
+template bool floatSetter<catena::DeviceModel<Threading::kMultiThreaded>>;
+// template bool floatSetter<catena::DeviceModel<Threading::kSingleThreaded>>;
