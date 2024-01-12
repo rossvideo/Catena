@@ -28,8 +28,8 @@
 #include <utility>
 #include <vector>
 
-// Ross Video
-namespace rv::patterns {
+namespace catena {
+namespace patterns {
 
 /**
  * @brief Factory template with which client classes can register a "Maker"
@@ -184,7 +184,8 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
     // }
 };
 
-}  // namespace rv::patterns
+}  
+}
 
 
 /**
