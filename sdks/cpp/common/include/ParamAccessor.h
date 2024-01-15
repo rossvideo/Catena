@@ -44,13 +44,18 @@ namespace catena {
  * @brief helper meta function to pass small types by value and complex
  * ones by reference.
 */
-// template<typename T> 
-// using PassByValueOrReference = std::conditional_t<std::is_scalar<T>::value, T, T&>::type;
-
 template<typename T>
 struct PassByValueOrReference {
     using type = std::conditional_t<std::is_scalar<T>::value, T, T&>;
 };
+
+/**
+ * @brief Value::KindCase looker upper
+*/
+template<typename V>
+catena::Value::KindCase getKindCase([[maybe_unused]] V &src ) {
+    return catena::Value::KindCase::KIND_NOT_SET;
+}
 
 /**
  * @brief type for indexing into parameters
@@ -72,12 +77,12 @@ public:
     /**
      * @brief type alias for the setter Functory
     */
-    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, const char*, catena::Value*>;
+    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*> ;
     
     /**
      * @brief type alias for the getter function
     */
-    using Getter = catena::patterns::Functory<catena::Value::KindCase, void, const catena::Value*, char*>;
+    using Getter = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*>;
 
 public:
   virtual ~IParamAccessor() = default;
@@ -195,26 +200,29 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
    */
     template <typename V> void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
 
-    template <typename V> void setValueExperimental(const PassByValueOrReference<V>::type src) {
+    template <typename V> void setValueExperimental(const V &src) {
       typename DM::LockGuard lock(deviceModel_.get().mutex_);
       auto& setter = Setter::getInstance();
       if constexpr(catena::has_getType<V>) {
-          const auto& typeInfo = src.getType();
-          const char* base = reinterpret_cast<const char*>(&src);
-          auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
-          for (auto& field : typeInfo.fields) {
-            const char* srcAddr = base + field.offset;
-            Value* dstField;
-            if (!dstFields->contains(field.name)){
-              // dstFields->insert({field.name, StructField{}});
-              // dstFields->at(field.name)->set_allocated_value(new Value{});
-              // skip missing field for now
-              // it's a debate whether fields that are not present should be added
-            } else {
-              dstField = dstFields->at(field.name).mutable_value();
-              setter[dstField->kind_case()](srcAddr, dstField);
-            }
+        const auto& typeInfo = src.getType();
+        const char* base = reinterpret_cast<const char*>(&src);
+        auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
+        for (auto& field : typeInfo.fields) {
+          const char* srcAddr = base + field.offset;
+          Value* dstField;
+          if (!dstFields->contains(field.name)){
+            // dstFields->insert({field.name, StructField{}});
+            // dstFields->at(field.name)->set_allocated_value(new Value{});
+            // skip missing field for now
+            // it's a debate whether fields that are not present should be added
+          } else {
+            dstField = dstFields->at(field.name).mutable_value();
+            setter[dstField->kind_case()](dstField, srcAddr);
           }
+        }
+      } else {
+        typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
+        setter[getKindCase(x)](&value_.get(), &src);
       }
     }
 
@@ -222,16 +230,18 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
       typename DM::LockGuard lock(deviceModel_.get().mutex_);
       auto& getter = Getter::getInstance();
       if constexpr(catena::has_getType<V>) {
-          const auto& typeInfo = dst.getType();
-          char* base = reinterpret_cast<char*>(&dst);
-          auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
-          for (auto& field : typeInfo.fields) {
-            char* dstAddr = base + field.offset;
-            if (srcFields->contains(field.name)) {
-              Value* srcField = value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
-              getter[srcField->kind_case()](srcField, dstAddr);
-            }
+        const auto& typeInfo = dst.getType();
+        char* base = reinterpret_cast<char*>(&dst);
+        auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
+        for (auto& field : typeInfo.fields) {
+          char* dstAddr = base + field.offset;
+          if (srcFields->contains(field.name)) {
+            Value* srcField = value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
+            getter[srcField->kind_case()](dstAddr, srcField);
           }
+        }
+      } else {
+        getter[getKindCase<V>(dst)](&dst, &value_.get());
       }
     }
   

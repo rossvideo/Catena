@@ -79,6 +79,19 @@
                     "value": {
                         "int32_value": 100
                     }
+                },
+                "name": {
+                    "type": {
+                        "type": "STRING"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Name"
+                        }
+                    },
+                    "value": {
+                        "string_value": "San Francisco"
+                    }
                 }
             },
             "value": {
@@ -97,6 +110,11 @@
                         "altitude": {
                             "value":{
                                 "int32_value": 100
+                            }
+                        },
+                        "name": {
+                            "value":{
+                                "string_value": "San Francisco"
                             }
                         }
                     }
@@ -174,6 +192,19 @@
                     ]
                     
                 }
+            }
+        },
+        "a_number": {
+            "type": {
+                "type": "INT32"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "A Number"
+                }
+            },
+            "value": {
+                "int32_value": 42
             }
         }
     }

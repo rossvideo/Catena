@@ -42,7 +42,8 @@ REFLECTABLE(
     Location, 
     (float) latitude, 
     (float) longitude,
-    (int32_t) altitude
+    (int32_t) altitude,
+    (std::string) name
 );
 };
 
@@ -60,15 +61,20 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-        Location loc = {10.0f,20.0f,-30}, loc2;
+        Location loc = {10.0f,20.0f,-30,"Old Trafford"}, loc2;
         ParamAccessor locParam = dm.param("/location");
 
-        locParam.getValueExperimental<Location>(loc2);
-        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << '\n';
+        locParam.getValueExperimental(loc2);
+        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude 
+            << ", " << loc2.altitude << ", " << loc2.name << '\n';
+        locParam.setValueExperimental(loc);
 
-        if constexpr (catena::has_getType<Location>) {
-            locParam.setValueExperimental<Location>(loc);
-        } 
+        ParamAccessor numParam = dm.param("/a_number");
+        int32_t num = 0;
+        numParam.getValueExperimental(num);
+        std::cout << "Number: " << num << '\n';
+        num *= 2;
+        numParam.setValueExperimental(num);
 
         // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';

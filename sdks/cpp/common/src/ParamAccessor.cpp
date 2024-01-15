@@ -681,18 +681,31 @@ template class catena::ParamAccessor<catena::DeviceModel<Threading::kSingleThrea
 
 
 
-static bool floatSetter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kFloat32Value, [](const char *srcAddr, catena::Value *dst) {
+static bool floatSetter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kFloat32Value, [](catena::Value *dst, const void *srcAddr) {
     dst->set_float32_value(*reinterpret_cast<const float *>(srcAddr));
 });
 
-static bool int32Setter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kInt32Value, [](const char *srcAddr, catena::Value *dst) {
+static bool int32Setter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kInt32Value, [](catena::Value *dst, const void *srcAddr) {
     dst->set_int32_value(*reinterpret_cast<const int32_t *>(srcAddr));
 });
 
-static bool floatGetter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](const catena::Value *src, char *dstAddr) {
+static bool stringSetter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kStringValue, [](catena::Value *dst, const void *srcAddr) {
+    *dst->mutable_string_value() = (*reinterpret_cast<const std::string *>(srcAddr));
+});
+
+static bool floatGetter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
     *reinterpret_cast<float *>(dstAddr) = src->float32_value();
 });
 
-static bool int32Getter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](const catena::Value *src, char *dstAddr) {
+static bool int32Getter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](void *dstAddr, const catena::Value *src) {
     *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
 });
+
+static bool stringGetter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kStringValue, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
+});
+
+template<>
+catena::Value::KindCase catena::getKindCase<int32_t>(int32_t& src) {
+    return catena::Value::KindCase::kInt32Value;
+}
