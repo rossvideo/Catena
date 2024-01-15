@@ -305,19 +305,49 @@ class TypeTraitsT<float> : public TypeTraits {
     std::stof(*reinterpret_cast<std::string*>(pField), &pos);
   }
 
-  std::unique_ptr<ParamType> paramType() {
+  std::unique_ptr<ParamType> paramType() override {
     std::unique_ptr<ParamType> float_type(new ParamType);
     // float_type->set_simple_type(catena::ParamType_SimpleTypes_FLOAT);
     return float_type;
   }
 
-  std::unique_ptr<Value> paramValue(const void* pField) {
+  std::unique_ptr<Value> paramValue(const void* pField) override {
     std::unique_ptr<Value> float_value(new Value);
     // float_value->set_float_value(*reinterpret_cast<const float*>(pField));
     return float_value;
   }
 
-  void setValue(void* pField, const Value& v) {
+  void setValue(void* pField, const Value& v) override {
+    // *reinterpret_cast<float*>(pField) = v.float_value();
+  }
+};
+
+template <>
+class TypeTraitsT<int32_t> : public TypeTraits {
+ public:
+  const std::type_info& runtimeType() const override { return typeid(int32_t); }
+  std::string toString(void* pField) override {
+    return std::to_string(*reinterpret_cast<int32_t*>(pField));
+  }
+
+  void fromString(void* pField, const std::string& value) override {
+    std::size_t pos;
+    std::stoi(*reinterpret_cast<std::string*>(pField), &pos);
+  }
+
+  std::unique_ptr<ParamType> paramType() override {
+    std::unique_ptr<ParamType> int32_type(new ParamType);
+    // float_type->set_simple_type(catena::ParamType_SimpleTypes_FLOAT);
+    return int32_type;
+  }
+
+  std::unique_ptr<Value> paramValue(const void* pField) override {
+    std::unique_ptr<Value> int32_value(new Value);
+    // float_value->set_float_value(*reinterpret_cast<const float*>(pField));
+    return int32_value;
+  }
+
+  void setValue(void* pField, const Value& v) override {
     // *reinterpret_cast<float*>(pField) = v.float_value();
   }
 };

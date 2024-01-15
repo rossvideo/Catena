@@ -66,6 +66,19 @@
                     "value": {
                         "float32_value": -122.4194
                     }
+                },
+                "altitude": {
+                    "type": {
+                        "type": "INT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Altitude"
+                        }
+                    },
+                    "value": {
+                        "int32_value": 100
+                    }
                 }
             },
             "value": {
@@ -79,6 +92,11 @@
                         "longitude": {
                             "value":{
                                 "float32_value": -122.4194
+                            }
+                        },
+                        "altitude": {
+                            "value":{
+                                "int32_value": 100
                             }
                         }
                     }

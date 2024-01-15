@@ -41,6 +41,18 @@
 namespace catena {
 
 /**
+ * @brief helper meta function to pass small types by value and complex
+ * ones by reference.
+*/
+// template<typename T> 
+// using PassByValueOrReference = std::conditional_t<std::is_scalar<T>::value, T, T&>::type;
+
+template<typename T>
+struct PassByValueOrReference {
+    using type = std::conditional_t<std::is_scalar<T>::value, T, T&>;
+};
+
+/**
  * @brief type for indexing into parameters
  *
  */
@@ -55,6 +67,33 @@ using ParamIndex = uint32_t;
  */
 static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 
+class IParamAccessor {
+public:
+    /**
+     * @brief type alias for the setter Functory
+    */
+    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, const char*, catena::Value*>;
+    
+    /**
+     * @brief type alias for the getter function
+    */
+    using Getter = catena::patterns::Functory<catena::Value::KindCase, void, const catena::Value*, char*>;
+
+public:
+  virtual ~IParamAccessor() = default;
+
+
+  static bool inline registerSetter(Value::KindCase kind, Setter::Function func) {
+    auto& setter = Setter::getInstance();
+    return setter.addFunction(kind, func);
+  }
+
+  static bool inline registerGetter(Value::KindCase kind, Getter::Function func) {
+    auto& getter = Getter::getInstance();
+    return getter.addFunction(kind, func);
+  }
+
+};
 /**
  * @brief wrapper around a catena::ParamAccessor stored in the device model
  *
@@ -65,18 +104,13 @@ static constexpr ParamIndex kParamEnd = ParamIndex(-1);
  * method involving potentially expensive searches.
  *
  */
-template <typename DM> class ParamAccessor {
+template <typename DM> class ParamAccessor : public IParamAccessor {
     // prevent use of this class outside of DeviceModel
     static_assert(std::is_same_v<DM, catena::DeviceModel<catena::Threading::kMultiThreaded>> ||
                     std::is_same_v<DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,
                   "Class Template Parameter must be of type DeviceModel<T>");
 
-  public:
-    /**
-     * @brief type alias for the setter Functory
-    */
-    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, const char*, catena::Value*>;
-  public:
+    public:
     /**
    * @brief Construct a new ParamAccessor object
    *
@@ -161,24 +195,46 @@ template <typename DM> class ParamAccessor {
    */
     template <typename V> void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
 
-    template <typename V> void setValueExperimental(const V& src) {
+    template <typename V> void setValueExperimental(const PassByValueOrReference<V>::type src) {
       typename DM::LockGuard lock(deviceModel_.get().mutex_);
       auto& setter = Setter::getInstance();
       if constexpr(catena::has_getType<V>) {
           const auto& typeInfo = src.getType();
           const char* base = reinterpret_cast<const char*>(&src);
+          auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
           for (auto& field : typeInfo.fields) {
             const char* srcAddr = base + field.offset;
-            auto dst_field = value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
-            setter[dst_field->kind_case()](srcAddr, dst_field);
+            Value* dstField;
+            if (!dstFields->contains(field.name)){
+              // dstFields->insert({field.name, StructField{}});
+              // dstFields->at(field.name)->set_allocated_value(new Value{});
+              // skip missing field for now
+              // it's a debate whether fields that are not present should be added
+            } else {
+              dstField = dstFields->at(field.name).mutable_value();
+              setter[dstField->kind_case()](srcAddr, dstField);
+            }
+          }
+      }
+    }
+
+    template <typename V> void getValueExperimental(V &dst) {
+      typename DM::LockGuard lock(deviceModel_.get().mutex_);
+      auto& getter = Getter::getInstance();
+      if constexpr(catena::has_getType<V>) {
+          const auto& typeInfo = dst.getType();
+          char* base = reinterpret_cast<char*>(&dst);
+          auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
+          for (auto& field : typeInfo.fields) {
+            char* dstAddr = base + field.offset;
+            if (srcFields->contains(field.name)) {
+              Value* srcField = value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
+              getter[srcField->kind_case()](srcField, dstAddr);
+            }
           }
       }
     }
   
-  static bool registerSetter(Value::KindCase kind, Setter::Function func) {
-    auto& setter = Setter::getInstance();
-    return setter.addFunction(kind, func);
-  }
 
   private:
     std::reference_wrapper<DM> deviceModel_;

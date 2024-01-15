@@ -680,10 +680,19 @@ template class catena::ParamAccessor<catena::DeviceModel<Threading::kSingleThrea
 
 
 
-template <typename DM>
-static bool floatSetter = catena::ParamAccessor<DM>::registerSetter(catena::Value::KindCase::kFloat32Value, [](const char *srcAddr, catena::Value *dst) {
+
+static bool floatSetter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kFloat32Value, [](const char *srcAddr, catena::Value *dst) {
     dst->set_float32_value(*reinterpret_cast<const float *>(srcAddr));
 });
 
-template bool floatSetter<catena::DeviceModel<Threading::kMultiThreaded>>;
-// template bool floatSetter<catena::DeviceModel<Threading::kSingleThreaded>>;
+static bool int32Setter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kInt32Value, [](const char *srcAddr, catena::Value *dst) {
+    dst->set_int32_value(*reinterpret_cast<const int32_t *>(srcAddr));
+});
+
+static bool floatGetter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](const catena::Value *src, char *dstAddr) {
+    *reinterpret_cast<float *>(dstAddr) = src->float32_value();
+});
+
+static bool int32Getter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](const catena::Value *src, char *dstAddr) {
+    *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
+});

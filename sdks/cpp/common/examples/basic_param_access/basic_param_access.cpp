@@ -41,10 +41,10 @@ struct Location  {
 REFLECTABLE(
     Location, 
     (float) latitude, 
-    (float) longitude
+    (float) longitude,
+    (int32_t) altitude
 );
 };
-template void catena::ParamAccessor<DeviceModel>::setValueExperimental<Location>(Location const&);
 
 int main(int argc, char **argv) {
     // process command line
@@ -60,11 +60,14 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-        Location loc = {10.0f,20.0f};
+        Location loc = {10.0f,20.0f,-30}, loc2;
         ParamAccessor locParam = dm.param("/location");
 
+        locParam.getValueExperimental<Location>(loc2);
+        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << '\n';
+
         if constexpr (catena::has_getType<Location>) {
-            locParam.setValueExperimental(loc);
+            locParam.setValueExperimental<Location>(loc);
         } 
 
         // write the device model to stdout
