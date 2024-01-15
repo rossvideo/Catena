@@ -206,6 +206,36 @@
             "value": {
                 "int32_value": 42
             }
+        },
+        "primes": {
+            "type": {
+                "type": "INT32_ARRAY"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Primes"
+                }
+            },
+            "value": {
+                "int32_array_values": {
+                    "ints": []
+                }
+            }
+        },
+        "squares": {
+            "type": {
+                "type": "INT32_ARRAY"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Squares"
+                }
+            },
+            "value": {
+                "int32_array_values": {
+                    "ints": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+                }
+            }
         }
     }
 }

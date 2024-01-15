@@ -693,6 +693,14 @@ static bool stringSetter = catena::IParamAccessor::registerSetter(catena::Value:
     *dst->mutable_string_value() = (*reinterpret_cast<const std::string *>(srcAddr));
 });
 
+static bool int32ArraySetter = catena::IParamAccessor::registerSetter(catena::Value::KindCase::kInt32ArrayValues, [](catena::Value *dst, const void *srcAddr) {
+    dst->mutable_int32_array_values()->clear_ints();
+    auto *src = reinterpret_cast<const std::vector<int32_t>*>(srcAddr);
+    for (auto &it : *src) {
+        dst->mutable_int32_array_values()->add_ints(it);
+    }
+});
+
 static bool floatGetter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
     *reinterpret_cast<float *>(dstAddr) = src->float32_value();
 });
@@ -705,7 +713,22 @@ static bool stringGetter = catena::IParamAccessor::registerGetter(catena::Value:
     *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
 });
 
+static bool int32ArrayGetter = catena::IParamAccessor::registerGetter(catena::Value::KindCase::kInt32ArrayValues, [](void *dstAddr, const catena::Value *src) {
+    auto *dst = reinterpret_cast<std::vector<int32_t>*>(dstAddr);
+    dst->clear();
+    auto& arr = src->int32_array_values().ints();
+    for (auto it = arr.begin(); it != arr.end(); ++it) {
+        dst->push_back(*it);
+    }
+});
+
+
 template<>
 catena::Value::KindCase catena::getKindCase<int32_t>(int32_t& src) {
     return catena::Value::KindCase::kInt32Value;
 }
+
+template<>
+catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(std::vector<int32_t>& src) {
+    return catena::Value::KindCase::kInt32ArrayValues;
+}   

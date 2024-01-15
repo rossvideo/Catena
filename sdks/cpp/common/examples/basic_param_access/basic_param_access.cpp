@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
+        // read & write native struct
         Location loc = {10.0f,20.0f,-30,"Old Trafford"}, loc2;
         ParamAccessor locParam = dm.param("/location");
 
@@ -69,6 +70,7 @@ int main(int argc, char **argv) {
             << ", " << loc2.altitude << ", " << loc2.name << '\n';
         locParam.setValueExperimental(loc);
 
+        // read & write native int32_t
         ParamAccessor numParam = dm.param("/a_number");
         int32_t num = 0;
         numParam.getValueExperimental(num);
@@ -76,6 +78,20 @@ int main(int argc, char **argv) {
         num *= 2;
         numParam.setValueExperimental(num);
 
+        // read & write native vector of int32_t
+        std::vector<int32_t> primes = {2,3,5,7,11,13,17,19,23,29};
+        ParamAccessor primesParam = dm.param("/primes");
+        primesParam.setValueExperimental(primes);
+
+        std::vector<int32_t> squares;
+        ParamAccessor squaresParam = dm.param("/squares");
+        squaresParam.getValueExperimental(squares);
+        std::cout << "Squares: ";
+        for (auto &i : squares) {
+            std::cout << i << ' ';
+        }
+        std::cout << '\n';
+        
         // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';
 
