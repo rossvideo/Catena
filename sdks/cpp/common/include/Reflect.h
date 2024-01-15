@@ -29,7 +29,6 @@ namespace catena {
 #define PUSH_FIELD_INFO(x)                                   \
   fi.setName(ARGNAME_AS_STRING(x));                          \
   fi.offset = offsetof(_className, ARGNAME(x));              \
-  fi.fieldType.reset(new catena::TypeTraitsT<ARGTYPE(x)>()); \
   t.fields.push_back(fi);
 
 /**
@@ -55,38 +54,38 @@ namespace catena {
     return t;                                         \
   }
 
-/**
- * @brief applies the type T to the parameter
- *
- * @tparam T a REFLECTED struct
- * @param p the parameter to apply the struct type to
- */
-template <typename T>
-static void applyType(catena::Param& p) {
-  *p.mutable_type() = *TypeTraitsT<T>().paramType();
-}
+// /**
+//  * @brief applies the type T to the parameter
+//  *
+//  * @tparam T a REFLECTED struct
+//  * @param p the parameter to apply the struct type to
+//  */
+// template <typename T>
+// static void applyType(catena::Param& p) {
+//   *p.mutable_type() = *TypeTraitsT<T>().paramType();
+// }
 
-/**
- * @brief Set the Value object
- *
- * @tparam T
- * @param p protobuf Param to set the value of
- * @param value value to use
- */
-template <typename T>
-static void setValue(catena::Param& p, const T& value) {
-  *p.mutable_value() = *TypeTraitsT<T>().paramValue(&value);
-}
+// /**
+//  * @brief Set the Value object
+//  *
+//  * @tparam T
+//  * @param p protobuf Param to set the value of
+//  * @param value value to use
+//  */
+// template <typename T>
+// static void setValue(catena::Param& p, const T& value) {
+//   *p.mutable_value() = *TypeTraitsT<T>().paramValue(&value);
+// }
 
-/**
- * @brief Get the value from a catena::Param
- *
- * @tparam T type of object to write to
- * @param value to update
- * @param p param object to read
- */
-template <typename T>
-static void getValue(T& value, const catena::Param& p) {
-  TypeTraitsT<T>().setValue(&value, p.value());
-}
+// /**
+//  * @brief Get the value from a catena::Param
+//  *
+//  * @tparam T type of object to write to
+//  * @param value to update
+//  * @param p param object to read
+//  */
+// template <typename T>
+// static void getValue(T& value, const catena::Param& p) {
+//   TypeTraitsT<T>().setValue(&value, p.value());
+// }
 }  // namespace catena
