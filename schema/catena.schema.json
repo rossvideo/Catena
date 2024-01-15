@@ -963,6 +963,9 @@
                             "$ref": "#/$defs/int32_value"
                         },
                         {
+                            "$ref": "#/$defs/string_value"
+                        },
+                        {
                             "$ref": "#/$defs/struct_value"
                         },
                         {
