@@ -75,14 +75,25 @@ static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 class IParamAccessor {
 public:
     /**
-     * @brief type alias for the setter Functory
+     * @brief type alias for the setter Functory for scalar types
     */
     using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*> ;
     
     /**
-     * @brief type alias for the getter function
+     * @brief type alias for the getter function for scalar types
     */
     using Getter = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*>;
+
+    /**
+     * @brief type alias for the setter Functory for vector types
+    */
+    using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*, const ParamIndex> ;
+
+    /**
+     * @brief type alias for the getter function for vector types
+    */
+    using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*, const ParamIndex>;
+
 
 public:
   virtual ~IParamAccessor() = default;
@@ -96,6 +107,16 @@ public:
   static bool inline registerGetter(Value::KindCase kind, Getter::Function func) {
     auto& getter = Getter::getInstance();
     return getter.addFunction(kind, func);
+  }
+
+  static bool inline registerSetterAt(Value::KindCase kind, SetterAt::Function func) {
+    auto& setterAt = SetterAt::getInstance();
+    return setterAt.addFunction(kind, func);
+  }
+
+  static bool inline registerGetterAt(Value::KindCase kind, GetterAt::Function func) {
+    auto& getterAt = GetterAt::getInstance();
+    return getterAt.addFunction(kind, func);
   }
 
 };
@@ -226,6 +247,14 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
       }
     }
 
+    template <typename V> void setValueAtExperimental(const V &src, const ParamIndex idx) {
+      using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
+      typename DM::LockGuard lock(deviceModel_.get().mutex_);
+      auto& setter = SetterAt::getInstance();
+      static std::vector<ElementType> x;
+      setter[getKindCase(x)](&value_.get(), &src, idx);
+    }
+
     template <typename V> void getValueExperimental(V &dst) {
       typename DM::LockGuard lock(deviceModel_.get().mutex_);
       auto& getter = Getter::getInstance();
@@ -243,6 +272,14 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
       } else {
         getter[getKindCase<V>(dst)](&dst, &value_.get());
       }
+    }
+
+    template <typename V> void getValueAtExperimental(V &dst, const ParamIndex idx) {
+      using ElementType = typename std::remove_reference<decltype(dst)>::type;
+      typename DM::LockGuard lock(deviceModel_.get().mutex_);
+      auto& getter = GetterAt::getInstance();
+      static std::vector<ElementType> x;
+      getter[getKindCase(x)](&dst, &value_.get(), idx);
     }
   
 

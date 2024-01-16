@@ -236,6 +236,21 @@
                     "ints": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
                 }
             }
+        },
+        "powers_of_two": {
+            "type": {
+                "type": "INT32_ARRAY"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Powers of Two"
+                }
+            },
+            "value": {
+                "int32_array_values": {
+                    "ints": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+                }
+            }
         }
     }
 }

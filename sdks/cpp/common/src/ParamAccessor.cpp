@@ -722,6 +722,31 @@ static bool int32ArrayGetter = catena::IParamAccessor::registerGetter(catena::Va
     }
 });
 
+static bool int32ArraySetterAt = catena::IParamAccessor::registerSetterAt(catena::Value::KindCase::kInt32ArrayValues, [](catena::Value *dst, const void *srcAddr, catena::ParamIndex idx) {
+    auto *src = reinterpret_cast<const int32_t*>(srcAddr);
+    if (idx >= dst->mutable_int32_array_values()->ints_size()) {
+        // range error
+        std::stringstream err;
+        err << "array index is out of bounds, " << idx << " >= " << dst->mutable_int32_array_values()->ints_size();
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+    } else {
+        // update array element
+        dst->mutable_int32_array_values()->set_ints(idx, *src);
+    }
+});
+
+static bool int32ArrayGetterAt = catena::IParamAccessor::registerGetterAt(catena::Value::KindCase::kInt32ArrayValues, [](void *dstAddr, const catena::Value *src, const catena::ParamIndex idx) {
+    auto *dst = reinterpret_cast<int32_t*>(dstAddr);
+    if (idx >= src->int32_array_values().ints_size()) {
+        // range error
+        std::stringstream err;
+        err << "array index is out of bounds, " << idx << " >= " << src->int32_array_values().ints_size();
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+    } else {
+        // update array element
+        *dst = src->int32_array_values().ints(idx);
+    }
+});
 
 template<>
 catena::Value::KindCase catena::getKindCase<int32_t>(int32_t& src) {
