@@ -282,7 +282,6 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
       getter[getKindCase(x)](&dst, &value_.get(), idx);
     }
   
-
   private:
     std::reference_wrapper<DM> deviceModel_;
     std::reference_wrapper<catena::Param> param_;
