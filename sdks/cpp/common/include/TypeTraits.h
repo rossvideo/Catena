@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
+#include <functional>
 
 using std::size_t;
 
@@ -46,7 +47,7 @@ struct TypeInfo {
 struct FieldInfo {
   std::string name; /**< the field's name */
   int offset;       /**< the offset to the field's data from struct base */
-
+  std::function<TypeInfo()> getTypeInfo; /**< type info of nested struct */
   /**
    * @brief class for field conversion to / back from protobuf.
    *
@@ -90,6 +91,18 @@ constexpr bool has_getType{};
 template <typename T>
 constexpr bool
     has_getType<T, std::void_t<decltype(std::declval<T>().getType())>> = true;
+
+/**
+ * @brief returns the getType method for types that have it, halts execution otherwise.
+*/
+template<typename T>
+std::function<catena::TypeInfo()> getTypeFunction() {
+  if constexpr (catena::has_getType<T>) {
+    return T::getType;
+  } else {
+    return []() -> catena::TypeInfo {return catena::TypeInfo{};};
+  }
+}
 
 // /**
 //  * @brief base class providing conversion interface.

@@ -29,7 +29,8 @@ namespace catena {
 #define PUSH_FIELD_INFO(x)                                   \
   fi.setName(ARGNAME_AS_STRING(x));                          \
   fi.offset = offsetof(_className, ARGNAME(x));              \
-  t.fields.push_back(fi);
+  fi.getTypeInfo = catena::getTypeFunction<ARGTYPE(x)>();    \
+  t.fields.push_back(fi)                                   
 
 /**
  * @brief makes a struct reflectable by initializing a TypeInfo object.

@@ -54,7 +54,10 @@ struct PassByValueOrReference {
 */
 template<typename V>
 catena::Value::KindCase getKindCase([[maybe_unused]] V &src ) {
-    return catena::Value::KindCase::KIND_NOT_SET;
+  if constexpr (has_getType<V>) {
+    return catena::Value::KindCase::kStructValue;
+  }
+  return catena::Value::KindCase::KIND_NOT_SET;
 }
 
 /**
@@ -230,14 +233,18 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
         auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
         for (auto& field : typeInfo.fields) {
           const char* srcAddr = base + field.offset;
-          Value* dstField;
+          Value* dstField = dstFields->at(field.name).mutable_value();
           if (!dstFields->contains(field.name)){
             // dstFields->insert({field.name, StructField{}});
             // dstFields->at(field.name)->set_allocated_value(new Value{});
             // skip missing field for now
             // it's a debate whether fields that are not present should be added
+          } else if (dstField->kind_case() == Value::KindCase::kStructValue){
+            // field is a struct
+            catena::ParamAccessor<DM> sp = subParam(field.name);
+            src.setStructValue(dstField, field.getTypeInfo(), sp, srcAddr);
           } else {
-            dstField = dstFields->at(field.name).mutable_value();
+            // field is a simple or simple array type
             setter[dstField->kind_case()](dstField, srcAddr);
           }
         }
@@ -280,6 +287,21 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
       auto& getter = GetterAt::getInstance();
       static std::vector<ElementType> x;
       getter[getKindCase(x)](&dst, &value_.get(), idx);
+    }
+
+    /**
+     *  @brief get accessor to sub-parameter matching fieldName
+     *  @param fieldName name of the sub-parameter
+     *  @return ParamAccessor<DM> to the sub-parameter
+     */
+    ParamAccessor subParam(const std::string &fieldName) {
+      typename DM::LockGuard lock(deviceModel_.get().mutex_);
+      Param &childParam = param_.get().mutable_params()->at(fieldName);
+      typename DM::ParamAccessorData pad{&childParam, childParam.mutable_value()};
+      return ParamAccessor {
+          deviceModel_.get(),
+          pad
+      };
     }
   
   private:

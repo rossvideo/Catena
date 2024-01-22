@@ -756,4 +756,4 @@ catena::Value::KindCase catena::getKindCase<int32_t>(int32_t& src) {
 template<>
 catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(std::vector<int32_t>& src) {
     return catena::Value::KindCase::kInt32ArrayValues;
-}   
+}
