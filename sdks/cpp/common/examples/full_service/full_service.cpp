@@ -58,7 +58,7 @@ using DeviceModel = typename catena::DeviceModel<catena::Threading::kMultiThread
 using ParamAccessor = typename catena::ParamAccessor<DeviceModel>;
 
 // set up the command line parameters
-ABSL_FLAG(uint16_t, port, 5255, "Catena service port");
+ABSL_FLAG(uint16_t, port, 6254, "Catena service port");
 ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
 ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, options are: \
   \"off\", \"ssl\", \"tls\"");
