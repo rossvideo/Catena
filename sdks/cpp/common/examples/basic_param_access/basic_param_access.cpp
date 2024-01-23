@@ -44,25 +44,7 @@ REFLECTABLE(
     (float) y,
     (float) z
 );
-template <typename DM>
-static void setStructValue(catena::Value* dst, catena::ParamAccessor<DM>& subParam, const char* base) {
-    auto& setter = catena::IParamAccessor::Setter::getInstance();
-    const auto& typeInfo = subParam.getType();
-    auto* dstFields = dst->mutable_struct_value()->mutable_fields();
-    for (auto& field : typeInfo.fields) {
-        const char* srcAddr = base + field.offset;
-        catena::Value* dstField = dstFields->at(field.name).mutable_value();
-        if (!dstFields->contains(field.name)){
-            // ignore fields that are not present
-        } else if (dstField->kind_case() == catena::Value::KindCase::kStructValue){
-            // field is a struct
-            subParam.setStructValue(dstField, subParam.subParam(field.name), srcAddr);
-        } else {
-            // field is a simple or simple array type
-            setter[dstField->kind_case()](dstField, srcAddr);
-        }
-    }
-}
+
 
 };
 
@@ -75,26 +57,9 @@ REFLECTABLE(
     (std::string) name,
     (Coords) coords
 );
-template <typename DM>
-static void setStructValue(catena::Value* dst, catena::ParamAccessor<DM>& subParam, const char* base) {
-    auto& setter = catena::IParamAccessor::Setter::getInstance();
-    const auto& typeInfo = subParam.getType();
-    auto* dstFields = dst->mutable_struct_value()->mutable_fields();
-    for (auto& field : typeInfo.fields) {
-        const char* srcAddr = base + field.offset;
-        catena::Value* dstField = dstFields->at(field.name).mutable_value();
-        if (!dstFields->contains(field.name)){
-            // ignore fields that are not present
-        } else if (dstField->kind_case() == catena::Value::KindCase::kStructValue){
-            // field is a struct
-            subParam.setStructValue(dstField, subParam.subParam(field.name), srcAddr);
-        } else {
-            // field is a simple or simple array type
-            setter[dstField->kind_case()](dstField, srcAddr);
-        }
-    }
-}
+
 };
+
 
 int main(int argc, char **argv) {
     // process command line
@@ -142,12 +107,12 @@ int main(int argc, char **argv) {
         std::cout << "2^3: " << twoCubed << '\n';
 
         // read & write native struct
-        Location loc = {10.0f,20.0f,-30,"Old Trafford",{1.f,2.f,3.f}}, loc2;
+        Location loc = {10.0f,20.0f,-30,"Old Trafford",{91.f,82.f,73.f}}, loc2;
         ParamAccessor locParam = dm.param("/location");
 
-        locParam.getValueExperimental(loc2);
-        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude 
-            << ", " << loc2.altitude << ", " << loc2.name << '\n';
+        // locParam.getValueExperimental(loc2);
+        // std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude 
+        //     << ", " << loc2.altitude << ", " << loc2.name << '\n';
         locParam.setValueExperimental(loc);
 
         // write the device model to stdout

@@ -122,6 +122,40 @@ public:
     return getterAt.addFunction(kind, func);
   }
 
+protected:
+  /**
+   * Access value object of the dependent class
+  */
+  virtual Value& value() = 0;
+
+  /**
+   * Access sub-parameter of current object.
+   * @param fieldName name of the sub-parameter
+   * @return Interface pointer to the named child parameter
+  */
+  virtual std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) = 0;
+
+
+  static void inline setChildStructValue(catena::TypeInfo& typeInfo, catena::IParamAccessor* subParam, const char* base) {
+    auto& setter = catena::IParamAccessor::Setter::getInstance();
+    auto* dstFields = subParam->value().mutable_struct_value()->mutable_fields();
+    for (auto& field : typeInfo.fields) {
+        const char* srcAddr = base + field.offset;
+        Value::KindCase kc = dstFields->at(field.name).value().kind_case();
+        if (!dstFields->contains(field.name)){
+            // ignore fields that are not present
+        } else if (kc == catena::Value::KindCase::kStructValue){
+            // field is a struct
+            std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
+            setChildStructValue(typeInfo, sp.get(), srcAddr);
+        } else {
+            // field is a simple or simple array type
+            std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
+            setter[kc](&sp->value(), srcAddr);
+        }
+    }
+}
+
 };
 /**
  * @brief wrapper around a catena::ParamAccessor stored in the device model
@@ -187,7 +221,30 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
     inline ~ParamAccessor() {  // nothing to do
     }
 
-    /**
+
+   /**
+    * @brief get accessor to the value of the parameter
+   */
+   Value& value() override {
+     return value_.get();
+   }
+
+  /**
+   *  @brief get accessor to sub-parameter matching fieldName
+   *  @param fieldName name of the sub-parameter
+   *  @return ParamAccessor<DM> to the sub-parameter
+   */
+   std::unique_ptr<IParamAccessor> subParam(const std::string &fieldName) override {
+      typename DM::LockGuard lock(deviceModel_.get().mutex_);
+      Param& parent = param_.get();
+      Param& childParam = parent.mutable_params()->at(fieldName);
+      Value& value = value_.get();
+      catena::Value *v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
+      typename DM::ParamAccessorData pad{&childParam, v};
+      return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+    }
+  
+  /**
    * @brief Get the value of the param referenced by this object
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
@@ -241,8 +298,9 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
             // it's a debate whether fields that are not present should be added
           } else if (dstField->kind_case() == Value::KindCase::kStructValue){
             // field is a struct
-            catena::ParamAccessor<DM> sp = subParam(field.name);
-            src.setStructValue(dstField, field.getTypeInfo(), sp, srcAddr);
+            std::unique_ptr<IParamAccessor> sp = subParam(field.name);
+            catena::TypeInfo ti = field.getTypeInfo();
+            setChildStructValue(ti, sp.get(), srcAddr);
           } else {
             // field is a simple or simple array type
             setter[dstField->kind_case()](dstField, srcAddr);
@@ -287,21 +345,6 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
       auto& getter = GetterAt::getInstance();
       static std::vector<ElementType> x;
       getter[getKindCase(x)](&dst, &value_.get(), idx);
-    }
-
-    /**
-     *  @brief get accessor to sub-parameter matching fieldName
-     *  @param fieldName name of the sub-parameter
-     *  @return ParamAccessor<DM> to the sub-parameter
-     */
-    ParamAccessor subParam(const std::string &fieldName) {
-      typename DM::LockGuard lock(deviceModel_.get().mutex_);
-      Param &childParam = param_.get().mutable_params()->at(fieldName);
-      typename DM::ParamAccessorData pad{&childParam, childParam.mutable_value()};
-      return ParamAccessor {
-          deviceModel_.get(),
-          pad
-      };
     }
   
   private:
