@@ -48,6 +48,7 @@
             "value": {
                 "string_value": "example"
             },
+            "minimal_set": true,
             "constraint": {
                 "type": "STRING_STRING_CHOICE",
                 "string_string_choice": {
@@ -176,6 +177,7 @@
                     "en": "The first few primes"
                 }
             },
+            "minimal_set": true,
             "value": {
                 "int32_array_values": {
                     "ints": [
@@ -199,6 +201,7 @@
                     "en": "The first few primes as strings"
                 }
             },
+            "minimal_set": false,
             "value": {
                 "string_array_values": {
                     "strings": [
