@@ -44,20 +44,18 @@ namespace catena {
  * @brief helper meta function to pass small types by value and complex
  * ones by reference.
 */
-template<typename T>
-struct PassByValueOrReference {
+template <typename T> struct PassByValueOrReference {
     using type = std::conditional_t<std::is_scalar<T>::value, T, T&>;
 };
 
 /**
  * @brief Value::KindCase looker upper
 */
-template<typename V>
-catena::Value::KindCase getKindCase([[maybe_unused]] V &src ) {
-  if constexpr (has_getType<V>) {
-    return catena::Value::KindCase::kStructValue;
-  }
-  return catena::Value::KindCase::KIND_NOT_SET;
+template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] V& src) {
+    if constexpr (has_getType<V>) {
+        return catena::Value::KindCase::kStructValue;
+    }
+    return catena::Value::KindCase::KIND_NOT_SET;
 }
 
 /**
@@ -76,12 +74,12 @@ using ParamIndex = uint32_t;
 static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 
 class IParamAccessor {
-public:
+  public:
     /**
      * @brief type alias for the setter Functory for scalar types
     */
-    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*> ;
-    
+    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*>;
+
     /**
      * @brief type alias for the getter function for scalar types
     */
@@ -90,73 +88,90 @@ public:
     /**
      * @brief type alias for the setter Functory for vector types
     */
-    using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*, const ParamIndex> ;
+    using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*,
+                                                const ParamIndex>;
 
     /**
      * @brief type alias for the getter function for vector types
     */
-    using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*, const ParamIndex>;
+    using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
+                                                const ParamIndex>;
 
 
-public:
-  virtual ~IParamAccessor() = default;
+  public:
+    virtual ~IParamAccessor() = default;
 
 
-  static bool inline registerSetter(Value::KindCase kind, Setter::Function func) {
-    auto& setter = Setter::getInstance();
-    return setter.addFunction(kind, func);
-  }
+    static bool inline registerSetter(Value::KindCase kind, Setter::Function func) {
+        auto& setter = Setter::getInstance();
+        return setter.addFunction(kind, func);
+    }
 
-  static bool inline registerGetter(Value::KindCase kind, Getter::Function func) {
-    auto& getter = Getter::getInstance();
-    return getter.addFunction(kind, func);
-  }
+    static bool inline registerGetter(Value::KindCase kind, Getter::Function func) {
+        auto& getter = Getter::getInstance();
+        return getter.addFunction(kind, func);
+    }
 
-  static bool inline registerSetterAt(Value::KindCase kind, SetterAt::Function func) {
-    auto& setterAt = SetterAt::getInstance();
-    return setterAt.addFunction(kind, func);
-  }
+    static bool inline registerSetterAt(Value::KindCase kind, SetterAt::Function func) {
+        auto& setterAt = SetterAt::getInstance();
+        return setterAt.addFunction(kind, func);
+    }
 
-  static bool inline registerGetterAt(Value::KindCase kind, GetterAt::Function func) {
-    auto& getterAt = GetterAt::getInstance();
-    return getterAt.addFunction(kind, func);
-  }
+    static bool inline registerGetterAt(Value::KindCase kind, GetterAt::Function func) {
+        auto& getterAt = GetterAt::getInstance();
+        return getterAt.addFunction(kind, func);
+    }
 
-protected:
-  /**
+  protected:
+    /**
    * Access value object of the dependent class
+   * @protected
   */
-  virtual Value& value() = 0;
+    virtual Value& value() = 0;
 
-  /**
+    /**
    * Access sub-parameter of current object.
    * @param fieldName name of the sub-parameter
    * @return Interface pointer to the named child parameter
+   * @protected
   */
-  virtual std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) = 0;
+    virtual std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) = 0;
 
-
-  static void inline setChildStructValue(catena::TypeInfo& typeInfo, catena::IParamAccessor* subParam, const char* base) {
-    auto& setter = catena::IParamAccessor::Setter::getInstance();
-    auto* dstFields = subParam->value().mutable_struct_value()->mutable_fields();
-    for (auto& field : typeInfo.fields) {
-        const char* srcAddr = base + field.offset;
-        Value::KindCase kc = dstFields->at(field.name).value().kind_case();
-        if (!dstFields->contains(field.name)){
-            // ignore fields that are not present
-        } else if (kc == catena::Value::KindCase::kStructValue){
-            // field is a struct
-            std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
-            setChildStructValue(typeInfo, sp.get(), srcAddr);
-        } else {
-            // field is a simple or simple array type
-            std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
-            setter[kc](&sp->value(), srcAddr);
+    /**
+   * @brief helper function to set the value of a child struct.
+   * @param typeInfo type info of the child struct
+   * @param subParam pointer to the child struct
+   * @param base pointer to the source struct's base address in memory
+   * @protected 
+   * 
+   * This function is used by setValueNative to set the value of a child struct.
+   * It writes native C++ objects to the protobuf objects in the device model.
+   * 
+   * Note it does not assert the device model's lock because it should only be 
+   * called from a method that already did. Hence its protected access.
+  */
+    static void inline setChildStructValue(catena::TypeInfo& typeInfo, catena::IParamAccessor* subParam,
+                                           const char* base) {
+        auto& setter = catena::IParamAccessor::Setter::getInstance();
+        auto* dstFields = subParam->value().mutable_struct_value()->mutable_fields();
+        for (auto& field : typeInfo.fields) {
+            const char* srcAddr = base + field.offset;
+            Value::KindCase kc = dstFields->at(field.name).value().kind_case();
+            if (!dstFields->contains(field.name)) {
+                // ignore fields that are not present
+            } else if (kc == catena::Value::KindCase::kStructValue) {
+                // field is a struct
+                std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
+                setChildStructValue(typeInfo, sp.get(), srcAddr);
+            } else {
+                // field is a simple or simple array type
+                std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
+                setter[kc](&sp->value(), srcAddr);
+            }
         }
     }
-}
-
 };
+
 /**
  * @brief wrapper around a catena::ParamAccessor stored in the device model
  *
@@ -165,6 +180,8 @@ protected:
  *
  * Enables client programs to "cache" a param without having to use a
  * method involving potentially expensive searches.
+ * 
+ * @tparam DM DeviceModel type
  *
  */
 template <typename DM> class ParamAccessor : public IParamAccessor {
@@ -173,7 +190,7 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
                     std::is_same_v<DM, catena::DeviceModel<catena::Threading::kSingleThreaded>>,
                   "Class Template Parameter must be of type DeviceModel<T>");
 
-    public:
+  public:
     /**
    * @brief Construct a new ParamAccessor object
    *
@@ -181,7 +198,7 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
    * @param p the parameter owned by the device model.
    */
 
-    ParamAccessor(DM &dm, typename DM::ParamAccessorData &pad) noexcept
+    ParamAccessor(DM& dm, typename DM::ParamAccessorData& pad) noexcept
         : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)} {}
 
     /**
@@ -195,56 +212,59 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
    *
    * @param other
    */
-    ParamAccessor(const ParamAccessor &other) = default;
+    ParamAccessor(const ParamAccessor& other) = default;
 
     /**
    * @brief ParamAccessor has copy semantics.
    *
    * @param rhs
    */
-    ParamAccessor &operator=(const ParamAccessor &rhs) = default;
+    ParamAccessor& operator=(const ParamAccessor& rhs) = default;
 
     /**
    * @brief ParamAccessor does not have move semantics.
    *
    * @param other
    */
-    ParamAccessor(ParamAccessor &&other) = delete;
+    ParamAccessor(ParamAccessor&& other) = delete;
 
     /**
    * @brief ParamAccessor does not have move semantics
    *
    * @param rhs, right hand side of the equals sign
    */
-    ParamAccessor &operator=(ParamAccessor &&rhs) = delete;
+    ParamAccessor& operator=(ParamAccessor&& rhs) = delete;
 
     inline ~ParamAccessor() {  // nothing to do
     }
 
 
-   /**
+    /**
     * @brief get accessor to the value of the parameter
    */
-   Value& value() override {
-     return value_.get();
-   }
+    Value& value() override { return value_.get(); }
 
-  /**
+    /**
    *  @brief get accessor to sub-parameter matching fieldName
    *  @param fieldName name of the sub-parameter
-   *  @return ParamAccessor<DM> to the sub-parameter
+   *  @return unique_ptr to ParamAccessor interface
+   * 
+   * Note that the value element of the returned sub-param references the appropriate
+   * part of the _parent's_ value element. This is because the value element in the child
+   * param descriptor is not part of the active value of the larger object. If even present,
+   * it's used as the default value for the matching part of the parent's value object.
    */
-   std::unique_ptr<IParamAccessor> subParam(const std::string &fieldName) override {
-      typename DM::LockGuard lock(deviceModel_.get().mutex_);
-      Param& parent = param_.get();
-      Param& childParam = parent.mutable_params()->at(fieldName);
-      Value& value = value_.get();
-      catena::Value *v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
-      typename DM::ParamAccessorData pad{&childParam, v};
-      return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+    std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) override {
+        typename DM::LockGuard lock(deviceModel_.get().mutex_);
+        Param& parent = param_.get();
+        Param& childParam = parent.mutable_params()->at(fieldName);
+        Value& value = value_.get();
+        catena::Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
+        typename DM::ParamAccessorData pad{&childParam, v};
+        return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
     }
-  
-  /**
+
+    /**
    * @brief Get the value of the param referenced by this object
    *
    * Threadsafe because it asserts the DeviceModel's mutex.
@@ -281,72 +301,101 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
    */
     template <typename V> void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
 
-    template <typename V> void setValueExperimental(const V &src) {
-      typename DM::LockGuard lock(deviceModel_.get().mutex_);
-      auto& setter = Setter::getInstance();
-      if constexpr(catena::has_getType<V>) {
-        const auto& typeInfo = src.getType();
-        const char* base = reinterpret_cast<const char*>(&src);
-        auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
-        for (auto& field : typeInfo.fields) {
-          const char* srcAddr = base + field.offset;
-          Value* dstField = dstFields->at(field.name).mutable_value();
-          if (!dstFields->contains(field.name)){
-            // dstFields->insert({field.name, StructField{}});
-            // dstFields->at(field.name)->set_allocated_value(new Value{});
-            // skip missing field for now
-            // it's a debate whether fields that are not present should be added
-          } else if (dstField->kind_case() == Value::KindCase::kStructValue){
-            // field is a struct
-            std::unique_ptr<IParamAccessor> sp = subParam(field.name);
-            catena::TypeInfo ti = field.getTypeInfo();
-            setChildStructValue(ti, sp.get(), srcAddr);
-          } else {
-            // field is a simple or simple array type
-            setter[dstField->kind_case()](dstField, srcAddr);
-          }
+    /**
+     * @brief Set the value of the stored parameter to which this object
+     * provides access.
+     * 
+     * @tparam V type of the value stored by the param. This must be a native type.
+    */
+    template <typename V> void setValueNative(const V& src) {
+        typename DM::LockGuard lock(deviceModel_.get().mutex_);
+        auto& setter = Setter::getInstance();
+        if constexpr (catena::has_getType<V>) {
+            const auto& typeInfo = src.getType();
+            const char* base = reinterpret_cast<const char*>(&src);
+            auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
+            for (auto& field : typeInfo.fields) {
+                const char* srcAddr = base + field.offset;
+                Value* dstField = dstFields->at(field.name).mutable_value();
+                if (!dstFields->contains(field.name)) {
+                    // dstFields->insert({field.name, StructField{}});
+                    // dstFields->at(field.name)->set_allocated_value(new Value{});
+                    // skip missing field for now
+                    // it's a debate whether fields that are not present should be added
+                } else if (dstField->kind_case() == Value::KindCase::kStructValue) {
+                    // field is a struct
+                    std::unique_ptr<IParamAccessor> sp = subParam(field.name);
+                    catena::TypeInfo ti = field.getTypeInfo();
+                    setChildStructValue(ti, sp.get(), srcAddr);
+                } else {
+                    // field is a simple or simple array type
+                    setter[dstField->kind_case()](dstField, srcAddr);
+                }
+            }
+        } else {
+            typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
+            setter[getKindCase(x)](&value_.get(), &src);
         }
-      } else {
-        typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
-        setter[getKindCase(x)](&value_.get(), &src);
-      }
     }
 
-    template <typename V> void setValueAtExperimental(const V &src, const ParamIndex idx) {
-      using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
-      typename DM::LockGuard lock(deviceModel_.get().mutex_);
-      auto& setter = SetterAt::getInstance();
-      static std::vector<ElementType> x;
-      setter[getKindCase(x)](&value_.get(), &src, idx);
+    /**
+     * @brief Set the value of the stored parameter to which this object
+     * provides access.
+     * 
+     * @tparam V type of the value stored by the param. This must be a native type.
+    */
+    template <typename V> void setValueAtNative(const V& src, const ParamIndex idx) {
+        using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
+        typename DM::LockGuard lock(deviceModel_.get().mutex_);
+        auto& setter = SetterAt::getInstance();
+        static std::vector<ElementType> x;
+        setter[getKindCase(x)](&value_.get(), &src, idx);
     }
 
-    template <typename V> void getValueExperimental(V &dst) {
-      typename DM::LockGuard lock(deviceModel_.get().mutex_);
-      auto& getter = Getter::getInstance();
-      if constexpr(catena::has_getType<V>) {
-        const auto& typeInfo = dst.getType();
-        char* base = reinterpret_cast<char*>(&dst);
-        auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
-        for (auto& field : typeInfo.fields) {
-          char* dstAddr = base + field.offset;
-          if (srcFields->contains(field.name)) {
-            Value* srcField = value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
-            getter[srcField->kind_case()](dstAddr, srcField);
-          }
+    /**
+     * @brief Get the value of the stored parameter to which this object
+     * provides access.
+     * 
+     * @tparam V type of the value stored by the param. This must be a native type.
+     * @param dst reference to the destination object written to by this method.
+    */
+    template <typename V> void getValueNative(V& dst) {
+        typename DM::LockGuard lock(deviceModel_.get().mutex_);
+        auto& getter = Getter::getInstance();
+        if constexpr (catena::has_getType<V>) {
+            const auto& typeInfo = dst.getType();
+            char* base = reinterpret_cast<char*>(&dst);
+            auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
+            for (auto& field : typeInfo.fields) {
+                char* dstAddr = base + field.offset;
+                if (srcFields->contains(field.name)) {
+                    Value* srcField =
+                      value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
+                    getter[srcField->kind_case()](dstAddr, srcField);
+                }
+            }
+        } else {
+            getter[getKindCase<V>(dst)](&dst, &value_.get());
         }
-      } else {
-        getter[getKindCase<V>(dst)](&dst, &value_.get());
-      }
     }
 
-    template <typename V> void getValueAtExperimental(V &dst, const ParamIndex idx) {
-      using ElementType = typename std::remove_reference<decltype(dst)>::type;
-      typename DM::LockGuard lock(deviceModel_.get().mutex_);
-      auto& getter = GetterAt::getInstance();
-      static std::vector<ElementType> x;
-      getter[getKindCase(x)](&dst, &value_.get(), idx);
+
+    /**
+     * @brief Get the value of the stored parameter to which this object
+     * provides access from an array with the specified index.
+     * 
+     * @tparam V type of the value stored by the param. This must be a native type.
+     * @param dst reference to the destination object written to by this method.
+     * @param idx index into the array
+    */
+    template <typename V> void getValueAtNative(V& dst, const ParamIndex idx) {
+        using ElementType = typename std::remove_reference<decltype(dst)>::type;
+        typename DM::LockGuard lock(deviceModel_.get().mutex_);
+        auto& getter = GetterAt::getInstance();
+        static std::vector<ElementType> x;
+        getter[getKindCase(x)](&dst, &value_.get(), idx);
     }
-  
+
   private:
     std::reference_wrapper<DM> deviceModel_;
     std::reference_wrapper<catena::Param> param_;
@@ -360,7 +409,7 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
  * @return true if v is a list type
  * @return false otherwise
  */
-inline static bool isList(const catena::Value &v) {
+inline static bool isList(const catena::Value& v) {
     bool ans = false;
     ans = v.has_float32_array_values() || v.has_int32_array_values() || v.has_string_array_values() ||
           v.has_struct_array_values() || v.has_variant_array_values();

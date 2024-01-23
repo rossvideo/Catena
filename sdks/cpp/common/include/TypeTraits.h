@@ -2,10 +2,10 @@
 
 /**
  * @file TypeTraits.h
- * @author your name (you@domain.com)
- * @brief
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @brief TypeTraits for providing compile time type information for structs and std::variant objects.
  * @version 0.1
- * @date 2022-04-18
+ * @date 2024-01-23
  *
  * @copyright not asserted
  *
@@ -93,7 +93,8 @@ constexpr bool
     has_getType<T, std::void_t<decltype(std::declval<T>().getType())>> = true;
 
 /**
- * @brief returns the getType method for types that have it, halts execution otherwise.
+ * @brief returns the getType method for types that have it,
+ * otherwise returns a function that returns an empty TypeInfo object.
 */
 template<typename T>
 std::function<catena::TypeInfo()> getTypeFunction() {

@@ -37,6 +37,10 @@ using DeviceModel = catena::DeviceModel<catena::Threading::kSingleThreaded>;
 using Param = catena::Param;
 using ParamAccessor = catena::ParamAccessor<DeviceModel>;
 
+// define some structs to test struct support
+// note use of REFLECTABLE macro which provides runtime reflection
+// and type conversion support used by ParamAccessor's *Native methods
+//
 struct Coords {
 REFLECTABLE(
     Coords, 
@@ -44,10 +48,9 @@ REFLECTABLE(
     (float) y,
     (float) z
 );
-
-
 };
 
+// note nested struct
 struct Location  {
 REFLECTABLE(
     Location, 
@@ -57,7 +60,6 @@ REFLECTABLE(
     (std::string) name,
     (Coords) coords
 );
-
 };
 
 
@@ -78,19 +80,19 @@ int main(int argc, char **argv) {
         // read & write native int32_t
         ParamAccessor numParam = dm.param("/a_number");
         int32_t num = 0;
-        numParam.getValueExperimental(num);
+        numParam.getValueNative(num);
         std::cout << "Number: " << num << '\n';
         num *= 2;
-        numParam.setValueExperimental(num);
+        numParam.setValueNative(num);
 
         // read & write native vector of int32_t
         std::vector<int32_t> primes = {2,3,5,7,11,13,17,19,23,29};
         ParamAccessor primesParam = dm.param("/primes");
-        primesParam.setValueExperimental(primes);
+        primesParam.setValueNative(primes);
 
         std::vector<int32_t> squares;
         ParamAccessor squaresParam = dm.param("/squares");
-        squaresParam.getValueExperimental(squares);
+        squaresParam.getValueNative(squares);
         std::cout << "Squares: ";
         for (auto &i : squares) {
             std::cout << i << ' ';
@@ -100,20 +102,20 @@ int main(int argc, char **argv) {
         // read & write elements of a native vector of int32_t
         ParamAccessor powersParam = dm.param("/powers_of_two");
         int32_t mistake = 0;
-        powersParam.setValueAtExperimental(mistake, 1);
+        powersParam.setValueAtNative(mistake, 1);
 
         int32_t twoCubed = 0;
-        powersParam.getValueAtExperimental(twoCubed,3);
+        powersParam.getValueAtNative(twoCubed,3);
         std::cout << "2^3: " << twoCubed << '\n';
 
         // read & write native struct
         Location loc = {10.0f,20.0f,-30,"Old Trafford",{91.f,82.f,73.f}}, loc2;
         ParamAccessor locParam = dm.param("/location");
 
-        // locParam.getValueExperimental(loc2);
+        // locParam.getValueNative(loc2);
         // std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude 
         //     << ", " << loc2.altitude << ", " << loc2.name << '\n';
-        locParam.setValueExperimental(loc);
+        locParam.setValueNative(loc);
 
         // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';
