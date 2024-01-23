@@ -291,6 +291,19 @@
                     
                 }
             }
-        }
+        },
+        "hello": {
+            "type": {
+                "type": "FLOAT32"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Hello"
+                }
+            },
+            "value": {
+                "float32_value": 123.456
+            }
+        },
     }
 }
