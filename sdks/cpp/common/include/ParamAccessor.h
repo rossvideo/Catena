@@ -128,6 +128,7 @@ class IParamAccessor {
    * @protected
   */
     virtual Value& value() = 0;
+    virtual const Value& value() const = 0;
 
     /**
    * Access sub-parameter of current object.
@@ -136,6 +137,7 @@ class IParamAccessor {
    * @protected
   */
     virtual std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) = 0;
+    virtual const std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) const = 0;
 
     /**
    * @brief helper function to set the value of a child struct.
@@ -170,6 +172,26 @@ class IParamAccessor {
             }
         }
     }
+
+    static void inline getChildStructValue(char* base, const catena::TypeInfo& ti, const catena::IParamAccessor* subParam) {
+        auto& getter = catena::IParamAccessor::Getter::getInstance();
+        auto& srcFields = subParam->value().struct_value().fields();
+        for (auto& field : ti.fields) {
+            char* dstAddr = base + field.offset;
+            Value::KindCase kc = srcFields.at(field.name).value().kind_case();
+            if (!srcFields.contains(field.name)) {
+                // ignore fields that are not present
+            } else if (kc == catena::Value::KindCase::kStructValue) {
+                // field is a struct
+                auto sp = subParam->subParam(field.name);
+                getChildStructValue(dstAddr, ti, sp.get());
+            } else {
+                // field is a simple or simple array type
+                auto sp = subParam->subParam(field.name);
+                getter[kc](dstAddr, &sp->value());
+            }
+        }
+    }
 };
 
 /**
@@ -195,7 +217,7 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
    * @brief Construct a new ParamAccessor object
    *
    * @param dm the parent device model.
-   * @param p the parameter owned by the device model.
+   * @param pad the data to initialize the param accessor
    */
 
     ParamAccessor(DM& dm, typename DM::ParamAccessorData& pad) noexcept
@@ -243,6 +265,7 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
     * @brief get accessor to the value of the parameter
    */
     Value& value() override { return value_.get(); }
+    const Value& value() const override { return value_.get(); }
 
     /**
    *  @brief get accessor to sub-parameter matching fieldName
@@ -261,6 +284,25 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
         Value& value = value_.get();
         catena::Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
         typename DM::ParamAccessorData pad{&childParam, v};
+        return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+    }
+
+    /**
+     * @brief get const accessor to sub-parameter matching fieldName
+     * @param fieldName name of the sub-parameter
+     * @return unique_ptr to ParamAccessor interface
+     * 
+     * See notes on value element of returned object in non-const version of this method.
+    */
+    const std::unique_ptr<IParamAccessor> subParam(const std::string& fieldName) const override {
+        typename DM::LockGuard lock(deviceModel_.get().mutex_);
+        Param& parent = param_.get();
+        const Param& childParam = parent.params().at(fieldName);
+        Value& value = value_.get();
+        const Value& v = value.struct_value().fields().at(fieldName).value();
+        // ewww, const_cast! gross! but ok because we're reapplying const-ness in the 
+        // return type
+        typename DM::ParamAccessorData pad{const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
         return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
     }
 
@@ -368,10 +410,18 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
             auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
             for (auto& field : typeInfo.fields) {
                 char* dstAddr = base + field.offset;
+                const Value& srcField = srcFields->at(field.name).value();
                 if (srcFields->contains(field.name)) {
-                    Value* srcField =
-                      value_.get().mutable_struct_value()->mutable_fields()->at(field.name).mutable_value();
-                    getter[srcField->kind_case()](dstAddr, srcField);
+                    const catena::Value::KindCase kc = srcField.kind_case();
+                    if (kc == Value::KindCase::kStructValue) {
+                        // field is a struct
+                        std::unique_ptr<IParamAccessor> sp = subParam(field.name);
+                        catena::TypeInfo ti = field.getTypeInfo();
+                        getChildStructValue(dstAddr, ti, sp.get());
+                    } else {
+                        // field is a simple or simple array type
+                        getter[kc](dstAddr, &srcField);
+                    }
                 }
             }
         } else {

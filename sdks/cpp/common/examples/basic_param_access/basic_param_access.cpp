@@ -112,9 +112,10 @@ int main(int argc, char **argv) {
         Location loc = {10.0f,20.0f,-30,"Old Trafford",{91.f,82.f,73.f}}, loc2;
         ParamAccessor locParam = dm.param("/location");
 
-        // locParam.getValueNative(loc2);
-        // std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude 
-        //     << ", " << loc2.altitude << ", " << loc2.name << '\n';
+        locParam.getValueNative(loc2);
+        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude 
+            << ", " << loc2.altitude << ", " << loc2.name << ", "
+            << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z << '\n';
         locParam.setValueNative(loc);
 
         // write the device model to stdout
@@ -125,47 +126,9 @@ int main(int argc, char **argv) {
         ParamAccessor helloParam = dm.param("/hello");
         std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 
-        // cache a array param and get its value using two methods
-        ParamAccessor strArrayParam= dm.param("/primes_str");
-        std::cout << "Prime String Param using getValueAt: " << strArrayParam.getValueAt(0).string_value() << '\n';
-        std::cout << "Prime String Param using getValue: " << strArrayParam.getValue<std::string>() << '\n';
-
-        // access a param directly
+        // access a sub-param directly
         std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
-
-        // set some values in the device model using a cached param
-        // and a path. N.B. types can be inferred
-        std::cout << "setting values to something different\n";
-        helloParam.setValue(3.142f);     // example using cached param
-        dm.param("/world").setValue(3);  // example using chaining
-
-        std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
-
-        // demo caching a sub-param
-        ParamAccessor longitudeParam = dm.param("/location/longitude");
-        std::cout << "Longitude: " << longitudeParam.getValue<float>() << '\n';
-        longitudeParam.setValue(30.0f);
-        std::cout << "Updated Longitude: " << longitudeParam.getValue<float>() << '\n';
-
-
-        // add a struct param the hard way
-        // catena::Param sparam{};
-        // *(sparam.mutable_name()->mutable_monoglot()) = "struct param";
-        // *(sparam.mutable_fqoid()) = "sparam";
-        // sparam.mutable_type()->set_param_type(
-        //     catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT);
-
-        // catena::Value fval;
-        // fval.set_float32_value(1.23);
-        // catena::Value struct_val;
-        // (*(*struct_val.mutable_struct_value()->mutable_fields())["float_field"]
-        //       .mutable_value()) = fval;
-        // (*sparam.mutable_value()) = struct_val;
-        // dm.addParam("/sparam", std::move(sparam));
-
-        // write out the updated device model
-        // std::cout << "Updated Device Model: " << dm << '\n';
-
+        
         // report the wire-size of the device model
         std::string serialized;
         dm.device().SerializeToString(&serialized);
