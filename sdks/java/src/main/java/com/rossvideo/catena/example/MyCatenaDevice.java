@@ -18,7 +18,6 @@ import catena.core.parameter.CommandResponse;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.Param;
-import catena.core.parameter.ParamDescriptor;
 import catena.core.parameter.ParamType;
 import catena.core.parameter.ParamType.Type;
 import catena.core.parameter.SetValuePayload;
@@ -62,8 +61,8 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    private Map<String, ParamDescriptor> buildAllParamDescriptors() {
-        Map<String, ParamDescriptor> parameters = new HashMap<>();
+    private Map<String, Param> buildAllParamDescriptors() {
+        Map<String, Param> parameters = new HashMap<>();
         parameters.put(
           FLOAT_OID, buildParamDescriptor(FLOAT_OID, "float parameter", Type.FLOAT32, false, 1, floatValue));
         parameters.put(INT_OID,
@@ -71,31 +70,30 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
         return parameters;
     }
     
-    private Map<String, ParamDescriptor> buildAllCommandDescriptors() {
-        Map<String, ParamDescriptor> commands = new HashMap<>();
+    private Map<String, Param> buildAllCommandDescriptors() {
+        Map<String, Param> commands = new HashMap<>();
         commands.put(
           CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", Type.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
         return commands;
     }
     
-    private ParamDescriptor buildParamDescriptor(String oid, String name, Type type, boolean readonly,
+    private Param buildParamDescriptor(String oid, String name, Type type, boolean readonly,
             int precision, Value value) {
                 return buildParamDescriptor(oid, name, type, readonly, precision, value, false);
     
     }
     
-    private ParamDescriptor buildParamDescriptor(String oid, String name, Type type, boolean readonly,
+    private Param buildParamDescriptor(String oid, String name, Type type, boolean readonly,
                                                  int precision, Value value, boolean response) {
         Param param = Param.newBuilder()
-                        .setFqoid(deviceName + '.' + oid)
-                        .setName(PolyglotText.newBuilder().setMonoglot(name).build())
+                        .setName(PolyglotText.newBuilder().putDisplayStrings("en", name).build())
                         .setType(ParamType.newBuilder().setType(type).build())
                         .setReadOnly(readonly)
                         .setPrecision(precision)
                         .setValue(value)
                         .setResponse(response)
                         .build();
-        return ParamDescriptor.newBuilder().setParam(param).build();
+        return param;
     }
     
     @Override
