@@ -22,6 +22,7 @@
 #include <typeinfo>
 #include <vector>
 #include <functional>
+#include <unordered_map>
 
 using std::size_t;
 
@@ -68,6 +69,18 @@ struct FieldInfo {
   }
 };
 
+struct VariantMemberInfo {
+  size_t index; /**< index of the member in the variant */
+  std::function<void*(void* dst)> set; /**< function to set the variant */
+  std::function<TypeInfo()> getTypeInfo; /**< type info of nested struct */
+};
+
+struct VariantInfo {
+  std::string name; /**< the variant's name */
+  std::unordered_map<std::string, VariantMemberInfo> members; /**< name to member Info map */
+};
+
+
 
 
 /**
@@ -105,6 +118,41 @@ std::function<catena::TypeInfo()> getTypeFunction() {
   }
 }
 
+
+/**
+ * @brief determine at compile time if a type T has a getType method.
+ *
+ * default is false
+ * 
+ * @todo refactor using C++ 20 concepts to make the code a bit clearer
+ *
+ * @tparam T
+ * @tparam typename
+ */
+template <typename T, typename = void>
+constexpr bool has_getVariant{};
+
+/**
+ * @brief specialization for types that do have getType method
+ *
+ * @tparam T
+ */
+template <typename T>
+constexpr bool
+    has_getVariant<T, std::void_t<decltype(std::declval<T>().getVariant())>> = true;
+
+/**
+ * @brief returns the getType method for types that have it,
+ * otherwise returns a function that returns an empty TypeInfo object.
+*/
+template<typename T>
+std::function<catena::TypeInfo()> getVariantFunction() {
+  if constexpr (catena::has_getVariant<T>) {
+    return T::getType;
+  } else {
+    return []() -> catena::TypeInfo {return catena::TypeInfo{};};
+  }
+}
 // /**
 //  * @brief base class providing conversion interface.
 //  *

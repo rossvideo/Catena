@@ -37,6 +37,8 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <typeinfo>
+#include <typeindex>
 
 namespace catena {
 
@@ -97,6 +99,7 @@ class IParamAccessor {
     using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
                                                 const ParamIndex>;
 
+    using VariantInfoGetter = catena::patterns::Functory<std::type_index, const catena::VariantInfo&>;
 
   public:
     virtual ~IParamAccessor() = default;
@@ -122,6 +125,10 @@ class IParamAccessor {
         return getterAt.addFunction(kind, func);
     }
 
+    static bool inline registerVariantGetter(const std::type_index ti, VariantInfoGetter::Function func) {
+        auto& getter = VariantInfoGetter::getInstance();
+        return getter.addFunction(ti, func);
+    }
   protected:
     /**
    * Access value object of the dependent class
@@ -282,8 +289,19 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
         Param& parent = param_.get();
         Param& childParam = parent.mutable_params()->at(fieldName);
         Value& value = value_.get();
-        catena::Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
-        typename DM::ParamAccessorData pad{&childParam, v};
+        typename DM::ParamAccessorData pad{};
+        if (value.kind_case() == Value::KindCase::kStructValue) {
+            // field is a struct
+            Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
+            pad = {&childParam, v};
+        } else if (value.kind_case() == Value::KindCase::kVariantValue) {
+            // field is a variant
+            Value* v = value.mutable_variant_value()->mutable_value();
+            pad = {&childParam, v};
+        } else {
+            // field is a simple or simple array type
+            BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
+        }
         return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
     }
 
@@ -298,11 +316,22 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
         typename DM::LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
         const Param& childParam = parent.params().at(fieldName);
-        Value& value = value_.get();
-        const Value& v = value.struct_value().fields().at(fieldName).value();
-        // ewww, const_cast! gross! but ok because we're reapplying const-ness in the 
-        // return type
-        typename DM::ParamAccessorData pad{const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+        const Value& value = value_.get();
+        typename DM::ParamAccessorData pad{};
+        if (value.kind_case() == Value::KindCase::kStructValue) {
+            // field is a struct
+            // yes the const_cast is gross, but ok because we re-apply constness on return
+            const Value& v = value.struct_value().fields().at(fieldName).value();
+            pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+        } else if (value.kind_case() == Value::KindCase::kVariantValue) {
+            // field is a variant
+            // yes the const_cast is gross, but ok because we re-apply constness on return
+            const Value& v = value.variant_value().value();
+            pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+        } else {
+            // field is a simple or simple array type
+            BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
+        }
         return std::unique_ptr<IParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
     }
 
@@ -395,8 +424,8 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
     }
 
     /**
-     * @brief Get the value of the stored parameter to which this object
-     * provides access.
+     * @brief Get the value of the stored parameter to which objects of
+     * this class provide access.
      * 
      * @tparam V type of the value stored by the param. This must be a native type.
      * @param dst reference to the destination object written to by this method.
@@ -405,6 +434,7 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
         typename DM::LockGuard lock(deviceModel_.get().mutex_);
         auto& getter = Getter::getInstance();
         if constexpr (catena::has_getType<V>) {
+            // dst is a struct
             const auto& typeInfo = dst.getType();
             char* base = reinterpret_cast<char*>(&dst);
             auto* srcFields = value_.get().mutable_struct_value()->mutable_fields();
@@ -424,7 +454,29 @@ template <typename DM> class ParamAccessor : public IParamAccessor {
                     }
                 }
             }
+        } else if constexpr (catena::meta::is_variant<V>::value) {
+            // dst is a variant gather information about the protobuf source
+            const VariantValue& src = value_.get().variant_value();
+            const std::string& variant = src.variant_type(); 
+            Value::KindCase kc = src.value().kind_case();
+            
+            // gather info about the native destination
+            auto& variantInfoFunctory = catena::IParamAccessor::VariantInfoGetter::getInstance();
+            const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
+            const catena::VariantMemberInfo vmi = variantInfo.members.at(variant);
+            catena::TypeInfo ti = vmi.getTypeInfo();
+            void* ptr = vmi.set(&dst); // set the variant to the correct type, and return a pointer to it
+            if (kc == Value::KindCase::kStructValue) {
+                // variant value is a struct
+                std::unique_ptr<IParamAccessor> sp = subParam(variant);          
+                getChildStructValue(reinterpret_cast<char*>(ptr), ti, sp.get());
+            } else {
+                // field is a simple or simple array type
+                getter[kc](reinterpret_cast<char*>(ptr), &src.value());
+            }
+            std::cout << "variant: " << variant << ", idx: " << variantInfo.members.at(variant).index << std::endl;
         } else {
+            // dst is a simple type
             getter[getKindCase<V>(dst)](&dst, &value_.get());
         }
     }

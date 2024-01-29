@@ -305,5 +305,83 @@
                 "float32_value": 123.456
             }
         },
+        "slot": {
+            "type": {
+                "type": "STRUCT_VARIANT"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Slot"
+                }
+            },
+            "params": {
+                "AudioSlot": {
+                    "type": {
+                        "type": "STRUCT"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Audio Slot"
+                        }
+                    },
+                    "params": {
+                        "name": {
+                            "type": {
+                                "type": "STRING"
+                            },
+                            "name": {
+                                "display_strings": {
+                                    "en": "Name"
+                                }
+                            },
+                            "value": {
+                                "string_value": "I am an audio slot"
+                            }
+                        }
+                    }
+                },
+                "VideoSlot": {
+                    "type": {
+                        "type": "STRUCT"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Video Slot"
+                        }
+                    },
+                    "params": {
+                        "name": {
+                            "type": {
+                                "type": "STRING"
+                            },
+                            "name": {
+                                "display_strings": {
+                                    "en": "Name"
+                                }
+                            },
+                            "value": {
+                                "string_value": "I am a video slot"
+                            }
+                        }
+                    }
+                }
+            },
+            "value": {
+                "variant_value": {
+                    "variant_type": "VideoSlot",
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "name": {
+                                    "value": {
+                                        "string_value": "I am a video slot"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

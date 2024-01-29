@@ -55,6 +55,18 @@ namespace catena {
     return t;                                         \
   }
 
+
+#define REFLECTABLE_VARIANT(classname, ...) \
+using classname = std::variant<DOFOREACH(ARGTYPE, __VA_ARGS__)>
+
+// REFLECTABLE_VARIANT(
+//     Slot,
+//     (AudioSlot) audio,
+//     (VideoSlot) video
+// );
+
+
+
 // /**
 //  * @brief applies the type T to the parameter
 //  *
