@@ -11,6 +11,7 @@
 */
 
 #include <Singleton.h>
+#include <Meta.h>
 
 #include <mutex>
 #include <sstream>
@@ -21,7 +22,7 @@
 
 namespace catena {
 namespace patterns {
-
+            
 /**
  * @brief Functory template to store function objects that
  * can then be retrieved by a key.
@@ -94,7 +95,8 @@ public:
         } else {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;
-            err << ", attempted to register item with duplicate key: " << key;
+            err << ", attempted to register item with duplicate key";
+            catena::meta::stream_if_possible (err, key);
             throw std::runtime_error(err.str());
         }
         return true;
@@ -116,12 +118,19 @@ public:
         } else {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;
-            err << ", could not find entry with key: " << key;
+            catena::meta::stream_if_possible (err, key);
             throw std::runtime_error(err.str());
         }
     }
 
-
+    /**
+     * returns true if the key is in the registry
+     * @param key - the key to look for
+    */
+    bool has(const K key) const {
+        LockGuard lock(_mtx);
+        return _registry.find(key) != _registry.end();
+    }
 
 
 
