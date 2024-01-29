@@ -24,6 +24,7 @@
 #include <DeviceModel.h>
 #include <ParamAccessor.h>
 #include <Path.h>
+#include <utils.h>
 
 #include <iomanip>
 #include <iostream>
@@ -41,6 +42,10 @@ int main(int argc, char **argv) {
         std::cout << "usage: " << argv[0] << " path/to/input-file.json\n";
         exit(EXIT_SUCCESS);
     }
+
+catena::ParamType pt;
+pt.set_template_oid("hello world");
+std::cout << catena::printJSON(pt) << '\n';
 
     try {
         // read a json file into a DeviceModel object

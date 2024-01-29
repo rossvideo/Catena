@@ -11,11 +11,14 @@
         },
         "variantlist_example": {
             "import": {"url": "include"},
-            "type": {"type": "UNDEFINED"}
+            "type" : {"type": "UNDEFINED"}
         },
         "hello": {
             "type": {"type": "STRING"},
             "value": {"string_value": "Hello World!"}
+        },
+        "template_oid_example": {
+            "type": {"template_oid": "/template/oid", "type": "UNDEFINED"}
         }
     }
 }
