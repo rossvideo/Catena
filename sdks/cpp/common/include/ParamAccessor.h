@@ -32,6 +32,7 @@
 #include <TypeTraits.h>
 #include <Functory.h>
 
+
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -99,7 +100,7 @@ class IParamAccessor {
     using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
                                                 const ParamIndex>;
 
-    using VariantInfoGetter = catena::patterns::Functory<std::type_index, const catena::VariantInfo&>;
+    using VariantInfoGetter = catena::patterns::Functory<std::type_index, const VariantInfo&>;
 
   public:
     virtual ~IParamAccessor() = default;

@@ -61,48 +61,11 @@ struct VideoSlot {
     REFLECTABLE(VideoSlot, (std::string) name);
 };
 
-using SlotVariant = std::variant<AudioSlot, VideoSlot>;
-
-// clang_format pop
-
-
-
-const catena::VariantInfo &getSlotVariant() {
-    static catena::VariantInfo vi;
-    if (vi.name.length())
-        return vi;
-    vi.name = "SlotVariant";
-    vi.members.insert({
-        "AudioSlot",
-        {
-            0,
-            [](void* arg) -> void* {
-                std::variant_alternative_t<0, SlotVariant> v{};
-                SlotVariant& dst = *reinterpret_cast<SlotVariant*>(arg);
-                dst = v; // forces variant to correct type
-                return reinterpret_cast<void*>(&std::get<0>(dst));
-            },
-            catena::getTypeFunction<AudioSlot>()
-        }
-    });
-    vi.members.insert({
-        "VideoSlot",
-        {
-            1,
-            [](void* arg) -> void* {
-                std::variant_alternative_t<1, SlotVariant> v{};
-                SlotVariant& dst = *reinterpret_cast<SlotVariant*>(arg);
-                dst = v;
-                return reinterpret_cast<void*>(&std::get<1>(dst));
-            },
-            catena::getTypeFunction<VideoSlot>()
-        }
-    });
-    return vi;
-}
-static bool registerSlotVariantGetter = catena::IParamAccessor::registerVariantGetter(std::type_index(typeid(SlotVariant)),getSlotVariant);
-
-
+REFLECTABLE_VARIANT(
+    SlotVariant,
+    (AudioSlot),
+    (VideoSlot)
+);
 
 int main(int argc, char **argv) {
     // process command line

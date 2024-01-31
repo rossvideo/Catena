@@ -68,7 +68,6 @@ struct FieldInfo {
     name = std::string(fieldName);
   }
 };
-
 struct VariantMemberInfo {
   size_t index; /**< index of the member in the variant */
   std::function<void*(void* dst)> set; /**< function to set the variant */

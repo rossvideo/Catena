@@ -77,7 +77,7 @@
   VAL
 
 /**
- * @brief returne arg count
+ * @brief return arg count
  *
  */
 #define NARGS_PASS4(x) x
