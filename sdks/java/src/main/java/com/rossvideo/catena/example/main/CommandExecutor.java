@@ -1,5 +1,7 @@
 package com.rossvideo.catena.example.main;
 
+import java.io.File;
+
 import com.rossvideo.catena.example.MyCatenaClient;
 import com.rossvideo.catena.example.MyCatenaDevice;
 
@@ -65,7 +67,20 @@ final class CommandExecutor {
         System.out.println("TEST: Execute command \"foo('bar')\" with no response expected");
         client.executeCommand("foo", slotNumber, "bar", false);
         Thread.sleep(250);
-
+        
+        System.out.println("TEST: Push file to server");
+        client.pushFile("file-receive", slotNumber, new File("C:\\Users\\jpeltzer\\Pictures\\cd-3.jpg"));
+        
+        System.out.println("TEST: Push same file to server");
+        client.pushFile("file-receive", slotNumber, new File("C:\\Users\\jpeltzer\\Pictures\\cd-3.jpg"));
+        
+        System.out.println("TEST: Push large file to server");
+        client.pushFile("file-receive", slotNumber, new File("C:\\Users\\jpeltzer\\Pictures\\DSC_7957.jpg"));   
+        
+        System.out.println("TEST: Push multiple files to server");
+        client.pushFile("file-receive", slotNumber, new File("C:\\Users\\jpeltzer\\Pictures\\2018-1").listFiles());
+        
+        
         // Tests for getDevice
         System.out.println("TEST: GetDevice for slot: " + slotNumber);
         client.getDevice(slotNumber);

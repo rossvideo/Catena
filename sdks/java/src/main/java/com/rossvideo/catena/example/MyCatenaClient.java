@@ -1,6 +1,10 @@
 package com.rossvideo.catena.example;
 
+import java.io.File;
+import java.io.IOException;
+
 import com.rossvideo.catena.example.command.CommandResponseHandler;
+import com.rossvideo.catena.example.command.FilePushResponseHandler;
 
 import catena.core.device.DeviceRequestPayload;
 import catena.core.parameter.ExecuteCommandPayload;
@@ -23,6 +27,7 @@ public class MyCatenaClient implements AutoCloseable {
     private CatenaServiceBlockingStub blockingStub; // Used for unary and server side streaming calls
     private CatenaServiceStub asyncStub; // Used for client-side and bi-directional streaming calls
     private ManagedChannel channel;
+    private int slotNumber;
 
     public MyCatenaClient(String hostname, int port) {
         this(hostname, port, 1);
@@ -31,6 +36,7 @@ public class MyCatenaClient implements AutoCloseable {
     public MyCatenaClient(String hostname, int port, int slotNumber) {
         this.hostname = hostname;
         this.port = port;
+        this.slotNumber = slotNumber;
     }
 
     public void start() {
@@ -96,6 +102,27 @@ public class MyCatenaClient implements AutoCloseable {
         } catch (StatusRuntimeException e) {
             printStatusRuntimeException("executeCommand", e);
             commandPayloadStream.onError(e);
+        }
+    }
+    
+    public void pushFile(String oid, int slot, File file) throws InterruptedException {
+        pushFile(oid, slot, new File[] { file });
+    }
+    
+    public void pushFile(String oid, int slot, File[] files) throws InterruptedException {
+        FilePushResponseHandler push = new FilePushResponseHandler(slot, oid, files, this);
+        StreamObserver<ExecuteCommandPayload> commandPayloadStream = asyncStub.executeCommand(push);
+        synchronized (this)
+        {
+            try
+            {
+                push.setTxStream(commandPayloadStream);
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            this.wait(60000);
         }
     }
 
