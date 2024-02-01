@@ -107,9 +107,9 @@ int main(int argc, char **argv) {
         locParam.setValueNative(loc);
 
         // read a variant
-        ParamAccessor slotParam = dm.param("/slot");
-        SlotVariant slot = {AudioSlot{"audio"}}; // initialize the variant
-        slotParam.getValueNative(slot);
+        // ParamAccessor slotParam = dm.param("/slot");
+        // SlotVariant slot = {AudioSlot{"audio"}}; // initialize the variant
+        // slotParam.getValueNative(slot);
 
         // read & write native int32_t
         ParamAccessor numParam = dm.param("/a_number");

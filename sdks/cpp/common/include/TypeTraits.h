@@ -51,7 +51,8 @@ struct FieldInfo {
   std::string name; /**< the field's name */
   int offset;       /**< the offset to the field's data from struct base */
   std::function<StructInfo()> getTypeInfo; /**< type info of nested struct */
-  std::function<void(void* dstAddr, ParamAccessor*)> wrapGetter;
+  std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
+  std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
   /**
    * @brief class for field conversion to / back from protobuf.
    *

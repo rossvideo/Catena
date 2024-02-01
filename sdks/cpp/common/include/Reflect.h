@@ -36,9 +36,13 @@ namespace catena {
   fi.setName(ARGNAME_AS_STRING(x));                          \
   fi.offset = offsetof(_className, ARGNAME(x));              \
   fi.getTypeInfo = catena::getTypeFunction<ARGTYPE(x)>();    \
-  fi.wrapGetter = [](void* dstAddr, ParamAccessor* pa) { \
+  fi.wrapGetter = [](void* dstAddr, const ParamAccessor* pa) { \
     auto dst = reinterpret_cast<NthElement<typelist, idx>*>(dstAddr); \
     pa->getValueNative<NthElement<typelist, idx>>(*dst); \
+  }; \
+  fi.wrapSetter = [](ParamAccessor* pa, const void* srcAddr) { \
+    auto src = reinterpret_cast<const NthElement<typelist, idx>*>(srcAddr); \
+    pa->setValueNative<NthElement<typelist, idx>>(*src); \
   }; \
   t.fields.push_back(fi);                               
 
