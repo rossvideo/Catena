@@ -50,7 +50,7 @@ class ParamAccessor;  // forward reference
 struct FieldInfo {
   std::string name; /**< the field's name */
   int offset;       /**< the offset to the field's data from struct base */
-  std::function<StructInfo()> getTypeInfo; /**< type info of nested struct */
+  std::function<StructInfo()> getStructInfo; /**< type info of nested struct */
   std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
   std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
   /**
@@ -75,7 +75,8 @@ struct FieldInfo {
 struct VariantMemberInfo {
   size_t index; /**< index of the member in the variant */
   std::function<void*(void* dst)> set; /**< function to set the variant */
-  std::function<StructInfo()> getTypeInfo; /**< type info of nested struct */
+  std::function<StructInfo()> getStructInfo; /**< type info of nested struct */
+  std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
 };
 
 struct VariantInfo {
@@ -113,7 +114,7 @@ constexpr bool
  * otherwise returns a function that returns an empty StructInfo object.
 */
 template<typename T>
-std::function<catena::StructInfo()> getTypeFunction() {
+std::function<catena::StructInfo()> getStructInfoFunction() {
   if constexpr (catena::has_getStructInfo<T>) {
     return T::getStructInfo;
   } else {

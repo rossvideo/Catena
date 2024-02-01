@@ -31,6 +31,8 @@
 #include <stdexcept>
 #include <utility>
 #include <typeinfo>
+#include <typeindex>
+#include <variant>
 
 using Index = catena::Path::Index;
 using DeviceModel = catena::DeviceModel;
@@ -70,6 +72,8 @@ REFLECTABLE_VARIANT(
     (VideoSlot)
 );
 
+static bool added = catena::ParamAccessor::registerVariantGetter(std::type_index(typeid(SlotVariant)), getSlotVariant);
+
 static bool floatGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
     *reinterpret_cast<float *>(dstAddr) = src->float32_value();
 });
@@ -96,6 +100,11 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
+        // read a variant
+        ParamAccessor slotParam = dm.param("/slot");
+        SlotVariant slot = {AudioSlot{"audio"}}; // initialize the variant
+        slotParam.getValueNative(slot);
+
         // read & write native struct
         Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford" }, loc2;
         ParamAccessor locParam = dm.param("/location");
@@ -105,11 +114,6 @@ int main(int argc, char **argv) {
                   << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
                   << '\n';
         locParam.setValueNative(loc);
-
-        // read a variant
-        // ParamAccessor slotParam = dm.param("/slot");
-        // SlotVariant slot = {AudioSlot{"audio"}}; // initialize the variant
-        // slotParam.getValueNative(slot);
 
         // read & write native int32_t
         ParamAccessor numParam = dm.param("/a_number");

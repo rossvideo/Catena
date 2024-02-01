@@ -35,7 +35,7 @@ namespace catena {
 #define PUSH_FIELD_INFO(idx, x)                              \
   fi.setName(ARGNAME_AS_STRING(x));                          \
   fi.offset = offsetof(_className, ARGNAME(x));              \
-  fi.getTypeInfo = catena::getTypeFunction<ARGTYPE(x)>();    \
+  fi.getStructInfo = catena::getStructInfoFunction<ARGTYPE(x)>();    \
   fi.wrapGetter = [](void* dstAddr, const ParamAccessor* pa) { \
     auto dst = reinterpret_cast<NthElement<typelist, idx>*>(dstAddr); \
     pa->getValueNative<NthElement<typelist, idx>>(*dst); \
@@ -60,7 +60,7 @@ namespace catena {
   /* accessible from PUSH_FIELD_INFO define */        \
   using typelist = TypeList< DOFOREACH(ARGTYPE, __VA_ARGS__) >; \
   using _className = className;                       \
-  static const catena::StructInfo& getStructInfo() {          \
+  static const catena::StructInfo& getStructInfo() {  \
     static catena::StructInfo t;                        \
     if (t.name.length()) return t;                    \
     t.name = #className;                              \
@@ -74,12 +74,25 @@ namespace catena {
  * @brief adds info about a variant member to the members map in VariantInfo
 */
 #define ADD_VARIANT_MEMBER(idx, x) \
-vi.members.insert({QUOTED(ARGTYPE(x)), {idx, [](void* arg) -> void* {\
-       std::variant_alternative_t<idx, vtype> v{}; \
-       vtype& dst = *reinterpret_cast<vtype*>(arg); \
-       dst = v; \
-       return reinterpret_cast<void*>(&std::get<idx>(dst)); \
-   }, catena::getTypeFunction<ARGTYPE(x)>()}});
+vi.members.insert({QUOTED(ARGTYPE(x)), \
+  { \
+    idx, \
+    [](void* arg) -> void* { \
+      vtype& dst = *reinterpret_cast<vtype*>(arg); \
+      if (dst.index() != idx) { \
+        /* change the variant type to the new type */ \
+        std::variant_alternative_t<idx, vtype> v{}; \
+        dst = v; \
+      } \
+      return reinterpret_cast<void*>(&std::get<idx>(dst)); \
+   }, \
+   catena::getStructInfoFunction<ARGTYPE(x)>(), \
+   [](void* dstAddr, const ParamAccessor* pa) { \
+     auto dst = reinterpret_cast<std::variant_alternative_t<idx, vtype>*>(dstAddr); \
+     pa->getValueNative<std::variant_alternative_t<idx, vtype>>(*dst); \
+   } \
+  } \
+});
 
 
 

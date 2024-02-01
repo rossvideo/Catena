@@ -398,12 +398,13 @@ class ParamAccessor {
             auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
             const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
             const catena::VariantMemberInfo vmi = variantInfo.members.at(variant);
-            catena::StructInfo ti = vmi.getTypeInfo();
-            void* ptr = vmi.set(&dst);  // set the variant to the correct type, and return a pointer to it
+
+            // set the variant to the correct type, and return a pointer to it
+            void* ptr = vmi.set(&dst);
             if (kc == Value::KindCase::kStructValue) {
                 // variant value is a struct
-                std::unique_ptr<ParamAccessor> sp = subParam(variant);
-                //getChildStructValue(reinterpret_cast<char*>(ptr), ti, sp.get());
+                const std::unique_ptr<ParamAccessor> sp = subParam(variant);
+                vmi.wrapGetter(ptr, sp.get());
             } else {
                 // field is a simple or simple array type
                 getter[kc](reinterpret_cast<char*>(ptr), &src.value());
