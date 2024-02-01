@@ -81,19 +81,19 @@ message BasicParamInfo {
 
 /* When streamed, only the payload field will be used after the first message. */
 message DataPayload {
-  map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
-
   enum PayloadEncoding {
     UNCOMPRESSED = 0;
     GZIP = 1;
     DEFLATE = 2;
   }
 
-  PayloadEncoding payload_encoding = 2;
+  map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
+  bytes digest = 2; // SHA-256 digest of the payload - flags the recipient to respond with proceed flag set to true/false to resume or cancel payload data
+  PayloadEncoding payload_encoding = 3;
 
   oneof kind {
-  	string url = 3;    // URL containing data for the payload
-  	bytes payload = 4; // Data for the payload
+  	string url = 4;    // URL containing data for the payload
+  	bytes payload = 5; // Data for the payload
   }
 }
 
@@ -325,6 +325,7 @@ message ExecuteCommandPayload {
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
   bool respond = 4; // false if Server/Device should not send any responses.
+  bool proceed = 5;
 }
 
 message Exception {
@@ -339,5 +340,6 @@ message CommandResponse {
     google.protobuf.Empty no_response = 1; // Server/Device does not have a response for the command.
     Value response = 2;
     Exception exception = 3;  // This is for Server/Device error executing the command.
+    bool proceed = 4;
   }
 }
