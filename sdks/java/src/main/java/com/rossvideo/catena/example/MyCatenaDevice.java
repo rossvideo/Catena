@@ -1,11 +1,15 @@
 package com.rossvideo.catena.example;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
-import com.rossvideo.catena.example.command.ExecuteCommandPayloadHandler;
+import com.rossvideo.catena.command.DelegatingStreamObserver;
+import com.rossvideo.catena.command.StreamObserverFactory;
+import com.rossvideo.catena.example.command.FileReceiveCommandHandler;
+import com.rossvideo.catena.example.command.FooCommandHandler;
 import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
@@ -15,6 +19,7 @@ import catena.core.device.DeviceComponent;
 import catena.core.device.DeviceRequestPayload;
 import catena.core.language.PolyglotText;
 import catena.core.parameter.CommandResponse;
+import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.Param;
@@ -26,11 +31,18 @@ import catena.core.parameter.Value.KindCase;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
 import io.grpc.stub.StreamObserver;
 
-public class MyCatenaDevice extends CatenaServiceImplBase {
+public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObserverFactory<ExecuteCommandPayload, CommandResponse> {
 
+    public static File getDefaultWorkingDirectory()
+    {
+        return new File("C:\\Users\\jpeltzer\\Pictures\\rx");
+        //return new File(System.getProperty("user.dir") + File.separatorChar +" Catena Example");
+    }
+    
     public static final String INT_OID = "integer";
     public static final String FLOAT_OID = "float";
     public static final String CMD_FOO_OID = "foo";
+    public static final String CMD_FILE_RECEIVE_OID = "file-receive";
 
     private static final AtomicInteger deviceId = new AtomicInteger(1);
 
@@ -39,8 +51,9 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 
     private final String deviceName = MyCatenaDevice.class.getSimpleName() + '-' + deviceId.getAndIncrement();
     private final int slot;
+    private File workingDirectory;
 
-    public MyCatenaDevice(int slot) { this.slot = slot; }
+    public MyCatenaDevice(int slot, File workingDirectory) { this.slot = slot; this.workingDirectory = workingDirectory; }
 
     @Override
     public void deviceRequest(DeviceRequestPayload request,
@@ -74,6 +87,8 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
         Map<String, Param> commands = new HashMap<>();
         commands.put(
           CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", Type.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
+        commands.put(
+                CMD_FILE_RECEIVE_OID, buildParamDescriptor(CMD_FILE_RECEIVE_OID, "file receive command", Type.DATA, false, 1, Value.newBuilder().setDataPayload(DataPayload.newBuilder().build()).build(), true));
         return commands;
     }
     
@@ -98,7 +113,7 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
     
     @Override
     public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
-        return new ExecuteCommandPayloadHandler(slot, responseObserver);
+        return new DelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
     }
 
     @Override
@@ -170,5 +185,20 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
 
         responseObserver.onNext(value);
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public StreamObserver<ExecuteCommandPayload> createStreamObserver(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream)
+    {
+        String oid = firstMessage.getOid();
+        switch (oid)
+        {
+            case CMD_FOO_OID:
+                return new FooCommandHandler(slot, responseStream);
+            case CMD_FILE_RECEIVE_OID:
+                return new FileReceiveCommandHandler(workingDirectory, responseStream);
+            default:
+                throw new UnknownOidException(oid);
+        }
     }
 }

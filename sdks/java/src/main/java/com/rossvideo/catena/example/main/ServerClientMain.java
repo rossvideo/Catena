@@ -21,7 +21,7 @@ public class ServerClientMain {
                 ServerCredentials credentials =
                   InsecureServerCredentials.create();  // TODO: Create proper credentials.
                 Server server = Grpc.newServerBuilderForPort(port, credentials)
-                                  .addService(new MyCatenaDevice(slotNumber))
+                                  .addService(new MyCatenaDevice(slotNumber, MyCatenaDevice.getDefaultWorkingDirectory()))
                                   .build();
                 server.start();
 
