@@ -55,8 +55,8 @@ using grpc::ServerContext;
 using grpc::Status;
 
 using Index = catena::Path::Index;
-using DeviceModel = typename catena::DeviceModel<catena::Threading::kMultiThreaded>;
-using ParamAccessor = typename catena::ParamAccessor<DeviceModel>;
+using DeviceModel =  catena::DeviceModel;
+using ParamAccessor =  catena::ParamAccessor;
 
 
 // set up the command line parameters
@@ -141,7 +141,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
         try {
             ParamAccessor p = dm_.get().param(req->oid());
             authorize(context);
-            *res = p.getValue<catena::Value>(req->element_index());
+            //*res = p.getValue<catena::Value>(req->element_index());
             std::cout << "GetValue: " << req->oid() << std::endl;
             return Status::OK;
 
@@ -161,7 +161,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
         try {
             auto p = dm_.get().param(req->oid());
             authorize(context);
-            p.setValue(req->value(), req->element_index());
+            //p.setValue(req->value(), req->element_index());
             std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
             return Status::OK;
 

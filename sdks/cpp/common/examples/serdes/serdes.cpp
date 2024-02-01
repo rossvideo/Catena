@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
         // read a json file into a DeviceModel object
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
-        catena::DeviceModel<catena::Threading::kSingleThreaded> dm(argv[1]);
+        catena::DeviceModel dm(argv[1]);
 
         
 

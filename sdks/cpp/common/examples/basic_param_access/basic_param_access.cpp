@@ -33,32 +33,35 @@
 #include <typeinfo>
 
 using Index = catena::Path::Index;
-using DeviceModel = catena::DeviceModel<catena::Threading::kSingleThreaded>;
+using DeviceModel = catena::DeviceModel;
 using Param = catena::Param;
-using ParamAccessor = catena::ParamAccessor<DeviceModel>;
+using ParamAccessor = catena::ParamAccessor;
+
+struct Wibble {
+};
 
 // clang_format push
 // clang_format off
 // define some structs to test struct support
-// note use of REFLECTABLE macro which provides runtime reflection
+// note use of REFLECTABLE_STRUCT macro which provides runtime reflection
 // and type conversion support used by ParamAccessor's *Native methods
 //
 struct Coords {
-    REFLECTABLE(Coords, (float) x, (float) y, (float) z);
+    REFLECTABLE_STRUCT(Coords, (float) x, (float) y, (float) z);
 };
+
 
 // note nested struct
 struct Location {
-    REFLECTABLE(Location, (float) latitude, (float) longitude, (int32_t) altitude, (std::string) name,
-                (Coords) coords);
+    REFLECTABLE_STRUCT(Location, (Coords) coords, (float) latitude, (float) longitude, (int32_t) altitude, (std::string) name);
 };
 
 struct AudioSlot {
-    REFLECTABLE(AudioSlot, (std::string) name);
+    REFLECTABLE_STRUCT(AudioSlot, (std::string) name);
 };
 
 struct VideoSlot {
-    REFLECTABLE(VideoSlot, (std::string) name);
+    REFLECTABLE_STRUCT(VideoSlot, (std::string) name);
 };
 
 REFLECTABLE_VARIANT(
@@ -66,6 +69,18 @@ REFLECTABLE_VARIANT(
     (AudioSlot),
     (VideoSlot)
 );
+
+static bool floatGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<float *>(dstAddr) = src->float32_value();
+});
+
+static bool int32Getter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
+});
+
+static bool stringGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kStringValue, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
+});
 
 int main(int argc, char **argv) {
     // process command line
@@ -80,6 +95,16 @@ int main(int argc, char **argv) {
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
+
+        // read & write native struct
+        Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford" }, loc2;
+        ParamAccessor locParam = dm.param("/location");
+
+        locParam.getValueNative(loc2);
+        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
+                  << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
+                  << '\n';
+        locParam.setValueNative(loc);
 
         // read a variant
         ParamAccessor slotParam = dm.param("/slot");
@@ -117,26 +142,16 @@ int main(int argc, char **argv) {
         powersParam.getValueAtNative(twoCubed, 3);
         std::cout << "2^3: " << twoCubed << '\n';
 
-        // read & write native struct
-        Location loc = {10.0f, 20.0f, -30, "Old Trafford", {91.f, 82.f, 73.f}}, loc2;
-        ParamAccessor locParam = dm.param("/location");
-
-        locParam.getValueNative(loc2);
-        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
-                  << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
-                  << '\n';
-        locParam.setValueNative(loc);
-
         // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';
 
 
-        // cache a param and get its value
-        ParamAccessor helloParam = dm.param("/hello");
-        std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
+        // // cache a param and get its value
+        // ParamAccessor helloParam = dm.param("/hello");
+        // std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
 
-        // access a sub-param directly
-        std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
+        // // access a sub-param directly
+        // std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
 
         // report the wire-size of the device model
         std::string serialized;

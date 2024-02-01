@@ -26,11 +26,10 @@
 
 #include <Fake.h>
 #include <Path.h>
-#include <Threading.h>
 #include <Status.h>
+
 #include <mutex>
 #include <memory>
-
 #include <iostream>
 #include <string>
 #include <type_traits>
@@ -38,7 +37,7 @@
 
 namespace catena {
 
-template <typename DM> class ParamAccessor;  // forward reference
+class ParamAccessor;  // forward reference
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
@@ -57,29 +56,22 @@ template <typename DM> class ParamAccessor;  // forward reference
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
-template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
-    friend ParamAccessor<DeviceModel>;
+class DeviceModel {
+    friend ParamAccessor;
 
   public:
-    /**
-   * @brief which threading model is active.
-   *
-   */
-    const catena::Threading kThreading = T;
 
     /**
-   * @brief Choose the mutex type
+   * @brief Mutexlock type
    *
    */
-    using Mutex = typename std::conditional<T == catena::Threading::kMultiThreaded, std::recursive_mutex,
-                                            FakeMutex>::type;
+    using Mutex = std::recursive_mutex;
 
     /**
-   * @brief Choose the lock guard type
+   * @brief Lock Guard type
    *
    */
-    using LockGuard = typename std::conditional<T == catena::Threading::kMultiThreaded,
-                                                std::lock_guard<Mutex>, FakeLockGuard<Mutex>>::type;
+    using LockGuard = std::lock_guard<Mutex>;
 
     /**
    * @brief Param Accessor Data
@@ -166,7 +158,7 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
    * device model
    * @return DeviceModel Param
    */
-    ParamAccessor<DeviceModel> param(const std::string &path);
+    ParamAccessor param(const std::string &path);
 
     /**
    * @brief Get the value of the parameter indicated by path
@@ -249,5 +241,4 @@ template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
  * @param dm the device model to stream
  * @return updated os
  */
-template <enum catena::Threading T = catena::Threading::kMultiThreaded>
-std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm);
+std::ostream &operator<<(std::ostream &os, const catena::DeviceModel &dm);

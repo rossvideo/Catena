@@ -475,3 +475,75 @@
     Debugger will stall in "<--" this line, so it makes sense to keep amount of
    line absolute minimal.
 */
+
+/**
+ * increment 
+*/
+#define INC(x) PRIMITIVE_CAT(INC_, x)
+#define INC_0 1
+#define INC_1 2
+#define INC_2 3
+#define INC_3 4
+#define INC_4 5
+#define INC_5 6
+#define INC_6 7
+#define INC_7 8
+#define INC_8 9
+#define INC_9 10
+#define INC_10 11
+#define INC_11 12
+#define INC_12 13
+#define INC_13 14
+#define INC_14 15
+
+/**
+ * put quotes around a macro argument
+ */
+#define QUOTED(a) str__(a)
+#define str__(a) #a
+
+#define DOFOREACH_COUNT(macro, ...) \
+  DOFOREACH_COUNT_PASS1(CAT_TOKENS(DOFOREACH_COUNT_, NARGS(__VA_ARGS__)), (macro, __VA_ARGS__))
+
+#define DOFOREACH_COUNT_PASS1(m, x) m x
+
+#define DOFOREACH_COUNT_0(m)
+#define DOFOREACH_COUNT_1(m, x1) m(0, x1)
+#define DOFOREACH_COUNT_2(m, x1, x2) m(0, x1) m(1, x2)
+#define DOFOREACH_COUNT_3(m, x1, x2, x3) m(0, x1) m(1, x2) m(2, x3)
+#define DOFOREACH_COUNT_4(m, x1, x2, x3, x4) m(0, x1) m(1, x2) m(2, x3) m(3, x4)
+#define DOFOREACH_COUNT_5(m, x1, x2, x3, x4, x5) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(3, x5)
+#define DOFOREACH_COUNT_7(m, x1, x2, x3, x4, x5, x6, x7) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7)
+#define DOFOREACH_COUNT_8(m, x1, x2, x3, x4, x5, x6, x7, x8) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8)
+#define DOFOREACH_COUNT_9(m, x1, x2, x3, x4, x5, x6, x7, x8, x9) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9)
+#define DOFOREACH_COUNT_10(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10)
+#define DOFOREACH_COUNT_11(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11)
+#define DOFOREACH_COUNT_12(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12)
+#define DOFOREACH_COUNT_13(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13)
+#define DOFOREACH_COUNT_14(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13) m(13, x14)
+#define DOFOREACH_COUNT_15(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13) m(13, x14) m(14, x15)
+#define DOFOREACH_COUNT_16(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16) \
+static_assert(false, "too many arguments to DOFOREACH_COUNT")
+
+#define DOFOREACH_COUNT_SEMICOLON(macro, ...) \
+  DOFOREACH_COUNT_SEMICOLON_PASS1(CAT_TOKENS(DOFOREACH_COUNT_, NARGS(__VA_ARGS__)), (macro, __VA_ARGS__))
+
+#define DOFOREACH_COUNT_SEMICOLON_PASS1(m, x) m x
+
+#define DOFOREACH_COUNT_SEMICOLON_0(m)
+#define DOFOREACH_COUNT_SEMICOLON_1(m, x1) m(0, x1)
+#define DOFOREACH_COUNT_SEMICOLON_2(m, x1, x2) m(0, x1); m(1, x2)
+#define DOFOREACH_COUNT_SEMICOLON_3(m, x1, x2, x3) m(0, x1); m(1, x2); m(2, x3)
+#define DOFOREACH_COUNT_SEMICOLON_4(m, x1, x2, x3, x4) m(0, x1); m(1, x2); m(2, x3); m(3, x4)
+#define DOFOREACH_COUNT_SEMICOLON_5(m, x1, x2, x3, x4, x5) m(0, x1); m(1, x2); m(2, x3); m(3, x4); m(3, x5)
+#define DOFOREACH_COUNT_SEMICOLON_7(m, x1, x2, x3, x4, x5, x6, x7) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7)
+#define DOFOREACH_COUNT_SEMICOLON_8(m, x1, x2, x3, x4, x5, x6, x7, x8) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8)
+#define DOFOREACH_COUNT_SEMICOLON_9(m, x1, x2, x3, x4, x5, x6, x7, x8, x9) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9)
+#define DOFOREACH_COUNT_SEMICOLON_10(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10)
+#define DOFOREACH_COUNT_SEMICOLON_11(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11)
+#define DOFOREACH_COUNT_SEMICOLON_12(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12)
+#define DOFOREACH_COUNT_SEMICOLON_13(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13)
+#define DOFOREACH_COUNT_SEMICOLON_14(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13) m(13, x14)
+#define DOFOREACH_COUNT_SEMICOLON_15(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13) m(13, x14) m(14, x15)
+#define DOFOREACH_COUNT_SEMICOLON_16(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16) \
+static_assert(false, "too many arguments to DOFOREACH_COUNT")

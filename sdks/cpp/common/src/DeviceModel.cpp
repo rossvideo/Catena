@@ -33,7 +33,7 @@ using catena::ParamAccessor;
 using catena::Threading;
 using google::protobuf::Map;
 
-template <enum Threading T> DeviceModel<T>::DeviceModel(const std::string &filename) : device_{} {
+ DeviceModel::DeviceModel(const std::string &filename) : device_{} {
     /** @todo recurse into parameters, implementation currently only works 1-layer
    * deep*/
 
@@ -90,16 +90,15 @@ template <enum Threading T> DeviceModel<T>::DeviceModel(const std::string &filen
     }
 }
 
-template <enum Threading T> const catena::Device &catena::DeviceModel<T>::device() const {
+const catena::Device &catena::DeviceModel::device() const {
     LockGuard lock(mutex_);
     return device_;
 }
 
 // for parameters that do not have values
-template <enum Threading T> catena::Value catena::DeviceModel<T>::noValue_;
+catena::Value catena::DeviceModel::noValue_;
 
-template <enum Threading T>
-catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(const std::string &jptr) {
+catena::ParamAccessor catena::DeviceModel::param(const std::string &jptr) {
     LockGuard lock(mutex_);
     catena::Path path_(jptr);
 
@@ -135,9 +134,9 @@ catena::ParamAccessor<catena::DeviceModel<T>> catena::DeviceModel<T>::param(cons
     return ParamAccessor(*this, ans);
 }
 
-template <enum Threading T>
-typename catena::DeviceModel<T>::ParamAccessorData
-catena::DeviceModel<T>::indexIntoParam_(catena::Path &path, catena::DeviceModel<T>::ParamAccessorData &pad) {
+
+typename catena::DeviceModel::ParamAccessorData
+catena::DeviceModel::indexIntoParam_(catena::Path &path, catena::DeviceModel::ParamAccessorData &pad) {
 
     // destructure the param-value pair
     auto [parent, value] = pad;
@@ -217,9 +216,8 @@ catena::DeviceModel<T>::indexIntoParam_(catena::Path &path, catena::DeviceModel<
     return ParamAccessorData(parent, v);
 }
 
-template <enum Threading T>
-typename catena::DeviceModel<T>::ParamAccessorData
-catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>::ParamAccessorData &pad) {
+typename catena::DeviceModel::ParamAccessorData
+catena::DeviceModel::getSubparam_(catena::Path &path, catena::DeviceModel::ParamAccessorData &pad) {
 
     // destructure the param-value pair
     auto [parent, value] = pad;
@@ -292,51 +290,7 @@ catena::DeviceModel<T>::getSubparam_(catena::Path &path, catena::DeviceModel<T>:
     return ParamAccessorData(&p, v);
 }
 
-template <enum Threading T> std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<T> &dm) {
+std::ostream &operator<<(std::ostream &os, const catena::DeviceModel &dm) {
     os << printJSON(dm.device());
     return os;
 }
-
-// template <enum Threading T>
-// const std::string &catena::DeviceModel<T>::getOid(const Param &param) {
-//   LockGuard lock(mutex_);
-//   return param.param_.get().fqoid();
-// }
-
-// template <enum Threading T>
-// catena::ParamAccessor
-// catena::DeviceModel<T>::addParam(const std::string &jptr,
-//                                  catena::Param &&param) {
-//   catena::Path path(jptr);
-//   LockGuard lock(mutex_);
-//   if (path.size() > 1) {
-//     /** @todo implement ability to add parameters below /params */
-//     BAD_STATUS("implementation only supports adding params to top level",
-//                catena::StatusCode::UNIMPLEMENTED);
-//   }
-//   if (path.size() == 0) {
-//     BAD_STATUS("empty path is invalid in this context",
-//                catena::StatusCode::INVALID_ARGUMENT);
-//   }
-//   catena::Param p(param);
-//   auto seg = path.pop_front();
-//   if (!std::holds_alternative<std::string>(seg)) {
-//     std::stringstream err;
-//     err << "invalid path: " << std::quoted(jptr);
-//     BAD_STATUS(err.str(), catena::StatusCode::INVALID_ARGUMENT);
-//   }
-//   std::string oid(std::get<std::string>(seg));
-
-//   *(*device_.mutable_params())[oid].mutable_param() = p;
-//   return Param(*this, *device_.mutable_params()->at(oid).mutable_param());
-// }
-
-
-// instantiate the 2 versions of DeviceModel, and its streaming operator
-template class catena::DeviceModel<Threading::kMultiThreaded>;
-template class catena::DeviceModel<Threading::kSingleThreaded>;
-
-// instantiate the ostream operators
-template std::ostream &operator<<(std::ostream &os, const catena::DeviceModel<Threading::kMultiThreaded> &dm);
-template std::ostream &operator<<(std::ostream &os,
-                                  const catena::DeviceModel<Threading::kSingleThreaded> &dm);
