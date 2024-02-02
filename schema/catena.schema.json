@@ -1209,10 +1209,12 @@
             "description": "Could be defined in-line or by reference to another parameter",
             "type": "object",
             "properties": {
-                "type": {
-                    "$ref": "#/$defs/param_type"
-                }
+                "type": {"$ref": "#/$defs/param_type"},
+                "template_oid": {"$ref": "#/$defs/template_oid"}
             },
+            "required": [
+                "type"
+            ],
             "additionalProperties": false
         },
         "constraint": {

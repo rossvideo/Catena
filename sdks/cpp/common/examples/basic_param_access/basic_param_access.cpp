@@ -24,6 +24,7 @@
 #include <DeviceModel.h>
 #include <ParamAccessor.h>
 #include <Path.h>
+#include <utils.h>
 
 #include <iomanip>
 #include <iostream>
