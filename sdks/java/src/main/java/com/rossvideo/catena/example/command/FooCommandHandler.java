@@ -33,6 +33,7 @@ public class FooCommandHandler implements StreamObserver<ExecuteCommandPayload> 
 			if (commandResponse != null) {
 				responseObserver.onNext(commandResponse);
 			}
+	        responseObserver.onCompleted();
 		} catch (StatusRuntimeException e) {
 			responseObserver.onError(e);
 		}
