@@ -43,10 +43,6 @@ int main(int argc, char **argv) {
         exit(EXIT_SUCCESS);
     }
 
-catena::ParamType pt;
-pt.set_template_oid("hello world");
-std::cout << catena::printJSON(pt) << '\n';
-
     try {
         // read a json file into a DeviceModel object
         DeviceModel dm(argv[1]);
