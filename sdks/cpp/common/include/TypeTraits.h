@@ -77,10 +77,12 @@ struct VariantMemberInfo {
   std::function<void*(void* dst)> set; /**< function to set the variant */
   std::function<StructInfo()> getStructInfo; /**< type info of nested struct */
   std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
+  std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
 };
 
 struct VariantInfo {
   std::string name; /**< the variant's name */
+  std::vector<std::string> lookup; /**< index to member type name */
   std::unordered_map<std::string, VariantMemberInfo> members; /**< name to member Info map */
 };
 

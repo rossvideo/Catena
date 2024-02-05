@@ -228,6 +228,18 @@ catena::Value::KindCase catena::getKindCase<int32_t>(int32_t& src) {
 }
 
 template<>
+catena::Value::KindCase catena::getKindCase<float>(float& src) {
+    return catena::Value::KindCase::kFloat32Value;
+}
+
+template<>
+catena::Value::KindCase catena::getKindCase<std::string>(std::string& src) {
+    return catena::Value::KindCase::kStringValue;
+}
+
+
+template<>
 catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(std::vector<int32_t>& src) {
     return catena::Value::KindCase::kInt32ArrayValues;
 }
+

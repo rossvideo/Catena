@@ -74,6 +74,7 @@ namespace catena {
  * @brief adds info about a variant member to the members map in VariantInfo
 */
 #define ADD_VARIANT_MEMBER(idx, x) \
+vi.lookup.push_back(QUOTED(ARGTYPE(x))); \
 vi.members.insert({QUOTED(ARGTYPE(x)), \
   { \
     idx, \
@@ -85,14 +86,17 @@ vi.members.insert({QUOTED(ARGTYPE(x)), \
         dst = v; \
       } \
       return reinterpret_cast<void*>(&std::get<idx>(dst)); \
-   }, \
-   catena::getStructInfoFunction<ARGTYPE(x)>(), \
-   [](void* dstAddr, const ParamAccessor* pa) { \
-     auto dst = reinterpret_cast<std::variant_alternative_t<idx, vtype>*>(dstAddr); \
-     pa->getValueNative<std::variant_alternative_t<idx, vtype>>(*dst); \
-   } \
-  } \
-});
+    }, \
+    catena::getStructInfoFunction<ARGTYPE(x)>(), \
+    [](void* dstAddr, const ParamAccessor* pa) { \
+      auto dst = reinterpret_cast<std::variant_alternative_t<idx, vtype>*>(dstAddr); \
+      pa->getValueNative<std::variant_alternative_t<idx, vtype>>(*dst); \
+    }, \
+    [](ParamAccessor* pa, const void* srcAddr) { \
+      auto src = reinterpret_cast<const std::variant_alternative_t<idx, vtype>*>(srcAddr); \
+      pa->setValueNative<std::variant_alternative_t<idx, vtype>>(*src); \
+    } \
+}});
 
 
 
@@ -110,5 +114,7 @@ const catena::VariantInfo CAT_TOKENS(&get, classname)() { \
     vi.name = QUOTED(classname); \
     DOFOREACH_COUNT(ADD_VARIANT_MEMBER, __VA_ARGS__); \
     return vi; \
-} 
+} \
+static bool CAT_TOKENS(classname, _added) = catena::ParamAccessor::registerVariantGetter(std::type_index(typeid(SlotVariant)), getSlotVariant)
+
 }  // namespace catena

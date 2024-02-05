@@ -111,7 +111,11 @@ class ParamAccessor {
     using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
                                                 const ParamIndex>;
 
+    /**
+     * @brief type alias for the function that gets the VariantInfo for a type
+    */
     using VariantInfoGetter = catena::patterns::Functory<std::type_index, const VariantInfo&>;
+
 
   public:
     static bool inline registerSetter(Value::KindCase kind, Setter::Function func) {
@@ -138,61 +142,6 @@ class ParamAccessor {
         auto& getter = VariantInfoGetter::getInstance();
         return getter.addFunction(ti, func);
     }
-
-    /**
-   * @brief helper function to set the value of a child struct.
-   * @param structInfo type info of the child struct
-   * @param subParam pointer to the child struct
-   * @param base pointer to the source struct's base address in memory
-   * @protected 
-   * 
-   * This function is used by setValueNative to set the value of a child struct.
-   * It writes native C++ objects to the protobuf objects in the device model.
-   * 
-   * Note it does not assert the device model's lock because it should only be 
-   * called from a method that already did. Hence its protected access.
-  */
-    // static void inline setChildStructValue(catena::StructInfo& structInfo, catena::IParamAccessor* subParam,
-    //                                        const char* base) {
-    //     auto& setter = catena::IParamAccessor::Setter::getInstance();
-    //     auto* dstFields = subParam->value().mutable_struct_value()->mutable_fields();
-    //     for (auto& field : structInfo.fields) {
-    //         const char* srcAddr = base + field.offset;
-    //         Value::KindCase kc = dstFields->at(field.name).value().kind_case();
-    //         if (!dstFields->contains(field.name)) {
-    //             // ignore fields that are not present
-    //         } else if (kc == catena::Value::KindCase::kStructValue) {
-    //             // field is a struct
-    //             std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
-    //             setChildStructValue(structInfo, sp.get(), srcAddr);
-    //         } else {
-    //             // field is a simple or simple array type
-    //             std::unique_ptr<IParamAccessor> sp = subParam->subParam(field.name);
-    //             setter[kc](&sp->value(), srcAddr);
-    //         }
-    //     }
-    // }
-
-    // static void inline getChildStructValue(char* base, const catena::StructInfo& ti, const catena::IParamAccessor* subParam) {
-    //     auto& getter = catena::IParamAccessor::Getter::getInstance();
-    //     auto& srcFields = subParam->value().struct_value().fields();
-    //     for (auto& field : ti.fields) {
-    //         char* dstAddr = base + field.offset;
-    //         Value::KindCase kc = srcFields.at(field.name).value().kind_case();
-    //         if (!srcFields.contains(field.name)) {
-    //             // ignore fields that are not present
-    //         } else if (kc == catena::Value::KindCase::kStructValue) {
-    //             // field is a struct
-    //             auto sp = subParam->subParam(field.name);
-    //             getChildStructValue(dstAddr, ti, sp.get());
-    //         } else {
-    //             // field is a simple or simple array type
-    //             auto sp = subParam->subParam(field.name);
-    //             getter[kc](dstAddr, &sp->value());
-    //         }
-    //     }
-    // }
-
 
   public:
     /**
@@ -322,22 +271,38 @@ class ParamAccessor {
             const char* base = reinterpret_cast<const char*>(&src);
             auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
             for (auto& field : structInfo.fields) {
-                const char* srcAddr = base + field.offset;
-                Value* dstField = dstFields->at(field.name).mutable_value();
+                const char* srcAddr = base + field.offset;      
                 if (!dstFields->contains(field.name)) {
-                    // dstFields->insert({field.name, StructField{}});
-                    // dstFields->at(field.name)->set_allocated_value(new Value{});
-                    // skip missing field for now
-                    // it's a debate whether fields that are not present should be added
-                } else if (dstField->kind_case() == Value::KindCase::kStructValue) {
-                    // field is a struct
+                    dstFields->insert({field.name, StructField{}});
+                    *dstFields->at(field.name).mutable_value() = Value{};
                     std::unique_ptr<ParamAccessor> sp = subParam(field.name);
                     field.wrapSetter(sp.get(), srcAddr);
                 } else {
-                    // field is a simple or simple array type
-                    setter[dstField->kind_case()](dstField, srcAddr);
+                    Value* dstField = dstFields->at(field.name).mutable_value();
+                    if (dstField->kind_case() == Value::KindCase::kStructValue) {
+                        // field is a struct
+                        std::unique_ptr<ParamAccessor> sp = subParam(field.name);
+                        field.wrapSetter(sp.get(), srcAddr);
+                    } else {
+                        // field is a simple or simple array type
+                        
+                        setter[dstField->kind_case()](dstField, srcAddr);
+                    }
                 }
             }
+        } else if constexpr (catena::meta::is_variant<V>::value) {
+            auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
+            const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
+            Value& v = value_.get();
+            VariantValue* vv = v.mutable_variant_value();   
+            std::string* currentVariant = vv->mutable_variant_type();
+            const std::string& variant = variantInfo.lookup[src.index()];
+            const std::unique_ptr<ParamAccessor> sp = subParam(variant);
+            if (variant.compare(*currentVariant) != 0) {
+                // we need to change the variant type in the protobuf
+                *currentVariant = variant;
+            } 
+            variantInfo.members.at(variant).wrapSetter(sp.get(), &src);          
         } else {
             typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
             setter[getKindCase(x)](&value_.get(), &src);
@@ -405,12 +370,13 @@ class ParamAccessor {
                 // variant value is a struct
                 const std::unique_ptr<ParamAccessor> sp = subParam(variant);
                 vmi.wrapGetter(ptr, sp.get());
+            } else if (kc == Value::KindCase::kVariantValue) {
+                // variant value is a variant
+                BAD_STATUS("Variant of variant not supported", catena::StatusCode::INVALID_ARGUMENT);
             } else {
                 // field is a simple or simple array type
                 getter[kc](reinterpret_cast<char*>(ptr), &src.value());
             }
-            std::cout << "variant: " << variant << ", idx: " << variantInfo.members.at(variant).index
-                      << std::endl;
         } else {
             // dst is a simple type
             getter[getKindCase<V>(dst)](&dst, &value_.get());

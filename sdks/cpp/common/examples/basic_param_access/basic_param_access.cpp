@@ -59,7 +59,11 @@ struct Location {
 };
 
 struct AudioSlot {
-    REFLECTABLE_STRUCT(AudioSlot, (std::string) name);
+    REFLECTABLE_STRUCT(
+        AudioSlot, 
+        (std::string) name,
+        (float) gain
+    );
 };
 
 struct VideoSlot {
@@ -72,8 +76,6 @@ REFLECTABLE_VARIANT(
     (VideoSlot)
 );
 
-static bool added = catena::ParamAccessor::registerVariantGetter(std::type_index(typeid(SlotVariant)), getSlotVariant);
-
 static bool floatGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
     *reinterpret_cast<float *>(dstAddr) = src->float32_value();
 });
@@ -85,6 +87,7 @@ static bool int32Getter = catena::ParamAccessor::registerGetter(catena::Value::K
 static bool stringGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kStringValue, [](void *dstAddr, const catena::Value *src) {
     *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
 });
+
 
 int main(int argc, char **argv) {
     // process command line
@@ -102,8 +105,11 @@ int main(int argc, char **argv) {
 
         // read a variant
         ParamAccessor slotParam = dm.param("/slot");
-        SlotVariant slot = {AudioSlot{"audio"}}; // initialize the variant
+        SlotVariant slot = {AudioSlot{"audio", 10.0f}}; // initialize the variant
         slotParam.getValueNative(slot);
+        assert(std::holds_alternative<VideoSlot>(slot));
+        slot = AudioSlot{"back to audio", 0.0f}; // change the variant
+        slotParam.setValueNative(slot);
 
         // read & write native struct
         Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford" }, loc2;
