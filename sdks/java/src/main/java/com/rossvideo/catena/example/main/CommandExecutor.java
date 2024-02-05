@@ -67,6 +67,10 @@ final class CommandExecutor {
         System.out.println("TEST: Execute command \"foo('bar')\" with no response expected");
         client.executeCommand("foo", slotNumber, "bar", false);
         Thread.sleep(250);
+
+        System.out.println("TEST: Execute command \"reverse('hello world')\" with no response expected");
+        client.executeCommand("reverse", slotNumber, "hello world", false);
+        Thread.sleep(250);
         
         System.out.println("TEST: Push file to server");
         client.pushFile("file-receive", slotNumber, new File("C:\\Users\\jpeltzer\\Pictures\\cd-3.jpg"));
