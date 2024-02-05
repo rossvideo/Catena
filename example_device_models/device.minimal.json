@@ -337,6 +337,19 @@
                             "value": {
                                 "string_value": "I am an audio slot"
                             }
+                        },
+                        "gain": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "display_strings": {
+                                    "en": "Gain"
+                                }
+                            },
+                            "value": {
+                                "float32_value": 0.0
+                            }
                         }
                     }
                 },
