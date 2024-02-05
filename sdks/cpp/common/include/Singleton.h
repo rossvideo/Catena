@@ -16,7 +16,8 @@
  * This is a comprehensively worked example that shows how to make Singletons.
  */
 
-namespace rv {
+namespace catena {
+namespace patterns {
 /**
  * Class template to make Singletons.
  * @tparam T the class to acquire Singleton behaviour.
@@ -79,4 +80,6 @@ template <typename T> class Singleton {
    */
     virtual ~Singleton() = default;
 };
-}  // namespace rv
+  
+}  // namespace patterns
+}  // namespace catena

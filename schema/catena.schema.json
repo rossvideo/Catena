@@ -910,8 +910,7 @@
                     "value": {
                         "$ref": "#/$defs/struct_array_values"
                     }
-                },
-                "additionalProperties": false
+                }
             }
         },
         "struct_value": {
@@ -962,6 +961,9 @@
                         },
                         {
                             "$ref": "#/$defs/int32_value"
+                        },
+                        {
+                            "$ref": "#/$defs/string_value"
                         },
                         {
                             "$ref": "#/$defs/struct_value"

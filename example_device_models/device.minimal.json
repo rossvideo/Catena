@@ -3,12 +3,7 @@
     "multi_set_enabled": true,
     "timeout": 100,
     "detail_level": "FULL",
-    "access_scopes": [
-        "monitor",
-        "operate",
-        "configure",
-        "adminster"
-    ],
+    "access_scopes": ["monitor", "operate", "configure", "administer"],
     "default_scope": 1,
     "language_packs": {
         "packs": {
@@ -36,136 +31,18 @@
         }
     },
     "params": {
-        "string_example": {
-            "type": {
-                "type": "STRING"
-            },
-            "name": {
-                "display_strings": {
-                    "en": "string example"
-                }
-            },
-            "value": {
-                "string_value": "example"
-            },
-            "minimal_set": true,
-            "constraint": {
-                "type": "STRING_STRING_CHOICE",
-                "string_string_choice": {
-                    "strict": true,
-                    "choices": [
-                        {
-                            "name": {
-                                "display_strings": {
-                                    "en": "example_name"
-                                }
-                            },
-                            "value": "example"
-                        },
-                        {
-                            "name": {
-                                "display_strings": {
-                                    "en": "example_name2"
-                                }
-                            },
-                            "value": "example2"
-                        }
-                    ]
-                }
-            }
-        },
-        "hello": {
-            "type": {
-                "type": "FLOAT32"
-            },
-            "name": {
-                "display_strings": {
-                    "en": "Example Float Parameter"
-                }
-            },
-            "value": {
-                "float32_value": 1.23
-            },
-            "constraint": {
-                "type": "FLOAT_RANGE",
-                "float_range": {
-                    "min_value": 1.0,
-                    "max_value": 10.0
-                }
-            }
-        },
-        "world": {
+        "a_number": {
+
             "type": {
                 "type": "INT32"
             },
             "name": {
                 "display_strings": {
-                    "en": "Example int32 Parameter"
+                    "en": "A Number"
                 }
             },
             "value": {
-                "int32_value": 123
-            },
-            "constraint": {
-                "type": "INT_CHOICE",
-                "int32_choice": {
-                    "choices": [
-                        {
-                            "name": {
-                                "display_strings": {
-                                    "en": "one"
-                                }
-                            },
-                            "value": 1
-                        },
-                        {
-                            "name": {
-                                "display_strings": {
-                                    "en": "two"
-                                }
-                            },
-                            "value": 2
-                        }
-                    ]
-                }
-            }
-        },
-        "alarm_table": {
-            "type": {
-                "type": "INT32"
-            },
-            "name": {
-                "display_strings": {
-                    "en": "Example int32 Parameter as alarm table"
-                }
-            },
-            "value": {
-                "int32_value": 13
-            },
-            "constraint": {
-                "type": "ALARM_TABLE",
-                "alarm_table": {
-                    "alarms": [
-                        {
-                            "bit_value": 1,
-                            "description": {
-                                "display_strings": {
-                                    "en": "warning"
-                                }
-                            },
-                            "severity": "WARNING"
-                        },
-                        {
-                            "bit_value": 3,
-                            "description": {
-                                "display_strings": {
-                                    "en": "severe"
-                                }
-                            },
-                            "severity": "SEVERE"
-                        }
-                    ]
-                }
+                "int32_value": 42
             }
         },
         "primes": {
@@ -174,68 +51,44 @@
             },
             "name": {
                 "display_strings": {
-                    "en": "The first few primes"
+                    "en": "Primes"
                 }
             },
             "minimal_set": true,
             "value": {
                 "int32_array_values": {
-                    "ints": [
-                        2,
-                        3,
-                        5,
-                        7,
-                        11,
-                        13,
-                        17
-                    ]
+                    "ints": []
                 }
             }
         },
-        "primes_str": {
+        "squares": {
             "type": {
-                "type": "STRING_ARRAY"
+                "type": "INT32_ARRAY"
             },
             "name": {
                 "display_strings": {
-                    "en": "The first few primes as strings"
+                    "en": "Squares"
                 }
             },
             "minimal_set": false,
             "value": {
-                "string_array_values": {
-                    "strings": [
-                        "2",
-                        "3",
-                        "5",
-                        "7",
-                        "11",
-                        "13",
-                        "17"
-                    ]
+                "int32_array_values": {
+                    "ints": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
                 }
             }
         },
-        "primes_float": {
+        "powers_of_two": {
             "type": {
-                "type": "FLOAT32_ARRAY"
+                "type": "INT32_ARRAY"
             },
             "name": {
                 "display_strings": {
-                    "en": "The first few primes as float32"
+                    "en": "Powers of Two"
                 }
             },
             "value": {
-                "float32_array_values": {
-                    "floats": [
-                        2.0,
-                        3.0,
-                        5.0,
-                        7.0,
-                        11.0,
-                        13.0,
-                        17.0
-                    ]
+                "int32_array_values": {
+                    "ints": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
                 }
             }
         },
@@ -274,6 +127,49 @@
                     "value": {
                         "float32_value": -122.4194
                     }
+                },
+                "altitude": {
+                    "type": {
+                        "type": "INT32"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Altitude"
+                        }
+                    },
+                    "value": {
+                        "int32_value": 100
+                    }
+                },
+                "name": {
+                    "type": {
+                        "type": "STRING"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Name"
+                        }
+                    },
+                    "value": {
+                        "string_value": "San Francisco"
+                    }
+                },
+                "coords": {
+                    "type": {"type": "STRUCT"},
+                    "params": {
+                        "x": {
+                            "type": {"type": "FLOAT32"},
+                            "value": {"float32_value": 1}
+                        },
+                        "y": {
+                            "type": {"type": "FLOAT32"},
+                            "value": {"float32_value": 1}
+                        },
+                        "z": {
+                            "type": {"type": "FLOAT32"},
+                            "value": {"float32_value": 1}
+                        }
+                    }
                 }
             },
             "value": {
@@ -288,6 +184,39 @@
                             "value":{
                                 "float32_value": -122.4194
                             }
+                        },
+                        "altitude": {
+                            "value":{
+                                "int32_value": 100
+                            }
+                        },
+                        "name": {
+                            "value":{
+                                "string_value": "San Francisco"
+                            }
+                        },
+                        "coords": {
+                            "value":{
+                                "struct_value": {
+                                    "fields": {
+                                        "x": {
+                                            "value":{
+                                                "float32_value": 10.0
+                                            }
+                                        },
+                                        "y": {
+                                            "value":{
+                                                "float32_value": 11.0
+                                            }
+                                        },
+                                        "z": {
+                                            "value":{
+                                                "float32_value": 12.0
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -299,7 +228,7 @@
             },
             "name": {
                 "display_strings": {    
-                    "en": "Locations"
+                    "en": "Location"
                 }
             },
             "params": {
@@ -362,6 +291,111 @@
                             }
                         }
                     ]
+                    
+                }
+            }
+        },
+        "hello": {
+            "type": {
+                "type": "FLOAT32"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Hello"
+                }
+            },
+            "value": {
+                "float32_value": 123.456
+            }
+        },
+        "slot": {
+            "type": {
+                "type": "STRUCT_VARIANT"
+            },
+            "name": {
+                "display_strings": {
+                    "en": "Slot"
+                }
+            },
+            "params": {
+                "AudioSlot": {
+                    "type": {
+                        "type": "STRUCT"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Audio Slot"
+                        }
+                    },
+                    "params": {
+                        "name": {
+                            "type": {
+                                "type": "STRING"
+                            },
+                            "name": {
+                                "display_strings": {
+                                    "en": "Name"
+                                }
+                            },
+                            "value": {
+                                "string_value": "I am an audio slot"
+                            }
+                        },
+                        "gain": {
+                            "type": {
+                                "type": "FLOAT32"
+                            },
+                            "name": {
+                                "display_strings": {
+                                    "en": "Gain"
+                                }
+                            },
+                            "value": {
+                                "float32_value": 0.0
+                            }
+                        }
+                    }
+                },
+                "VideoSlot": {
+                    "type": {
+                        "type": "STRUCT"
+                    },
+                    "name": {
+                        "display_strings": {
+                            "en": "Video Slot"
+                        }
+                    },
+                    "params": {
+                        "name": {
+                            "type": {
+                                "type": "STRING"
+                            },
+                            "name": {
+                                "display_strings": {
+                                    "en": "Name"
+                                }
+                            },
+                            "value": {
+                                "string_value": "I am a video slot"
+                            }
+                        }
+                    }
+                }
+            },
+            "value": {
+                "variant_value": {
+                    "variant_type": "VideoSlot",
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "name": {
+                                    "value": {
+                                        "string_value": "I am a video slot"
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

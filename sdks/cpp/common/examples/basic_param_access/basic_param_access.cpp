@@ -24,17 +24,71 @@
 #include <DeviceModel.h>
 #include <ParamAccessor.h>
 #include <Path.h>
+#include <Reflect.h>
 #include <utils.h>
 
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <utility>
+#include <typeinfo>
+#include <typeindex>
+#include <variant>
 
 using Index = catena::Path::Index;
-using DeviceModel = catena::DeviceModel<catena::Threading::kSingleThreaded>;
+using DeviceModel = catena::DeviceModel;
 using Param = catena::Param;
-using ParamAccessor = catena::ParamAccessor<DeviceModel>;
+using ParamAccessor = catena::ParamAccessor;
+
+struct Wibble {
+};
+
+// clang_format push
+// clang_format off
+// define some structs to test struct support
+// note use of REFLECTABLE_STRUCT macro which provides runtime reflection
+// and type conversion support used by ParamAccessor's *Native methods
+//
+struct Coords {
+    REFLECTABLE_STRUCT(Coords, (float) x, (float) y, (float) z);
+};
+
+
+// note nested struct
+struct Location {
+    REFLECTABLE_STRUCT(Location, (Coords) coords, (float) latitude, (float) longitude, (int32_t) altitude, (std::string) name);
+};
+
+struct AudioSlot {
+    REFLECTABLE_STRUCT(
+        AudioSlot, 
+        (std::string) name,
+        (float) gain
+    );
+};
+
+struct VideoSlot {
+    REFLECTABLE_STRUCT(VideoSlot, (std::string) name);
+};
+
+REFLECTABLE_VARIANT(
+    SlotVariant,
+    (AudioSlot),
+    (VideoSlot)
+);
+
+static bool floatGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<float *>(dstAddr) = src->float32_value();
+});
+
+static bool int32Getter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
+});
+
+static bool stringGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kStringValue, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
+});
+
 
 int main(int argc, char **argv) {
     // process command line
@@ -50,50 +104,65 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-        // cache a param and get its value
-        ParamAccessor helloParam = dm.param("/hello");
-        std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
+        // read a variant
+        ParamAccessor slotParam = dm.param("/slot");
+        SlotVariant slot = {AudioSlot{"audio", 10.0f}}; // initialize the variant
+        slotParam.getValueNative(slot);
+        assert(std::holds_alternative<VideoSlot>(slot));
+        slot = AudioSlot{"back to audio", 0.0f}; // change the variant
+        slotParam.setValueNative(slot);
 
-        // cache a array param and get its value using two methods
-        ParamAccessor strArrayParam= dm.param("/primes_str");
-        std::cout << "Prime String Param using getValueAt: " << strArrayParam.getValueAt(0).string_value() << '\n';
-        std::cout << "Prime String Param using getValue: " << strArrayParam.getValue<std::string>() << '\n';
+        // read & write native struct
+        Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford" }, loc2;
+        ParamAccessor locParam = dm.param("/location");
 
-        // access a param directly
-        std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
+        locParam.getValueNative(loc2);
+        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
+                  << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
+                  << '\n';
+        locParam.setValueNative(loc);
 
-        // set some values in the device model using a cached param
-        // and a path. N.B. types can be inferred
-        std::cout << "setting values to something different\n";
-        helloParam.setValue(3.142f);     // example using cached param
-        dm.param("/world").setValue(3);  // example using chaining
+        // read & write native int32_t
+        ParamAccessor numParam = dm.param("/a_number");
+        int32_t num = 0;
+        numParam.getValueNative(num);
+        std::cout << "Number: " << num << '\n';
+        num *= 2;
+        numParam.setValueNative(num);
 
-        std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
+        // read & write native vector of int32_t
+        std::vector<int32_t> primes = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+        ParamAccessor primesParam = dm.param("/primes");
+        primesParam.setValueNative(primes);
 
-        // demo caching a sub-param
-        ParamAccessor longitudeParam = dm.param("/location/longitude");
-        std::cout << "Longitude: " << longitudeParam.getValue<float>() << '\n';
-        longitudeParam.setValue(30.0f);
-        std::cout << "Updated Longitude: " << longitudeParam.getValue<float>() << '\n';
+        std::vector<int32_t> squares;
+        ParamAccessor squaresParam = dm.param("/squares");
+        squaresParam.getValueNative(squares);
+        std::cout << "Squares: ";
+        for (auto &i : squares) {
+            std::cout << i << ' ';
+        }
+        std::cout << '\n';
 
+        // read & write elements of a native vector of int32_t
+        ParamAccessor powersParam = dm.param("/powers_of_two");
+        int32_t mistake = 0;
+        powersParam.setValueAtNative(mistake, 1);
 
-        // add a struct param the hard way
-        // catena::Param sparam{};
-        // *(sparam.mutable_name()->mutable_monoglot()) = "struct param";
-        // *(sparam.mutable_fqoid()) = "sparam";
-        // sparam.mutable_type()->set_param_type(
-        //     catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT);
+        int32_t twoCubed = 0;
+        powersParam.getValueAtNative(twoCubed, 3);
+        std::cout << "2^3: " << twoCubed << '\n';
 
-        // catena::Value fval;
-        // fval.set_float32_value(1.23);
-        // catena::Value struct_val;
-        // (*(*struct_val.mutable_struct_value()->mutable_fields())["float_field"]
-        //       .mutable_value()) = fval;
-        // (*sparam.mutable_value()) = struct_val;
-        // dm.addParam("/sparam", std::move(sparam));
-
-        // write out the updated device model
+        // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';
+
+
+        // // cache a param and get its value
+        // ParamAccessor helloParam = dm.param("/hello");
+        // std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
+
+        // // access a sub-param directly
+        // std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
 
         // report the wire-size of the device model
         std::string serialized;

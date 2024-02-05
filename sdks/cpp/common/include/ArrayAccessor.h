@@ -34,7 +34,7 @@ class ArrayAccessor {
         * @brief define factory for ArrayAccessor (int for key type)
         *
         */
-    using Factory = rv::patterns::GenericFactory<ArrayAccessor, int, catena::Value &>;
+    using Factory = catena::patterns::GenericFactory<ArrayAccessor, int, catena::Value &>;
 
     /**
         * @brief override array accessor operator
