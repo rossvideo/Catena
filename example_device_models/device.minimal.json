@@ -32,6 +32,7 @@
     },
     "params": {
         "a_number": {
+
             "type": {
                 "type": "INT32"
             },
@@ -53,6 +54,7 @@
                     "en": "Primes"
                 }
             },
+            "minimal_set": true,
             "value": {
                 "int32_array_values": {
                     "ints": []
@@ -68,6 +70,7 @@
                     "en": "Squares"
                 }
             },
+            "minimal_set": false,
             "value": {
                 "int32_array_values": {
                     "ints": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]

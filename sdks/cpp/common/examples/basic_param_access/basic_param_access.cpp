@@ -25,6 +25,7 @@
 #include <ParamAccessor.h>
 #include <Path.h>
 #include <Reflect.h>
+#include <utils.h>
 
 #include <iomanip>
 #include <iostream>

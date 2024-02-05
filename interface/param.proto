@@ -49,22 +49,22 @@ message ParamType {
     DATA = 50; // Used to allow commands to accept files
   }
 
-   /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
-    *  ParamTypes param_type = 1;
-    *
-    * // Non-relative JSON pointer to a param elsewhere in the model.
-    * string param_ref = 2;
-    * }
-    */
+  /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
+  *  ParamTypes param_type = 1;
+  *
+  * // Non-relative JSON pointer to a param elsewhere in the model.
+  * string param_ref = 2;
+  * }
+  */
 
   /* Defines the parameter type.
-   * Can be defined in-line
-   * or reference a shared type definition from device.types.params
-   */
+  * Can be defined in-line
+  * or reference a shared type definition from device.types.params
+  */
   Type type = 1;
 
   // Non-relative JSON pointer to a param elsewhere in the model.
-  string param_ref = 2;
+  string template_oid = 2;
 }
 
 message BasicParamInfo {
@@ -81,91 +81,90 @@ message BasicParamInfo {
 
 /* When streamed, only the payload field will be used after the first message. */
 message DataPayload {
-  map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
-
   enum PayloadEncoding {
     UNCOMPRESSED = 0;
     GZIP = 1;
     DEFLATE = 2;
   }
 
-  PayloadEncoding payload_encoding = 2;
+  map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
+  bytes digest = 2; // SHA-256 digest of the payload - flags the recipient to respond with proceed flag set to true/false to resume or cancel payload data
+  PayloadEncoding payload_encoding = 3;
 
   oneof kind {
-  	string url = 3;    // URL containing data for the payload
-  	bytes payload = 4; // Data for the payload
+  	string url = 4;    // URL containing data for the payload
+  	bytes payload = 5; // Data for the payload
   }
 }
 
 message Param {
-  // JSON pointer to a param that defines the structure of this param
-  string template_oid = 2;
-
   // the parameter's name
-  PolyglotText name = 3;
+  PolyglotText name = 1;
 
   // the parameter's type
-  ParamType type = 4;
+  ParamType type = 2;
 
   // Read only flag. Clients shall style the param's widget as read only when true.
-  bool read_only = 5;
+  bool read_only = 3;
 
   // Identifies the GUI elements to display and adjust the parameter value.
-  string widget = 6;
+  string widget = 4;
 
   // For float params, how many digits to display
-  uint32 precision = 7;
+  uint32 precision = 5;
 
   // The parameter's value
-  Value value = 8;
+  Value value = 6;
 
   /* The constraint's on the parameters' value.
    * Can be a reference to a shared constraint or defined in-line.
    */
-  Constraint constraint = 9;
+  Constraint constraint = 7;
 
   /* For string params, the maximum length of the string
    * @todo - is this really needed? the proto encoding of strings includes their
    * length
    */
-  uint32 max_length = 10;
+  uint32 max_length = 8;
 
   /* For string array params, the total length of all the strings in the array.
    * @todo - is this really needed? doesn't proto give us this info?
    */
-  uint32 total_length = 11;
+  uint32 total_length = 9;
 
   /* Access scope
    * if not present, the parameter's access scope is that of its parent.
    * if not a child parameter, the access scope is the default for the device.
    */
-  string access_scope = 12;
+  string access_scope = 10;
 
   // Additional properties to assist client
-  map<string, string> client_hints = 13;
+  map<string, string> client_hints = 11;
 
   // If this is an imported sub-device, it can have a set of commands too.
-  map<string, Param> commands = 14;
+  map<string, Param> commands = 12;
 
   // If this is a STRUCT or STRUCT_ARRAY Param its sub-params are defined here.
-  map<string, Param> params = 15;
+  map<string, Param> params = 13;
 
   /* Meaningful when this message is used as a command descriptor
    * true if the command provides a response when executed.
    */
-  bool response = 16;
+  bool response = 14;
 
   // Optional additional information about the usage of the parameter
-  PolyglotText help = 17;
+  PolyglotText help = 15;
 
   // Import directive
-  Import import = 18;
+  Import import = 16;
 
   /* Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
    * The aliases must be fully-qualitfied.
    */
-  repeated string oid_aliases = 19;
+  repeated string oid_aliases = 17;
 
+  // When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device
+  bool minimal_set = 18;
 }
 
 // A value that can be one of several types, even within the same array
@@ -323,6 +322,7 @@ message ExecuteCommandPayload {
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
   bool respond = 4; // false if Server/Device should not send any responses.
+  bool proceed = 5;
 }
 
 message Exception {
@@ -337,5 +337,6 @@ message CommandResponse {
     google.protobuf.Empty no_response = 1; // Server/Device does not have a response for the command.
     Value response = 2;
     Exception exception = 3;  // This is for Server/Device error executing the command.
+    bool proceed = 4;
   }
 }
