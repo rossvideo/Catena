@@ -222,6 +222,18 @@ static bool int32ArrayGetterAt = catena::ParamAccessor::registerGetterAt(catena:
     }
 });
 
+static bool floatGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<float *>(dstAddr) = src->float32_value();
+});
+
+static bool int32Getter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
+});
+
+static bool stringGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kStringValue, [](void *dstAddr, const catena::Value *src) {
+    *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
+});
+
 template<>
 catena::Value::KindCase catena::getKindCase<int32_t>(int32_t& src) {
     return catena::Value::KindCase::kInt32Value;
@@ -237,9 +249,17 @@ catena::Value::KindCase catena::getKindCase<std::string>(std::string& src) {
     return catena::Value::KindCase::kStringValue;
 }
 
-
 template<>
 catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(std::vector<int32_t>& src) {
     return catena::Value::KindCase::kInt32ArrayValues;
 }
 
+template<>
+catena::Value::KindCase catena::getKindCase<std::vector<float>>(std::vector<float>& src) {
+    return catena::Value::KindCase::kFloat32ArrayValues;
+}
+
+template<>
+catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vector<std::string>& src) {
+    return catena::Value::KindCase::kStringArrayValues;
+}
