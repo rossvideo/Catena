@@ -77,19 +77,6 @@ REFLECTABLE_VARIANT(
     (VideoSlot)
 );
 
-static bool floatGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kFloat32Value, [](void *dstAddr, const catena::Value *src) {
-    *reinterpret_cast<float *>(dstAddr) = src->float32_value();
-});
-
-static bool int32Getter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kInt32Value, [](void *dstAddr, const catena::Value *src) {
-    *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
-});
-
-static bool stringGetter = catena::ParamAccessor::registerGetter(catena::Value::KindCase::kStringValue, [](void *dstAddr, const catena::Value *src) {
-    *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
-});
-
-
 int main(int argc, char **argv) {
     // process command line
     if (argc != 2) {
