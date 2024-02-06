@@ -52,6 +52,7 @@
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 
 using Index = catena::Path::Index;
@@ -169,6 +170,27 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
             std::cerr << why.what() << std::endl;
             grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
             return Status(gs, "SetValue failed", why.what());
+
+        } catch (...) {
+            std::cerr << "unhandled exception: " << std::endl;
+            return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
+        }
+    }
+
+    Status DeviceRequest(ServerContext *context, const  ::catena::DeviceRequestPayload *req,
+                         ServerWriter< ::catena::DeviceComponent> *writer) override {
+        try {
+            catena::DeviceComponent dc;
+            // ewww! gross! const_cast! but it's the only way to get the device
+            dc.set_allocated_device(const_cast<catena::Device*>(&dm_.get().device()));
+            writer->Write(dc);
+            auto x = dc.release_device();
+            return Status::OK;
+
+        } catch (catena::exception_with_status &why) {
+            std::cerr << why.what() << std::endl;
+            grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
+            return Status(gs, "DeviceRequest failed", why.what());
 
         } catch (...) {
             std::cerr << "unhandled exception: " << std::endl;
