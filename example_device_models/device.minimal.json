@@ -32,7 +32,6 @@
     },
     "params": {
         "a_number": {
-
             "type": {
                 "type": "INT32"
             },
@@ -43,7 +42,8 @@
             },
             "value": {
                 "int32_value": 42
-            }
+            },
+            "stateless": true
         },
         "primes": {
             "type": {
