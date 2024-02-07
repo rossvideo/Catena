@@ -6,24 +6,23 @@
     "params": {
         "variant_example": {
             "import": {"url": "include"},
-            "type": {"type": "UNDEFINED"}
-           
+            "type": "UNDEFINED"
         },
         "variantlist_example": {
             "import": {"url": "include"},
-            "type": {"type": "UNDEFINED"}
+            "type": "UNDEFINED"
         },
         "hello": {
-            "type": {"type": "STRING"},
+            "type": "STRING",
             "value": {"string_value": "Hello World!"}
         },
         "template_oid_example": {
-            "type": {"template_oid": "/types/audio_slot", "type": "UNDEFINED"}
+            "template_oid": "/types/audio_slot", 
+            "type": "STRUCT"
         },
         "types": {
-            "type": {"type": "STRUCT"},
+            "type": "STRUCT",
             "params": {"audio_slot": {"type": "STRING"}}
-
         }
     }
 }

@@ -2,9 +2,7 @@
     "name": {
         "monoglot": "Tape Transport as example of re-used or reference sub-device."
     },
-    "type": {
-        "type": "STRUCT"
-    },
+    "type": "STRUCT",
     "commands": {
         "play": {
             "param": {
@@ -60,9 +58,7 @@
                         "name": {
                             "monoglot": "Play Mode"
                         },
-                        "type": {
-                            "type": "INT32"
-                        },
+                        "type": "INT32",
                         "value": {
                             "int32_value": 0
                         },
@@ -92,9 +88,7 @@
                         "name": {
                             "monoglot": "In Point"
                         },
-                        "type": {
-                            "type": "INT32"
-                        },
+                        "type": "INT32",
                         "value": {
                             "int32_value": 0
                         }
@@ -105,9 +99,7 @@
                         "name": {
                             "display_strings": {"en": "Out Point"}
                         },
-                        "type": {
-                            "type": "INT32"
-                        },
+                        "type": "INT32",
                         "value": {
                             "int32_value": 0
                         }
@@ -118,9 +110,7 @@
                         "name": {
                             "display_strings": {"en": "Play Speed"}
                         },
-                        "type": {
-                            "type": "FLOAT32"
-                        },
+                        "type":"FLOAT32",
                         "value": {
                             "float32_value": 1.0
                         },

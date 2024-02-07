@@ -140,7 +140,7 @@
                     "$ref": "#/$defs/polyglot_text"
                 },
                 "type": {
-                    "$ref": "#/$defs/type"
+                    "$ref": "#/$defs/param_type"
                 },
                 "readonly": {
                     "$ref": "#/$defs/readonly"
@@ -304,11 +304,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "FLOAT32"
-                            }
-                        }
+                        "const": "FLOAT32"
                     }
                 }
             },
@@ -531,11 +527,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "INT32"
-                            }
-                        }
+                        "const": "INT32"
                     }
                 }
             },
@@ -589,11 +581,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "INT32_ARRAY"
-                            }
-                        }
+                        "const": "INT32_ARRAY"
                     }
                 }
             },
@@ -643,11 +631,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "FLOAT32_ARRAY"
-                            }
-                        }
+                        "const": "FLOAT32_ARRAY"
                     }
                 }
             },
@@ -786,11 +770,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "STRING"
-                            }
-                        }
+                        "const": "STRING"
                     }
                 }
             },
@@ -839,11 +819,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "STRING_ARRAY"
-                            }
-                        }
+                        "const": "STRING_ARRAY"
                     }
                 }
             },
@@ -897,11 +873,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "STRUCT_ARRAY"
-                            }
-                        }
+                        "const": "STRUCT_ARRAY"
                     }
                 }
             },
@@ -992,11 +964,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "STRUCT"
-                            }
-                        }
+                        "const": "STRUCT"
                     }
                 }
             },
@@ -1206,19 +1174,6 @@
             ],
             "default": "UNDEFINED"
         },
-        "type": {
-            "title": "Parameter type",
-            "description": "Could be defined in-line or by reference to another parameter",
-            "type": "object",
-            "properties": {
-                "type": {"$ref": "#/$defs/param_type"},
-                "template_oid": {"$ref": "#/$defs/template_oid"}
-            },
-            "required": [
-                "type"
-            ],
-            "additionalProperties": false
-        },
         "constraint": {
             "title": "Constraint to apply to parameter value",
             "description":
@@ -1265,11 +1220,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "STRUCT_VARIANT"
-                            }
-                        }
+                         "const": "STRUCT_VARIANT"
                     }
                 }
             },
@@ -1334,11 +1285,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "properties": {
-                            "type": {
-                                "const": "STRUCT_VARIANT_ARRAY"
-                            }
-                        }
+                        "const": "STRUCT_VARIANT_ARRAY"
                     }
                 }
             },

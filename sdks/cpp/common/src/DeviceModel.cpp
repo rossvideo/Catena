@@ -149,9 +149,9 @@ catena::DeviceModel::indexIntoParam_(catena::Path &path, catena::DeviceModel::Pa
     }
 
     // validate the param type
-    catena::ParamType_Type type = parent->type().type();
+    catena::ParamType type = parent->type();
     switch (type) {
-        case catena::ParamType_Type::ParamType_Type_FLOAT32_ARRAY:
+        case catena::ParamType::FLOAT32_ARRAY:
             if (!value->has_float32_array_values()) {
                 BAD_STATUS("value must be of type float32_array_value",
                         catena::StatusCode::FAILED_PRECONDITION);
@@ -165,7 +165,7 @@ catena::DeviceModel::indexIntoParam_(catena::Path &path, catena::DeviceModel::Pa
             }
             v->set_float32_value(value->mutable_float32_array_values()->floats(idx));
             break;
-        case catena::ParamType_Type::ParamType_Type_STRUCT_ARRAY:
+        case catena::ParamType::STRUCT_ARRAY:
             if (!value->has_struct_array_values()) {
                 BAD_STATUS("value must be of type struct_array_value",
                         catena::StatusCode::FAILED_PRECONDITION);
@@ -179,7 +179,7 @@ catena::DeviceModel::indexIntoParam_(catena::Path &path, catena::DeviceModel::Pa
             }
             v->mutable_struct_value()->CopyFrom(value->mutable_struct_array_values()->struct_values(idx));
             break;
-        case catena::ParamType_Type::ParamType_Type_STRING_ARRAY:
+        case catena::ParamType::STRING_ARRAY:
             if (!value->has_string_array_values()) {
                 BAD_STATUS("value must be of type string_array_value",
                         catena::StatusCode::FAILED_PRECONDITION);
@@ -193,7 +193,7 @@ catena::DeviceModel::indexIntoParam_(catena::Path &path, catena::DeviceModel::Pa
             }
             v->set_string_value(value->mutable_string_array_values()->strings(idx));
             break;
-        case catena::ParamType_Type::ParamType_Type_INT32_ARRAY:
+        case catena::ParamType::INT32_ARRAY:
             if (!value->has_int32_array_values()) {
                 BAD_STATUS("value must be of type int32_array_value",
                         catena::StatusCode::FAILED_PRECONDITION);
@@ -223,12 +223,12 @@ catena::DeviceModel::getSubparam_(catena::Path &path, catena::DeviceModel::Param
     auto [parent, value] = pad;
 
     // validate the param type
-    catena::ParamType_Type type = parent->type().type();
+    catena::ParamType type = parent->type();
     switch (type) {
-        case catena::ParamType_Type::ParamType_Type_STRUCT:
+        case catena::ParamType::STRUCT:
             // this is ok
             break;
-        case catena::ParamType_Type::ParamType_Type_STRUCT_ARRAY:
+        case catena::ParamType::STRUCT_ARRAY:
             // this is ok
             break;
         default:
