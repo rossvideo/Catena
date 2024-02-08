@@ -6,10 +6,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
-import com.rossvideo.catena.example.command.FooCommandHandler;
 import com.rossvideo.catena.command.DelegatingStreamObserver;
-import com.rossvideo.catena.command.SimpleCommandHandler;
-import com.rossvideo.catena.command.SimpleCommandStreamObserver;
 import com.rossvideo.catena.command.StreamObserverFactory;
 import com.rossvideo.catena.example.command.FileReceiveCommandHandler;
 import com.rossvideo.catena.example.command.FooCommandHandler;
@@ -33,7 +30,7 @@ import catena.core.parameter.Value.KindCase;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
 import io.grpc.stub.StreamObserver;
 
-public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObserverFactory<ExecuteCommandPayload, CommandResponse>, SimpleCommandHandler {
+public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObserverFactory<ExecuteCommandPayload, CommandResponse> {
 
     public static File getDefaultWorkingDirectory()
     {
@@ -44,7 +41,6 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObser
     public static final String INT_OID = "integer";
     public static final String FLOAT_OID = "float";
     public static final String CMD_FOO_OID = "foo";
-    public static final String CMD_REVERSE_OID = "reverse";
     public static final String CMD_FILE_RECEIVE_OID = "file-receive";
 
     private static final AtomicInteger deviceId = new AtomicInteger(1);
@@ -90,8 +86,6 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObser
         Map<String, Param> commands = new HashMap<>();
         commands.put(
           CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", ParamType.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
-        commands.put(
-                CMD_REVERSE_OID, buildParamDescriptor(CMD_REVERSE_OID, "reverse string command", ParamType.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
         commands.put(
                 CMD_FILE_RECEIVE_OID, buildParamDescriptor(CMD_FILE_RECEIVE_OID, "file receive command", ParamType.DATA, false, 1, Value.newBuilder().setDataPayload(DataPayload.newBuilder().build()).build(), true));
         return commands;
@@ -200,61 +194,10 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObser
         {
             case CMD_FOO_OID:
                 return new FooCommandHandler(slot, responseStream);
-            case CMD_REVERSE_OID:
-                return new SimpleCommandStreamObserver(responseStream, this);
             case CMD_FILE_RECEIVE_OID:
                 return new FileReceiveCommandHandler(workingDirectory, responseStream);
             default:
                 throw new UnknownOidException(oid);
         }
-    }
-
-    @Override
-    public CommandResponse processCommand(ExecuteCommandPayload commandExecution) throws Exception
-    {
-        String oid = commandExecution.getOid();
-        Value responseValue = null;
-        switch (oid)
-        {
-            case CMD_REVERSE_OID:
-                responseValue = createValue(reverseString(getString(commandExecution.getValue())));
-                break;
-        }
-        
-        if (responseValue != null)
-        {
-            return CommandResponse.newBuilder().setResponse(responseValue).build();
-        }
-        else
-        {
-            return CommandResponse.newBuilder().setNoResponse(Empty.getDefaultInstance()).build();
-        }
-    }
-
-    private Value createValue(String string)
-    {
-        if (string != null)
-        {
-            return Value.newBuilder().setStringValue(string).build();
-        }
-        return null;
-    }
-    
-    private String getString(Value value)
-    {
-        if (value != null)
-        {
-            return value.getStringValue();
-        }
-        return null;
-    }
-    
-    private String reverseString(String str)
-    {
-        if (str != null)
-        {
-            return new StringBuilder(str).reverse().toString();
-        }
-        return null;
     }
 }
