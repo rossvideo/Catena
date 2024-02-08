@@ -91,9 +91,9 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObser
         commands.put(
           CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", ParamType.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
         commands.put(
-                CMD_REVERSE_OID, buildParamDescriptor(CMD_REVERSE_OID, "reverse string command", Type.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
+                CMD_REVERSE_OID, buildParamDescriptor(CMD_REVERSE_OID, "reverse string command", ParamType.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
         commands.put(
-                CMD_FILE_RECEIVE_OID, buildParamDescriptor(CMD_FILE_RECEIVE_OID, "file receive command", Type.DATA, false, 1, Value.newBuilder().setDataPayload(DataPayload.newBuilder().build()).build(), true));
+                CMD_FILE_RECEIVE_OID, buildParamDescriptor(CMD_FILE_RECEIVE_OID, "file receive command", ParamType.DATA, false, 1, Value.newBuilder().setDataPayload(DataPayload.newBuilder().build()).build(), true));
         return commands;
     }
     
@@ -118,7 +118,6 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObser
     
     @Override
     public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
-        return new FooCommandHandler(slot, responseObserver);
         return new DelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
     }
 
