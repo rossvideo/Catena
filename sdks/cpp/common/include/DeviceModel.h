@@ -35,6 +35,10 @@
 #include <type_traits>
 #include <functional>
 
+#include <service.grpc.pb.h>
+
+using grpc::ServerWriter;
+
 namespace catena {
 
 class ParamAccessor;  // forward reference
@@ -147,6 +151,13 @@ class DeviceModel {
    * @return const catena::Device&
    */
     const catena::Device &device() const;
+
+    /**
+     * @brief sends device info to client via writer
+     * 
+     * @return void
+     */
+    void streamDevice(ServerWriter< ::catena::DeviceComponent> *writer);
 
     /**
    * @brief Get the Param object at path

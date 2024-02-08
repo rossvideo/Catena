@@ -33,6 +33,8 @@ using catena::ParamAccessor;
 using catena::Threading;
 using google::protobuf::Map;
 
+using grpc::ServerWriter;
+
  DeviceModel::DeviceModel(const std::string &filename) : device_{} {
     /** @todo recurse into parameters, implementation currently only works 1-layer
    * deep*/
@@ -93,6 +95,13 @@ using google::protobuf::Map;
 const catena::Device &catena::DeviceModel::device() const {
     LockGuard lock(mutex_);
     return device_;
+}
+
+void catena::DeviceModel::streamDevice(ServerWriter< ::catena::DeviceComponent> *writer){
+    catena::DeviceComponent dc;
+    dc.set_allocated_device(&device_);
+    writer->Write(dc);
+    auto x = dc.release_device();
 }
 
 // for parameters that do not have values
