@@ -57,7 +57,7 @@ message BasicParamInfo {
   ParamType type = 3;
 
   // The OID of the template from which this parameter was created
-  string template_oid; 
+  string template_oid = 4;
 
 }
 
