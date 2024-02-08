@@ -56,6 +56,9 @@ message BasicParamInfo {
   // The parameter's type
   ParamType type = 3;
 
+  // The OID of the template from which this parameter was created
+  string template_oid; 
+
 }
 
 /* When streamed, only the payload field will be used after the first message. */
