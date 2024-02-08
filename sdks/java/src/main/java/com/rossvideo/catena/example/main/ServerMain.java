@@ -2,7 +2,7 @@ package com.rossvideo.catena.example.main;
 
 import java.io.File;
 
-import com.rossvideo.catena.example.MyCatenaDevice;
+import com.rossvideo.catena.example.device.MyCatenaDevice;
 
 import io.grpc.Grpc;
 import io.grpc.InsecureServerCredentials;
@@ -16,16 +16,16 @@ public class ServerMain {
 
     public static void main(String[] args) {
         try {
-            File workingDirectory = MyCatenaDevice.getDefaultWorkingDirectory();
+            File serverWorkingDirectory = null;
             if (args.length > 0) {
-                workingDirectory = new File(args[0]);
+                serverWorkingDirectory = new File(args[0]);
+                serverWorkingDirectory.mkdirs();
             }
-            workingDirectory.mkdirs();
             
             ServerCredentials credentials =
               InsecureServerCredentials.create();  // TODO: Create proper credentials.
             Server server = Grpc.newServerBuilderForPort(port, credentials)
-                              .addService(new MyCatenaDevice(slotNumber, workingDirectory))
+                              .addService(new MyCatenaDevice(slotNumber, serverWorkingDirectory))
                               .build();
             server.start();
             System.out.println("SERVER: Server started.");
