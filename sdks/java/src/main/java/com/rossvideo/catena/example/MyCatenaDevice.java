@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
-import com.rossvideo.catena.example.command.ExecuteCommandPayloadHandler;
+import com.rossvideo.catena.example.command.FooCommandHandler;
 import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
@@ -19,7 +19,6 @@ import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.Param;
 import catena.core.parameter.ParamType;
-import catena.core.parameter.ParamType.Type;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
 import catena.core.parameter.Value.KindCase;
@@ -64,30 +63,30 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
     private Map<String, Param> buildAllParamDescriptors() {
         Map<String, Param> parameters = new HashMap<>();
         parameters.put(
-          FLOAT_OID, buildParamDescriptor(FLOAT_OID, "float parameter", Type.FLOAT32, false, 1, floatValue));
+          FLOAT_OID, buildParamDescriptor(FLOAT_OID, "float parameter", ParamType.FLOAT32, false, 1, floatValue));
         parameters.put(INT_OID,
-                       buildParamDescriptor(INT_OID, "int parameter", Type.INT32, false, 1, intValue));
+                       buildParamDescriptor(INT_OID, "int parameter", ParamType.INT32, false, 1, intValue));
         return parameters;
     }
     
     private Map<String, Param> buildAllCommandDescriptors() {
         Map<String, Param> commands = new HashMap<>();
         commands.put(
-          CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", Type.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
+          CMD_FOO_OID, buildParamDescriptor(CMD_FOO_OID, "string command", ParamType.STRING, false, 1, Value.newBuilder().setStringValue("").build(), true));
         return commands;
     }
     
-    private Param buildParamDescriptor(String oid, String name, Type type, boolean readonly,
+    private Param buildParamDescriptor(String oid, String name, ParamType type, boolean readonly,
             int precision, Value value) {
                 return buildParamDescriptor(oid, name, type, readonly, precision, value, false);
     
     }
     
-    private Param buildParamDescriptor(String oid, String name, Type type, boolean readonly,
+    private Param buildParamDescriptor(String oid, String name, ParamType type, boolean readonly,
                                                  int precision, Value value, boolean response) {
         Param param = Param.newBuilder()
                         .setName(PolyglotText.newBuilder().putDisplayStrings("en", name).build())
-                        .setType(ParamType.newBuilder().setType(type).build())
+                        .setType(type)
                         .setReadOnly(readonly)
                         .setPrecision(precision)
                         .setValue(value)
@@ -98,7 +97,7 @@ public class MyCatenaDevice extends CatenaServiceImplBase {
     
     @Override
     public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
-        return new ExecuteCommandPayloadHandler(slot, responseObserver);
+        return new FooCommandHandler(slot, responseObserver);
     }
 
     @Override

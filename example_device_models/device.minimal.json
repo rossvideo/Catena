@@ -32,10 +32,7 @@
     },
     "params": {
         "a_number": {
-
-            "type": {
-                "type": "INT32"
-            },
+            "type": "INT32",
             "name": {
                 "display_strings": {
                     "en": "A Number"
@@ -46,9 +43,7 @@
             }
         },
         "primes": {
-            "type": {
-                "type": "INT32_ARRAY"
-            },
+            "type": "INT32_ARRAY",
             "name": {
                 "display_strings": {
                     "en": "Primes"
@@ -62,9 +57,7 @@
             }
         },
         "squares": {
-            "type": {
-                "type": "INT32_ARRAY"
-            },
+            "type": "INT32_ARRAY",
             "name": {
                 "display_strings": {
                     "en": "Squares"
@@ -78,9 +71,7 @@
             }
         },
         "powers_of_two": {
-            "type": {
-                "type": "INT32_ARRAY"
-            },
+            "type": "INT32_ARRAY",
             "name": {
                 "display_strings": {
                     "en": "Powers of Two"
@@ -93,9 +84,7 @@
             }
         },
         "location": {
-            "type": {
-                "type": "STRUCT"
-            },
+            "type": "STRUCT",
             "name": {
                 "display_strings": {    
                     "en": "Location"
@@ -103,9 +92,7 @@
             },
             "params": {
                 "latitude": {
-                    "type": {
-                        "type": "FLOAT32"
-                    },
+                    "type": "FLOAT32",
                     "name": {
                         "display_strings": {
                             "en": "Latitude"
@@ -116,9 +103,7 @@
                     }
                 },
                 "longitude": {
-                    "type": {
-                        "type": "FLOAT32"
-                    },
+                    "type": "FLOAT32",
                     "name": {
                         "display_strings": {
                             "en": "Longitude"
@@ -129,9 +114,7 @@
                     }
                 },
                 "altitude": {
-                    "type": {
-                        "type": "INT32"
-                    },
+                    "type": "INT32",
                     "name": {
                         "display_strings": {
                             "en": "Altitude"
@@ -142,9 +125,7 @@
                     }
                 },
                 "name": {
-                    "type": {
-                        "type": "STRING"
-                    },
+                    "type": "STRING",
                     "name": {
                         "display_strings": {
                             "en": "Name"
@@ -155,18 +136,18 @@
                     }
                 },
                 "coords": {
-                    "type": {"type": "STRUCT"},
+                    "type": "STRUCT",
                     "params": {
                         "x": {
-                            "type": {"type": "FLOAT32"},
+                            "type": "FLOAT32",
                             "value": {"float32_value": 1}
                         },
                         "y": {
-                            "type": {"type": "FLOAT32"},
+                            "type": "FLOAT32",
                             "value": {"float32_value": 1}
                         },
                         "z": {
-                            "type": {"type": "FLOAT32"},
+                            "type": "FLOAT32",
                             "value": {"float32_value": 1}
                         }
                     }
@@ -223,9 +204,7 @@
             }
         },
         "locations": {
-            "type": {
-                "type": "STRUCT_ARRAY"
-            },
+            "type": "STRUCT_ARRAY",
             "name": {
                 "display_strings": {    
                     "en": "Location"
@@ -233,9 +212,7 @@
             },
             "params": {
                 "latitude": {
-                    "type": {
-                        "type": "FLOAT32"
-                    },
+                    "type": "FLOAT32",
                     "name": {
                         "display_strings": {
                             "en": "Latitude"
@@ -246,9 +223,7 @@
                     }
                 },
                 "longitude": {
-                    "type": {
-                        "type": "FLOAT32"
-                    },
+                    "type": "FLOAT32",
                     "name": {
                         "display_strings": {
                             "en": "Longitude"
@@ -296,9 +271,7 @@
             }
         },
         "hello": {
-            "type": {
-                "type": "FLOAT32"
-            },
+            "type": "FLOAT32",
             "name": {
                 "display_strings": {
                     "en": "Hello"
@@ -309,9 +282,7 @@
             }
         },
         "slot": {
-            "type": {
-                "type": "STRUCT_VARIANT"
-            },
+            "type": "STRUCT_VARIANT",
             "name": {
                 "display_strings": {
                     "en": "Slot"
@@ -319,9 +290,7 @@
             },
             "params": {
                 "AudioSlot": {
-                    "type": {
-                        "type": "STRUCT"
-                    },
+                    "type": "STRUCT",
                     "name": {
                         "display_strings": {
                             "en": "Audio Slot"
@@ -329,9 +298,7 @@
                     },
                     "params": {
                         "name": {
-                            "type": {
-                                "type": "STRING"
-                            },
+                            "type": "STRING",
                             "name": {
                                 "display_strings": {
                                     "en": "Name"
@@ -342,9 +309,7 @@
                             }
                         },
                         "gain": {
-                            "type": {
-                                "type": "FLOAT32"
-                            },
+                            "type": "FLOAT32",
                             "name": {
                                 "display_strings": {
                                     "en": "Gain"
@@ -357,9 +322,7 @@
                     }
                 },
                 "VideoSlot": {
-                    "type": {
-                        "type": "STRUCT"
-                    },
+                    "type": "STRUCT",
                     "name": {
                         "display_strings": {
                             "en": "Video Slot"
@@ -367,9 +330,7 @@
                     },
                     "params": {
                         "name": {
-                            "type": {
-                                "type": "STRING"
-                            },
+                            "type": "STRING",
                             "name": {
                                 "display_strings": {
                                     "en": "Name"
