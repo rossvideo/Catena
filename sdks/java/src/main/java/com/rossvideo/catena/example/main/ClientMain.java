@@ -1,6 +1,8 @@
 package com.rossvideo.catena.example.main;
 
-import com.rossvideo.catena.example.MyCatenaClient;
+import java.io.File;
+
+import com.rossvideo.catena.example.client.MyCatenaClient;
 
 public class ClientMain {
 
@@ -8,7 +10,13 @@ public class ClientMain {
     private static int slotNumber = 1;
 
     public static void main(String[] args) {
-        try (MyCatenaClient client = new MyCatenaClient("127.0.0.1", port)) {
+        File clientWorkingDirectory = null;
+        if (args.length > 0) {
+            clientWorkingDirectory = new File(args[0]);
+            clientWorkingDirectory.mkdirs();
+        }
+        
+        try (MyCatenaClient client = new MyCatenaClient("127.0.0.1", port, clientWorkingDirectory)) {
             client.start();
 
             CommandExecutor.executeOnClient(client, slotNumber);
