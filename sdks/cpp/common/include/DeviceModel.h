@@ -24,7 +24,6 @@
 #include <device.pb.h>
 #include <param.pb.h>
 
-#include <Fake.h>
 #include <Path.h>
 #include <Status.h>
 
@@ -51,55 +50,54 @@ class ParamAccessor;  // forward reference
  * std::lock_guard<std::recursive_mutex>.
  * When false, it is of type catena::FakeLockGuard<FakeMutex> which is an empty,
  * do-nothing struct that is completely optimized out of the
- * implementation by asserting the -O1 (or higher) compiler option. 
+ * implementation by asserting the -O1 (or higher) compiler option.
  * Design motivation - small, single threaded devices shouldn't
  * be asserting locks pointlessly, they're resource bound enough.
  *
  */
 class DeviceModel {
-    friend ParamAccessor;
+    friend ParamAccessor; /**< so this class can access the DeviceModel's mutex */
 
   public:
+    /**
+     * @brief Mutex type
+     *
+     */
+    using Mutex = std::mutex;
 
     /**
-   * @brief Mutexlock type
-   *
-   */
-    using Mutex = std::recursive_mutex;
-
-    /**
-   * @brief Lock Guard type
-   *
-   */
+     * @brief Lock Guard type
+     *
+     */
     using LockGuard = std::lock_guard<Mutex>;
 
     /**
-   * @brief Param Accessor Data
-   * 
-   * Yes, this could be a std::pair, but I've a hunch that we'll need to add
-   * a pointer to catena::Constraint too in the near future because constraints
-   * can be referenced and not only defined in-line.
-   */
+     * @brief Param Accessor Data
+     *
+     * Yes, this could be a std::pair, but I've a hunch that we'll need to add
+     * a pointer to catena::Constraint too in the near future because constraints
+     * can be referenced and not only defined in-line.
+     */
     using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
 
     /**
-   * @brief default constructor, creates an empty model.
-   *
-   */
+     * @brief default constructor, creates an empty model.
+     *
+     */
     DeviceModel() {}
 
     /**
-   * @brief Copy constructor, makes deep copy of other's device model.
-   * @todo implementation
-   * @param other the DeviceModel to copy.
-   */
+     * @brief Copy constructor, makes deep copy of other's device model.
+     * @todo implementation
+     * @param other the DeviceModel to copy.
+     */
     DeviceModel(const DeviceModel &other) {}
 
     /**
-   * @brief Assignment operator, makes deep copy of rhs's device model.
-   * @param rhs the right hand side of the = operator
-   * @todo implementation
-   */
+     * @brief Assignment operator, makes deep copy of rhs's device model.
+     * @param rhs the right hand side of the = operator
+     * @todo implementation
+     */
     DeviceModel &operator=(const DeviceModel &rhs) {
         LockGuard lock(mutex_);
         // not implemented
@@ -107,92 +105,92 @@ class DeviceModel {
     }
 
     /**
-   * @brief Move constructor, takes possession of other's state
-   * @param other the donor object
-   * @todo implementation
-   */
+     * @brief Move constructor, takes possession of other's state
+     * @param other the donor object
+     * @todo implementation
+     */
     DeviceModel(DeviceModel &&other) {
         // not implemented
     }
 
     /**
-   * @brief Move assignment, takes possession of rhs's state
-   * @todo implementation
-   * @param rhs the right hand side of the = operator
-   * @return DeviceModel
-   */
+     * @brief Move assignment, takes possession of rhs's state
+     * @todo implementation
+     * @param rhs the right hand side of the = operator
+     * @return DeviceModel
+     */
     DeviceModel operator=(DeviceModel &&rhs) {
         // not implemented
         return *this;
     }
 
     /**
-   * @brief construct from a catena protobuf Device object.
-   * @todo implementation
-   */
+     * @brief construct from a catena protobuf Device object.
+     * @todo implementation
+     */
     explicit DeviceModel(catena::Device &pbDevice) {
         // not implemented
     }
 
     /**
-   * @brief Construct a new Device Model from a json file
-   *
-   * @param filename
-   */
+     * @brief Construct a new Device Model from a json file
+     *
+     * @param filename
+     */
     explicit DeviceModel(const std::string &filename);
 
     /**
-   * @brief read access to the protobuf Device
-   *
-   * @return const catena::Device&
-   */
+     * @brief read access to the protobuf Device
+     *
+     * @return const catena::Device&
+     */
     const catena::Device &device() const;
 
     /**
-   * @brief Get the Param object at path
-   *
-   * @param path uniquely locates the parameter
-   * @throws catena::exception_with_status if the code to navigate
-   * to the requested fully qualified oid has not been implemented.
-   * @throws catena::exception_with_status if the requested oid is not present in the
-   * device model
-   * @return DeviceModel Param
-   */
+     * @brief Get the Param object at path
+     *
+     * @param path uniquely locates the parameter
+     * @throws catena::exception_with_status if the code to navigate
+     * to the requested fully qualified oid has not been implemented.
+     * @throws catena::exception_with_status if the requested oid is not present in the
+     * device model
+     * @return DeviceModel Param
+     */
     ParamAccessor param(const std::string &path);
 
     /**
-   * @brief Get the value of the parameter indicated by path
-   *
-   * @tparam V type of the value to be retrieved
-   * @param ans [out] value retreived
-   * @param path unique oid to get
-   * @return param at the path because finding params can be
-   * expensive and the client is likely to want to access the param
-   * again after getting its value
-   */
+     * @brief Get the value of the parameter indicated by path
+     *
+     * @tparam V type of the value to be retrieved
+     * @param ans [out] value retreived
+     * @param path unique oid to get
+     * @return param at the path because finding params can be
+     * expensive and the client is likely to want to access the param
+     * again after getting its value
+     */
     template <typename V> void getValue(V &ans, const std::string &path);
 
     /**
-   * @brief Set value of param identified by path
-   *
-   * @tparam V underlying value type of param
-   * @param path unique oid of param
-   * @param v value to set
-   * @return the param indicated by path because finding params can be
-   * expensive and the client is likely to want to access the param
-   * again after setting its value
-   */
+     * @brief Set value of param identified by path
+     *
+     * @tparam V underlying value type of param
+     * @param path unique oid of param
+     * @param v value to set
+     * @return the param indicated by path because finding params can be
+     * expensive and the client is likely to want to access the param
+     * again after setting its value
+     */
     template <typename V> void setValue(const std::string &path, V v);
 
     /**
-   * @brief moves the param into the device model
-   *
-   * @param jptr - json pointer to the place to insert the param, must be
-   * escaped.
-   * @param param the param to be added to the device model
-   * @returns cached version of param which client can use
-   * for ongoing access to the param in a threadsafe way
-   */
+     * @brief moves the param into the device model
+     *
+     * @param jptr - json pointer to the place to insert the param, must be
+     * escaped.
+     * @param param the param to be added to the device model
+     * @returns cached version of param which client can use
+     * for ongoing access to the param in a threadsafe way
+     */
     // Param addParam(const std::string &jptr, catena::Param &&param);
 
   private:
@@ -201,33 +199,33 @@ class DeviceModel {
     static catena::Value noValue_; /**< to flag undefined values */
 
     /**
-   * @brief Get the parent's sub-param at front of path
-   *
-   * @param path [in|out] path to the sub-param, the first segment will be
-   * consumed.
-   * @param parent param
-   * @return child param indicated by front of path
-   * @throws catena::exception_with_status if is STRUCT_ARRAY
-   * @throws catena::exception_with_status if parent is not a sub-param supporting param
-   * @throws catena::exception_with_status if param doesn't have a values object
-   * type
-   *
-   */
+     * @brief Get the parent's sub-param at front of path
+     *
+     * @param path [in|out] path to the sub-param, the first segment will be
+     * consumed.
+     * @param parent param
+     * @return child param indicated by front of path
+     * @throws catena::exception_with_status if is STRUCT_ARRAY
+     * @throws catena::exception_with_status if parent is not a sub-param supporting param
+     * @throws catena::exception_with_status if param doesn't have a values object
+     * type
+     *
+     */
     ParamAccessorData getSubparam_(catena::Path &path, ParamAccessorData &pad);
-    
+
     /**
-   * @brief Set the param accessor index to the value indicated in the json string
-   *
-   * @param path [in|out] path to the sub-param, the first segment will be
-   * consumed.
-   * @param parent param
-   * @return indexed value indicated by front of path
-   * @throws catena::exception_with_status if is not an array
-   * @throws catena::exception_with_status if param doesn't have a values object
-   * type
-   * @throws catena::exception_with_status if the index is out of range
-   *
-   */
+     * @brief Set the param accessor index to the value indicated in the json string
+     *
+     * @param path [in|out] path to the sub-param, the first segment will be
+     * consumed.
+     * @param parent param
+     * @return indexed value indicated by front of path
+     * @throws catena::exception_with_status if is not an array
+     * @throws catena::exception_with_status if param doesn't have a values object
+     * type
+     * @throws catena::exception_with_status if the index is out of range
+     *
+     */
     ParamAccessorData indexIntoParam_(catena::Path &path, ParamAccessorData &pad);
 };
 

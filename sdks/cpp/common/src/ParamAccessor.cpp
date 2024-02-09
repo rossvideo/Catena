@@ -35,6 +35,7 @@ using VP = catena::Value *;  // shared value pointer
 using catena::Value;
 using catena::Param;
 using catena::DeviceModel;
+using LockGuard = catena::ParamAccessor::LockGuard;
 
 int applyIntConstraint(catena::Param &param, int v) {
     /// @todo: add warning log for invalid constraint
@@ -126,6 +127,13 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 }
 
 std::unique_ptr<ParamAccessor> ParamAccessor::subParam(const std::string& fieldName) {
+    // apply lock
+    LockGuard lock(deviceModel_.get().mutex_);
+    // then call the private version of the method
+    return subParam_(fieldName);
+}
+
+std::unique_ptr<ParamAccessor> ParamAccessor::subParam_(const std::string& fieldName) {
     Param& parent = param_.get();
     Param& childParam = parent.mutable_params()->at(fieldName);
     Value& value = value_.get();
@@ -146,6 +154,13 @@ std::unique_ptr<ParamAccessor> ParamAccessor::subParam(const std::string& fieldN
 }
 
 const std::unique_ptr<ParamAccessor> ParamAccessor::subParam(const std::string& fieldName) const {
+    // apply lock
+    LockGuard lock(deviceModel_.get().mutex_);
+    // then call the private version of the method
+    return subParam_(fieldName);
+}
+
+const std::unique_ptr<ParamAccessor> ParamAccessor::subParam_(const std::string& fieldName) const {
     Param& parent = param_.get();
     const Param& childParam = parent.params().at(fieldName);
     const Value& value = value_.get();
