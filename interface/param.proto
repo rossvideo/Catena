@@ -148,7 +148,6 @@ message Param {
   // When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device
   bool minimal_set = 18;
 
-
   // When true, indicates that the parameter is stateless
   // design intent is to signal that values of stateless parameters are not worth persisting
   // and that the device should not be expected to remember them across reboots.
