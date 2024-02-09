@@ -29,10 +29,7 @@ option java_outer_classname = "ParamProtos";
 
 option optimize_for = CODE_SIZE;
 
-message ParamType {
-
-  // Parameter types can be simple, structures, or binary.
-  enum Type {
+enum ParamType {
     UNDEFINED = 0;
     EMPTY = 1;
     INT32 = 4;
@@ -47,24 +44,6 @@ message ParamType {
     STRUCT_ARRAY = 32;
     STRUCT_VARIANT_ARRAY = 33;
     DATA = 50; // Used to allow commands to accept files
-  }
-
-  /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
-  *  ParamTypes param_type = 1;
-  *
-  * // Non-relative JSON pointer to a param elsewhere in the model.
-  * string param_ref = 2;
-  * }
-  */
-
-  /* Defines the parameter type.
-  * Can be defined in-line
-  * or reference a shared type definition from device.types.params
-  */
-  Type type = 1;
-
-  // Non-relative JSON pointer to a param elsewhere in the model.
-  string template_oid = 2;
 }
 
 message BasicParamInfo {
@@ -76,6 +55,9 @@ message BasicParamInfo {
 
   // The parameter's type
   ParamType type = 3;
+
+  // The OID of the template from which this parameter was created
+  string template_oid = 4;
 
 }
 
@@ -166,11 +148,15 @@ message Param {
   // When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device
   bool minimal_set = 18;
 
-  // When true, indicates that the parameter is stateless and can be accessed without a slot
+  // When true, indicates that the parameter is stateless
   // design intent is to signal that values of stateless parameters are not worth persisting
   // and that the device should not be expected to remember them across reboots.
   // Good examples of stateless parameters are: device's current time, audio meters, etc.
   bool stateless = 19;
+
+  // The OID of the template from which this parameter was created
+  string template_oid = 19; 
+
 }
 
 // A value that can be one of several types, even within the same array

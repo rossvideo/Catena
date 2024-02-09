@@ -2,7 +2,7 @@
     "type": {"type": "STRUCT_VARIANT"},
     "params": {
         "videochannel": {
-            "type": {"type": "STRUCT"},
+            "type": "STRUCT",
             "params": {
                 "id": {
                     "type": {"type": "STRING"}
@@ -13,16 +13,16 @@
             }
         },
         "audiochannel": {
-            "type": {"type": "STRUCT"},
+            "type": "STRUCT",
             "params": {
                 "id": {
-                    "type": {"type": "STRING"}
+                    "type": "STRING"
                 },
                 "label": {
-                    "type": {"type": "STRING"}
+                    "type": "STRING"
                 },
                 "gain": {
-                    "type": {"type": "FLOAT32"}
+                    "type": "FLOAT32"
                 }
             }
         }
