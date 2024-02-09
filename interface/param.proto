@@ -155,7 +155,7 @@ message Param {
   bool stateless = 19;
 
   // The OID of the template from which this parameter was created
-  string template_oid = 19; 
+  string template_oid = 20; 
 
 }
 
