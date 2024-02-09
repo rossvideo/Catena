@@ -16,12 +16,12 @@ import io.grpc.stub.StreamObserver;
  * Handles receiving ExecuteCommandPayload instances on the server side to
  * provide responses back to the client.
  */
-public class ExecuteCommandPayloadHandler implements StreamObserver<ExecuteCommandPayload> {
+public class FooCommandHandler implements StreamObserver<ExecuteCommandPayload> {
 
 	private final int slot;
 	private final StreamObserver<CommandResponse> responseObserver;
 
-	public ExecuteCommandPayloadHandler(int slot, StreamObserver<CommandResponse> responseObserver) {
+	public FooCommandHandler(int slot, StreamObserver<CommandResponse> responseObserver) {
 		this.slot = slot;
 		this.responseObserver = responseObserver;
 	}
