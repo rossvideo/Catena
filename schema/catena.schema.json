@@ -189,6 +189,9 @@
                 }, 
                 "oid_aliases": {
                     "$ref": "#/$defs/oid_aliases"
+                },
+                "stateless": {
+                    "$ref": "#/$defs/stateless"
                 }
             },
             "required": [
@@ -1325,6 +1328,13 @@
                     
                 }
             }
+        },
+        "stateless": {
+            "title": "Stateless Flag",
+            "description":
+              "When true, indicates that the parameter is stateless and does not require to be persisted. This is useful for values that are transient in nature: current time, audio meters, ...",
+            "type": "boolean",
+            "default": false
         }
     }
 }

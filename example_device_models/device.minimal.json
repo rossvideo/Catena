@@ -40,7 +40,8 @@
             },
             "value": {
                 "int32_value": 42
-            }
+            },
+            "stateless": true
         },
         "primes": {
             "type": "INT32_ARRAY",
