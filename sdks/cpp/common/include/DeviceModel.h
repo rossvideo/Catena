@@ -36,23 +36,15 @@
 
 namespace catena {
 
+struct FakeLock {FakeLock(std::mutex&){}};
+
 class ParamAccessor;  // forward reference
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
  * ogscript API in DashBoard.
  *
- * @tparam T controls whether the class asserts locks when being
- * accessed
- *
  * The data model access methods all begin with code to assert a lock guard.
- * When threadsafe mode is selected, this is of type
- * std::lock_guard<std::recursive_mutex>.
- * When false, it is of type catena::FakeLockGuard<FakeMutex> which is an empty,
- * do-nothing struct that is completely optimized out of the
- * implementation by asserting the -O1 (or higher) compiler option.
- * Design motivation - small, single threaded devices shouldn't
- * be asserting locks pointlessly, they're resource bound enough.
  *
  */
 class DeviceModel {
@@ -64,12 +56,6 @@ class DeviceModel {
      *
      */
     using Mutex = std::mutex;
-
-    /**
-     * @brief Lock Guard type
-     *
-     */
-    using LockGuard = std::lock_guard<Mutex>;
 
     /**
      * @brief Param Accessor Data
@@ -99,7 +85,7 @@ class DeviceModel {
      * @todo implementation
      */
     DeviceModel &operator=(const DeviceModel &rhs) {
-        LockGuard lock(mutex_);
+        std::lock_guard lock(mutex_);
         // not implemented
         return *this;
     }

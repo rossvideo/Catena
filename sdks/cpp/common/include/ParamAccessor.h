@@ -25,12 +25,13 @@
 #include <device.pb.h>
 #include <param.pb.h>
 
+#include <Functory.h>
+#include <DeviceModel.h>
 #include <Path.h>
 #include <Status.h>
 #include <Threading.h>
 #include <TypeTraits.h>
-#include <Functory.h>
-#include <DeviceModel.h>
+
 
 
 #include <functional>
@@ -85,11 +86,6 @@ class ParamAccessor {
     using Mutex = DeviceModel::Mutex;
 
     /**
-     * @brief Lock Guard type
-     *
-     */
-    using LockGuard = DeviceModel::LockGuard;
-    /**
      * @brief type alias for the setter Functory for scalar types
      */
     using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*>;
@@ -116,33 +112,6 @@ class ParamAccessor {
      */
     using VariantInfoGetter = catena::patterns::Functory<std::type_index, const VariantInfo&>;
 
-
-  public:
-    static bool inline registerSetter(Value::KindCase kind, Setter::Function func) {
-        auto& setter = Setter::getInstance();
-        return setter.addFunction(kind, func);
-    }
-
-    static bool inline registerGetter(Value::KindCase kind, Getter::Function func) {
-        auto& getter = Getter::getInstance();
-        return getter.addFunction(kind, func);
-    }
-
-    static bool inline registerSetterAt(Value::KindCase kind, SetterAt::Function func) {
-        auto& setterAt = SetterAt::getInstance();
-        return setterAt.addFunction(kind, func);
-    }
-
-    static bool inline registerGetterAt(Value::KindCase kind, GetterAt::Function func) {
-        auto& getterAt = GetterAt::getInstance();
-        return getterAt.addFunction(kind, func);
-    }
-
-    static bool inline registerVariantGetter(const std::type_index ti, VariantInfoGetter::Function func) {
-        auto& getter = VariantInfoGetter::getInstance();
-        return getter.addFunction(ti, func);
-    }
-
   public:
     /**
      * @brief Construct a new ParamAccessor object
@@ -151,8 +120,7 @@ class ParamAccessor {
      * @param pad the data to initialize the param accessor
      */
 
-    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad)
-        : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)} {}
+    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad);
 
     /**
      * @brief ParamAccessor has no default constructor.
@@ -207,18 +175,57 @@ class ParamAccessor {
      * part of the _parent's_ value element. This is because the value element in the child
      * param descriptor is not part of the active value of the larger object. If even present,
      * it's used as the default value for the matching part of the parent's value object.
+     * 
+     * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
-    std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName);
+template <bool Threadsafe>
+std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
+    using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+    LockGuard lock(deviceModel_.get().mutex_);
+    Param& parent = param_.get();
+    Param& childParam = parent.mutable_params()->at(fieldName);
+    Value& value = value_.get();
+    DeviceModel::ParamAccessorData pad{};
+    if (value.kind_case() == Value::KindCase::kStructValue) {
+        // field is a struct
+        Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
+        pad = {&childParam, v};
+    } else if (value.kind_case() == Value::KindCase::kVariantValue) {
+        // field is a variant
+        Value* v = value.mutable_variant_value()->mutable_value();
+        pad = {&childParam, v};
+    } else {
+        // field is a simple or simple array type
+        BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
+    }
+    return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+}
 
 
-    /**
-     * @brief get const accessor to sub-parameter matching fieldName
-     * @param fieldName name of the sub-parameter
-     * @return unique_ptr to ParamAccessor interface
-     *
-     * See notes on value element of returned object in non-const version of this method.
-     */
-    const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) const;
+template <bool Threadsafe>
+const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) const {
+    using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+    LockGuard lock(deviceModel_.get().mutex_);
+    Param& parent = param_.get();
+    const Param& childParam = parent.params().at(fieldName);
+    const Value& value = value_.get();
+    DeviceModel::ParamAccessorData pad{};
+    if (value.kind_case() == Value::KindCase::kStructValue) {
+        // field is a struct
+        // yes the const_cast is gross, but ok because we re-apply constness on return
+        const Value& v = value.struct_value().fields().at(fieldName).value();
+        pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+    } else if (value.kind_case() == Value::KindCase::kVariantValue) {
+        // field is a variant
+        // yes the const_cast is gross, but ok because we re-apply constness on return
+        const Value& v = value.variant_value().value();
+        pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+    } else {
+        // field is a simple or simple array type
+        BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
+    }
+    return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+}
 
     /**
      * @brief Get the value of the param referenced by this object
@@ -263,7 +270,8 @@ class ParamAccessor {
      *
      * @tparam V type of the value stored by the param. This must be a native type.
      */
-    template <typename V> void setValueNative(const V& src) {
+    template <bool Threadsafe = true, typename V> void setValueNative(const V& src) {
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& setter = Setter::getInstance();
         if constexpr (catena::has_getStructInfo<V>) {
@@ -275,13 +283,13 @@ class ParamAccessor {
                 if (!dstFields->contains(field.name)) {
                     dstFields->insert({field.name, StructField{}});
                     *dstFields->at(field.name).mutable_value() = Value{};
-                    std::unique_ptr<ParamAccessor> sp = subParam(field.name);
+                    std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
                     field.wrapSetter(sp.get(), srcAddr);
                 } else {
                     Value* dstField = dstFields->at(field.name).mutable_value();
                     if (dstField->kind_case() == Value::KindCase::kStructValue) {
                         // field is a struct
-                        std::unique_ptr<ParamAccessor> sp = subParam(field.name);
+                        std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
                         field.wrapSetter(sp.get(), srcAddr);
                     } else {
                         // field is a simple or simple array type
@@ -297,7 +305,7 @@ class ParamAccessor {
             VariantValue* vv = v.mutable_variant_value();
             std::string* currentVariant = vv->mutable_variant_type();
             const std::string& variant = variantInfo.lookup[src.index()];
-            const std::unique_ptr<ParamAccessor> sp = subParam(variant);
+            const std::unique_ptr<ParamAccessor> sp = subParam<false>(variant);
             if (variant.compare(*currentVariant) != 0) {
                 // we need to change the variant type in the protobuf
                 *currentVariant = variant;
@@ -315,8 +323,9 @@ class ParamAccessor {
      *
      * @tparam V type of the value stored by the param. This must be a native type.
      */
-    template <typename V> void setValueAtNative(const V& src, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void setValueAtNative(const V& src, const ParamIndex idx) {
         using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& setter = SetterAt::getInstance();
         static std::vector<ElementType> x;
@@ -330,7 +339,8 @@ class ParamAccessor {
      * @tparam V type of the value stored by the param. This must be a native type.
      * @param dst reference to the destination object written to by this method.
      */
-    template <typename V> void getValueNative(V& dst) const {
+    template <bool Threadsafe = true, typename V> void getValueNative(V& dst) const {
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& getter = Getter::getInstance();
         if constexpr (catena::has_getStructInfo<V>) {
@@ -345,7 +355,7 @@ class ParamAccessor {
                     const catena::Value::KindCase kc = srcField.kind_case();
                     if (kc == Value::KindCase::kStructValue) {
                         // field is a struct
-                        const std::unique_ptr<ParamAccessor> sp = subParam(field.name);
+                        const std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
                         field.wrapGetter(dstAddr, sp.get());
                     } else {
                         // field is a simple or simple array type
@@ -368,7 +378,7 @@ class ParamAccessor {
             void* ptr = vmi.set(&dst);
             if (kc == Value::KindCase::kStructValue) {
                 // variant value is a struct
-                const std::unique_ptr<ParamAccessor> sp = subParam(variant);
+                const std::unique_ptr<ParamAccessor> sp = subParam<false>(variant);
                 vmi.wrapGetter(ptr, sp.get());
             } else if (kc == Value::KindCase::kVariantValue) {
                 // variant value is a variant
@@ -391,20 +401,14 @@ class ParamAccessor {
      * @param dst reference to the destination object written to by this method.
      * @param idx index into the array
      */
-    template <typename V> void getValueAtNative(V& dst, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void getValueAtNative(V& dst, const ParamIndex idx) {
         using ElementType = typename std::remove_reference<decltype(dst)>::type;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& getter = GetterAt::getInstance();
         static std::vector<ElementType> x;
         getter[getKindCase(x)](&dst, &value_.get(), idx);
     }
-
-  private:
-    /** implementation of subParam with no thread locking */
-    std::unique_ptr<ParamAccessor> subParam_(const std::string& fieldName);
-
-    /** implementation of subParam ... const with no thread locking */
-    const std::unique_ptr<ParamAccessor> subParam_(const std::string& fieldName) const;
 
   private:
     std::reference_wrapper<catena::DeviceModel> deviceModel_;

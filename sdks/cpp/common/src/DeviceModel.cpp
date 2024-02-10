@@ -91,6 +91,7 @@ using google::protobuf::Map;
 }
 
 const catena::Device &catena::DeviceModel::device() const {
+    using LockGuard = std::lock_guard<Mutex>;
     LockGuard lock(mutex_);
     return device_;
 }
@@ -99,6 +100,7 @@ const catena::Device &catena::DeviceModel::device() const {
 catena::Value catena::DeviceModel::noValue_;
 
 catena::ParamAccessor catena::DeviceModel::param(const std::string &jptr) {
+    using LockGuard = std::lock_guard<Mutex>;
     LockGuard lock(mutex_);
     catena::Path path_(jptr);
 

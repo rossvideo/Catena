@@ -117,7 +117,7 @@ public:
             return it->second;
         } else {
             std::stringstream err;
-            err << __PRETTY_FUNCTION__;
+            err << __PRETTY_FUNCTION__ << ", key not found ";
             catena::meta::stream_if_possible (err, key);
             throw std::runtime_error(err.str());
         }
@@ -131,9 +131,6 @@ public:
         LockGuard lock(_mtx);
         return _registry.find(key) != _registry.end();
     }
-
-
-
 };
 }
 }
