@@ -77,6 +77,20 @@ using ParamIndex = uint32_t;
  */
 static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 
+/**
+ * @brief true if v is a list type
+ *
+ * @param v
+ * @return true if v is a list type
+ * @return false otherwise
+ */
+inline static bool isList(const catena::Value& v) {
+    bool ans = false;
+    ans = v.has_float32_array_values() || v.has_int32_array_values() || v.has_string_array_values() ||
+          v.has_struct_array_values() || v.has_variant_array_values();
+    return ans;
+}
+
 class ParamAccessor {
   public:
     /**
@@ -129,32 +143,32 @@ class ParamAccessor {
     ParamAccessor() = delete;
 
     /**
-     * @brief ParamAccessor does not have copy semantics.
+     * @brief ParamAccessor copy constructor
      *
      * @param other
      */
-    ParamAccessor(const ParamAccessor& other) = delete;
+    ParamAccessor(const ParamAccessor& other) = default;
 
     /**
-     * @brief ParamAccessor does not have copy semantics.
+     * @brief ParamAccessor copy assignment
      *
      * @param rhs
      */
-    ParamAccessor& operator=(const ParamAccessor& rhs) = delete;
+    ParamAccessor& operator=(const ParamAccessor& rhs) = default;
 
     /**
-     * @brief ParamAccessor does not have move semantics.
+     * @brief ParamAccessor move constructor.
      *
      * @param other
      */
-    ParamAccessor(ParamAccessor&& other) = delete;
+    ParamAccessor(ParamAccessor&& other) = default;
 
     /**
-     * @brief ParamAccessor does not have move semantics
+     * @brief ParamAccessor move assignment
      *
      * @param rhs, right hand side of the equals sign
      */
-    ParamAccessor& operator=(ParamAccessor&& rhs) = delete;
+    ParamAccessor& operator=(ParamAccessor&& rhs) = default;
 
     inline ~ParamAccessor() {  // nothing to do
     }
@@ -227,42 +241,56 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
     return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
 }
 
-    /**
-     * @brief Get the value of the param referenced by this object
-     *
-     * Threadsafe because it asserts the DeviceModel's mutex.
-     *
-     * @param idx index into the array if parameter is an array type kParamEnd
-     * will return all array elements.
-     * @tparam V underlying value type of param
-     * @return V value of parameter
-     * @throws catena::exception_with_status if a type mismatch is detected, or
-     * support for the type used has not been implemented.
-     */
-    template <typename V> V getValue([[maybe_unused]] ParamIndex idx = 0);
-
-    /**
-     * @brief Get the value of the array-type param referenced by this object
-     *
-     * Threadsafe because it asserts the DeviceModel's mutex.
-     * @param idx index into the array
-     * @throws catena::exception_with_status if idx is out of range, or value
-     * referenced by this object is not a list type, or if support for the type
-     * has not been implemented
-     * @return V catena::Value set to type matching that of the param referenced
-     * by this object.
-     */
-    catena::Value getValueAt(ParamIndex idx);
-
-    /**
-     * @brief Set the value of the stored catena::ParamAccessor.
-     *
-     * Threadsafe because it asserts the DeviceModel's mutex.
-     * @param idx index into the array if parameter is an array type.
-     * @tparam V type of the value stored by the param.
-     * @param v value to set.
-     */
-    template <typename V> void setValue(V v, [[maybe_unused]] ParamIndex idx = kParamEnd);
+/**
+ * @brief make a ParamAccessor with a value set to the index indicated
+ * @tparam Threadsafe, whether or not the device model's lock will be asserted
+ * @param idx index into the array
+ * @throws catena::exception_with_status::INVALID_ARGUMENT if the param is not an array
+ * @throws catena::exception_with_status::OUT_OF_RANGE if the index isn't valid
+*/
+// template <bool Threadsafe = true>
+// std::unique_ptr<ParamAccessor> at(const ParamIndex idx) {
+//     using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+//     LockGuard lock(deviceModel_.get().mutex_);
+//     Param& parent = param_.get();
+//     Value& value = value_.get();
+//     DeviceModel::ParamAccessorData pad{};
+//     if (catena::isList(value)) {
+//         // field is a list
+//         Value* v = nullptr;
+//         switch (value.kind_case()) {
+//         case Value::KindCase::kFloat32ArrayValues:
+//             BAD_STATUS("Float array does not have sub-params.", catena::StatusCode::INVALID_ARGUMENT);
+//             break;
+//         case Value::KindCase::kInt32ArrayValues:
+//             BAD_STATUS("Int32 array does not have sub-params.", catena::StatusCode::INVALID_ARGUMENT);
+//             break;
+//         case Value::KindCase::kStringArrayValues:
+//             BAD_STATUS("String Array does not have sub-params.", catena::StatusCode::INVALID_ARGUMENT);
+//             break;
+//         case Value::KindCase::kStructArrayValues:
+//             if (idx >= value.struct_array_values().struct_values_size()) {
+//                 BAD_STATUS("index out of range", catena::StatusCode::OUT_OF_RANGE);
+//             }
+//             Value newValue{};
+//             newValue.set_allocated_struct_value
+//             v = value.mutable_struct_array_values()->mutable_struct_values();
+//             break;
+//         case Value::KindCase::kVariantArrayValues:
+//             if (idx >= value.variant_array_values().size()) {
+//                 BAD_STATUS("index out of range", catena::StatusCode::OUT_OF_RANGE);
+//             }
+//             v = value.mutable_variant_array_values()->mutable_values()->at(idx)
+//             break;
+//         default:
+//             BAD_STATUS("at called on non-list type", catena::StatusCode::INVALID_ARGUMENT);
+//         }
+//         pad = {&parent, v};
+//     } else {
+//         BAD_STATUS("at called on non-list type", catena::StatusCode::INVALID_ARGUMENT);
+//     }
+//     return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+// }
 
     /**
      * @brief Set the value of the stored parameter to which this object
@@ -270,7 +298,7 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
      *
      * @tparam V type of the value stored by the param. This must be a native type.
      */
-    template <bool Threadsafe = true, typename V> void setValueNative(const V& src) {
+    template <bool Threadsafe = true, typename V> void setValue(const V& src) {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& setter = Setter::getInstance();
@@ -323,7 +351,7 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
      *
      * @tparam V type of the value stored by the param. This must be a native type.
      */
-    template <bool Threadsafe = true, typename V> void setValueAtNative(const V& src, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void setValueAt(const V& src, const ParamIndex idx) {
         using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
@@ -339,7 +367,7 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
      * @tparam V type of the value stored by the param. This must be a native type.
      * @param dst reference to the destination object written to by this method.
      */
-    template <bool Threadsafe = true, typename V> void getValueNative(V& dst) const {
+    template <bool Threadsafe = true, typename V> void getValue(V& dst) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& getter = Getter::getInstance();
@@ -401,7 +429,7 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
      * @param dst reference to the destination object written to by this method.
      * @param idx index into the array
      */
-    template <bool Threadsafe = true, typename V> void getValueAtNative(V& dst, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void getValueAt(V& dst, const ParamIndex idx) {
         using ElementType = typename std::remove_reference<decltype(dst)>::type;
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
@@ -416,17 +444,5 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
     std::reference_wrapper<catena::Value> value_;
 };
 
-/**
- * @brief true if v is a list type
- *
- * @param v
- * @return true if v is a list type
- * @return false otherwise
- */
-inline static bool isList(const catena::Value& v) {
-    bool ans = false;
-    ans = v.has_float32_array_values() || v.has_int32_array_values() || v.has_string_array_values() ||
-          v.has_struct_array_values() || v.has_variant_array_values();
-    return ans;
-}
+
 }  // namespace catena

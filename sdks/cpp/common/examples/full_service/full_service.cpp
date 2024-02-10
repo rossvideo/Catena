@@ -140,9 +140,9 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
     Status GetValue(ServerContext *context, const ::catena::GetValuePayload *req,
                     ::catena::Value *res) override {
         try {
-            ParamAccessor p = dm_.get().param(req->oid());
+            auto p = dm_.get().param(req->oid());
             authorize(context);
-            //*res = p.getValue<catena::Value>(req->element_index());
+            *res = p->value();
             std::cout << "GetValue: " << req->oid() << std::endl;
             return Status::OK;
 
