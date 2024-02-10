@@ -40,8 +40,6 @@ using DeviceModel = catena::DeviceModel;
 using Param = catena::Param;
 using ParamAccessor = catena::ParamAccessor;
 
-struct Wibble {
-};
 
 // clang_format push
 // clang_format off
@@ -76,6 +74,8 @@ REFLECTABLE_VARIANT(
     (AudioSlot),
     (VideoSlot)
 );
+
+
 
 int main(int argc, char **argv) {
     // process command line

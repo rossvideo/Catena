@@ -91,7 +91,7 @@ using google::protobuf::Map;
 }
 
 const catena::Device &catena::DeviceModel::device() const {
-    LockGuard lock(mutex_);
+    std::lock_guard<Mutex> lock(mutex_);
     return device_;
 }
 
@@ -99,7 +99,7 @@ const catena::Device &catena::DeviceModel::device() const {
 catena::Value catena::DeviceModel::noValue_;
 
 catena::ParamAccessor catena::DeviceModel::param(const std::string &jptr) {
-    LockGuard lock(mutex_);
+    std::lock_guard<Mutex> lock(mutex_);
     catena::Path path_(jptr);
 
     // get our oid and look for it in the params map
@@ -133,7 +133,6 @@ catena::ParamAccessor catena::DeviceModel::param(const std::string &jptr) {
 
     return ParamAccessor(*this, ans);
 }
-
 
 typename catena::DeviceModel::ParamAccessorData
 catena::DeviceModel::indexIntoParam_(catena::Path &path, catena::DeviceModel::ParamAccessorData &pad) {
