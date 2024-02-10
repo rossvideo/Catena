@@ -45,7 +45,7 @@ using ParamAccessor = catena::ParamAccessor;
 // clang_format off
 // define some structs to test struct support
 // note use of REFLECTABLE_STRUCT macro which provides runtime reflection
-// and type conversion support used by ParamAccessor's *Native methods
+// and type conversion support used by ParamAccessor's get/set methods
 //
 struct Coords {
     REFLECTABLE_STRUCT(Coords, (float) x, (float) y, (float) z);
@@ -92,39 +92,39 @@ int main(int argc, char **argv) {
         std::cout << "Read Device Model: " << dm << '\n';
 
         // read a variant
-        ParamAccessor slotParam = dm.param("/slot");
+        std::unique_ptr<ParamAccessor> slotParam = dm.param("/slot");
         SlotVariant slot = {AudioSlot{"audio", 10.0f}}; // initialize the variant
-        slotParam.getValueNative(slot);
+        slotParam->getValue(slot);
         assert(std::holds_alternative<VideoSlot>(slot));
         slot = AudioSlot{"back to audio", 0.0f}; // change the variant
-        slotParam.setValueNative(slot);
+        slotParam->setValue(slot);
 
         // read & write native struct
         Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford" }, loc2;
-        ParamAccessor locParam = dm.param("/location");
+        std::unique_ptr<ParamAccessor> locParam = dm.param("/location");
 
-        locParam.getValueNative(loc2);
+        locParam->getValue(loc2);
         std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
                   << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
                   << '\n';
-        locParam.setValueNative(loc);
+        locParam->setValue(loc);
 
         // read & write native int32_t
-        ParamAccessor numParam = dm.param("/a_number");
+        std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
         int32_t num = 0;
-        numParam.getValueNative(num);
+        numParam->getValue(num);
         std::cout << "Number: " << num << '\n';
         num *= 2;
-        numParam.setValueNative(num);
+        numParam->setValue(num);
 
         // read & write native vector of int32_t
         std::vector<int32_t> primes = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
-        ParamAccessor primesParam = dm.param("/primes");
-        primesParam.setValueNative(primes);
+        std::unique_ptr<ParamAccessor> primesParam = dm.param("/primes");
+        primesParam->setValue(primes);
 
         std::vector<int32_t> squares;
-        ParamAccessor squaresParam = dm.param("/squares");
-        squaresParam.getValueNative(squares);
+        std::unique_ptr<ParamAccessor> squaresParam = dm.param("/squares");
+        squaresParam->getValue(squares);
         std::cout << "Squares: ";
         for (auto &i : squares) {
             std::cout << i << ' ';
@@ -132,26 +132,17 @@ int main(int argc, char **argv) {
         std::cout << '\n';
 
         // read & write elements of a native vector of int32_t
-        ParamAccessor powersParam = dm.param("/powers_of_two");
+        std::unique_ptr<ParamAccessor> powersParam = dm.param("/powers_of_two");
         int32_t mistake = 0;
-        powersParam.setValueAtNative(mistake, 1);
+        powersParam->setValueAt(mistake, 1);
 
         int32_t twoCubed = 0;
-        powersParam.getValueAtNative(twoCubed, 3);
+        powersParam->getValueAt(twoCubed, 3);
         std::cout << "2^3: " << twoCubed << '\n';
 
         // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';
 
-
-        // // cache a param and get its value
-        // ParamAccessor helloParam = dm.param("/hello");
-        // std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
-
-        // // access a sub-param directly
-        // std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
-
-        // report the wire-size of the device model
         std::string serialized;
         dm.device().SerializeToString(&serialized);
         std::cout << "Device model serializes to " << serialized.size() << " bytes\n";

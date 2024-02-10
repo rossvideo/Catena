@@ -51,14 +51,9 @@ int main(int argc, char** argv) {
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
         catena::DeviceModel dm(argv[1]);
-
         
-
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
-
-        auto p = dm.param("/location");
-        std::cout << "Size of Location: " << sizeof(p.getValue<catena::Value>()) << '\n';
 
         // report the wire-size of the device model
         std::string serialized;

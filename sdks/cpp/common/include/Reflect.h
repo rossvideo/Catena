@@ -38,11 +38,11 @@ namespace catena {
   fi.getStructInfo = catena::getStructInfoFunction<ARGTYPE(x)>();    \
   fi.wrapGetter = [](void* dstAddr, const ParamAccessor* pa) { \
     auto dst = reinterpret_cast<NthElement<typelist, idx>*>(dstAddr); \
-    pa->getValueNative<false, NthElement<typelist, idx>>(*dst); \
+    pa->getValue<false, NthElement<typelist, idx>>(*dst); \
   }; \
   fi.wrapSetter = [](ParamAccessor* pa, const void* srcAddr) { \
     auto src = reinterpret_cast<const NthElement<typelist, idx>*>(srcAddr); \
-    pa->setValueNative<false, NthElement<typelist, idx>>(*src); \
+    pa->setValue<false, NthElement<typelist, idx>>(*src); \
   }; \
   t.fields.push_back(fi);                               
 
@@ -90,11 +90,11 @@ vi.members.insert({QUOTED(ARGTYPE(x)), \
     catena::getStructInfoFunction<ARGTYPE(x)>(), \
     [](void* dstAddr, const ParamAccessor* pa) { \
       auto dst = reinterpret_cast<std::variant_alternative_t<idx, vtype>*>(dstAddr); \
-      pa->getValueNative<false, std::variant_alternative_t<idx, vtype>>(*dst); \
+      pa->getValue<false, std::variant_alternative_t<idx, vtype>>(*dst); \
     }, \
     [](ParamAccessor* pa, const void* srcAddr) { \
       auto src = reinterpret_cast<const std::variant_alternative_t<idx, vtype>*>(srcAddr); \
-      pa->setValueNative<false, std::variant_alternative_t<idx, vtype>>(*src); \
+      pa->setValue<false, std::variant_alternative_t<idx, vtype>>(*src); \
     } \
 }});
 
