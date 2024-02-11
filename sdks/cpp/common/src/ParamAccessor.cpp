@@ -145,6 +145,7 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         auto &getterAt = GetterAt::getInstance();
         auto &variantGetter = VariantInfoGetter::getInstance();
         auto &variantSetter = VariantInfoGetter::getInstance();
+        auto &valueGetter = ValueGetter::getInstance();
 
         // register int32 setter
         setter.addFunction(KindCase::kInt32Value, [](Value *dst, const void *srcAddr) {
@@ -228,6 +229,17 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         getter.addFunction(KindCase::kStringValue, [](void *dstAddr, const Value *src) {
             *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
         });
+
+        // register value getter for int32 array
+        valueGetter.addFunction(KindCase::kInt32ArrayValues, [this](Value* dst, const Value &val, ParamIndex idx) -> void {
+            if (idx >= val.int32_array_values().ints_size()) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << val.int32_array_values().ints_size();
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst->set_int32_value(val.int32_array_values().ints(idx));
+        });
     }
 }
 
@@ -257,3 +269,14 @@ template <>
 catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vector<std::string> & src) {
     return catena::Value::KindCase::kStringArrayValues;
 }
+
+void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
+        const Value& value = value_.get();
+        if (isList(value) && idx != kParamEnd) {
+            auto& getter = ValueGetter::getInstance();
+            getter[value.kind_case()](dst, value, idx);
+        } else {
+            // value is a scalar type
+            dst->CopyFrom(value);
+        }
+    }

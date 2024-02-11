@@ -142,7 +142,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
         try {
             auto p = dm_.get().param(req->oid());
             authorize(context);
-            *res = p->value();
+            p->getValue(res, req->element_index());
             std::cout << "GetValue: " << req->oid() << std::endl;
             return Status::OK;
 
