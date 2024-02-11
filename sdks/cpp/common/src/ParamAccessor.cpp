@@ -263,6 +263,30 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
             }
             dst->set_string_value(val.string_array_values().strings(idx));
         });
+
+        // register value getter for struct array
+        valueGetter.addFunction(KindCase::kStructArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+            auto size = val.struct_array_values().struct_values_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            *dst->mutable_struct_value() = val.struct_array_values().struct_values(idx);
+        });
+
+        // register value getter for variant array
+        valueGetter.addFunction(KindCase::kVariantArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+            auto size = val.variant_array_values().variants_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            *dst->mutable_variant_value() = val.variant_array_values().variants(idx);
+        });
     }
 }
 
