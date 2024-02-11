@@ -231,7 +231,7 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         });
 
         // register value getter for int32 array
-        valueGetter.addFunction(KindCase::kInt32ArrayValues, [this](Value* dst, const Value &val, ParamIndex idx) -> void {
+        valueGetter.addFunction(KindCase::kInt32ArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
             if (idx >= val.int32_array_values().ints_size()) {
                 std::stringstream err;
                 err << "array index is out of bounds, " << idx
@@ -239,6 +239,29 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
                 BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
             dst->set_int32_value(val.int32_array_values().ints(idx));
+        });
+
+        // register value getter for float array
+        valueGetter.addFunction(KindCase::kFloat32ArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+            if (idx >= val.float32_array_values().floats_size()) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << val.float32_array_values().floats_size();
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst->set_float32_value(val.float32_array_values().floats(idx));
+        });
+
+        // register value getter for string array
+        valueGetter.addFunction(KindCase::kStringArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+            auto size = val.string_array_values().strings_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst->set_string_value(val.string_array_values().strings(idx));
         });
     }
 }
@@ -271,12 +294,13 @@ catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vecto
 }
 
 void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
-        const Value& value = value_.get();
-        if (isList(value) && idx != kParamEnd) {
-            auto& getter = ValueGetter::getInstance();
-            getter[value.kind_case()](dst, value, idx);
-        } else {
-            // value is a scalar type
-            dst->CopyFrom(value);
-        }
+    std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
+    const Value& value = value_.get();
+    if (isList(value) && idx != kParamEnd) {
+        auto& getter = ValueGetter::getInstance();
+        getter[value.kind_case()](dst, value, idx);
+    } else {
+        // value is a scalar type
+        dst->CopyFrom(value);
     }
+}

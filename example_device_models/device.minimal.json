@@ -57,6 +57,19 @@
                 }
             }
         },
+        "constants": {
+            "type": "FLOAT32_ARRAY",
+            "name": {
+                "display_strings": {
+                    "en": "Math Constants"
+                }
+            },
+            "value": {
+                "float32_array_values": {
+                    "floats": [2.71828, 3.14159, 1.61803, 0.57721, 0.30103, 0.69315, 0.43429, 0.56714, 0.66169, 0.78540]
+                }
+            }
+        },
         "squares": {
             "type": "INT32_ARRAY",
             "name": {
@@ -358,6 +371,19 @@
                             }
                         }
                     }
+                }
+            }
+        },
+        "words": {
+            "type": "STRING_ARRAY",
+            "name": {
+                "display_strings": {
+                    "en": "Words"
+                }
+            },
+            "value": {
+                "string_array_values": {
+                    "strings": ["Apple", "Boy", "Cat", "Dog", "Elephant", "Frog", "Giraffe", "Horse", "Iguana", "Jaguar"]
                 }
             }
         }

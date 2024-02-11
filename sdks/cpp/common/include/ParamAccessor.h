@@ -447,8 +447,8 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
      * @brief get the parameter's value packaged as a catena::Value object for
      * sending to a client.
      * 
-     * @param idx index into the array, if set to kParamEnd, the entire array is returned
-     * @return the parameter value packaged as a catena::Value object
+     * @param dst [out] destination for the value
+     * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
      */
     void getValue(Value *dst, [[maybe_unused]] ParamIndex idx) const; 
 
@@ -456,7 +456,6 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
     std::reference_wrapper<catena::Param> param_;
     std::reference_wrapper<catena::Value> value_;
-    // mutable catena::Value returnedValue_;
 };
 
 
