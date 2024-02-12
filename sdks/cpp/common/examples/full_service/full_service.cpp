@@ -47,6 +47,7 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 
 using grpc::Server;
@@ -180,11 +181,8 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
     Status DeviceRequest(ServerContext *context, const  ::catena::DeviceRequestPayload *req,
                          ServerWriter< ::catena::DeviceComponent> *writer) override {
         try {
-            catena::DeviceComponent dc;
-            // ewww! gross! const_cast! but it's the only way to get the device
-            dc.set_allocated_device(const_cast<catena::Device*>(&dm_.get().device()));
-            writer->Write(dc);
-            auto x = dc.release_device();
+            std::thread t1(&catena::DeviceModel::streamDevice, &dm_.get(), writer);
+            t1.join();
             return Status::OK;
 
         } catch (catena::exception_with_status &why) {

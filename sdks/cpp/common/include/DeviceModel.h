@@ -35,6 +35,10 @@
 #include <functional>
 #include <fstream>
 
+#include <service.grpc.pb.h>
+
+using grpc::ServerWriter;
+
 namespace catena {
 
 // a fake lock for use in recursive function calls
@@ -131,6 +135,13 @@ class DeviceModel {
     const catena::Device &device() const;
 
     /**
+
+     * @brief sends device info to client via writer
+     * 
+     * @return void
+     */
+    void streamDevice(ServerWriter< ::catena::DeviceComponent> *writer);
+
      * @brief Get the Param object at path
      *
      * @param path uniquely locates the parameter

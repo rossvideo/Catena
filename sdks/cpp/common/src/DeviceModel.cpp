@@ -33,8 +33,16 @@ using catena::ParamAccessor;
 using catena::Threading;
 using google::protobuf::Map;
 
+
+using grpc::ServerWriter;
+using grpc::Status;
+
+ DeviceModel::DeviceModel(const std::string &filename) : device_{} {
+
+
 // JSON parse options, used by a few methods defined here
 auto jpopts = google::protobuf::util::JsonParseOptions{};
+
 
  DeviceModel::DeviceModel(const std::string &filename) : device_{} {
     // initialize static attributes
@@ -103,6 +111,15 @@ void DeviceModel::importSubParams_ (std::filesystem::path& current_folder, Param
 const catena::Device &catena::DeviceModel::device() const {
     std::lock_guard<Mutex> lock(mutex_);
     return device_;
+}
+
+//send device info to client via writer
+void catena::DeviceModel::streamDevice(ServerWriter< ::catena::DeviceComponent> *writer){
+    LockGuard lock(mutex_);
+    catena::DeviceComponent dc;
+    dc.set_allocated_device(&device_);
+    writer->Write(dc);
+    auto x = dc.release_device();
 }
 
 // for parameters that do not have values
