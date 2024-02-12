@@ -176,6 +176,7 @@ message DeviceRequestPayload {
   uint32 slot = 1;                     // The slot id, must be included
   string language = 2;                 // Optionally specify the language for the response
   Device.DetailLevel detail_level = 3; // Optionally specify the detail level for the response
+  repeated string subscribed_oids = 4; // Optionally specify a subscription list for the device (see UpdateSubscriptionsPayload)
 }
 
 /* Initial handshake between client and device. */
