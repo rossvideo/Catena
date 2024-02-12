@@ -37,14 +37,11 @@ using google::protobuf::Map;
 using grpc::ServerWriter;
 using grpc::Status;
 
- DeviceModel::DeviceModel(const std::string &filename) : device_{} {
-
-
 // JSON parse options, used by a few methods defined here
 auto jpopts = google::protobuf::util::JsonParseOptions{};
 
 
- DeviceModel::DeviceModel(const std::string &filename) : device_{} {
+DeviceModel::DeviceModel(const std::string &filename) : device_{} {
     // initialize static attributes
     noValue_.set_undefined_value(catena::UndefinedValue());
 
@@ -64,11 +61,11 @@ auto jpopts = google::protobuf::util::JsonParseOptions{};
     // the top-level ones will come from path/to/device/params
     //
     std::filesystem::path current_folder(filename);
-    current_folder = current_folder.remove_filename() /= "params";
-    importSubParams_ (current_folder, *device_.mutable_params());
+    current_folder = current_folder.remove_filename() /= std::string("params");
+    importSubParams_(current_folder, *device_.mutable_params());
 }
 
-void DeviceModel::importSubParams_ (std::filesystem::path& current_folder, ParamsMap& params){
+void DeviceModel::importSubParams_(std::filesystem::path &current_folder, ParamsMap &params) {
     for (auto it = params.begin(); it != params.end(); ++it) {
         catena::Param &child = params.at(it->first);
         if (child.has_import()) {
@@ -99,8 +96,7 @@ void DeviceModel::importSubParams_ (std::filesystem::path& current_folder, Param
                     next_folder = next_folder /= it->first;
                     importSubParams_(next_folder, *child.mutable_params());
                 }
-            }
-            else if (child.import().url().compare("") != 0) {
+            } else if (child.import().url().compare("") != 0) {
                 /** @todo implement url imports*/
                 BAD_STATUS("Cannot (yet) import from urls, sorry.", catena::StatusCode::UNIMPLEMENTED);
             }
@@ -113,9 +109,9 @@ const catena::Device &catena::DeviceModel::device() const {
     return device_;
 }
 
-//send device info to client via writer
-void catena::DeviceModel::streamDevice(ServerWriter< ::catena::DeviceComponent> *writer){
-    LockGuard lock(mutex_);
+// send device info to client via writer
+void catena::DeviceModel::streamDevice(ServerWriter<::catena::DeviceComponent> *writer) {
+    std::lock_guard<Mutex> lock(mutex_);
     catena::DeviceComponent dc;
     dc.set_allocated_device(&device_);
     writer->Write(dc);
@@ -147,7 +143,7 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     catena::Param &p = device_.mutable_params()->at(oid);
     std::get<0>(pad) = &p;
     std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
-    auto ans = std::make_unique<ParamAccessor>(*this, pad); 
+    auto ans = std::make_unique<ParamAccessor>(*this, pad);
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {
             std::string oid(std::get<std::string>(path_.pop_front()));

@@ -51,7 +51,6 @@ struct Coords {
     REFLECTABLE_STRUCT(Coords, (float) x, (float) y, (float) z);
 };
 
-
 // note nested struct
 struct Location {
     REFLECTABLE_STRUCT(Location, (Coords) coords, (float) latitude, (float) longitude, (int32_t) altitude, (std::string) name);

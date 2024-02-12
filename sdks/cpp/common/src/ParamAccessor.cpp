@@ -144,7 +144,6 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         auto &setterAt = SetterAt::getInstance();
         auto &getterAt = GetterAt::getInstance();
         auto &variantGetter = VariantInfoGetter::getInstance();
-        auto &variantSetter = VariantInfoGetter::getInstance();
         auto &valueGetter = ValueGetter::getInstance();
         auto &valueSetter = ValueSetter::getInstance();
 
@@ -198,6 +197,8 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
                 }
             }
         );
+        
+        /** @todo float array, string array setters */
 
         // register element of array of int getter
         getterAt.addFunction(KindCase::kInt32ArrayValues,

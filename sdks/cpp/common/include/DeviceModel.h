@@ -137,11 +137,12 @@ class DeviceModel {
     /**
 
      * @brief sends device info to client via writer
-     * 
+     *
      * @return void
      */
-    void streamDevice(ServerWriter< ::catena::DeviceComponent> *writer);
+    void streamDevice(ServerWriter<::catena::DeviceComponent> *writer);
 
+    /**
      * @brief Get the Param object at path
      *
      * @param path uniquely locates the parameter
