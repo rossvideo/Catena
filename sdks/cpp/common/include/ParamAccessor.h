@@ -127,10 +127,15 @@ class ParamAccessor {
     using VariantInfoGetter = catena::patterns::Functory<std::type_index, const VariantInfo&>;
 
     /**
-     * @brief type alias for the function that gets the Value from an array
+     * @brief type alias for the function that gets values from the device model for delivery to attached clients
      */
-    using ValueGetter = catena::patterns::Functory<catena::Value::KindCase, void, Value*, const catena::Value&, ParamIndex>;
+    using ValueGetter = catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&, ParamIndex>;
 
+    /**
+     * @brief type alias for the function that sets values in the device model in response to client requests
+     */
+    using ValueSetter = catena::patterns::Functory<catena::Value::KindCase, void, Value&, const Value&, ParamIndex>;
+    
   public:
     /**
      * @brief Construct a new ParamAccessor object
@@ -451,6 +456,8 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
      */
     void getValue(Value *dst, [[maybe_unused]] ParamIndex idx) const; 
+
+    void setValue(const Value& src, [[maybe_unused]] ParamIndex idx);
 
   private:
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
