@@ -1,37 +1,20 @@
 {
-    "type": {"type": "STRUCT_VARIANT_ARRAY"},
+    "type": "STRUCT_VARIANT_ARRAY",
     "params": {
-        "videochannel": {
-            "type": {"type": "STRUCT"},
-            "params": {
-                "id": {
-                    "type": {"type": "STRING"}
-                },
-                "label": {
-                    "type": {"type": "STRING"}
-                }
-            }
+        "VideoSlot": {
+            "import": {"url": "include"},
+            "type": "UNDEFINED"
         },
-        "audiochannel": {
-            "type": {"type": "STRUCT"},
-            "params": {
-                "id": {
-                    "type": {"type": "STRING"}
-                },
-                "label": {
-                    "type": {"type": "STRING"}
-                },
-                "gain": {
-                    "type": {"type": "FLOAT32"}
-                }
-            }
+        "AudioSlot": {
+            "import": {"url": "include"},
+            "type": "UNDEFINED"
         }
     },
     "value": {
         "variant_array_values": {
             "variants": [
                 {
-                    "variant_type": "audiochannel",
+                    "variant_type": "AudioSlot",
                     "value": {
                         "struct_value": {
                             "fields": {
@@ -49,7 +32,7 @@
                     }
                 },
                 {
-                    "variant_type": "videochannel",
+                    "variant_type": "VideoSlot",
                     "value": {
                         "struct_value": {
                             "fields": {
