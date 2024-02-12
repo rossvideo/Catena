@@ -162,7 +162,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
         try {
             auto p = dm_.get().param(req->oid());
             authorize(context);
-            //p.setValue(req->value(), req->element_index());
+            p->setValue(req->value(), req->element_index());
             std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
             return Status::OK;
 

@@ -146,6 +146,7 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         auto &variantGetter = VariantInfoGetter::getInstance();
         auto &variantSetter = VariantInfoGetter::getInstance();
         auto &valueGetter = ValueGetter::getInstance();
+        auto &valueSetter = ValueSetter::getInstance();
 
         // register int32 setter
         setter.addFunction(KindCase::kInt32Value, [](Value *dst, const void *srcAddr) {
@@ -287,6 +288,66 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
             }
             *dst->mutable_variant_value() = val.variant_array_values().variants(idx);
         });
+
+        // register value setter for int32 array
+        valueSetter.addFunction(KindCase::kInt32ArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            auto size = src.int32_array_values().ints_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst.mutable_int32_array_values()->mutable_ints()->at(idx) = src.int32_value();
+        });
+
+        // register value setter for float32 array
+        valueSetter.addFunction(KindCase::kFloat32ArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            auto size = src.float32_array_values().floats_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst.mutable_float32_array_values()->mutable_floats()->at(idx) = src.float32_value();
+        });
+
+        // register value setter for string array
+        valueSetter.addFunction(KindCase::kStringArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            auto size = src.string_array_values().strings_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst.mutable_string_array_values()->mutable_strings()->at(idx) = src.string_value();
+        });
+
+        // register value setter for struct array
+        valueSetter.addFunction(KindCase::kStructArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            auto size = src.struct_array_values().struct_values_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst.mutable_struct_array_values()->mutable_struct_values()->at(idx) = src.struct_value();
+        });
+
+        // register value setter for variant array
+        valueSetter.addFunction(KindCase::kVariantArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            auto size = src.variant_array_values().variants_size();
+            if (idx >= size) {
+                std::stringstream err;
+                err << "array index is out of bounds, " << idx
+                    << " >= " << size;
+                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
+            }
+            dst.mutable_variant_array_values()->mutable_variants()->at(idx) = src.variant_value();
+        });
     }
 }
 
@@ -326,5 +387,18 @@ void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
     } else {
         // value is a scalar type
         dst->CopyFrom(value);
+    }
+}
+
+void ParamAccessor::setValue(const Value &src, ParamIndex idx) {
+    std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
+    Value &value = value_.get();
+    if (isList(value) && idx != kParamEnd) {
+        // update array element
+        auto& setter = ValueSetter::getInstance();
+        setter[value.kind_case()](value, src, idx);
+    } else {
+        // update scalar value
+        value.CopyFrom(src);
     }
 }
