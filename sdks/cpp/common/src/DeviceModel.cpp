@@ -34,6 +34,7 @@ using catena::Threading;
 using google::protobuf::Map;
 
 using grpc::ServerWriter;
+using grpc::Status;
 
  DeviceModel::DeviceModel(const std::string &filename) : device_{} {
     /** @todo recurse into parameters, implementation currently only works 1-layer
@@ -97,7 +98,9 @@ const catena::Device &catena::DeviceModel::device() const {
     return device_;
 }
 
+//send device info to client via writer
 void catena::DeviceModel::streamDevice(ServerWriter< ::catena::DeviceComponent> *writer){
+    LockGuard lock(mutex_);
     catena::DeviceComponent dc;
     dc.set_allocated_device(&device_);
     writer->Write(dc);
