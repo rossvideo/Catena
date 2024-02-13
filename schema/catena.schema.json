@@ -1223,8 +1223,33 @@
                 },
                 { 
                     "$ref": "#/$defs/string_constraint"
+                },
+                {
+                    "$ref": "#/$defs/constraint_ref"
                 }
             ]
+        },
+        "constraint_ref": {
+            "title": "Constraint Reference",
+            "description": "Reference to a shared constraint",
+            "type": "object",
+            "properties": {
+                "ref": {
+                    "type": "object",
+                    "properties": {
+                        "oid": {
+                            "type": "string",
+                            "format": "json-pointer"
+                        },
+                        "type": {
+                            "const": "UNDEFINED"
+                        }
+                    },
+                    "required": ["oid"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["ref"]
         },
         "growth_type": {
             "title": "Growth type to apply to INT32 and FLOAT32 range constraints",

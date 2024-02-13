@@ -3,7 +3,12 @@
     "multi_set_enabled": true,
     "timeout": 100,
     "detail_level": "FULL",
-    "access_scopes": ["monitor", "operate", "configure", "administer"],
+    "access_scopes": [
+        "monitor",
+        "operate",
+        "configure",
+        "administer"
+    ],
     "default_scope": 1,
     "language_packs": {
         "packs": {
@@ -34,16 +39,41 @@
         "shared_string_constraint": {
             "type": "STRING_CHOICE",
             "string_choice": {
-                "choices": ["A", "B", "C"]
-            } 
+                "choices": [
+                    "A",
+                    "B",
+                    "C"
+                ]
+            }
         },
         "shared_int32_constraint": {
             "type": "INT_CHOICE",
             "int32_choice": {
                 "choices": [
-                    {"name": {"display_strings": {"en": "one"}}, "value": 1},
-                    {"name": {"display_strings": {"en": "two"}}, "value": 2},
-                    {"name": {"display_strings": {"en": "three"}}, "value": 3}
+                    {
+                        "name": {
+                            "display_strings": {
+                                "en": "one"
+                            }
+                        },
+                        "value": 1
+                    },
+                    {
+                        "name": {
+                            "display_strings": {
+                                "en": "two"
+                            }
+                        },
+                        "value": 2
+                    },
+                    {
+                        "name": {
+                            "display_strings": {
+                                "en": "three"
+                            }
+                        },
+                        "value": 3
+                    }
                 ]
             }
         },
@@ -52,6 +82,12 @@
             "float_range": {
                 "min_value": 0.0,
                 "max_value": 100.0
+            }
+        },
+        "constraint_ref": {
+            "type": "UNDEFINED",
+            "ref": {
+                "oid": "/constraints/shared_string_constraint"
             }
         }
     },
@@ -91,7 +127,18 @@
             },
             "value": {
                 "float32_array_values": {
-                    "floats": [2.71828, 3.14159, 1.61803, 0.57721, 0.30103, 0.69315, 0.43429, 0.56714, 0.66169, 0.78540]
+                    "floats": [
+                        2.71828,
+                        3.14159,
+                        1.61803,
+                        0.57721,
+                        0.30103,
+                        0.69315,
+                        0.43429,
+                        0.56714,
+                        0.66169,
+                        0.78540
+                    ]
                 }
             }
         },
@@ -105,7 +152,18 @@
             "minimal_set": false,
             "value": {
                 "int32_array_values": {
-                    "ints": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+                    "ints": [
+                        1,
+                        4,
+                        9,
+                        16,
+                        25,
+                        36,
+                        49,
+                        64,
+                        81,
+                        100
+                    ]
                 }
             }
         },
@@ -118,14 +176,25 @@
             },
             "value": {
                 "int32_array_values": {
-                    "ints": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+                    "ints": [
+                        1,
+                        2,
+                        4,
+                        8,
+                        16,
+                        32,
+                        64,
+                        128,
+                        256,
+                        512
+                    ]
                 }
             }
         },
         "location": {
             "type": "STRUCT",
             "name": {
-                "display_strings": {    
+                "display_strings": {
                     "en": "Location"
                 }
             },
@@ -179,15 +248,21 @@
                     "params": {
                         "x": {
                             "type": "FLOAT32",
-                            "value": {"float32_value": 1}
+                            "value": {
+                                "float32_value": 1
+                            }
                         },
                         "y": {
                             "type": "FLOAT32",
-                            "value": {"float32_value": 1}
+                            "value": {
+                                "float32_value": 1
+                            }
                         },
                         "z": {
                             "type": "FLOAT32",
-                            "value": {"float32_value": 1}
+                            "value": {
+                                "float32_value": 1
+                            }
                         }
                     }
                 }
@@ -196,41 +271,41 @@
                 "struct_value": {
                     "fields": {
                         "latitude": {
-                            "value":{
+                            "value": {
                                 "float32_value": 37.7749
                             }
                         },
                         "longitude": {
-                            "value":{
+                            "value": {
                                 "float32_value": -122.4194
                             }
                         },
                         "altitude": {
-                            "value":{
+                            "value": {
                                 "int32_value": 100
                             }
                         },
                         "name": {
-                            "value":{
+                            "value": {
                                 "string_value": "San Francisco"
                             }
                         },
                         "coords": {
-                            "value":{
+                            "value": {
                                 "struct_value": {
                                     "fields": {
                                         "x": {
-                                            "value":{
+                                            "value": {
                                                 "float32_value": 10.0
                                             }
                                         },
                                         "y": {
-                                            "value":{
+                                            "value": {
                                                 "float32_value": 11.0
                                             }
                                         },
                                         "z": {
-                                            "value":{
+                                            "value": {
                                                 "float32_value": 12.0
                                             }
                                         }
@@ -245,7 +320,7 @@
         "locations": {
             "type": "STRUCT_ARRAY",
             "name": {
-                "display_strings": {    
+                "display_strings": {
                     "en": "Location"
                 }
             },
@@ -279,12 +354,12 @@
                         {
                             "fields": {
                                 "latitude": {
-                                    "value":{
+                                    "value": {
                                         "float32_value": 37.7749
                                     }
                                 },
                                 "longitude": {
-                                    "value":{
+                                    "value": {
                                         "float32_value": -122.4194
                                     }
                                 }
@@ -293,19 +368,18 @@
                         {
                             "fields": {
                                 "latitude": {
-                                    "value":{
+                                    "value": {
                                         "float32_value": 37.7749
                                     }
                                 },
                                 "longitude": {
-                                    "value":{
+                                    "value": {
                                         "float32_value": -122.4194
                                     }
                                 }
                             }
                         }
                     ]
-                    
                 }
             }
         },
@@ -408,7 +482,18 @@
             },
             "value": {
                 "string_array_values": {
-                    "strings": ["Apple", "Boy", "Cat", "Dog", "Elephant", "Frog", "Giraffe", "Horse", "Iguana", "Jaguar"]
+                    "strings": [
+                        "Apple",
+                        "Boy",
+                        "Cat",
+                        "Dog",
+                        "Elephant",
+                        "Frog",
+                        "Giraffe",
+                        "Horse",
+                        "Iguana",
+                        "Jaguar"
+                    ]
                 }
             }
         },
