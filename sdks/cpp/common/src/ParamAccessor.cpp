@@ -402,4 +402,5 @@ void ParamAccessor::setValue(const Value &src, ParamIndex idx) {
         // update scalar value
         value.CopyFrom(src);
     }
+    deviceModel_.get().valueSetByClient.emit(*this, idx);
 }

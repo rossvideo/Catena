@@ -23,6 +23,9 @@
 
 #include <device.pb.h>
 #include <param.pb.h>
+#include <service.grpc.pb.h>
+
+#include <signals.h>
 
 #include <Path.h>
 #include <Status.h>
@@ -35,18 +38,25 @@
 #include <functional>
 #include <fstream>
 
-#include <service.grpc.pb.h>
 
 using grpc::ServerWriter;
 
 namespace catena {
 
-// a fake lock for use in recursive function calls
+/**
+ * a fake lock for use in recursive function calls
+ */
 struct FakeLock {
     FakeLock(std::mutex &) {}
 };
 
 class ParamAccessor;  // forward reference
+
+/**
+ * @brief type for indexing into parameters
+ *
+ */
+using ParamIndex = uint32_t;
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
@@ -179,6 +189,18 @@ class DeviceModel {
     catena::Device device_;        /**< the protobuf device model */
     mutable Mutex mutex_;          /**< used to mediate access */
     static catena::Value noValue_; /**< to flag undefined values */
+
+  public:
+
+   /**
+    *  signal to share value changes by clients 
+    */
+    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByClient; 
+
+    /**
+    *  signal to share value changes by the service 
+    */
+    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByService;
 };
 
 }  // namespace catena

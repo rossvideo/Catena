@@ -27,7 +27,9 @@ message(STATUS "*** CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
 set(LIB_TARGET catena_common)
 set(LIB_SRC_DIR "src")
+set(VDK_SRC_DIR ${LIB_SRC_DIR}/vdk)
 set(LIB_INCLUDE_DIR "include")
+set(VDK_INCLUDE_DIR ${LIB_INCLUDE_DIR}/vdk)
 
 add_library(${LIB_TARGET}
         include/ArrayAccessor.h
@@ -40,6 +42,7 @@ message(STATUS "*** binary dir: ${PARENT_BINARY_DIR}")
 target_include_directories(${LIB_TARGET}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${VDK_INCLUDE_DIR}>
         $<BUILD_INTERFACE:${PARENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )
@@ -51,6 +54,7 @@ target_sources(${LIB_TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/Path.cpp>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/ParamAccessor.cpp>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${LIB_SRC_DIR}/ConcreteArrayAccessor.cpp>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${VDK_SRC_DIR}/signals.cpp>
 )
 
 target_link_libraries(${LIB_TARGET}
