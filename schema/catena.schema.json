@@ -113,7 +113,7 @@
             "$comment": "patternProperties regex must be same as that defined in oid schema",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-                    "$ref": "#/$defs/constraint"   
+                    "$ref": "#/$defs/constraints"   
                 }
             },
             "additionalProperties": false
@@ -1223,9 +1223,6 @@
                 },
                 { 
                     "$ref": "#/$defs/string_constraint"
-                },
-                {
-                    "$ref": "#/$defs/constraint_ref"
                 }
             ]
         },
@@ -1249,7 +1246,18 @@
                     "additionalProperties": false
                 }
             },
-            "required": ["ref"]
+            "required": ["ref"],
+            "additionalProperties": false
+        },
+        "constraints": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/constraint"
+                },
+                {
+                    "$ref": "#/$defs/constraint_ref"
+                }
+            ]
         },
         "growth_type": {
             "title": "Growth type to apply to INT32 and FLOAT32 range constraints",
