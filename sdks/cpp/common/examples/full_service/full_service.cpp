@@ -224,6 +224,14 @@ void RunServer(uint16_t port, DeviceModel &dm) {
     server->Wait();
 }
 
+void valueSetByClient(const ParamAccessor& p, catena::ParamIndex idx) {
+    std::cout << "value updated by client: " << " (oid goes here) " << ", " << idx << '\n';
+}
+
+void valueSetByService(const ParamAccessor& p, catena::ParamIndex idx) {
+    std::cout << "value updated by service: " << " (oid goes here) " << ", " << idx << '\n';
+}
+
 int main(int argc, char **argv) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
@@ -233,6 +241,11 @@ int main(int argc, char **argv) {
     try {
         // read a json file into a DeviceModel object
         DeviceModel dm(absl::GetFlag(FLAGS_device_model));
+        dm.valueSetByClient.connect(valueSetByClient);
+        dm.valueSetByService.connect(valueSetByService);
+
+        auto a_number = dm.param("/a_number");
+        a_number->setValue(42);
 
         RunServer(absl::GetFlag(FLAGS_port), dm);
 

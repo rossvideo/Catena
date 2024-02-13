@@ -63,12 +63,6 @@ template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] V& sr
 }
 
 /**
- * @brief type for indexing into parameters
- *
- */
-using ParamIndex = uint32_t;
-
-/**
  * @brief index value used to trigger special behaviors.
  *
  * getValue with this value specified as the index will get all values of an
@@ -353,6 +347,7 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
             typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
             setter[getKindCase(x)](&value_.get(), &src);
         }
+        deviceModel_.get().valueSetByService(*this, kParamEnd);
     }
 
     /**
@@ -368,6 +363,7 @@ const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) cons
         auto& setter = SetterAt::getInstance();
         static std::vector<ElementType> x;
         setter[getKindCase(x)](&value_.get(), &src, idx);
+        deviceModel_.get().valueSetByService(*this, idx);
     }
 
     /**
