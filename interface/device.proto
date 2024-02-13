@@ -66,23 +66,26 @@ message Device {
   // Device's timeout, in ms
   uint32 timeout = 5;
 
+  // The device's shared constraints. A map of Constraint, keyed by their object ids (OIDs).
+  map<string, Constraint> constraints = 6;
+
   // The device's parameters. A map of Param, keyed by their object ids (OIDs).
-  map<string, Param> params = 6;
+  map<string, Param> params = 7;
 
   // The device's default editor UI definition and access scope definitions
-  MenuGroups menu_groups = 7;
+  MenuGroups menu_groups = 8;
 
   // The device's available commands, keyed by their object ids (OIDs).
-  map<string, Param> commands = 8;
+  map<string, Param> commands = 9;
 
   // The devices language packs
-  LanguagePacks language_packs = 9;
+  LanguagePacks language_packs = 10;
 
   // The device's access scopes, a list of mutually unique strings
-  repeated string access_scopes = 10;
+  repeated string access_scopes = 11;
 
   // The default scope, index into access_scopes to indicate which of them is the default.
-  uint32 default_scope = 11;
+  uint32 default_scope = 12;
 }
 
 /* The Device model broken into smaller pieces.
