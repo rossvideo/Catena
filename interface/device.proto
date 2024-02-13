@@ -159,9 +159,6 @@ message DeviceComponent {
     LanguagePack language_pack = 2;
   }
 
-  // Identifies device within server scope
-  uint32 slot = 1;
-
   /* Small device models can be sent as a whole.
    * Larger ones should be broken into a stream of smaller components.
    */
@@ -172,6 +169,50 @@ message DeviceComponent {
     ComponentMenu menu = 5;
     ComponentCommand command = 6;
     ComponentLanguagePack language_pack = 7;
+  }
+}
+
+message RemoveComponents {
+  message RemoveParams {
+    repeated string oids = 1;
+  }
+
+   /* A menu.
+    * Note that menus are grouped into menu groups. They are uniquely identified
+    * by the json_pointer field which is relative to the Device's top-level
+    * menu-groups object thus: menu-group-name/menu-name.
+    * example: status/vendor_info
+    */
+  message RemoveMenus {
+    repeated string oids = 1;
+  }
+
+   /* A constraint descriptor.
+    * The oid is relative to the "constraints" child of the device's top-level
+    * "types" object.
+    */
+  message RemoveConstraints {
+    repeated string oids = 1;
+  }
+
+  /* A command descriptor.
+   * Defines a command to be mapped to device.commands.oid
+   */
+  message RemoveCommands {
+    repeated string oids = 1;
+  }
+
+  /* A language pack. */
+  message RemoveLanguagePacks {
+    repeated string languages = 1; // Language string is the language code that identifies the language e.g. en-uk
+  }
+
+	oneof kind {
+    RemoveParams param = 3;
+    RemoveConstraints shared_constraint = 4;
+    RemoveMenus menu = 5;
+    RemoveCommands command = 6;
+    RemoveLanguagePacks language_pack = 7;
   }
 }
 
@@ -211,13 +252,12 @@ message PushUpdates {
   uint32 slot = 1;
   oneof kind {
     PushValue value = 2; // e.g. audio meters
-    Param param = 3;
-    DeviceComponent.ComponentConstraint constraint = 4;
-    DeviceComponent device = 5;
-    Exception refused = 6;
-    string invalidated_external_object_id = 7;
-    TrapMessage trap_message = 8;
-    bool invalidate_device_model = 9;
-    PushExternalObject external_object = 10;
+    DeviceComponent device_component = 3;
+    Exception refused = 4;
+    string invalidated_external_object_id = 5;
+    TrapMessage trap_message = 6;
+    bool invalidate_device_model = 7;
+    PushExternalObject external_object = 8;
+    RemoveComponents remove_device_components = 9;
   }
 }
