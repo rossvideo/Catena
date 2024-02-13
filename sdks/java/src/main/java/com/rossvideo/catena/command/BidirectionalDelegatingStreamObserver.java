@@ -2,14 +2,16 @@ package com.rossvideo.catena.command;
 
 import io.grpc.stub.StreamObserver;
 
-public class DelegatingStreamObserver<C> implements StreamObserver<C>
+public class BidirectionalDelegatingStreamObserver<C, D> implements StreamObserver<C>
 {
     private StreamObserver<C> delegate;
-    private StreamObserverFactory<C> factory;
+    private StreamObserver<D> responseStream;
+    private BidirectionalStreamObserverFactory<C, D> factory;
     
-    public DelegatingStreamObserver(StreamObserverFactory<C> factory)
+    public BidirectionalDelegatingStreamObserver(BidirectionalStreamObserverFactory<C, D> factory, StreamObserver<D> responseStream)
     {
         this.factory = factory;
+        this.responseStream = responseStream;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class DelegatingStreamObserver<C> implements StreamObserver<C>
     {
         if (delegate == null)
         {
-            delegate = factory.createStreamObserver(arg0);
+            delegate = factory.createStreamObserver(arg0, responseStream);
         }
         
         if (delegate != null)

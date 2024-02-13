@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
-import com.rossvideo.catena.command.DelegatingStreamObserver;
+import com.rossvideo.catena.command.BidirectionalDelegatingStreamObserver;
+import com.rossvideo.catena.command.BidirectionalStreamObserverFactory;
 import com.rossvideo.catena.command.SimpleCommandHandler;
 import com.rossvideo.catena.command.SimpleCommandStreamObserver;
-import com.rossvideo.catena.command.StreamObserverFactory;
-import com.rossvideo.catena.example.device.command.ServerReceiveFileCommandHandler;
-import com.rossvideo.catena.example.device.command.ServerPushFileCommandHandler;
 import com.rossvideo.catena.example.device.command.FooCommandHandler;
+import com.rossvideo.catena.example.device.command.ServerPushFileCommandHandler;
+import com.rossvideo.catena.example.device.command.ServerReceiveFileCommandHandler;
 import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
@@ -33,7 +33,7 @@ import catena.core.parameter.Value.KindCase;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
 import io.grpc.stub.StreamObserver;
 
-public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObserverFactory<ExecuteCommandPayload, CommandResponse> {
+public class MyCatenaDevice extends CatenaServiceImplBase implements BidirectionalStreamObserverFactory<ExecuteCommandPayload, CommandResponse> {
     public static final String INT_OID = "integer";
     public static final String FLOAT_OID = "float";
     public static final String CMD_FOO_OID = "foo";
@@ -115,7 +115,7 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements StreamObser
     
     @Override
     public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
-        return new DelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
+        return new BidirectionalDelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
     }
 
     @Override
