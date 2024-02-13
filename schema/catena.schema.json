@@ -113,7 +113,7 @@
             "$comment": "patternProperties regex must be same as that defined in oid schema",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-                    "$ref": "#/$defs/constraint"   
+                    "$ref": "#/$defs/constraints"   
                 }
             },
             "additionalProperties": false
@@ -1223,6 +1223,39 @@
                 },
                 { 
                     "$ref": "#/$defs/string_constraint"
+                }
+            ]
+        },
+        "constraint_ref": {
+            "title": "Constraint Reference",
+            "description": "Reference to a shared constraint",
+            "type": "object",
+            "properties": {
+                "ref": {
+                    "type": "object",
+                    "properties": {
+                        "oid": {
+                            "type": "string",
+                            "format": "json-pointer"
+                        },
+                        "type": {
+                            "const": "UNDEFINED"
+                        }
+                    },
+                    "required": ["oid"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["ref"],
+            "additionalProperties": false
+        },
+        "constraints": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/constraint"
+                },
+                {
+                    "$ref": "#/$defs/constraint_ref"
                 }
             ]
         },
