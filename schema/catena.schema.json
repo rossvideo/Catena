@@ -31,6 +31,9 @@
             "min": 0,
             "max": 1000000
         },
+        "constraints": {
+            "$ref": "#/$defs/constraint_map"
+        },
         "params": {
             "$ref": "#/$defs/param_map"
         },
@@ -101,6 +104,19 @@
             "title": "Language Packs",
             "description":
               "Language Packs A map of language identifiers to resource dictionaries or language packs for each language supported. The keys shall be patterned on those defined in https://www.mesaonline.org/language-metadata-table, e.g. \"es\" for Global Spanish. \"es-CO\" for Colombian Spanish. \"pl\" for Jezyk polski"
+        },
+        "constraint_map": {
+            "title": "map of constraints used for top-level shared constraints",
+            "description":
+              "Defines the collection of constraints that are able to be shared amongst params or commands within a device.",
+            "type": "object",
+            "$comment": "patternProperties regex must be same as that defined in oid schema",
+            "patternProperties": {
+                "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+                    "$ref": "#/$defs/constraint"   
+                }
+            },
+            "additionalProperties": false
         },
         "param_map": {
             "title": "map of params used for top-level params and commands objects",
@@ -1199,6 +1215,24 @@
             },
             "required": [
                 "type"
+            ],
+            "oneOf": [
+                { 
+                    "$ref": "#/$defs/float32_constraint"
+                },
+                { 
+                    "$ref": "#/$defs/int32_constraint"
+                },
+                { 
+                    "$ref": "#/$defs/string_constraint"
+                },
+                { 
+                    "properties": {
+						"ref": {
+							"$ref": "#/$defs/oid"
+						}
+					}
+                }
             ]
         },
         "growth_type": {
