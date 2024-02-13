@@ -1213,9 +1213,7 @@
                     "default": "UNDEFINED"
                 }
             },
-            "required": [
-                "type"
-            ],
+            "required": ["type"],
             "oneOf": [
                 { 
                     "$ref": "#/$defs/float32_constraint"
@@ -1225,13 +1223,6 @@
                 },
                 { 
                     "$ref": "#/$defs/string_constraint"
-                },
-                { 
-                    "properties": {
-						"ref": {
-							"$ref": "#/$defs/oid"
-						}
-					}
                 }
             ]
         },

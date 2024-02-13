@@ -30,6 +30,31 @@
             }
         }
     },
+    "constraints": {
+        "shared_string_constraint": {
+            "type": "STRING_CHOICE",
+            "string_choice": {
+                "choices": ["A", "B", "C"]
+            } 
+        },
+        "shared_int32_constraint": {
+            "type": "INT_CHOICE",
+            "int32_choice": {
+                "choices": [
+                    {"name": {"display_strings": {"en": "one"}}, "value": 1},
+                    {"name": {"display_strings": {"en": "two"}}, "value": 2},
+                    {"name": {"display_strings": {"en": "three"}}, "value": 3}
+                ]
+            }
+        },
+        "shared_float32_constraint": {
+            "type": "FLOAT_RANGE",
+            "float_range": {
+                "min_value": 0.0,
+                "max_value": 100.0
+            }
+        }
+    },
     "params": {
         "a_number": {
             "type": "INT32",
