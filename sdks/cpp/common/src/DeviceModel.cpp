@@ -143,7 +143,7 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     catena::Param &p = device_.mutable_params()->at(oid);
     std::get<0>(pad) = &p;
     std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
-    auto ans = std::make_unique<ParamAccessor>(*this, pad);
+    auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr);
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {
             std::string oid(std::get<std::string>(path_.pop_front()));

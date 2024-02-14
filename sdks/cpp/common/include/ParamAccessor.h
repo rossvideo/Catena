@@ -141,7 +141,7 @@ class ParamAccessor {
      * @param pad the data to initialize the param accessor
      */
 
-    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad);
+    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad, const std::string& oid);
 
     /**
      * @brief ParamAccessor has no default constructor.
@@ -177,15 +177,24 @@ class ParamAccessor {
      */
     ParamAccessor& operator=(ParamAccessor&& rhs) = default;
 
-    inline ~ParamAccessor() {  // nothing to do
+    inline virtual ~ParamAccessor() {  // nothing to do
     }
 
 
     /**
      * @brief get accessor to the value of the parameter
      */
-    inline Value& value() { return value_.get(); }
-    inline const Value& value() const { return value_.get(); }
+    // inline Value& value() { 
+    //     std::lock_guard<Mutex> lock(deviceModel_.get().mutex_);
+    //     return value_.get(); 
+    // }
+
+    template <bool Threadsafe = true>
+    inline const Value& value() const {
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+        LockGuard lock(deviceModel_.get().mutex_);
+        return value_.get(); 
+    }
 
     /**
      * @brief get accessor to sub-parameter matching fieldName
@@ -223,7 +232,7 @@ class ParamAccessor {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
         }
-        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName});
     }
 
     /**
@@ -266,7 +275,7 @@ class ParamAccessor {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
         }
-        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad});
+        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName});
     }
 
 
@@ -522,11 +531,19 @@ class ParamAccessor {
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
      * 
      */
-    void setValue(const Value& src, [[maybe_unused]] ParamIndex idx);
+    void setValue(const std::string& peer, const Value& src, [[maybe_unused]] ParamIndex idx);
+
+    template <bool Threadsafe = true>
+    const std::string& oid() const {
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+        LockGuard lock(deviceModel_.get().mutex_);
+        return oid_; 
+    }
 
   private:
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
     std::reference_wrapper<catena::Param> param_;
     std::reference_wrapper<catena::Value> value_;
+    std::string oid_;
 };
 }  // namespace catena

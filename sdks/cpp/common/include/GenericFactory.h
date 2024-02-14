@@ -47,57 +47,57 @@ template <typename P, typename K, typename... Ms>
 class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
   public:
     /**
-   * Type alias to function returning a pointer to a product
-   * taking a variable number of arguments
-   * @since 1.0.0
-   */
+     * Type alias to function returning a pointer to a product
+     * taking a variable number of arguments
+     * @since 1.0.0
+     */
     using Maker = P* (*)(Ms...);
 
     /**
-   * Type alias to the Singleton's Protector type.
-   * Needed for Singletons that are class templates such as
-   * this one.
-   *
-   * C++17 needs "typename" here, C++20 doesn't.
-   * @since 1.0.0
-   */
+     * Type alias to the Singleton's Protector type.
+     * Needed for Singletons that are class templates such as
+     * this one.
+     *
+     * C++17 needs "typename" here, C++20 doesn't.
+     * @since 1.0.0
+     */
     using Protector = typename Singleton<GenericFactory<P, K, Ms...>>::Protector;
 
   private:
     /**
-   * Used to provide thread safe use of the public methods.
-   */
+     * Used to provide thread safe use of the public methods.
+     */
     mutable std::mutex _mtx;
     using LockGuard = std::lock_guard<std::mutex>;
 
     /**
-   * registry of named maker functions
-   */
+     * registry of named maker functions
+     */
     std::unordered_map<K, Maker> _registry;
 
   public:
     /**
-   * As a singleton, we needn't provide a default constructor.
-   * @since 1.0.0
-   */
+     * As a singleton, we needn't provide a default constructor.
+     * @since 1.0.0
+     */
     GenericFactory() = delete;
 
     /**
-   * Pattern constructor called by Singleton::getInstance.
-   * Using Protector as a dummy parameter prevents its use by
-   * client code.
-   * @since 1.0.0
-   */
+     * Pattern constructor called by Singleton::getInstance.
+     * Using Protector as a dummy parameter prevents its use by
+     * client code.
+     * @since 1.0.0
+     */
     explicit GenericFactory(Protector) {}
 
     /**
-   * Registers Products that the GenericFactory can make.
-   * Thread safe.
-   * @param[in] key unique identifier for component.
-   * @param[in] maker function to make the identified component.
-   * @throws std::runtime_error if key is a duplicate.
-   * @since 1.0.0
-   */
+     * Registers Products that the GenericFactory can make.
+     * Thread safe.
+     * @param[in] key unique identifier for component.
+     * @param[in] maker function to make the identified component.
+     * @throws std::runtime_error if key is a duplicate.
+     * @since 1.0.0
+     */
     bool addProduct(const K key, Maker maker) {
         LockGuard lock(_mtx);
         auto it = _registry.find(key);
@@ -107,21 +107,21 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;
             err << ", attempted to register item with duplicate key";
-            catena::meta::stream_if_possible (err, key);
+            catena::meta::stream_if_possible(err, key);
             throw std::runtime_error(err.str());
         }
         return true;
     }
 
     /**
-   * Creates a Product of type identified by key.
-   * Thread safe.
-   * @param[in] key unique identfier for component to be made.
-   * @param[in] args parameter pack to pass to maker function
-   * @return shared pointer to newly created Product
-   * @throws std::runtime_error if key doesn't exist.
-   * @since 1.0.0
-   */
+     * Creates a Product of type identified by key.
+     * Thread safe.
+     * @param[in] key unique identfier for component to be made.
+     * @param[in] args parameter pack to pass to maker function
+     * @return shared pointer to newly created Product
+     * @throws std::runtime_error if key doesn't exist.
+     * @since 1.0.0
+     */
     std::shared_ptr<P> makeProduct(const K key, Ms&&... args) {
         LockGuard lock(_mtx);
         std::shared_ptr<P> ans(nullptr);
@@ -132,20 +132,20 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;
             err << ", could not find entry with key";
-            catena::meta::stream_if_possible (err, key);
+            catena::meta::stream_if_possible(err, key);
             throw std::runtime_error(err.str());
         }
         return ans;
     }
 
     /**
-   * Tests whether Factory can make a product with given key.
-   * Thread safe.
-   * @param[in] key name of product to query.
-   * @return true if factory can make objects with key provided, false
-   * otherwise.
-   * @since 1.0.0
-   */
+     * Tests whether Factory can make a product with given key.
+     * Thread safe.
+     * @param[in] key name of product to query.
+     * @return true if factory can make objects with key provided, false
+     * otherwise.
+     * @since 1.0.0
+     */
     bool canMake(const K key) const {
         LockGuard lock(_mtx);
         bool ans = false;
@@ -157,11 +157,11 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
     }
 
     /**
-   * Returns list of items that the factory can make.
-   * Thread safe.
-   * @return vector of key values.
-   * @since 1.0.0
-   */
+     * Returns list of items that the factory can make.
+     * Thread safe.
+     * @return vector of key values.
+     * @since 1.0.0
+     */
     // std::vector<K> inventory() const {
     //   LockGuard lock(_mtx);
     //   std::vector<K> ans;
@@ -172,11 +172,11 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
     // }
 
     /**
-   * Serializes keys registered with the factory.
-   * Thread safe.
-   * @return newline delimited string listing keys registered with factory.
-   * @since 1.0.0
-   */
+     * Serializes keys registered with the factory.
+     * Thread safe.
+     * @return newline delimited string listing keys registered with factory.
+     * @since 1.0.0
+     */
     // std::string serialize() const {
     //   LockGuard lock(_mtx);
     //   std::string ans;
@@ -187,8 +187,8 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
     // }
 };
 
-}  
-}
+}  // namespace patterns
+}  // namespace catena
 
 
 /**

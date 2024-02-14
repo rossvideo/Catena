@@ -26,6 +26,8 @@
 #include <Path.h>
 #include <utils.h>
 #include <Reflect.h>
+#include <PeerManager.h>
+#include <PeerInfo.h>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -49,6 +51,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <chrono>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -57,8 +60,8 @@ using grpc::ServerWriter;
 using grpc::Status;
 
 using Index = catena::Path::Index;
-using DeviceModel =  catena::DeviceModel;
-using ParamAccessor =  catena::ParamAccessor;
+using DeviceModel = catena::DeviceModel;
+using ParamAccessor = catena::ParamAccessor;
 
 
 // set up the command line parameters
@@ -68,7 +71,8 @@ ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, optio
   \"off\", \"ssl\", \"tls\"");
 ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, device_model, "../../../example_device_models/device.minimal.json", "Specify the JSON device model to use.");
+ABSL_FLAG(std::string, device_model, "../../../example_device_models/device.minimal.json",
+          "Specify the JSON device model to use.");
 
 // expand env variables
 void expandEnvVariables(std::string &str) {
@@ -163,7 +167,7 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
         try {
             auto p = dm_.get().param(req->oid());
             authorize(context);
-            p->setValue(req->value(), req->element_index());
+            p->setValue(context->peer(), req->value(), req->element_index());
             std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
             return Status::OK;
 
@@ -178,8 +182,8 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
         }
     }
 
-    Status DeviceRequest(ServerContext *context, const  ::catena::DeviceRequestPayload *req,
-                         ServerWriter< ::catena::DeviceComponent> *writer) override {
+    Status DeviceRequest(ServerContext *context, const ::catena::DeviceRequestPayload *req,
+                         ServerWriter<::catena::DeviceComponent> *writer) override {
         try {
             std::thread t1(&catena::DeviceModel::streamDevice, &dm_.get(), writer);
             t1.join();
@@ -194,6 +198,19 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
             std::cerr << "unhandled exception: " << std::endl;
             return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
         }
+    }
+
+    Status Connect(ServerContext *context, const ::catena::ConnectPayload *req,
+                         ServerWriter<::catena::PushUpdates> *writer) override {
+        const std::string& peer = context->peer();
+        auto& peerManager = catena::PeerManager::getInstance();
+        grpc::Status status;
+        if (!peerManager.hasPeer(peer)) {
+            catena::PeerInfo& pi = peerManager.addPeer(context, writer);
+            status = pi.handleConnection();
+            peerManager.removePeer(peer);
+        }
+        return status;
     }
 
   public:
@@ -224,13 +241,6 @@ void RunServer(uint16_t port, DeviceModel &dm) {
     server->Wait();
 }
 
-void valueSetByClient(const ParamAccessor& p, catena::ParamIndex idx) {
-    std::cout << "value updated by client: " << " (oid goes here) " << ", " << idx << '\n';
-}
-
-void valueSetByService(const ParamAccessor& p, catena::ParamIndex idx) {
-    std::cout << "value updated by service: " << " (oid goes here) " << ", " << idx << '\n';
-}
 
 int main(int argc, char **argv) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
@@ -241,11 +251,30 @@ int main(int argc, char **argv) {
     try {
         // read a json file into a DeviceModel object
         DeviceModel dm(absl::GetFlag(FLAGS_device_model));
-        dm.valueSetByClient.connect(valueSetByClient);
-        dm.valueSetByService.connect(valueSetByService);
+        auto &peerManager = catena::PeerManager::getInstance();
 
-        auto a_number = dm.param("/a_number");
-        a_number->setValue(42);
+        // connect up the peer manager to the device model
+        // N.B. we have to cast the member methods to the correct signature for the
+        // overloaded moethod called handleValueUpdate
+        dm.valueSetByClient.connect(
+          &peerManager, static_cast<void (catena::PeerManager::*)(const catena::ParamAccessor &, unsigned int,
+                                                                  const std::string &)>(
+                          &catena::PeerManager::handleValueUpdate));
+        dm.valueSetByService.connect(
+          &peerManager,
+          static_cast<void (catena::PeerManager::*)(const catena::ParamAccessor &, unsigned int)>(
+            &catena::PeerManager::handleValueUpdate));
+
+        // send regular updates to the device model
+        std::thread loop([&dm]() {
+            auto a_number = dm.param("/a_number");
+            int i = 0;
+            while (true) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                a_number->setValue(i++);
+            }
+        });
+        loop.detach();
 
         RunServer(absl::GetFlag(FLAGS_port), dm);
 

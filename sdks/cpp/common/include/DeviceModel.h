@@ -194,8 +194,9 @@ class DeviceModel {
 
    /**
     *  signal to share value changes by clients 
+    * 
     */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByClient; 
+    vdk::signal<void(const ParamAccessor&, ParamIndex idx, const std::string&)> valueSetByClient; 
 
     /**
     *  signal to share value changes by the service 

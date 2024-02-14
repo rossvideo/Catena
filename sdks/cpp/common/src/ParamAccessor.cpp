@@ -132,8 +132,8 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 }
 
 
-ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)} {
+ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid)
+    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid} {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -401,7 +401,7 @@ void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
     }
 }
 
-void ParamAccessor::setValue(const Value &src, ParamIndex idx) {
+void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {
         Value &value = value_.get();
@@ -413,7 +413,7 @@ void ParamAccessor::setValue(const Value &src, ParamIndex idx) {
             // update scalar value
             value.CopyFrom(src);
         }
-        deviceModel_.get().valueSetByClient.emit(*this, idx);
+        deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
     } catch (const catena::exception_with_status& why) {
         std::stringstream err;
         err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
