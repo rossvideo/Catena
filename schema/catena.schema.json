@@ -23,14 +23,6 @@
               "When true, indicates that the device supports subscription-based access to subsets of parameters.",
             "type": "boolean"
         },
-        "timeout": {
-            "title": "Timeout",
-            "description": "Time, in ms, after which device will timeout",
-            "$comment": "get help with the description",
-            "type": "integer",
-            "min": 0,
-            "max": 1000000
-        },
         "constraints": {
             "$ref": "#/$defs/constraint_map"
         },
