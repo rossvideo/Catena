@@ -2,7 +2,9 @@ package com.rossvideo.catena.example.device;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.Empty;
@@ -17,10 +19,16 @@ import com.rossvideo.catena.example.error.InvalidSlotNumberException;
 import com.rossvideo.catena.example.error.UnknownOidException;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
 
+import catena.core.device.ConnectPayload;
 import catena.core.device.Device;
 import catena.core.device.DeviceComponent;
 import catena.core.device.DeviceRequestPayload;
+import catena.core.device.PushUpdates;
+import catena.core.device.PushUpdates.PushValue;
 import catena.core.language.PolyglotText;
+import catena.core.menu.Menu;
+import catena.core.menu.MenuGroup;
+import catena.core.menu.MenuGroups;
 import catena.core.parameter.CommandResponse;
 import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
@@ -31,6 +39,7 @@ import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
 import catena.core.parameter.Value.KindCase;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
+import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 
 public class MyCatenaDevice extends CatenaServiceImplBase implements BidirectionalStreamObserverFactory<ExecuteCommandPayload, CommandResponse> {
@@ -49,11 +58,54 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements Bidirection
     private final String deviceName = MyCatenaDevice.class.getSimpleName() + '-' + deviceId.getAndIncrement();
     private final int slot;
     private File workingDirectory;
+    private Set<StreamObserver<PushUpdates>> pushConnections = new LinkedHashSet<>(); 
 
     public MyCatenaDevice(int slot, File workingDirectory) { 
         this.slot = slot; 
         this.workingDirectory = workingDirectory; 
     }
+    
+    
+
+    @Override
+    public void connect(ConnectPayload request, StreamObserver<PushUpdates> responseObserver)
+    {
+        addConnection(responseObserver);
+        Device device = buildDeviceMessage();
+        DeviceComponent deviceComponent = DeviceComponent.newBuilder().setDevice(device).build();
+        PushUpdates.Builder pushUpdate = PushUpdates.newBuilder()
+                .setSlot(slot)
+                .setDeviceComponent(deviceComponent);
+        responseObserver.onNext(pushUpdate.build());
+    }
+
+
+
+    protected void addConnection(StreamObserver<PushUpdates> responseObserver)
+    {
+        synchronized (pushConnections)
+        {
+            if (pushConnections.add(responseObserver) && responseObserver instanceof ServerCallStreamObserver)
+            {
+                ((ServerCallStreamObserver<PushUpdates>) responseObserver).setOnCancelHandler(() -> {
+                    removeConnection(responseObserver);
+                });
+            }
+        }
+    }
+
+
+
+    protected void removeConnection(StreamObserver<PushUpdates> responseObserver)
+    {
+        synchronized (pushConnections)
+        {
+            pushConnections.remove(responseObserver);
+            responseObserver.onCompleted();
+        }
+    }
+
+    
 
     @Override
     public void deviceRequest(DeviceRequestPayload request,
@@ -65,15 +117,37 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements Bidirection
             return;
         }
 
-        Device device =
-          Device.newBuilder().setSlot(this.slot).putAllParams(buildAllParamDescriptors())
-          .putAllCommands(buildAllCommandDescriptors())
-          .build();
+        Device device = buildDeviceMessage();
         DeviceComponent deviceComponent = DeviceComponent.newBuilder().setDevice(device).build();
         responseObserver.onNext(deviceComponent);
         responseObserver.onCompleted();
     }
 
+
+
+    protected Device buildDeviceMessage()
+    {
+        Device device =
+          Device.newBuilder().setSlot(this.slot).setMenuGroups(buildAllMenus())
+          .putAllParams(buildAllParamDescriptors())
+          .putAllCommands(buildAllCommandDescriptors())
+          .build();
+        return device;
+    }
+
+    private MenuGroups buildAllMenus() {
+        Menu configMenu = Menu.newBuilder()
+                .setName(PolyglotText.newBuilder().putDisplayStrings("en", "Config").build())
+                .addParamOids(FLOAT_OID)
+                .addParamOids(INT_OID)
+                .setId(0)
+                .build();
+        MenuGroup configGroup = MenuGroup.newBuilder().putMenus("config", configMenu)
+                .setId(1)
+                .build();
+        return MenuGroups.newBuilder().putMenuGroups("config", configGroup).build();
+    }
+    
     private Map<String, Param> buildAllParamDescriptors() {
         Map<String, Param> parameters = new HashMap<>();
         parameters.put(
@@ -157,6 +231,27 @@ public class MyCatenaDevice extends CatenaServiceImplBase implements Bidirection
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
+        
+        notifyClients(PushUpdates.newBuilder()
+                .setSlot(slot)
+                .setValue(PushValue.newBuilder()
+                        .setOid(oid)
+                        .setElementIndex(request.getElementIndex())
+                        .setValue(value)
+                        .build())
+                .build());
+    }
+    
+    protected void notifyClients(PushUpdates pushUpdates)
+    {
+        synchronized (pushConnections)
+        {
+            for (StreamObserver<PushUpdates> observer : pushConnections)
+            {
+                System.out.println("NOTIFYING " + observer);
+                observer.onNext(pushUpdates);
+            }
+        }
     }
 
     @Override
