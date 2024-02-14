@@ -381,26 +381,44 @@ catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vecto
 
 void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    const Value& value = value_.get();
-    if (isList(value) && idx != kParamEnd) {
-        auto& getter = ValueGetter::getInstance();
-        getter[value.kind_case()](dst, value, idx);
-    } else {
-        // value is a scalar type
-        dst->CopyFrom(value);
+    try {
+        const Value& value = value_.get();
+        if (isList(value) && idx != kParamEnd) {
+            auto& getter = ValueGetter::getInstance();
+            getter[value.kind_case()](dst, value, idx);
+        } else {
+            // value is a scalar type
+            dst->CopyFrom(value);
+        }
+    } catch (const catena::exception_with_status& why) {
+        std::stringstream err;
+        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), why.status);
+    } catch (...) {
+        std::stringstream err;
+        err << "getValue failed for with uknown exception" << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
     }
 }
 
 void ParamAccessor::setValue(const Value &src, ParamIndex idx) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    Value &value = value_.get();
-    if (isList(value) && idx != kParamEnd) {
-        // update array element
-        auto& setter = ValueSetter::getInstance();
-        setter[value.kind_case()](value, src, idx);
-    } else {
-        // update scalar value
-        value.CopyFrom(src);
+    try {
+        Value &value = value_.get();
+        if (isList(value) && idx != kParamEnd) {
+            // update array element
+            auto& setter = ValueSetter::getInstance();
+            setter[value.kind_case()](value, src, idx);
+        } else {
+            // update scalar value
+            value.CopyFrom(src);
+        }
+        deviceModel_.get().valueSetByClient.emit(*this, idx);
+    } catch (const catena::exception_with_status& why) {
+        std::stringstream err;
+        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), why.status);
+    } catch (...) {
+        throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
     }
-    deviceModel_.get().valueSetByClient.emit(*this, idx);
 }
