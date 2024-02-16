@@ -54,10 +54,15 @@
 #include <chrono>
 
 using grpc::Server;
+using grpc::ServerAsyncResponseWriter;
+using grpc::ServerAsyncWriter;
 using grpc::ServerBuilder;
+using grpc::ServerCompletionQueue;
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
+
+using catena::CatenaService;
 
 using Index = catena::Path::Index;
 using DeviceModel = catena::DeviceModel;
@@ -141,105 +146,129 @@ void authorize(grpc::ServerContext *context /*catena::Param &p*/) {
     }
 }
 
-class CatenaServiceImpl final : public catena::CatenaService::Service {
-    Status GetValue(ServerContext *context, const ::catena::GetValuePayload *req,
-                    ::catena::Value *res) override {
-        try {
-            auto p = dm_.get().param(req->oid());
-            authorize(context);
-            p->getValue(res, req->element_index());
-            std::cout << "GetValue: " << req->oid() << std::endl;
-            return Status::OK;
+class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
-        } catch (catena::exception_with_status &why) {
-            std::cerr << why.what() << std::endl;
-            grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
-            return Status(gs, "GetValue failed", why.what());
+    // Status SetValue(ServerContext *context, const ::catena::SetValuePayload *req,
+    //                 ::google::protobuf::Empty *res) override {
+    //     try {
+    //         auto p = dm_.get().param(req->oid());
+    //         authorize(context);
+    //         p->setValue(context->peer(), req->value(), req->element_index());
+    //         std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
+    //         return Status::OK;
 
-        } catch (...) {
-            std::cerr << "unhandled exception: " << std::endl;
-            return Status(grpc::StatusCode::INTERNAL, "Unhandled exception");
-        }
-    }
+    //     } catch (catena::exception_with_status &why) {
+    //         std::cerr << why.what() << std::endl;
+    //         grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
+    //         return Status(gs, "SetValue failed", why.what());
 
-    Status SetValue(ServerContext *context, const ::catena::SetValuePayload *req,
-                    ::google::protobuf::Empty *res) override {
-        try {
-            auto p = dm_.get().param(req->oid());
-            authorize(context);
-            p->setValue(context->peer(), req->value(), req->element_index());
-            std::cout << "SetValue: " << req->oid() << ", " << req->element_index() << '\n';
-            return Status::OK;
+    //     } catch (...) {
+    //         std::cerr << "unhandled exception: " << std::endl;
+    //         return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
+    //     }
+    // }
 
-        } catch (catena::exception_with_status &why) {
-            std::cerr << why.what() << std::endl;
-            grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
-            return Status(gs, "SetValue failed", why.what());
+    // Status DeviceRequest(ServerContext *context, const ::catena::DeviceRequestPayload *req,
+    //                      ServerWriter<::catena::DeviceComponent> *writer) override {
+    //     try {
+    //         std::thread t1(&catena::DeviceModel::streamDevice, &dm_.get(), writer);
+    //         t1.join();
+    //         return Status::OK;
 
-        } catch (...) {
-            std::cerr << "unhandled exception: " << std::endl;
-            return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
-        }
-    }
+    //     } catch (catena::exception_with_status &why) {
+    //         std::cerr << why.what() << std::endl;
+    //         grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
+    //         return Status(gs, "DeviceRequest failed", why.what());
 
-    Status DeviceRequest(ServerContext *context, const ::catena::DeviceRequestPayload *req,
-                         ServerWriter<::catena::DeviceComponent> *writer) override {
-        try {
-            std::thread t1(&catena::DeviceModel::streamDevice, &dm_.get(), writer);
-            t1.join();
-            return Status::OK;
+    //     } catch (...) {
+    //         std::cerr << "unhandled exception: " << std::endl;
+    //         return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
+    //     }
+    // }
 
-        } catch (catena::exception_with_status &why) {
-            std::cerr << why.what() << std::endl;
-            grpc::StatusCode gs = static_cast<grpc::StatusCode>(why.status);
-            return Status(gs, "DeviceRequest failed", why.what());
-
-        } catch (...) {
-            std::cerr << "unhandled exception: " << std::endl;
-            return Status(grpc::StatusCode::INTERNAL, "SetValue failed");
-        }
-    }
-
-    Status Connect(ServerContext *context, const ::catena::ConnectPayload *req,
-                         ServerWriter<::catena::PushUpdates> *writer) override {
-        const std::string& peer = context->peer();
-        auto& peerManager = catena::PeerManager::getInstance();
-        grpc::Status status;
-        if (!peerManager.hasPeer(peer)) {
-            catena::PeerInfo& pi = peerManager.addPeer(context, writer);
-            status = pi.handleConnection();
-            peerManager.removePeer(peer);
-        }
-        return status;
-    }
+    // Status Connect(ServerContext *context, const ::catena::ConnectPayload *req,
+    //                ServerWriter<::catena::PushUpdates> *writer) override {
+    //     const std::string &peer = context->peer();
+    //     auto &peerManager = catena::PeerManager::getInstance();
+    //     grpc::Status status;
+    //     if (!peerManager.hasPeer(peer)) {
+    //         catena::PeerInfo &pi = peerManager.addPeer(context, writer);
+    //         status = pi.handleConnection();
+    //         peerManager.removePeer(peer);
+    //     }
+    //     return status;
+    // }
 
   public:
-    inline explicit CatenaServiceImpl(DeviceModel &dm) : catena::CatenaService::Service{}, dm_{dm} {}
+    inline explicit CatenaServiceImpl(ServerCompletionQueue *cq, DeviceModel &dm)
+        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm} {}
+    
+    void init() {
+        new GetValue(this, dm_);
+    }
 
-    ~CatenaServiceImpl() {}
+    void processEvents() {
+        void *tag;
+        bool ok;
+        while (cq_->Next(&tag, &ok)) {
+            static_cast<CallData *>(tag)->proceed(ok);
+        }
+    }
 
   private:
-    std::reference_wrapper<DeviceModel> dm_;
+    ServerCompletionQueue *cq_;
+    DeviceModel &dm_;
+
+    /**
+     * Nested private classes
+     */
+    enum class CallStatus { kCreate, kProcess, kFinish };
+    /**
+     * @brief Abstract base class for the CallData classes
+     * Provides a the proceed method
+     */
+    class CallData {
+      public:
+        virtual void proceed(bool ok) = 0;
+    };
+
+    /**
+     * @brief CallData class for the GetValue RPC
+     */
+    class GetValue : public CallData {
+      public:
+        GetValue(CatenaServiceImpl *service, DeviceModel &dm) : service_{service}, dm_{dm}, responder_(&context_), status_{CallStatus::kCreate} { proceed(true); }
+
+        void proceed(bool ok) override {
+            if (status_ == CallStatus::kCreate) {
+                status_ = CallStatus::kProcess;
+                service_->RequestGetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            } else if (status_ == CallStatus::kProcess) {
+                new GetValue(service_, dm_);
+                if (ok) {
+                    authorize(&context_);
+                    std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
+                    catena::Value ans; // oh dear, this is a copy refactoring needed!
+                    param->getValue(&ans, req_.element_index());
+                    responder_.Finish(ans, Status::OK, this);
+                    status_ = CallStatus::kFinish;
+                }
+            } else {
+                    GPR_ASSERT(status_ == CallStatus::kFinish);
+                    delete this;
+            }
+        }
+
+      private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        catena::GetValuePayload req_;
+        catena::Value res_;
+        ServerAsyncResponseWriter<::catena::Value> responder_;
+        CallStatus status_;
+        DeviceModel &dm_;
+    };
 };
-
-void RunServer(uint16_t port, DeviceModel &dm) {
-    std::string server_address = absl::StrFormat("0.0.0.0:%d", port);
-    CatenaServiceImpl service(dm);
-
-    grpc::EnableDefaultHealthCheckService(true);
-    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
-    ServerBuilder builder;
-    builder.AddListeningPort(server_address, getServerCredentials());
-    builder.RegisterService(&service);
-    std::unique_ptr<Server> server(builder.BuildAndStart());
-    std::cout << "Server listening on " << server_address << " with secure comms "
-              << (absl::GetFlag(FLAGS_secure_comms).compare("off") == 0 ? "disabled" : "enabled") << '\n';
-
-    // Wait for the server to shutdown. Note that some other thread
-    // must be responsible for shutting down the server for this call
-    // to ever return.
-    server->Wait();
-}
 
 
 int main(int argc, char **argv) {
@@ -251,19 +280,6 @@ int main(int argc, char **argv) {
     try {
         // read a json file into a DeviceModel object
         DeviceModel dm(absl::GetFlag(FLAGS_device_model));
-        auto &peerManager = catena::PeerManager::getInstance();
-
-        // connect up the peer manager to the device model
-        // N.B. we have to cast the member methods to the correct signature for the
-        // overloaded moethod called handleValueUpdate
-        dm.valueSetByClient.connect(
-          &peerManager, static_cast<void (catena::PeerManager::*)(const catena::ParamAccessor &, unsigned int,
-                                                                  const std::string &)>(
-                          &catena::PeerManager::handleValueUpdate));
-        dm.valueSetByService.connect(
-          &peerManager,
-          static_cast<void (catena::PeerManager::*)(const catena::ParamAccessor &, unsigned int)>(
-            &catena::PeerManager::handleValueUpdate));
 
         // send regular updates to the device model
         std::thread loop([&dm]() {
@@ -276,7 +292,29 @@ int main(int argc, char **argv) {
         });
         loop.detach();
 
-        RunServer(absl::GetFlag(FLAGS_port), dm);
+        // build and run the service asynchronously
+        grpc::EnableDefaultHealthCheckService(true);
+        grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+
+        // build the server
+        ServerBuilder builder;
+        std::string addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+        builder.AddListeningPort(addr, getServerCredentials());
+        std::unique_ptr<ServerCompletionQueue> cq = builder.AddCompletionQueue();
+        CatenaServiceImpl service(cq.get(), dm);
+        builder.RegisterService(&service);
+        std::unique_ptr<Server> server = builder.BuildAndStart();
+        std::cout << "Server listening on " << addr
+            << " with secure comms mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+
+        // start processing events
+        service.init();
+        std::thread cq_thread([&]() { service.processEvents(); }); 
+
+        // wait for the server to shutdown and tidy up
+        server->Wait();
+        cq->Shutdown();
+        cq_thread.join();
 
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
