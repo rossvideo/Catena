@@ -379,28 +379,6 @@ catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vecto
     return catena::Value::KindCase::kStringArrayValues;
 }
 
-void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
-    std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    try {
-        const Value& value = value_.get();
-        if (isList(value) && idx != kParamEnd) {
-            auto& getter = ValueGetter::getInstance();
-            getter[value.kind_case()](dst, value, idx);
-        } else {
-            // value is a scalar type
-            dst->CopyFrom(value);
-        }
-    } catch (const catena::exception_with_status& why) {
-        std::stringstream err;
-        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-        throw catena::exception_with_status(err.str(), why.status);
-    } catch (...) {
-        std::stringstream err;
-        err << "getValue failed for with uknown exception" << '\n' << __PRETTY_FUNCTION__ << '\n';
-        throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
-    }
-}
-
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {

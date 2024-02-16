@@ -202,9 +202,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
     inline explicit CatenaServiceImpl(ServerCompletionQueue *cq, DeviceModel &dm)
         : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm} {}
-    
-    void init() {
-        new GetValue(this, dm_);
+
+    void init() { 
+        new GetValue(this, dm_); 
+        new Connect(this, dm_);
     }
 
     void processEvents() {
@@ -237,7 +238,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     class GetValue : public CallData {
       public:
-        GetValue(CatenaServiceImpl *service, DeviceModel &dm) : service_{service}, dm_{dm}, responder_(&context_), status_{CallStatus::kCreate} { proceed(true); }
+        GetValue(CatenaServiceImpl *service, DeviceModel &dm)
+            : service_{service}, dm_{dm}, responder_(&context_), status_{CallStatus::kCreate} {
+            proceed(true);
+        }
 
         void proceed(bool ok) override {
             if (status_ == CallStatus::kCreate) {
@@ -248,14 +252,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 if (ok) {
                     authorize(&context_);
                     std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
-                    catena::Value ans; // oh dear, this is a copy refactoring needed!
+                    catena::Value ans;  // oh dear, this is a copy refactoring needed!
                     param->getValue(&ans, req_.element_index());
                     responder_.Finish(ans, Status::OK, this);
                     status_ = CallStatus::kFinish;
                 }
             } else {
-                    GPR_ASSERT(status_ == CallStatus::kFinish);
-                    delete this;
+                GPR_ASSERT(status_ == CallStatus::kFinish);
+                delete this;
             }
         }
 
@@ -267,6 +271,69 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ServerAsyncResponseWriter<::catena::Value> responder_;
         CallStatus status_;
         DeviceModel &dm_;
+    };
+
+    /**
+     * @brief CallData class for the GetValue RPC
+     */
+    class Connect : public CallData {
+      public:
+        Connect(CatenaServiceImpl *service, DeviceModel &dm)
+            : service_{service}, dm_{dm}, writer_(&context_), status_{CallStatus::kCreate} {
+            // dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
+            //     this->res_.mutable_value()->set_oid(p.oid<false>());
+            //     p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx);
+            //     this->hasUpdate_ = true;
+            // });
+            std::thread([this](){
+                int n = 0;
+                while (true) {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    this->res_.set_slot(n++);
+                    this->hasUpdate_ = true;
+                }
+            }).detach();
+            proceed(true);
+        }
+
+        void proceed(bool ok) override {
+            if (status_ == CallStatus::kCreate) {
+                status_ = CallStatus::kProcess;
+                service_->RequestConnect(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
+                context_.AsyncNotifyWhenDone(this);
+            } else if (status_ == CallStatus::kProcess) {
+                if (context_.IsCancelled()) {
+                    new Connect(service_, dm_);
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(Status::CANCELLED, this);
+                } else {
+                    if (ok) {
+                        if (hasUpdate_) {
+                            hasUpdate_ = false;
+                            authorize(&context_);
+                            writer_.Write(res_, this);
+                        }
+                    } else {
+                        // not ok, so we are done
+                        status_ = CallStatus::kFinish;
+                        writer_.Finish(Status::OK, this); // some other status?
+                    }
+                }
+            } else {
+                GPR_ASSERT(status_ == CallStatus::kFinish);
+                delete this;
+            }
+        }
+
+      private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        catena::ConnectPayload req_;
+        catena::PushUpdates res_;
+        ServerAsyncWriter<catena::PushUpdates> writer_;
+        CallStatus status_;
+        DeviceModel &dm_;
+        std::atomic<bool> hasUpdate_{false};
     };
 };
 
@@ -305,11 +372,11 @@ int main(int argc, char **argv) {
         builder.RegisterService(&service);
         std::unique_ptr<Server> server = builder.BuildAndStart();
         std::cout << "Server listening on " << addr
-            << " with secure comms mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+                  << " with secure comms mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
 
         // start processing events
         service.init();
-        std::thread cq_thread([&]() { service.processEvents(); }); 
+        std::thread cq_thread([&]() { service.processEvents(); });
 
         // wait for the server to shutdown and tidy up
         server->Wait();

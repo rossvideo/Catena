@@ -517,7 +517,29 @@ class ParamAccessor {
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
      * 
      */
-    void getValue(Value* dst, [[maybe_unused]] ParamIndex idx) const;
+    template<bool Threadsafe = true>
+    void getValue(Value* dst, [[maybe_unused]] ParamIndex idx) const {
+    using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
+    LockGuard lock(deviceModel_.get().mutex_);
+    try {
+        const Value& value = value_.get();
+        if (isList(value) && idx != kParamEnd) {
+            auto& getter = ValueGetter::getInstance();
+            getter[value.kind_case()](dst, value, idx);
+        } else {
+            // value is a scalar type
+            dst->CopyFrom(value);
+        }
+    } catch (const catena::exception_with_status& why) {
+        std::stringstream err;
+        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), why.status);
+    } catch (...) {
+        std::stringstream err;
+        err << "getValue failed for with uknown exception" << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
+    }
+}
 
     /**
      * @brief set the parameter's value packaged as a catena::Value object most likely 
