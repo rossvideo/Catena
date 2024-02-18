@@ -110,12 +110,13 @@ const catena::Device &catena::DeviceModel::device() const {
 }
 
 // send device info to client via writer
-void catena::DeviceModel::streamDevice(ServerWriter<::catena::DeviceComponent> *writer) {
+bool catena::DeviceModel::streamDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag) {
     std::lock_guard<Mutex> lock(mutex_);
     catena::DeviceComponent dc;
     dc.set_allocated_device(&device_);
-    writer->Write(dc);
+    writer->Write(dc, tag);
     auto x = dc.release_device();
+    return true; // we're sending the whole device for now, so signal that we're done
 }
 
 // for parameters that do not have values
