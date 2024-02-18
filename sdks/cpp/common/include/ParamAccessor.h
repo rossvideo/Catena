@@ -516,6 +516,8 @@ class ParamAccessor {
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
      * 
+     * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex. If false,
+     * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
     template<bool Threadsafe = true>
     void getValue(Value* dst, [[maybe_unused]] ParamIndex idx) const {
@@ -552,6 +554,7 @@ class ParamAccessor {
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
      * 
+     * Threadsafe - asserts a lock on the DeviceModel's mutex.
      */
     void setValue(const std::string& peer, const Value& src, [[maybe_unused]] ParamIndex idx);
 
