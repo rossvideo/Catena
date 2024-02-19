@@ -362,7 +362,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     this->hasUpdate_ = true;
                     lock.unlock();
                     this->cv_.notify_one();
-                    std::cout << "notified cv : " << timeNow() << std::endl;
                 });
             }
             proceed(ok);  // start the process
