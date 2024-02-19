@@ -5,20 +5,17 @@
     "detail_level": "FULL",
     "params": {
         "variant_example": {
-            "import": {"url": "include"},
-            "type": "UNDEFINED"
+            "import": {"url": "include"}
         },
         "variantlist_example": {
-            "import": {"url": "include"},
-            "type": "UNDEFINED"
+            "import": {"url": "include"}
         },
         "hello": {
             "type": "STRING",
             "value": {"string_value": "Hello World!"}
         },
         "template_oid_example": {
-            "template_oid": "/types/audio_slot", 
-            "type": "STRUCT"
+            "template_oid": "/types/audio_slot"
         },
         "types": {
             "type": "STRUCT",
