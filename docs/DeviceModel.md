@@ -3,10 +3,10 @@
 
 # The Device Model
 
+> Defined in `interface/device.proto`.
 
 ![Alt](images/Catena%20UML%20-%20Device.svg)
 
-Defined in `interface/device.proto`.
 
 As previously mentioned, it's possible to represent a device model using human-authored JSON.
 
@@ -40,10 +40,8 @@ This will cause incorrect code to be highlighted like this typo...
 ![alt](images/autocomplete.png)
 
 
-
-
 <div style="text-align: center">
 
-[Next Page](Validation.md)
+[Next Page: Device Model Validation](Validation.md)
 
 </div>

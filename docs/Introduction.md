@@ -19,8 +19,12 @@ It's useful to use the following model when encountering Catena for the first ti
 - Connection management is outside of Catena's scope. So the diagram shows two reasonable options. The example programs in this repo use gRPC.
 - For gRPC transport is via http/2 which enables messages with fast transaction times (e.g. get a parameter value) to overtake slower ones (e.g. file upload).
 
+> The drawings featured in this documentation are available to Lucid licensees [here](https://lucid.app/lucidchart/f8e5c336-3c28-4f45-9844-6f8f8cb4d1bc/edit?viewport_loc=-89%2C-33%2C1986%2C1220%2C5clx7UNbqSKm&invitationId=inv_4a6be56a-bf42-4a9f-ab54-262174f9b14c).
+>
+> They're likely to be more up-to-date.
+
 <div style="text-align: center">
 
-[Next Page](DeviceModel.md)
+[Next Page: The Device Model](DeviceModel.md)
 
 </div>
