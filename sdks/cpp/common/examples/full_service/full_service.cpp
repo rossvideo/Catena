@@ -357,7 +357,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             if (ok) {
                 dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
                     std::unique_lock<std::mutex> lock(this->mtx_);
-                    this->res_.mutable_value()->set_oid(p.oid<false>());
+                    this->res_.mutable_value()->set_oid(p.oid());
                     p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx);
                     this->hasUpdate_ = true;
                     lock.unlock();
@@ -502,19 +502,31 @@ int main(int argc, char **argv) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
 
+    // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
 
+    // get the path to our ssh certificates
     std::string path(absl::GetFlag(FLAGS_certs));
     expandEnvVariables(path);
-    std::cout << path << '\n';
+
     try {
         // read a json file into a DeviceModel object
         DeviceModel dm(absl::GetFlag(FLAGS_device_model));
 
-        // send regular updates to the device model
+        // This is the business logic for the service
+        // This simple example just increments a number every second,
+        // and logs client updates
+        //
+        dm.valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
+            catena::Value v;
+            p.getValue<false>(&v, idx);
+            std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
+            // a real service would do something with the value here
+        });
         std::thread loop([&dm]() {
+            // a real service would possibly send status updates, telemetry or audio meters here
             auto a_number = dm.param("/a_number");
             int i = 0;
             while (globalLoop) {
@@ -539,6 +551,8 @@ int main(int argc, char **argv) {
         std::cout << "Server listening on " << addr
                   << " with secure comms mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
 
+        // now that the server is running, we can let the signal handlers know
+        // it's address
         globalServer = server.get();
 
         // start processing events on the completion queue
