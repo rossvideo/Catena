@@ -48,32 +48,24 @@ using ParamAccessor = catena::ParamAccessor;
 // and type conversion support used by ParamAccessor's get/set methods
 //
 struct Coords {
-    REFLECTABLE_STRUCT(Coords, (float) x, (float) y, (float) z);
+    REFLECTABLE_STRUCT(Coords, (float)x, (float)y, (float)z);
 };
 
 // note nested struct
 struct Location {
-    REFLECTABLE_STRUCT(Location, (Coords) coords, (float) latitude, (float) longitude, (int32_t) altitude, (std::string) name);
+    REFLECTABLE_STRUCT(Location, (Coords)coords, (float)latitude, (float)longitude, (int32_t)altitude,
+                       (std::string)name);
 };
 
 struct AudioSlot {
-    REFLECTABLE_STRUCT(
-        AudioSlot, 
-        (std::string) name,
-        (float) gain
-    );
+    REFLECTABLE_STRUCT(AudioSlot, (std::string)name, (float)gain);
 };
 
 struct VideoSlot {
-    REFLECTABLE_STRUCT(VideoSlot, (std::string) name);
+    REFLECTABLE_STRUCT(VideoSlot, (std::string)name);
 };
 
-REFLECTABLE_VARIANT(
-    SlotVariant,
-    (AudioSlot),
-    (VideoSlot)
-);
-
+REFLECTABLE_VARIANT(SlotVariant, (AudioSlot), (VideoSlot));
 
 
 int main(int argc, char **argv) {
@@ -92,14 +84,14 @@ int main(int argc, char **argv) {
 
         // read a variant
         std::unique_ptr<ParamAccessor> slotParam = dm.param("/slot");
-        SlotVariant slot = {AudioSlot{"audio", 10.0f}}; // initialize the variant
+        SlotVariant slot = {AudioSlot{"audio", 10.0f}};  // initialize the variant
         slotParam->getValue(slot);
         assert(std::holds_alternative<VideoSlot>(slot));
-        slot = AudioSlot{"back to audio", 0.0f}; // change the variant
+        slot = AudioSlot{"back to audio", 0.0f};  // change the variant
         slotParam->setValue(slot);
 
         // read & write native struct
-        Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford" }, loc2;
+        Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford"}, loc2;
         std::unique_ptr<ParamAccessor> locParam = dm.param("/location");
 
         locParam->getValue(loc2);

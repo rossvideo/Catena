@@ -4,9 +4,20 @@
 
       {
         "type": "cppdbg",
-        "name": "Debug with CMake/Ninja",
+        "name": "Debug Full Service with lldb",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service",
+        "args": ["${workspaceFolder}/example_device_models/device.minimal.json"],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
+        "name": "Debug Basic Param Access with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/basic_param_access/basic_param_access",
         "args": ["${workspaceFolder}/example_device_models/device.minimal.json"],
         "cwd": "${workspaceFolder}/sdks/cpp/build",
         "preLaunchTask": "",

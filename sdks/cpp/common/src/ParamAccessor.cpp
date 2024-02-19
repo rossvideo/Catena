@@ -132,8 +132,8 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 }
 
 
-ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)} {
+ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid)
+    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)} {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -379,28 +379,24 @@ catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vecto
     return catena::Value::KindCase::kStringArrayValues;
 }
 
-void ParamAccessor::getValue(Value *dst, ParamIndex idx) const {
+void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    const Value& value = value_.get();
-    if (isList(value) && idx != kParamEnd) {
-        auto& getter = ValueGetter::getInstance();
-        getter[value.kind_case()](dst, value, idx);
-    } else {
-        // value is a scalar type
-        dst->CopyFrom(value);
+    try {
+        Value &value = value_.get();
+        if (isList() && idx != kParamEnd) {
+            // update array element
+            auto& setter = ValueSetter::getInstance();
+            setter[value.kind_case()](value, src, idx);
+        } else {
+            // update scalar value
+            value.CopyFrom(src);
+        }
+        deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
+    } catch (const catena::exception_with_status& why) {
+        std::stringstream err;
+        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), why.status);
+    } catch (...) {
+        throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
     }
-}
-
-void ParamAccessor::setValue(const Value &src, ParamIndex idx) {
-    std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    Value &value = value_.get();
-    if (isList(value) && idx != kParamEnd) {
-        // update array element
-        auto& setter = ValueSetter::getInstance();
-        setter[value.kind_case()](value, src, idx);
-    } else {
-        // update scalar value
-        value.CopyFrom(src);
-    }
-    deviceModel_.get().valueSetByClient.emit(*this, idx);
 }

@@ -110,12 +110,13 @@ const catena::Device &catena::DeviceModel::device() const {
 }
 
 // send device info to client via writer
-void catena::DeviceModel::streamDevice(ServerWriter<::catena::DeviceComponent> *writer) {
+bool catena::DeviceModel::streamDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag) {
     std::lock_guard<Mutex> lock(mutex_);
     catena::DeviceComponent dc;
     dc.set_allocated_device(&device_);
-    writer->Write(dc);
+    writer->Write(dc, tag);
     auto x = dc.release_device();
+    return true; // we're sending the whole device for now, so signal that we're done
 }
 
 // for parameters that do not have values
@@ -143,7 +144,7 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     catena::Param &p = device_.mutable_params()->at(oid);
     std::get<0>(pad) = &p;
     std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
-    auto ans = std::make_unique<ParamAccessor>(*this, pad);
+    auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr);
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {
             std::string oid(std::get<std::string>(path_.pop_front()));
