@@ -133,7 +133,7 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 
 
 ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid} {
+    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)} {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -383,7 +383,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {
         Value &value = value_.get();
-        if (isList(value) && idx != kParamEnd) {
+        if (isList() && idx != kParamEnd) {
             // update array element
             auto& setter = ValueSetter::getInstance();
             setter[value.kind_case()](value, src, idx);

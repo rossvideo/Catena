@@ -29,7 +29,7 @@ void PeerInfo::handleValueUpdate(const ParamAccessor& param, ParamIndex idx) {
     if (going) {
         catena::PushUpdates update;
         update.set_slot(0);
-        *update.mutable_value()->mutable_oid() = param.oid<false>();
+        *update.mutable_value()->mutable_oid() = param.oid();
         *update.mutable_value()->mutable_value() = param.value<false>();
         writer_->Write(update);
     }

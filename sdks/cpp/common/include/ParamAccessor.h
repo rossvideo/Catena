@@ -481,7 +481,7 @@ class ParamAccessor {
      * @param dst reference to the destination object written to by this method.
      * @param idx index into the array
      */
-    template <bool Threadsafe = true, typename V> void getValueAt(V& dst, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void getValueAt(V& dst, const ParamIndex idx) const {
         try {
             using ElementType = typename std::remove_reference<decltype(dst)>::type;
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
@@ -525,7 +525,7 @@ class ParamAccessor {
     LockGuard lock(deviceModel_.get().mutex_);
     try {
         const Value& value = value_.get();
-        if (isList(value) && idx != kParamEnd) {
+        if (isList() && idx != kParamEnd) {
             auto& getter = ValueGetter::getInstance();
             getter[value.kind_case()](dst, value, idx);
         } else {
@@ -558,17 +558,54 @@ class ParamAccessor {
      */
     void setValue(const std::string& peer, const Value& src, [[maybe_unused]] ParamIndex idx);
 
-    template <bool Threadsafe = true>
-    const std::string& oid() const {
-        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
-        LockGuard lock(deviceModel_.get().mutex_);
+
+    /** 
+     * @brief get the parameter's fully qualified object id
+    */
+    inline const std::string& oid() const {
         return oid_; 
     }
 
+    /**
+     * @brief get the parameter's unique id
+     */ 
+    inline size_t id() const {
+        return id_;
+    }
+
+    /**
+     * @brief comparison operator, returns true if the 2 ids are equal
+    */
+    inline bool operator==(const ParamAccessor& rhs) const {
+        return id_ == rhs.id_;
+    }
+
+    /**
+     * @brief returns true if the param is an array (list in protobuf) type.
+    */
+    inline bool isList() const {
+        return catena::isList(value_.get());
+    }
+
   private:
+    /** @brief a reference to the device model that contains accessed parrameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
+
+    /** @brief a reference to the parameter accessed by this object */
     std::reference_wrapper<catena::Param> param_;
+
+    /** @brief a reference to the accessed parameter's value object */
     std::reference_wrapper<catena::Value> value_;
+
+    /** @brief the accessed parameter's fully qualified object id*/
     std::string oid_;
+
+    /** 
+     * @brief a unique id (probability of non-uniqueness is approx 1:10^19). 
+     * Motivation - to allow for fast comparison of ParamAccessor objects and
+     * to only compute the hash once.
+     * 
+    */
+    size_t id_;
 };
 }  // namespace catena
