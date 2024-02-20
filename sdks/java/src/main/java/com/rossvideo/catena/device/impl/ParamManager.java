@@ -172,10 +172,17 @@ public class ParamManager
         {
             widgetHint = WidgetHint.DEFAULT;
         }
-        return setWidgetHint(param, widgetHint.name().toLowerCase());
+        return setWidgetHint(param, widgetHint.name());
     }
     
     public Param.Builder setWidgetHint(Param.Builder param, String widgetHint) {
+        if (!WidgetHint.DEFAULT.name().equals(widgetHint)) {
+            param.setWidget(widgetHint);
+        }
+        else
+        {
+            param.clearWidget();
+        }
         return param;
     }
     
