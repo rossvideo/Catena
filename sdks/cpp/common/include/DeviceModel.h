@@ -147,10 +147,11 @@ class DeviceModel {
     /**
 
      * @brief sends device info to client via writer
-     *
-     * @return void
+     * @param writer the writer to send the device info to
+     * @param tag the tag to associate with the stream
+     * @return true if the device model was sent, false is there's more to come.
      */
-    void streamDevice(ServerWriter<::catena::DeviceComponent> *writer);
+    bool streamDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag);
 
     /**
      * @brief Get the Param object at path
@@ -194,8 +195,9 @@ class DeviceModel {
 
    /**
     *  signal to share value changes by clients 
+    * 
     */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByClient; 
+    vdk::signal<void(const ParamAccessor&, ParamIndex idx, const std::string&)> valueSetByClient; 
 
     /**
     *  signal to share value changes by the service 

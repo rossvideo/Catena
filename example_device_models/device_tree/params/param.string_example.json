@@ -1,30 +1,22 @@
 {
-    "type": "STRING",
-    "name": {
-        "display_strings": {"en": "string example"}
-    },
-    "value": {
-        "string_value": "test_value"
-    },
-    "constraint": {
-        "type": "STRING_STRING_CHOICE",
-        "string_string_choice": {
-            "strict": true,
-            "choices": [
-                {
-                    "name": {
-                        "display_strings": {"en": "test_name"}
-                    },
-                    "value": "test1"
-                },
-                {
-                    "name": {
-                        "display_strings": {"en": "test_name 2"}
-                    },
-                    "value": "test2"
-                }
-            ]
+  "type": "STRING",
+  "name": { "display_strings": { "en": "string example" } },
+  "value": { "string_value": "test_value" },
+  "constraint": {
+    "type": "STRING_STRING_CHOICE",
+    "string_string_choice": {
+      "strict": true,
+      "choices": [
+        {
+          "name": {"display_strings": { "en": "test_name" } },
+          "value": "test1"
+        },
+        {
+          "name": { "display_strings": { "en": "test_name 2" }},
+          "value": "test2"
         }
-    },
-    "minimal_set": true
+      ]
+    }
+  },
+  "minimal_set": true
 }

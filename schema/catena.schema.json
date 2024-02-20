@@ -23,14 +23,6 @@
               "When true, indicates that the device supports subscription-based access to subsets of parameters.",
             "type": "boolean"
         },
-        "timeout": {
-            "title": "Timeout",
-            "description": "Time, in ms, after which device will timeout",
-            "$comment": "get help with the description",
-            "type": "integer",
-            "min": 0,
-            "max": 1000000
-        },
         "constraints": {
             "$ref": "#/$defs/constraint_map"
         },
@@ -113,7 +105,7 @@
             "$comment": "patternProperties regex must be same as that defined in oid schema",
             "patternProperties": {
                 "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-                    "$ref": "#/$defs/constraint"   
+                    "$ref": "#/$defs/constraints"   
                 }
             },
             "additionalProperties": false
@@ -1223,6 +1215,39 @@
                 },
                 { 
                     "$ref": "#/$defs/string_constraint"
+                }
+            ]
+        },
+        "constraint_ref": {
+            "title": "Constraint Reference",
+            "description": "Reference to a shared constraint",
+            "type": "object",
+            "properties": {
+                "ref": {
+                    "type": "object",
+                    "properties": {
+                        "oid": {
+                            "type": "string",
+                            "format": "json-pointer"
+                        },
+                        "type": {
+                            "const": "UNDEFINED"
+                        }
+                    },
+                    "required": ["oid"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["ref"],
+            "additionalProperties": false
+        },
+        "constraints": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/constraint"
+                },
+                {
+                    "$ref": "#/$defs/constraint_ref"
                 }
             ]
         },

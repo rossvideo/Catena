@@ -63,29 +63,26 @@ message Device {
   // Whether subscriptions are supported
   bool subscriptions = 4;
 
-  // Device's timeout, in ms
-  uint32 timeout = 5;
-
   // The device's shared constraints. A map of Constraint, keyed by their object ids (OIDs).
-  map<string, Constraint> constraints = 6;
+  map<string, Constraint> constraints = 5;
 
   // The device's parameters. A map of Param, keyed by their object ids (OIDs).
-  map<string, Param> params = 7;
+  map<string, Param> params = 6;
 
   // The device's default editor UI definition and access scope definitions
-  MenuGroups menu_groups = 8;
+  MenuGroups menu_groups = 7;
 
   // The device's available commands, keyed by their object ids (OIDs).
-  map<string, Param> commands = 9;
+  map<string, Param> commands = 8;
 
   // The devices language packs
-  LanguagePacks language_packs = 10;
+  LanguagePacks language_packs = 9;
 
   // The device's access scopes, a list of mutually unique strings
-  repeated string access_scopes = 11;
+  repeated string access_scopes = 10;
 
   // The default scope, index into access_scopes to indicate which of them is the default.
-  uint32 default_scope = 12;
+  uint32 default_scope = 11;
 }
 
 /* The Device model broken into smaller pieces.
@@ -237,6 +234,10 @@ message TrapMessage {
 	repeated string trap_data = 2;
 }
 
+message SlotList {
+  	repeated uint32 slots = 1;
+}
+
 /* Messages that the device can push to the client. */
 message PushUpdates {
   message PushExternalObject {
@@ -246,7 +247,8 @@ message PushUpdates {
 
   message PushValue {
     string oid = 1;
-	Value value = 2;
+    int32 element_index = 2;
+	Value value = 3;
   }
 
   uint32 slot = 1;
@@ -259,5 +261,7 @@ message PushUpdates {
     bool invalidate_device_model = 7;
     PushExternalObject external_object = 8;
     RemoveComponents remove_device_components = 9;
+    SlotList slots_added = 10;
+    SlotList slots_removed = 11;
   }
 }
