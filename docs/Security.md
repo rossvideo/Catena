@@ -1,6 +1,8 @@
+![alt](images/Catena%20Logo_PMS2191%20&%20White.png)
+
 # Secure Communications
 
-The gRPC repo includes a command line utility called `grpc_cli` which can be used to exercise the unary components of a service. These are the message pairs that return single objects, not a stream of them.
+The gRPC repo includes a command line utility called `grpc_cli` which can be used to exercise the unary components of a service. These are the message pairs that return single objects, not a stream of them. To exercise streams, Postman is a good tool however, its support for security is not complete (mutual authentication isn't supported) so `grcp_cli` is the best way to test and demonstrate Catena's secure comms.
 
 In addition to exercising some of the `Catena Service`'s calls (`GetValue` and `SetValue`) it can also be used with three levels of secure communications:
 
@@ -8,22 +10,22 @@ In addition to exercising some of the `Catena Service`'s calls (`GetValue` and `
 - server side SSL
 - mutual SSL
 
-The C++ SDK includes an example program, `minimal_device.cpp` which implements these 3 levels of secure communications.
+The C++ SDK includes an example program, `full_service.cpp` which implements these 3 levels of secure communications.
 
 ## With no security
 
-Start `minimal_device` with no options:
+Start `full_service` with no options:
 
 Example output:
 
-```{.sh}
- ./minimal_device                   
+```sh
+ ./full_service                   
 Server listening on 0.0.0.0:5255 with secure comms disabled
 ```
 
 In another shell, run `grpc_cli`.
 
-```{.sh}
+```sh
 % ./grpc_cli  --json_input call localhost:5255 GetValue "{'oid': '/hello'}"
 connecting to localhost:5255
 float32_value: 12.3
@@ -36,7 +38,7 @@ Server side authentication requires a private key and certificate authority-sign
 
 Here is a script that creates a local root of trust and uses it to create and sign certificates for both the client and server ends of the connection. For now, we'll just need the server's key and cert.
 
-```{.sh}
+```sh
 #!/bin/bash
 
 # If you care about keeping the passphrase secret, be sure to suppress 
@@ -94,16 +96,16 @@ After running this, you should have these files:
 - client.key
 - client.crt
 
-These are hard-coded into `minimal_device.cpp` but the path to them is passed as a command line option. On my machine, I created a folder called `test_certs` under my home folder. This location is used in all the examples that follow. Be sure to change the examples if you use a different location.
+These are hard-coded into `full_service.cpp` but the path to them is passed as a command line option. On my machine, I created a folder called `test_certs` under my home folder. This location is used in all the examples that follow. Be sure to change the examples if you use a different location.
 
-```{.sh}
-% ./minimal_device --certs ${HOME}/test_certs --secure_comms ssl
+```sh
+% ./full_service --certs ${HOME}/test_certs --secure_comms ssl
 Server listening on 0.0.0.0:5255 with secure comms enabled
 ```
 
 Now we need to invoke `grpc_cli` with instructions to authenticate the server:
 
-```{.sh}
+```sh
 # tell gRPC where to find the certificate authority
 % export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/path/to/ca.crt
 
@@ -118,16 +120,16 @@ Note that, trying to use the insecure invocation of `grpc_cli` as in our first e
 
 ## Mutual Authentication
 
-Start `minimal_device` with the `--mutual_auth` flag asserted.
+Start `full_service` with the `--mutual_auth` flag asserted.
 
-```{.sh}
-% ./minimal_device --certs ${HOME}/test_certs --secure_comms ssl --mutual_auth
+```sh
+% ./full_service --certs ${HOME}/test_certs --secure_comms ssl --mutual_auth
 Server listening on 0.0.0.0:5255 with secure comms enabled
 ```
 
 Pass the client certificate information to `grpc_cli`.
 
-```{.sh}
+```sh
 % ./grpc_cli --ssl_target device.catenamedia.tv  --channel_creds_type ssl --ssl_client_cert ~/test_certs/client.crt --ssl_client_key ~/test_certs/client.key --json_input call localhost:5255 GetValue "{'oid': '/hello'}"
 connecting to localhost:5255
 float32_value: 12.3
@@ -144,18 +146,24 @@ At time of writing, all the device does is check whether a token is attached to 
 
 Also, the token itself should be obtained from a correctly configured authorization server. At time of writing, [jwt.io](https://jwt.io) can be used to create properly formatted tokens that DO NOT contain the correct claims.
 
-Start `minimal_device` with the `--authz` flag asserted
+Start `full_service` with the `--authz` flag asserted
 
-```{.sh}
-% ./common/examples/minimal_device/minimal_device --secure_comms ssl --mutual_authc --authz
+```sh
+% ./common/examples/full_service/full_service --secure_comms ssl --mutual_authc --authz
 Server listening on 0.0.0.0:5255 with secure comms enabled
 ```
 
 Pass a `JWT` to `grpc_cli`:
 
-```{.sh}
+```sh
 % ./grpc_cli --ssl_target device.catenamedia.tv  --channel_creds_type ssl --ssl_client_cert ${HOME}/test_certs/client.crt --ssl_client_key ${HOME}/test_certs/client.key --call_creds access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJzY29wZXMiOiJtb25pdG9yOnJvIG9wZXJhdGU6cncgY29uZmlnOnJvIn0.U76pZPakfhYOhVLPE-uyyDKmTL7f5x59b7Oranolx9c  --json_input call localhost:5255 GetValue "{'oid':'/hello'}"
 connecting to localhost:5255
 float32_value: 12.3
 Rpc succeeded with OK status
 ```
+
+<div style="text-align: center">
+
+[The End. For Now](Index.md)
+
+</div>
