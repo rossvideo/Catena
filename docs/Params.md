@@ -31,21 +31,27 @@ DeviceModel dm(filename_of_root_device.json)
 
 // get a handle on the audio parameters
 gainParam = dm.getParam(/AudioSlot/gain)
-meterParam = dm.getParam(/audiometer)
+meterParam = dm.getParam(/Audiometer)
 
-// use the handle to get the gain in dB
-dB = gainParam.getValue()
+// listen for valueSetByClient events
+on valueSetByClient event (param, index, client) {
+    if (param == gainParam) // This is one I can act on
+        // use the handle to get the gain in dB
+        dB = gainParam.getValue()
+        // calculate the gain coefficient
+        gain = power(10,db/20)
+}
 
-// calculate the gain coefficient
-gain = power(10,db/20)
-
-// *** this code would be in your 
+// *** the next 2 code blocks would be in your 
 // program's main processing loop
 every sample {
     audioOut = audioIn * gain;
 }
 every now & then {
+    // compute the meter value
     meterLevel = calculateAudioMeter(audioOut)
+    // write it to the data model which will relay
+    // the change to connected clients
     meterParam.setValue (meterLevel)
 }
 ```
