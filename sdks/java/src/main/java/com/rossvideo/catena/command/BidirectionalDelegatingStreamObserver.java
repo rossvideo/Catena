@@ -44,6 +44,10 @@ public class BidirectionalDelegatingStreamObserver<C, D> implements StreamObserv
         {
             delegate.onNext(arg0);
         }
+        else
+        {
+            responseStream.onError(new IllegalStateException("Stream handler not created"));
+        }
     }
 
 }
