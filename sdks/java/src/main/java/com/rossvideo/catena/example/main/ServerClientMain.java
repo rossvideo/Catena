@@ -2,6 +2,7 @@ package com.rossvideo.catena.example.main;
 
 import java.io.File;
 
+import com.rossvideo.catena.device.CatenaServer;
 import com.rossvideo.catena.example.client.MyCatenaClient;
 import com.rossvideo.catena.example.device.MyCatenaDevice;
 
@@ -33,10 +34,17 @@ public class ServerClientMain {
         
         new Thread(() -> {
             try {
+                
+                CatenaServer catenaServer = new CatenaServer();
+                MyCatenaDevice device = new MyCatenaDevice(catenaServer, slotNumber, fServerWorkingDirectory);
+                catenaServer.addDevice(slotNumber, device);
+                device.start();
+
+                
                 ServerCredentials credentials =
                   InsecureServerCredentials.create();  // TODO: Create proper credentials.
                 Server server = Grpc.newServerBuilderForPort(port, credentials)
-                                  .addService(new MyCatenaDevice(slotNumber, fClientWorkingDirectory))
+                                  .addService(catenaServer)
                                   .build();
                 server.start();
 
@@ -57,7 +65,7 @@ public class ServerClientMain {
         Thread.sleep(2000);  // Let some time for the server to start first
 
         new Thread(() -> {
-            try (MyCatenaClient client = new MyCatenaClient("localhost", port, fServerWorkingDirectory)) {
+            try (MyCatenaClient client = new MyCatenaClient("localhost", port, fClientWorkingDirectory)) {
                 client.start();
                 CommandExecutor.executeOnClient(client, slotNumber);
 
