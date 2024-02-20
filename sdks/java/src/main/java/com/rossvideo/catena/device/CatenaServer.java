@@ -71,7 +71,10 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
     private SlotList buildPopulatedSlots()
     {
         SlotList.Builder slotList = SlotList.newBuilder();
-        slotList.addSlots(0);
+        for (Integer slot : devices.keySet())
+        {
+            slotList.addSlots(slot.intValue());
+        }
         return slotList.build();
     }
     
