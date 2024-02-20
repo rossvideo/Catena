@@ -1,8 +1,6 @@
 package com.rossvideo.catena.example.device;
 
 import java.io.File;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import com.rossvideo.catena.command.SimpleCommandHandler;
 import com.rossvideo.catena.command.SimpleCommandStreamObserver;
@@ -11,12 +9,12 @@ import com.rossvideo.catena.device.CatenaServer;
 import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.ConstraintUtils;
 import com.rossvideo.catena.device.impl.ParamManager;
+import com.rossvideo.catena.device.impl.ParamManager.WidgetHint;
 import com.rossvideo.catena.example.device.command.FooCommandHandler;
 import com.rossvideo.catena.example.device.command.ServerPushFileCommandHandler;
 import com.rossvideo.catena.example.device.command.ServerReceiveFileCommandHandler;
 import com.rossvideo.catena.example.error.UnknownOidException;
 
-import catena.core.device.PushUpdates;
 import catena.core.parameter.CommandResponse;
 import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
@@ -37,7 +35,6 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     public static final String CMD_FILE_TRANSMIT_OID = "file-transmit";
 
     private File workingDirectory;
-    private Set<StreamObserver<PushUpdates>> pushConnections = new LinkedHashSet<>(); 
 
     public MyCatenaDevice(CatenaServer server, int slot, File workingDirectory) { 
         super(server, slot);
@@ -63,7 +60,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     private void buildParams() {
         ParamManager manager = getParamManager();
-        manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build());
+        manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build(), null, WidgetHint.TEXT_DISPLAY);
         manager.addParamAlias(CATENA_DISPLAY_NAME, "0xFF01");
         manager.createParamDescriptor(CATENA_PRODUCT_NAME, "Product Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Example Device").build());
         manager.addParamAlias(CATENA_PRODUCT_NAME, "0x105");
