@@ -21,9 +21,11 @@ public class ClientPushFileResponseHandler extends CommandResponseHandler
     private Object notifier;
     private URL[] files;
     private int fileIndex = 0;
+    private int slot;
 
     public ClientPushFileResponseHandler(int slot, String oid, URL files[], Object notifier)
     {
+        this.slot = slot;
         this.files = files;
         this.notifier = notifier;
         this.oid = oid;
@@ -56,6 +58,7 @@ public class ClientPushFileResponseHandler extends CommandResponseHandler
     public void onError(Throwable arg0)
     {
         complete = true;
+        arg0.printStackTrace();
         release();
     }
     
@@ -116,7 +119,7 @@ public class ClientPushFileResponseHandler extends CommandResponseHandler
             fileIndex++;
             dataPayloadBuilder.calculateDigest();
             DataPayload firstPayload = dataPayloadBuilder.buildNext();
-            txStream.onNext(ExecuteCommandPayload.newBuilder().setOid(oid).setValue(Value.newBuilder().setDataPayload(firstPayload)).build());
+            txStream.onNext(ExecuteCommandPayload.newBuilder().setSlot(slot).setOid(oid).setValue(Value.newBuilder().setDataPayload(firstPayload)).build());
             return true;
         }
         
