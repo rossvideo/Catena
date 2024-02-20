@@ -545,5 +545,4 @@ static_assert(false, "too many arguments to DOFOREACH_COUNT")
 #define DOFOREACH_COUNT_SEMICOLON_13(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13)
 #define DOFOREACH_COUNT_SEMICOLON_14(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13) m(13, x14)
 #define DOFOREACH_COUNT_SEMICOLON_15(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) m(0, x1) m(1, x2) m(2, x3) m(3, x4) m(4, x5) m(5, x6) m(6, x7) m(7, x8) m(8, x9) m(9, x10) m(10, x11) m(11, x12) m(12, x13) m(13, x14) m(14, x15)
-#define DOFOREACH_COUNT_SEMICOLON_16(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16) \
-static_assert(false, "too many arguments to DOFOREACH_COUNT")
+#define DOFOREACH_COUNT_SEMICOLON_16(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16)

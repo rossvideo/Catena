@@ -181,7 +181,8 @@ class CatenaServiceImpl final : public catena::CatenaService::Service {
     Status DeviceRequest(ServerContext *context, const  ::catena::DeviceRequestPayload *req,
                          ServerWriter< ::catena::DeviceComponent> *writer) override {
         try {
-            std::thread t1(&catena::DeviceModel::streamDevice, &dm_.get(), writer);
+            int g = req->granularity();
+            std::thread t1(&catena::DeviceModel::streamDevice, &dm_.get(), writer, g);
             t1.join();
             return Status::OK;
 

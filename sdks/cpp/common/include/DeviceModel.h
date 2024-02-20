@@ -37,6 +37,7 @@
 #include <type_traits>
 #include <functional>
 #include <fstream>
+#include <filesystem>
 
 
 using grpc::ServerWriter;
@@ -150,7 +151,7 @@ class DeviceModel {
      *
      * @return void
      */
-    void streamDevice(ServerWriter<::catena::DeviceComponent> *writer);
+    void streamDevice(ServerWriter<::catena::DeviceComponent> *writer, int granularity);
 
     /**
      * @brief Get the Param object at path

@@ -221,6 +221,13 @@ message DeviceRequestPayload {
   string language = 2;                 // Optionally specify the language for the response
   Device.DetailLevel detail_level = 3; // Optionally specify the detail level for the response
   repeated string subscribed_oids = 4; // Optionally specify a subscription list for the device (see UpdateSubscriptionsPayload)
+  
+  enum Granularity {
+    NO_PARAMS = 0;
+    TOP_LEVEL_PARAMS = 1;
+    ALL_PARAMS = 2;
+  }
+  Granularity granularity = 5;         // Optionally specify the granularity of the response
 }
 
 /* Initial handshake between client and device. */

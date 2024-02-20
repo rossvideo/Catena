@@ -20,6 +20,8 @@
 #include <google/protobuf/map.h>
 #include <google/protobuf/util/json_util.h>
 
+#include <device.pb.h>
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -110,10 +112,28 @@ const catena::Device &catena::DeviceModel::device() const {
 }
 
 // send device info to client via writer
-void catena::DeviceModel::streamDevice(ServerWriter<::catena::DeviceComponent> *writer) {
+void catena::DeviceModel::streamDevice(ServerWriter<::catena::DeviceComponent> *writer, int granularity) {
     std::lock_guard<Mutex> lock(mutex_);
+    
+    catena::Device temp;
+    temp.set_slot(device_.slot());
+    temp.set_detail_level(device_.detail_level());
+    temp.set_multi_set_enabled(device_.multi_set_enabled());
+    temp.set_subscriptions(device_.subscriptions());
+    temp.set_timeout(device_.timeout());
+    temp.set_default_scope(device_.default_scope());
+    temp.set_allocated_menu_groups(device_.mutable_menu_groups());
+    temp.set_allocated_language_packs(device_.mutable_language_packs());
+    temp.mutable_access_scopes()->Add(device_.access_scopes().begin(), device_.access_scopes().end());
+    temp.mutable_constraints()->insert(device_.mutable_constraints()->begin(), device_.mutable_constraints()->end());
+    temp.mutable_commands()->insert(device_.mutable_commands()->begin(), device_.mutable_commands()->end());
+
+    if(granularity == DeviceRequestPayload_Granularity_ALL_PARAMS){
+        temp.mutable_params()->insert(device_.mutable_params()->begin(), device_.mutable_params()->end());
+    }
+    
     catena::DeviceComponent dc;
-    dc.set_allocated_device(&device_);
+    dc.set_allocated_device(&temp);
     writer->Write(dc);
     auto x = dc.release_device();
 }
