@@ -32,6 +32,11 @@ public class ClientReceiveFileResponseHandler implements StreamObserver<CommandR
     
     private void release()
     {
+        if (filePayloadReceiver != null)
+        {
+            filePayloadReceiver.close();
+        }
+        
         if (filePayloadReceiver.getSkipCount() > 0)
         {
             System.out.println("CLIENT SKIPPED " + filePayloadReceiver.getSkipCount() + " files.");            
@@ -53,14 +58,12 @@ public class ClientReceiveFileResponseHandler implements StreamObserver<CommandR
     @Override
     public void onCompleted()
     {
-        filePayloadReceiver.close();
         release();
     }
 
     @Override
     public void onError(Throwable arg0)
     {
-        filePayloadReceiver.close();      
         release();
     }
     

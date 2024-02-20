@@ -1,0 +1,159 @@
+package com.rossvideo.catena.device;
+
+import com.google.protobuf.Empty;
+import com.rossvideo.catena.device.impl.CommandManager;
+import com.rossvideo.catena.device.impl.MenuGroupManager;
+import com.rossvideo.catena.device.impl.ParamManager;
+import com.rossvideo.catena.example.error.WrongValueTypeException;
+
+import catena.core.device.Device;
+import catena.core.device.DeviceComponent;
+import catena.core.device.DeviceRequestPayload;
+import catena.core.device.PushUpdates;
+import catena.core.device.PushUpdates.PushValue;
+import catena.core.parameter.GetValuePayload;
+import catena.core.parameter.SetValuePayload;
+import catena.core.parameter.Value;
+import io.grpc.stub.StreamObserver;
+
+public class BasicCatenaDevice implements CatenaDevice
+{
+    private int slot;
+
+    private CatenaServer server;
+
+    private Device.Builder deviceBuilder;
+
+    private MenuGroupManager menuGroups;
+
+    private ParamManager paramManager;
+    private CommandManager commandManager;
+
+    public BasicCatenaDevice(CatenaServer server, int slot)
+    {
+        this.server = server;
+        this.slot = slot;
+
+        deviceBuilder = createDeviceBuilder();
+        menuGroups = createMenuGroupManager(deviceBuilder);
+        paramManager = createParamManager(deviceBuilder);
+        commandManager = createCommandManager(deviceBuilder);
+    }
+
+    protected CatenaServer getServer() {
+        return server;
+    }
+    
+    
+    protected Device.Builder createDeviceBuilder()
+    {
+        return Device.newBuilder().setSlot(getSlot());
+    }
+
+    protected MenuGroupManager createMenuGroupManager(Device.Builder deviceBuilder)
+    {
+        return new MenuGroupManager(deviceBuilder.getMenuGroupsBuilder());
+    }
+
+    protected ParamManager createParamManager(Device.Builder deviceBuilder)
+    {
+        return new ParamManager(deviceBuilder);
+    }
+    
+    protected CommandManager createCommandManager(Device.Builder deviceBuilder)
+    {
+        return new CommandManager(deviceBuilder);
+    }
+
+    public int getSlot()
+    {
+        return slot;
+    }
+
+    public void start()
+    {
+        server.addDevice(slot, this);
+    }
+
+    public void stop()
+    {
+        server.removeDevice(slot);
+    }
+
+    @Override
+    public void deviceRequest(DeviceRequestPayload request, StreamObserver<DeviceComponent> responseObserver)
+    {
+        Device device = buildDeviceMessage(request);
+        DeviceComponent component = DeviceComponent.newBuilder().setDevice(device).build();
+        responseObserver.onNext(component);
+        responseObserver.onCompleted();
+    }
+
+    protected Device buildDeviceMessage(DeviceRequestPayload request)
+    {
+        return deviceBuilder.build();
+    };
+
+    protected MenuGroupManager getMenuManager()
+    {
+        return menuGroups;
+    }
+
+    protected ParamManager getParamManager()
+    {
+        return paramManager;
+    }
+    
+    protected CommandManager getCommandManager()
+    {
+        return commandManager;
+    }
+    
+    protected void validate(String oid, Value value)
+    {
+        
+    }
+
+    @Override
+    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver)
+    {
+        String oid = request.getOid();
+        Value value = request.getValue();
+        try 
+        {
+            getParamManager().setValue(oid, request.getValue());
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+    
+            this.getServer().notifyClients(PushUpdates.newBuilder()
+                    .setSlot(slot)
+                    .setValue(PushValue.newBuilder()
+                            .setOid(oid)
+                            .setElementIndex(request.getElementIndex())
+                            .setValue(value)
+                            .build())
+                    .build());
+        }
+        catch (Exception ex)
+        {
+            responseObserver.onError(ex);
+        }
+    }
+
+    @Override
+    public void getValue(GetValuePayload request, StreamObserver<Value> responseObserver)
+    {
+        try
+        {
+            Value paramValue = getParamManager().getValue(request.getOid());
+            responseObserver.onNext(paramValue);
+            responseObserver.onCompleted();
+        }
+        catch (Exception ex)
+        {
+            responseObserver.onError(ex);
+        }
+    }
+    
+    
+}
