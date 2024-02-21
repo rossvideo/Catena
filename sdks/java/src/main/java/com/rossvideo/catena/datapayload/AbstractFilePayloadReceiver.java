@@ -78,6 +78,11 @@ public abstract class AbstractFilePayloadReceiver
             throw new IOException("Unable to determine file to write to");
         }
         
+        if (!file.getParentFile().exists())
+        {
+            file.getParentFile().mkdirs();
+        }
+        
         ProceedResponse proceed = shouldReceiveFile(file, digest != null ? digest.toByteArray() : null);
         if (proceed == ProceedResponse.PROCEED || proceed == ProceedResponse.NONE)
         {
