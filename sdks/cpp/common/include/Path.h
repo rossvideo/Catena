@@ -78,6 +78,7 @@ class Path {
      * 
      * @param path an escaped json-pointer, 
      * i.e. '/' replaced by "~1" and '~' by "~0"
+     * @throw catena::exception_with_status INVALID_ARGUMENT if path is not a valid json-pointer
      */
     explicit Path(const std::string& path);
 

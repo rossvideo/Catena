@@ -14,6 +14,7 @@
 
 #include <Path.h>
 #include <utils.h>
+#include <Status.h>
 
 #include <regex>
 
@@ -28,12 +29,17 @@ catena::Path::Path(const std::string &path) : segments_{} {
     std::regex segment_regex("(\\/-{1})|(\\/([\\w]|~[01])*)");
     auto r_begin = std::sregex_iterator(path.begin(), path.end(), segment_regex);
     auto r_end = std::sregex_iterator();
+    if (!std::regex_match(path, segment_regex))  {
+        std::stringstream why;
+        why << __PRETTY_FUNCTION__ << "\n'" << path << "' is not a valid path";
+        throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
+    }
     for (std::sregex_iterator it = r_begin; it != r_end; ++it) {
         std::smatch match = *it;
         if (it == r_begin && match.position(0) != 0) {
             std::stringstream why;
-            why << __PRETTY_FUNCTION__ << "\n'" << path << "' must begin with '/'";
-            throw std::runtime_error(why.str());
+            why << __PRETTY_FUNCTION__ << "\n'" << path << " is invalid json pointer";
+            throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
 
         std::string txt = unescape(match.str());
