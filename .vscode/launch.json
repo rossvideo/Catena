@@ -7,7 +7,7 @@
         "name": "Debug Full Service with lldb",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service",
-        "args": ["${workspaceFolder}/example_device_models/device.minimal.json"],
+        "args": ["--device_model", "${workspaceFolder}/example_device_models/device.one_of_everything.json"],
         "cwd": "${workspaceFolder}/sdks/cpp/build",
         "preLaunchTask": "",
         "externalConsole": true,
