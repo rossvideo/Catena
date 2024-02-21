@@ -114,30 +114,48 @@ public class BasicCatenaDevice implements CatenaDevice
         
     }
 
+    public void setValue(String oid, int index, Value value)
+    {
+        setValue(oid, index, value, null);
+    }
+    
+    public void setValue(String oid, int index, Value value, StreamObserver<Empty> responseObserver)
+    {
+        try 
+        {
+            getParamManager().setValue(oid, index, value);
+            
+            if (responseObserver != null)
+            {
+                responseObserver.onNext(Empty.getDefaultInstance());
+                responseObserver.onCompleted();
+            }
+        }
+        catch (Exception ex)
+        {
+            if (responseObserver != null)
+            {
+                responseObserver.onError(ex);
+            }
+        }
+        
+        this.getServer().notifyClients(PushUpdates.newBuilder()
+                .setSlot(slot)
+                .setValue(PushValue.newBuilder()
+                        .setOid(oid)
+                        .setElementIndex(index)
+                        .setValue(value)
+                        .build())
+                .build());
+    }
+    
     @Override
     public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver)
     {
         String oid = request.getOid();
+        int index = request.getElementIndex();
         Value value = request.getValue();
-        try 
-        {
-            getParamManager().setValue(oid, request.getValue());
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
-    
-            this.getServer().notifyClients(PushUpdates.newBuilder()
-                    .setSlot(slot)
-                    .setValue(PushValue.newBuilder()
-                            .setOid(oid)
-                            .setElementIndex(request.getElementIndex())
-                            .setValue(value)
-                            .build())
-                    .build());
-        }
-        catch (Exception ex)
-        {
-            responseObserver.onError(ex);
-        }
+        setValue(oid, index, value, responseObserver);
     }
 
     @Override
