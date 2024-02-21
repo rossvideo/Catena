@@ -56,6 +56,13 @@
             "$ref": "#/$defs/language_packs",
             "additionalProperties": true,
             "description": "The devices language packs"
+        },
+        "menu_groups": {
+            "type": "object",
+            "properties": {
+                "menu_groups": { "$ref": "#/$defs/menu_groups" }
+            },
+            "additionalProperties": false
         }
     },
     "required": [
@@ -63,6 +70,87 @@
     ],
     "additionalProperties": false,
     "$defs": {
+        "menu_groups": {
+            "title": "Menu Groups",
+            "description": "The menu groups recognised by this device",
+            "type": "object",
+            "patternProperties": {
+                "^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$": {
+                    "$ref": "#/$defs/menu_group"
+                }
+            },
+            "additionalProperties": false
+        },
+        "menu_group": {
+            "title": "Menu Group",
+            "description": "A group of menus",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text"
+                },
+                "menus": {
+                    "$ref": "#/$defs/menus"
+                }
+            },
+            "additionalProperties": false,
+            "required": ["id"]
+        },
+        "menus": {
+            "title": "Menus",
+            "description": "The menus recognised by this device",
+            "type": "object",
+            "patternProperties": {
+                "^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$": {
+                    "$ref": "#/$defs/menu"
+                }
+            },
+            "additionalProperties": false
+        },
+        "menu": {
+            "title": "Menu",
+            "description": "A menu",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "$ref": "#/$defs/polyglot_text"
+                },
+                "param_oids": {
+                    "$ref": "#/$defs/oids_list"
+                },
+                "command_oids": {
+                    "$ref": "#/$defs/oids_list"
+                },
+                "client_hints": {
+                    "$ref": "#/$defs/client_hints"
+                },
+                "hidden": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "disabled": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "additionalProperties": false,
+            "required": ["id"]
+        },
+        "oids_list": {
+            "title": "OIDs List",
+            "description": "A list of Object IDs",
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/oid"
+            },
+            "additionalItems": false
+        },
         "language_pack": {
             "properties": {
                 "name": {
