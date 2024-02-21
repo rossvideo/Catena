@@ -195,7 +195,8 @@ public class ParamManager
         throw new UnknownOidException("No such parameter: " + oid);        
     }
     
-    public void setValue(String oid, Value value) {
+    public void setValue(String oid, int index, Value value) {
+        oid = validateOid(oid, false);
         Param.Builder param = getParam(oid);
         if (param != null && value != null)
         {
