@@ -427,7 +427,13 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         lock.unlock();
                         authorize(&context_);
                         std::cout << "sending update\n";
-                        writer_.Write(res_, this);
+                        if (context_.IsCancelled()) {
+                            std::cout << "Connect[" << objectId_ << "] cancelled\n";
+                            status_ = CallStatus::kFinish;
+                            break;
+                        } else {
+                            writer_.Write(res_, this);
+                        }
                     } else {
                         status_ = CallStatus::kFinish;
                         // writer_.Finish(Status(grpc::StatusCode::INTERNAL, "who knows?"), this);
@@ -435,7 +441,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     break;
 
                 case CallStatus::kPostWrite:
-                    // unreachable
+                    writer_.Finish(Status::OK, this);
+                    status_ = CallStatus::kFinish;
                     break;
 
                 case CallStatus::kFinish:
