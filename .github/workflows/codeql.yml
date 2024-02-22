@@ -77,8 +77,8 @@ jobs:
 
     - run: |
         echo "Run, Build Application using make"
-        mkdir -p /sdks/cpp/build
-        cd /sdks/cpp/build
+        mkdir -p sdks/cpp/build
+        cd sdks/cpp/build
         cmake ..
         make
 
