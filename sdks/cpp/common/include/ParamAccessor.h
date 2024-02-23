@@ -81,7 +81,7 @@ static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 inline static bool isList(const catena::Value& v) {
     bool ans = false;
     ans = v.has_float32_array_values() || v.has_int32_array_values() || v.has_string_array_values() ||
-          v.has_struct_array_values() || v.has_variant_array_values();
+          v.has_struct_array_values() || v.has_struct_variant_array_values();
     return ans;
 }
 
@@ -224,9 +224,9 @@ class ParamAccessor {
             }
             Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
             pad = {&childParam, v};
-        } else if (value.kind_case() == Value::KindCase::kVariantValue) {
+        } else if (value.kind_case() == Value::KindCase::kStructVariantValue) {
             // field is a variant
-            Value* v = value.mutable_variant_value()->mutable_value();
+            Value* v = value.mutable_struct_variant_value()->mutable_value();
             pad = {&childParam, v};
         } else {
             // field is a simple or simple array type
@@ -266,10 +266,10 @@ class ParamAccessor {
             }
             const Value& v = value.struct_value().fields().at(fieldName).value();
             pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
-        } else if (value.kind_case() == Value::KindCase::kVariantValue) {
+        } else if (value.kind_case() == Value::KindCase::kStructVariantValue) {
             // field is a variant
             // yes the const_cast is gross, but ok because we re-apply constness on return
-            const Value& v = value.variant_value().value();
+            const Value& v = value.struct_variant_value().value();
             pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
         } else {
             // field is a simple or simple array type
@@ -321,8 +321,8 @@ class ParamAccessor {
                 auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
                 const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
                 Value& v = value_.get();
-                VariantValue* vv = v.mutable_variant_value();
-                std::string* currentVariant = vv->mutable_variant_type();
+                StructVariantValue* vv = v.mutable_struct_variant_value();
+                std::string* currentVariant = vv->mutable_struct_variant_type();
                 const std::string& variant = variantInfo.lookup[src.index()];
                 const std::unique_ptr<ParamAccessor> sp = subParam<false>(variant);
                 if (variant.compare(*currentVariant) != 0) {
@@ -427,8 +427,8 @@ class ParamAccessor {
                 }
             } else if constexpr (catena::meta::is_variant<V>::value) {
                 // dst is a variant gather information about the protobuf source
-                const VariantValue& src = value_.get().variant_value();
-                const std::string& variant = src.variant_type();
+                const StructVariantValue& src = value_.get().struct_variant_value();
+                const std::string& variant = src.struct_variant_type();
                 Value::KindCase kc = src.value().kind_case();
 
                 // gather info about the native destination
@@ -442,7 +442,7 @@ class ParamAccessor {
                     // variant value is a struct
                     const std::unique_ptr<ParamAccessor> sp = subParam<false>(variant);
                     vmi.wrapGetter(ptr, sp.get());
-                } else if (kc == Value::KindCase::kVariantValue) {
+                } else if (kc == Value::KindCase::kStructVariantValue) {
                     // variant value is a variant
                     BAD_STATUS("Variant of variant not supported", catena::StatusCode::INVALID_ARGUMENT);
                 } else {

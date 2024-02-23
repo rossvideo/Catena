@@ -60,16 +60,16 @@ template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](
 
 
 // variant implementation
-template <> catena::Value ConcreteArrayAccessor<catena::VariantList>::operator[](std::size_t idx) const {
-    auto &arr = _in.get().variant_array_values();
+template <> catena::Value ConcreteArrayAccessor<catena::StructVariantList>::operator[](std::size_t idx) const {
+    auto &arr = _in.get().struct_variant_array_values();
 
-    if (arr.variants_size() > idx) {
+    if (arr.struct_variants_size() > idx) {
         catena::Value ans{};
-        *(ans.mutable_variant_value()) = arr.variants(idx);
+        *(ans.mutable_struct_variant_value()) = arr.struct_variants(idx);
         return ans;
     } else {
         std::stringstream err;
-        err << "Index is out of range: " << idx << " >= " << arr.variants_size();
+        err << "Index is out of range: " << idx << " >= " << arr.struct_variants_size();
         BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
     }
 }

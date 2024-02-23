@@ -3,7 +3,7 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": 1,
+  "default_scope": "operate",
   "language_packs": {
     "packs": {
       "es": {
@@ -311,8 +311,8 @@
         }
       },
       "value": {
-        "variant_value": {
-          "variant_type": "VideoSlot",
+        "struct_variant_value": {
+          "struct_variant_type": "VideoSlot",
           "value": {
             "struct_value": {
               "fields": {
@@ -458,22 +458,22 @@
         }
       },
       "value": {
-        "variant_array_values": {
-          "variants": [
+        "struct_variant_array_values": {
+          "struct_variants": [
             {
-              "variant_type": "INT32",
+              "struct_variant_type": "INT32",
               "value": {
                 "int32_value": 42
               }
             },
             {
-              "variant_type": "FLOAT32",
+              "struct_variant_type": "FLOAT32",
               "value": {
                 "float32_value": 3.14159
               }
             },
             {
-              "variant_type": "STRING",
+              "struct_variant_type": "STRING",
               "value": {
                 "string_value": "Hello"
               }

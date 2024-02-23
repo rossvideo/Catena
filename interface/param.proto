@@ -151,11 +151,11 @@ message Param {
 }
 
 /* A value that can be one of several types, even within the same array
- * The type to apply is determined by the variant_type field which must match one 
+ * The type to apply is determined by the struct_variant_type field which must match one 
  * of the keys in the descriptor's params map */
-message VariantValue {
+message StructVariantValue {
   /* The type of the variant */
-  string variant_type = 1;
+  string struct_variant_type = 1;
 
   /* The value of the variant */
   Value value = 2;
@@ -163,8 +163,8 @@ message VariantValue {
 
 /* An array of Values, each of which can be one of several types defined in the
  * descriptor's params map */
-message VariantList {
-  repeated VariantValue variants = 1;
+message StructVariantList {
+  repeated StructVariantValue struct_variants = 1;
 }
 
 enum UndefinedValue {
@@ -223,9 +223,9 @@ message Value {
 
     DataPayload data_payload = 11; // Used for commands that accept or return data blobs
 
-    VariantValue variant_value = 12;
+    StructVariantValue struct_variant_value = 12;
 
-    VariantList variant_array_values = 13;
+    StructVariantList struct_variant_array_values = 13;
   }
 }
 

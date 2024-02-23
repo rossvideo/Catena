@@ -67,7 +67,7 @@ message Device {
   map<string, Param> params = 6;
 
   /* The device's default editor UI definition and access scope definitions */
-  MenuGroups menu_groups = 7;
+  map<string, MenuGroup> menu_groups = 7;
 
   /* The device's available commands, keyed by their object ids (OIDs). */
   map<string, Param> commands = 8;
@@ -79,7 +79,7 @@ message Device {
   repeated string access_scopes = 10;
 
   /* The default scope, index into access_scopes to indicate which of them is the default. */
-  uint32 default_scope = 11;
+  string default_scope = 11;
 }
 
 /* The Device model broken into smaller pieces.
