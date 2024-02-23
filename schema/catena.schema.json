@@ -114,9 +114,9 @@
         },
         "oids_list": {
             "title": "OIDs List",
-            "description": "A list of Object IDs",
+            "description": "A list of Fully Qualified Object IDs",
             "type": "array",
-            "items": { "$ref": "#/$defs/oid" },
+            "items": { "type": "string", "format": "json-pointer" },
             "additionalItems": false
         },
         "language_pack": {

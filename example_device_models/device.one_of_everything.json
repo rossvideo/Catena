@@ -3,7 +3,7 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": 1,
+  "default_scope": "operate",
   "params": {
     "string_example": {
       "type": "STRING",
@@ -27,7 +27,7 @@
       "menus": {
         "status": {
           "name": { "display_strings": { "en": "Product" } },
-          "param_oids": ["a_number"]
+          "param_oids": ["/a_number"]
         }
       }
     },
@@ -36,7 +36,7 @@
       "menus": {
         "config": {
           "name": { "display_strings": { "en": "Catena" } },
-          "param_oids": ["string_example", "float_example"]
+          "param_oids": ["/string_example", "/float_example"]
         }
       }
     }
