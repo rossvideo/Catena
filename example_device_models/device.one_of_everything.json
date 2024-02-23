@@ -3,7 +3,7 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": 1,
+  "default_scope": "operate",
   "params": {
     "string_example": {
       "type": "STRING",
@@ -22,27 +22,21 @@
     }
   },
   "menu_groups": {
-    "menu_groups": {
-      "status_group": {
-        "id": 0,
-        "name": { "display_strings": { "en": "Status" } },
-        "menus": {
-          "status": {
-            "id": 0,
-            "name": { "display_strings": { "en": "Product" } },
-            "param_oids": ["a_number"]
-          }
+    "status_group": {
+      "name": { "display_strings": { "en": "Status" } },
+      "menus": {
+        "status": {
+          "name": { "display_strings": { "en": "Product" } },
+          "param_oids": ["/a_number"]
         }
-      },
-      "config_group": {
-        "id": 1,
-        "name": { "display_strings": { "en": "Config" } },
-        "menus": {
-          "config": {
-            "id": 1,
-            "name": { "display_strings": { "en": "Catena" } },
-            "param_oids": ["string_example", "float_example"]
-          }
+      }
+    },
+    "config_group": {
+      "name": { "display_strings": { "en": "Config" } },
+      "menus": {
+        "config": {
+          "name": { "display_strings": { "en": "Catena" } },
+          "param_oids": ["/string_example", "/float_example"]
         }
       }
     }

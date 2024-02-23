@@ -48,31 +48,21 @@
             "$id": "Default Access Scope",
             "description":
               "Objects in the model will have this access scope unless overridden explicitly, or implicitly by inheritance",
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 4
+            "type": "string"
         },
         "language_packs": {
             "$ref": "#/$defs/language_packs",
             "additionalProperties": true,
             "description": "The devices language packs"
         },
-        "menu_groups": {
-            "type": "object",
-            "properties": {
-                "menu_groups": { "$ref": "#/$defs/menu_groups" }
-            },
-            "additionalProperties": false
-        }
+        "menu_groups": { "$ref": "#/$defs/menu_groups" }
     },
-    "required": [
-        "slot"
-    ],
+    "required": [  "slot"  ],
     "additionalProperties": false,
     "$defs": {
         "menu_groups": {
             "title": "Menu Groups",
-            "description": "The menu groups recognised by this device",
+            "description": "An operationally logical grouping of menus.",
             "type": "object",
             "patternProperties": {
                 "^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$": {
@@ -86,18 +76,10 @@
             "description": "A group of menus",
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "$ref": "#/$defs/polyglot_text"
-                },
-                "menus": {
-                    "$ref": "#/$defs/menus"
-                }
+                "name": { "$ref": "#/$defs/polyglot_text" },
+                "menus": { "$ref": "#/$defs/menus" }
             },
-            "additionalProperties": false,
-            "required": ["id"]
+            "additionalProperties": false
         },
         "menus": {
             "title": "Menus",
@@ -115,21 +97,10 @@
             "description": "A menu",
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "$ref": "#/$defs/polyglot_text"
-                },
-                "param_oids": {
-                    "$ref": "#/$defs/oids_list"
-                },
-                "command_oids": {
-                    "$ref": "#/$defs/oids_list"
-                },
-                "client_hints": {
-                    "$ref": "#/$defs/client_hints"
-                },
+                "name": { "$ref": "#/$defs/polyglot_text" },
+                "param_oids": { "$ref": "#/$defs/oids_list" },
+                "command_oids": { "$ref": "#/$defs/oids_list" },
+                "client_hints": { "$ref": "#/$defs/client_hints" },
                 "hidden": {
                     "type": "boolean",
                     "default": false
@@ -139,16 +110,13 @@
                     "default": false
                 }
             },
-            "additionalProperties": false,
-            "required": ["id"]
+            "additionalProperties": false
         },
         "oids_list": {
             "title": "OIDs List",
-            "description": "A list of Object IDs",
+            "description": "A list of Fully Qualified Object IDs",
             "type": "array",
-            "items": {
-                "$ref": "#/$defs/oid"
-            },
+            "items": { "type": "string", "format": "json-pointer" },
             "additionalItems": false
         },
         "language_pack": {
@@ -1368,7 +1336,7 @@
             "then": {
                 "properties": {
                     "value": {
-                        "$ref": "#/$defs/variant_value"
+                        "$ref": "#/$defs/struct_variant_value"
                     },
                     "total_length": false,
                     "max_length": false,
@@ -1376,15 +1344,15 @@
                 }
             }
         },
-        "variant_value": {
-            "title": "Variant Value",
-            "description": "Wrapper round the variant's value",
+        "struct_variant_value": {
+            "title": "Struct Variant Value",
+            "description": "Wrapper round the struct variant's value",
             "type": "object",
             "properties": {
-                "variant_value": {
+                "struct_variant_value": {
                     "type": "object",
                     "properties": {
-                        "variant_type": {
+                        "struct_variant_type": {
                             "$ref": "#/$defs/oid"
                         },
                         "value": {
@@ -1392,7 +1360,7 @@
                         }
                     },
                     "required": [
-                        "variant_type",
+                        "struct_variant_type",
                         "value"
                     ],
                     "additionalProperties": false
@@ -1400,20 +1368,20 @@
             },
             "additionalProperties": false
         },
-        "variant_array_values": {
-            "title": "VARIANT_ARRAY",
-            "description": "Defines how VARIANT ARRAY values are represented",
+        "struct_variant_array_values": {
+            "title": "STRUCT_VARIANT_ARRAY",
+            "description": "Defines how STRUCT VARIANT ARRAY values are represented",
             "type": "object",
             "properties": {
-                "variant_array_values": {
+                "struct_variant_array_values": {
                     "type": "object",
                     "properties": {
-                        "variants": {
+                        "struct_variants": {
                             "type": "array",
-                            "items": {"$ref": "#/$defs/variant_value"}
-                        }
-                    },
-                    "additionalItems": false
+                            "items": {"$ref": "#/$defs/struct_variant_value"}
+                        },
+                        "additionalItems": false
+                    }
                 },
                 "additionalProperties": false
             },
@@ -1435,23 +1403,19 @@
                     "value": {
                         "type": "object",
                         "properties": {
-                            "variant_array_values": {
+                            "struct_variant_array_values": {
                                 "type": "object",
                                 "properties": {
-                                    "variants": {
+                                    "struct_variants": {
                                         "type": "array",
                                         "items": {
                                             "type": "object",
                                             "properties": {
-                                                "variant_type": {
-                                                    "$ref": "#/$defs/oid"
-                                                },
-                                                "value": {
-                                                    "$ref": "#/$defs/value"
-                                                }
+                                                "struct_variant_type": { "$ref": "#/$defs/oid" },
+                                                "value": { "$ref": "#/$defs/value" }
                                             },
                                             "required": [
-                                                "variant_type",
+                                                "struct_variant_type",
                                                 "value"
                                             ],
                                             "additionalProperties": false

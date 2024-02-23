@@ -279,15 +279,15 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         });
 
         // register value getter for variant array
-        valueGetter.addFunction(KindCase::kVariantArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
-            auto size = val.variant_array_values().variants_size();
+        valueGetter.addFunction(KindCase::kStructVariantArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+            auto size = val.struct_variant_array_values().struct_variants_size();
             if (idx >= size) {
                 std::stringstream err;
                 err << "array index is out of bounds, " << idx
                     << " >= " << size;
                 BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
-            *dst->mutable_variant_value() = val.variant_array_values().variants(idx);
+            *dst->mutable_struct_variant_value() = val.struct_variant_array_values().struct_variants(idx);
         });
 
         // register value setter for int32 array
@@ -339,15 +339,15 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         });
 
         // register value setter for variant array
-        valueSetter.addFunction(KindCase::kVariantArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            auto size = src.variant_array_values().variants_size();
+        valueSetter.addFunction(KindCase::kStructVariantArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            auto size = src.struct_variant_array_values().struct_variants_size();
             if (idx >= size) {
                 std::stringstream err;
                 err << "array index is out of bounds, " << idx
                     << " >= " << size;
                 BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
-            dst.mutable_variant_array_values()->mutable_variants()->at(idx) = src.variant_value();
+            dst.mutable_struct_variant_array_values()->mutable_struct_variants()->at(idx) = src.struct_variant_value();
         });
     }
 }
