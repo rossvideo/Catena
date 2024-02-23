@@ -1,24 +1,22 @@
-/*
-Copyright © 2023 Ross Video Limited, All Rights Reserved.
-
-Licensed under the Creative Commons Attribution NoDerivatives 4.0
-International Licensing (CC-BY-ND-4.0);
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:
-
-https://creativecommons.org/licenses/by-nd/4.0/
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/* Copyright © 2023 Ross Video Limited, All Rights Reserved.
+ * 
+ * Licensed under the Creative Commons Attribution NoDerivatives 4.0
+ * International Licensing (CC-BY-ND-4.0);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * 
+ * https://creativecommons.org/licenses/by-nd/4.0/
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
 
 syntax = "proto3";
 
-// change this to the smpte doc name once a st-# has been assigned
-// for example smpte_st_major_minor_year
+/* change this to the smpte doc name once a st-# has been assigned
+ * for example smpte_st_major_minor_year */
 package catena;
 
 option java_multiple_files = true;
@@ -33,15 +31,15 @@ import "param.proto";
 import "language.proto";
 import "externalobject.proto";
 
-// Catena's API
+/* Catena's API */
 
 message GeneralRequest {
   int32 slot = 1;
 }
 
-// TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE
+/* TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE */
 message GeneralResponse {
-  int32 return_code = 1;  // 0 indicates success, non-zero a problem
+  int32 return_code = 1;    // 0 indicates success, non-zero a problem
   Exception exception = 2;  // Explains non-zero return codes
 }
 
@@ -67,11 +65,10 @@ service CatenaService {
   rpc GetParam(GetParamPayload) returns (stream DeviceComponent.ComponentParam);
 
   /* The stream of PushUpdates is open-ended, terminating only when the
-   * logical connection with the client is terminated.
-   */
+   * logical connection with the client is terminated. */
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
-  // Multi-language support
+  /* Multi-language support */
   rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); // Optional capability to allow clients to provide additional language packs
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
