@@ -1,0 +1,57 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor", "operate", "configure", "administer"],
+  "default_scope": "operate",
+  "params": {
+    "transition": {
+      "type": "FLOAT32",
+      "value": { "float32_value": 0.0 },
+      "name": { "display_strings": { "en": "Vision Mix" } },
+      "constraint": {
+        "type": "FLOAT_RANGE",
+        "float_range": {
+          "min_value": -1.0,
+          "max_value": 1.0,
+          "step": 0.01
+        }
+      },
+      "widget": "t-bar"
+    },
+    "product": {
+      "type": "STRING",
+      "value": { "string_value": "Catena + MCM Demo" },
+      "name": { "display_strings": { "en": "Product" } },
+      "read_only": true
+    },
+    "partners": {
+      "type": "STRING_ARRAY",
+      "value": {
+        "string_array_values": {
+          "strings": ["Ross Video", "Intel", "Cisco"]
+        }
+      }
+    }
+  },
+  "menu_groups": {
+    "status_group": {
+      "name": { "display_strings": { "en": "Status" } },
+      "menus": {
+        "status": {
+          "name": { "display_strings": { "en": "Product" } },
+          "param_oids": ["/product", "/partners"]
+        }
+      }
+    },
+    "config_group": {
+      "name": { "display_strings": { "en": "Config" } },
+      "menus": {
+        "config": {
+          "name": { "display_strings": { "en": "Analyzer" } },
+          "param_oids": ["/analysis"]
+        }
+      }
+    }
+  }
+}
