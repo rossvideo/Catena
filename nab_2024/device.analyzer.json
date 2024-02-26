@@ -13,9 +13,9 @@
         "type": "INT_CHOICE",
         "int32_choice": {
           "choices": [
-            { "value": 0, "name": { "display_strings": { "en": "Off" } } },
-            { "value": 1, "name": { "display_strings": { "en": "On" } } },
-            { "value": 2, "name": { "display_strings": { "en": "On" } } }
+            { "value": 0, "name": { "display_strings": { "en": "Mode 1" } } },
+            { "value": 1, "name": { "display_strings": { "en": "Mode 2" } } },
+            { "value": 2, "name": { "display_strings": { "en": "Mode 3" } } }
           ]
         }
       },
