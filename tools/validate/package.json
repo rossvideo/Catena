@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "ajv": "^8.8.2",
+    "ajv-formats": "^2.1.1",
+    "json-source-map": "^0.6.1",
+    "node": "^20.7.0"
+  },
+  "scripts": {
+    "clang-format": "find . -regex '.*\\.\\(cpp\\|h\\|js\\|json\\|java\\)' -exec clang-format -style=file -i {} \\;",
+    "clang-format-windows": "powershell -NoProfile -ExecutionPolicy Unrestricted -Command scripts/clang-format.ps1"
+  },
+  "name": "validate",
+  "version": "1.0.0",
+  "description": "Validates json files against Catena schemata",
+  "main": "validate.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rossvideo/Catena.git"
+  },
+  "keywords": [
+    "json-schema",
+    "catena",
+    "validate"
+  ],
+  "author": "John R. Naylor",
+  "license": "CC-BY-ND-4.0",
+  "bugs": {
+    "url": "https://github.com/rossvideo/Catena/issues"
+  },
+  "homepage": "https://github.com/rossvideo/Catena#readme"
+}

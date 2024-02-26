@@ -1,0 +1,32 @@
+{
+  "name": "codegen",
+  "version": "1.0.0",
+  "description": "Code Generator. Converts Catena JSON device models into source code representations in various languages.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rossvideo/Catena.git"
+  },
+  "keywords": [
+    "json-schema",
+    "catena",
+    "code generator",
+    "C++"
+  ],
+  "author": "John R. Naylor",
+  "license": "CC-BY-ND-4.0",
+  "bugs": {
+    "url": "https://github.com/rossvideo/Catena/issues"
+  },
+  "homepage": "https://github.com/rossvideo/Catena#readme",
+  "dependencies": {
+    "ajv": "^8.8.2",
+    "ajv-formats": "^2.1.1",
+    "commander": "^12.0.0",
+    "json-source-map": "^0.6.1",
+    "node": "^20.7.0"
+  }
+}
