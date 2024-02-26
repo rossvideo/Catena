@@ -19,13 +19,15 @@
           ]
         }
       },
-      "widget": "radio_toggle_buttons"
+      "widget": "radio_toggle_buttons",
+      "access_scope": "operate"
     },
     "product": {
         "type": "STRING",
         "value": { "string_value": "Catena + MCM Demo" },
         "name": { "display_strings": { "en": "Product" } },
-        "read_only": true
+        "read_only": true,
+        "access_scope": "monitor"
     },
     "partners": {
         "type": "STRING_ARRAY",
@@ -33,7 +35,9 @@
             "string_array_values": {
                 "strings": ["Ross Video", "Intel", "Cisco"] 
             }
-        }
+        },
+        "read_only": true,
+        "access_scope": "monitor"
     }
   },
   "menu_groups": {
