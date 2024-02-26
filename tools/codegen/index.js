@@ -62,7 +62,9 @@ if (!fs.existsSync(options.deviceModel)) {
 }
 
 // extract schema name from input filename
-const schemaName = path.parse(options.deviceModel).name.split('.')[0];
+const info = path.parse(options.deviceModel).name.split('.');
+const schemaName = info[0];
+const namespace = info[1];
 
 // read the schema definition file
 const schemaFilename = '../../schema/catena.schema.json';
@@ -143,11 +145,13 @@ try {
         }
     }
 
+
     if (valid && kDeviceSchema) {
         // load the code generator
         const codegen = require(`./${options.language}gen.js`);
+        codegen.setNamespace(namespace);
         for (p in data.params) {
-            codegen(p, data.params[p]);
+            codegen.convert(p, data.params[p]);
         }
     }
 

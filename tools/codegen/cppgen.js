@@ -34,6 +34,9 @@ function initialCap(s) {
 let convertors = {
     "STRUCT": (name, body, indent = 0) => {
         const params = body.params;
+        if (indent === 0) {
+            console.log(`namespace ${namespace} {`);
+        }
         console.log(`${spaces(indent)}struct ${initialCap(name)} {`);
         let n = 0;
         let types = [];
@@ -58,13 +61,25 @@ let convertors = {
         console.log(`${spaces(indent+1)}using FieldTypes = TypeList<${types.join(', ')}>;`);
         console.log(`${spaces(indent+1)}static constexpr std::string fieldNames[] = {${names.map(n => `"${n}"`).join(', ')}};`);
         console.log(`${spaces(indent)}};`);
+        if (indent === 0) {
+            console.log(`} // namespace ${namespace}`);
+        }
     }
 }
 
-module.exports = function convert(name, body) {
-    if (body.type in convertors) {
-        return convertors[body.type](name, body);
-    } else {
-        console.log(`No convertor found for ${name} of type ${body.type}`);
+let namespace = "";
+
+let api = {
+    convert: function (name, body) {
+        if (body.type in convertors) {
+            return convertors[body.type](name, body);
+        } else {
+            // console.log(`No convertor found for ${name} of type ${body.type}`);
+        }
+    },
+    setNamespace: function (ns) {
+        namespace = ns;
     }
 }
+module.exports = api;
+
