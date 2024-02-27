@@ -52,7 +52,7 @@ public class BasicCatenaDevice implements CatenaDevice
 
     protected MenuGroupManager createMenuGroupManager(Device.Builder deviceBuilder)
     {
-        return new MenuGroupManager(deviceBuilder.getMenuGroupsBuilder());
+        return new MenuGroupManager(deviceBuilder);
     }
 
     protected ParamManager createParamManager(Device.Builder deviceBuilder)
