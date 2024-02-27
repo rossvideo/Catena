@@ -57,12 +57,12 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
 
     private void buildMenus() {
-        getMenuManager().createMenuGroup("config", 1, "Config");
-        getMenuManager().createMenu("config", "config", 0, "Configuration");
+        getMenuManager().createMenuGroup("config", "Config");
+        getMenuManager().createMenu("config", "config", "Configuration");
         getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, INT_OID, CHOICE_OID});;
         
-        getMenuManager().createMenuGroup("status", 0, "Status");
-        getMenuManager().createMenu("status", "product", 0, "Product");
+        getMenuManager().createMenuGroup("status", "Status");
+        getMenuManager().createMenu("status", "product", "Product");
         getMenuManager().addParamsMenu("status", "product", new String[] {DATE_AND_TIME_OID, FLOAT_OID, INT_OID, CHOICE_OID});
     }
     
