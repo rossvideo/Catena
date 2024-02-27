@@ -1,9 +1,10 @@
 package com.rossvideo.catena.device;
 
 import com.google.protobuf.Empty;
-import com.rossvideo.catena.device.impl.CommandManager;
-import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.device.impl.ParamManager;
+import com.rossvideo.catena.device.impl.params.DefaultCommandManager;
+import com.rossvideo.catena.device.impl.params.DefaultParamManager;
+import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.example.error.WrongValueTypeException;
 
 import catena.core.device.Device;
@@ -27,7 +28,7 @@ public class BasicCatenaDevice implements CatenaDevice
     private MenuGroupManager menuGroups;
 
     private ParamManager paramManager;
-    private CommandManager commandManager;
+    private DefaultCommandManager commandManager;
 
     public BasicCatenaDevice(CatenaServer server, int slot)
     {
@@ -57,12 +58,12 @@ public class BasicCatenaDevice implements CatenaDevice
 
     protected ParamManager createParamManager(Device.Builder deviceBuilder)
     {
-        return new ParamManager(deviceBuilder);
+        return new DefaultParamManager(deviceBuilder);
     }
     
-    protected CommandManager createCommandManager(Device.Builder deviceBuilder)
+    protected DefaultCommandManager createCommandManager(Device.Builder deviceBuilder)
     {
-        return new CommandManager(deviceBuilder);
+        return new DefaultCommandManager(deviceBuilder);
     }
 
     public int getSlot()
@@ -106,7 +107,7 @@ public class BasicCatenaDevice implements CatenaDevice
         return paramManager;
     }
     
-    protected CommandManager getCommandManager()
+    protected DefaultCommandManager getCommandManager()
     {
         return commandManager;
     }

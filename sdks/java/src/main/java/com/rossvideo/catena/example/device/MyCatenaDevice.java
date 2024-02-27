@@ -12,10 +12,10 @@ import com.rossvideo.catena.command.SimpleCommandHandler;
 import com.rossvideo.catena.command.SimpleCommandStreamObserver;
 import com.rossvideo.catena.device.BasicCatenaDevice;
 import com.rossvideo.catena.device.CatenaServer;
-import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.ConstraintUtils;
 import com.rossvideo.catena.device.impl.ParamManager;
-import com.rossvideo.catena.device.impl.ParamManager.WidgetHint;
+import com.rossvideo.catena.device.impl.params.DefaultCommandManager;
+import com.rossvideo.catena.device.impl.params.DefaultParamManager.WidgetHint;
 import com.rossvideo.catena.example.device.command.FooCommandHandler;
 import com.rossvideo.catena.example.device.command.ServerPushFileCommandHandler;
 import com.rossvideo.catena.example.device.command.ServerReceiveFileCommandHandler;
@@ -153,7 +153,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     private void buildCommands() {
         //createParamDescriptor(String oid, String name, ParamType type, boolean readOnly, Value value)
-        CommandManager manager = getCommandManager();
+        DefaultCommandManager manager = getCommandManager();
         manager.createParamDescriptor(CMD_FOO_OID, "String Command", ParamType.STRING, false, Value.newBuilder().setStringValue("").build());
         manager.createParamDescriptor(CMD_REVERSE_OID, "Reverse String", ParamType.STRING, false, Value.newBuilder().setStringValue("").build());
         manager.createParamDescriptor(CMD_FILE_RECEIVE_OID, "File Receive", ParamType.DATA, false, Value.newBuilder().setDataPayload(DataPayload.newBuilder().build()).build());
