@@ -37,6 +37,11 @@ using catena::Param;
 using catena::Value;
 using KindCase = Value::KindCase;
 
+#define SETTER_INSTANCE(kind_case, set_method, cast) \
+setter.addFunction( kind_case, [](Value *dst, const void *srcAddr) { \
+  dst->set_method(*reinterpret_cast<cast*>(srcAddr)); \
+})
+
 // ParamAccessor::Setter::Protector setterProtector;
 // static ParamAccessor::Setter setter(setterProtector);
 // ParamAccessor::Getter::Protector getterProtector;
@@ -148,14 +153,10 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         auto &valueSetter = ValueSetter::getInstance();
 
         // register int32 setter
-        setter.addFunction(KindCase::kInt32Value, [](Value *dst, const void *srcAddr) {
-            dst->set_int32_value(*reinterpret_cast<const int32_t *>(srcAddr));
-        });
+        SETTER_INSTANCE(KindCase::kInt32Value, set_int32_value, const int32_t);
 
         // register float32 setter
-        setter.addFunction(KindCase::kFloat32Value, [](Value *dst, const void *srcAddr) {
-            dst->set_float32_value(*reinterpret_cast<const float *>(srcAddr));
-        });
+        SETTER_INSTANCE(KindCase::kFloat32Value, set_float32_value, const float);
 
         // register string setter
         setter.addFunction(KindCase::kStringValue, [](Value *dst, const void *srcAddr) {
@@ -348,6 +349,36 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
                 BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
             }
             dst.mutable_variant_array_values()->mutable_variants()->at(idx) = src.variant_value();
+        });
+
+        // register value setter for int32
+        valueSetter.addFunction(KindCase::kInt32Value, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            dst.set_int32_value(src.int32_value());
+        });
+
+        // register value setter for float32
+        valueSetter.addFunction(KindCase::kFloat32Value, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            dst.set_float32_value(src.float32_value());
+        });
+
+        // register value setter for string
+        valueSetter.addFunction(KindCase::kStringValue, [](Value &dst, const Value &src, ParamIndex idx) -> void {
+            dst.set_string_value(src.string_value());
+        });
+
+        //register value getter for int32
+        valueGetter.addFunction(KindCase::kInt32Value, [](Value* dst, const Value &src, ParamIndex idx) -> void {
+            dst->set_int32_value(src.int32_value());
+        });
+
+        //register value getter for float32
+        valueGetter.addFunction(KindCase::kFloat32Value, [](Value* dst, const Value &src, ParamIndex idx) -> void {
+            dst->set_float32_value(src.float32_value());
+        });
+
+        //register value getter for string
+        valueGetter.addFunction(KindCase::kStringValue, [](Value* dst, const Value &src, ParamIndex idx) -> void {
+            dst->set_string_value(src.string_value());
         });
     }
 }
