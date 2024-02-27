@@ -91,6 +91,8 @@ public class BasicCatenaDevice implements CatenaDevice
 
     protected Device buildDeviceMessage(DeviceRequestPayload request)
     {
+        paramManager.commitChanges();
+        commandManager.commitChanges();
         return deviceBuilder.build();
     };
 
@@ -163,7 +165,7 @@ public class BasicCatenaDevice implements CatenaDevice
     {
         try
         {
-            Value paramValue = getParamManager().getValue(request.getOid());
+            Value paramValue = getParamManager().getValue(request.getOid(), request.getElementIndex());
             responseObserver.onNext(paramValue);
             responseObserver.onCompleted();
         }

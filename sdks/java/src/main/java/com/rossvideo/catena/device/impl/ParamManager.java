@@ -1,15 +1,16 @@
 package com.rossvideo.catena.device.impl;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
+import com.rossvideo.catena.device.impl.params.ParamTable;
 import com.rossvideo.catena.example.error.UnknownOidException;
 
 import catena.core.constraint.Constraint;
 import catena.core.device.Device;
 import catena.core.parameter.Param;
 import catena.core.parameter.ParamType;
+import catena.core.parameter.StructField;
+import catena.core.parameter.StructValue;
 import catena.core.parameter.Value;
 
 public class ParamManager
@@ -45,11 +46,18 @@ public class ParamManager
     }
     
     private Device.Builder deviceBuilder;
-    private Map<String, Param.Builder> params = new LinkedHashMap<>();
+    private ParamTable paramTable;
     
     public ParamManager(Device.Builder deviceBuilder)
     {
         this.deviceBuilder = deviceBuilder;
+        paramTable = createParamTable();
+        paramTable.updateFrom(deviceBuilder);
+    }
+    
+    protected ParamTable createParamTable()
+    {
+        return new ParamTable();
     }
     
     protected String validateOid(String oid, boolean topLevel)
@@ -70,53 +78,42 @@ public class ParamManager
         return oid;
     }
     
-    protected Device.Builder getDeviceBuilder()
-    {
-        return deviceBuilder;
-    }
-    
-    protected Param.Builder getParam(String oid) {
-        return params.get(oid);
-    }
-    
     protected Param.Builder initTopLevelParam(String oid) {
-        return deviceBuilder.putParamsBuilderIfAbsent(oid);
-    }
-        
-    protected Param.Builder createOrGetTopLevelParam(String oid)
-    {
-        validateOid(oid, true);
-        Param.Builder paramBuilder = getParam(oid);
-        if (paramBuilder == null)
-        {
-            paramBuilder = initTopLevelParam(oid);
-            params.put(oid, paramBuilder);
-        }
-        
-        return paramBuilder;
+        Param.Builder builder = Param.newBuilder();
+        paramTable.putParam(oid, Param.newBuilder().build());
+        return builder;
     }
     
     public Param.Builder createOrGetParam(String oid)
     {
-        oid = validateOid(oid, true);
+        oid = validateOid(oid, false);
         
-        Param.Builder paramBuilder = getParam(oid);
-        if (paramBuilder != null)
-        {
-            return paramBuilder;
+        Param existing = paramTable.getParam(oid);
+        if (existing != null) {
+            return existing.toBuilder();
         }
-        
-        if (oid.lastIndexOf('/') <= 0)
+
+        if (isTopLevel(oid))
         {
-            return createOrGetTopLevelParam(oid);
+            return initTopLevelParam(oid);
         }
         
         String[] parts = removeTail(oid);
         Param.Builder parent = createOrGetParam(parts[0]);
-        paramBuilder = parent.putParamsBuilderIfAbsent(parts[1]);
-        params.put(oid, paramBuilder);
-        
-        return paramBuilder;
+        if (parent.getType() != ParamType.STRUCT || parent.getType() != ParamType.STRUCT_ARRAY)
+        {
+            parent.setType(ParamType.STRUCT);
+            paramTable.putParam(parts[0], parent.build());
+        }
+
+        Param.Builder newParam = Param.newBuilder();
+        paramTable.putParam(oid, newParam.build());
+        return newParam;
+    }
+    
+    public boolean isTopLevel(String oid)
+    {
+        return oid.lastIndexOf('/') <= 0;
     }
     
     private String[] removeTail(String fqoid)
@@ -131,7 +128,12 @@ public class ParamManager
     public void clearParams()
     {
         deviceBuilder.clearParams();
-        params.clear();
+        paramTable.updateFrom(deviceBuilder);
+    }
+    
+    public void commitChanges()
+    {
+        paramTable.commitChanges();
     }
     
     public Param.Builder createParamDescriptor(String oid, String name, ParamType type, boolean readOnly, Value value) {
@@ -149,6 +151,11 @@ public class ParamManager
                 .setReadOnly(readOnly)
                 .setValue(value);
         
+        if (!isTopLevel(oid))
+        {
+            setValue(oid, 0, value);
+        }
+        
         if (constraint != null)
         {
             param.setConstraint(constraint);
@@ -156,15 +163,18 @@ public class ParamManager
         
         setWidgetHint(param, widget);
         
+        paramTable.putParam(oid, param.build());
+        paramTable.putValue(oid, value);
+        
         return param;
     }
     
     public void addParamAlias(String fqoid, String alias) {
-        createOrGetParam(fqoid).addOidAliases(alias);
+        paramTable.putParam(fqoid, createOrGetParam(fqoid).addOidAliases(alias).build());
     }
 
     public void addParamAliases(String fqoid, String[] aliases) {
-        createOrGetParam(fqoid).addAllOidAliases(Arrays.asList(aliases));
+        paramTable.putParam(fqoid, createOrGetParam(fqoid).addAllOidAliases(Arrays.asList(aliases)).build());
     }
     
     public Param.Builder setWidgetHint(Param.Builder param, WidgetHint widgetHint) {
@@ -186,25 +196,14 @@ public class ParamManager
         return param;
     }
     
-    public Value getValue(String oid) {
-        Param.Builder param = getParam(oid);
-        if (param != null)
-        {
-            return param.getValue();
-        }
-        throw new UnknownOidException("No such parameter: " + oid);        
+    public Value getValue(String oid, Integer index) {
+        oid = validateOid(oid, false);
+        //TODO handle index
+        return paramTable.getValue(oid);   
     }
     
-    public void setValue(String oid, int index, Value value) {
+    public void setValue(String oid, Integer index, Value value) {
         oid = validateOid(oid, false);
-        Param.Builder param = getParam(oid);
-        if (param != null && value != null)
-        {
-            param.setValue(value);
-        }
-        else
-        {
-            throw new UnknownOidException("No such parameter: " + oid);
-        }
+        paramTable.putValue(oid, value);
     }
 }

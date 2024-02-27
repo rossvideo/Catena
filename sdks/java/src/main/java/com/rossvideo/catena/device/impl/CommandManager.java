@@ -1,6 +1,7 @@
 package com.rossvideo.catena.device.impl;
 
-import com.rossvideo.catena.device.impl.ParamManager.WidgetHint;
+import com.rossvideo.catena.device.impl.params.CommandTable;
+import com.rossvideo.catena.device.impl.params.ParamTable;
 
 import catena.core.constraint.Constraint;
 import catena.core.device.Device;
@@ -15,8 +16,12 @@ public class CommandManager extends ParamManager
     {
         super(deviceBuilder);
     }
-    
-    
+
+    @Override
+    protected ParamTable createParamTable()
+    {
+        return new CommandTable();
+    }
 
     @Override
     public Builder createParamDescriptor(String oid, String name, ParamType type, boolean readOnly, Value value, Constraint constraint, WidgetHint widget)
@@ -25,13 +30,6 @@ public class CommandManager extends ParamManager
                 .setResponse(true);
     }
 
-
-
-    @Override
-    protected catena.core.parameter.Param.Builder initTopLevelParam(String oid)
-    {
-        return getDeviceBuilder().putCommandsBuilderIfAbsent(oid);
-    }
     
     public void setResponds(String oid, boolean responds)
     {
