@@ -23,6 +23,7 @@
 
 #include <DeviceModel.h>
 #include <ParamAccessor.h>
+#include <Param.h>
 #include <Path.h>
 #include <Reflect.h>
 #include <utils.h>
@@ -79,26 +80,29 @@ int main(int argc, char **argv) {
         // read a json file into a DeviceModel object
         DeviceModel dm(argv[1]);
 
-        // write the device model to stdout
-        std::cout << "Read Device Model: " << dm << '\n';
+        // experiments
+        
 
-        // read a variant
-        std::unique_ptr<ParamAccessor> slotParam = dm.param("/slot");
-        SlotVariant slot = {AudioSlot{"audio", 10.0f}};  // initialize the variant
-        slotParam->getValue(slot);
-        assert(std::holds_alternative<VideoSlot>(slot));
-        slot = AudioSlot{"back to audio", 0.0f};  // change the variant
-        slotParam->setValue(slot);
+        // // write the device model to stdout
+        // std::cout << "Read Device Model: " << dm << '\n';
 
-        // read & write native struct
-        Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford"}, loc2;
-        std::unique_ptr<ParamAccessor> locParam = dm.param("/location");
+        // // read a variant
+        // std::unique_ptr<ParamAccessor> slotParam = dm.param("/slot");
+        // SlotVariant slot = {AudioSlot{"audio", 10.0f}};  // initialize the variant
+        // slotParam->getValue(slot);
+        // assert(std::holds_alternative<VideoSlot>(slot));
+        // slot = AudioSlot{"back to audio", 0.0f};  // change the variant
+        // slotParam->setValue(slot);
 
-        locParam->getValue(loc2);
-        std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
-                  << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
-                  << '\n';
-        locParam->setValue(loc);
+        // // read & write native struct
+        // Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford"}, loc2;
+        // std::unique_ptr<ParamAccessor> locParam = dm.param("/location");
+
+        // locParam->getValue(loc2);
+        // std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
+        //           << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
+        //           << '\n';
+        // locParam->setValue(loc);
 
         // read & write native int32_t
         std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
@@ -107,6 +111,12 @@ int main(int argc, char **argv) {
         std::cout << "Number: " << num << '\n';
         num *= 2;
         numParam->setValue(num);
+
+        
+        catena::sdk::Param<int32_t> p("/a_number", numParam->param());
+        catena::Value numValue;
+        numValue = p.getValue(numValue);
+
 
         // read & write native vector of int32_t
         std::vector<int32_t> primes = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};

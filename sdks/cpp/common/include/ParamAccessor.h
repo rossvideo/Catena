@@ -55,7 +55,7 @@ template <typename T> struct PassByValueOrReference {
 /**
  * @brief Value::KindCase looker upper
  */
-template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] V& src) {
+template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] const V& src) {
     if constexpr (has_getStructInfo<V>) {
         return catena::Value::KindCase::kStructValue;
     }
@@ -571,6 +571,13 @@ class ParamAccessor {
      */ 
     inline size_t id() const {
         return id_;
+    }
+
+    /**
+     * @brief provide reference to underlying Param
+    */
+    inline const Param& param() const {
+        return param_.get();
     }
 
     /**
