@@ -17,8 +17,13 @@
     },
     "float_example": {
       "type": "FLOAT32",
-      "value": { "float32_value": 1234 },
+      "value": { "float32_value": 1234.5678},
       "name": { "display_strings": { "en": "Float Example" } }
+    },
+    "number_array": {
+      "type": "INT32_ARRAY",
+      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } },
+      "name": { "display_strings": { "en": "Int Array Example" } }
     }
   },
   "menu_groups": {
