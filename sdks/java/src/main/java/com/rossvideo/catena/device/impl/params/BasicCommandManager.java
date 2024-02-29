@@ -23,8 +23,8 @@ public class BasicCommandManager extends BasicParamManager implements CommandMan
     {
         Device.Builder deviceBuilder = getDeviceBuilder();
         Param existing = deviceBuilder.getCommandsOrDefault(fieldName, null);
-        deviceBuilder.removeParams(fieldName);
-        Param.Builder structParamBuilder = deviceBuilder.putParamsBuilderIfAbsent(fieldName);
+        deviceBuilder.removeCommands(fieldName);
+        Param.Builder structParamBuilder = deviceBuilder.putCommandsBuilderIfAbsent(fieldName);
         if (existing != null) {
             structParamBuilder.mergeFrom(existing);                        
         }
