@@ -115,7 +115,10 @@ int main(int argc, char **argv) {
         
         catena::sdk::Param<int32_t> p("/a_number", numParam->param());
         catena::Value numValue;
-        numValue = p.getValue(numValue);
+        numValue << p;
+        catena::sdk::Param<int32_t> p2(std::string("/another_number"));
+        numValue >> p2;
+
 
 
         // read & write native vector of int32_t
