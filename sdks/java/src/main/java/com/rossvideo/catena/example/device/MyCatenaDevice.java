@@ -30,6 +30,7 @@ import catena.core.parameter.Value;
 import io.grpc.stub.StreamObserver;
 
 public class MyCatenaDevice extends BasicCatenaDevice {
+    
     protected static final String CATENA_PRODUCT_NAME = "catena_product_name";
     protected static final String CATENA_DISPLAY_NAME = "catena_display_name";
     
@@ -82,7 +83,8 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     private void updateTime()
     {
-        boolean shouldUpdate = getParamManager().getValue(CLOCK_ON_OID, 0).getInt32Value() != 0;
+        Value clockOn = getParamManager().getValue(CLOCK_ON_OID, 0);
+        boolean shouldUpdate = clockOn == null ? false : clockOn.getInt32Value() != 0;
         if (!shouldUpdate)
         {
             if (clockUpdating)
