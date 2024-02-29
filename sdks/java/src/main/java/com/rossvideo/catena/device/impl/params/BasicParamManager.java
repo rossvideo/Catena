@@ -280,36 +280,7 @@ public class BasicParamManager implements ParamManager
                     Param.Builder build = getBuilderForParam(oidParts[index], param);
                     PathToComponent paramChild = new PathToComponent(parent, oidParts[index], build);
                     return collectPathToParam(oidParts, index + 1, paramChild);
-                }/*
-                case VALUE:
-                {
-                    Value.Builder value = parent.getValue();
-                    StructValue.Builder structValue = value.getStructValueBuilder();
-                    PathToComponent structValueChild = new PathToComponent(parent, structValue);
-                    StructField structField = structValue.getFieldsMap().get(oidParts[index]);
-                    StructField.Builder structFieldBuilder = null;
-                    if (structField == null) {
-                        structFieldBuilder = StructField.newBuilder();
-                        structValue.putFields(oidParts[index], structFieldBuilder.build());
-                    } else
-                    {
-                        structFieldBuilder = structField.toBuilder();
-                    }
-                    
-                    PathToComponent fieldChild = new PathToComponent(structValueChild, oidParts[index], structFieldBuilder);
-                    return collectPathToValue(oidParts, index, fieldChild);
                 }
-                case STRUCT_FIELD:
-                {
-                    StructField.Builder structField = parent.getStructField();
-                    if (structField.hasParam()) {
-                        Param.Builder structFieldValue = structField.getParamBuilder();
-                        return collectPathToValue(oidParts, index + 1, new PathToComponent(parent, structFieldValue));
-                    } else if (structField.hasValue()) {
-                        Value.Builder structFieldValue = structField.getValueBuilder();
-                        return collectPathToValue(oidParts, index + 1, new PathToComponent(parent, structFieldValue));
-                    }
-                }*/
                 default:
                     return null;
             }
