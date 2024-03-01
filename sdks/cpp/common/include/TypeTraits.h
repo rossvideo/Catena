@@ -50,9 +50,22 @@ class ParamAccessor;  // forward reference
 struct FieldInfo {
   std::string name; /**< the field's name */
   int offset;       /**< the offset to the field's data from struct base */
-  std::function<StructInfo()> getStructInfo; /**< type info of nested struct */
+
+  /**
+   *  method returns type info of nested struct 
+   */
+  std::function<StructInfo()> getStructInfo; 
+
+  /**
+   * @brief recursive call into ParamAccessor::getValue<T> for nested structs
+   */
   std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
+
+  /**
+   * @brief recursive call into ParamAccessor::setValue<T> for nested structs
+   */
   std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
+
   /**
    * @brief class for field conversion to / back from protobuf.
    *
