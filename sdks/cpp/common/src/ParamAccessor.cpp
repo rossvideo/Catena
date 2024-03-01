@@ -37,9 +37,131 @@ using catena::Param;
 using catena::Value;
 using KindCase = Value::KindCase;
 
-#define SETTER_INSTANCE(kind_case, set_method, cast) \
+/**
+ * @brief A macro used to add getter functions for simple data types
+*/
+#define REGISTER_GETTER(kind_case, get_method, cast) \
+getter.addFunction( kind_case, [](void *dstAddr, const Value *src) { \
+    *reinterpret_cast<cast *>(dstAddr) = src->get_method(); \
+})
+
+/**
+ * @brief A macro used to add setter functions for simple data types
+*/
+#define REGISTER_SETTER(kind_case, set_method, cast) \
 setter.addFunction( kind_case, [](Value *dst, const void *srcAddr) { \
-  dst->set_method(*reinterpret_cast<cast*>(srcAddr)); \
+    dst->set_method(*reinterpret_cast<const cast*>(srcAddr));  \
+})
+
+/**
+ * @brief A macro used to add getter functions for array of simple data types
+*/
+#define REGISTER_ARRAY_GETTER(kind_case, cast, array_values_method, access_method) \
+getter.addFunction(kind_case, [](void *dstAddr, const Value *src) { \
+    auto *dst = reinterpret_cast<std::vector<cast>*>(dstAddr); \
+    dst->clear(); \
+    auto &arr = src->array_values_method().access_method(); \
+    for (auto it = arr.begin(); it != arr.end(); ++it) { \
+        dst->push_back(*it); \
+    } \
+})
+
+/**
+ * @brief A macro used to add setter functions for array of simple data types
+*/
+#define REGISTER_ARRAY_SETTER(kind_case, mutable_array_method, clear_method, cast, add_method) \
+setter.addFunction(kind_case, [](catena::Value *dst, const void *srcAddr) { \
+    dst->mutable_array_method()->clear_method(); \
+    auto *src = reinterpret_cast<const std::vector<cast> *>(srcAddr); \
+    for (auto &it : *src) { \
+        dst->mutable_array_method()->add_method(it); \
+    } \
+})
+
+/**
+ * @brief A macro used to add getter functions for element of array of simple data types
+*/
+#define REGISTER_ARRAY_GETTER_AT(kind_case, cast, array_values_method, size_method, access_method) \
+getterAt.addFunction(kind_case, \
+    [](void *dstAddr, const Value *src, const catena::ParamIndex idx) { \
+        auto *dst = reinterpret_cast<cast *>(dstAddr); \
+        if (idx >= src->array_values_method().size_method()) { \
+            /* range error  */ \
+            std::stringstream err; \
+            err << "array index is out of bounds, " << idx \
+                << " >= " << src->array_values_method().size_method(); \
+            BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE); \
+        } else { \
+            /* update array element */ \
+            *dst = src->array_values_method().access_method(idx); \
+        } \
+    } \
+)
+
+/**
+ * @brief A macro used to add setter functions for element of array of simple data types
+*/
+#define REGISTER_ARRAY_SETTER_AT(kind_case, cast, mutable_array_values_method, size_method, set_method) \
+setterAt.addFunction(kind_case, \
+    [](Value *dst, const void *srcAddr, catena::ParamIndex idx) { \
+        auto *src = reinterpret_cast<const cast *>(srcAddr); \
+        if (idx >= dst->mutable_array_values_method()->size_method()) { \
+            /* range error */ \
+            std::stringstream err; \
+            err << "array index is out of bounds, " << idx \
+                << " >= " << dst->mutable_array_values_method()->size_method(); \
+            BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE); \
+        } else { \
+            /* update array element */ \
+            dst->mutable_array_values_method()->set_method(idx, *src); \
+        } \
+    } \
+)
+
+/**
+ * @brief A macro used to add getter functions accessible by clients
+*/
+#define REGISTER_VALUE_GETTER(kind_case, dst_method, src_method) \
+valueGetter.addFunction(kind_case, [](Value* dst, const Value &src, ParamIndex idx) -> void { \
+    dst->dst_method(src.src_method());\
+})
+
+/**
+ * @brief A macro used to add setter functions accessible by clients
+*/
+#define REGISTER_VALUE_SETTER(kind_case, dst_method, src_method) \
+valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
+    dst.dst_method(src.src_method()); \
+})
+
+/**
+ * @brief A macro used to add getter functions for array of simple data types accessible by clients
+*/
+#define REGISTER_ARRAY_VALUE_GETTER(kind_case, array_val_method, size_method, set_value_method, index_method) \
+valueGetter.addFunction(kind_case, [](Value* dst, const Value &val, ParamIndex idx) -> void { \
+    auto size = val.array_val_method().size_method(); \
+    if (idx >= size) { \
+        std::stringstream err; \
+        err << "array index is out of bounds, " << idx \
+            << " >= " << size; \
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE); \
+    } \
+    dst->set_value_method(val.array_val_method().index_method(idx)); \
+})
+
+/**
+ * @brief A macro used to add setter functions for array of simple data types accessible by clients
+*/
+#define REGISTER_ARRAY_VALUE_SETTER(kind_case, array_val_method, size_method, mutable_array_val_method, mutable_method, value_method) \
+valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
+    auto size = src.array_val_method().size_method(); \
+    if (idx >= size) { \
+        std::stringstream err; \
+        err << "array index is out of bounds, " << idx \
+            << " >= " << size; \
+        BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE); \
+    } \
+    dst.mutable_array_val_method()->mutable_method()->at(idx) = src.value_method(); \
 })
 
 // ParamAccessor::Setter::Protector setterProtector;
@@ -152,120 +274,78 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         auto &valueGetter = ValueGetter::getInstance();
         auto &valueSetter = ValueSetter::getInstance();
 
-        // register int32 setter
-        SETTER_INSTANCE(KindCase::kInt32Value, set_int32_value, const int32_t);
-
-        // register float32 setter
-        SETTER_INSTANCE(KindCase::kFloat32Value, set_float32_value, const float);
-
-        // register string setter
-        setter.addFunction(KindCase::kStringValue, [](Value *dst, const void *srcAddr) {
-            *dst->mutable_string_value() = (*reinterpret_cast<const std::string *>(srcAddr));
-        });
-
-        // register array of int setter
-        setter.addFunction(KindCase::kInt32ArrayValues, [](catena::Value *dst, const void *srcAddr) {
-            dst->mutable_int32_array_values()->clear_ints();
-            auto *src = reinterpret_cast<const std::vector<int32_t> *>(srcAddr);
-            for (auto &it : *src) {
-                dst->mutable_int32_array_values()->add_ints(it);
-            }
-        });
-        
-        // register array of int getter
-        getter.addFunction(KindCase::kInt32ArrayValues, [](void *dstAddr, const Value *src) {
-            auto *dst = reinterpret_cast<std::vector<int32_t>*>(dstAddr);
-            dst->clear();
-            auto &arr = src->int32_array_values().ints();
-            for (auto it = arr.begin(); it != arr.end(); ++it) {
-                dst->push_back(*it);
-            }
-        });
-
-        // register element of array of int setter
-        setterAt.addFunction(KindCase::kInt32ArrayValues, 
-            [](Value *dst, const void *srcAddr, catena::ParamIndex idx) {
-                auto *src = reinterpret_cast<const int32_t *>(srcAddr);
-                if (idx >= dst->mutable_int32_array_values()->ints_size()) {
-                    // range error
-                    std::stringstream err;
-                    err << "array index is out of bounds, " << idx
-                        << " >= " << dst->mutable_int32_array_values()->ints_size();
-                    BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-                } else {
-                    // update array element
-                    dst->mutable_int32_array_values()->set_ints(idx, *src);
-                }
-            }
-        );
-        
-        /** @todo float array, string array setters */
-
-        // register element of array of int getter
-        getterAt.addFunction(KindCase::kInt32ArrayValues,
-            [](void *dstAddr, const Value *src, const catena::ParamIndex idx) {
-                auto *dst = reinterpret_cast<int32_t *>(dstAddr);
-                if (idx >= src->int32_array_values().ints_size()) {
-                    // range error
-                    std::stringstream err;
-                    err << "array index is out of bounds, " << idx
-                        << " >= " << src->int32_array_values().ints_size();
-                    BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-                } else {
-                    // update array element
-                    *dst = src->int32_array_values().ints(idx);
-                }
-            }
-        );
-        
-        // register float getter
-        getter.addFunction(KindCase::kFloat32Value, [](void *dstAddr, const Value *src) {
-            *reinterpret_cast<float *>(dstAddr) = src->float32_value();
-        });
-
         // register int getter
-        getter.addFunction(KindCase::kInt32Value, [](void *dstAddr, const Value *src) {
-            *reinterpret_cast<int32_t *>(dstAddr) = src->int32_value();
-        });
+        REGISTER_GETTER(KindCase::kInt32Value, int32_value, int32_t);
+
+        // register float getter
+        REGISTER_GETTER(KindCase::kFloat32Value, float32_value, float);
 
         // register string getter
-        getter.addFunction(KindCase::kStringValue, [](void *dstAddr, const Value *src) {
-            *reinterpret_cast<std::string *>(dstAddr) = src->string_value();
-        });
+        REGISTER_GETTER(KindCase::kStringValue, string_value, std::string);
+
+        // register int32 setter
+        REGISTER_SETTER(KindCase::kInt32Value, set_int32_value, int32_t);
+
+        // register float32 setter
+        REGISTER_SETTER(KindCase::kFloat32Value, set_float32_value, float);
+
+        // register string setter
+        REGISTER_SETTER(KindCase::kStringValue, set_string_value, std::string);
+
+        // register array of int getter
+        REGISTER_ARRAY_GETTER(KindCase::kInt32ArrayValues, int32_t, int32_array_values, ints);
+
+        // register array of float getter
+        REGISTER_ARRAY_GETTER(KindCase::kFloat32ArrayValues, float, float32_array_values, floats);
+
+        // register array of int setter
+        REGISTER_ARRAY_SETTER(KindCase::kInt32ArrayValues, mutable_int32_array_values, clear_ints, int32_t, add_ints);
+
+        //register array of float setter
+        REGISTER_ARRAY_SETTER(KindCase::kFloat32ArrayValues, mutable_float32_array_values, clear_floats, float, add_floats);
+    
+        // register element of array of int getter
+        REGISTER_ARRAY_GETTER_AT(KindCase::kInt32ArrayValues, int32_t, int32_array_values, ints_size, ints);
+
+        // register element of array of float getter
+        REGISTER_ARRAY_GETTER_AT(KindCase::kFloat32ArrayValues, float, float32_array_values, floats_size, floats);
+
+        // register element of array of int setter
+        REGISTER_ARRAY_SETTER_AT(KindCase::kInt32ArrayValues, int32_t, mutable_int32_array_values, ints_size, set_ints);
+
+        // register element of array of float setter
+        REGISTER_ARRAY_SETTER_AT(KindCase::kFloat32ArrayValues, float, mutable_float32_array_values, floats_size, set_floats);
+        
+        /** @todo string array gettter/setters */
+
+
+
+        //register value getter for int32
+        REGISTER_VALUE_GETTER(KindCase::kInt32Value, set_int32_value, int32_value);
+
+        //register value getter for float32
+        REGISTER_VALUE_GETTER(KindCase::kFloat32Value, set_float32_value, float32_value);
+
+        //register value getter for string
+        REGISTER_VALUE_GETTER(KindCase::kStringValue, set_string_value, string_value);
+
+        // register value setter for int32
+        REGISTER_VALUE_SETTER(KindCase::kInt32Value, set_int32_value, int32_value);
+
+        // register value setter for float32
+        REGISTER_VALUE_SETTER(KindCase::kFloat32Value, set_float32_value, float32_value);
+
+        // register value setter for string
+        REGISTER_VALUE_SETTER(KindCase::kStringValue, set_string_value, string_value);
 
         // register value getter for int32 array
-        valueGetter.addFunction(KindCase::kInt32ArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
-            if (idx >= val.int32_array_values().ints_size()) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << val.int32_array_values().ints_size();
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst->set_int32_value(val.int32_array_values().ints(idx));
-        });
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kInt32ArrayValues, int32_array_values, ints_size, set_int32_value, ints);
 
         // register value getter for float array
-        valueGetter.addFunction(KindCase::kFloat32ArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
-            if (idx >= val.float32_array_values().floats_size()) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << val.float32_array_values().floats_size();
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst->set_float32_value(val.float32_array_values().floats(idx));
-        });
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kFloat32ArrayValues, float32_array_values, floats_size, set_float32_value, floats);
 
         // register value getter for string array
-        valueGetter.addFunction(KindCase::kStringArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
-            auto size = val.string_array_values().strings_size();
-            if (idx >= size) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << size;
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst->set_string_value(val.string_array_values().strings(idx));
-        });
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kStringArrayValues, string_array_values, strings_size, set_string_value, strings);
 
         // register value getter for struct array
         valueGetter.addFunction(KindCase::kStructArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
@@ -292,94 +372,24 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         });
 
         // register value setter for int32 array
-        valueSetter.addFunction(KindCase::kInt32ArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            auto size = src.int32_array_values().ints_size();
-            if (idx >= size) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << size;
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst.mutable_int32_array_values()->mutable_ints()->at(idx) = src.int32_value();
-        });
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kInt32ArrayValues, int32_array_values, ints_size, 
+                                    mutable_int32_array_values, mutable_ints, int32_value);
 
         // register value setter for float32 array
-        valueSetter.addFunction(KindCase::kFloat32ArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            auto size = src.float32_array_values().floats_size();
-            if (idx >= size) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << size;
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst.mutable_float32_array_values()->mutable_floats()->at(idx) = src.float32_value();
-        });
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kFloat32ArrayValues, float32_array_values, floats_size, 
+                                    mutable_float32_array_values, mutable_floats, float32_value);
 
         // register value setter for string array
-        valueSetter.addFunction(KindCase::kStringArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            auto size = src.string_array_values().strings_size();
-            if (idx >= size) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << size;
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst.mutable_string_array_values()->mutable_strings()->at(idx) = src.string_value();
-        });
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStringArrayValues, string_array_values, strings_size, 
+                                    mutable_string_array_values, mutable_strings, string_value);
 
         // register value setter for struct array
-        valueSetter.addFunction(KindCase::kStructArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            auto size = src.struct_array_values().struct_values_size();
-            if (idx >= size) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << size;
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst.mutable_struct_array_values()->mutable_struct_values()->at(idx) = src.struct_value();
-        });
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStructArrayValues, struct_array_values, struct_values_size, 
+                                    mutable_struct_array_values, mutable_struct_values, struct_value);
 
         // register value setter for variant array
-        valueSetter.addFunction(KindCase::kVariantArrayValues, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            auto size = src.variant_array_values().variants_size();
-            if (idx >= size) {
-                std::stringstream err;
-                err << "array index is out of bounds, " << idx
-                    << " >= " << size;
-                BAD_STATUS(err.str(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            dst.mutable_variant_array_values()->mutable_variants()->at(idx) = src.variant_value();
-        });
-
-        // register value setter for int32
-        valueSetter.addFunction(KindCase::kInt32Value, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            dst.set_int32_value(src.int32_value());
-        });
-
-        // register value setter for float32
-        valueSetter.addFunction(KindCase::kFloat32Value, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            dst.set_float32_value(src.float32_value());
-        });
-
-        // register value setter for string
-        valueSetter.addFunction(KindCase::kStringValue, [](Value &dst, const Value &src, ParamIndex idx) -> void {
-            dst.set_string_value(src.string_value());
-        });
-
-        //register value getter for int32
-        valueGetter.addFunction(KindCase::kInt32Value, [](Value* dst, const Value &src, ParamIndex idx) -> void {
-            dst->set_int32_value(src.int32_value());
-        });
-
-        //register value getter for float32
-        valueGetter.addFunction(KindCase::kFloat32Value, [](Value* dst, const Value &src, ParamIndex idx) -> void {
-            dst->set_float32_value(src.float32_value());
-        });
-
-        //register value getter for string
-        valueGetter.addFunction(KindCase::kStringValue, [](Value* dst, const Value &src, ParamIndex idx) -> void {
-            dst->set_string_value(src.string_value());
-        });
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kVariantArrayValues, variant_array_values, variants_size, 
+                                    mutable_variant_array_values, mutable_variants, variant_value);
     }
 }
 

@@ -5,11 +5,6 @@
   "access_scopes": ["monitor", "operate", "configure", "administer"],
   "default_scope": 1,
   "params": {
-    "string_example": {
-      "type": "STRING",
-      "value": { "string_value": "Hello, World!" },
-      "name": { "display_strings": { "en": "String Example" } }
-    },
     "a_number": {
       "type": "INT32",
       "value": { "int32_value": 1234 },
@@ -19,6 +14,11 @@
       "type": "FLOAT32",
       "value": { "float32_value": 1234.5678},
       "name": { "display_strings": { "en": "Float Example" } }
+    },
+    "string_example": {
+      "type": "STRING",
+      "value": { "string_value": "Hello, World!" },
+      "name": { "display_strings": { "en": "String Example" } }
     },
     "number_array": {
       "type": "INT32_ARRAY",
