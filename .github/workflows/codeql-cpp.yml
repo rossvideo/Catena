@@ -90,6 +90,9 @@ jobs:
         make -j 4
         make install
         popd
+        echo "Install and Build jwt-cpp
+        apt-get install libssl-dev
+        git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..  && make && sudo make install
         echo "Run, Build Application using make"
         mkdir -p sdks/cpp/build
         cd sdks/cpp/build
