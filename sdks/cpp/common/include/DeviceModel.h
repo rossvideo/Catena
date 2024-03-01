@@ -39,7 +39,6 @@
 #include <fstream>
 #include <filesystem>
 
-
 using grpc::ServerWriter;
 
 namespace catena {
