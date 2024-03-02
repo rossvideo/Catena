@@ -78,27 +78,28 @@ jobs:
     - name: build
       run: |
         cmake --version
-        # echo "Install and Build gRPC and Protobufs"
-        # export MY_INSTALL_DIR=$HOME/.local
-        # mkdir -p $MY_INSTALL_DIR
-        # export PATH="$MY_INSTALL_DIR/bin:$PATH"
-        # sudo apt install -y build-essential autoconf libtool pkg-config
-        # git clone --recurse-submodules -b v1.62.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
-        # cd grpc
-        # mkdir -p cmake/build
-        # pushd cmake/build
-        # cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR ../..
-        # make -j 4
-        # make install
-        # popd
-        # echo "Install and Build jwt-cpp
-        # apt-get install libssl-dev
-        # git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..  && make && sudo make install
-        # echo "Run, Build Application using make"
-        # mkdir -p sdks/cpp/build
-        # cd sdks/cpp/build
-        # cmake ..
-        # make
+        echo "Install and Build gRPC and Protobufs"
+        export MY_INSTALL_DIR=$HOME/.local
+        mkdir -p $MY_INSTALL_DIR
+        export PATH="$MY_INSTALL_DIR/bin:$PATH"
+        sudo apt install -y build-essential autoconf libtool pkg-config
+        apt-get install ninja-build
+        git clone --recurse-submodules -b v1.62.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
+        cd grpc
+        mkdir -p cmake/build
+        pushd cmake/build
+        cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR ../..
+        ninja
+        ninja install
+        popd
+        echo "Install and Build jwt-cpp
+        apt-get install libssl-dev
+        git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..  && make && sudo make install
+        echo "Run, Build Application using make"
+        mkdir -p sdks/cpp/build
+        cd sdks/cpp/build
+        cmake ..
+        ninja
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
