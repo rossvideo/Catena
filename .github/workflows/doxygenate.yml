@@ -1,0 +1,40 @@
+#
+name: "Doxygen GitHub Pages Deploy Action"
+
+
+on:
+    push:
+      branches: [ "develop", "main" ]
+    pull_request:
+      branches: [ "develop", "main" ]
+    schedule:
+      - cron: '25 16 * * 2'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            - name: Set up CMake
+              uses: actions/setup-cmake@v1
+              with:
+                  cmake-version: '3.21.3'
+            
+            - name: Install Doxygen and Graphviz
+              run: |
+                  sudo apt-get update -y
+                  sudo apt-get install -y -qq doxygen
+                  sudo apt-get install -y -qq graphviz
+
+            - name: Make a build directory and run CMake
+              run: |
+                  mkdir -p sdks/cpp/build
+                  cd sdks/cpp/build
+                  cmake -G Ninja ..
+                  ninja doxygen
+                  tar -zcvf github-pages doxygen/html
+
+            - name: Deploy to GitHub Pages
+              uses: actions/upload-pages-artifact@v2
