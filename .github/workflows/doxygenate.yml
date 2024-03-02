@@ -16,11 +16,6 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v2
-
-            - name: Set up CMake
-              uses: actions/setup-cmake@v1
-              with:
-                  cmake-version: '3.21.3'
             
             - name: Install Doxygen and Graphviz
               run: |
