@@ -89,17 +89,17 @@ jobs:
         cd grpc
         mkdir -p cmake/build
         pushd cmake/build
-        cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR ../..
+        cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR -G Ninja ../..
         ninja
         sudo ninja install
         popd
         echo "Install and Build jwt-cpp
         sudo apt-get install libssl-dev
-        git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..  && make && sudo make install
-        echo "Run, Build Application using make"
+        git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..  && ninja && sudo ninja install
+        echo "Run, Build Application using Ninja"
         mkdir -p sdks/cpp/build
         cd sdks/cpp/build
-        cmake ..
+        cmake -G Ninja ..
         ninja
 
     - name: Perform CodeQL Analysis
