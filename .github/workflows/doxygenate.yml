@@ -4,7 +4,7 @@ name: "Doxygen GitHub Pages Deploy Action"
 
 on:
     push:
-      branches: [ "develop", "main" ]
+      branches: [ "develop", "main", "doxygen" ]
     pull_request:
       branches: [ "develop", "main" ]
     schedule:
