@@ -17,11 +17,12 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v2
             
-            - name: Install Doxygen and Graphviz
+            - name: Install Toolchain
               run: |
                   sudo apt-get update -y
                   sudo apt-get install -y -qq doxygen
                   sudo apt-get install -y -qq graphviz
+                  sudo apt-get install ninja-build
 
             - name: Make a build directory and run CMake
               run: |
