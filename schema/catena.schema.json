@@ -206,8 +206,8 @@
                 "type": {
                     "$ref": "#/$defs/param_type"
                 },
-                "readonly": {
-                    "$ref": "#/$defs/readonly"
+                "read_only": {
+                    "$ref": "#/$defs/read_only"
                 },
                 "widget": {
                     "$ref": "#/$defs/widget"
@@ -1161,7 +1161,7 @@
                 "$key"
             ]
         },
-        "readonly": {
+        "read_only": {
             "title": "Parameter access mode",
             "description": "If set true, parameter is read only",
             "type": "boolean",
