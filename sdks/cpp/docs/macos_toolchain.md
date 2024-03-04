@@ -92,20 +92,10 @@ brew install graphviz
 ```
 ## Optionally install Google Test
 
-```
-cd ~/  
-git clone https://github.com/google/googletest.git
-cd googletest 
-mkdir install 
-cd install 
-cmake ../  #creates a make file 
-make #compiles Google Test
-sudo make install #installs Google Test
-echo "export CPLUS_INCLUDE_PATH=/usr/local/include" >> ~/.bash_profile
-echo "export LIBRARY_PATH=/usr/local/lib" >> ~/.bash_profile
- 
-source ~/.bash_profile
-```
+It can be installed using [brew](https://docs.brew.sh/Installation),
+which itself may need installation if not already present
+
+`brew install googletest`
 
 To build without Google Test, empty the build folder and run
 `cmake .. -DUNIT_TESTING=OFF`
