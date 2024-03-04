@@ -23,6 +23,7 @@
 
 #include <DeviceModel.h>
 #include <ParamAccessor.h>
+#include <Device.h>
 #include <Param.h>
 #include <Path.h>
 #include <Reflect.h>
@@ -105,19 +106,20 @@ int main(int argc, char **argv) {
         // locParam->setValue(loc);
 
         // read & write native int32_t
-        std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
-        int32_t num = 0;
-        numParam->getValue(num);
-        std::cout << "Number: " << num << '\n';
-        num *= 2;
-        numParam->setValue(num);
+        // std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
+        // int32_t num = 0;
+        // numParam->getValue(num);
+        // std::cout << "Number: " << num << '\n';
+        // num *= 2;
+        // numParam->setValue(num);
 
         
-        catena::sdk::Param<int32_t> p("/a_number", numParam->param());
-        catena::Value numValue;
-        numValue << p;
-        catena::sdk::Param<int32_t> p2(std::string("/another_number"));
-        numValue >> p2;
+        catena::sdk::Device device{argv[1]};
+        catena::sdk::IParam* param = device.param("/a_number");
+        int32_t num;
+        param->getValue(&num);
+        std::cout << "Number: " << num << '\n'; 
+
 
 
 
