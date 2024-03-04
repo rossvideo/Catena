@@ -108,4 +108,4 @@ source ~/.bash_profile
 ```
 
 To build without Google Test, empty the build folder and run
-`cmake .. -DDO_UNIT_TEST=OFF`
+`cmake .. -DUNIT_TESTING=OFF`

@@ -56,4 +56,4 @@ cd build
 cmake ..
 ```
 
-To build without unit test set DO_UNIT_TEST=OFF
+To build without unit test set UNIT_TESTING=OFF when building

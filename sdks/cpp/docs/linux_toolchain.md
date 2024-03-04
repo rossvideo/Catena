@@ -43,5 +43,5 @@ sudo cp lib/*.a /usr/lib
 ``` 
 
 To build without Google Test, empty the build folder and run
-`cmake .. -G Ninja -DDO_UNIT_TEST=OFF`
+`cmake .. -G Ninja -DUNIT_TESTING=OFF`
 
