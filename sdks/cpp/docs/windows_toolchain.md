@@ -46,4 +46,14 @@ which is part of graphviz is installed.
 
 * Install [graphviz](https://graphviz.org/download/) (add to path during installation)
 
+## Optionally Install Google Test
 
+1. Download the library ZIP file from the [Github repo](https://github.com/google/googletest/tree/release-1.10.0).  Extract the ZIP file to a directory on your computer.
+2. Open command prompt and navigate to the directory where you extracted Google Test and run
+```
+mkdir build
+cd build
+cmake ..
+```
+
+To build without unit test set DO_UNIT_TEST=OFF

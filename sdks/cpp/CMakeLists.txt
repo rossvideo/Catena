@@ -28,8 +28,11 @@ project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 # export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(DO_UNIT_TEST "Build Google test" ON)
+if(DO_UNIT_TEST)
 # enable unit testing
 enable_testing()
+endif(DO_UNIT_TEST)
 
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
