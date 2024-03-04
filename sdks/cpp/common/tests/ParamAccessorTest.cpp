@@ -99,10 +99,45 @@ TEST_F(ParamAccessorTest, Int32ArrayAccessTest){
   numParam->setValueAt(50, 0);
   numParam->setValueAt(-8, 3);
   ASSERT_EQ(numArray.size(), 4);
+
+  int32_t val = 0;
   for(int i = 0; i < numArray.size(); i++){
-    EXPECT_EQ(numArray[i], numArray[i]);
+    numParam->getValueAt(val, i);
+    EXPECT_EQ(val, numArray[i]);
   }
 }
+
+TEST_F(ParamAccessorTest, Float32ArrayAccessTest){
+  std::unique_ptr<ParamAccessor> numParam = dm.param("/float_array");
+  std::vector<float> numArray;
+  std::vector<float> otherArray = {1.1, 2.2, 3.3, 4.4};
+  numParam->getValue(numArray);
+  ASSERT_EQ(numArray.size(), 4);
+  for(int i = 0; i < numArray.size(); i++){
+    EXPECT_FLOAT_EQ(numArray[i], otherArray[i]);
+  }
+
+  numArray = {5.5, 6.6, 7.7, 8.8};
+  numParam->setValue(numArray);
+  numParam->getValue(otherArray);
+  ASSERT_EQ(otherArray.size(), 4);
+  for(int i = 0; i < numArray.size(); i++){
+    EXPECT_FLOAT_EQ(otherArray[i], numArray[i]);
+  }
+
+  numArray[0] = 50.5;
+  numArray[3] = -8.8;
+  numParam->setValueAt((float)50.5, 0);
+  numParam->setValueAt((float)-8.8, 3);
+  ASSERT_EQ(numArray.size(), 4);
+  
+  float val = 0;
+  for(int i = 0; i < numArray.size(); i++){
+    numParam->getValueAt(val, i);
+    EXPECT_FLOAT_EQ(val, numArray[i]);
+  }
+}
+
 
 int main(int argc, char** argv)
 {
