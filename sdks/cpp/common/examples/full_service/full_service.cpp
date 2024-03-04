@@ -563,64 +563,57 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
 int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 
-int main(int argc, char **argv) {
-    absl::SetProgramUsageMessage("Runs the Catena Service");
-    absl::ParseCommandLine(argc, argv);
 
+void statusUpdateExample(DeviceModel *dm)
+{
+    dm->valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
+        catena::Value v;
+        p.getValue<false>(&v, idx);
+        std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
+        // a real service would do something with the value here
+    });
+    std::thread loop([dm]() {
+        // a real service would possibly send status updates, telemetry or audio meters here
+        auto a_number = dm->param("/a_number");
+        int i = 0;
+        while (globalLoop) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            a_number->setValue(i++);
+        }
+    });
+    loop.detach();
+}
+
+void RunRPCServer(std::string addr, DeviceModel *dm)
+{
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
 
     // get the path to our ssh certificates
-    std::string path(absl::GetFlag(FLAGS_certs));
-    expandEnvVariables(path);
+    std::string certs_Path(absl::GetFlag(FLAGS_certs));
+    expandEnvVariables(certs_Path);
 
     try {
         // read a json file into a DeviceModel object
-        DeviceModel dm(absl::GetFlag(FLAGS_device_model));
+        statusUpdateExample(dm);
 
-        // This is the business logic for the service
-        // This simple example just increments a number every second,
-        // and logs client updates
-        //
-        dm.valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
-            catena::Value v;
-            p.getValue<false>(&v, idx);
-            std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
-            // a real service would do something with the value here
-        });
-        std::thread loop([&dm]() {
-            // a real service would possibly send status updates, telemetry or audio meters here
-            auto a_number = dm.param("/a_number");
-            int i = 0;
-            while (globalLoop) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                a_number->setValue(i++);
-            }
-        });
-        loop.detach();
-
+        ServerBuilder builder;
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
         grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
-        // build the server
-        ServerBuilder builder;
-        std::string addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
         builder.AddListeningPort(addr, getServerCredentials());
         std::unique_ptr<ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        CatenaServiceImpl service(cq.get(), dm);
-        builder.RegisterService(&service);
-        std::unique_ptr<Server> server = builder.BuildAndStart();
-        std::cout << "Server listening on " << addr
-                  << " with secure comms mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+        CatenaServiceImpl service(cq.get(), *dm);
 
-        // now that the server is running, we can let the signal handlers know
-        // it's address
+        builder.RegisterService(&service);
+        std::unique_ptr<Server> server(builder.BuildAndStart());
+        std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
+
         globalServer = server.get();
 
-        // start processing events on the completion queue
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
@@ -631,7 +624,21 @@ int main(int argc, char **argv) {
 
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
-        exit(EXIT_FAILURE);
     }
-    return EXIT_SUCCESS;
+}
+
+int main(int argc, char* argv[])
+{
+    DeviceModel *dm;
+    std::string addr;
+    absl::SetProgramUsageMessage("Runs the Catena Service");
+    absl::ParseCommandLine(argc, argv);
+  
+    addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+    dm = new DeviceModel(absl::GetFlag(FLAGS_device_model));
+  
+    std::thread catenaRpcThread(RunRPCServer, addr, dm);
+    catenaRpcThread.join();
+    delete (dm);
+    return 0;
 }

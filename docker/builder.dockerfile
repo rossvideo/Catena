@@ -31,7 +31,8 @@ RUN apt-get update --fix-missing && \
         libssl-dev \
         libgtest-dev \
         cmake make \
-        jq && \
+        jq  doxygen \
+        graphviz && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -61,9 +62,6 @@ RUN git clone --recurse-submodules -b ${GPRC_VERSION} --depth 1 --shallow-submod
 # catena-sdk
 COPY . "${CATENA_SDK}/"
 
-RUN apt-get update && apt install -y doxygen graphviz
 WORKDIR "${CATENA_SDK}/sdks/cpp/build"
-RUN cmake \
-        -S "${CATENA_SDK}/sdks/cpp" \
-        -B "${CATENA_SDK}/sdks/cpp/build" && \
+RUN cmake -S "${CATENA_SDK}/sdks/cpp" -B "${CATENA_SDK}/sdks/cpp/build" && \
     make -C "${CATENA_SDK}/sdks/cpp/build" -j "${NPROC:-$(nproc)}"
