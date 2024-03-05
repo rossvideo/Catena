@@ -92,6 +92,14 @@ Device& Device::operator=(const catena::Device& pbufDevice) {
 
 }
 
+catena::sdk::IParam* Device::param(const std::string& oid) {
+    auto it = params_.find(oid);
+    if (it != params_.end()) {
+        return it->second.get();
+    }
+    return nullptr;
+}
+
 void Device::addParam(const std::string& oid, const catena::Param& param) {
     auto& fac = catena::sdk::IParam::Factory::getInstance();
     auto p = fac.makeProduct(param.value().kind_case(), param);

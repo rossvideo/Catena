@@ -19,8 +19,36 @@
 // limitations under the License.
 
 #include <Param.h>
+using catena::sdk::IParam;
+using catena::sdk::ParamCommon;
 using catena::sdk::Param;
 
+
+/* Param Common Definitions */
+ParamCommon::ParamCommon(const catena::Param& src) : type_{src.type()}, import_{src.import()} {}
+
+ParamCommon& ParamCommon::operator=(const catena::Param& src) {
+    type_ = src.type();
+    import_ = src.import();
+    return *this;
+}
+
+bool ParamCommon::include() const {
+    // only test for include directive if not already included
+    return included_ || import_.isIncludeDirective();
+}
+
+void ParamCommon::included() {
+    import_ = Import{}; // remove include directive
+    included_ = true;   // mark as included
+}
+
+
+/* Param Definitions */
+
 using Int32Param = Param<int32_t>;
-template<>
-bool Int32Param::registered_ = Int32Param::registerWithFactory();
+
+template <>
+Int32Param::Initializer Int32Param::initializer_;
+template <>
+bool Int32Param::registered_ = false;

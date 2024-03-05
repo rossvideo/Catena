@@ -28,14 +28,12 @@
 #include <Status.h>
 #include <TypeTraits.h>
 #include <ParamAccessor.h>
+#include <Import.h>
 
 #include <string>
 #include <assert.h>
 #include <tuple>
 
-template <> catena::Value::KindCase catena::getKindCase<int32_t>(const int32_t& src) {
-    return catena::Value::KindCase::kInt32Value;
-}
 namespace catena {
 namespace sdk {
 
@@ -57,11 +55,6 @@ class IParam {
      * @brief Default destructor
      */
     virtual ~IParam() = default;
-
-    /**
-     * @brief Construct from a catena::Param (protobuf)
-     */
-    IParam(){};
 
     /**
      * @brief get the parameter's value as a catena::Value (protobuf)
@@ -111,21 +104,26 @@ class ParamCommon : public IParam {
      * @param oid object id
      * @param src source parameter
      */
-    ParamCommon(const catena::Param& src) : IParam{}, type_{src.type()} {}
+    ParamCommon(const catena::Param& src);
+
+    ParamCommon& operator=(const catena::Param& src) override;
 
     /**
      * @brief Construct from an object id
      * @param oid object id
      * Note: type is set to UNDEFINED
      */
-    explicit ParamCommon(const std::string& oid) : IParam{}, oid_{oid}, type_{catena::ParamType::UNDEFINED} {}
 
     virtual ~ParamCommon() = default;
 
+    bool include() const override;
+
+    void included() override;
+
   protected:
-    std::string oid_;
-    catena::ParamType type_;
     bool included_{false};
+    catena::ParamType type_;
+    sdk::Import import_;
 };
 
 template <typename VT> class Param : public ParamCommon {
@@ -160,31 +158,37 @@ template <typename VT> class Param : public ParamCommon {
 
     void getValue(void* dst) const override { *reinterpret_cast<VT*>(dst) = value_; }
 
-    static bool registerWithFactory() {
-        if (registered_) {
-            return true;
-        }
-        auto& fac = IParam::Factory::getInstance();
-        fac.addProduct(getKindCase<VT>(), [](const std::string& oid, const catena::Param& src) -> IParam* {
-            return new Param<VT>(src);
-        });
-        return registered_;
-    }
 
     bool hasSubparams() const override { return params_.size() > 0; }
 
     ParamsMap& subparams() override { return params_; }
 
-    IParam& operator=(const catena::Param& src) override {
-        return *this;
-    }
+    Param& operator=(const catena::Param& src) override { return *this; }
 
+  private:
+    class Initializer {
+      public:
+        Initializer() { Param::registerWithFactory(); }
+    };
+
+  private:
+    static bool registerWithFactory() {
+        if (registered_) {
+            return true;
+        }
+        auto& fac = IParam::Factory::getInstance();
+        fac.addProduct(getKindCase(std::declval<VT>()),
+                       [](const catena::Param& src) -> IParam* { return new Param<VT>(src); });
+        return registered_;
+    }
 
   private:
     VT value_;
+    static Initializer initializer_;
     static bool registered_;
     ParamsMap params_;
 };
+
 
 }  // namespace sdk
 }  // namespace catena
