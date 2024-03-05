@@ -106,8 +106,8 @@ jobs:
         cd ~
         
         echo "Run, Build Application using Ninja"
-        mkdir -p Catena/Catena/sdks/cpp/build
-        cd Catena/Catena/sdks/cpp/build
+        mkdir -p ./sdks/cpp/build
+        cd ./sdks/cpp/build
         cmake -G Ninja ..
         ninja
         cd ~
