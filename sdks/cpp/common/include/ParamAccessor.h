@@ -53,9 +53,20 @@ template <typename T> struct PassByValueOrReference {
 };
 
 /**
+ * @brief meta programming to avoid having to pass potentially large, default constructed objects to getKindCase.
+ * 
+ * Instead we pass a TypeTag<T> to getKindCase, which, as an empty struct, is optimized to nothing.
+ * The only thing that matters is the type T, which is used to determine the KindCase.
+*/
+template <typename T>
+struct TypeTag {
+    using type = T;
+};
+
+/**
  * @brief Value::KindCase looker upper
  */
-template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] const V& src) {
+template <typename V = float> catena::Value::KindCase getKindCase(TypeTag<V> = {}) {
     if constexpr (has_getStructInfo<V>) {
         return catena::Value::KindCase::kStructValue;
     }
@@ -331,8 +342,8 @@ class ParamAccessor {
                 }
                 variantInfo.members.at(variant).wrapSetter(sp.get(), &src);
             } else {
-                typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
-                setter[getKindCase(x)](&value_.get(), &src);
+                using type = typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
+                setter[getKindCase(TypeTag<type>{})](&value_.get(), &src);
             }
             deviceModel_.get().valueSetByService(*this, kParamEnd);
         } catch (const catena::exception_with_status& why) {
@@ -370,8 +381,8 @@ class ParamAccessor {
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& setter = SetterAt::getInstance();
-            static std::vector<ElementType> x;
-            setter[getKindCase(x)](&value_.get(), &src, idx);
+            
+            setter[getKindCase(TypeTag<std::vector<V>>{})](&value_.get(), &src, idx);
             deviceModel_.get().valueSetByService(*this, idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
@@ -451,7 +462,7 @@ class ParamAccessor {
                 }
             } else {
                 // dst is a simple type
-                getter[getKindCase<V>(dst)](&dst, &value_.get());
+                getter[getKindCase(TypeTag<V>{})](&dst, &value_.get());
             }
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
@@ -487,8 +498,7 @@ class ParamAccessor {
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& getter = GetterAt::getInstance();
-            static std::vector<ElementType> x;
-            getter[getKindCase(x)](&dst, &value_.get(), idx);
+            getter[getKindCase(TypeTag<std::vector<V>>{})](&dst, &value_.get(), idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';

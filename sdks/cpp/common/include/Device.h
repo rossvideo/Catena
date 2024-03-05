@@ -42,12 +42,12 @@ namespace sdk {
 class Device {
   public:
     using ParamsMap = IParam::ParamsMap;
-    
+
   public:
     /**
      * @brief default constructor
      */
-    Device() = default;
+    Device() = delete;
 
     /**
      * @brief virtual destructor

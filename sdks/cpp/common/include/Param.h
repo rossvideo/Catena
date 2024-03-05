@@ -33,6 +33,9 @@
 #include <string>
 #include <assert.h>
 #include <tuple>
+#include <type_traits>
+#include <unordered_map>
+
 
 namespace catena {
 namespace sdk {
@@ -133,11 +136,13 @@ template <typename VT> class Param : public ParamCommon {
      * @param src source parameter
      */
     explicit Param(const catena::Param& src) : ParamCommon{src} {
-        assert(src.value().kind_case() == catena::getKindCase(value_));
+        const catena::Value& value = src.value();
+        catena::Value::KindCase kind = value.kind_case();
+        catena::Value::KindCase expected = catena::getKindCase(TypeTag<VT>{});
+        assert(kind == expected);
         auto& getter = catena::ParamAccessor::Getter::getInstance();
-        getter[src.value().kind_case()](&value_, &src.value());
+        getter[kind](&value_, &value);
     }
-
 
     virtual ~Param() = default;
 
@@ -146,18 +151,17 @@ template <typename VT> class Param : public ParamCommon {
 
     catena::Value& getValue(catena::Value& dst) const override {
         auto& setter = catena::ParamAccessor::Setter::getInstance();
-        setter[catena::getKindCase<VT>(value_)](&dst, &value_);
+        setter[catena::getKindCase(TypeTag<VT>{})](&dst, &value_);
         return dst;
     }
 
     void setValue(const catena::Value& src) override {
-        assert(src.kind_case() == catena::getKindCase(value_));
+        assert(src.kind_case() == catena::getKindCase(TypeTag<VT>{}));
         auto& getter = catena::ParamAccessor::Getter::getInstance();
         getter[src.kind_case()](&value_, &src);
     }
 
     void getValue(void* dst) const override { *reinterpret_cast<VT*>(dst) = value_; }
-
 
     bool hasSubparams() const override { return params_.size() > 0; }
 
@@ -165,26 +169,10 @@ template <typename VT> class Param : public ParamCommon {
 
     Param& operator=(const catena::Param& src) override { return *this; }
 
-  private:
-    class Initializer {
-      public:
-        Initializer() { Param::registerWithFactory(); }
-    };
-
-  private:
-    static bool registerWithFactory() {
-        if (registered_) {
-            return true;
-        }
-        auto& fac = IParam::Factory::getInstance();
-        fac.addProduct(getKindCase(std::declval<VT>()),
-                       [](const catena::Param& src) -> IParam* { return new Param<VT>(src); });
-        return registered_;
-    }
+    static bool registerWithFactory();
 
   private:
     VT value_;
-    static Initializer initializer_;
     static bool registered_;
     ParamsMap params_;
 };

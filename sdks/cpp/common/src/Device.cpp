@@ -21,13 +21,20 @@
 #include <Device.h>
 #include <DeviceModel.h>
 #include <utils.h>
+#include <Param.h>
 
 using catena::sdk::Device;
 using ParamsMap = catena::DeviceModel::ParamsMap;
 
+
 static auto jpopts = google::protobuf::util::JsonParseOptions{};
 
 Device::Device(const std::string& filename) {
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        catena::sdk::Param<int32_t>::registerWithFactory();
+    }
     // read in the top level file, code block used to minimize
     // lifespan of the imported file
     {
@@ -92,12 +99,23 @@ Device& Device::operator=(const catena::Device& pbufDevice) {
 
 }
 
-catena::sdk::IParam* Device::param(const std::string& oid) {
-    auto it = params_.find(oid);
-    if (it != params_.end()) {
-        return it->second.get();
+catena::sdk::IParam* Device::param(const std::string& jptr) {
+    catena::Path path_(jptr);
+
+    // get our oid and look for it in the params map
+    catena::Path::Segment segment = path_.pop_front();
+
+    if (!std::holds_alternative<std::string>(segment)) {
+        BAD_STATUS("expected oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
     }
-    return nullptr;
+    std::string oid(std::get<std::string>(segment));
+
+    if (!params_.contains(oid)) {
+        std::stringstream msg;
+        msg << "param " << std::quoted(oid) << " not found";
+        BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
+    }
+    return params_[oid].get();
 }
 
 void Device::addParam(const std::string& oid, const catena::Param& param) {

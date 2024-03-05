@@ -394,29 +394,29 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
 }
 
 
-// template <> catena::Value::KindCase catena::getKindCase<int32_t>(int32_t & src) {
-//     return catena::Value::KindCase::kInt32Value;
-// }
+template <> catena::Value::KindCase catena::getKindCase<int32_t>(TypeTag<int32_t>) {
+    return catena::Value::KindCase::kInt32Value;
+}
 
-template <> catena::Value::KindCase catena::getKindCase<float>(const float &src) {
+template <> catena::Value::KindCase catena::getKindCase<float>(TypeTag<float>) {
     return catena::Value::KindCase::kFloat32Value;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::string>(const std::string & src) {
+template <> catena::Value::KindCase catena::getKindCase<std::string>(TypeTag<std::string>) {
     return catena::Value::KindCase::kStringValue;
 }
 
 template <>
-catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(const std::vector<int32_t> & src) {
+catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(TypeTag<std::vector<int32_t>>) {
     return catena::Value::KindCase::kInt32ArrayValues;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::vector<float>>(const std::vector<float> & src) {
+template <> catena::Value::KindCase catena::getKindCase<std::vector<float>>(TypeTag<std::vector<float>>) {
     return catena::Value::KindCase::kFloat32ArrayValues;
 }
 
 template <>
-catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(const std::vector<std::string> & src) {
+catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(TypeTag<std::vector<std::string>>) {
     return catena::Value::KindCase::kStringArrayValues;
 }
 
