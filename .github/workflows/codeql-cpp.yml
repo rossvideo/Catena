@@ -78,6 +78,7 @@ jobs:
     - name: build
       run: |
         pwd
+        find . -name "CMakeLists.txt"
         cmake --version
         echo "Install and Build gRPC and Protobufs"
         export MY_INSTALL_DIR=$HOME/.local
