@@ -197,7 +197,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
               gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(1, GPR_TIMESPAN));
             switch (cq_->AsyncNext(&tag, &ok, deadline)) {
                 case ServerCompletionQueue::GOT_EVENT:
-                    std::thread(&CallData::proceed, static_cast<CallData *>(tag), ok).detach();
+                    std::thread(&CallData::proceed, static_cast<CallData *>(tag), this, ok).detach();
                     break;
                 case ServerCompletionQueue::SHUTDOWN:
                     return;
@@ -221,10 +221,22 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     class CallData {
       public:
-        virtual void proceed(bool ok) = 0;
+        virtual void proceed(CatenaServiceImpl *service, bool ok) = 0;
         virtual ~CallData() {}
+
+      protected:
+        void removeFromRegistry(std::vector<std::unique_ptr<CallData>> *registry) {
+            auto it = std::find_if(registry->begin(), registry->end(),
+                                   [this](const std::unique_ptr<CallData> &p) { return p.get() == this; });
+            if (it != registry->end()) {
+                registry->erase(it);
+            }
+        }
     };
 
+
+    std::vector<std::unique_ptr<CallData>> registry;
+    
     /**
      * @brief CallData class for the GetValue RPC
      */
@@ -234,10 +246,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             : service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             objectId_ = objectCounter_++;
-            proceed(ok);
+            service->registry.push_back(std::unique_ptr<CallData>(this));
+            proceed(service, ok);
         }
 
-        void proceed(bool ok) override {
+        void proceed(CatenaServiceImpl *service, bool ok) override {
             std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok << '\n';
             if (status_ == CallStatus::kCreate) {
@@ -269,7 +282,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 }
             } else {
                 std::cout << "GetValue[" << objectId_ << "] finished\n";
-                delete this;
+                removeFromRegistry(&service->registry);
             }
         }
 
@@ -302,10 +315,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             : service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             objectId_ = objectCounter_++;
-            proceed(ok);
+            service->registry.push_back(std::unique_ptr<CallData>(this));
+            proceed(service, ok);
         }
 
-        void proceed(bool ok) override {
+        void proceed(CatenaServiceImpl *service, bool ok) override {
             std::cout << "SetValue::proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok << '\n';
             switch (status_) {
@@ -352,7 +366,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kFinish:
                     std::cout << "SetValue[" << objectId_ << "] finished\n";
-                    delete this;
+                    removeFromRegistry(&service->registry);
                     break;
             }
         }
@@ -386,6 +400,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         Connect(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
             : service_{service}, dm_{dm}, writer_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+            service->registry.push_back(std::unique_ptr<CallData>(this));
             objectId_ = objectCounter_++;
             if (ok) {
                 dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
@@ -397,11 +412,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     this->cv_.notify_one();
                 });
             }
-            proceed(ok);  // start the process
+            proceed(service, ok);  // start the process
         }
         ~Connect() {}
 
-        void proceed(bool ok) override {
+        void proceed(CatenaServiceImpl *service, bool ok) override {
             std::cout << "Connect proceed[" << objectId_ << "] " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                       << std::endl;
@@ -447,7 +462,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kFinish:
                     std::cout << "Connect[" << objectId_ << "] finished\n";
-                    delete this;
+                    removeFromRegistry(&service->registry);
                     break;
             }
         }
@@ -476,12 +491,13 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         DeviceRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
             : service_{service}, dm_{dm}, writer_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+            service->registry.push_back(std::unique_ptr<CallData>(this));
             objectId_ = objectCounter_++;
-            proceed(ok);  // start the process
+            proceed(service, ok);  // start the process
         }
         ~DeviceRequest() {}
 
-        void proceed(bool ok) override {
+        void proceed(CatenaServiceImpl *service, bool ok) override {
             std::cout << "DeviceRequest proceed[" << objectId_ << "] " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                       << std::endl;
@@ -516,7 +532,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kFinish:
                     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
-                    delete this;
+                    removeFromRegistry(&service->registry);
                     break;
             }
         }
