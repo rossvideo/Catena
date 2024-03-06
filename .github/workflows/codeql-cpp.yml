@@ -51,35 +51,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        debug: true
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
-
-        # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-        # queries: security-extended,security-and-quality
-
-
-    # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    # - name: Autobuild
-    #   uses: github/codeql-action/autobuild@v3
-
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-    #   If the Autobuild fails above, remove it and uncomment the following three lines.
-    #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-    - name: build
+    - name: Install and Build gRPC and Protobufs
       run: |
-        pwd
-        find . -name "CMakeLists.txt"
-        cmake --version
+        cd ~
         echo "Install and Build gRPC and Protobufs"
         export MY_INSTALL_DIR=$HOME/.local
         mkdir -p $MY_INSTALL_DIR
@@ -89,30 +63,43 @@ jobs:
         git clone --recurse-submodules -b v1.62.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
         cd grpc
         mkdir -p cmake/build
-        cd cmake/build
+        pushd cmake/build
         cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR -G Ninja ../..
         ninja
         sudo ninja install
+        popd
+   
+    - name: Install and Build jwt-cpp
+      run: |
         cd ~
-        
         echo "Install and Build jwt-cpp"
         sudo apt-get install libssl-dev
-        git clone https://github.com/Thalhammer/jwt-cpp
-        cd jwt-cpp
-        mkdir -p build && cd build 
-        cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..
-        ninja
-        sudo ninja install
-        cd ~
-        
+        git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..  && ninja && sudo ninja install
         echo "Run, Build Application using Ninja"
-        mkdir -p ./Catena/sdks/cpp/build
-        cd ./Catena/sdks/cpp/build
+        mkdir -p sdks/cpp/build
+        cd sdks/cpp/build
         cmake -G Ninja ..
         ninja
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        debug: true
+
+    - name: Scan with CodeQL
+      run: |
+        echo "Run, Build Application using Ninja"
         cd ~
+        pushd $(find . -type d -name "cpp" 2>/dev/null)
+        mkdir -p build
+        cd build
+        cmake -G Ninja ..
+        ninja
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
+
