@@ -54,21 +54,20 @@ jobs:
     - name: Install and Build gRPC and Protobufs
       run: |
         cd ~
-        find . -type d -name "cpp" 2>/dev/null
-        # echo "Install and Build gRPC and Protobufs"
-        # export MY_INSTALL_DIR=$HOME/.local
-        # mkdir -p $MY_INSTALL_DIR
-        # export PATH="$MY_INSTALL_DIR/bin:$PATH"
-        # sudo apt install -y build-essential autoconf libtool pkg-config
-        # sudo apt-get install ninja-build
-        # git clone --recurse-submodules -b v1.62.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
-        # cd grpc
-        # mkdir -p cmake/build
-        # pushd cmake/build
-        # cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR -G Ninja ../..
-        # ninja
-        # sudo ninja install
-        # popd
+        echo "Install and Build gRPC and Protobufs"
+        export MY_INSTALL_DIR=$HOME/.local
+        mkdir -p $MY_INSTALL_DIR
+        export PATH="$MY_INSTALL_DIR/bin:$PATH"
+        sudo apt install -y build-essential autoconf libtool pkg-config
+        sudo apt-get install ninja-build
+        git clone --recurse-submodules -b v1.62.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
+        cd grpc
+        mkdir -p cmake/build
+        pushd cmake/build
+        cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR -G Ninja ../..
+        ninja
+        sudo ninja install
+        popd
    
     - name: Install and Build jwt-cpp
       run: |
@@ -89,6 +88,7 @@ jobs:
       run: |
         echo "Run, Build Application using Ninja"
         cd ~
+        ./work/Catena/Catena/sdks/cpp
         mkdir -p build
         cd build
         cmake -G Ninja ..
