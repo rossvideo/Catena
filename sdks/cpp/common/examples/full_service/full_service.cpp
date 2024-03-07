@@ -208,8 +208,25 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     }
 
   private:
+    class CallData;
+    using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
+    using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;
+    Registry registry_;
+
     ServerCompletionQueue *cq_;
     DeviceModel &dm_;
+  
+    void registerItem(CallData *cd) {
+        this->registry_.push_back(std::unique_ptr<CallData>(cd));
+    }
+
+    void deregisterItem(CallData *cd) {
+        auto it = std::find_if(registry_.begin(), registry_.end(),
+                               [cd](const RegistryItem &i) { return i.get() == cd; });
+        if (it != registry_.end()) {
+            registry_.erase(it);
+        }
+    }
 
     /**
      * Nested private classes
@@ -223,19 +240,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
       public:
         virtual void proceed(CatenaServiceImpl *service, bool ok) = 0;
         virtual ~CallData() {}
-
-      protected:
-        void removeFromRegistry(std::vector<std::unique_ptr<CallData>> *registry) {
-            auto it = std::find_if(registry->begin(), registry->end(),
-                                   [this](const std::unique_ptr<CallData> &p) { return p.get() == this; });
-            if (it != registry->end()) {
-                registry->erase(it);
-            }
-        }
     };
-
-
-    std::vector<std::unique_ptr<CallData>> registry;
     
     /**
      * @brief CallData class for the GetValue RPC
@@ -246,7 +251,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             : service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             objectId_ = objectCounter_++;
-            service->registry.push_back(std::unique_ptr<CallData>(this));
+            service->registerItem(this);
             proceed(service, ok);
         }
 
@@ -282,7 +287,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 }
             } else {
                 std::cout << "GetValue[" << objectId_ << "] finished\n";
-                removeFromRegistry(&service->registry);
+                service->deregisterItem(this);
             }
         }
 
@@ -315,7 +320,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             : service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             objectId_ = objectCounter_++;
-            service->registry.push_back(std::unique_ptr<CallData>(this));
+            service->registerItem(this);
             proceed(service, ok);
         }
 
@@ -366,7 +371,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kFinish:
                     std::cout << "SetValue[" << objectId_ << "] finished\n";
-                    removeFromRegistry(&service->registry);
+                    service->deregisterItem(this);
                     break;
             }
         }
@@ -400,7 +405,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         Connect(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
             : service_{service}, dm_{dm}, writer_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-            service->registry.push_back(std::unique_ptr<CallData>(this));
+            service->registerItem(this);
             objectId_ = objectCounter_++;
             if (ok) {
                 dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
@@ -445,24 +450,27 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         if (context_.IsCancelled()) {
                             std::cout << "Connect[" << objectId_ << "] cancelled\n";
                             status_ = CallStatus::kFinish;
+                            service->deregisterItem(this);
                             break;
                         } else {
                             writer_.Write(res_, this);
                         }
                     } else {
+                        std::cout << "Server shutting down: connect[" << objectId_ << "] cancelled\n";
                         status_ = CallStatus::kFinish;
-                        // writer_.Finish(Status(grpc::StatusCode::INTERNAL, "who knows?"), this);
+                        service->deregisterItem(this);
                     }
                     break;
 
                 case CallStatus::kPostWrite:
                     writer_.Finish(Status::OK, this);
                     status_ = CallStatus::kFinish;
+                    service->deregisterItem(this);
                     break;
 
                 case CallStatus::kFinish:
                     std::cout << "Connect[" << objectId_ << "] finished\n";
-                    removeFromRegistry(&service->registry);
+                    service->deregisterItem(this);
                     break;
             }
         }
@@ -491,7 +499,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         DeviceRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
             : service_{service}, dm_{dm}, writer_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-            service->registry.push_back(std::unique_ptr<CallData>(this));
+            service->registerItem(this);
             objectId_ = objectCounter_++;
             proceed(service, ok);  // start the process
         }
@@ -532,7 +540,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kFinish:
                     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
-                    removeFromRegistry(&service->registry);
+                    service->deregisterItem(this);
                     break;
             }
         }
