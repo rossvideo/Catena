@@ -31,6 +31,7 @@
 #include <Status.h>
 #include <Threading.h>
 #include <TypeTraits.h>
+#include <ValueAccessors.h>
 
 
 #include <functional>
@@ -52,26 +53,6 @@ template <typename T> struct PassByValueOrReference {
     using type = std::conditional_t<std::is_scalar<T>::value, T, T&>;
 };
 
-/**
- * @brief meta programming to avoid having to pass potentially large, default constructed objects to getKindCase.
- * 
- * Instead we pass a TypeTag<T> to getKindCase, which, as an empty struct, is optimized to nothing.
- * The only thing that matters is the type T, which is used to determine the KindCase.
-*/
-template <typename T>
-struct TypeTag {
-    using type = T;
-};
-
-/**
- * @brief Value::KindCase looker upper
- */
-template <typename V = float> catena::Value::KindCase getKindCase(TypeTag<V> = {}) {
-    if constexpr (has_getStructInfo<V>) {
-        return catena::Value::KindCase::kStructValue;
-    }
-    return catena::Value::KindCase::KIND_NOT_SET;
-}
 
 /**
  * @brief index value used to trigger special behaviors.
@@ -103,46 +84,6 @@ class ParamAccessor {
      *
      */
     using Mutex = DeviceModel::Mutex;
-
-    /**
-     * @brief type alias for the setter Functory for scalar types
-     */
-    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*>;
-
-    /**
-     * @brief type alias for the getter function for scalar types
-     */
-    using Getter = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*>;
-
-    /**
-     * @brief type alias for the setter Functory for vector types
-     */
-    using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*,
-                                                const ParamIndex>;
-
-    /**
-     * @brief type alias for the getter function for vector types
-     */
-    using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
-                                                const ParamIndex>;
-
-    /**
-     * @brief type alias for the function that gets the VariantInfo for a type
-     */
-    using VariantInfoGetter = catena::patterns::Functory<std::type_index, const VariantInfo&>;
-
-    /**
-     * @brief type alias for the function that gets values from the device model for delivery to attached
-     * clients
-     */
-    using ValueGetter =
-      catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&, ParamIndex>;
-
-    /**
-     * @brief type alias for the function that sets values in the device model in response to client requests
-     */
-    using ValueSetter =
-      catena::patterns::Functory<catena::Value::KindCase, void, Value&, const Value&, ParamIndex>;
 
   public:
     /**
@@ -329,7 +270,7 @@ class ParamAccessor {
                     }
                 }
             } else if constexpr (catena::meta::is_variant<V>::value) {
-                auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
+                auto& variantInfoFunctory = catena::VariantInfoGetter::getInstance();
                 const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
                 Value& v = value_.get();
                 StructVariantValue* vv = v.mutable_struct_variant_value();
@@ -343,7 +284,7 @@ class ParamAccessor {
                 variantInfo.members.at(variant).wrapSetter(sp.get(), &src);
             } else {
                 using type = typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
-                setter[getKindCase(TypeTag<type>{})](&value_.get(), &src);
+                setter[getKindCase(meta::TypeTag<type>{})](&value_.get(), &src);
             }
             deviceModel_.get().valueSetByService(*this, kParamEnd);
         } catch (const catena::exception_with_status& why) {
@@ -382,7 +323,7 @@ class ParamAccessor {
             LockGuard lock(deviceModel_.get().mutex_);
             auto& setter = SetterAt::getInstance();
             
-            setter[getKindCase(TypeTag<std::vector<V>>{})](&value_.get(), &src, idx);
+            setter[getKindCase(meta::TypeTag<std::vector<V>>{})](&value_.get(), &src, idx);
             deviceModel_.get().valueSetByService(*this, idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
@@ -443,7 +384,7 @@ class ParamAccessor {
                 Value::KindCase kc = src.value().kind_case();
 
                 // gather info about the native destination
-                auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
+                auto& variantInfoFunctory = catena::VariantInfoGetter::getInstance();
                 const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
                 const catena::VariantMemberInfo vmi = variantInfo.members.at(variant);
 
@@ -462,7 +403,7 @@ class ParamAccessor {
                 }
             } else {
                 // dst is a simple type
-                getter[getKindCase(TypeTag<V>{})](&dst, &value_.get());
+                getter[getKindCase(meta::TypeTag<V>{})](&dst, &value_.get());
             }
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
@@ -498,7 +439,7 @@ class ParamAccessor {
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& getter = GetterAt::getInstance();
-            getter[getKindCase(TypeTag<std::vector<V>>{})](&dst, &value_.get(), idx);
+            getter[getKindCase(meta::TypeTag<std::vector<V>>{})](&dst, &value_.get(), idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';

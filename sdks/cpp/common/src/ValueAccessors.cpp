@@ -12,30 +12,23 @@
 // limitations under the License.
 //
 
-#include <ParamAccessor.h>
 #include <ValueAccessors.h>
-#include <DeviceModel.h>
-#include <Path.h>
-#include <utils.h>
-#include <ArrayAccessor.h>
-#include <TypeTraits.h>
 
-#include <google/protobuf/map.h>
-#include <google/protobuf/util/json_util.h>
 
-#include <algorithm>
-#include <fstream>
-#include <iostream>
 #include <sstream>
-#include <stdexcept>
-#include <utility>
+#include <exception>
+#include <algorithm>
+#include <vector>
+#include <iostream>
+#include <type_traits>
+#include <typeindex>
+#include <typeinfo>
+#include <variant>
 
-using catena::ParamAccessor;
 using catena::ParamIndex;
 using VP = catena::Value *;  // shared value pointer
-using catena::DeviceModel;
-using catena::Param;
-using catena::Value;
+using catena::Param;    // this is the protobuf Param message
+using catena::Value;    // this is the protobuf Value message
 using KindCase = Value::KindCase;
 
 /**
@@ -165,103 +158,9 @@ valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex i
     dst.mutable_array_val_method()->mutable_method()->at(idx) = src.value_method(); \
 })
 
-// ParamAccessor::Setter::Protector setterProtector;
-// static ParamAccessor::Setter setter(setterProtector);
-// ParamAccessor::Getter::Protector getterProtector;
-// static ParamAccessor::Getter getter(getterProtector);
-
-int applyIntConstraint(catena::Param &param, int v) {
-    /// @todo: add warning log for invalid constraint
-    if (param.has_constraint()) {
-        // apply the constraint
-        int constraint_type = param.constraint().type();
-
-        switch (constraint_type) {
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_RANGE:
-                v = std::clamp(v, param.constraint().int32_range().min_value(),
-                               param.constraint().int32_range().max_value());
-                break;
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_INT_CHOICE:
-                if (std::find_if(param.constraint().int32_choice().choices().begin(),
-                                 param.constraint().int32_choice().choices().end(),
-                                 [&](catena::Int32ChoiceConstraint_IntChoice const &c) {
-                                     return c.value() == v;
-                                 }) == param.constraint().int32_choice().choices().end()) {
-
-                    // if value is not in constraint, choose first item in list
-                    v = param.constraint().int32_choice().choices(0).value();
-                }
-                break;
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_ALARM_TABLE: {
-                // e.g. for bit_value of 1 and 3, bit_location = 1010
-                int bit_location = 0;
-                for (const auto &it : param.constraint().alarm_table().alarms()) {
-                    bit_location |= (1 << it.bit_value());
-                }
-
-                /*
-                 * assume you have three binary numbers, x=1010, y=0111 and t=1010
-                 * if the corresponding bit in t is 1 then take the corresponding bit in x,
-                 * if the corresponding bit in t is 0, then take the corresponding bit in y
-                 *
-                 * so result = 0010
-                 */
-
-                v = (bit_location & v) | ((~bit_location) & param.value().int32_value());
-
-            }; break;
-            default:
-                std::stringstream err;
-                err << "invalid constraint for int32: " << constraint_type << '\n';
-                BAD_STATUS((err.str()), catena::StatusCode::OUT_OF_RANGE);
-        }
-    }
-    return v;
-}
-
-std::string applyStringConstraint(catena::Param &param, std::string v) {
-    /// @todo: add warning log for invalid constraint
-    if (param.has_constraint()) {
-        // apply the constraint
-        int constraint_type = param.constraint().type();
-
-        switch (constraint_type) {
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_CHOICE:
-                if (param.constraint().string_choice().strict()) {
-                    if (std::find_if(param.constraint().string_choice().choices().begin(),
-                                     param.constraint().string_choice().choices().end(),
-                                     [&](std::string const &c) { return c == v; }) ==
-                        param.constraint().string_choice().choices().end()) {
-
-                        // if value is not in constraint, choose first item in list
-                        v = param.constraint().string_choice().choices(0);
-                    }
-                }
-                break;
-            case catena::Constraint_ConstraintType::Constraint_ConstraintType_STRING_STRING_CHOICE:
-                if (param.constraint().string_string_choice().strict()) {
-                    if (std::find_if(param.constraint().string_string_choice().choices().begin(),
-                                     param.constraint().string_string_choice().choices().end(),
-                                     [&](catena::StringStringChoiceConstraint_StringStringChoice const &c) {
-                                         return c.value() == v;
-                                     }) == param.constraint().string_string_choice().choices().end()) {
-                        // if value is not in constraint, choose first item in list
-                        v = param.constraint().string_string_choice().choices(0).value();
-                    }
-                }
-                break;
-            default:
-                std::stringstream err;
-                err << "invalid constraint for string: " << constraint_type << '\n';
-                BAD_STATUS((err.str()), catena::StatusCode::OUT_OF_RANGE);
-        }
-    }
-    return v;
-}
 
 
-ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)} {
+void catena::initValueAccessors() {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -421,24 +320,3 @@ catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(TypeTag<st
     return catena::Value::KindCase::kStringArrayValues;
 }
 
-void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx) {
-    std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    try {
-        Value &value = value_.get();
-        if (isList() && idx != kParamEnd) {
-            // update array element
-            auto& setter = ValueSetter::getInstance();
-            setter[value.kind_case()](value, src, idx);
-        } else {
-            // update scalar value
-            value.CopyFrom(src);
-        }
-        deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
-    } catch (const catena::exception_with_status& why) {
-        std::stringstream err;
-        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-        throw catena::exception_with_status(err.str(), why.status);
-    } catch (...) {
-        throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
-    }
-}

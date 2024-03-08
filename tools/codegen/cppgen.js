@@ -74,7 +74,7 @@ let api = {
         if (body.type in convertors) {
             return convertors[body.type](name, body);
         } else {
-            // console.log(`No convertor found for ${name} of type ${body.type}`);
+            console.log(`No convertor found for ${name} of type ${body.type}`);
         }
     },
     setNamespace: function (ns) {

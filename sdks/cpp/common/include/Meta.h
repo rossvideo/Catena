@@ -157,5 +157,16 @@ class NthElementT<L, 0> : public FrontT<L> {};
 template <typename L, unsigned int N>
 using NthElement = typename NthElementT<L, N>::type;
 
+/**
+ * @brief meta programming to avoid having to pass potentially large, default constructed objects to getKindCase.
+ * 
+ * Instead we pass a TypeTag<T> to getKindCase, which, as an empty struct, is optimized to nothing.
+ * The only thing that matters is the type T, which is used to determine the KindCase.
+*/
+template <typename T>
+struct TypeTag {
+    using type = T;
+};
+
 }  // namespace meta
 }  // namespace catena
