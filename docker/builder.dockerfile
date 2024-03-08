@@ -65,7 +65,7 @@ COPY "example_device_models" "${CATENA_SDK}/example_device_models"
 
 RUN apt-get update && apt install -y doxygen graphviz
 WORKDIR "${CATENA_SDK}/sdks/cpp/build"
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX_DIR}" \
+RUN cmake \
         -S "${CATENA_SDK}/sdks/cpp" \
         -B "${CATENA_SDK}/sdks/cpp/build" && \
     make -C "${CATENA_SDK}/sdks/cpp/build" -j "${NPROC:-$(nproc)}"
