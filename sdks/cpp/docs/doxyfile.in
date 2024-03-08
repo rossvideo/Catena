@@ -2,6 +2,7 @@ PROJECT_NAME           = @CMAKE_PROJECT_NAME@-v@CMAKE_PROJECT_VERSION@
 
 RECURSIVE              = YES
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/common/include @CMAKE_CURRENT_SOURCE_DIR@/docs
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/common/include/vdk @CMAKE_CURRENT_SOURCE_DIR@/common/src/vdk
 
 USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/cpp_sdk_main_page.md
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/doxygen/
