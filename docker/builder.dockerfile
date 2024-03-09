@@ -31,7 +31,8 @@ RUN apt-get update --fix-missing && \
         libssl-dev \
         libgtest-dev \
         cmake make \
-        jq && \
+        jq  doxygen \
+        graphviz && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -59,13 +60,8 @@ RUN git clone --recurse-submodules -b ${GPRC_VERSION} --depth 1 --shallow-submod
     rm -rf "${GRPC_DIR}"
 
 # catena-sdk
-COPY "sdks/cpp" "${CATENA_SDK}/sdks/cpp/"
-COPY "interface" "${CATENA_SDK}/interface"
-COPY "example_device_models" "${CATENA_SDK}/example_device_models"
+COPY . "${CATENA_SDK}/"
 
-RUN apt-get update && apt install -y doxygen graphviz
 WORKDIR "${CATENA_SDK}/sdks/cpp/build"
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX_DIR}" \
-        -S "${CATENA_SDK}/sdks/cpp" \
-        -B "${CATENA_SDK}/sdks/cpp/build" && \
+RUN cmake -S "${CATENA_SDK}/sdks/cpp" -B "${CATENA_SDK}/sdks/cpp/build" && \
     make -C "${CATENA_SDK}/sdks/cpp/build" -j "${NPROC:-$(nproc)}"
