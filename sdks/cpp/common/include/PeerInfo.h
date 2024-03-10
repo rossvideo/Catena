@@ -86,7 +86,7 @@ class PeerInfo {
     /**
      * @brief handles updates from the owning service
      */
-    void handleValueUpdate(const catena::ParamAccessor& param, catena::ParamIndex idx);
+    void handleValueUpdate(const catena::ParamAccessor& param, catena::ValueIndex idx);
 
     /**
      * @brief handles the connection with the pier

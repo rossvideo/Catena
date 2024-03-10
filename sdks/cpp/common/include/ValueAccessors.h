@@ -25,8 +25,35 @@
 
 #include <Functory.h>
 #include <Meta.h>
+#include <TypeTraits.h>
+
+#include <typeindex>
+#include <typeinfo>
+#include <variant>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <stdexcept>
+#include <type_traits>
 
 namespace catena {
+
+/**
+ * @brief type for indexing into values that are arrays
+ *
+ */
+using ValueIndex = uint32_t;
+
+/**
+ * @brief index value used to trigger special behaviors.
+ *
+ * getValue with this value specified as the index will get all values of an
+ * array. setValue will append the value to the array
+ *
+ */
+static constexpr ValueIndex kValueEnd = ValueIndex(-1);
 
 /**
  * @brief Value::KindCase looker upper
@@ -44,7 +71,7 @@ template <typename V = float> catena::Value::KindCase getKindCase(meta::TypeTag<
  * 
  * Call this method once at startup to initialize the Functories.
 */
-static void initValueAccessors();
+void initValueAccessors();
 
 /**
  * @brief type alias to Functory of methods to set catena::Value from C++ scalar types
@@ -60,13 +87,13 @@ using Getter = catena::patterns::Functory<catena::Value::KindCase, void, void*, 
  * @brief type alias to Functory of methods to set catena::Value from C++ vector types
  */
 using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*,
-                                            const ParamIndex>;
+                                            const ValueIndex>;
 
 /**
  * @brief type alias to Functory of methods to get C++ vector types from catena::Value
  */
 using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
-                                            const ParamIndex>;
+                                            const ValueIndex>;
 
 /**
  * @brief type alias for Functory of methods to get VariantInfo given its type_index
@@ -78,13 +105,13 @@ using VariantInfoGetter = catena::patterns::Functory<std::type_index, const Vari
  * clients
  */
 using ValueGetter =
-    catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const catena::Value&, ParamIndex>;
+    catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const catena::Value&, ValueIndex>;
 
 /**
  * @brief type alias for the function that sets values in the protobuf device model in response to client requests
  */
 using ValueSetter =
-    catena::patterns::Functory<catena::Value::KindCase, void, catena::Value&, const catena::Value&, ParamIndex>;
+    catena::patterns::Functory<catena::Value::KindCase, void, catena::Value&, const catena::Value&, ValueIndex>;
 
 
 } // namespace catena

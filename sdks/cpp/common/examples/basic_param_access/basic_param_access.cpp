@@ -28,6 +28,9 @@
 #include <Path.h>
 #include <Reflect.h>
 #include <utils.h>
+#include <TypeTraits.h>
+#include <Meta.h>
+#include <ValueAccessors.h>
 
 #include <iomanip>
 #include <iostream>
@@ -49,26 +52,58 @@ using ParamAccessor = catena::ParamAccessor;
 // note use of REFLECTABLE_STRUCT macro which provides runtime reflection
 // and type conversion support used by ParamAccessor's get/set methods
 //
-struct Coords {
-    REFLECTABLE_STRUCT(Coords, (float)x, (float)y, (float)z);
-};
+// struct Coords {
+//     REFLECTABLE_STRUCT(Coords, (float)x, (float)y, (float)z);
+// };
 
-// note nested struct
+// // note nested struct
+// struct Location {
+//     REFLECTABLE_STRUCT(Location, (Coords)coords, (float)latitude, (float)longitude, (int32_t)altitude,
+//                        (std::string)name);
+// };
+
+// struct AudioSlot {
+//     REFLECTABLE_STRUCT(AudioSlot, (std::string)name, (float)gain);
+// };
+
+// struct VideoSlot {
+//     REFLECTABLE_STRUCT(VideoSlot, (std::string)name);
+// };
+
+// REFLECTABLE_VARIANT(SlotVariant, (AudioSlot), (VideoSlot));
+
+using catena::StructInfo;
+using catena::FieldInfo;
+using catena::sdk::IParam;
+
 struct Location {
-    REFLECTABLE_STRUCT(Location, (Coords)coords, (float)latitude, (float)longitude, (int32_t)altitude,
-                       (std::string)name);
+    float latitude;
+    float longitude;
+    static const StructInfo& getStructInfo();
 };
 
-struct AudioSlot {
-    REFLECTABLE_STRUCT(AudioSlot, (std::string)name, (float)gain);
-};
+const StructInfo& Location::getStructInfo() {
+    static StructInfo t;
+    if (t.name.length()) return t;
+    t.name = "Location";
+    FieldInfo fi;
+    fi.name = "latitude";
+    fi.offset = offsetof(Location, latitude);
+    fi.makeParam = [](const catena::Param& src) -> IParam* {
+        return new catena::sdk::Param<float>(src);
+    };
+    t.fields.push_back(fi);
+    fi.name = "longitude";
+    fi.offset = offsetof(Location, longitude);
+    t.fields.push_back(fi);
+    return t;
+}
 
-struct VideoSlot {
-    REFLECTABLE_STRUCT(VideoSlot, (std::string)name);
-};
 
-REFLECTABLE_VARIANT(SlotVariant, (AudioSlot), (VideoSlot));
 
+using LocationParam = catena::sdk::Param<Location>;
+
+static bool locationRegistered = LocationParam::registerWithFactory();
 
 int main(int argc, char **argv) {
     // process command line
@@ -78,8 +113,11 @@ int main(int argc, char **argv) {
     }
 
     try {
+
+
+
         // read a json file into a DeviceModel object
-        DeviceModel dm(argv[1]);
+        // DeviceModel dm(argv[1]);
 
         // experiments
         
@@ -106,51 +144,59 @@ int main(int argc, char **argv) {
         // locParam->setValue(loc);
 
         // read & write native int32_t
-        std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
-        int32_t num = 0;
-        numParam->getValue(num);
-        std::cout << "Number: " << num << '\n';
-        num *= 2;
-        numParam->setValue(num);
+        // std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
+        // int32_t num = 0;
+        // numParam->getValue(num);
+        // std::cout << "Number: " << num << '\n';
+        // num *= 2;
+        // numParam->setValue(num);
 
+        catena::initValueAccessors();
         
         catena::sdk::Device device{argv[1]};
-        catena::sdk::IParam* param = device.param("/a_number");
+        IParam* param = device.param("/a_number");
+        int32_t num = 0;
         param->getValue(&num);
-        std::cout << "Number: " << num << '\n'; 
+        std::cout << "Number: " << num << '\n';
+
+        IParam* locParam = device.param("/location");
+        Location loc;
+        locParam->getValue(&loc);
 
 
 
 
-        // read & write native vector of int32_t
-        std::vector<int32_t> primes = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
-        std::unique_ptr<ParamAccessor> primesParam = dm.param("/primes");
-        primesParam->setValue(primes);
 
-        std::vector<int32_t> squares;
-        std::unique_ptr<ParamAccessor> squaresParam = dm.param("/squares");
-        squaresParam->getValue(squares);
-        std::cout << "Squares: ";
-        for (auto &i : squares) {
-            std::cout << i << ' ';
-        }
-        std::cout << '\n';
 
-        // read & write elements of a native vector of int32_t
-        std::unique_ptr<ParamAccessor> powersParam = dm.param("/powers_of_two");
-        int32_t mistake = 0;
-        powersParam->setValueAt(mistake, 1);
+        // // read & write native vector of int32_t
+        // std::vector<int32_t> primes = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+        // std::unique_ptr<ParamAccessor> primesParam = dm.param("/primes");
+        // primesParam->setValue(primes);
 
-        int32_t twoCubed = 0;
-        powersParam->getValueAt(twoCubed, 3);
-        std::cout << "2^3: " << twoCubed << '\n';
+        // std::vector<int32_t> squares;
+        // std::unique_ptr<ParamAccessor> squaresParam = dm.param("/squares");
+        // squaresParam->getValue(squares);
+        // std::cout << "Squares: ";
+        // for (auto &i : squares) {
+        //     std::cout << i << ' ';
+        // }
+        // std::cout << '\n';
 
-        // write the device model to stdout
-        std::cout << "Updated Device Model: " << dm << '\n';
+        // // read & write elements of a native vector of int32_t
+        // std::unique_ptr<ParamAccessor> powersParam = dm.param("/powers_of_two");
+        // int32_t mistake = 0;
+        // powersParam->setValueAt(mistake, 1);
 
-        std::string serialized;
-        dm.device().SerializeToString(&serialized);
-        std::cout << "Device model serializes to " << serialized.size() << " bytes\n";
+        // int32_t twoCubed = 0;
+        // powersParam->getValueAt(twoCubed, 3);
+        // std::cout << "2^3: " << twoCubed << '\n';
+
+        // // write the device model to stdout
+        // std::cout << "Updated Device Model: " << dm << '\n';
+
+        // std::string serialized;
+        // dm.device().SerializeToString(&serialized);
+        // std::cout << "Device model serializes to " << serialized.size() << " bytes\n";
 
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';

@@ -13,6 +13,8 @@
 
 #include <device.pb.h>
 
+#include <IParam.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <memory>
@@ -50,6 +52,7 @@ class ParamAccessor;  // forward reference
 struct FieldInfo {
   std::string name; /**< the field's name */
   int offset;       /**< the offset to the field's data from struct base */
+  std::function<catena::sdk::IParam*(const catena::Param&)> makeParam; /**< function to make a Param with correct type for this field */
 
   /**
    *  method returns type info of nested struct 

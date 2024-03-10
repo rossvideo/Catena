@@ -22,6 +22,7 @@
 using catena::sdk::IParam;
 using catena::sdk::ParamCommon;
 using catena::sdk::Param;
+using catena::meta::TypeTag;
 
 
 /* Param Common Definitions */
@@ -47,18 +48,6 @@ void ParamCommon::included() {
 /* Param Definitions */
 using catena::sdk::Param;
 using Int32Param = Param<int32_t>;
-template<> bool Int32Param::registered_ = false;
 
-template<typename VT>
-bool Param<VT>::registerWithFactory() {
-    if (registered_) {
-        return true;
-    }
-    auto& fac = IParam::Factory::getInstance();
-    fac.addProduct(getKindCase<VT>(TypeTag<VT>{}),
-                    [](const catena::Param& src) -> IParam* { return new Param<VT>(src); });
-    return registered_ = true;
-}
 
-template bool Int32Param::registerWithFactory();
 

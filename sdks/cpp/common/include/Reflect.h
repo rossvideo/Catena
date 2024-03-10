@@ -115,7 +115,7 @@ const catena::VariantInfo CAT_TOKENS(&get, classname)() { \
     DOFOREACH_COUNT(ADD_VARIANT_MEMBER, __VA_ARGS__); \
     return vi; \
 } \
-auto& CAT_TOKENS(classname, _funct) = catena::ParamAccessor::VariantInfoGetter::getInstance(); \
+auto& CAT_TOKENS(classname, _funct) = catena::VariantInfoGetter::getInstance(); \
 bool CAT_TOKENS(classname, _added) = CAT_TOKENS(classname, _funct).addFunction(std::type_index(typeid(classname)),CAT_TOKENS(get, classname))
 
 

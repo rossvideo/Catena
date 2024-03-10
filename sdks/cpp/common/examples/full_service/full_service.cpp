@@ -388,7 +388,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             objectId_ = objectCounter_++;
             if (ok) {
-                dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
+                dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ValueIndex idx) {
                     std::unique_lock<std::mutex> lock(this->mtx_);
                     this->res_.mutable_value()->set_oid(p.oid());
                     p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx);
@@ -560,7 +560,7 @@ int main(int argc, char **argv) {
         // This simple example just increments a number every second,
         // and logs client updates
         //
-        dm.valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
+        dm.valueSetByClient.connect([](const ParamAccessor &p, catena::ValueIndex idx, const std::string &peer) {
             catena::Value v;
             p.getValue<false>(&v, idx);
             std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';

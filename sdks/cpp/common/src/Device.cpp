@@ -30,11 +30,8 @@ using ParamsMap = catena::DeviceModel::ParamsMap;
 static auto jpopts = google::protobuf::util::JsonParseOptions{};
 
 Device::Device(const std::string& filename) {
-    static bool initialized = false;
-    if (!initialized) {
-        initialized = true;
-        catena::sdk::Param<int32_t>::registerWithFactory();
-    }
+    sdk::Param<int32_t>::registerWithFactory();
+    sdk::Param<float>::registerWithFactory();
     // read in the top level file, code block used to minimize
     // lifespan of the imported file
     {
@@ -80,13 +77,13 @@ void Device::importSubParams_(std::filesystem::path &current_folder, ParamsMap &
                 BAD_STATUS(err.str(), catena::StatusCode::INVALID_ARGUMENT);
             }
             child = pbufParam;
+        }
 
-            // recurse to import any sub-params
-            if (child.hasSubparams()) {
-                std::filesystem::path next_folder(current_folder);
-                next_folder = next_folder /= it->first;
-                importSubParams_(next_folder, child.subparams());
-            }
+        // recurse to import any sub-params
+        if (child.hasSubparams()) {
+            std::filesystem::path next_folder(current_folder);
+            next_folder = next_folder /= it->first;
+            importSubParams_(next_folder, child.subparams());
         }
     }
 }
@@ -120,7 +117,8 @@ catena::sdk::IParam* Device::param(const std::string& jptr) {
 
 void Device::addParam(const std::string& oid, const catena::Param& param) {
     auto& fac = catena::sdk::IParam::Factory::getInstance();
-    auto p = fac.makeProduct(param.value().kind_case(), param);
+    const Value::KindCase kind = param.value().kind_case();
+    auto p = fac.makeProduct(kind, param);
     params_[oid] = p;
 }
 

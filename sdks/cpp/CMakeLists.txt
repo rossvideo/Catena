@@ -20,6 +20,10 @@
 #  https://grpc.io/docs/languages/cpp/quickstart/
 #
 #
+if (APPLE)
+  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE CMAKE_OSX_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+endif(APPLE)
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -44,10 +48,7 @@ set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
 set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
 endif(WIN32)
 
-if (APPLE)
-  set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
-  set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
+
 
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)

@@ -29,6 +29,7 @@
 
 #include <Path.h>
 #include <Status.h>
+#include <ValueAccessors.h> // ValueIndex
 
 #include <mutex>
 #include <memory>
@@ -52,11 +53,6 @@ struct FakeLock {
 
 class ParamAccessor;  // forward reference
 
-/**
- * @brief type for indexing into parameters
- *
- */
-using ParamIndex = uint32_t;
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
@@ -197,12 +193,12 @@ class DeviceModel {
     *  signal to share value changes by clients 
     * 
     */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx, const std::string&)> valueSetByClient; 
+    vdk::signal<void(const ParamAccessor&, catena::ValueIndex idx, const std::string&)> valueSetByClient; 
 
     /**
     *  signal to share value changes by the service 
     */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByService;
+    vdk::signal<void(const ParamAccessor&, ValueIndex idx)> valueSetByService;
 };
 
 }  // namespace catena

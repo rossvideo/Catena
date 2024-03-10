@@ -21,11 +21,11 @@
 
 using catena::PeerInfo;
 using catena::ParamAccessor;
-using catena::ParamIndex;
+using catena::ValueIndex;
 
 std::atomic<bool> going{}; // flag shared among threads and methods in this translation unit
 
-void PeerInfo::handleValueUpdate(const ParamAccessor& param, ParamIndex idx) {
+void PeerInfo::handleValueUpdate(const ParamAccessor& param, ValueIndex idx) {
     if (going) {
         catena::PushUpdates update;
         update.set_slot(0);

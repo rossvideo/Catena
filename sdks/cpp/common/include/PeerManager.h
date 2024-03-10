@@ -98,7 +98,7 @@ class PeerManager : public catena::patterns::Singleton<PeerManager> {
     /**
      * @brief handle updates from the service
      */
-    void handleValueUpdate(const ParamAccessor& p, ParamIndex idx) {
+    void handleValueUpdate(const ParamAccessor& p, ValueIndex idx) {
         for (auto& [id, peer] : peers_) {
             peer.handleValueUpdate(p, idx);
         }
@@ -107,7 +107,7 @@ class PeerManager : public catena::patterns::Singleton<PeerManager> {
     /**
      * @brief handle updates from other clients
      */
-    void handleValueUpdate(const ParamAccessor& p, ParamIndex idx, const std::string& peer) {
+    void handleValueUpdate(const ParamAccessor& p, ValueIndex idx, const std::string& peer) {
         PeerID ignore = std::hash<std::string>{}(peer);
         for (auto& [id, peer] : peers_) {
             if (id != ignore) {

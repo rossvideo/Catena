@@ -53,16 +53,6 @@ template <typename T> struct PassByValueOrReference {
     using type = std::conditional_t<std::is_scalar<T>::value, T, T&>;
 };
 
-
-/**
- * @brief index value used to trigger special behaviors.
- *
- * getValue with this value specified as the index will get all values of an
- * array. setValue will append the value to the array
- *
- */
-static constexpr ParamIndex kParamEnd = ParamIndex(-1);
-
 /**
  * @brief true if v is a list type
  *
@@ -286,7 +276,7 @@ class ParamAccessor {
                 using type = typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
                 setter[getKindCase(meta::TypeTag<type>{})](&value_.get(), &src);
             }
-            deviceModel_.get().valueSetByService(*this, kParamEnd);
+            deviceModel_.get().valueSetByService(*this, kValueEnd);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -314,9 +304,9 @@ class ParamAccessor {
      * @tparam V type of the value stored by the param. This must be a native type.
      * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex.
      * @param src the value to set the parameter owned by the ParamAccessor to.
-     * @param idx index into the array, if set to kParamEnd, the value is appended to the array
+     * @param idx index into the array, if set to kValueEnd, the value is appended to the array
      */
-    template <bool Threadsafe = true, typename V> void setValueAt(const V& src, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void setValueAt(const V& src, const ValueIndex idx) {
         try {
             using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
@@ -433,7 +423,7 @@ class ParamAccessor {
      * @param dst reference to the destination object written to by this method.
      * @param idx index into the array
      */
-    template <bool Threadsafe = true, typename V> void getValueAt(V& dst, const ParamIndex idx) const {
+    template <bool Threadsafe = true, typename V> void getValueAt(V& dst, const ValueIndex idx) const {
         try {
             using ElementType = typename std::remove_reference<decltype(dst)>::type;
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
@@ -461,7 +451,7 @@ class ParamAccessor {
      * sending to a client.
      *
      * @param dst [out] destination for the value
-     * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
+     * @param idx [in] index into the array, if set to kValueEnd, the entire array is returned
      * 
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
@@ -471,12 +461,12 @@ class ParamAccessor {
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
     template<bool Threadsafe = true>
-    void getValue(Value* dst, [[maybe_unused]] ParamIndex idx) const {
+    void getValue(Value* dst, [[maybe_unused]] ValueIndex idx) const {
     using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
     LockGuard lock(deviceModel_.get().mutex_);
     try {
         const Value& value = value_.get();
-        if (isList() && idx != kParamEnd) {
+        if (isList() && idx != kValueEnd) {
             auto& getter = ValueGetter::getInstance();
             getter[value.kind_case()](dst, value, idx);
         } else {
@@ -499,7 +489,7 @@ class ParamAccessor {
      * received from client
      *
      * @param dst [out] destination for the value
-     * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
+     * @param idx [in] index into the array, if set to kValueEnd, the entire array is returned
      * 
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
@@ -507,7 +497,7 @@ class ParamAccessor {
      * 
      * Threadsafe - asserts a lock on the DeviceModel's mutex.
      */
-    void setValue(const std::string& peer, const Value& src, [[maybe_unused]] ParamIndex idx);
+    void setValue(const std::string& peer, const Value& src, [[maybe_unused]] ValueIndex idx);
 
 
     /** 

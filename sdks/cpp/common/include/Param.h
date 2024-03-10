@@ -29,6 +29,8 @@
 #include <TypeTraits.h>
 #include <ParamAccessor.h>
 #include <Import.h>
+#include <Meta.h>
+#include <IParam.h>
 
 #include <string>
 #include <assert.h>
@@ -40,65 +42,6 @@
 namespace catena {
 namespace sdk {
 
-/**
- * Parameter interface definition
- */
-class IParam {
-  public:
-    /**
-     * @brief Factory to make concrete objects derived from IParam
-     */
-    using Factory = catena::patterns::GenericFactory<IParam, catena::Value::KindCase, const catena::Param&>;
-
-    using SharedIParam = std::shared_ptr<IParam>;
-    using ParamsMap = std::unordered_map<std::string, SharedIParam>;
-
-  public:
-    /**
-     * @brief Default destructor
-     */
-    virtual ~IParam() = default;
-
-    /**
-     * @brief get the parameter's value as a catena::Value (protobuf)
-     */
-    virtual catena::Value& getValue(catena::Value& dst) const = 0;
-
-    /**
-     * @brief set the parameter's value from a catena::Value (protobuf)
-     */
-    virtual void setValue(const catena::Value& src) = 0;
-
-    virtual void getValue(void* dst) const = 0;
-
-    /**
-     * @brief true if parameter needs to be included
-     */
-    virtual bool include() const = 0;
-
-    /**
-     * @brief marks the param as having been included.
-     *
-     * Subsequent calls to include() will return false.
-     */
-    virtual void included() = 0;
-
-    virtual bool hasSubparams() const = 0;
-
-    virtual ParamsMap& subparams() = 0;
-
-    virtual IParam& operator=(const catena::Param& src) = 0;
-};
-
-/**
- * @brief output serialize operator for IParam
- */
-inline catena::Value& operator<<(catena::Value& dst, const IParam& src) { return src.getValue(dst); }
-
-inline const catena::Value& operator>>(const catena::Value& src, IParam& dst) {
-    dst.setValue(src);
-    return src;
-}
 
 class ParamCommon : public IParam {
   public:
@@ -138,10 +81,25 @@ template <typename VT> class Param : public ParamCommon {
     explicit Param(const catena::Param& src) : ParamCommon{src} {
         const catena::Value& value = src.value();
         catena::Value::KindCase kind = value.kind_case();
-        catena::Value::KindCase expected = catena::getKindCase(TypeTag<VT>{});
+        catena::Value::KindCase expected = catena::getKindCase(meta::TypeTag<VT>{});
         assert(kind == expected);
-        auto& getter = catena::ParamAccessor::Getter::getInstance();
-        getter[kind](&value_, &value);
+        auto& getter = catena::Getter::getInstance();
+        if constexpr(has_getStructInfo<VT>) {
+            const StructInfo& si = VT::getStructInfo();
+            char* base = reinterpret_cast<char*>(&value_); // necessary for correct pointer arithmetic
+            for (const auto& field : si.fields) {
+                auto& fields = value.struct_value().fields();
+                if (fields.contains(field.name)) {
+                    // skip value assignment if field is not present
+                    const catena::Value& field_value = fields.at(field.name).value();
+                    getter[field_value.kind_case()](base + field.offset, &field_value);
+                }
+                // construct the subparam
+                params_[field.name].reset(field.makeParam(src.params().at(field.name)));
+            }
+        } else {
+            getter[kind](&value_, &value);
+        }
     }
 
     virtual ~Param() = default;
@@ -150,15 +108,24 @@ template <typename VT> class Param : public ParamCommon {
     Param& operator=(const Param&) = delete;
 
     catena::Value& getValue(catena::Value& dst) const override {
-        auto& setter = catena::ParamAccessor::Setter::getInstance();
-        setter[catena::getKindCase(TypeTag<VT>{})](&dst, &value_);
+        auto& setter = catena::Setter::getInstance();
+        setter[catena::getKindCase(meta::TypeTag<VT>{})](&dst, &value_);
         return dst;
     }
 
+
     void setValue(const catena::Value& src) override {
-        assert(src.kind_case() == catena::getKindCase(TypeTag<VT>{}));
-        auto& getter = catena::ParamAccessor::Getter::getInstance();
-        getter[src.kind_case()](&value_, &src);
+        assert(src.kind_case() == catena::getKindCase(meta::TypeTag<VT>{}));
+        auto& getter = catena::Getter::getInstance();
+        if constexpr (has_getStructInfo<VT>) {
+            const StructInfo& si = VT::getStructInfo();
+            void* base = &value_;
+            for (const auto& field : si.fields) {
+                src.struct_value().fields().at(field.name);
+            }
+        } else {
+            getter[src.kind_case()](&value_, &src);
+        }
     }
 
     void getValue(void* dst) const override { *reinterpret_cast<VT*>(dst) = value_; }
@@ -169,11 +136,22 @@ template <typename VT> class Param : public ParamCommon {
 
     Param& operator=(const catena::Param& src) override { return *this; }
 
-    static bool registerWithFactory();
+    /**
+     * @brief Register the Param with the factory
+     */
+    static bool registerWithFactory() {
+        static bool registered_ = false;
+        if (registered_) {
+            return true;
+        }
+        auto& fac = IParam::Factory::getInstance();
+        fac.addProduct(getKindCase<VT>(meta::TypeTag<VT>{}),
+                       [](const catena::Param& src) -> IParam* { return new Param<VT>(src); });
+        return registered_ = true;
+    }
 
   private:
     VT value_;
-    static bool registered_;
     ParamsMap params_;
 };
 

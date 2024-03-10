@@ -13,6 +13,7 @@
 //
 
 #include <ValueAccessors.h>
+#include <Status.h>
 
 
 #include <sstream>
@@ -25,11 +26,12 @@
 #include <typeinfo>
 #include <variant>
 
-using catena::ParamIndex;
+using catena::ValueIndex;
 using VP = catena::Value *;  // shared value pointer
 using catena::Param;    // this is the protobuf Param message
 using catena::Value;    // this is the protobuf Value message
 using KindCase = Value::KindCase;
+using catena::meta::TypeTag;
 
 /**
  * @brief A macro used to add getter functions for simple data types
@@ -77,7 +79,7 @@ setter.addFunction(kind_case, [](catena::Value *dst, const void *srcAddr) { \
 */
 #define REGISTER_ARRAY_GETTER_AT(kind_case, cast, array_values_method, size_method, access_method) \
 getterAt.addFunction(kind_case, \
-    [](void *dstAddr, const Value *src, const catena::ParamIndex idx) { \
+    [](void *dstAddr, const Value *src, const catena::ValueIndex idx) { \
         auto *dst = reinterpret_cast<cast *>(dstAddr); \
         if (idx >= src->array_values_method().size_method()) { \
             /* range error  */ \
@@ -97,7 +99,7 @@ getterAt.addFunction(kind_case, \
 */
 #define REGISTER_ARRAY_SETTER_AT(kind_case, cast, mutable_array_values_method, size_method, set_method) \
 setterAt.addFunction(kind_case, \
-    [](Value *dst, const void *srcAddr, catena::ParamIndex idx) { \
+    [](Value *dst, const void *srcAddr, catena::ValueIndex idx) { \
         auto *src = reinterpret_cast<const cast *>(srcAddr); \
         if (idx >= dst->mutable_array_values_method()->size_method()) { \
             /* range error */ \
@@ -116,7 +118,7 @@ setterAt.addFunction(kind_case, \
  * @brief A macro used to add getter functions accessible by clients
 */
 #define REGISTER_VALUE_GETTER(kind_case, dst_method, src_method) \
-valueGetter.addFunction(kind_case, [](Value* dst, const Value &src, ParamIndex idx) -> void { \
+valueGetter.addFunction(kind_case, [](Value* dst, const Value &src, ValueIndex idx) -> void { \
     dst->dst_method(src.src_method());\
 })
 
@@ -124,7 +126,7 @@ valueGetter.addFunction(kind_case, [](Value* dst, const Value &src, ParamIndex i
  * @brief A macro used to add setter functions accessible by clients
 */
 #define REGISTER_VALUE_SETTER(kind_case, dst_method, src_method) \
-valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
+valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ValueIndex idx) -> void { \
     dst.dst_method(src.src_method()); \
 })
 
@@ -132,7 +134,7 @@ valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex i
  * @brief A macro used to add getter functions for array of simple data types accessible by clients
 */
 #define REGISTER_ARRAY_VALUE_GETTER(kind_case, array_val_method, size_method, set_value_method, index_method) \
-valueGetter.addFunction(kind_case, [](Value* dst, const Value &val, ParamIndex idx) -> void { \
+valueGetter.addFunction(kind_case, [](Value* dst, const Value &val, ValueIndex idx) -> void { \
     auto size = val.array_val_method().size_method(); \
     if (idx >= size) { \
         std::stringstream err; \
@@ -147,7 +149,7 @@ valueGetter.addFunction(kind_case, [](Value* dst, const Value &val, ParamIndex i
  * @brief A macro used to add setter functions for array of simple data types accessible by clients
 */
 #define REGISTER_ARRAY_VALUE_SETTER(kind_case, array_val_method, size_method, mutable_array_val_method, mutable_method, value_method) \
-valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
+valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ValueIndex idx) -> void { \
     auto size = src.array_val_method().size_method(); \
     if (idx >= size) { \
         std::stringstream err; \
@@ -248,7 +250,7 @@ void catena::initValueAccessors() {
         REGISTER_ARRAY_VALUE_GETTER(KindCase::kStringArrayValues, string_array_values, strings_size, set_string_value, strings);
 
         // register value getter for struct array
-        valueGetter.addFunction(KindCase::kStructArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+        valueGetter.addFunction(KindCase::kStructArrayValues, [](Value* dst, const Value &val, ValueIndex idx) -> void {
             auto size = val.struct_array_values().struct_values_size();
             if (idx >= size) {
                 std::stringstream err;
@@ -260,7 +262,7 @@ void catena::initValueAccessors() {
         });
 
         // register value getter for variant array
-        valueGetter.addFunction(KindCase::kStructVariantArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+        valueGetter.addFunction(KindCase::kStructVariantArrayValues, [](Value* dst, const Value &val, ValueIndex idx) -> void {
             auto size = val.struct_variant_array_values().struct_variants_size();
             if (idx >= size) {
                 std::stringstream err;
