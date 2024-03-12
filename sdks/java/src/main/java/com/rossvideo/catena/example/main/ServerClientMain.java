@@ -13,7 +13,7 @@ import io.grpc.ServerCredentials;
 
 public class ServerClientMain {
 
-    private static int port = 5255;
+    private static int port = 6254;
     private static int slotNumber = 1;
     private static boolean run = true;
     private static Object lock = new Object();
@@ -65,7 +65,7 @@ public class ServerClientMain {
         Thread.sleep(2000);  // Let some time for the server to start first
 
         new Thread(() -> {
-            try (MyCatenaClient client = new MyCatenaClient("localhost", port, fClientWorkingDirectory)) {
+            try (MyCatenaClient client = new MyCatenaClient("localhost", port, fClientWorkingDirectory, false)) {
                 client.start();
                 CommandExecutor.executeOnClient(client, slotNumber);
 
