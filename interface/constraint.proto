@@ -132,7 +132,3 @@ message Constraint {
   }
 }
 
-/* A map of constraints intended for use as shared references. */
-message ConstraintDescriptors {
-  map<string, Constraint> descriptors = 1;
-}
