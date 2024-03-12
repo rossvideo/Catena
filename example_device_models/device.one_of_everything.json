@@ -5,11 +5,6 @@
   "access_scopes": ["monitor", "operate", "configure", "administer"],
   "default_scope": "operate",
   "params": {
-    "string_example": {
-      "type": "STRING",
-      "value": { "string_value": "Hello, World!" },
-      "name": { "display_strings": { "en": "String Example" } }
-    },
     "a_number": {
       "type": "INT32",
       "value": { "int32_value": 1234 },
@@ -17,8 +12,23 @@
     },
     "float_example": {
       "type": "FLOAT32",
-      "value": { "float32_value": 1234 },
+      "value": { "float32_value": 1234.5678},
       "name": { "display_strings": { "en": "Float Example" } }
+    },
+    "string_example": {
+      "type": "STRING",
+      "value": { "string_value": "Hello, World!" },
+      "name": { "display_strings": { "en": "String Example" } }
+    },
+    "number_array": {
+      "type": "INT32_ARRAY",
+      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } },
+      "name": { "display_strings": { "en": "Int Array Example" } }
+    },
+    "float_array": {
+      "type": "FLOAT32_ARRAY",
+      "value": { "float32_array_values": { "floats": [1.1, 2.2, 3.3, 4.4] } },
+      "name": { "display_strings": { "en": "Float Array Example" } }
     }
   },
   "menu_groups": {

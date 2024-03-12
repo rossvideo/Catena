@@ -335,15 +335,15 @@ class ParamAccessor {
                 setter[getKindCase(x)](&value_.get(), &src);
             }
             deviceModel_.get().valueSetByService(*this, kParamEnd);
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
         } catch (const std::runtime_error& why) {
             // most likely thrown by the setter encountering a missing function
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
-        } catch (const catena::exception_with_status& why) {
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), why.status);
         } catch (...) {
             std::stringstream err;
             err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -373,15 +373,15 @@ class ParamAccessor {
             static std::vector<ElementType> x;
             setter[getKindCase(x)](&value_.get(), &src, idx);
             deviceModel_.get().valueSetByService(*this, idx);
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
         } catch (const std::runtime_error& why) {
             // most likely thrown by the setter encountering a missing function
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
-        } catch (const catena::exception_with_status& why) {
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), why.status);
         } catch (...) {
             std::stringstream err;
             err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -453,15 +453,15 @@ class ParamAccessor {
                 // dst is a simple type
                 getter[getKindCase<V>(dst)](&dst, &value_.get());
             }
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
         } catch (const std::runtime_error& why) {
             // most likely thrown by the getter encountering a missing function
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
-        } catch (const catena::exception_with_status& why) {
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), why.status);
         } catch (...) {
             std::stringstream err;
             err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -489,15 +489,15 @@ class ParamAccessor {
             auto& getter = GetterAt::getInstance();
             static std::vector<ElementType> x;
             getter[getKindCase(x)](&dst, &value_.get(), idx);
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
         } catch (const std::runtime_error& why) {
             // most likely thrown by the getter encountering a missing function
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
-        } catch (const catena::exception_with_status& why) {
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), why.status);
         } catch (...) {
             std::stringstream err;
             err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
