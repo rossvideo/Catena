@@ -76,6 +76,16 @@ jobs:
         sudo apt-get install libssl-dev
         git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..  && ninja && sudo ninja install
         
+    - name: Install google test
+      run: |
+        cd ~
+        echo "Install google test"
+        sudo apt-get install libgtest-dev
+        cd /usr/src/googletest
+        sudo mkdir build
+        cd build
+        sudo cmake ..
+        sudo make
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
