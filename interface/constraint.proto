@@ -108,9 +108,9 @@ message Constraint {
     INT_RANGE = 2;
     FLOAT_RANGE = 4;
     INT_CHOICE = 5;
-    STRING_CHOICE = 40;
-    STRING_STRING_CHOICE = 6;
-    ALARM_TABLE = 7;
+    STRING_CHOICE = 6;
+    STRING_STRING_CHOICE = 7;
+    ALARM_TABLE = 8;
   }
 
   ConstraintType type = 1;
