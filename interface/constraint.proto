@@ -85,11 +85,6 @@ message FloatRangeConstraint {
   GrowthType growth_type = 6;
 }
 
-/* A reference to a shared constraint. */
-message ConstraintRef {
-  string oid = 1; // The constraint's object id in Device.type.constraints.oid
-}
-
 /* A selection of strings for client GUI to use in pick list and other GUI elements. */
 message StringChoiceConstraint {
   repeated string choices = 1;
@@ -120,8 +115,8 @@ message Constraint {
 
   ConstraintType type = 1;
   oneof kind {
-    /* A reference to a shared constraint defined in device.types.constraints */
-    ConstraintRef ref = 2;
+    /* A reference to a shared constraint defined in device.constraints */
+    string ref_oid = 2;
 
     /* Int32 Constraints */
     AlarmTableConstraint alarm_table = 3;
