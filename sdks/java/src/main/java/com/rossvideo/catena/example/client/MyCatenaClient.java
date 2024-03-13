@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import com.rossvideo.catena.example.client.command.CommandResponseHandler;
+import javax.net.ssl.SSLException;
+
 import com.rossvideo.catena.example.client.command.ClientPushFileResponseHandler;
 import com.rossvideo.catena.example.client.command.ClientReceiveFileResponseHandler;
+import com.rossvideo.catena.example.client.command.CommandResponseHandler;
 
 import catena.core.device.DeviceRequestPayload;
 import catena.core.parameter.ExecuteCommandPayload;
@@ -21,6 +23,9 @@ import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.stub.StreamObserver;
 
 public class MyCatenaClient implements AutoCloseable {
@@ -29,17 +34,13 @@ public class MyCatenaClient implements AutoCloseable {
     private CatenaServiceBlockingStub blockingStub; // Used for unary and server side streaming calls
     private CatenaServiceStub asyncStub; // Used for client-side and bi-directional streaming calls
     private ManagedChannel channel;
-    private int slotNumber;
     private File workingDirectory;
+    private boolean secure;
 
-    public MyCatenaClient(String hostname, int port, File workingDirectory) {
-        this(hostname, port, 1, workingDirectory);
-    }
-
-    public MyCatenaClient(String hostname, int port, int slotNumber, File workingDirectory) {
+    public MyCatenaClient(String hostname, int port, File workingDirectory, boolean secure) {
         this.hostname = hostname;
         this.port = port;
-        this.slotNumber = slotNumber;
+        this.secure = secure;
         setWorkingDirectory(workingDirectory);
     }
     
@@ -48,13 +49,49 @@ public class MyCatenaClient implements AutoCloseable {
         this.workingDirectory = workingDirectory;
     }
 
-    public void start() {
+    public void start() throws SSLException {
         if (channel == null) {
-            ChannelCredentials credentials = InsecureChannelCredentials.create(); // TODO: Create proper credentials.
-            channel = Grpc.newChannelBuilderForAddress(hostname, port, credentials).build();
+            // Specify the path to your server's certificate
+            if (secure)
+            {
+                createSecureChannel();
+            }
+            else
+            {
+                createInsecureChannel();
+            }
+
+            
             blockingStub = CatenaServiceGrpc.newBlockingStub(channel);
             asyncStub = CatenaServiceGrpc.newStub(channel);
         }
+    }
+
+    protected void createInsecureChannel()
+    {
+        ChannelCredentials credentials = InsecureChannelCredentials.create();
+        channel = Grpc.newChannelBuilderForAddress(hostname, port, credentials).build();
+    }
+
+    protected void createSecureChannel() throws SSLException
+    {
+        File serverCertFile = null;
+        try
+        {
+            serverCertFile = new File(getWorkingDirectory(), "server.crt");
+        }
+        catch (IOException e)
+        {
+        }
+        
+        // Create a gRPC channel with TLS support
+        SslContext sslContext = GrpcSslContexts.forClient()
+                .trustManager(serverCertFile)
+                .build();
+        
+        channel = NettyChannelBuilder.forAddress(hostname, port)
+                .sslContext(sslContext)
+                .build();
     }
 
     @Override

@@ -4,7 +4,8 @@ import com.google.protobuf.Empty;
 import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.device.impl.ParamManager;
-import com.rossvideo.catena.example.error.WrongValueTypeException;
+import com.rossvideo.catena.device.impl.params.BasicCommandManager;
+import com.rossvideo.catena.device.impl.params.BasicParamManager;
 
 import catena.core.device.Device;
 import catena.core.device.DeviceComponent;
@@ -57,12 +58,12 @@ public class BasicCatenaDevice implements CatenaDevice
 
     protected ParamManager createParamManager(Device.Builder deviceBuilder)
     {
-        return new ParamManager(deviceBuilder);
+        return new BasicParamManager(deviceBuilder);
     }
     
     protected CommandManager createCommandManager(Device.Builder deviceBuilder)
     {
-        return new CommandManager(deviceBuilder);
+        return new BasicCommandManager(deviceBuilder);
     }
 
     public int getSlot()
@@ -91,6 +92,8 @@ public class BasicCatenaDevice implements CatenaDevice
 
     protected Device buildDeviceMessage(DeviceRequestPayload request)
     {
+        paramManager.commitChanges();
+        commandManager.commitChanges();
         return deviceBuilder.build();
     };
 
@@ -163,7 +166,7 @@ public class BasicCatenaDevice implements CatenaDevice
     {
         try
         {
-            Value paramValue = getParamManager().getValue(request.getOid());
+            Value paramValue = getParamManager().getValue(request.getOid(), request.getElementIndex());
             responseObserver.onNext(paramValue);
             responseObserver.onCompleted();
         }
