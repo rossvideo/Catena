@@ -29,16 +29,6 @@ option java_outer_classname = "DeviceProtos";
 
 option optimize_for = CODE_SIZE;
 
-/* Some parameters share sub-param descriptors and/or constraints.
- * They can be selected by reference into the Types message which
- * contains a map of each. The motivation is to improve the efficiency
- * of communications and memory footprint by avoiding the duplication
- * of commonly occurring constraints and parameter types. */
-message Types {
-  ConstraintDescriptors constraints = 1;
-  map<string, Param> params = 2;
-}
-
 /* Device model for Catena compatible devices. */
 message Device {
   /* ID for the device, locally unique within the Catena connection. */
