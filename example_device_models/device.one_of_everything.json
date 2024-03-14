@@ -1,7 +1,7 @@
 {
   "slot": 1,
   "multi_set_enabled": true,
-  "detail_level": "FULL",
+  "detail_level": "COMMANDS",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
   "default_scope": "operate",
   "params": {
@@ -32,7 +32,7 @@
     }
   },
   "menu_groups": {
-    "status_group": {
+    "status": {
       "name": { "display_strings": { "en": "Status" } },
       "menus": {
         "status": {
@@ -41,7 +41,7 @@
         }
       }
     },
-    "config_group": {
+    "config": {
       "name": { "display_strings": { "en": "Config" } },
       "menus": {
         "config": {
