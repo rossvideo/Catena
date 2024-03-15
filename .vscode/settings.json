@@ -9,7 +9,8 @@
     "json.schemas": [
         {
             "fileMatch": [
-                "/example_device_models/device.*.json"
+                "/example_device_models/device.*.json",
+                "/nab_2024/device.*.json"
             ],
             "url": "./schema/catena.schema.json"
         }

@@ -11,10 +11,10 @@
         }
     },
     "value": {
-        "variant_array_values": {
-            "variants": [
+        "struct_variant_array_values": {
+            "struct_variants": [
                 {
-                    "variant_type": "AudioSlot",
+                    "struct_variant_type": "AudioSlot",
                     "value": {
                         "struct_value": {
                             "fields": {
@@ -32,7 +32,7 @@
                     }
                 },
                 {
-                    "variant_type": "VideoSlot",
+                    "struct_variant_type": "VideoSlot",
                     "value": {
                         "struct_value": {
                             "fields": {

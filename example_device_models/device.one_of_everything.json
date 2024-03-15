@@ -3,13 +3,8 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": 1,
+  "default_scope": "operate",
   "params": {
-    "string_example": {
-      "type": "STRING",
-      "value": { "string_value": "Hello, World!" },
-      "name": { "display_strings": { "en": "String Example" } }
-    },
     "a_number": {
       "type": "INT32",
       "value": { "int32_value": 1234 },
@@ -17,32 +12,41 @@
     },
     "float_example": {
       "type": "FLOAT32",
-      "value": { "float32_value": 1234 },
+      "value": { "float32_value": 1234.5678},
       "name": { "display_strings": { "en": "Float Example" } }
+    },
+    "string_example": {
+      "type": "STRING",
+      "value": { "string_value": "Hello, World!" },
+      "name": { "display_strings": { "en": "String Example" } }
+    },
+    "number_array": {
+      "type": "INT32_ARRAY",
+      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } },
+      "name": { "display_strings": { "en": "Int Array Example" } }
+    },
+    "float_array": {
+      "type": "FLOAT32_ARRAY",
+      "value": { "float32_array_values": { "floats": [1.1, 2.2, 3.3, 4.4] } },
+      "name": { "display_strings": { "en": "Float Array Example" } }
     }
   },
   "menu_groups": {
-    "menu_groups": {
-      "status_group": {
-        "id": 0,
-        "name": { "display_strings": { "en": "Status" } },
-        "menus": {
-          "status": {
-            "id": 0,
-            "name": { "display_strings": { "en": "Product" } },
-            "param_oids": ["a_number"]
-          }
+    "status_group": {
+      "name": { "display_strings": { "en": "Status" } },
+      "menus": {
+        "status": {
+          "name": { "display_strings": { "en": "Product" } },
+          "param_oids": ["/a_number"]
         }
-      },
-      "config_group": {
-        "id": 1,
-        "name": { "display_strings": { "en": "Config" } },
-        "menus": {
-          "config": {
-            "id": 1,
-            "name": { "display_strings": { "en": "Catena" } },
-            "param_oids": ["string_example", "float_example"]
-          }
+      }
+    },
+    "config_group": {
+      "name": { "display_strings": { "en": "Config" } },
+      "menus": {
+        "config": {
+          "name": { "display_strings": { "en": "Catena" } },
+          "param_oids": ["/string_example", "/float_example"]
         }
       }
     }

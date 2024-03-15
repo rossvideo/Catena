@@ -70,3 +70,6 @@ target_compile_features(${LIB_TARGET}
 )
 
 add_subdirectory("examples")
+if(UNIT_TESTING)
+add_subdirectory("tests")
+endif(UNIT_TESTING)

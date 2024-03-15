@@ -1,19 +1,17 @@
-/*
-Copyright © 2023 Ross Video Limited, All Rights Reserved.
-
-Licensed under the Creative Commons Attribution NoDerivatives 4.0
-International Licensing (CC-BY-ND-4.0);
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:
-
-https://creativecommons.org/licenses/by-nd/4.0/
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/* Copyright © 2023 Ross Video Limited, All Rights Reserved.
+ * 
+ * Licensed under the Creative Commons Attribution NoDerivatives 4.0
+ * International Licensing (CC-BY-ND-4.0);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * 
+ * https://creativecommons.org/licenses/by-nd/4.0/
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
 
 syntax = "proto3";
 
@@ -31,23 +29,12 @@ option java_outer_classname = "DeviceProtos";
 
 option optimize_for = CODE_SIZE;
 
-/* Some parameters share sub-param descriptors and/or constraints.
- * They can be selected by reference into the Types message which
- * contains a map of each. The motivation is to improve the efficiency
- * of communications and memory footprint by avoiding the duplication
- * of commonly occurring constraints and parameter types.
- */
-message Types {
-  ConstraintDescriptors constraints = 1;
-  map<string, Param> params = 2;
-}
-
 /* Device model for Catena compatible devices. */
 message Device {
-  // ID for the device, locally unique within the Catena connection.
+  /* ID for the device, locally unique within the Catena connection. */
   uint32 slot = 1;
 
-  // How much of the device model to deliver.
+  /* How much of the device model to deliver. */
   enum DetailLevel {
     FULL = 0;
     SUBSCRIPTIONS = 1;
@@ -57,38 +44,37 @@ message Device {
   }
   DetailLevel detail_level = 2;
 
-  // Whether multi-set message is supported
+  /* Whether multi-set message is supported */
   bool multi_set_enabled = 3;
 
-  // Whether subscriptions are supported
+  /* Whether subscriptions are supported */
   bool subscriptions = 4;
 
-  // The device's shared constraints. A map of Constraint, keyed by their object ids (OIDs).
+  /* The device's shared constraints. A map of Constraint, keyed by their object ids (OIDs). */
   map<string, Constraint> constraints = 5;
 
-  // The device's parameters. A map of Param, keyed by their object ids (OIDs).
+  /* The device's parameters. A map of Param, keyed by their object ids (OIDs). */
   map<string, Param> params = 6;
 
-  // The device's default editor UI definition and access scope definitions
-  MenuGroups menu_groups = 7;
+  /* The device's default editor UI definition and access scope definitions */
+  map<string, MenuGroup> menu_groups = 7;
 
-  // The device's available commands, keyed by their object ids (OIDs).
+  /* The device's available commands, keyed by their object ids (OIDs). */
   map<string, Param> commands = 8;
 
-  // The devices language packs
+  /* The devices language packs */
   LanguagePacks language_packs = 9;
 
-  // The device's access scopes, a list of mutually unique strings
+  /* The device's access scopes, a list of mutually unique strings */
   repeated string access_scopes = 10;
 
-  // The default scope, index into access_scopes to indicate which of them is the default.
-  uint32 default_scope = 11;
+  /* The default scope, index into access_scopes to indicate which of them is the default. */
+  string default_scope = 11;
 }
 
 /* The Device model broken into smaller pieces.
  * Design intent is to allow very large Device Models to be delivered
- to clients as a stream of DeviceComponents.
- */
+ * to clients as a stream of DeviceComponents. */
 message DeviceComponent {
 
   /* A parameter or sub-parameter, or sub-sub-parameter, or ...
@@ -115,8 +101,7 @@ message DeviceComponent {
    * monitor/eq/1/f, monitor/eq/1/q, monitor/eq/1/gain sub-sub params of
    * eq 2 in the monitor output audio processing.
    * It's likely not practical to use messages this small to report device
-   * models, but this illustrates how it could be done if desirable.
-   */
+   * models, but this illustrates how it could be done if desirable. */
   message ComponentParam {
     string oid = 1;
     Param param = 2;
@@ -126,8 +111,7 @@ message DeviceComponent {
     * Note that menus are grouped into menu groups. They are uniquely identified
     * by the json_pointer field which is relative to the Device's top-level
     * menu-groups object thus: menu-group-name/menu-name.
-    * example: status/vendor_info
-    */
+    * example: status/vendor_info */
   message ComponentMenu {
     string oid = 1;
     Menu menu = 2;
@@ -135,16 +119,14 @@ message DeviceComponent {
 
    /* A constraint descriptor.
     * The oid is relative to the "constraints" child of the device's top-level
-    * "types" object.
-    */
+    * "types" object. */
   message ComponentConstraint {
     string oid = 1;
     Constraint constraint = 2;
   }
 
   /* A command descriptor.
-   * Defines a command to be mapped to device.commands.oid
-   */
+   * Defines a command to be mapped to device.commands.oid */
   message ComponentCommand {
     string oid = 1;
     Param param = 2;
@@ -157,8 +139,7 @@ message DeviceComponent {
   }
 
   /* Small device models can be sent as a whole.
-   * Larger ones should be broken into a stream of smaller components.
-   */
+   * Larger ones should be broken into a stream of smaller components. */
   oneof kind {
     Device device = 2;
     ComponentParam param = 3;
@@ -178,23 +159,20 @@ message RemoveComponents {
     * Note that menus are grouped into menu groups. They are uniquely identified
     * by the json_pointer field which is relative to the Device's top-level
     * menu-groups object thus: menu-group-name/menu-name.
-    * example: status/vendor_info
-    */
+    * example: status/vendor_info */
   message RemoveMenus {
     repeated string oids = 1;
   }
 
    /* A constraint descriptor.
     * The oid is relative to the "constraints" child of the device's top-level
-    * "types" object.
-    */
+    * "types" object. */
   message RemoveConstraints {
     repeated string oids = 1;
   }
 
   /* A command descriptor.
-   * Defines a command to be mapped to device.commands.oid
-   */
+   * Defines a command to be mapped to device.commands.oid */
   message RemoveCommands {
     repeated string oids = 1;
   }
@@ -226,7 +204,7 @@ message ConnectPayload {
   Device.DetailLevel detail_level = 2;
   string user_agent = 3;               // Description of the client type and version
   bool force_connection = 4;           // True to request access if connection had been previously refused
-  // authn / authz should be handled by gRPC metadata
+  /* authn / authz should be handled by gRPC metadata */
 }
 
 message TrapMessage {

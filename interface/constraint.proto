@@ -1,19 +1,17 @@
-/*
-Copyright © 2023 Ross Video Limited, All Rights Reserved.
-
-Licensed under the Creative Commons Attribution NoDerivatives 4.0
-International Licensing (CC-BY-ND-4.0);
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:
-
-https://creativecommons.org/licenses/by-nd/4.0/
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/* Copyright © 2023 Ross Video Limited, All Rights Reserved.
+ * 
+ * Licensed under the Creative Commons Attribution NoDerivatives 4.0
+ * International Licensing (CC-BY-ND-4.0);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * 
+ * https://creativecommons.org/licenses/by-nd/4.0/
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
 
 syntax = "proto3";
 
@@ -42,7 +40,7 @@ message Alarm {
   }
   Severity severity = 2;
 
-  // Message to display in client GUI
+  /* Message to display in client GUI */
   PolyglotText description = 3;
 }
 
@@ -60,14 +58,6 @@ message Int32ChoiceConstraint {
   repeated IntChoice choices = 1;
 }
 
-/* Range constraints can specify a growth type to specify how the
- * step value should be interpreted. If not defined, 'linear' will be assumed.
- */
-enum GrowthType {
-    LINEAR = 0; // each valid value will be the sum of the previous value and the 'step' value
-    EXPONENTIAL = 1; // each valid value will be the multiplication of the previous value and the 'step' value
-}
-
 /* Range constraint including hard min & max values plus display min & max. */
 message Int32RangeConstraint {
   int32 min_value = 1;
@@ -75,7 +65,6 @@ message Int32RangeConstraint {
   int32 step = 3;
   int32 display_min = 4;
   int32 display_max = 5;
-  GrowthType growth_type = 6;
 }
 
 /* Range constraint with hard min & max plus display min & max. */
@@ -85,12 +74,6 @@ message FloatRangeConstraint {
   float step = 3;
   float display_min = 4;
   float display_max = 5;
-  GrowthType growth_type = 6;
-}
-
-/* A reference to a shared constraint. */
-message ConstraintRef {
-  string oid = 1; // The constraint's object id in Device.type.constraints.oid
 }
 
 /* A selection of strings for client GUI to use in pick list and other GUI elements. */
@@ -100,8 +83,7 @@ message StringChoiceConstraint {
 }
 
 /* A selection of human-friendly strings to display in client GUI that are
- * used to select a string intended for machine use.
- */
+ * used to select a string intended for machine use. */
 message StringStringChoiceConstraint {
   message StringStringChoice {
     string value = 1;
@@ -117,31 +99,27 @@ message Constraint {
     INT_RANGE = 2;
     FLOAT_RANGE = 4;
     INT_CHOICE = 5;
-    STRING_CHOICE = 40;
-    STRING_STRING_CHOICE = 6;
-    ALARM_TABLE = 7;
+    STRING_CHOICE = 6;
+    STRING_STRING_CHOICE = 7;
+    ALARM_TABLE = 8;
   }
 
   ConstraintType type = 1;
   oneof kind {
-    // A reference to a shared constraint defined in device.types.constraints
-    ConstraintRef ref = 2;
+    /* A reference to a shared constraint defined in device.constraints */
+    string ref_oid = 2;
 
-    // Int32 Constraints
+    /* Int32 Constraints */
     AlarmTableConstraint alarm_table = 3;
     Int32RangeConstraint int32_range = 4;
     Int32ChoiceConstraint int32_choice = 5;
 
-    // Float Constraints
+    /* Float Constraints */
     FloatRangeConstraint float_range = 6;
 
-    // String Constraints
+    /* String Constraints */
     StringChoiceConstraint string_choice = 7;
     StringStringChoiceConstraint string_string_choice = 8;
   }
 }
 
-/* A map of constraints intended for use as shared references. */
-message ConstraintDescriptors {
-  map<string, Constraint> descriptors = 1;
-}
