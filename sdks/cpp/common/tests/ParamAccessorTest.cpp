@@ -96,13 +96,13 @@ TEST_F(ParamAccessorTest, Int32ArrayAccessTest){
 
   numArray[0] = 50;
   numArray[3] = -8;
-  numParam->setValueAt(50, 0);
-  numParam->setValueAt(-8, 3);
+  numParam->setValue(50, 0);
+  numParam->setValue(-8, 3);
   ASSERT_EQ(numArray.size(), 4);
 
   int32_t val = 0;
   for(int i = 0; i < numArray.size(); i++){
-    numParam->getValueAt(val, i);
+    numParam->getValue(val, i);
     EXPECT_EQ(val, numArray[i]);
   }
 }
@@ -127,17 +127,205 @@ TEST_F(ParamAccessorTest, Float32ArrayAccessTest){
 
   numArray[0] = 50.5;
   numArray[3] = -8.8;
-  numParam->setValueAt((float)50.5, 0);
-  numParam->setValueAt((float)-8.8, 3);
+  numParam->setValue((float)50.5, 0);
+  numParam->setValue((float)-8.8, 3);
   ASSERT_EQ(numArray.size(), 4);
   
   float val = 0;
   for(int i = 0; i < numArray.size(); i++){
-    numParam->getValueAt(val, i);
+    numParam->getValue(val, i);
     EXPECT_FLOAT_EQ(val, numArray[i]);
   }
 }
 
+TEST_F(ParamAccessorTest, StringArrayAccessTest){
+  std::unique_ptr<ParamAccessor> strParam = dm.param("/string_array");
+  std::vector<std::string> strArray;
+  std::vector<std::string> otherArray = {"one", "two", "three", "four"};
+  strParam->getValue(strArray);
+  ASSERT_EQ(strArray.size(), 4);
+  for(int i = 0; i < strArray.size(); i++){
+    EXPECT_EQ(strArray[i], otherArray[i]);
+  }
+
+  strArray = {"five", "six", "seven", "eight"};
+  strParam->setValue(strArray);
+  strParam->getValue(otherArray);
+  ASSERT_EQ(otherArray.size(), 4);
+  for(int i = 0; i < strArray.size(); i++){
+    EXPECT_EQ(otherArray[i], strArray[i]);
+  }
+
+  strArray[0] = "nine";
+  strParam->setValue(strArray[0], 0);
+  strArray[3] = "ten";
+  strParam->setValue(strArray[3], 3);
+  ASSERT_EQ(strArray.size(), 4);
+  
+  std::string val;
+  for(int i = 0; i < strArray.size(); i++){
+    strParam->getValue(val, i);
+    EXPECT_EQ(val, strArray[i]);
+  }
+}
+
+TEST_F(ParamAccessorTest, Int32ValueAccess){
+  std::unique_ptr<ParamAccessor> numParam = dm.param("/a_number");
+  catena::Value numValue;
+  numParam->getValue(&numValue);
+  EXPECT_EQ(numValue.int32_value(), 1234);
+  numValue.set_int32_value(5678);
+  numParam->setValue("test", numValue);
+  numParam->getValue(&numValue);
+  EXPECT_EQ(numValue.int32_value(), 5678);
+}
+
+TEST_F(ParamAccessorTest, Float32ValueAccess){
+  std::unique_ptr<ParamAccessor> numParam = dm.param("/float_example");
+  catena::Value numValue;
+  numParam->getValue(&numValue);
+  EXPECT_FLOAT_EQ(numValue.float32_value(), 1234.5678);
+  numValue.set_float32_value(5678.1234);
+  numParam->setValue("test", numValue);
+  numParam->getValue(&numValue);
+  EXPECT_FLOAT_EQ(numValue.float32_value(), 5678.1234);
+}
+
+TEST_F(ParamAccessorTest, StringValueAccess){
+  std::unique_ptr<ParamAccessor> strParam = dm.param("/string_example");
+  catena::Value strValue;
+  strParam->getValue(&strValue);
+  EXPECT_EQ(strValue.string_value(), "Hello, World!");
+  strValue.set_string_value("Goodbye, World!");
+  strParam->setValue("test", strValue);
+  strParam->getValue(&strValue);
+  EXPECT_EQ(strValue.string_value(), "Goodbye, World!");
+}
+
+TEST_F(ParamAccessorTest, Int32ValueArrayAccessTest){
+  std::unique_ptr<ParamAccessor> numParam = dm.param("/number_array");
+  catena::Value numValueArray;
+  std::string context = "test";
+
+  //test getting whole array
+  numParam->getValue(&numValueArray);
+  std::vector<int32_t> otherArray = {1, 2, 3, 4};
+  ASSERT_EQ(numValueArray.int32_array_values().ints_size(), 4);
+  for(int i = 0; i < numValueArray.int32_array_values().ints_size(); i++){
+    EXPECT_EQ(numValueArray.int32_array_values().ints(i), otherArray[i]);
+  }
+
+  //test setting whole array
+  numValueArray.mutable_int32_array_values()->clear_ints();
+  for (int i = 5; i < 9; i++){
+    numValueArray.mutable_int32_array_values()->add_ints(i);
+  }
+  otherArray = {5, 6, 7, 8};
+  numParam->setValue(context, numValueArray);
+  numValueArray.mutable_int32_array_values()->clear_ints();
+  ASSERT_EQ(numValueArray.int32_array_values().ints_size(), 0);
+  numParam->getValue(&numValueArray);
+  ASSERT_EQ(numValueArray.int32_array_values().ints_size(), 4);
+  for(int i = 0; i < numValueArray.int32_array_values().ints_size(); i++){
+    EXPECT_EQ(numValueArray.int32_array_values().ints(i), otherArray[i]);
+  }
+
+  //test getAt and setAt
+  catena::Value val;
+  val.set_int32_value(50);
+  numParam->setValue(context, val, 0);
+  val.set_int32_value(-8);
+  numParam->setValue(context, val, 3);
+  otherArray = {50, 6, 7, -8};
+  for(int i = 0; i < numValueArray.int32_array_values().ints_size(); i++){
+    numParam->getValue(&val, i);
+    EXPECT_EQ(val.int32_value(), otherArray[i]);
+  }
+}
+
+TEST_F(ParamAccessorTest, Float32ValueArrayAccessTest){
+  std::unique_ptr<ParamAccessor> numParam = dm.param("/float_array");
+  catena::Value numValueArray;
+  std::string context = "test";
+
+  //test getting whole array
+  numParam->getValue(&numValueArray);
+  std::vector<float> otherArray = {1.1, 2.2, 3.3, 4.4};
+  ASSERT_EQ(numValueArray.float32_array_values().floats_size(), 4);
+  for(int i = 0; i < numValueArray.float32_array_values().floats_size(); i++){
+    EXPECT_FLOAT_EQ(numValueArray.float32_array_values().floats(i), otherArray[i]);
+  }
+
+  //test setting whole array
+  numValueArray.mutable_float32_array_values()->clear_floats();
+  for (float i = 5.5; i < 9; i += 1.1){
+    numValueArray.mutable_float32_array_values()->add_floats(i);
+  }
+  otherArray = {5.5, 6.6, 7.7, 8.8};
+  numParam->setValue(context, numValueArray);
+  numValueArray.mutable_float32_array_values()->clear_floats();
+  ASSERT_EQ(numValueArray.float32_array_values().floats_size(), 0);
+  numParam->getValue(&numValueArray);
+  ASSERT_EQ(numValueArray.float32_array_values().floats_size(), 4);
+  for(int i = 0; i < numValueArray.float32_array_values().floats_size(); i++){
+    EXPECT_FLOAT_EQ(numValueArray.float32_array_values().floats(i), otherArray[i]);
+  }
+
+  //test getAt and setAt
+  catena::Value val;
+  val.set_float32_value(50.5);
+  numParam->setValue(context, val, 0);
+  val.set_float32_value(-8.8);
+  numParam->setValue(context, val, 3);
+  otherArray = {50.5, 6.6, 7.7, -8.8};
+  for(int i = 0; i < numValueArray.float32_array_values().floats_size(); i++){
+    numParam->getValue(&val, i);
+    EXPECT_FLOAT_EQ(val.float32_value(), otherArray[i]);
+  }
+}
+
+TEST_F(ParamAccessorTest, StringValueArrayAccessTest){
+  std::unique_ptr<ParamAccessor> strParam = dm.param("/string_array");
+  catena::Value strValueArray;
+  std::string context = "test";
+
+  //test getting whole array
+  strParam->getValue(&strValueArray);
+  std::vector<std::string> otherArray = {"one", "two", "three", "four"};
+  ASSERT_EQ(strValueArray.string_array_values().strings_size(), 4);
+  for(int i = 0; i < strValueArray.string_array_values().strings_size(); i++){
+    EXPECT_EQ(strValueArray.string_array_values().strings(i), otherArray[i]);
+  }
+
+  //test setting whole array
+  strValueArray.mutable_string_array_values()->clear_strings();
+  strValueArray.mutable_string_array_values()->add_strings("five");
+  strValueArray.mutable_string_array_values()->add_strings("six");
+  strValueArray.mutable_string_array_values()->add_strings("seven");
+  strValueArray.mutable_string_array_values()->add_strings("eight");
+  
+  otherArray = {"five", "six", "seven", "eight"};
+  strParam->setValue(context, strValueArray);
+  strValueArray.mutable_string_array_values()->clear_strings();
+  ASSERT_EQ(strValueArray.string_array_values().strings_size(), 0);
+  strParam->getValue(&strValueArray);
+  ASSERT_EQ(strValueArray.string_array_values().strings_size(), 4);
+  for(int i = 0; i < strValueArray.string_array_values().strings_size(); i++){
+    EXPECT_EQ(strValueArray.string_array_values().strings(i), otherArray[i]);
+  }
+
+  //test getAt and setAt
+  catena::Value val;
+  val.set_string_value("nine");
+  strParam->setValue(context, val, 0);
+  val.set_string_value("ten");
+  strParam->setValue(context, val, 3);
+  otherArray = {"nine", "six", "seven", "ten"};
+  for(int i = 0; i < strValueArray.string_array_values().strings_size(); i++){
+    strParam->getValue(&val, i);
+    EXPECT_EQ(val.string_value(), otherArray[i]);
+  }
+}
 
 int main(int argc, char** argv)
 {
