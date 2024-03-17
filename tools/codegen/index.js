@@ -32,12 +32,16 @@ addFormats(ajv);
 // load the command line parser
 const { program } = require('commander');
 program
-    .option('-d, --device-model <string>', 'Catena device model to process', "../../example_device_models/device.minimal.json")
-    .option('-l, --language <string>', 'Language to generate code for', "cpp")
+    .option('-s, --schema <string>', 'path to schema definitions', '../../schema/catena.schema.json')
+    .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
+    .option('-l, --language <string>', 'Language to generate code for', 'cpp')
     .option('-o, --output <string>', 'Output folder for generated code', '.');
 
 program.parse(process.argv);
 const options = program.opts();
+if (options.schema) {
+    console.log(`schema: ${options.schema}`);
+}
 if (options.deviceModel) {
     console.log(`deviceModel: ${options.deviceModel}`);
 }
@@ -47,6 +51,7 @@ if (options.language) {
 if (options.output) {
     console.log(`output: ${options.output}`);
 }
+
 
 // import the json-source-map library
 const jsonMap = require('json-source-map');
@@ -65,9 +70,12 @@ if (!fs.existsSync(options.deviceModel)) {
 const info = path.parse(options.deviceModel).name.split('.');
 const schemaName = info[0];
 const namespace = info[1];
-
+const pathname = options.deviceModel;
+const baseFilename = path.basename(pathname);
+const headerFilename = `${baseFilename}.h`;
+const bodyFilename = `${baseFilename}.cpp`;
 // read the schema definition file
-const schemaFilename = '../../schema/catena.schema.json';
+const schemaFilename = options.schema;
 if (!fs.existsSync(schemaFilename)) {
     console.log(`Cannot open schema file at: ${schemaFilename}`);
     process.exit(1);
@@ -149,10 +157,17 @@ try {
     if (valid && kDeviceSchema) {
         // load the code generator
         const codegen = require(`./${options.language}gen.js`);
+        let header = fs.openSync(path.join(options.output,headerFilename), 'w');
+        let body = fs.openSync(path.join(options.output,bodyFilename), 'w');
+        fs.writeSync(header, `namespace ${namespace} {\n`)
         codegen.setNamespace(namespace);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
         }
+        fs.writeSync(header, `} // namespace ${namespace}\n`);
+        fs.close(body);
+        fs.close(header);
+        
     }
 
 } catch (why) {
