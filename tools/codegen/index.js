@@ -156,11 +156,16 @@ try {
 
     if (valid && kDeviceSchema) {
         // load the code generator
-        const codegen = require(`./${options.language}gen.js`);
+        const CppGen = require(`./${options.language}gen.js`);
         let header = fs.openSync(path.join(options.output,headerFilename), 'w');
         let body = fs.openSync(path.join(options.output,bodyFilename), 'w');
+        fs.writeSync(header, `#pragma once\n`);
+        fs.writeSync(header, `#include <Meta.h>\n`);
+        fs.writeSync(header, `#include <string>\n`);
+        fs.writeSync(header, `#include <vector>\n`);
         fs.writeSync(header, `namespace ${namespace} {\n`)
-        codegen.setNamespace(namespace);
+        fs.writeSync(body, `#include <${headerFilename}>\n`);
+        let codegen = new CppGen(header, body, namespace);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
         }

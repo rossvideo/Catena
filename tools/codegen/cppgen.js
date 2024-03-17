@@ -15,13 +15,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+'use strict';
+
+const fs = require('fs');
+
 const kCppTypes = {
     "INT32": "int32_t",
     "FLOAT32": "float",
     "STRING": "std::string",
 }
-
-'use strict';
 
 function spaces(n) {
     return " ".repeat(n*2);
@@ -31,55 +33,50 @@ function initialCap(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-let convertors = {
-    "STRUCT": (name, body, indent = 0) => {
-        const params = body.params;
-        if (indent === 0) {
-            console.log(`namespace ${namespace} {`);
-        }
-        console.log(`${spaces(indent)}struct ${initialCap(name)} {`);
-        let n = 0;
-        let types = [];
-        let names = [];
-        for (p in params) {
-            const type = params[p].type;
-            names.push(p);
-            
-            if (type in kCppTypes) {
-                let cppType = kCppTypes[type];
-                types.push(cppType);
-            } else if (type === "STRUCT") {
-                let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
-                types.push(userDefinedType);
-                convertors.STRUCT(userDefinedType, params[p], indent + 1);
+class CppGen {
+    constructor(header, body, namespace) {
+        this.header = header;
+        this.body = body;
+        this.namespace = namespace;
+        this.convertors = {
+            "STRUCT": (name, desc, indent = 0) => {
+                const params = desc.params;
+                fs.writeSync(this.header,`${spaces(indent)}struct ${initialCap(name)} {\n`);
+                let n = 0;
+                let types = [];
+                let names = [];
+                for (p in params) {
+                    const type = params[p].type;
+                    names.push(p);
+                    
+                    if (type in kCppTypes) {
+                        let cppType = kCppTypes[type];
+                        types.push(cppType);
+                    } else if (type === "STRUCT") {
+                        let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
+                        types.push(userDefinedType);
+                        this.convertors.STRUCT(userDefinedType, params[p], indent + 1);
+                    }
+                    ++n;
+                }
+                for (let i = 0; i < n; ++i) {
+                    fs.writeSync(this.header,`${spaces(indent+1)}${types[i]} ${names[i]};\n`);
+                }
+                fs.writeSync(this.header,`${spaces(indent+1)}using FieldTypes = TypeList<${types.join(', ')}>;\n`);
+                fs.writeSync(this.header,`${spaces(indent+1)}static constexpr std::string fieldNames[] = {${names.map(n => `"${n}"`).join(', ')}};\n`);
+                fs.writeSync(this.header,`${spaces(indent)}};\n`);
             }
-            ++n;
-        }
-        for (i = 0; i < n; ++i) {
-            console.log(`${spaces(indent+1)}${types[i]} ${names[i]};`);
-        }
-        console.log(`${spaces(indent+1)}using FieldTypes = TypeList<${types.join(', ')}>;`);
-        console.log(`${spaces(indent+1)}static constexpr std::string fieldNames[] = {${names.map(n => `"${n}"`).join(', ')}};`);
-        console.log(`${spaces(indent)}};`);
-        if (indent === 0) {
-            console.log(`} // namespace ${namespace}`);
-        }
+        };
     }
-}
-
-let namespace = "";
-
-let api = {
-    convert: function (name, body) {
-        if (body.type in convertors) {
-            return convertors[body.type](name, body);
+    
+    convert (oid, desc) {
+        if (desc.type in this.convertors) {
+            return this.convertors[desc.type](oid, desc);
         } else {
-            console.log(`No convertor found for ${name} of type ${body.type}`);
+            console.log(`No convertor found for ${oid} of type ${desc.type}`);
         }
-    },
-    setNamespace: function (ns) {
-        namespace = ns;
     }
-}
-module.exports = api;
+};
+
+module.exports = CppGen;
 
