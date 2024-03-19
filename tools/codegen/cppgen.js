@@ -34,14 +34,14 @@ function initialCap(s) {
 }
 
 class CppGen {
-    constructor(header, body, namespace) {
-        this.header = header;
-        this.body = body;
+    constructor(hloc, bloc, namespace) {
+        this.hloc = hloc; // write a line of code to the header file
+        this.bloc = bloc; // write a line of code to the body file
         this.namespace = namespace;
         this.convertors = {
             "STRUCT": (name, desc, indent = 0) => {
                 const params = desc.params;
-                fs.writeSync(this.header,`${spaces(indent)}struct ${initialCap(name)} {\n`);
+                hloc(`${spaces(indent)}struct ${initialCap(name)} {`);
                 let n = 0;
                 let types = [];
                 let names = [];
@@ -60,11 +60,11 @@ class CppGen {
                     ++n;
                 }
                 for (let i = 0; i < n; ++i) {
-                    fs.writeSync(this.header,`${spaces(indent+1)}${types[i]} ${names[i]};\n`);
+                    hloc(`${spaces(indent+1)}${types[i]} ${names[i]};`);
                 }
-                fs.writeSync(this.header,`${spaces(indent+1)}using FieldTypes = TypeList<${types.join(', ')}>;\n`);
-                fs.writeSync(this.header,`${spaces(indent+1)}static constexpr std::string fieldNames[] = {${names.map(n => `"${n}"`).join(', ')}};\n`);
-                fs.writeSync(this.header,`${spaces(indent)}};\n`);
+                hloc(`${spaces(indent+1)}using FieldTypes = TypeList<${types.join(', ')}>;`);
+                hloc(`${spaces(indent+1)}static constexpr std::string fieldNames[] = {${names.map(n => `"${n}"`).join(', ')}};`);
+                hloc(`${spaces(indent)}};`);
             }
         };
     }

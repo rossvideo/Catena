@@ -29,6 +29,15 @@ addFormats(ajv);
 // so we only turn it on after loading ajv
 'use strict';
 
+class loc {
+    constructor(fd) {
+        this.fd = fd;
+    }
+    write(s) {
+        fs.writeSync(this.fd, `${s}\n`);
+    }
+}
+
 // load the command line parser
 const { program } = require('commander');
 program
@@ -159,17 +168,24 @@ try {
         const CppGen = require(`./${options.language}gen.js`);
         let header = fs.openSync(path.join(options.output,headerFilename), 'w');
         let body = fs.openSync(path.join(options.output,bodyFilename), 'w');
-        fs.writeSync(header, `#pragma once\n`);
-        fs.writeSync(header, `#include <Meta.h>\n`);
-        fs.writeSync(header, `#include <string>\n`);
-        fs.writeSync(header, `#include <vector>\n`);
-        fs.writeSync(header, `namespace ${namespace} {\n`)
-        fs.writeSync(body, `#include <${headerFilename}>\n`);
-        let codegen = new CppGen(header, body, namespace);
+        let headerLoc = new loc(header);
+        let bodyLoc = new loc(body);
+        let hloc = headerLoc.write.bind(headerLoc);
+        let bloc = bodyLoc.write.bind(bodyLoc);
+        const warning = `// This file was auto-generated. Do not modify by hand.`;
+        hloc(`#pragma once`);
+        hloc(warning);
+        hloc(`#include <Meta.h>`);
+        hloc(`#include <string>`);
+        hloc(`#include <vector>`);
+        hloc(`namespace ${namespace} {`)
+        bloc(warning);
+        bloc(`#include <${headerFilename}>`);
+        let codegen = new CppGen(hloc, bloc, namespace);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
         }
-        fs.writeSync(header, `} // namespace ${namespace}\n`);
+        hloc(`} // namespace ${namespace}`);
         fs.close(body);
         fs.close(header);
         
