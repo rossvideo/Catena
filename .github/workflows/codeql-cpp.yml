@@ -90,8 +90,8 @@ jobs:
         cd ./work/Catena/Catena/sdks/cpp
         mkdir -p build
         cd build
-        cmake -DUNIT_TESTING=OFF -G Ninja ..
-        ninja
+        cmake -DUNIT_TESTING=OFF ..
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
