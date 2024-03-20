@@ -408,7 +408,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             service->registerItem(this);
             objectId_ = objectCounter_++;
             if (ok) {
-                dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
+                connectId_ = dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
                     std::unique_lock<std::mutex> lock(this->mtx_);
                     this->res_.mutable_value()->set_oid(p.oid());
                     p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx);
@@ -450,6 +450,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         if (context_.IsCancelled()) {
                             std::cout << "Connect[" << objectId_ << "] cancelled\n";
                             status_ = CallStatus::kFinish;
+                            dm_.valueSetByService.disconnect(connectId_);
                             service->deregisterItem(this);
                             break;
                         } else {
@@ -458,6 +459,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     } else {
                         std::cout << "Server shutting down: connect[" << objectId_ << "] cancelled\n";
                         status_ = CallStatus::kFinish;
+                        dm_.valueSetByService.disconnect(connectId_);
                         service->deregisterItem(this);
                     }
                     break;
@@ -465,11 +467,13 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kPostWrite:
                     writer_.Finish(Status::OK, this);
                     status_ = CallStatus::kFinish;
+                    dm_.valueSetByService.disconnect(connectId_);
                     service->deregisterItem(this);
                     break;
 
                 case CallStatus::kFinish:
                     std::cout << "Connect[" << objectId_ << "] finished\n";
+                    dm_.valueSetByService.disconnect(connectId_);
                     service->deregisterItem(this);
                     break;
             }
@@ -488,6 +492,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         bool hasUpdate_{false};
         int objectId_;
         static int objectCounter_;
+        unsigned int connectId_;
     };
 
     /**

@@ -29,6 +29,11 @@
       "type": "FLOAT32_ARRAY",
       "value": { "float32_array_values": { "floats": [1.1, 2.2, 3.3, 4.4] } },
       "name": { "display_strings": { "en": "Float Array Example" } }
+    },
+    "string_array": {
+      "type": "STRING_ARRAY",
+      "value": { "string_array_values": { "strings": ["one", "two", "three", "four"] } },
+      "name": { "display_strings": { "en": "String Array Example" } }
     }
   },
   "menu_groups": {
