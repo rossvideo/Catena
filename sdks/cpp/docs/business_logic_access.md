@@ -1,4 +1,4 @@
-# Native Types
+# Being Nice to the Business Logic
 
 Problem - Protobuf isn't a very accessible or (probably) performant way of representing the objects used by a service to control and report on its functionality of value.
 
@@ -157,6 +157,13 @@ My_device_model dm; // initialization not shown;
 }
 ```
 
+## Analysis
+
+| Option | Pros | Cons |
+|--------|------|------|
+| Let them eat protobuf! | zero work for the SDK devs | Lots of work and learning curves for Business Logic devs. Discourages adoption. |
+| Serdes |- Hides protobuf from BL<br>- Easier, so promotes adoption<br>- Enables pointers to interesting parts of the model to be cached by the BL<br>- BL is decoupled from the device model files |- Using one massive protobuf object for the device model isn't that great<br>- need to serdes both to/from clients and to/from BL |
+| Generate C++ device model from protobuf JSON |- most space efficient option<br>- most performant access option<br>- BL can cache pointers to interesting parts of the DM |- BL is tightly coupled to device model JSON files, changing even a parameter name in the DM will require the BL to recompile because the code-gen'd files will change |
 
 
-## 
+
