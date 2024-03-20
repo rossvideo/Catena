@@ -33,8 +33,8 @@ class loc {
     constructor(fd) {
         this.fd = fd;
     }
-    write(s) {
-        fs.writeSync(this.fd, `${s}\n`);
+    write(s, indent = 0) {
+        fs.writeSync(this.fd, `${" ".repeat(indent*2)}${s}\n`);
     }
 }
 
@@ -176,6 +176,7 @@ try {
         hloc(`#pragma once`);
         hloc(warning);
         hloc(`#include <Meta.h>`);
+        hloc(`#include <TypeTraits.h>`);
         hloc(`#include <string>`);
         hloc(`#include <vector>`);
         hloc(`namespace ${namespace} {`)

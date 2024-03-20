@@ -25,10 +25,6 @@ const kCppTypes = {
     "STRING": "std::string",
 }
 
-function spaces(n) {
-    return " ".repeat(n*2);
-}
-
 function initialCap(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -41,10 +37,13 @@ class CppGen {
         this.convertors = {
             "STRUCT": (name, desc, indent = 0) => {
                 const params = desc.params;
-                hloc(`${spaces(indent)}struct ${initialCap(name)} {`);
+                const classname = initialCap(name);
+                const fqname = `${namespace}::${classname}`;
+                hloc(`${classname} {`, indent);
                 let n = 0;
                 let types = [];
                 let names = [];
+                // gather information about the struct
                 for (p in params) {
                     const type = params[p].type;
                     names.push(p);
@@ -59,12 +58,40 @@ class CppGen {
                     }
                     ++n;
                 }
+
+                // write the struct to the header file
                 for (let i = 0; i < n; ++i) {
-                    hloc(`${spaces(indent+1)}${types[i]} ${names[i]};`);
+                    hloc(`${types[i]} ${names[i]};`, indent+1);
                 }
-                hloc(`${spaces(indent+1)}using FieldTypes = TypeList<${types.join(', ')}>;`);
-                hloc(`${spaces(indent+1)}static constexpr std::string fieldNames[] = {${names.map(n => `"${n}"`).join(', ')}};`);
-                hloc(`${spaces(indent)}};`);
+                hloc(`static const StructInfo& getStructInfo();`, indent+1)
+                hloc(`};`, indent);
+
+                // write the getStructInfo method to the body file
+                let bodyIndent = 0;
+                bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
+                bloc(`static StructInfo t;`, bodyIndent+1);
+                bloc(`if (t.name.length()) return t;`, bodyIndent+1);
+                bloc(`t.name = "${name}";`, bodyIndent+1);
+                bloc(`catena::FieldInfo fi;`, bodyIndent+1);
+                for (let i = 0; i < n; ++i) {
+                    let indent = bodyIndent+2;
+                    bloc(`// register info for the ${names[i]} field`, indent);
+                    bloc(`//`, indent);
+                    bloc(`fi.name = "${names[i]}";`, indent);
+                    bloc(`fi.offset = offsetof(${fqname}, ${names[i]});`, indent);
+                    // fi.getStructInfo = catena::getStructInfoFunction<types[i]>();
+                    bloc(`fi.wrapGetter = [](void* dstAddr, const ParamAccessor* pa) {`, indent);
+                      bloc(`auto dst = reinterpret_cast<${types[i]}*>(dstAddr);`, indent+1);
+                      bloc(`pa->getValue<false, ${types[i]}>(*dst);`, indent+1);
+                    bloc(`};`, indent);
+                    bloc(`fi.wrapSetter = [](ParamAccessor* pa, const void* srcAddr) {`, indent);
+                      bloc(`auto src = reinterpret_cast<const ${types[i]}*>(srcAddr);`, indent+1);
+                      bloc(`pa->setValue<false, ${types[i]}>(*src);`, indent+1);
+                    bloc(`};`, indent);
+                    bloc(`t.fields.push_back(fi);`, indent);
+                }
+                bloc(`return t;`, bodyIndent+1)
+                bloc('}', bodyIndent);
             }
         };
     }
