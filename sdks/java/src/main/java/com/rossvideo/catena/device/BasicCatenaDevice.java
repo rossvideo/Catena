@@ -1,5 +1,7 @@
 package com.rossvideo.catena.device;
 
+import java.util.Map;
+
 import com.google.protobuf.Empty;
 import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.MenuGroupManager;
@@ -82,7 +84,7 @@ public class BasicCatenaDevice implements CatenaDevice
     }
 
     @Override
-    public void deviceRequest(DeviceRequestPayload request, StreamObserver<DeviceComponent> responseObserver)
+    public void deviceRequest(DeviceRequestPayload request, StreamObserver<DeviceComponent> responseObserver, Map<String, Object> claims)
     {
         Device device = buildDeviceMessage(request);
         DeviceComponent component = DeviceComponent.newBuilder().setDevice(device).build();
@@ -153,7 +155,7 @@ public class BasicCatenaDevice implements CatenaDevice
     }
     
     @Override
-    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver)
+    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims)
     {
         String oid = request.getOid();
         int index = request.getElementIndex();
@@ -162,7 +164,7 @@ public class BasicCatenaDevice implements CatenaDevice
     }
 
     @Override
-    public void getValue(GetValuePayload request, StreamObserver<Value> responseObserver)
+    public void getValue(GetValuePayload request, StreamObserver<Value> responseObserver, Map<String, Object> claims)
     {
         try
         {
