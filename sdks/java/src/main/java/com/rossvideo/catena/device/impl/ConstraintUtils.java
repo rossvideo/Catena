@@ -1,8 +1,9 @@
 package com.rossvideo.catena.device.impl;
 
 import catena.core.constraint.Constraint;
-import catena.core.constraint.Int32ChoiceConstraint;
 import catena.core.constraint.Constraint.ConstraintType;
+import catena.core.constraint.FloatRangeConstraint;
+import catena.core.constraint.Int32ChoiceConstraint;
 import catena.core.constraint.Int32ChoiceConstraint.IntChoice;
 
 public class ConstraintUtils
@@ -29,5 +30,17 @@ public class ConstraintUtils
         }
         return null;
         
+    }
+
+    public static Constraint buildFloatRangeConstraint(float min, float max, float step)
+    {
+        Constraint.Builder constraint = Constraint.newBuilder();
+        FloatRangeConstraint.Builder floatRange = FloatRangeConstraint.newBuilder();
+        floatRange.setMinValue(min);
+        floatRange.setMaxValue(max);
+        floatRange.setStep(step);
+        constraint.setType(ConstraintType.FLOAT_RANGE);
+        constraint.setFloatRange(floatRange);
+        return constraint.build();
     }
 }
