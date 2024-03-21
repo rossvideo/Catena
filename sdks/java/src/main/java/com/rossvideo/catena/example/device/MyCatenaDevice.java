@@ -38,6 +38,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     public static final String STRUCT_OID = "/product/serial-number";
     public static final String INT_OID = "/parameters/nested/integer";
     public static final String FLOAT_OID = "/parameters/nested/float";
+    public static final String FLOAT_OID_RANGE = "/parameters/nested/float_range";
     public static final String DATE_AND_TIME_OID = "/clock/date-and-time";
     public static final String CLOCK_ON_OID = "/clock/on";
     
@@ -67,7 +68,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     private void buildMenus() {
         getMenuManager().createMenuGroup("config", "Config");
         getMenuManager().createMenu("config", "config", "Configuration");
-        getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, INT_OID, CHOICE_OID});
+        getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, FLOAT_OID_RANGE, INT_OID, CHOICE_OID});
         getMenuManager().createMenu("config", "clock", "Clock");
         getMenuManager().addParamsMenu("config", "clock", new String[] {DATE_AND_TIME_OID, CLOCK_ON_OID});
         
@@ -147,6 +148,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
                 "Off", "On"
         }), WidgetHint.CHECKBOX);
         manager.createParamDescriptor(FLOAT_OID, "Float Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build());
+        manager.createParamDescriptor(FLOAT_OID_RANGE, "Float Range Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build(), ConstraintUtils.buildFloatRangeConstraint(0f, 100f, 0.1f));
         manager.createParamDescriptor(INT_OID, "Int Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build());
         manager.createParamDescriptor(CHOICE_OID, "Choice Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
                         "Choice 1", "Choice 2", "Choice 3"
