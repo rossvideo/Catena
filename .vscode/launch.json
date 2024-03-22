@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+      {
+        "type": "cppdbg",
+        "name": "Debug Full Service with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service",
+        "args": ["--device_model", "${workspaceFolder}/example_device_models/device.one_of_everything.json"],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
+        "name": "Debug Basic Param Access with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/basic_param_access/basic_param_access",
+        "args": ["${workspaceFolder}/example_device_models/device.minimal.json"],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "name": "Debug full_service with gdb",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service", // Path to the full_service executable
+        "args": ["--device_model", "example_device_models/device.minimal.json" ], // Any command-line arguments go here
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ]
+    }
+    ]
+}

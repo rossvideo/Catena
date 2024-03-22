@@ -24,11 +24,51 @@ hs_err_pid*
 
 # cmake build folders
 **/build
+**/cmake-build-debug
+**/CMakeFiles*
+
+# clion ide
+/.idea
 
 **/node_modules
 
+<<<<<<< HEAD
 **/cmake-build-debug
 
 # clion ide
 /.idea
+=======
+### Eclipse ###
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse m2e generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+>>>>>>> develop
 

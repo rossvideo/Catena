@@ -32,7 +32,9 @@ PATH="/Applications/CMake.app/Contents/bin":"$PATH"
 source ~/.zprofile
 ```
 
-## Install and Build gRPC and Protobufs
+## Dependencies
+
+### Install and Build gRPC and Protobufs
 
 Carefully follow [these steps](https://grpc.io/docs/languages/cpp/quickstart/)
 
@@ -49,18 +51,17 @@ After upgrading to MacOS 13.3, these instructions no longer worked. I had to run
               -DgRPC_RE2_PROVIDER=package      \
               -DgRPC_SSL_PROVIDER=package      \
               -DgRPC_ZLIB_PROVIDER=package \
-              -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk \
+              -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
               -DCMAKE_PREFIX_PATH=/Users/$USER/.local 
 ```
 
-Another change necessary to prevent linker warnings on the examples was to make a symbolic link thus:
 
-```{.sh}
-sudo ln -s /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk\
-    /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk
-```
+### Install and Build jwt-cpp
 
-because the linker flags insisted on using MacOSX13.1 for a non-obvious reason.
+1. Install openSSL eg. `brew install openssl`
+2. Run `git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build`
+3. Run `cmake -DCMAKE_BUILD_TYPE=Release ..`
+4. Build and add to path
 
 ## Optionally install doxygen
 
@@ -89,3 +90,12 @@ which itself may need installation if not already present
 ```{.sh}
 brew install graphviz
 ```
+## Optionally install Google Test
+
+It can be installed using [brew](https://docs.brew.sh/Installation),
+which itself may need installation if not already present
+
+`brew install googletest`
+
+To build without Google Test, empty the build folder and run
+`cmake .. -DUNIT_TESTING=OFF`

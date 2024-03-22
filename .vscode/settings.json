@@ -1,5 +1,7 @@
 {
+    "C_Cpp.default.cppStandard": "c++20",
     "cmake.sourceDirectory": "${workspaceFolder}/sdks/cpp",
+<<<<<<< HEAD
     "cmake.configureOnOpen": true,
     "files.associations": {
         "__bit_reference": "cpp",
@@ -84,4 +86,21 @@
         "ranges": "cpp",
         "filesystem": "cpp"
     }
+=======
+    "cmake.buildDirectory": "${workspaceFolder}/sdks/cpp/build",
+    "cmake.buildBeforeRun": false,
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/sdks/cpp/build"
+    ],
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/example_device_models/device.*.json",
+                "/nab_2024/device.*.json"
+            ],
+            "url": "./schema/catena.schema.json"
+        }
+    ],
+    "git.ignoreLimitWarning": true
+>>>>>>> develop
 }

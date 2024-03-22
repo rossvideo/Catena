@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
 Copyright © 2023 Ross Video Limited, All Rights Reserved.
  
@@ -14,6 +15,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+=======
+/* Copyright © 2023 Ross Video Limited, All Rights Reserved.
+ * 
+ * Licensed under the Creative Commons Attribution NoDerivatives 4.0
+ * International Licensing (CC-BY-ND-4.0);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * 
+ * https://creativecommons.org/licenses/by-nd/4.0/
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+>>>>>>> develop
 
 syntax = "proto3";
 
@@ -24,151 +41,149 @@ import "constraint.proto";
 import "google/protobuf/empty.proto";
 
 option java_multiple_files = true;
-option java_package = "catena.core";
+option java_package = "catena.core.parameter";
 option java_outer_classname = "ParamProtos";
 
 option optimize_for = CODE_SIZE;
 
-message ParamType {
-
-  // Parameter types can be simple, structures, or binary.
-  enum Type {
+enum ParamType {
     UNDEFINED = 0;
     EMPTY = 1;
     INT32 = 4;
     FLOAT32 = 6;
     STRING = 7;
     STRUCT = 10;
+    STRUCT_VARIANT = 11;
     INT32_ARRAY = 14;
     FLOAT32_ARRAY = 16;
     STRING_ARRAY = 17;
     BINARY = 18;
     STRUCT_ARRAY = 32;
+    STRUCT_VARIANT_ARRAY = 33;
     DATA = 50; // Used to allow commands to accept files
-  }
-
-   /* oneof kind { Unless we make array a separate flag, we need to be able to specify both a ref and a type override
-    *  ParamTypes param_type = 1;
-    *
-    * // Non-relative JSON pointer to a param elsewhere in the model.
-    * string param_ref = 2;
-    * }
-    */
-
-  /* Defines the parameter type.
-   * Can be defined in-line
-   * or reference a shared type definition from device.types.params
-   */
-  Type type = 1;
-
-  // Non-relative JSON pointer to a param elsewhere in the model.
-  string param_ref = 2;
 }
 
 message BasicParamInfo {
-  // The parameter's OID
+  /* The parameter's OID */
   string oid = 1;
 
-  // The parameter's name to display in a client GUI
+  /* The parameter's name to display in a client GUI */
   PolyglotText name = 2;
 
-  // The parameter's type
+  /* The parameter's type */
   ParamType type = 3;
 
-  // JSON pointer to a param that defines the structure of this param
+  /* The OID of the template from which this parameter was created */
   string template_oid = 4;
 
-  repeated string oid_aliases = 5;
 }
 
 /* When streamed, only the payload field will be used after the first message. */
 message DataPayload {
-  string mime_type = 1; // MIME type of the data in the payload
-
   enum PayloadEncoding {
     UNCOMPRESSED = 0;
     GZIP = 1;
     DEFLATE = 2;
   }
 
-  PayloadEncoding payload_encoding = 2;
+  map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
+  bytes digest = 2; // SHA-256 digest of the payload - flags the recipient to respond with proceed flag set to true/false to resume or cancel payload data
+  PayloadEncoding payload_encoding = 3;
 
   oneof kind {
-  	string url = 3;    // URL containing data for the payload
-  	bytes payload = 4; // Data for the payload
-  }
-}
-
-message ParamDescriptor {
-  oneof kind {
-    Param param = 1;
-    Import import = 2;
+  	string url = 4;    // URL containing data for the payload
+  	bytes payload = 5; // Data for the payload
   }
 }
 
 message Param {
+  /* the parameter's name */
+  PolyglotText name = 1;
 
-  /* Fully qualified object id, a JSON pointer referenced to the top-level
-   * params field in the device. note that this information can be inferred from
-   * authored device models (JSON files) and should be left out of those.
-   * Devices / Services should populate this information. Whether this is done
-   * in eager or lazy fashion is up to the device.
-   */
-  string fqoid = 1;
+  /* the parameter's type */
+  ParamType type = 2;
 
-  // the parameter's name
-  PolyglotText name = 2;
+  /* Read only flag. Clients shall style the param's widget as read only when true. */
+  bool read_only = 3;
 
-  // the parameter's type
-  ParamType type = 3;
+  /* Identifies the GUI elements to display and adjust the parameter value. */
+  string widget = 4;
 
-  // Read only flag. Clients shall style the param's widget as read only when true.
-  bool read_only = 4;
+  /* For float params, how many digits to display */
+  uint32 precision = 5;
 
-  // Identifies the GUI elements to display and adjust the parameter value.
-  string widget = 5;
-
-  // For float params, how many digits to display
-  uint32 precision = 6;
-
-  // The parameter's value
-  Value value = 7;
+  /* The parameter's value */
+  Value value = 6;
 
   /* The constraint's on the parameters' value.
-   * Can be a reference to a shared constraint or defined in-line.
-   */
-  Constraint constraint = 8;
+   * Can be a reference to a shared constraint or defined in-line. */
+  Constraint constraint = 7;
 
   /* For string params, the maximum length of the string
-   * @todo - is this really needed? the proto encoding of strings includes their
-   * length
-   */
-  uint32 max_length = 9;
+   * @todo - is this really needed? The proto encoding of strings includes their length */
+  uint32 max_length = 8;
 
   /* For string array params, the total length of all the strings in the array.
-   * @todo - is this really needed? doesn't proto give us this info?
-   */
-  uint32 total_length = 10;
+   * @todo - is this really needed? doesn't proto give us this info? */
+  uint32 total_length = 9;
 
   /* Access scope
    * if not present, the parameter's access scope is that of its parent.
-   * if not a child parameter, the access scope is the default for the device.
-   */
-  string access_scope = 11;
+   * if not a child parameter, the access scope is the default for the device. */
+  string access_scope = 10;
 
-  // Additional properties to assist client
-  map<string, string> client_hints = 12;
+  /* Additional properties to assist client */
+  map<string, string> client_hints = 11;
 
-  // If this is an imported sub-device, it can have a set of commands too.
-  map<string, ParamDescriptor> commands = 13;
+  /* If this is an imported sub-device, it can have a set of commands too. */
+  map<string, Param> commands = 12;
 
-  // If this is a STRUCT or STRUCT_ARRAY Param its sub-params are defined here.
-  map<string, ParamDescriptor> params = 14;
+  /* If this is a STRUCT or STRUCT_ARRAY Param its sub-params are defined here. */
+  map<string, Param> params = 13;
 
   /* Meaningful when this message is used as a command descriptor
-   * true if the command provides a response when executed.
-   */
-  bool response = 15;
+   * true if the command provides a response when executed. */
+  bool response = 14;
+
+  /* Optional additional information about the usage of the parameter */
+  PolyglotText help = 15;
+
+  /* Import directive */
+  Import import = 16;
+
+  /* Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
+   * The aliases must be fully-qualitfied. */
+  repeated string oid_aliases = 17;
+
+  /* When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device */
+  bool minimal_set = 18;
+
+  /* When true, indicates that the parameter is stateless
+   * design intent is to signal that values of stateless parameters are not worth persisting
+   * and that the device should not be expected to remember them across reboots.
+   * Good examples of stateless parameters are: device's current time, audio meters, etc. */
+  bool stateless = 19;
+
+  /* The OID of the template from which this parameter was created */
+  string template_oid = 20; 
+
+}
+
+/* A value that can be one of several types, even within the same array
+ * The type to apply is determined by the struct_variant_type field which must match one 
+ * of the keys in the descriptor's params map */
+message StructVariantValue {
+  /* The type of the variant */
+  string struct_variant_type = 1;
+
+  /* The value of the variant */
+  Value value = 2;
+}
+
+/* An array of Values, each of which can be one of several types defined in the
+ * descriptor's params map */
+message StructVariantList {
+  repeated StructVariantValue struct_variants = 1;
 }
 
 enum UndefinedValue {
@@ -177,25 +192,31 @@ enum UndefinedValue {
 
 message Int32List { repeated sfixed32 ints = 1; }
 
-message FloatList { repeated float floats = 1; }
+message Float32List { repeated float floats = 1; }
 
 message StringList { repeated string strings = 1; }
 
 /* Structured object comprising named fields that map to dynamically typed Values.
  * Needed for the STRUCT_ARRAY param type because proto doesn't
- * support repeated maps, or for maps to appear in oneof unions.
- */
-message StructValue {
-  map<string, Value> fields = 1;
+ * support repeated maps, or for maps to appear in oneof unions. */
+message StructField {
+  oneof kind {
+    Value value = 1;
+    Param param = 2;
+  }
 }
+/* Structured object comprising named fields that map to dynamically typed values */
+message StructValue {
+	map<string, StructField> fields = 1;
+}
+
 
 message StructList { repeated StructValue struct_values = 1; }
 
 /* Represents a dynamically typed value with straightforward mapping to
  * OGP/JSON.
  * Note that sfixed32 types are used to prefer marshalling performance
- * to wire size.
- */
+ * to wire size. */
 message Value {
   oneof kind {
 
@@ -213,19 +234,29 @@ message Value {
 
     Int32List int32_array_values = 7;
 
-    FloatList float32_array_values = 8;
+    Float32List float32_array_values = 8;
 
     StringList string_array_values = 9;
 
     StructList struct_array_values = 10;
 
     DataPayload data_payload = 11; // Used for commands that accept or return data blobs
+
+    StructVariantValue struct_variant_value = 12;
+
+    StructVariantList struct_variant_array_values = 13;
   }
 }
 
 message Import {
   string url = 1;
-  repeated string excludes = 2;
+  string digest = 2;
+
+  enum DigestAlgorithm {
+    UNDEFINED = 0;
+    SHA256 = 1;
+  }
+  DigestAlgorithm method = 3;
 }
 
 message GetParamPayload {
@@ -239,17 +270,15 @@ message BasicParamInfoResponse {
 }
 
 /* Specifies the OID and potentially its subtree of
- * child parameters if the recursive flag is set.
- */
+ * child parameters if the recursive flag is set. */
 message BasicParamInfoRequestPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.
 
   /* Uniquely identifies starting parameter relative to device.params
-   * Specifying "" selects all top-level parameters.
-   */
+   * Specifying "" selects all top-level parameters. */
   string oid_prefix = 2;
 
-  // Selects whether the param's child parameters should also be returned.
+  /* Selects whether the param's child parameters should also be returned. */
   bool recursive = 3;
 }
 
@@ -269,26 +298,26 @@ message GetValuePayload {
 message MultiSetValuePayload { repeated SetValuePayload values = 1; }
 
 message UpdateSubscriptionsPayload {
-  uint32 slot = 1; // Uniquely identifies the device at node scope.
-  repeated string added_oids = 2;
-  repeated string removed_oids = 3;
+  uint32 slot = 1;                  // Uniquely identifies the device at node scope.
+  repeated string added_oids = 2;   // A list of object IDs to add to current subscriptions (or a partial OID with a trailing "*" to indicate all object IDs with the same prefix)
+  repeated string removed_oids = 3; // A list of object IDs to remove from current subscriptions (or a partial OID with a trailing "*" to indicate all object IDs with the same prefix)
 }
 
 /* Defines a command for a device.
  * Commands provide a way to use device connection to execute commands from other devices.
- * Superseded by just adding a `responds` field to the Param message.
+ * Superseded by just adding a `respond` field to the Param message.
  * message Command {
  *   Param definition = 1; // provides command's input values
- *   bool responds = 2;    // true when the device will respond to the command, false otherwise.
+ *   bool respond = 2;     // true when the device will respond to the command, false otherwise.
  * }
  *
- * When streamed, only the value field will be used after the first message.
-*/
+ * When streamed, only the value field will be used after the first message. */
 message ExecuteCommandPayload {
   uint32 slot = 1;  // Slot id of the device
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
-  bool respond = 5; // Set false to suppress responses from device
+  bool respond = 4; // false if Server/Device should not send any responses.
+  bool proceed = 5;
 }
 
 message Exception {
@@ -299,10 +328,10 @@ message Exception {
 
 /* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
-  int32 return_code = 1; // 0 indicates success, non-zero a problem
   oneof kind {
-    google.protobuf.Empty no_response = 2;
-    Value response = 3;
-    Exception exception = 4;
+    google.protobuf.Empty no_response = 1; // Server/Device does not have a response for the command.
+    Value response = 2;
+    Exception exception = 3;  // This is for Server/Device error executing the command.
+    bool proceed = 4;
   }
 }

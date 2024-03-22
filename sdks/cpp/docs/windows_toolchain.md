@@ -1,34 +1,59 @@
-# Windows Toolchain Installation {#windows_toolchain}
+# Windows Toolchain Installation (MSVC)
 
-# TODO: This is still a work in progress
-This toolchain installation has been verified on Windows 10
+This toolchain installation has been verified on x64 Windows 10.
 
 ## Getting a C++ compiler
 
-Download and install CMake release from: https://cmake.org/download/
+1. Install [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/) for C++ dev
+2. (Optional) Add msbuild to path. Usually under `%ProgramFiles%\Microsoft Visual Studio\<YEAR>\<YOUR_VS_EDITION>\MSBuild\Current\Bin`
 
-Download and install NASM from: https://www.nasm.us/
-Add $HOME\AppData\Local\bin\NASM to PATH
+## Installing cmake
 
-Download and install MinGW compiler installer from: https://osdn.net/projects/mingw/
-Add the mingw32-automakeX.XX-bin and mingw32-autoconf-bin packages
-Add MinGw bin directory to PATH variable.
+* Install [cmake](https://cmake.org/download/)
 
+## Dependencies
 
-## Building and installing grpc
-Create the following directories in the HOME directory: ...\.local\bin
-Add the \bin directory to PATH
+### Install and Build gRPC and Protobufs
 
-In GitBash execute:
-`git clone --recurse-submodules -b v1.55.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc`
-`cd grpc`
-`mkdir -p cmake/build`
-`pushd cmake/build`
-`cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="$HOME/.local/ -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER="/c/MinGw/bin/g++.exe" -DCMAKE_C_COMPILER="/c/MinGw/bin/gcc.exe" ../..`
-`mingw32-make.exe -j 4`
-`make install`
-`popd`
+1. Install [vcpkg](https://vcpkg.io/en/getting-started)
+2. Navigate to install directory of vcpkg and run
+```
+vcpkg install grpc:x64-windows
+vcpkg install protobuf protobuf:x64-windows
+vcpkg install protobuf[zlib] protobuf[zlib]:x64-windows
+vcpkg integrate install
+```
 
-## Building the C++ SDK
-Go to sdks/cpp directory
-Run `cmake -G "MinGW Makefiles" CMakeLists.txt`
+### Install and Build jwt-cpp
+
+1. Install full openSSL from [here](https://slproweb.com/products/Win32OpenSSL.html)
+2. Run `git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build`
+3. Run `cmake -DCMAKE_BUILD_TYPE=Release ..` and then `msbuild jwt-cpp.sln`
+4. Find location of `jwt-cpp-targets.cmake` and create symlink to `build/jwt-cpp-targets.cmake` eg. `mklink jwt-cpp-targets.cmake c:\...\build\CMakeFiles\Export\272ceadb8458515b2ae4b5630a6029cc\jwt-cpp-targets.cmake`
+
+> If the build fails with syntax errors follow [this](https://github.com/Thalhammer/jwt-cpp/blob/master/docs/faqs.md#building-on-windows-fails-with-syntax-errors)
+___
+> After installing the dependencies above you will have to add `-DCMAKE_TOOLCHAIN_FILE=<vcpkg_install>/scripts/buildsystems/vcpkg.cmake -DCMAKE_PREFIX_PATH=<jwt-cpp-install>/build` to cmake options in your build environment
+
+## Optionally Install doxygen
+
+* Install [doxygen](https://www.doxygen.nl/download.html)
+
+### graphviz installation
+
+Doxygen can add inheritance diagrams and call trees if the program called `dot`
+which is part of graphviz is installed.
+
+* Install [graphviz](https://graphviz.org/download/) (add to path during installation)
+
+## Optionally Install Google Test
+
+1. Download the library ZIP file from the [Github repo](https://github.com/google/googletest/tree/release-1.10.0).  Extract the ZIP file to a directory on your computer.
+2. Open command prompt and navigate to the directory where you extracted Google Test and run
+```
+mkdir build
+cd build
+cmake ..
+```
+
+To build without unit test set UNIT_TESTING=OFF when building

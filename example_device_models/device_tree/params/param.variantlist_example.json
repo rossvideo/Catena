@@ -1,0 +1,52 @@
+{
+    "type": "STRUCT_VARIANT_ARRAY",
+    "params": {
+        "VideoSlot": {
+            "import": {"url": "include"},
+            "type": "UNDEFINED"
+        },
+        "AudioSlot": {
+            "import": {"url": "include"},
+            "type": "UNDEFINED"
+        }
+    },
+    "value": {
+        "struct_variant_array_values": {
+            "struct_variants": [
+                {
+                    "struct_variant_type": "AudioSlot",
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "id": {
+                                    "value": {"string_value": "audio1"}
+                                },
+                                "label": {
+                                    "value": {"string_value": "Audio 1"}
+                                },
+                                "gain": {
+                                    "value": {"float32_value": 0.5}
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "struct_variant_type": "VideoSlot",
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "id": {
+                                    "value": {"string_value": "video1"}
+                                },
+                                "label": {
+                                    "value": {"string_value": "Video 1"}
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
