@@ -4,6 +4,7 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -115,9 +116,9 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     
     @Override
-    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver)
+    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims)
     {
-        super.setValue(request, responseObserver);
+        super.setValue(request, responseObserver, claims);
         if (request.getOid().equals(CLOCK_ON_OID))
         {
             updateTime();
@@ -165,7 +166,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
 
     @Override
-    public StreamObserver<ExecuteCommandPayload> executeCommand(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream)
+    public StreamObserver<ExecuteCommandPayload> executeCommand(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream, Map<String, Object> claims)
     {
         String oid = firstMessage.getOid();
         switch (oid)
