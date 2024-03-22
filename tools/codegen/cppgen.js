@@ -39,7 +39,7 @@ class CppGen {
                 const params = desc.params;
                 const classname = initialCap(name);
                 const fqname = `${namespace}::${classname}`;
-                hloc(`${classname} {`, indent);
+                hloc(`struct ${classname} {`, indent);
                 let n = 0;
                 let types = [];
                 let names = [];
