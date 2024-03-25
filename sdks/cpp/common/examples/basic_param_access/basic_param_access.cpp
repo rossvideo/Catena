@@ -82,49 +82,6 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
-<<<<<<< HEAD
-        // cache a param and get its value
-        ParamAccessor helloParam = dm.param("/hello");
-        std::cout << "Hello Param: " << helloParam.getValue<float>() << '\n';
-
-        // access a param directly
-        std::cout << "location.latitude: " << dm.param("/location/latitude").getValue<float>() << '\n';
-
-        // set some values in the device model using a cached param
-        // and a path. N.B. types can be inferred
-        std::cout << "setting values to something different\n";
-        helloParam.setValue(3.142f);     // example using cached param
-        dm.param("/world").setValue(3);  // example using chaining
-      
-        std::cout << "cached param value: " << helloParam.getValue<float>() << '\n';
-
-        // demo caching a sub-param
-        ParamAccessor longitudeParam = dm.param("/location/longitude");
-        std::cout << "Longitude: " << longitudeParam.getValue<float>() << '\n';
-        longitudeParam.setValue(30.0f);
-        std::cout << "Updated Longitude: " << longitudeParam.getValue<float>() << '\n';
-
-
-        // add a struct param the hard way
-        // catena::Param sparam{};
-        // *(sparam.mutable_name()->mutable_monoglot()) = "struct param";
-        // *(sparam.mutable_fqoid()) = "sparam";
-        // sparam.mutable_type()->set_param_type(
-        //     catena::ParamType_ParamTypes::ParamType_ParamTypes_STRUCT);
-
-        // catena::Value fval;
-        // fval.set_float32_value(1.23);
-        // catena::Value struct_val;
-        // (*(*struct_val.mutable_struct_value()->mutable_fields())["float_field"]
-        //       .mutable_value()) = fval;
-        // (*sparam.mutable_value()) = struct_val;
-        // dm.addParam("/sparam", std::move(sparam));
-
-        // write out the updated device model
-        std::cout << "Updated Device Model: " << dm << '\n';
-
-        // report the wire-size of the device model
-=======
         // read a variant
         std::unique_ptr<ParamAccessor> slotParam = dm.param("/slot");
         SlotVariant slot = {AudioSlot{"audio", 10.0f}};  // initialize the variant
@@ -177,7 +134,6 @@ int main(int argc, char **argv) {
         // write the device model to stdout
         std::cout << "Updated Device Model: " << dm << '\n';
 
->>>>>>> develop
         std::string serialized;
         dm.device().SerializeToString(&serialized);
         std::cout << "Device model serializes to " << serialized.size() << " bytes\n";

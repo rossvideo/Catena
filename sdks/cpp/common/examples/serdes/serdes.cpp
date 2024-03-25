@@ -28,10 +28,7 @@
  */
 
 #include <DeviceModel.h>
-<<<<<<< HEAD
-=======
 #include <ParamAccessor.h>
->>>>>>> develop
 #include <Path.h>
 
 #include <iostream>

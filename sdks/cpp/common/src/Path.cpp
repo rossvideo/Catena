@@ -29,25 +29,17 @@ catena::Path::Path(const std::string &path) : segments_{} {
     std::regex segment_regex("(\\/-{1})|(\\/([\\w]|~[01])*)");
     auto r_begin = std::sregex_iterator(path.begin(), path.end(), segment_regex);
     auto r_end = std::sregex_iterator();
-<<<<<<< HEAD
-=======
     if (!std::regex_match(path, segment_regex))  {
         std::stringstream why;
         why << __PRETTY_FUNCTION__ << "\n'" << path << "' is not a valid path";
         throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
     }
->>>>>>> develop
     for (std::sregex_iterator it = r_begin; it != r_end; ++it) {
         std::smatch match = *it;
         if (it == r_begin && match.position(0) != 0) {
             std::stringstream why;
-<<<<<<< HEAD
-            why << __PRETTY_FUNCTION__ << "\n'" << path << "' must begin with '/'";
-            throw std::runtime_error(why.str());
-=======
             why << __PRETTY_FUNCTION__ << "\n'" << path << " is invalid json pointer";
             throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
->>>>>>> develop
         }
 
         std::string txt = unescape(match.str());
@@ -59,12 +51,6 @@ catena::Path::Path(const std::string &path) : segments_{} {
 catena::Path::Path(const char *literal) : Path(std::string(literal)) {}
 
 catena::Path::Segment catena::Path::pop_front() noexcept {
-<<<<<<< HEAD
-    Segment ans;
-    if (segments_.size() >= 1) {
-        std::string seg = segments_[0];
-        segments_.pop_front();
-=======
     Segment ans = front();
     segments_.pop_front();
     return ans;
@@ -74,7 +60,6 @@ catena::Path::Segment catena::Path::front() noexcept {
     Segment ans;
     if (segments_.size() >= 1) {
         std::string seg = segments_[0];
->>>>>>> develop
         if (seg.compare("-") == 0) {
             // the one-past-the-end array index
             ans.emplace<Index>(kEnd);

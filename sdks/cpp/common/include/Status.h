@@ -25,15 +25,6 @@
 #include <stdexcept>
 
 namespace catena {
-<<<<<<< HEAD
-struct exception_with_status : public std::runtime_error {
-    inline explicit exception_with_status(const std::string &why, grpc::StatusCode s)
-        : std::runtime_error{why}, status{s} {}
-
-    const grpc::StatusCode status;
-};
-
-=======
 
 /**
  * @brief Status Code - reproduced from google's grpc project.
@@ -172,7 +163,6 @@ struct exception_with_status : public std::runtime_error {
     const StatusCode status;
 };
 
->>>>>>> develop
 }  // namespace catena
 
 /**
@@ -184,11 +174,7 @@ struct exception_with_status : public std::runtime_error {
  */
 #define BAD_STATUS(msg, status)                                                                              \
     do {                                                                                                     \
-<<<<<<< HEAD
-        static_assert(status != grpc::StatusCode::OK, "Only use with error status codes");                   \
-=======
         static_assert(status != catena::StatusCode::OK, "Only use with error status codes");                   \
->>>>>>> develop
         std::stringstream why;                                                                               \
         why << __FILE__ << ':' << __LINE__ << '\n' << msg;                                                   \
         throw catena::exception_with_status(why.str(), status);                                              \

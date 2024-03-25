@@ -45,9 +45,6 @@ using grpc::ServerWriter;
 
 namespace catena {
 
-<<<<<<< HEAD
-template <typename DM> class ParamAccessor;  // forward reference
-=======
 /**
  * a fake lock for use in recursive function calls
  */
@@ -62,7 +59,6 @@ class ParamAccessor;  // forward reference
  *
  */
 using ParamIndex = uint32_t;
->>>>>>> develop
 
 /**
  * @brief Provide access to the Catena data model that's similar to the
@@ -71,173 +67,6 @@ using ParamIndex = uint32_t;
  * The data model access methods all begin with code to assert a lock guard.
  *
  */
-<<<<<<< HEAD
-template <enum Threading T = Threading::kMultiThreaded> class DeviceModel {
-    friend ParamAccessor<DeviceModel>;
-  
-  public:
-    /**
-   * @brief which threading model is active.
-   *
-   */
-    const catena::Threading kThreading = T;
-
-    /**
-   * @brief Choose the mutex type
-   *
-   */
-    using Mutex = typename std::conditional<T == catena::Threading::kMultiThreaded, std::recursive_mutex,
-                                            FakeMutex>::type;
-
-    /**
-   * @brief Choose the lock guard type
-   *
-   */
-    using LockGuard = typename std::conditional<T == catena::Threading::kMultiThreaded,
-                                                std::lock_guard<Mutex>, FakeLockGuard<Mutex>>::type;
-
-    /**
-   * @brief Param Accessor Data
-   * 
-   * Yes, this could be a std::pair, but I've a hunch that we'll need to add
-   * a pointer to catena::Constraint too in the near future because constraints
-   * can be referenced and not only defined in-line.
-   */
-    using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
-
-    /**
-   * @brief default constructor, creates an empty model.
-   *
-   */
-    DeviceModel() {}
-
-    /**
-   * @brief Copy constructor, makes deep copy of other's device model.
-   * @todo implementation
-   * @param other the DeviceModel to copy.
-   */
-    DeviceModel(const DeviceModel &other) {}
-
-    /**
-   * @brief Assignment operator, makes deep copy of rhs's device model.
-   * @param rhs the right hand side of the = operator
-   * @todo implementation
-   */
-    DeviceModel &operator=(const DeviceModel &rhs) {
-        LockGuard lock(mutex_);
-        // not implemented
-        return *this;
-    }
-
-    /**
-   * @brief Move constructor, takes possession of other's state
-   * @param other the donor object
-   * @todo implementation
-   */
-    DeviceModel(DeviceModel &&other) {
-        // not implemented
-    }
-
-    /**
-   * @brief Move assignment, takes possession of rhs's state
-   * @todo implementation
-   * @param rhs the right hand side of the = operator
-   * @return DeviceModel
-   */
-    DeviceModel operator=(DeviceModel &&rhs) {
-        // not implemented
-        return *this;
-    }
-
-    /**
-   * @brief construct from a catena protobuf Device object.
-   * @todo implementation
-   */
-    explicit DeviceModel(catena::Device &pbDevice) {
-        // not implemented
-    }
-
-    /**
-   * @brief Construct a new Device Model from a json file
-   *
-   * @param filename
-   */
-    explicit DeviceModel(const std::string &filename);
-
-    /**
-   * @brief read access to the protobuf Device
-   *
-   * @return const catena::Device&
-   */
-    const catena::Device &device() const;
-
-    /**
-   * @brief Get the Param object at path
-   *
-   * @param path uniquely locates the parameter
-   * @throws catena::exception_with_status if the code to navigate
-   * to the requested fully qualified oid has not been implemented.
-   * @throws catena::exception_with_status if the requested oid is not present in the
-   * device model
-   * @return DeviceModel Param
-   */
-    ParamAccessor<DeviceModel> param(const std::string &path);
-
-    /**
-   * @brief Get the value of the parameter indicated by path
-   *
-   * @tparam V type of the value to be retrieved
-   * @param ans [out] value retreived
-   * @param path unique oid to get
-   * @return param at the path because finding params can be
-   * expensive and the client is likely to want to access the param
-   * again after getting its value
-   */
-    template <typename V> void getValue(V &ans, const std::string &path);
-
-    /**
-   * @brief Set value of param identified by path
-   *
-   * @tparam V underlying value type of param
-   * @param path unique oid of param
-   * @param v value to set
-   * @return the param indicated by path because finding params can be
-   * expensive and the client is likely to want to access the param
-   * again after setting its value
-   */
-    template <typename V> void setValue(const std::string &path, V v);
-
-    /**
-   * @brief moves the param into the device model
-   *
-   * @param jptr - json pointer to the place to insert the param, must be
-   * escaped.
-   * @param param the param to be added to the device model
-   * @returns cached version of param which client can use
-   * for ongoing access to the param in a threadsafe way
-   */
-    // Param addParam(const std::string &jptr, catena::Param &&param);
-
-  private:
-    catena::Device device_;        /**< the protobuf device model */
-    mutable Mutex mutex_;          /**< used to mediate access */
-    static catena::Value noValue_; /**< to flag undefined values */
-
-    /**
-   * @brief Get the parent's sub-param at front of path
-   *
-   * @param path [in|out] path to the sub-param, the first segment will be
-   * consumed.
-   * @param parent param
-   * @return child param indicated by front of path
-   * @throws catena::exception_with_status if is STRUCT_ARRAY
-   * @throws catena::exception_with_status if parent is not a sub-param supporting param
-   * @throws catena::exception_with_status if param doesn't have a values object
-   * type
-   *
-   */
-    ParamAccessorData getSubparam_(catena::Path &path, ParamAccessorData &pad);
-=======
 class DeviceModel {
     friend ParamAccessor; /**< so this class can access the DeviceModel's mutex */
 
@@ -376,7 +205,6 @@ class DeviceModel {
     *  signal to share value changes by the service 
     */
     vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByService;
->>>>>>> develop
 };
 
 }  // namespace catena
