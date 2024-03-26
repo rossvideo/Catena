@@ -37,6 +37,7 @@
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
+#include <grpcpp/support/server_interceptor.h>
 
 #include <service.grpc.pb.h>
 
@@ -54,6 +55,12 @@
 #include <chrono>
 #include <signal.h>
 #include <condition_variable>
+
+using grpc::experimental::InterceptionHookPoints;
+using grpc::experimental::Interceptor;
+using grpc::experimental::InterceptorBatchMethods;
+using grpc::experimental::ServerInterceptorFactoryInterface;
+using grpc::experimental::ServerRpcInfo;
 
 using grpc::Server;
 using grpc::ServerAsyncResponseWriter;
@@ -156,24 +163,42 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 //
 // right now, it just tests that a token exists, decodes it and prints it out
 // much work required to actually validate the token
-void authorize(grpc::ServerContext *context /*catena::Param &p*/) {
-    if (absl::GetFlag(FLAGS_authz)) {
-        auto authz = context->client_metadata();
-        auto it = authz.find("authorization");
-        if (it == authz.end()) {
-            BAD_STATUS("No authorization token found", catena::StatusCode::PERMISSION_DENIED);
+class TestInterceptor : public Interceptor {
+  public:
+    void Intercept(InterceptorBatchMethods* methods) override {
+        if (methods->QueryInterceptionHookPoint(
+            InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
+            std::cout << "Got a new streaming RPC" << std::endl;
+
+            if (absl::GetFlag(FLAGS_authz)) {
+                auto authz = methods->GetRecvInitialMetadata();
+                auto it = authz->find("authorization");
+                if (it == authz->end()) {
+                    BAD_STATUS("No authorization token found", catena::StatusCode::PERMISSION_DENIED);
+                }
+
+                // remove the 'Bearer ' text from the beginning
+                grpc::string_ref t = it->second.substr(7);
+                std::string token(t.begin(), t.end());
+                std::cout << "authz: " << token << '\n';
+                auto decoded = jwt::decode(token);
+                for (auto &e : decoded.get_payload_json()) {
+                    std::cout << e.first << ": " << e.second << '\n';
+                }
+            }
         }
 
-        // remove the 'Bearer ' text from the beginning
-        grpc::string_ref t = it->second.substr(7);
-        std::string token(t.begin(), t.end());
-        std::cout << "authz: " << token << '\n';
-        auto decoded = jwt::decode(token);
-        for (auto &e : decoded.get_payload_json()) {
-            std::cout << e.first << ": " << e.second << '\n';
-        }
+        methods->Proceed();
     }
-}
+};
+
+class TestInterceptorFactory : public ServerInterceptorFactoryInterface {
+ public:
+  Interceptor* CreateServerInterceptor(ServerRpcInfo* info) override {
+    return new TestInterceptor();
+  }
+};
+
 /**
  * @brief Implements the Catena Service
  */
@@ -267,7 +292,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     context_.AsyncNotifyWhenDone(this);
                     if (validateRequest_()) {
                         try {
-                            authorize(&context_);
                             std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
                             catena::Value ans;  // oh dear, this is a copy refactoring needed!
                             param->getValue(&ans, req_.element_index());
@@ -339,7 +363,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         context_.AsyncNotifyWhenDone(this);
                         if (validateRequest_()) {
                             try {
-                                authorize(&context_);
                                 std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
                                 param->setValue(context_.peer(), req_.value(), req_.element_index());
                                 responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
@@ -445,7 +468,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         std::cout << "cv wait over : " << timeNow() << std::endl;
                         hasUpdate_ = false;
                         lock.unlock();
-                        authorize(&context_);
                         std::cout << "sending update\n";
                         if (context_.IsCancelled()) {
                             std::cout << "Connect[" << objectId_ << "] cancelled\n";
@@ -529,7 +551,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kWrite:
                     if (ok) {
-                        authorize(&context_);
                         std::cout << "sending device\n";
                         bool sendComplete = dm_.streamDevice(&writer_, this);
                         status_ = sendComplete ? CallStatus::kPostWrite : CallStatus::kWrite;
@@ -614,6 +635,12 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
         CatenaServiceImpl service(cq.get(), *dm);
 
         builder.RegisterService(&service);
+
+        std::vector<std::unique_ptr<ServerInterceptorFactoryInterface>> creators;
+        creators.push_back(std::unique_ptr<ServerInterceptorFactoryInterface>(
+            new TestInterceptorFactory()));
+        builder.experimental().SetInterceptorCreators(std::move(creators));
+
         std::unique_ptr<Server> server(builder.BuildAndStart());
         std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
 

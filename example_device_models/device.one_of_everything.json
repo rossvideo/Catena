@@ -34,6 +34,77 @@
       "type": "STRING_ARRAY",
       "value": { "string_array_values": { "strings": ["one", "two", "three", "four"] } },
       "name": { "display_strings": { "en": "String Array Example" } }
+    },
+    "nested_struct_array": {
+      "type": "STRUCT_ARRAY",
+      "name": { "display_strings": { "en": "Top Level Nested Struct Array Example" } },
+      "params": {
+        "nested_struct": {
+          "type": "STRUCT",
+          "name": { "display_strings": { "en": "Second Level Nested Struct Array Example" } },
+          "params": {
+            "num_1": {
+              "type": "INT32",
+              "value": { "int32_value": 1 },
+              "name": { "display_strings": { "en": "Int Example" } }
+            },
+            "num_2": {
+              "type": "INT32",
+              "value": { "int32_value": 2 },
+              "name": { "display_strings": { "en": "Int Example" } }
+            }
+          },
+          "value": { 
+            "struct_value": { 
+              "fields":{
+                "num_1": { "value": { "int32_value": 1 } },
+                "num_2": { "value": { "int32_value": 2 } }
+              } 
+            } 
+          }
+        },
+        "text": {
+          "type": "STRING",
+          "value": { "string_value": "This is first struct in list" },
+          "name": { "display_strings": { "en": "Nested String Example" } } 
+        }
+      },
+      "value": {
+        "struct_array_values": {
+          "struct_values": [
+            {
+              "fields": {
+                "nested_struct": {
+                  "value": {
+                    "struct_value": {
+                      "fields": {
+                        "num_1": { "value": { "int32_value": 1 } },
+                        "num_2": { "value": { "int32_value": 2 } }
+                      }
+                    }
+                  }
+                },
+                "text": { "value": { "string_value": "This is first struct in list" } }
+              }
+            },
+            {
+              "fields": {
+                "nested_struct": {
+                  "value": {
+                    "struct_value": {
+                      "fields": {
+                        "num_1": { "value": { "int32_value": 3 } },
+                        "num_2": { "value": { "int32_value": 4 } }
+                      }
+                    }
+                  }
+                },
+                "text": { "value": { "string_value": "This is second struct in list" } }
+              }
+            }
+          ]
+        }
+      }
     }
   },
   "menu_groups": {
