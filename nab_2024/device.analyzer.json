@@ -13,14 +13,35 @@
         "type": "INT_CHOICE",
         "int32_choice": {
           "choices": [
-            { "value": 0, "name": { "display_strings": { "en": "Mode 1" } } },
-            { "value": 1, "name": { "display_strings": { "en": "Mode 2" } } },
-            { "value": 2, "name": { "display_strings": { "en": "Mode 3" } } }
+            { "value": 0, "name": { "display_strings": { "en": "Show st20 RAISR" } } },
+            { "value": 1, "name": { "display_strings": { "en": "Show st22 JPEGxs" } } },
+            { "value": 2, "name": { "display_strings": { "en": "Diff st20/st22" } } },
+            { "value": 3, "name": { "display_strings": { "en": "Diff st22/st20" } } },
+            { "value": 4, "name": { "display_strings": { "en": "W.Div st20/st22" } } },
+            { "value": 5, "name": { "display_strings": { "en": "W.Div st22/st20" } } },
+            { "value": 6, "name": { "display_strings": { "en": "Cmpr st20/st22" } } },
+            { "value": 7, "name": { "display_strings": { "en": "Cmpr st22/st20" } } }
           ]
         }
       },
-      "widget": "radio_toggle_buttons",
+      "widget": "radio",
       "access_scope": "operate"
+    },
+    "amplification": {
+      "type": "FLOAT32",
+      "value": { "float32_value": 1.0 },
+      "name": { "display_strings": { "en": "Difference amplification" } },
+      "widget": "default",
+      "access_scope": "operate",
+      "constraint": {
+        "type": "FLOAT_RANGE",
+        "float_range": {
+          "min_value": 0.0,
+          "max_value": 1000.0,
+          "step": 0.1
+        }
+      },
+      "precision": 2
     },
     "product": {
         "type": "STRING",
@@ -33,15 +54,28 @@
         "type": "STRING_ARRAY",
         "value": {
             "string_array_values": {
-                "strings": ["Ross Video", "Intel", "Cisco"] 
+                "strings": ["Ross Video", "Intel", "Cisco"]
             }
         },
+        "name": { "display_strings": { "en": "Partners" } },
         "read_only": true,
         "access_scope": "monitor"
+    },
+    "a_number": {
+      "type": "INT32",
+      "name": {
+        "display_strings": {
+          "en": "A Number"
+        }
+      },
+      "value": {
+        "int32_value": 42
+      },
+      "stateless": true
     }
   },
   "menu_groups": {
-    "status_group": {
+    "status": {
       "name": { "display_strings": { "en": "Status" } },
       "menus": {
         "status": {
@@ -50,12 +84,12 @@
         }
       }
     },
-    "config_group": {
+    "config": {
       "name": { "display_strings": { "en": "Config" } },
       "menus": {
         "config": {
           "name": { "display_strings": { "en": "Analyzer" } },
-          "param_oids": ["/analysis"]
+          "param_oids": ["/analysis","/amplification"]
         }
       }
     }
