@@ -163,8 +163,10 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 //
 // right now, it just tests that a token exists, decodes it and prints it out
 // much work required to actually validate the token
-class TestInterceptor : public Interceptor {
+class RPCInterceptor : public Interceptor {
   public:
+    RPCInterceptor(DeviceModel &dm) : dm_(dm) {}
+
     void Intercept(InterceptorBatchMethods* methods) override {
         if (methods->QueryInterceptionHookPoint(
             InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
@@ -183,20 +185,38 @@ class TestInterceptor : public Interceptor {
                 std::cout << "authz: " << token << '\n';
                 auto decoded = jwt::decode(token);
                 for (auto &e : decoded.get_payload_json()) {
+                    if(e.first == "scopes"){
+                        std::cout << "scope found" << '\n';
+                    }
                     std::cout << e.first << ": " << e.second << '\n';
                 }
             }
         }
 
+        if(methods->QueryInterceptionHookPoint(InterceptionHookPoints::POST_RECV_MESSAGE)) {
+            auto message = static_cast<catena::GetValuePayload *>(methods->GetRecvMessage());
+            if (message->oid().empty()) {
+                BAD_STATUS("oid is empty", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            std::unique_ptr<ParamAccessor> param = dm_.param(message->oid());
+        }
         methods->Proceed();
     }
+
+  private:
+    DeviceModel &dm_;
 };
 
-class TestInterceptorFactory : public ServerInterceptorFactoryInterface {
+class RPCInterceptorFactory : public ServerInterceptorFactoryInterface {
  public:
-  Interceptor* CreateServerInterceptor(ServerRpcInfo* info) override {
-    return new TestInterceptor();
-  }
+    RPCInterceptorFactory(DeviceModel &dm) : dm_(dm) {}
+
+    Interceptor* CreateServerInterceptor(ServerRpcInfo* info) override {
+        return new RPCInterceptor(dm_);
+    }
+
+  private:
+    DeviceModel &dm_;
 };
 
 /**
@@ -292,7 +312,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     context_.AsyncNotifyWhenDone(this);
                     if (validateRequest_()) {
                         try {
-                            std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
+                            std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
                             catena::Value ans;  // oh dear, this is a copy refactoring needed!
                             param->getValue(&ans, req_.element_index());
                             responder_.Finish(ans, Status::OK, this);
@@ -363,7 +383,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         context_.AsyncNotifyWhenDone(this);
                         if (validateRequest_()) {
                             try {
-                                std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
+                                std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
                                 param->setValue(context_.peer(), req_.value(), req_.element_index());
                                 responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
                                 status_ = CallStatus::kFinish;
@@ -638,7 +658,7 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
 
         std::vector<std::unique_ptr<ServerInterceptorFactoryInterface>> creators;
         creators.push_back(std::unique_ptr<ServerInterceptorFactoryInterface>(
-            new TestInterceptorFactory()));
+            new RPCInterceptorFactory(*dm)));
         builder.experimental().SetInterceptorCreators(std::move(creators));
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
