@@ -10,6 +10,7 @@ This is a quick guide on how to use Postman to run test with Catena. For a more 
 4. Select "Enter URL" and add the IP and port that the service is running on.
 5. Select the method you want to test.
 6. Write the message for your request then click invoke.
+![Alt](images/Postman%20guide%20example.png) 
 
 ## Enabling Secure Comm
 Authentication can be enabled by selecting the lock icon beside the IP addrress
