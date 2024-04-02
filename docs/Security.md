@@ -120,10 +120,10 @@ Note that, trying to use the insecure invocation of `grpc_cli` as in our first e
 
 ## Mutual Authentication
 
-Start `full_service` with the `--mutual_auth` flag asserted.
+Start `full_service` with the `--mutual_authc` flag asserted.
 
 ```sh
-% ./full_service --certs ${HOME}/test_certs --secure_comms ssl --mutual_auth
+% ./full_service --certs ${HOME}/test_certs --secure_comms ssl --mutual_authc
 Server listening on 0.0.0.0:5255 with secure comms enabled
 ```
 
