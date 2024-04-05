@@ -641,7 +641,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         }
                     } else {
                         status_ = CallStatus::kFinish;
-                        writer_.Finish(Status::CANCELLED, this);
                     }
                     break;
 
