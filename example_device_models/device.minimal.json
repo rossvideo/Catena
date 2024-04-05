@@ -79,6 +79,11 @@
     }
   },
   "params": {
+    "externalObject": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0E", "0xFF0C"],
+      "value": { "string_value": "eo://2" }
+    },
     "a_number": {
       "type": "INT32",
       "name": {
