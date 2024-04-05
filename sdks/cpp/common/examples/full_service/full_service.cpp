@@ -609,30 +609,39 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kWrite:
                     if (ok) {
-                        authorize(&context_);
-                        std::cout << "sending external object " << req_.oid() <<"\n";
-                        std::string path = absl::GetFlag(FLAGS_static_root);
-                        path.append("/");
-                        path.append(req_.oid());
+                        try {
+                            authorize(&context_);
+                            std::cout << "sending external object " << req_.oid() <<"\n";
+                            std::string path = absl::GetFlag(FLAGS_static_root);
+                            path.append("/");
+                            path.append(req_.oid());
 
-                        if (!std::filesystem::exists(path)) {
-                            std::stringstream msg;
-                            msg << "file " << path << " not found";
-                            BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
+                            if (!std::filesystem::exists(path)) {
+                                std::stringstream why;
+                                why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found";
+                                throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                            }
+                            // read the file into a byte array
+                            std::ifstream file(path, std::ios::binary);
+                            std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                            
+                            catena::ExternalObjectPayload obj;
+                            obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
+                            writer_.Write(obj, this);
+
+                            //For now we are sending the whole file in one go
+                            std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
+                            status_ = CallStatus::kPostWrite;
+                        } catch (catena::exception_with_status &e) {
+                            writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                            status_ = CallStatus::kFinish;
+                        } catch (...) {
+                            writer_.Finish(Status::CANCELLED, this);
+                            status_ = CallStatus::kFinish;
                         }
-                        // read the file into a byte array
-                        std::ifstream file(path, std::ios::binary);
-                        std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                        
-                        catena::ExternalObjectPayload obj;
-                        obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
-                        writer_.Write(obj, this);
-
-                        //For now we are sending the whole file in one go
-                        std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
-                        status_ = CallStatus::kPostWrite;
                     } else {
                         status_ = CallStatus::kFinish;
+                        writer_.Finish(Status::CANCELLED, this);
                     }
                     break;
 
