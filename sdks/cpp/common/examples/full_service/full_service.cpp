@@ -178,7 +178,10 @@ class RPCInterceptor : public Interceptor {
                 if (it == authz->end()) {
                     BAD_STATUS("No authorization token found", catena::StatusCode::PERMISSION_DENIED);
                 }
-
+                                
+                /**
+                 * @todo add autorization logic
+                */
                 // remove the 'Bearer ' text from the beginning
                 grpc::string_ref t = it->second.substr(7);
                 std::string token(t.begin(), t.end());
@@ -193,13 +196,16 @@ class RPCInterceptor : public Interceptor {
             }
         }
 
-        if(methods->QueryInterceptionHookPoint(InterceptionHookPoints::POST_RECV_MESSAGE)) {
-            auto message = static_cast<catena::GetValuePayload *>(methods->GetRecvMessage());
-            if (message->oid().empty()) {
-                BAD_STATUS("oid is empty", catena::StatusCode::INVALID_ARGUMENT);
-            }
-            std::unique_ptr<ParamAccessor> param = dm_.param(message->oid());
-        }
+        /**
+         * @todo compare authorization with param scope
+        */
+        // if(methods->QueryInterceptionHookPoint(InterceptionHookPoints::POST_RECV_MESSAGE)) {
+        //     auto message = static_cast<catena::GetValuePayload *>(methods->GetRecvMessage());
+        //     if (message->oid().empty()) {
+        //         BAD_STATUS("oid is empty", catena::StatusCode::INVALID_ARGUMENT);
+        //     }
+        //     std::unique_ptr<ParamAccessor> param = dm_.param(message->oid());
+        // }
         methods->Proceed();
     }
 
