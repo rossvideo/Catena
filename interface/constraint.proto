@@ -58,13 +58,6 @@ message Int32ChoiceConstraint {
   repeated IntChoice choices = 1;
 }
 
-/* Range constraints can specify a growth type to specify how the
- * step value should be interpreted. If not defined, 'linear' will be assumed. */
-enum GrowthType {
-    LINEAR = 0;      // each valid value will be the sum of the previous value and the 'step' value
-    EXPONENTIAL = 1; // each valid value will be the multiplication of the previous value and the 'step' value
-}
-
 /* Range constraint including hard min & max values plus display min & max. */
 message Int32RangeConstraint {
   int32 min_value = 1;
@@ -72,7 +65,6 @@ message Int32RangeConstraint {
   int32 step = 3;
   int32 display_min = 4;
   int32 display_max = 5;
-  GrowthType growth_type = 6;
 }
 
 /* Range constraint with hard min & max plus display min & max. */
@@ -82,12 +74,6 @@ message FloatRangeConstraint {
   float step = 3;
   float display_min = 4;
   float display_max = 5;
-  GrowthType growth_type = 6;
-}
-
-/* A reference to a shared constraint. */
-message ConstraintRef {
-  string oid = 1; // The constraint's object id in Device.type.constraints.oid
 }
 
 /* A selection of strings for client GUI to use in pick list and other GUI elements. */
@@ -113,15 +99,15 @@ message Constraint {
     INT_RANGE = 2;
     FLOAT_RANGE = 4;
     INT_CHOICE = 5;
-    STRING_CHOICE = 40;
-    STRING_STRING_CHOICE = 6;
-    ALARM_TABLE = 7;
+    STRING_CHOICE = 6;
+    STRING_STRING_CHOICE = 7;
+    ALARM_TABLE = 8;
   }
 
   ConstraintType type = 1;
   oneof kind {
-    /* A reference to a shared constraint defined in device.types.constraints */
-    ConstraintRef ref = 2;
+    /* A reference to a shared constraint defined in device.constraints */
+    string ref_oid = 2;
 
     /* Int32 Constraints */
     AlarmTableConstraint alarm_table = 3;
@@ -137,7 +123,3 @@ message Constraint {
   }
 }
 
-/* A map of constraints intended for use as shared references. */
-message ConstraintDescriptors {
-  map<string, Constraint> descriptors = 1;
-}

@@ -90,3 +90,12 @@ which itself may need installation if not already present
 ```{.sh}
 brew install graphviz
 ```
+## Optionally install Google Test
+
+It can be installed using [brew](https://docs.brew.sh/Installation),
+which itself may need installation if not already present
+
+`brew install googletest`
+
+To build without Google Test, empty the build folder and run
+`cmake .. -DUNIT_TESTING=OFF`

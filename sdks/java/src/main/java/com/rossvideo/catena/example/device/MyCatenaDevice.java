@@ -4,9 +4,11 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.google.protobuf.Empty;
 import com.rossvideo.catena.command.SimpleCommandHandler;
 import com.rossvideo.catena.command.SimpleCommandStreamObserver;
 import com.rossvideo.catena.device.BasicCatenaDevice;
@@ -24,17 +26,23 @@ import catena.core.parameter.CommandResponse;
 import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.ParamType;
+import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
 import io.grpc.stub.StreamObserver;
 
 public class MyCatenaDevice extends BasicCatenaDevice {
+    
     protected static final String CATENA_PRODUCT_NAME = "catena_product_name";
     protected static final String CATENA_DISPLAY_NAME = "catena_display_name";
     
-    public static final String CHOICE_OID = "choice";
-    public static final String INT_OID = "integer";
-    public static final String FLOAT_OID = "float";
-    public static final String DATE_AND_TIME_OID = "date-and-time";
+    public static final String CHOICE_OID = "/parameters/nested/choice";
+    public static final String STRUCT_OID = "/product/serial-number";
+    public static final String INT_OID = "/parameters/nested/integer";
+    public static final String FLOAT_OID = "/parameters/nested/float";
+    public static final String FLOAT_OID_RANGE = "/parameters/nested/float_range";
+    public static final String DATE_AND_TIME_OID = "/clock/date-and-time";
+    public static final String CLOCK_ON_OID = "/clock/on";
+    
     public static final String CMD_FOO_OID = "foo";
     public static final String CMD_REVERSE_OID = "reverse";
     public static final String CMD_FILE_RECEIVE_OID = "file-receive";
@@ -42,6 +50,8 @@ public class MyCatenaDevice extends BasicCatenaDevice {
 
     private File workingDirectory;
     private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private Timer clockTimer = new Timer();
+    private volatile boolean clockUpdating = false;
 
     public MyCatenaDevice(CatenaServer server, int slot, File workingDirectory) { 
         super(server, slot);
@@ -57,13 +67,15 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
 
     private void buildMenus() {
-        getMenuManager().createMenuGroup("config", 1, "Config");
-        getMenuManager().createMenu("config", "config", 0, "Configuration");
-        getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, INT_OID, CHOICE_OID});;
+        getMenuManager().createMenuGroup("config", "Config");
+        getMenuManager().createMenu("config", "config", "Configuration");
+        getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, FLOAT_OID_RANGE, INT_OID, CHOICE_OID});
+        getMenuManager().createMenu("config", "clock", "Clock");
+        getMenuManager().addParamsMenu("config", "clock", new String[] {DATE_AND_TIME_OID, CLOCK_ON_OID});
         
-        getMenuManager().createMenuGroup("status", 0, "Status");
-        getMenuManager().createMenu("status", "product", 0, "Product");
-        getMenuManager().addParamsMenu("status", "product", new String[] {DATE_AND_TIME_OID, FLOAT_OID, INT_OID, CHOICE_OID});
+        getMenuManager().createMenuGroup("status", "Status");
+        getMenuManager().createMenu("status", "product", "Product");
+        getMenuManager().addParamsMenu("status", "product", new String[] {STRUCT_OID, DATE_AND_TIME_OID, FLOAT_OID, INT_OID, CHOICE_OID});
     }
     
     private String getTime()
@@ -71,34 +83,73 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         return dateFormat.format(new Date());
     }
     
+    private void updateTime()
+    {
+        Value clockOn = getParamManager().getValue(CLOCK_ON_OID, 0);
+        boolean shouldUpdate = clockOn == null ? false : clockOn.getInt32Value() != 0;
+        if (!shouldUpdate)
+        {
+            if (clockUpdating)
+            {
+                clockTimer.cancel();
+                clockTimer = new Timer();
+                clockUpdating = false;
+            }
+            return;
+        }
+        else if (!clockUpdating)
+        {
+            startTimeUpdate();
+        }
+        
+        String time = getTime();
+        try
+        {
+            setValue(DATE_AND_TIME_OID, 0, Value.newBuilder().setStringValue(time).build());
+        }
+        catch (UnknownOidException ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+    
+    
+    
+    @Override
+    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims)
+    {
+        super.setValue(request, responseObserver, claims);
+        if (request.getOid().equals(CLOCK_ON_OID))
+        {
+            updateTime();
+        }
+    }
+
     private void startTimeUpdate()
     {
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
+        clockUpdating = true;
+        clockTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run()
             {
-                String time = getTime();
-                try
-                {
-                    setValue(DATE_AND_TIME_OID, 0, Value.newBuilder().setStringValue(time).build());
-                }
-                catch (UnknownOidException ex)
-                {
-                    ex.printStackTrace();
-                }
+                updateTime();
             }
         }, 500, 500);
     }
     
     private void buildParams() {
         ParamManager manager = getParamManager();
-        manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build(), null, WidgetHint.TEXT_DISPLAY);
-        manager.addParamAlias(CATENA_DISPLAY_NAME, "0xFF01");
-        manager.createParamDescriptor(CATENA_PRODUCT_NAME, "Product Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Example Device").build());
-        manager.addParamAlias(CATENA_PRODUCT_NAME, "0x105");
-        manager.createParamDescriptor(DATE_AND_TIME_OID, "Date and Time", ParamType.STRING, true, Value.newBuilder().setStringValue(getTime()).build());
+        manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build(), null, WidgetHint.TEXT_DISPLAY)
+            .addOidAliases("0xFF01");
+        manager.createParamDescriptor(CATENA_PRODUCT_NAME, "Product Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Example Device").build())
+            .addOidAliases("0x105");
+        manager.createParamDescriptor(STRUCT_OID, "Serial Number", ParamType.STRING, true, Value.newBuilder().setStringValue("12-345-6989").build(), null, WidgetHint.TEXT_DISPLAY);
+        manager.createParamDescriptor(DATE_AND_TIME_OID, "Date and Time", ParamType.STRING, true, Value.newBuilder().setStringValue(getTime()).build(), null, WidgetHint.LABEL);
+        manager.createParamDescriptor(CLOCK_ON_OID, "Clock On", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
+                "Off", "On"
+        }), WidgetHint.CHECKBOX);
         manager.createParamDescriptor(FLOAT_OID, "Float Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build());
+        manager.createParamDescriptor(FLOAT_OID_RANGE, "Float Range Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build(), ConstraintUtils.buildFloatRangeConstraint(0f, 100f, 0.1f));
         manager.createParamDescriptor(INT_OID, "Int Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build());
         manager.createParamDescriptor(CHOICE_OID, "Choice Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
                         "Choice 1", "Choice 2", "Choice 3"
@@ -115,7 +166,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
 
     @Override
-    public StreamObserver<ExecuteCommandPayload> executeCommand(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream)
+    public StreamObserver<ExecuteCommandPayload> executeCommand(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream, Map<String, Object> claims)
     {
         String oid = firstMessage.getOid();
         switch (oid)

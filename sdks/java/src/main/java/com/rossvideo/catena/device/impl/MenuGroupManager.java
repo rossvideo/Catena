@@ -4,23 +4,18 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import catena.core.device.Device;
 import catena.core.menu.Menu;
 import catena.core.menu.MenuGroup;
-import catena.core.menu.MenuGroups;
 
 public class MenuGroupManager
 {
     private Map<String, Menu.Builder> menus = new LinkedHashMap<>();
     private Map<String, MenuGroup.Builder> menuGroups = new LinkedHashMap<>();
-    private MenuGroups.Builder menuGroupsBuilder;
+    private Device.Builder deviceBuilder;
     
-    public MenuGroupManager(MenuGroups.Builder menuGroupsBuilder) {
-        this.menuGroupsBuilder = menuGroupsBuilder;
-    }
-    
-    public MenuGroups buildMenuGroups()
-    {
-        return menuGroupsBuilder.build();
+    public MenuGroupManager(Device.Builder deviceBuilder) {
+        this.deviceBuilder = deviceBuilder;
     }
     
     protected MenuGroup.Builder createOrGetMenuGroup(String groupId)
@@ -28,16 +23,15 @@ public class MenuGroupManager
         MenuGroup.Builder groupBuilder = menuGroups.get(groupId);
         if (groupBuilder == null)
         {
-            groupBuilder = menuGroupsBuilder.putMenuGroupsBuilderIfAbsent(groupId);
+            groupBuilder = deviceBuilder.putMenuGroupsBuilderIfAbsent(groupId);
             menuGroups.put(groupId, groupBuilder);
         }
 
         return groupBuilder;
     }
     
-    public void createMenuGroup(String groupId, int numericID, String name) {
+    public void createMenuGroup(String groupId, String name) {
         createOrGetMenuGroup(groupId)
-                .setId(numericID)
                 .setName(TextUtils.createSimpleText(name));
     }
     
@@ -55,9 +49,8 @@ public class MenuGroupManager
         return menuBuilder;
     }
     
-    public void createMenu(String groupId, String menuId, int numericID, String name) {
+    public void createMenu(String groupId, String menuId, String name) {
         createOrGetMenu(groupId, menuId)
-                .setId(numericID)
                 .setName(TextUtils.createSimpleText(name));
     }
     

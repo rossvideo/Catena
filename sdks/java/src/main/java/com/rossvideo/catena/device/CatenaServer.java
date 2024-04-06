@@ -34,13 +34,22 @@ import catena.core.parameter.Value;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
 import catena.core.service.GeneralRequest;
 import catena.core.service.GeneralResponse;
+import io.grpc.Context;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 
 public class CatenaServer extends CatenaServiceImplBase implements BidirectionalStreamObserverFactory<ExecuteCommandPayload, CommandResponse>
 {
+    public static final Context.Key<Map<String, Object>> KEY_CLAIMS = Context.key("claims");
+    
     private Set<StreamObserver<PushUpdates>> pushConnections = new LinkedHashSet<>();
     private Map<Integer, CatenaDevice> devices = new HashMap<>();
+    
+    protected Map<String, Object> getClaims()
+    {
+        Context context = Context.current();
+        return KEY_CLAIMS.get(context);
+    }
     
     public void addDevice(Integer slot, CatenaDevice device) {
         devices.put(slot, device);
@@ -95,7 +104,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(firstMessage.getSlot());
         if (device != null)
         {
-            return device.executeCommand(firstMessage, responseStream);
+            return device.executeCommand(firstMessage, responseStream, getClaims());
         }
         return null;
     }
@@ -151,7 +160,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.deviceRequest(request, responseObserver);
+            device.deviceRequest(request, responseObserver, getClaims());
         }
         else
         {
@@ -165,7 +174,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.setValue(request, responseObserver);
+            device.setValue(request, responseObserver, getClaims());
         }
         else
         {
@@ -179,7 +188,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.getValue(request, responseObserver);
+            device.getValue(request, responseObserver, getClaims());
         }
         else
         {
@@ -193,7 +202,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.getParam(request, responseObserver);
+            device.getParam(request, responseObserver, getClaims());
         }
         else
         {
@@ -207,7 +216,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.externalObjectRequest(request, responseObserver);
+            device.externalObjectRequest(request, responseObserver, getClaims());
         }
         else
         {
@@ -221,7 +230,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.basicParamInfoRequest(request, responseObserver);
+            device.basicParamInfoRequest(request, responseObserver, getClaims());
         }
         else
         {
@@ -244,7 +253,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.updateSubscriptions(request, responseObserver);
+            device.updateSubscriptions(request, responseObserver, getClaims());
         }
         else
         {
@@ -258,7 +267,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.addLanguage(request, responseObserver);
+            device.addLanguage(request, responseObserver, getClaims());
         }
         else
         {
@@ -272,7 +281,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.languagePackRequest(request, responseObserver);
+            device.languagePackRequest(request, responseObserver, getClaims());
         }
         else
         {
@@ -286,7 +295,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.listLanguages(request, responseObserver);
+            device.listLanguages(request, responseObserver, getClaims());
         }
         else
         {

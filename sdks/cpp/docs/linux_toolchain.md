@@ -31,3 +31,17 @@ Doxygen can add inheritance diagrams and call trees if the program called `dot`
 which is part of graphviz is installed.
 
 `sudo apt-get install graphviz`
+
+## Optionally Install Google Test
+
+```
+sudo apt-get install libgtest-dev
+cd /usr/src/gtest
+sudo cmake CMakeLists.txt
+sudo make
+sudo cp lib/*.a /usr/lib
+``` 
+
+To build without Google Test, empty the build folder and run
+`cmake .. -G Ninja -DUNIT_TESTING=OFF`
+

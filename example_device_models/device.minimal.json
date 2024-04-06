@@ -79,6 +79,16 @@
     }
   },
   "params": {
+    "dashboard_icon": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0C"],
+      "value": { "string_value": "eo://2" }
+    },
+    "dashboard_UI": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0E"],
+      "value": { "string_value": "eo://3" }
+    },
     "a_number": {
       "type": "INT32",
       "name": {
