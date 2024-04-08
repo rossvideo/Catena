@@ -55,12 +55,7 @@ template <typename T> struct PassByValueOrReference {
 /**
  * @brief Value::KindCase looker upper
  */
-template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] V& src) {
-    if constexpr (has_getStructInfo<V>) {
-        return catena::Value::KindCase::kStructValue;
-    }
-    return catena::Value::KindCase::KIND_NOT_SET;
-}
+template <typename V> catena::Value::KindCase getKindCase(const V& src);
 
 /**
  * @brief index value used to trigger special behaviors.
@@ -94,25 +89,25 @@ class ParamAccessor {
     using Mutex = DeviceModel::Mutex;
 
     /**
-     * @brief type alias for the setter Functory for scalar types
-     */
-    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*>;
-
-    /**
      * @brief type alias for the getter function for scalar types
      */
     using Getter = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*>;
 
     /**
-     * @brief type alias for the setter Functory for vector types
+     * @brief type alias for the setter Functory for scalar types
      */
-    using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*,
-                                                const ParamIndex>;
+    using Setter = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*>;
 
     /**
      * @brief type alias for the getter function for vector types
      */
     using GetterAt = catena::patterns::Functory<catena::Value::KindCase, void, void*, const catena::Value*,
+                                                const ParamIndex>;
+
+    /**
+     * @brief type alias for the setter Functory for vector types
+     */
+    using SetterAt = catena::patterns::Functory<catena::Value::KindCase, void, catena::Value*, const void*,
                                                 const ParamIndex>;
 
     /**
@@ -125,12 +120,25 @@ class ParamAccessor {
      * clients
      */
     using ValueGetter =
-      catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&, ParamIndex>;
+      catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&>;
 
     /**
      * @brief type alias for the function that sets values in the device model in response to client requests
      */
     using ValueSetter =
+      catena::patterns::Functory<catena::Value::KindCase, void, Value&, const Value&>;
+
+    /**
+     * @brief type alias for the function that gets values from the device model for delivery to attached
+     * clients
+     */
+    using ValueGetterAt =
+      catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&, ParamIndex>;
+
+    /**
+     * @brief type alias for the function that sets values in the device model in response to client requests
+     */
+    using ValueSetterAt =
       catena::patterns::Functory<catena::Value::KindCase, void, Value&, const Value&, ParamIndex>;
 
   public:
@@ -249,7 +257,6 @@ class ParamAccessor {
      *
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
-
     template <bool Threadsafe>
     const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
@@ -280,116 +287,6 @@ class ParamAccessor {
 
 
     /**
-     * @brief Set the value of the stored parameter to which this object
-     * provides access.
-     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not implemented, 
-     * or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
-     * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
-     *
-     * @tparam V type of the value stored by the param. This must be a native type.
-     */
-    template <bool Threadsafe = true, typename V> void setValue(const V& src) {
-        try {
-            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
-            LockGuard lock(deviceModel_.get().mutex_);
-            auto& setter = Setter::getInstance();
-            if constexpr (catena::has_getStructInfo<V>) {
-                const auto& structInfo = src.getStructInfo();
-                const char* base = reinterpret_cast<const char*>(&src);
-                auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
-                for (auto& field : structInfo.fields) {
-                    const char* srcAddr = base + field.offset;
-                    if (!dstFields->contains(field.name)) {
-                        dstFields->insert({field.name, StructField{}});
-                        *dstFields->at(field.name).mutable_value() = Value{};
-                        std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
-                        field.wrapSetter(sp.get(), srcAddr);
-                    } else {
-                        Value* dstField = dstFields->at(field.name).mutable_value();
-                        if (dstField->kind_case() == Value::KindCase::kStructValue) {
-                            // field is a struct
-                            std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
-                            field.wrapSetter(sp.get(), srcAddr);
-                        } else {
-                            // field is a simple or simple array type
-
-                            setter[dstField->kind_case()](dstField, srcAddr);
-                        }
-                    }
-                }
-            } else if constexpr (catena::meta::is_variant<V>::value) {
-                auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
-                const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
-                Value& v = value_.get();
-                StructVariantValue* vv = v.mutable_struct_variant_value();
-                std::string* currentVariant = vv->mutable_struct_variant_type();
-                const std::string& variant = variantInfo.lookup[src.index()];
-                const std::unique_ptr<ParamAccessor> sp = subParam<false>(variant);
-                if (variant.compare(*currentVariant) != 0) {
-                    // we need to change the variant type in the protobuf
-                    *currentVariant = variant;
-                }
-                variantInfo.members.at(variant).wrapSetter(sp.get(), &src);
-            } else {
-                typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
-                setter[getKindCase(x)](&value_.get(), &src);
-            }
-            deviceModel_.get().valueSetByService(*this, kParamEnd);
-        } catch (const catena::exception_with_status& why) {
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), why.status);
-        } catch (const std::runtime_error& why) {
-            // most likely thrown by the setter encountering a missing function
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
-        } catch (...) {
-            std::stringstream err;
-            err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
-        }
-    }
-
-    /**
-     * @brief Set the value of the stored parameter to which this object
-     * provides access.
-     * 
-     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not implemented, 
-     * or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
-     * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
-     * 
-     * @tparam V type of the value stored by the param. This must be a native type.
-     * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex.
-     * @param src the value to set the parameter owned by the ParamAccessor to.
-     * @param idx index into the array, if set to kParamEnd, the value is appended to the array
-     */
-    template <bool Threadsafe = true, typename V> void setValueAt(const V& src, const ParamIndex idx) {
-        try {
-            using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
-            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
-            LockGuard lock(deviceModel_.get().mutex_);
-            auto& setter = SetterAt::getInstance();
-            static std::vector<ElementType> x;
-            setter[getKindCase(x)](&value_.get(), &src, idx);
-            deviceModel_.get().valueSetByService(*this, idx);
-        } catch (const catena::exception_with_status& why) {
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), why.status);
-        } catch (const std::runtime_error& why) {
-            // most likely thrown by the setter encountering a missing function
-            std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
-        } catch (...) {
-            std::stringstream err;
-            err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
-            throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
-        }
-    }
-
-    /**
      * @brief Get the value of the stored parameter to which objects of
      * this class provide access.
      *
@@ -400,7 +297,8 @@ class ParamAccessor {
      * @tparam V type of the value stored by the param. This must be a native type.
      * @param dst reference to the destination object written to by this method.
      */
-    template <bool Threadsafe = true, typename V> void getValue(V& dst) const {
+    template <bool Threadsafe = true, typename V> 
+    void getValue(V& dst) const {
         try {
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
@@ -450,21 +348,21 @@ class ParamAccessor {
                     getter[kc](reinterpret_cast<char*>(ptr), &src.value());
                 }
             } else {
-                // dst is a simple type
+                // dst is a simple type or whole array
                 getter[getKindCase<V>(dst)](&dst, &value_.get());
             }
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), why.status);
         } catch (const std::runtime_error& why) {
             // most likely thrown by the getter encountering a missing function
             std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
         } catch (...) {
             std::stringstream err;
-            err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
+            err << "getValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
         }
     }
@@ -481,7 +379,8 @@ class ParamAccessor {
      * @param dst reference to the destination object written to by this method.
      * @param idx index into the array
      */
-    template <bool Threadsafe = true, typename V> void getValueAt(V& dst, const ParamIndex idx) const {
+    template <bool Threadsafe = true, typename V> 
+    void getValue(V& dst, const ParamIndex idx) const {
         try {
             using ElementType = typename std::remove_reference<decltype(dst)>::type;
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
@@ -491,10 +390,120 @@ class ParamAccessor {
             getter[getKindCase(x)](&dst, &value_.get(), idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
-            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            err << "getValueAt failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), why.status);
         } catch (const std::runtime_error& why) {
             // most likely thrown by the getter encountering a missing function
+            std::stringstream err;
+            err << "getValueAt failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
+        } catch (...) {
+            std::stringstream err;
+            err << "getValueAt failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
+        }
+    }
+
+    /**
+     * @brief Set the value of the stored parameter to which this object
+     * provides access.
+     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not implemented, 
+     * or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
+     * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
+     *
+     * @tparam V type of the value stored by the param. This must be a native type.
+     */
+    template <bool Threadsafe = true, typename V> 
+    void setValue(const V& src) {
+        try {
+            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+            LockGuard lock(deviceModel_.get().mutex_);
+            auto& setter = Setter::getInstance();
+            if constexpr (catena::has_getStructInfo<V>) {
+                const auto& structInfo = src.getStructInfo();
+                const char* base = reinterpret_cast<const char*>(&src);
+                auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
+                for (auto& field : structInfo.fields) {
+                    const char* srcAddr = base + field.offset;
+                    if (!dstFields->contains(field.name)) {
+                        dstFields->insert({field.name, StructField{}});
+                        *dstFields->at(field.name).mutable_value() = Value{};
+                        std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
+                        field.wrapSetter(sp.get(), srcAddr);
+                    } else {
+                        Value* dstField = dstFields->at(field.name).mutable_value();
+                        if (dstField->kind_case() == Value::KindCase::kStructValue) {
+                            // field is a struct
+                            std::unique_ptr<ParamAccessor> sp = subParam<false>(field.name);
+                            field.wrapSetter(sp.get(), srcAddr);
+                        } else {
+                            // field is a simple or simple array type
+                            setter[dstField->kind_case()](dstField, srcAddr);
+                        }
+                    }
+                }
+            } else if constexpr (catena::meta::is_variant<V>::value) {
+                auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
+                const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
+                Value& v = value_.get();
+                StructVariantValue* vv = v.mutable_struct_variant_value();
+                std::string* currentVariant = vv->mutable_struct_variant_type();
+                const std::string& variant = variantInfo.lookup[src.index()];
+                const std::unique_ptr<ParamAccessor> sp = subParam<false>(variant);
+                if (variant.compare(*currentVariant) != 0) {
+                    // we need to change the variant type in the protobuf
+                    *currentVariant = variant;
+                }
+                variantInfo.members.at(variant).wrapSetter(sp.get(), &src);
+            } else {
+                setter[getKindCase<V>(src)](&value_.get(), &src);
+            }
+            deviceModel_.get().valueSetByService(*this, kParamEnd);
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
+        } catch (const std::runtime_error& why) {
+            // most likely thrown by the setter encountering a missing function
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
+        } catch (...) {
+            std::stringstream err;
+            err << "setValue failed with unknown exception: " << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
+        }
+    }
+
+    /**
+     * @brief Set the value of the stored parameter to which this object
+     * provides access.
+     * 
+     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not implemented, 
+     * or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
+     * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
+     * 
+     * @tparam V type of the value stored by the param. This must be a native type.
+     * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex.
+     * @param src the value to set the parameter owned by the ParamAccessor to.
+     * @param idx index into the array, if set to kParamEnd, the value is appended to the array
+     */
+    template <bool Threadsafe = true, typename V> 
+    void setValue(const V& src, const ParamIndex idx) {
+        try {
+            using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
+            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+            LockGuard lock(deviceModel_.get().mutex_);
+            auto& setterAt = SetterAt::getInstance();
+            static std::vector<ElementType> x;
+            setterAt[getKindCase(x)](&value_.get(), &src, idx);
+            deviceModel_.get().valueSetByService(*this, idx);
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
+        } catch (const std::runtime_error& why) {
+            // most likely thrown by the setter encountering a missing function
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
             throw catena::exception_with_status(err.str(), catena::StatusCode::UNIMPLEMENTED);
@@ -519,29 +528,63 @@ class ParamAccessor {
      * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex. If false,
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
-    template<bool Threadsafe = true>
-    void getValue(Value* dst, [[maybe_unused]] ParamIndex idx) const {
-    using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
-    LockGuard lock(deviceModel_.get().mutex_);
-    try {
-        const Value& value = value_.get();
-        if (isList() && idx != kParamEnd) {
-            auto& getter = ValueGetter::getInstance();
-            getter[value.kind_case()](dst, value, idx);
-        } else {
-            // value is a scalar type
-            dst->CopyFrom(value);
+    template<bool Threadsafe = true> 
+    void getValue(Value* dst) const {
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
+        LockGuard lock(deviceModel_.get().mutex_);
+        auto& getter = ValueGetter::getInstance();
+        try {
+            const Value& value = value_.get();
+            getter[value.kind_case()](dst, value);
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
+        } catch (...) {
+            std::stringstream err;
+            err << "getValue failed for with uknown exception" << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
         }
-    } catch (const catena::exception_with_status& why) {
-        std::stringstream err;
-        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
-        throw catena::exception_with_status(err.str(), why.status);
-    } catch (...) {
-        std::stringstream err;
-        err << "getValue failed for with uknown exception" << '\n' << __PRETTY_FUNCTION__ << '\n';
-        throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
     }
-}
+
+    /**
+     * @brief get the parameter's value packaged as a catena::Value object for
+     * sending to a client.
+     *
+     * @param dst [out] destination for the value
+     * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
+     * 
+     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
+     * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
+     * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
+     * 
+     * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex. If false,
+     * no lock is asserted - use when making recursive calls to avoid deadlock.
+     */
+    template<bool Threadsafe = true> 
+    void getValue(Value* dst, ParamIndex idx) const {
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
+        LockGuard lock(deviceModel_.get().mutex_);
+        try {
+            const Value& value = value_.get();
+            if (isList() && idx != kParamEnd) {
+                auto& getterAt = ValueGetterAt::getInstance();
+                getterAt[value.kind_case()](dst, value, idx);
+            } else {
+                // value is a scalar or whole array type
+                auto& getter = ValueGetter::getInstance();
+                getter[value.kind_case()](dst, value);
+            }
+        } catch (const catena::exception_with_status& why) {
+            std::stringstream err;
+            err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), why.status);
+        } catch (...) {
+            std::stringstream err;
+            err << "getValue failed for with uknown exception" << '\n' << __PRETTY_FUNCTION__ << '\n';
+            throw catena::exception_with_status(err.str(), catena::StatusCode::UNKNOWN);
+        }
+    }
 
     /**
      * @brief set the parameter's value packaged as a catena::Value object most likely 
@@ -556,8 +599,22 @@ class ParamAccessor {
      * 
      * Threadsafe - asserts a lock on the DeviceModel's mutex.
      */
-    void setValue(const std::string& peer, const Value& src, [[maybe_unused]] ParamIndex idx);
+    void setValue(const std::string& peer, const Value& src);
 
+    /**
+     * @brief set the parameter's value packaged as a catena::Value object most likely 
+     * received from client
+     *
+     * @param dst [out] destination for the value
+     * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
+     * 
+     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
+     * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
+     * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
+     * 
+     * Threadsafe - asserts a lock on the DeviceModel's mutex.
+     */
+    void setValue(const std::string& peer, const Value& src, ParamIndex idx);
 
     /** 
      * @brief get the parameter's fully qualified object id

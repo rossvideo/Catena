@@ -118,27 +118,45 @@ setterAt.addFunction(kind_case, \
     } \
 )
 
+
+
 /**
  * @brief A macro used to add getter functions accessible by clients
 */
-#define REGISTER_VALUE_GETTER(kind_case, dst_method, src_method) \
-valueGetter.addFunction(kind_case, [](Value* dst, const Value &src, ParamIndex idx) -> void { \
-    dst->dst_method(src.src_method());\
+#define REGISTER_VALUE_GETTER(kind_case) \
+valueGetter.addFunction(kind_case, [](Value* dst, const Value &src) -> void { \
+    dst->CopyFrom(src); \
 })
 
 /**
  * @brief A macro used to add setter functions accessible by clients
 */
 #define REGISTER_VALUE_SETTER(kind_case, dst_method, src_method) \
-valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
-    dst.dst_method(src.src_method()); \
+valueSetter.addFunction(kind_case, [](Value &dst, const Value &src) -> void { \
+    dst.CopyFrom(src); \
 })
 
 /**
  * @brief A macro used to add getter functions for array of simple data types accessible by clients
 */
-#define REGISTER_ARRAY_VALUE_GETTER(kind_case, array_val_method, size_method, set_value_method, index_method) \
-valueGetter.addFunction(kind_case, [](Value* dst, const Value &val, ParamIndex idx) -> void { \
+#define REGISTER_ARRAY_VALUE_GETTER(kind_case) \
+valueGetter.addFunction(kind_case, [](Value* dst, const Value &src) -> void { \
+    dst->CopyFrom(src); \
+})
+
+/**
+ * @brief A macro used to add setter functions for array of simple data types accessible by clients
+*/
+#define REGISTER_ARRAY_VALUE_SETTER(kind_case) \
+valueSetter.addFunction(kind_case, [](Value &dst, const Value &src) -> void { \
+    dst.CopyFrom(src); \
+})
+
+/**
+ * @brief A macro used to add getter functions for array of simple data types accessible by clients
+*/
+#define REGISTER_ARRAY_VALUE_GETTER_AT(kind_case, array_val_method, size_method, set_value_method, index_method) \
+valueGetterAt.addFunction(kind_case, [](Value* dst, const Value &val, ParamIndex idx) -> void { \
     auto size = val.array_val_method().size_method(); \
     if (idx >= size) { \
         std::stringstream err; \
@@ -152,9 +170,9 @@ valueGetter.addFunction(kind_case, [](Value* dst, const Value &val, ParamIndex i
 /**
  * @brief A macro used to add setter functions for array of simple data types accessible by clients
 */
-#define REGISTER_ARRAY_VALUE_SETTER(kind_case, array_val_method, size_method, mutable_array_val_method, mutable_method, value_method) \
-valueSetter.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
-    auto size = src.array_val_method().size_method(); \
+#define REGISTER_ARRAY_VALUE_SETTER_AT(kind_case, array_val_method, size_method, mutable_array_val_method, mutable_method, value_method) \
+valueSetterAt.addFunction(kind_case, [](Value &dst, const Value &src, ParamIndex idx) -> void { \
+    auto size = dst.array_val_method().size_method(); \
     if (idx >= size) { \
         std::stringstream err; \
         err << "array index is out of bounds, " << idx \
@@ -266,13 +284,15 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         initialized = true;  // so we only do this once
 
         // get our functories
-        auto &setter = Setter::getInstance();
         auto &getter = Getter::getInstance();
-        auto &setterAt = SetterAt::getInstance();
+        auto &setter = Setter::getInstance();
         auto &getterAt = GetterAt::getInstance();
+        auto &setterAt = SetterAt::getInstance();
         auto &variantGetter = VariantInfoGetter::getInstance();
         auto &valueGetter = ValueGetter::getInstance();
         auto &valueSetter = ValueSetter::getInstance();
+        auto &valueGetterAt = ValueGetterAt::getInstance();
+        auto &valueSetterAt = ValueSetterAt::getInstance();
 
         // register int getter
         REGISTER_GETTER(KindCase::kInt32Value, int32_value, int32_t);
@@ -298,11 +318,17 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         // register array of float getter
         REGISTER_ARRAY_GETTER(KindCase::kFloat32ArrayValues, float, float32_array_values, floats);
 
+        // register array of string getter
+        REGISTER_ARRAY_GETTER(KindCase::kStringArrayValues, std::string, string_array_values, strings);
+
         // register array of int setter
         REGISTER_ARRAY_SETTER(KindCase::kInt32ArrayValues, mutable_int32_array_values, clear_ints, int32_t, add_ints);
 
         //register array of float setter
         REGISTER_ARRAY_SETTER(KindCase::kFloat32ArrayValues, mutable_float32_array_values, clear_floats, float, add_floats);
+
+        //register array of string setter
+        REGISTER_ARRAY_SETTER(KindCase::kStringArrayValues, mutable_string_array_values, clear_strings, std::string, add_strings);
     
         // register element of array of int getter
         REGISTER_ARRAY_GETTER_AT(KindCase::kInt32ArrayValues, int32_t, int32_array_values, ints_size, ints);
@@ -310,24 +336,30 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         // register element of array of float getter
         REGISTER_ARRAY_GETTER_AT(KindCase::kFloat32ArrayValues, float, float32_array_values, floats_size, floats);
 
+        // register element of array of string getter
+        REGISTER_ARRAY_GETTER_AT(KindCase::kStringArrayValues, std::string, string_array_values, strings_size, strings);
+
         // register element of array of int setter
         REGISTER_ARRAY_SETTER_AT(KindCase::kInt32ArrayValues, int32_t, mutable_int32_array_values, ints_size, set_ints);
 
         // register element of array of float setter
         REGISTER_ARRAY_SETTER_AT(KindCase::kFloat32ArrayValues, float, mutable_float32_array_values, floats_size, set_floats);
-        
-        /** @todo string array gettter/setters */
 
+        // register element of array of string setter
+        REGISTER_ARRAY_SETTER_AT(KindCase::kStringArrayValues, std::string, mutable_string_array_values, strings_size, set_strings);
+        
+        
+        /** Register Value Getters/Setters */
 
 
         //register value getter for int32
-        REGISTER_VALUE_GETTER(KindCase::kInt32Value, set_int32_value, int32_value);
+        REGISTER_VALUE_GETTER(KindCase::kInt32Value);
 
         //register value getter for float32
-        REGISTER_VALUE_GETTER(KindCase::kFloat32Value, set_float32_value, float32_value);
+        REGISTER_VALUE_GETTER(KindCase::kFloat32Value);
 
         //register value getter for string
-        REGISTER_VALUE_GETTER(KindCase::kStringValue, set_string_value, string_value);
+        REGISTER_VALUE_GETTER(KindCase::kStringValue);
 
         // register value setter for int32
         REGISTER_VALUE_SETTER(KindCase::kInt32Value, set_int32_value, int32_value);
@@ -339,16 +371,40 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         REGISTER_VALUE_SETTER(KindCase::kStringValue, set_string_value, string_value);
 
         // register value getter for int32 array
-        REGISTER_ARRAY_VALUE_GETTER(KindCase::kInt32ArrayValues, int32_array_values, ints_size, set_int32_value, ints);
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kInt32ArrayValues);
 
-        // register value getter for float array
-        REGISTER_ARRAY_VALUE_GETTER(KindCase::kFloat32ArrayValues, float32_array_values, floats_size, set_float32_value, floats);
+        // register value getter for float32 array
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kFloat32ArrayValues);
 
         // register value getter for string array
-        REGISTER_ARRAY_VALUE_GETTER(KindCase::kStringArrayValues, string_array_values, strings_size, set_string_value, strings);
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kStringArrayValues);
 
-        // register value getter for struct array
-        valueGetter.addFunction(KindCase::kStructArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+        // register value setter for int32 array
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kInt32ArrayValues);
+
+        // register value setter for float32 array
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kFloat32ArrayValues);
+
+        // register value setter for string array
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStringArrayValues);
+
+        // register value setter for struct array
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStructArrayValues);
+
+        // register value setter for variant array
+        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStructVariantArrayValues);
+
+        // register value getter for element of int32 array
+        REGISTER_ARRAY_VALUE_GETTER_AT(KindCase::kInt32ArrayValues, int32_array_values, ints_size, set_int32_value, ints);
+
+        // register value getter for element of float array
+        REGISTER_ARRAY_VALUE_GETTER_AT(KindCase::kFloat32ArrayValues, float32_array_values, floats_size, set_float32_value, floats);
+
+        // register value getter for element of string array
+        REGISTER_ARRAY_VALUE_GETTER_AT(KindCase::kStringArrayValues, string_array_values, strings_size, set_string_value, strings);
+
+        // register value getter for element of struct array
+        valueGetterAt.addFunction(KindCase::kStructArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
             auto size = val.struct_array_values().struct_values_size();
             if (idx >= size) {
                 std::stringstream err;
@@ -359,8 +415,8 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
             *dst->mutable_struct_value() = val.struct_array_values().struct_values(idx);
         });
 
-        // register value getter for variant array
-        valueGetter.addFunction(KindCase::kStructVariantArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
+        // register value getter for element of variant array
+        valueGetterAt.addFunction(KindCase::kStructVariantArrayValues, [](Value* dst, const Value &val, ParamIndex idx) -> void {
             auto size = val.struct_variant_array_values().struct_variants_size();
             if (idx >= size) {
                 std::stringstream err;
@@ -370,54 +426,64 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
             }
             *dst->mutable_struct_variant_value() = val.struct_variant_array_values().struct_variants(idx);
         });
+        
+        // register value setter for element of int32 array
+        REGISTER_ARRAY_VALUE_SETTER_AT(KindCase::kInt32ArrayValues, int32_array_values, ints_size, mutable_int32_array_values, mutable_ints, int32_value);     
 
-        // register value setter for int32 array
-        REGISTER_ARRAY_VALUE_SETTER(KindCase::kInt32ArrayValues, int32_array_values, ints_size, 
-                                    mutable_int32_array_values, mutable_ints, int32_value);
+        // register value setter for element of float array
+        REGISTER_ARRAY_VALUE_SETTER_AT(KindCase::kFloat32ArrayValues, float32_array_values, floats_size, mutable_float32_array_values, mutable_floats, float32_value); 
 
-        // register value setter for float32 array
-        REGISTER_ARRAY_VALUE_SETTER(KindCase::kFloat32ArrayValues, float32_array_values, floats_size, 
-                                    mutable_float32_array_values, mutable_floats, float32_value);
-
-        // register value setter for string array
-        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStringArrayValues, string_array_values, strings_size, 
-                                    mutable_string_array_values, mutable_strings, string_value);
-
-        // register value setter for struct array
-        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStructArrayValues, struct_array_values, struct_values_size, 
-                                    mutable_struct_array_values, mutable_struct_values, struct_value);
-
-        // register value setter for variant array
-        REGISTER_ARRAY_VALUE_SETTER(KindCase::kStructVariantArrayValues, struct_variant_array_values, struct_variants_size, 
-                                    mutable_struct_variant_array_values, mutable_struct_variants, struct_variant_value);
+        // register value setter for element of string array
+        REGISTER_ARRAY_VALUE_SETTER_AT(KindCase::kStringArrayValues, string_array_values, strings_size, mutable_string_array_values, mutable_strings, string_value);  
     }
 }
 
 
-template <> catena::Value::KindCase catena::getKindCase<int32_t>(int32_t & src) {
+template <> catena::Value::KindCase catena::getKindCase<int32_t>(const int32_t & src) {
     return catena::Value::KindCase::kInt32Value;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<float>(float &src) {
+template <> catena::Value::KindCase catena::getKindCase<float>(const float &src) {
     return catena::Value::KindCase::kFloat32Value;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::string>(std::string & src) {
+template <> catena::Value::KindCase catena::getKindCase<std::string>(const std::string & src) {
     return catena::Value::KindCase::kStringValue;
 }
 
-template <>
-catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(std::vector<int32_t> & src) {
+template <> catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(const std::vector<int32_t> & src) {
     return catena::Value::KindCase::kInt32ArrayValues;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::vector<float>>(std::vector<float> & src) {
+template <> catena::Value::KindCase catena::getKindCase<std::vector<float>>(const std::vector<float> & src) {
     return catena::Value::KindCase::kFloat32ArrayValues;
 }
 
-template <>
-catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(std::vector<std::string> & src) {
+template <> catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(const std::vector<std::string> & src) {
     return catena::Value::KindCase::kStringArrayValues;
+}
+
+template <typename V> catena::Value::KindCase getKindCase(const V& src) {
+    if constexpr (catena::has_getStructInfo<V>) {
+        return catena::Value::KindCase::kStructValue;
+    }
+    return catena::Value::KindCase::KIND_NOT_SET;
+}
+
+void ParamAccessor::setValue(const std::string& peer, const Value &src) {
+    std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
+    try {
+        Value &value = value_.get();
+        auto& setter = ValueSetter::getInstance();
+        setter[value.kind_case()](value, src);
+        deviceModel_.get().valueSetByClient.emit(*this, -1, peer);
+    } catch (const catena::exception_with_status& why) {
+        std::stringstream err;
+        err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+        throw catena::exception_with_status(err.str(), why.status);
+    } catch (...) {
+        throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
+    }
 }
 
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx) {
@@ -426,16 +492,16 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
         Value &value = value_.get();
         if (isList() && idx != kParamEnd) {
             // update array element
-            auto& setter = ValueSetter::getInstance();
-            setter[value.kind_case()](value, src, idx);
+            auto& setterAt = ValueSetterAt::getInstance();
+            setterAt[value.kind_case()](value, src, idx);
         } else {
-            // update scalar value
+            // update scalar value or whole array
             value.CopyFrom(src);
         }
         deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
     } catch (const catena::exception_with_status& why) {
         std::stringstream err;
-        err << "getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+        err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
         throw catena::exception_with_status(err.str(), why.status);
     } catch (...) {
         throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
