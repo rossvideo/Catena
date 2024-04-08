@@ -1,6 +1,10 @@
 package com.rossvideo.catena.example.device;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -8,6 +12,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import com.rossvideo.catena.command.SimpleCommandHandler;
 import com.rossvideo.catena.command.SimpleCommandStreamObserver;
@@ -21,10 +26,15 @@ import com.rossvideo.catena.example.device.command.FooCommandHandler;
 import com.rossvideo.catena.example.device.command.ServerPushFileCommandHandler;
 import com.rossvideo.catena.example.device.command.ServerReceiveFileCommandHandler;
 import com.rossvideo.catena.example.error.UnknownOidException;
+import com.rossvideo.catena.utils.IOUtils;
 
+import catena.core.externalobject.ExternalObjectPayload;
+import catena.core.externalobject.ExternalObjectRequestPayload;
+import catena.core.language.PolyglotText;
 import catena.core.parameter.CommandResponse;
 import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
+import catena.core.parameter.Param;
 import catena.core.parameter.ParamType;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
@@ -32,6 +42,7 @@ import io.grpc.stub.StreamObserver;
 
 public class MyCatenaDevice extends BasicCatenaDevice {
     
+    protected static final String CATENA_ICON = "catena_icon";
     protected static final String CATENA_PRODUCT_NAME = "catena_product_name";
     protected static final String CATENA_DISPLAY_NAME = "catena_display_name";
     
@@ -67,10 +78,16 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     }
 
     private void buildMenus() {
-        getMenuManager().createMenuGroup("config", "Config");
-        getMenuManager().createMenu("config", "config", "Configuration");
+        getMenuManager().createMenuGroup("config", "Config")
+        .getNameBuilder().putDisplayStrings("fr", "Configuration")
+        .putDisplayStrings("es", "Configuración");
+        getMenuManager().createMenu("config", "config", "Configuration")
+        .getNameBuilder().putDisplayStrings("fr", "Configuration")
+        .putDisplayStrings("es", "Configuración");;
         getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, FLOAT_OID_RANGE, INT_OID, CHOICE_OID});
-        getMenuManager().createMenu("config", "clock", "Clock");
+        getMenuManager().createMenu("config", "clock", "Clock")
+            .getNameBuilder().putDisplayStrings("fr", "Horloge")
+            .putDisplayStrings("es", "Reloj");
         getMenuManager().addParamsMenu("config", "clock", new String[] {DATE_AND_TIME_OID, CLOCK_ON_OID});
         
         getMenuManager().createMenuGroup("status", "Status");
@@ -139,21 +156,47 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     private void buildParams() {
         ParamManager manager = getParamManager();
-        manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build(), null, WidgetHint.TEXT_DISPLAY)
+        Param.Builder builder = manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build(), null, WidgetHint.TEXT_DISPLAY)
             .addOidAliases("0xFF01");
+        
+        addParamName(builder, "fr", "Nom de l'appareil visible");
+        
         manager.createParamDescriptor(CATENA_PRODUCT_NAME, "Product Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Example Device").build())
-            .addOidAliases("0x105");
+        .addOidAliases("0x105");
+        
+        manager.createParamDescriptor(CATENA_ICON, "Product Icon", ParamType.STRING, true, Value.newBuilder().setStringValue("eo://icon.png").build())
+            .addOidAliases("0xFF0C");
+        
+        
         manager.createParamDescriptor(STRUCT_OID, "Serial Number", ParamType.STRING, true, Value.newBuilder().setStringValue("12-345-6989").build(), null, WidgetHint.TEXT_DISPLAY);
-        manager.createParamDescriptor(DATE_AND_TIME_OID, "Date and Time", ParamType.STRING, true, Value.newBuilder().setStringValue(getTime()).build(), null, WidgetHint.LABEL);
-        manager.createParamDescriptor(CLOCK_ON_OID, "Clock On", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
+        builder = manager.createParamDescriptor(DATE_AND_TIME_OID, "Date and Time", ParamType.STRING, true, Value.newBuilder().setStringValue(getTime()).build(), null, WidgetHint.LABEL);
+        addParamName(builder, "fr", "Date et heure");
+        addParamName(builder, "es", "Fecha y hora");
+        addParamName(builder, "en_CA", "Date and Time, Eh");
+        addParamName(builder, "en_GB", "Date and Time, Innit");
+        builder = manager.createParamDescriptor(CLOCK_ON_OID, "Clock On", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
                 "Off", "On"
         }), WidgetHint.CHECKBOX);
-        manager.createParamDescriptor(FLOAT_OID, "Float Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build());
+        addParamName(builder, "fr", "Horloge activée");
+        addParamName(builder, "es", "Reloj activado");
+        builder = manager.createParamDescriptor(FLOAT_OID, "Floating Point", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build());
+        addParamName(builder, "fr", "Nombre à virgule flottante");
+        addParamName(builder, "es", "Punto flotante");
+        
         manager.createParamDescriptor(FLOAT_OID_RANGE, "Float Range Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build(), ConstraintUtils.buildFloatRangeConstraint(0f, 100f, 0.1f));
-        manager.createParamDescriptor(INT_OID, "Int Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build());
+        builder = manager.createParamDescriptor(INT_OID, "Int Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build());
+        addParamName(builder, "fr", "Nombre entier");
+        addParamName(builder, "es", "Entero");
         manager.createParamDescriptor(CHOICE_OID, "Choice Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
                         "Choice 1", "Choice 2", "Choice 3"
                 }));
+    }
+    
+    private PolyglotText.Builder addParamName(Param.Builder builder, String lang, String name)
+    {
+        PolyglotText.Builder text = builder.getNameBuilder();
+        text.putDisplayStrings(lang, name);
+        return text;
     }
     
     private void buildCommands() {
@@ -196,6 +239,82 @@ public class MyCatenaDevice extends BasicCatenaDevice {
             default:
                 throw new UnknownOidException(oid);
         }
+    }
+    
+    
+
+    @Override
+    public void externalObjectRequest(ExternalObjectRequestPayload request, StreamObserver<ExternalObjectPayload> responseObserver, Map<String, Object> claims)
+    {
+        String oid = request.getOid();
+        try
+        {
+            if (sendResourceFromWorkingDirectory(request, responseObserver, claims, oid))
+            {
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            responseObserver.onError(e);
+            return;
+        }
+        
+        if (sendResourceFromPackage(responseObserver, oid))
+        {
+            return;
+        }        
+        
+        super.externalObjectRequest(request, responseObserver, claims);
+    }
+
+    private boolean sendResourceFromWorkingDirectory(ExternalObjectRequestPayload request, StreamObserver<ExternalObjectPayload> responseObserver, Map<String, Object> claims, String oid) throws FileNotFoundException, IOException
+    {
+        File workingDirectory = getWorkingDirectory();
+        if (workingDirectory == null || oid == null || oid.isEmpty())
+        {
+            return false;
+        }
+        
+        File requestedFile = new File(workingDirectory, oid);
+        if (!requestedFile.exists() || !requestedFile.isFile() || !requestedFile.canRead())
+        {
+            return false;
+        }
+                
+        try (FileInputStream fis = new FileInputStream(requestedFile))
+        {
+            byte[] payload = IOUtils.readAllBytes(fis);
+            ExternalObjectPayload response = ExternalObjectPayload
+                    .newBuilder()
+                    .setPayload(
+                            DataPayload.newBuilder()
+                            .setPayload(ByteString.copyFrom(payload))).build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+            return true;
+        }
+        finally {}
+    }
+
+    private boolean sendResourceFromPackage(StreamObserver<ExternalObjectPayload> responseObserver, String oid)
+    {
+        try (InputStream resource = MyCatenaDevice.class.getResourceAsStream("files/" + oid)) {
+            if (resource != null)
+            {
+                byte[] payload = IOUtils.readAllBytes(resource);
+                ExternalObjectPayload response = ExternalObjectPayload.newBuilder().setPayload(DataPayload.newBuilder().setPayload(ByteString.copyFrom(payload))).build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            responseObserver.onError(e);
+        }
+        
+         return false;
     }
 
     private File getWorkingDirectory()
