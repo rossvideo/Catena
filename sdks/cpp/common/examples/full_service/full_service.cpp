@@ -613,7 +613,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                             authorize(&context_);
                             std::cout << "sending external object " << req_.oid() <<"\n";
                             std::string path = absl::GetFlag(FLAGS_static_root);
-                            path.append("/");
                             path.append(req_.oid());
 
                             if (!std::filesystem::exists(path)) {
