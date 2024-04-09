@@ -165,33 +165,35 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 // much work required to actually validate the token
 class RPCInterceptor : public Interceptor {
   public:
-    RPCInterceptor(DeviceModel &dm) : dm_(dm) {}
+    RPCInterceptor(ServerRpcInfo* info, DeviceModel &dm) : info_(info), dm_(dm) {}
 
     void Intercept(InterceptorBatchMethods* methods) override {
+        auto context = info_->server_context();
         if (methods->QueryInterceptionHookPoint(
             InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
-            std::cout << "Got a new streaming RPC" << std::endl;
 
             if (absl::GetFlag(FLAGS_authz)) {
                 auto authz = methods->GetRecvInitialMetadata();
                 auto it = authz->find("authorization");
                 if (it == authz->end()) {
-                    BAD_STATUS("No authorization token found", catena::StatusCode::PERMISSION_DENIED);
-                }
-                                
-                /**
-                 * @todo add autorization logic
-                */
-                // remove the 'Bearer ' text from the beginning
-                grpc::string_ref t = it->second.substr(7);
-                std::string token(t.begin(), t.end());
-                std::cout << "authz: " << token << '\n';
-                auto decoded = jwt::decode(token);
-                for (auto &e : decoded.get_payload_json()) {
-                    if(e.first == "scopes"){
-                        std::cout << "scope found" << '\n';
+                    std::cout << "No authorization token found." << std::endl;
+                    context->TryCancel();
+                }else{  
+                    authorized_ = true;  
+                    /**
+                     * @todo add autorization logic
+                    */
+                    // remove the 'Bearer ' text from the beginning
+                    grpc::string_ref t = it->second.substr(7);
+                    std::string token(t.begin(), t.end());
+                    std::cout << "authz: " << token << '\n';
+                    auto decoded = jwt::decode(token);
+                    for (auto &e : decoded.get_payload_json()) {
+                        if(e.first == "scopes"){
+                            std::cout << "scope found" << '\n';
+                        }
+                        std::cout << e.first << ": " << e.second << '\n';
                     }
-                    std::cout << e.first << ": " << e.second << '\n';
                 }
             }
         }
@@ -210,7 +212,9 @@ class RPCInterceptor : public Interceptor {
     }
 
   private:
+    ServerRpcInfo* info_;
     DeviceModel &dm_;
+    bool authorized_{false};
 };
 
 class RPCInterceptorFactory : public ServerInterceptorFactoryInterface {
@@ -218,7 +222,7 @@ class RPCInterceptorFactory : public ServerInterceptorFactoryInterface {
     RPCInterceptorFactory(DeviceModel &dm) : dm_(dm) {}
 
     Interceptor* CreateServerInterceptor(ServerRpcInfo* info) override {
-        return new RPCInterceptor(dm_);
+        return new RPCInterceptor(info, dm_);
     }
 
   private:
@@ -316,7 +320,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 new GetValue(service_, dm_, ok);
                 if (ok) {
                     context_.AsyncNotifyWhenDone(this);
-                    if (validateRequest_()) {
+                    if (validateRequest_() && !context_.IsCancelled()) {
                         try {
                             std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
                             catena::Value ans;  // oh dear, this is a copy refactoring needed!
@@ -387,7 +391,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     new SetValue(service_, dm_, ok);
                     if (ok) {
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_()) {
+                        if (validateRequest_()&& !context_.IsCancelled()) {
                             try {
                                 std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
                                 param->setValue(context_.peer(), req_.value(), req_.element_index());
@@ -487,7 +491,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok) {
+                    if (ok && !context_.IsCancelled()) {
                         std::unique_lock<std::mutex> lock(this->mtx_);
                         std::cout << "waiting on cv : " << timeNow() << std::endl;
                         cv_.wait(lock, [this] { return hasUpdate_; });
@@ -505,7 +509,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                             writer_.Write(res_, this);
                         }
                     } else {
-                        std::cout << "Server shutting down: connect[" << objectId_ << "] cancelled\n";
+                        std::cout << "Connect[" << objectId_ << "] cancelled\n";
                         status_ = CallStatus::kFinish;
                         dm_.valueSetByService.disconnect(connectId_);
                         service->deregisterItem(this);
@@ -576,7 +580,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok) {
+                    if (ok && !context_.IsCancelled()) {
                         std::cout << "sending device\n";
                         bool sendComplete = dm_.streamDevice(&writer_, this);
                         status_ = sendComplete ? CallStatus::kPostWrite : CallStatus::kWrite;
