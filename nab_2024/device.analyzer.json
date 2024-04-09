@@ -16,11 +16,8 @@
             { "value": 0, "name": { "display_strings": { "en": "Show st20 RAISR" } } },
             { "value": 1, "name": { "display_strings": { "en": "Show st22 JPEGxs" } } },
             { "value": 2, "name": { "display_strings": { "en": "Diff st20/st22" } } },
-            { "value": 3, "name": { "display_strings": { "en": "Diff st22/st20" } } },
-            { "value": 4, "name": { "display_strings": { "en": "W.Div st20/st22" } } },
-            { "value": 5, "name": { "display_strings": { "en": "W.Div st22/st20" } } },
-            { "value": 6, "name": { "display_strings": { "en": "Cmpr st20/st22" } } },
-            { "value": 7, "name": { "display_strings": { "en": "Cmpr st22/st20" } } }
+            { "value": 3, "name": { "display_strings": { "en": "W.Div st20/st22" } } },
+            { "value": 4, "name": { "display_strings": { "en": "Cmpr st20/st22" } } }
           ]
         }
       },
@@ -37,7 +34,7 @@
         "type": "FLOAT_RANGE",
         "float_range": {
           "min_value": 0.0,
-          "max_value": 1000.0,
+          "max_value": 20.0,
           "step": 0.1
         }
       },
