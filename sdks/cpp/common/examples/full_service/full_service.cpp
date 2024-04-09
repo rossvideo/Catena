@@ -613,13 +613,18 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                             authorize(&context_);
                             std::cout << "sending external object " << req_.oid() <<"\n";
                             std::string path = absl::GetFlag(FLAGS_static_root);
-                            path.append("/");
                             path.append(req_.oid());
 
                             if (!std::filesystem::exists(path)) {
-                                std::stringstream why;
-                                why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found";
-                                throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                                if(req_.oid()[0] != '/'){
+                                    std::stringstream why;
+                                    why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
+                                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                                }else{
+                                    std::stringstream why;
+                                    why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found";
+                                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                                }
                             }
                             // read the file into a byte array
                             std::ifstream file(path, std::ios::binary);
