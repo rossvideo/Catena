@@ -81,7 +81,7 @@ ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
 ABSL_FLAG(std::string, device_model, "../../../example_device_models/device.minimal.json",
           "Specify the JSON device model to use.");
-ABSL_FLAG(std::string, static_root, "${HOME}", "Specify the directory to search for external objects");
+ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
 
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
