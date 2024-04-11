@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.rossvideo.catena.datapayload.DataPayloadBuilder;
+import com.rossvideo.catena.example.device.MyCatenaDevice;
 
 import catena.core.parameter.CommandResponse;
 import catena.core.parameter.ExecuteCommandPayload;
@@ -23,7 +24,7 @@ public class ServerPushFileCommandHandler implements StreamObserver<ExecuteComma
 
     protected InputStream createInputStream(String resource) throws IOException
     {
-        return ServerPushFileCommandHandler.class.getResourceAsStream("files/" + resource);
+        return MyCatenaDevice.class.getResourceAsStream("files/" + resource);
     }
     
     protected void close()

@@ -15,5 +15,10 @@
             "url": "./schema/catena.schema.json"
         }
     ],
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "files.associations": {
+        "*.tcc": "cpp",
+        "map": "cpp",
+        "system_error": "cpp"
+    }
 }

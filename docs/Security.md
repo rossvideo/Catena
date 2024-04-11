@@ -142,7 +142,7 @@ Note that calling `grpc_cli` without specifying the location of the client key a
 
 This is acheived by attaching a JSON Web Token `JWT` formatted `Access Token` to each access to the gRPC service. The device should validate the token and its contents before providing permitting the request to proceed.
 
-At time of writing, all the device does is check whether a token is attached to requests. It will deny requests with no token, but permit all that to to proceed. Clearly, more work is needed here!
+At time of writing, all the device does is check whether a token is attached to requests. It will deny requests with no token, but permit all that do to proceed. Clearly, more work is needed here!
 
 Also, the token itself should be obtained from a correctly configured authorization server. At time of writing, [jwt.io](https://jwt.io) can be used to create properly formatted tokens that DO NOT contain the correct claims.
 

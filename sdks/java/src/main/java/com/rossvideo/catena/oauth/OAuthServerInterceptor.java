@@ -31,7 +31,7 @@ public class OAuthServerInterceptor implements ServerInterceptor
             return Contexts.interceptCall(context, call, headers, next);
         } else if (utils.isValidationRequired()) {
             // Token is invalid, close the call with UNAUTHENTICATED status
-            call.close(Status.UNAUTHENTICATED.withDescription("Invalid or missing token"), headers);
+            call.close(Status.PERMISSION_DENIED.withDescription("Invalid or missing token"), headers);
             return new ServerCall.Listener<ReqT>() {};
         }
         

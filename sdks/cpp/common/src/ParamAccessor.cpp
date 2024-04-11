@@ -363,6 +363,9 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
         //register value getter for string
         REGISTER_VALUE_GETTER(KindCase::kStringValue);
 
+        //register value getter for struct
+        REGISTER_VALUE_GETTER(KindCase::kStructValue);
+
         // register value setter for int32
         REGISTER_VALUE_SETTER(KindCase::kInt32Value, set_int32_value, int32_value);
 
@@ -380,6 +383,9 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
 
         // register value getter for string array
         REGISTER_ARRAY_VALUE_GETTER(KindCase::kStringArrayValues);
+
+        // register value getter for struct array
+        REGISTER_ARRAY_VALUE_GETTER(KindCase::kStructArrayValues);
 
         // register value setter for int32 array
         REGISTER_ARRAY_VALUE_SETTER(KindCase::kInt32ArrayValues);

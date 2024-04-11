@@ -30,8 +30,8 @@ public class MenuGroupManager
         return groupBuilder;
     }
     
-    public void createMenuGroup(String groupId, String name) {
-        createOrGetMenuGroup(groupId)
+    public MenuGroup.Builder createMenuGroup(String groupId, String name) {
+        return createOrGetMenuGroup(groupId)
                 .setName(TextUtils.createSimpleText(name));
     }
     
@@ -49,17 +49,17 @@ public class MenuGroupManager
         return menuBuilder;
     }
     
-    public void createMenu(String groupId, String menuId, String name) {
-        createOrGetMenu(groupId, menuId)
+    public Menu.Builder createMenu(String groupId, String menuId, String name) {
+        return createOrGetMenu(groupId, menuId)
                 .setName(TextUtils.createSimpleText(name));
     }
     
-    public void addParamsMenu(String groupId, String menuId, String oid) {
-        addParamsMenu(groupId, menuId, new String[] { oid });
+    public Menu.Builder addParamsMenu(String groupId, String menuId, String oid) {
+        return addParamsMenu(groupId, menuId, new String[] { oid });
     }
     
-    public void addParamsMenu(String groupId, String menuId, String[] oid) { 
-        createOrGetMenu(groupId, menuId).addAllParamOids(Arrays.asList(oid));
+    public Menu.Builder addParamsMenu(String groupId, String menuId, String[] oid) { 
+        return createOrGetMenu(groupId, menuId).addAllParamOids(Arrays.asList(oid));
             
     }
 }
