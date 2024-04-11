@@ -180,8 +180,7 @@ class RPCInterceptor : public Interceptor {
                 if (it == authz->end()) {
                     std::cout << "No authorization token found." << std::endl;
                     context->TryCancel();
-                } else {  
-                    authorized_ = true;  
+                } else {
                     /**
                      * @todo add autorization logic
                     */
@@ -216,7 +215,6 @@ class RPCInterceptor : public Interceptor {
   private:
     ServerRpcInfo* info_;
     DeviceModel &dm_;
-    bool authorized_{false};
 };
 
 class RPCInterceptorFactory : public ServerInterceptorFactoryInterface {
@@ -329,7 +327,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         context_.AsyncNotifyWhenDone(this);
                         if (validateRequest_() && !context_.IsCancelled()) {
                             try {
-                                authorize(&context_);
                                 std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
                                 catena::Value ans;  // oh dear, this is a copy refactoring needed!
                                 param->getValue(&ans, req_.element_index());
@@ -661,9 +658,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok) {
+                    if (ok && !context_.IsCancelled()) {
                         try {
-                            authorize(&context_);
                             std::cout << "sending external object " << req_.oid() <<"\n";
                             std::string path = absl::GetFlag(FLAGS_static_root);
                             path.append(req_.oid());
