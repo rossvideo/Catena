@@ -45,6 +45,8 @@
 
 namespace catena {
 
+using ParamIndex = ValueIndex;
+
 /**
  * @brief helper meta function to pass small types by value and complex
  * ones by reference.
