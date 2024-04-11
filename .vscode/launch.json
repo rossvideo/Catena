@@ -29,7 +29,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service", // Path to the full_service executable
-        "args": ["--device_model", "example_device_models/device.minimal.json" ], // Any command-line arguments go here
+        "args": ["--device_model", "example_device_models/device.one_of_everything.json", "--secure_comms", "ssl", "--authz"], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],

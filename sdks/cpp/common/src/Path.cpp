@@ -26,14 +26,16 @@ catena::Path::Path(const std::string &path) : segments_{} {
     // /string_with_~0_~1_escaped_chars -- string_with_~_/_escaped_chars
     // /291834719 -- just numbers
     //
-    std::regex segment_regex("(\\/-{1})|(\\/([\\w]|~[01])*)");
-    auto r_begin = std::sregex_iterator(path.begin(), path.end(), segment_regex);
-    auto r_end = std::sregex_iterator();
-    if (!std::regex_match(path, segment_regex))  {
+    std::regex path_regex("((\\/-{1})|(\\/([\\w]|~[01])*))*");
+    if (!std::regex_match(path, path_regex))  {
         std::stringstream why;
         why << __PRETTY_FUNCTION__ << "\n'" << path << "' is not a valid path";
         throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
     }
+
+    std::regex segment_regex("(\\/-{1})|(\\/([\\w]|~[01])*)");
+    auto r_begin = std::sregex_iterator(path.begin(), path.end(), segment_regex);
+    auto r_end = std::sregex_iterator();
     for (std::sregex_iterator it = r_begin; it != r_end; ++it) {
         std::smatch match = *it;
         if (it == r_begin && match.position(0) != 0) {
