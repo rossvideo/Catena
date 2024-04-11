@@ -178,7 +178,7 @@ class RPCInterceptor : public Interceptor {
                 if (it == authz->end()) {
                     std::cout << "No authorization token found." << std::endl;
                     context->TryCancel();
-                }else{  
+                } else {  
                     authorized_ = true;  
                     /**
                      * @todo add autorization logic
@@ -189,7 +189,7 @@ class RPCInterceptor : public Interceptor {
                     std::cout << "authz: " << token << '\n';
                     auto decoded = jwt::decode(token);
                     for (auto &e : decoded.get_payload_json()) {
-                        if(e.first == "scopes"){
+                        if (e.first == "scopes") {
                             std::cout << "scope found" << '\n';
                         }
                         std::cout << e.first << ": " << e.second << '\n';
