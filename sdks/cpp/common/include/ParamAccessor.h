@@ -55,12 +55,7 @@ template <typename T> struct PassByValueOrReference {
 /**
  * @brief Value::KindCase looker upper
  */
-template <typename V> catena::Value::KindCase getKindCase([[maybe_unused]] V& src) {
-    if constexpr (has_getStructInfo<V>) {
-        return catena::Value::KindCase::kStructValue;
-    }
-    return catena::Value::KindCase::KIND_NOT_SET;
-}
+template <typename V> catena::Value::KindCase getKindCase(const V& src);
 
 /**
  * @brief index value used to trigger special behaviors.
@@ -443,7 +438,6 @@ class ParamAccessor {
                             field.wrapSetter(sp.get(), srcAddr);
                         } else {
                             // field is a simple or simple array type
-
                             setter[dstField->kind_case()](dstField, srcAddr);
                         }
                     }
@@ -462,8 +456,7 @@ class ParamAccessor {
                 }
                 variantInfo.members.at(variant).wrapSetter(sp.get(), &src);
             } else {
-                typename std::remove_const<typename std::remove_reference<decltype(src)>::type>::type x;
-                setter[getKindCase(x)](&value_.get(), &src);
+                setter[getKindCase<V>(src)](&value_.get(), &src);
             }
             deviceModel_.get().valueSetByService(*this, kParamEnd);
         } catch (const catena::exception_with_status& why) {
