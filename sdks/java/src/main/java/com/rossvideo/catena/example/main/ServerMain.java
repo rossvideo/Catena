@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.Map;
 
 import com.rossvideo.catena.device.CatenaServer;
+import com.rossvideo.catena.device.JsonCatenaDevice;
 import com.rossvideo.catena.example.device.MyCatenaDevice;
 import com.rossvideo.catena.oauth.JwtOAuthValidationUtils;
 import com.rossvideo.catena.oauth.OAuthConfig;
@@ -51,9 +52,29 @@ public class ServerMain {
             }
             
             CatenaServer catenaServer = new MyCatenaServer();
-            MyCatenaDevice device = new MyCatenaDevice(catenaServer, slot, serverWorkingDirectory);
-            catenaServer.addDevice(slot, device);
-            device.start();
+            
+            String deviceDefinition = MainUtil.stringFromMap(arguments, "device", null);
+            if (deviceDefinition != null)
+            {
+                JsonCatenaDevice device = new JsonCatenaDevice(catenaServer);
+                if (serverWorkingDirectory != null)
+                {
+                    device.init(new File(serverWorkingDirectory, deviceDefinition));
+                }
+                else
+                {
+                    device.init(new File(deviceDefinition));
+                }
+                catenaServer.addDevice(slot, device);
+                device.start();
+            }
+            else
+            {
+                MyCatenaDevice device = new MyCatenaDevice(catenaServer, slot, serverWorkingDirectory);
+                catenaServer.addDevice(slot, device);
+                device.start();
+            }
+            
             
             Server server = null;
             ServerBuilder<?> serverBuilder = null;

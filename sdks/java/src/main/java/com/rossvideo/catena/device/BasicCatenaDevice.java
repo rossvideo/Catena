@@ -32,100 +32,94 @@ public class BasicCatenaDevice implements CatenaDevice
     private ParamManager paramManager;
     private CommandManager commandManager;
 
-    public BasicCatenaDevice(CatenaServer server, int slot)
-    {
+    public BasicCatenaDevice(CatenaServer server) {
+        this(server, 0);
+    }
+    
+    public BasicCatenaDevice(CatenaServer server, int slot) {
         this.server = server;
         this.slot = slot;
-
-        deviceBuilder = createDeviceBuilder();
-        menuGroups = createMenuGroupManager(deviceBuilder);
-        paramManager = createParamManager(deviceBuilder);
-        commandManager = createCommandManager(deviceBuilder);
+    }
+    
+    public void setSlot(int slot) {
+        this.slot = slot;
     }
 
     protected CatenaServer getServer() {
         return server;
     }
     
+    protected void init() {
+        deviceBuilder = createDeviceBuilder();
+        menuGroups = createMenuGroupManager(deviceBuilder);
+        paramManager = createParamManager(deviceBuilder);
+        commandManager = createCommandManager(deviceBuilder);        
+    }
     
-    protected Device.Builder createDeviceBuilder()
-    {
+    
+    protected Device.Builder createDeviceBuilder() {
         return Device.newBuilder().setSlot(getSlot());
     }
 
-    protected MenuGroupManager createMenuGroupManager(Device.Builder deviceBuilder)
-    {
+    protected MenuGroupManager createMenuGroupManager(Device.Builder deviceBuilder) {
         return new MenuGroupManager(deviceBuilder);
     }
 
-    protected ParamManager createParamManager(Device.Builder deviceBuilder)
-    {
+    protected ParamManager createParamManager(Device.Builder deviceBuilder) {
         return new BasicParamManager(deviceBuilder);
     }
     
-    protected CommandManager createCommandManager(Device.Builder deviceBuilder)
-    {
+    protected CommandManager createCommandManager(Device.Builder deviceBuilder) {
         return new BasicCommandManager(deviceBuilder);
     }
 
-    public int getSlot()
-    {
+    public int getSlot() {
         return slot;
     }
 
-    public void start()
-    {
+    public void start() {
         server.addDevice(slot, this);
     }
 
-    public void stop()
-    {
+    public void stop() {
         server.removeDevice(slot);
     }
 
     @Override
-    public void deviceRequest(DeviceRequestPayload request, StreamObserver<DeviceComponent> responseObserver, Map<String, Object> claims)
-    {
+    public void deviceRequest(DeviceRequestPayload request, StreamObserver<DeviceComponent> responseObserver, Map<String, Object> claims) {
         Device device = buildDeviceMessage(request);
         DeviceComponent component = DeviceComponent.newBuilder().setDevice(device).build();
         responseObserver.onNext(component);
         responseObserver.onCompleted();
     }
 
-    protected Device buildDeviceMessage(DeviceRequestPayload request)
-    {
+    protected Device buildDeviceMessage(DeviceRequestPayload request) {
         paramManager.commitChanges();
         commandManager.commitChanges();
         return deviceBuilder.build();
     };
 
-    protected MenuGroupManager getMenuManager()
-    {
+    protected MenuGroupManager getMenuManager() {
         return menuGroups;
     }
 
-    protected ParamManager getParamManager()
-    {
+    protected ParamManager getParamManager() {
         return paramManager;
     }
     
-    protected CommandManager getCommandManager()
-    {
+    protected CommandManager getCommandManager() {
         return commandManager;
     }
     
-    protected void validate(String oid, Value value)
-    {
+    protected void validate(String oid, Value value) {
         
     }
 
-    public void setValue(String oid, int index, Value value)
-    {
+    public void setValue(String oid, int index, Value value)  {
         setValue(oid, index, value, null);
     }
     
-    public void setValue(String oid, int index, Value value, StreamObserver<Empty> responseObserver)
-    {
+    public void setValue(String oid, int index, Value value, StreamObserver<Empty> responseObserver) {
         try 
         {
             getParamManager().setValue(oid, index, value);
@@ -155,8 +149,7 @@ public class BasicCatenaDevice implements CatenaDevice
     }
     
     @Override
-    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims)
-    {
+    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims) {
         String oid = request.getOid();
         int index = request.getElementIndex();
         Value value = request.getValue();
@@ -164,8 +157,7 @@ public class BasicCatenaDevice implements CatenaDevice
     }
 
     @Override
-    public void getValue(GetValuePayload request, StreamObserver<Value> responseObserver, Map<String, Object> claims)
-    {
+    public void getValue(GetValuePayload request, StreamObserver<Value> responseObserver, Map<String, Object> claims) {
         try
         {
             Value paramValue = getParamManager().getValue(request.getOid(), request.getElementIndex());
