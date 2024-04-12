@@ -243,6 +243,44 @@ public class BasicParamManager implements ParamManager
         return existingBuilder;
     }
     
+    
+    
+    @Override
+    public Builder getParam(String oid)
+    {
+        if (uncommittedParams.containsKey(oid))
+        {
+            return uncommittedParams.get(oid);
+        }
+        
+        if (isTopLevel(oid))
+        {
+            Param p = deviceBuilder.getParamsOrDefault(oid, null);
+            if (p == null)
+            {
+                return null;
+            }
+            return p.toBuilder();
+        }
+        else
+        {
+            String[] parts = splitOid(oid);
+            PathToComponent path = pathToParam(parts, 0, null, false);
+            if (path == null)
+            {
+                return null;
+            }
+
+            Param p = path.getParam();
+            if (p == null)
+            {
+                return null;
+            }
+            
+            return p.toBuilder();
+        }
+    }
+
     @Override
     public Builder createOrGetParam(String oid)
     {
