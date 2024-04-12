@@ -13,11 +13,9 @@
         "type": "INT_CHOICE",
         "int32_choice": {
           "choices": [
-            { "value": 0, "name": { "display_strings": { "en": "Show st20 RAISR" } } },
-            { "value": 1, "name": { "display_strings": { "en": "Show st22 JPEGxs" } } },
-            { "value": 2, "name": { "display_strings": { "en": "Diff st20/st22" } } },
-            { "value": 3, "name": { "display_strings": { "en": "W.Div st20/st22" } } },
-            { "value": 4, "name": { "display_strings": { "en": "Cmpr st20/st22" } } }
+            { "value": 0, "name": { "display_strings": { "en": "Stream ST 2110-20" } } },
+            { "value": 1, "name": { "display_strings": { "en": "Stream ST 2110-22 (JPEG-XS)" } } },
+            { "value": 2, "name": { "display_strings": { "en": "Difference between streams" } } }
           ]
         }
       },
