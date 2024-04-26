@@ -131,7 +131,7 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
         } else {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;
-            err << ", could not find entry with key";
+            err << ", could not find entry with key: ";
             catena::meta::stream_if_possible(err, key);
             throw std::runtime_error(err.str());
         }

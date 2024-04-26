@@ -183,13 +183,13 @@ int main(int argc, char **argv) {
         // std::cout << '\n';
 
         // read & write elements of a native vector of int32_t
-        std::unique_ptr<ParamAccessor> powersParam = dm.param("/powers_of_two");
-        int32_t mistake = 0;
-        powersParam->setValue(mistake, 1);
+        // std::unique_ptr<ParamAccessor> powersParam = dm.param("/powers_of_two");
+        // int32_t mistake = 0;
+        // powersParam->setValue(mistake, 1);
 
-        int32_t twoCubed = 0;
-        powersParam->getValue(twoCubed, 3);
-        std::cout << "2^3: " << twoCubed << '\n';
+        // int32_t twoCubed = 0;
+        // powersParam->getValue(twoCubed, 3);
+        // std::cout << "2^3: " << twoCubed << '\n';
 
         // // write the device model to stdout
         // std::cout << "Updated Device Model: " << dm << '\n';
