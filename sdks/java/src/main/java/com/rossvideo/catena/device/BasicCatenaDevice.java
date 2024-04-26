@@ -8,6 +8,8 @@ import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.device.impl.ParamManager;
 import com.rossvideo.catena.device.impl.params.BasicCommandManager;
 import com.rossvideo.catena.device.impl.params.BasicParamManager;
+import com.rossvideo.catena.oauth.ScopeValidator;
+import com.rossvideo.catena.oauth.SimpleScopeValidator;
 
 import catena.core.device.Device;
 import catena.core.device.DeviceComponent;
@@ -15,6 +17,7 @@ import catena.core.device.DeviceRequestPayload;
 import catena.core.device.PushUpdates;
 import catena.core.device.PushUpdates.PushValue;
 import catena.core.parameter.GetValuePayload;
+import catena.core.parameter.Param;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
 import io.grpc.stub.StreamObserver;
@@ -92,6 +95,10 @@ public class BasicCatenaDevice implements CatenaDevice
         responseObserver.onNext(component);
         responseObserver.onCompleted();
     }
+    
+    protected Device.Builder getDeviceBuilder() {
+        return deviceBuilder;
+    }
 
     protected Device buildDeviceMessage(DeviceRequestPayload request) {
         paramManager.commitChanges();
@@ -150,10 +157,47 @@ public class BasicCatenaDevice implements CatenaDevice
     
     @Override
     public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims) {
+        if (claims != null) {
+            String scope = getScope(request.getOid());
+            if (scope != null && !scope.isEmpty()) {
+                ScopeValidator scopes = getScopes(claims);
+                if (scopes == null || !scopes.isWritable(scope))
+                {
+                    responseObserver.onError(new IllegalArgumentException("Not authorized to write to " + request.getOid()));
+                    return;
+                }
+            }
+        }
+        
         String oid = request.getOid();
         int index = request.getElementIndex();
         Value value = request.getValue();
         setValue(oid, index, value, responseObserver);
+    }
+    
+    protected ScopeValidator getScopes(Map<String, Object> claims)
+    {
+        if (claims != null)
+        {
+            Object scopes = claims.get("scope");
+            return SimpleScopeValidator.getFrom(scopes == null ? null : scopes.toString()); 
+        }
+        return null;
+    }
+    
+    protected String getScope(String oid) {
+        Param.Builder param = getParamManager().getParam(oid);
+        if (param == null) {
+            return null;
+        }
+        
+        String scope = param.getAccessScope();
+        if (scope != null && !scope.isEmpty())
+        {
+            return scope;
+        }
+        
+        return deviceBuilder.getDefaultScope();
     }
 
     @Override
