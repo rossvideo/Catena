@@ -70,7 +70,8 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         init();
     }
     
-    private void init() {
+    protected void init() {
+        super.init();        
         buildMenus();
         buildParams();
         buildCommands();
