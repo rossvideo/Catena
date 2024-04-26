@@ -92,13 +92,17 @@ ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to se
 
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
+std::mutex registryMutex;
+std::condition_variable registryEmptyCV;
+
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
         std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
         globalLoop = false;
         if (globalServer != nullptr) {
-            globalServer->Shutdown();
+            std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now();
+            globalServer->Shutdown(deadline);
             globalServer = nullptr;
         }
     });
@@ -263,6 +267,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         }
     }
 
+    bool registryEmpty() {
+        return registry_.empty();
+    }
+
   private:
     class CallData;
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
@@ -273,14 +281,20 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     DeviceModel &dm_;
   
     void registerItem(CallData *cd) {
+        std::lock_guard<std::mutex> lock(registryMutex);
         this->registry_.push_back(std::unique_ptr<CallData>(cd));
     }
 
     void deregisterItem(CallData *cd) {
+        std::lock_guard<std::mutex> lock(registryMutex);
         auto it = std::find_if(registry_.begin(), registry_.end(),
                                [cd](const RegistryItem &i) { return i.get() == cd; });
         if (it != registry_.end()) {
             registry_.erase(it);
+        }
+        std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
+        if (registry_.empty()) {
+            registryEmptyCV.notify_all();
         }
     }
 
@@ -314,6 +328,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         void proceed(CatenaServiceImpl *service, bool ok) override {
             std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok << '\n';
+
+            if(!ok){
+                status_ = CallStatus::kFinish;
+            }
 
             switch(status_){
                 case CallStatus::kCreate:
@@ -397,6 +415,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         void proceed(CatenaServiceImpl *service, bool ok) override {
             std::cout << "SetValue::proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok << '\n';
+            
+            if(!ok){
+                status_ = CallStatus::kFinish;
+            }
+            
             switch (status_) {
                 case CallStatus::kCreate:
                     status_ = CallStatus::kProcess;
@@ -491,9 +514,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ~Connect() {}
 
         void proceed(CatenaServiceImpl *service, bool ok) override {
-            std::cout << "Connect proceed[" << objectId_ << "] " << timeNow()
+            std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                       << std::endl;
+            
+            if(!ok){
+                status_ = CallStatus::kFinish;
+            }
+            
             switch (status_) {
                 case CallStatus::kCreate:
                     status_ = CallStatus::kProcess;
@@ -507,7 +535,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok && !context_.IsCancelled()) {
+                    if (ok) {
                         std::unique_lock<std::mutex> lock(this->mtx_);
                         std::cout << "waiting on cv : " << timeNow() << std::endl;
                         cv_.wait(lock, [this] { return hasUpdate_; });
@@ -579,9 +607,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ~DeviceRequest() {}
 
         void proceed(CatenaServiceImpl *service, bool ok) override {
-            std::cout << "DeviceRequest proceed[" << objectId_ << "] " << timeNow()
+            std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                       << std::endl;
+            
+            if(!ok){
+                status_ = CallStatus::kFinish;
+            }
+            
             switch (status_) {
                 case CallStatus::kCreate:
                     status_ = CallStatus::kProcess;
@@ -641,9 +674,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ~ExternalObjectRequest() {}
 
         void proceed(CatenaServiceImpl *service, bool ok) override {
-            std::cout << "ExternalObjectRequest proceed[" << objectId_ << "] " << timeNow()
+            std::cout << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
                       << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                       << std::endl;
+            
+            if(!ok){
+                status_ = CallStatus::kFinish;
+            }
+            
             switch (status_) {
                 case CallStatus::kCreate:
                     status_ = CallStatus::kProcess;
@@ -704,6 +742,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     break;
 
                 case CallStatus::kFinish:
+                    std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
                     service->deregisterItem(this);
                     break;
             }
@@ -797,6 +836,11 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
 
         // wait for the server to shutdown and tidy up
         server->Wait();
+        std::unique_lock<std::mutex> lock(registryMutex);
+
+        //wait for all the RPCs to finish
+        registryEmptyCV.wait(lock, [&]() { return service.registryEmpty(); });
+
         cq->Shutdown();
         cq_thread.join();
 
