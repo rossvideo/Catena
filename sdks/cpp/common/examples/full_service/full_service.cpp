@@ -132,26 +132,17 @@ class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
 public:
     grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override {
-        for (const auto& pair : auth_metadata) {
-             std::cout << pair.first << " : " << pair.second << std::endl;
-        }
                 
         auto authz = auth_metadata.find("authorization");
         if (authz == auth_metadata.end()) {
-            return grpc::Status(grpc::StatusCode::PERMISSION_DENIED, "No authorization token provided");
+            return grpc::Status(grpc::StatusCode::PERMISSION_DENIED, "No bearer token provided");
         } 
 
         // remove the 'Bearer ' text from the beginning
         grpc::string_ref t = authz->second.substr(7);
         std::string token(t.begin(), t.end());
-        auto decoded = jwt::decode(token); 
-
-        if (!decoded.has_payload_claim("scopes")) {
-            return grpc::Status(grpc::StatusCode::PERMISSION_DENIED, "No scopes claim in token");
-        }
-
-        std::string scope(decoded.get_payload_claim("scopes").as_string());
-        context->AddProperty("scope", scope);
+        auto decoded = jwt::decode(token);
+        context->AddProperty("claims", decoded.get_payload());   
 
         return grpc::Status::OK;
     }
@@ -178,9 +169,8 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
           grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
         ans = grpc::SslServerCredentials(ssl_opts);
 
-         if (absl::GetFlag(FLAGS_authz)) {
+        if (absl::GetFlag(FLAGS_authz)) {
             const std::shared_ptr<grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
-            std::cout << "Authorization on\n";
             ans->SetAuthMetadataProcessor(authzProcessor);
         }
 
@@ -251,6 +241,33 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         }
     }
 
+    static std::vector<std::string> getScopes(ServerContext &context) {
+        auto claimsStr = context.auth_context()->FindPropertyValues("claims");
+        if (claimsStr.empty()) {
+            throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
+        }
+        // parse string of claims into a picojson object
+        picojson::value claims;
+        std::string err = picojson::parse(claims, claimsStr[0].data());
+        if (!err.empty()) {
+            throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
+        }
+
+        // extract the scopes from the claims
+        std::vector<std::string> scopes;
+        const picojson::value::object &obj = claims.get<picojson::object>();
+        for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
+            if (it->first == "scope"){
+                std::string scopeClaim = it->second.get<std::string>();
+                std::istringstream iss(scopeClaim);
+                while (std::getline(iss, scopeClaim, ' ')) {
+                    scopes.push_back(scopeClaim);
+                }
+            }
+        }
+        return scopes;
+    }
+
     /**
      * Nested private classes
      */
@@ -294,13 +311,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         context_.AsyncNotifyWhenDone(this);
                         if (validateRequest_() && !context_.IsCancelled()) {
                             try {
-                                auto scope = context_.auth_context()->FindPropertyValues("scope");
-                                if (!scope.empty()) {
-                                    std::cout << "scope: " << scope[0] << '\n';
-                                }
+                                std::vector<std::string> clientScopes = getScopes(context_);
                                 std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
                                 catena::Value ans;  // oh dear, this is a copy refactoring needed!
-                                param->getValue(&ans, req_.element_index());
+                                param->getValue(&ans, req_.element_index(), clientScopes);
                                 responder_.Finish(ans, Status::OK, this);
                                 status_ = CallStatus::kFinish;
                             } catch (catena::exception_with_status &e) {
@@ -381,7 +395,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         if (validateRequest_()&& !context_.IsCancelled()) {
                             try {
                                 std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
-                                param->setValue(context_.peer(), req_.value(), req_.element_index());
+                                std::vector<std::string> clientScopes = getScopes(context_);
+                                param->setValue(context_.peer(), req_.value(), req_.element_index(), clientScopes);
                                 responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
                                 status_ = CallStatus::kFinish;
                             } catch (catena::exception_with_status &e) {
@@ -450,8 +465,9 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             if (ok) {
                 connectId_ = dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
                     std::unique_lock<std::mutex> lock(this->mtx_);
+                    std::vector<std::string> scopes = {"monitor"};
                     this->res_.mutable_value()->set_oid(p.oid());
-                    p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx);
+                    p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
                     this->hasUpdate_ = true;
                     lock.unlock();
                     this->cv_.notify_one();
@@ -480,9 +496,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kWrite:
                     if (ok && !context_.IsCancelled()) {
                         auto scope = context_.auth_context()->FindPropertyValues("scope");
-                        if (!scope.empty()) {
-                            std::cout << "scope: " << scope[0] << '\n';
-                        }
                         std::unique_lock<std::mutex> lock(this->mtx_);
                         std::cout << "waiting on cv : " << timeNow() << std::endl;
                         cv_.wait(lock, [this] { return hasUpdate_; });
@@ -708,7 +721,8 @@ void statusUpdateExample(DeviceModel *dm)
 {
     dm->valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
         catena::Value v;
-        p.getValue<false>(&v, idx);
+        std::vector<std::string> scopes = {"monitor"};
+        p.getValue<false>(&v, idx, scopes);
         std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
         // a real service would do something with the value here
     });
