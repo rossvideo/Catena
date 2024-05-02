@@ -507,7 +507,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kWrite:
                     if (ok) {
-                        auto scope = context_.auth_context()->FindPropertyValues("scope");
                         std::unique_lock<std::mutex> lock(this->mtx_);
                         std::cout << "waiting on cv : " << timeNow() << std::endl;
                         cv_.wait(lock, [this] { return hasUpdate_; });
