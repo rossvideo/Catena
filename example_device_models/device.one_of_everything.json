@@ -3,7 +3,7 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": "operate",
+  "default_scope": "monitor",
   "params": {
     "a_number": {
       "type": "INT32",

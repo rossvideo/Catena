@@ -494,12 +494,14 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
 
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx, std::vector<std::string>& clientScopes) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    try {
-        Value &value = value_.get();
-        if (std::find(clientScopes.begin(), clientScopes.end(), scope_.append(":w")) == clientScopes.end()) {
-            BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+    try {  
+        if (clientScopes[0] != AUTHZ_DISABLED) {
+            if (std::find(clientScopes.begin(), clientScopes.end(), scope_.append(":w")) == clientScopes.end()) {
+                BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+            }
         }
 
+        Value &value = value_.get();
         if (isList() && idx != kParamEnd) {
             // update array element
             auto& setterAt = ValueSetterAt::getInstance();

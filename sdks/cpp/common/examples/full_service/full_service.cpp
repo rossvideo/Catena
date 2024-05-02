@@ -139,10 +139,14 @@ public:
         } 
 
         // remove the 'Bearer ' text from the beginning
-        grpc::string_ref t = authz->second.substr(7);
-        std::string token(t.begin(), t.end());
-        auto decoded = jwt::decode(token);
-        context->AddProperty("claims", decoded.get_payload());   
+        try {
+            grpc::string_ref t = authz->second.substr(7);
+            std::string token(t.begin(), t.end());
+            auto decoded = jwt::decode(token);
+            context->AddProperty("claims", decoded.get_payload());  
+        } catch (...) {
+            return grpc::Status(grpc::StatusCode::PERMISSION_DENIED, "Invalid bearer token");
+        }
 
         return grpc::Status::OK;
     }
@@ -242,7 +246,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     }
 
     static std::vector<std::string> getScopes(ServerContext &context) {
-        auto claimsStr = context.auth_context()->FindPropertyValues("claims");
+        if (absl::GetFlag(FLAGS_authz) == false) {
+            return {AUTHZ_DISABLED};
+        }
+
+        std::vector<grpc::string_ref> claimsStr = context.auth_context()->FindPropertyValues("claims");
         if (claimsStr.empty()) {
             throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
         }
@@ -261,6 +269,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 std::string scopeClaim = it->second.get<std::string>();
                 std::istringstream iss(scopeClaim);
                 while (std::getline(iss, scopeClaim, ' ')) {
+                    // check that reserved scope is not used
+                    if (scopeClaim == AUTHZ_DISABLED) {
+                        throw catena::exception_with_status("Invalid scope", catena::StatusCode::PERMISSION_DENIED);
+                    }
                     scopes.push_back(scopeClaim);
                 }
             }
@@ -465,7 +477,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             if (ok) {
                 connectId_ = dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
                     std::unique_lock<std::mutex> lock(this->mtx_);
-                    std::vector<std::string> scopes = {"monitor"};
+                    std::vector<std::string> scopes = {AUTHZ_DISABLED};
                     this->res_.mutable_value()->set_oid(p.oid());
                     p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
                     this->hasUpdate_ = true;
@@ -721,7 +733,7 @@ void statusUpdateExample(DeviceModel *dm)
 {
     dm->valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
         catena::Value v;
-        std::vector<std::string> scopes = {"monitor"};
+        std::vector<std::string> scopes = {AUTHZ_DISABLED};
         p.getValue<false>(&v, idx, scopes);
         std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
         // a real service would do something with the value here

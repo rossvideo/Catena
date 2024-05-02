@@ -42,6 +42,8 @@
 #include <typeinfo>
 #include <typeindex>
 
+#define AUTHZ_DISABLED "__AUTHZ_DISABLED__"
+
 namespace catena {
 
 /**
@@ -572,12 +574,14 @@ class ParamAccessor {
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
     template<bool Threadsafe = true> 
-    void getValue(Value* dst, ParamIndex idx, std::vector<std::string> clientScopes) const {
+    void getValue(Value* dst, ParamIndex idx, std::vector<std::string>& clientScopes) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         try {
-            if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
-                BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+            if (clientScopes[0] != AUTHZ_DISABLED) {
+                if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
+                    BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+                }
             }
 
             const Value& value = value_.get();
