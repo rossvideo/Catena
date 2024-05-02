@@ -321,7 +321,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     new GetValue(service_, dm_, ok);
                     if (ok){
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_() && !context_.IsCancelled()) {
+                        if (validateRequest_()) {
                             try {
                                 std::vector<std::string> clientScopes = getScopes(context_);
                                 std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
@@ -404,7 +404,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     new SetValue(service_, dm_, ok);
                     if (ok) {
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_()&& !context_.IsCancelled()) {
+                        if (validateRequest_()) {
                             try {
                                 std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
                                 std::vector<std::string> clientScopes = getScopes(context_);
@@ -506,7 +506,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok && !context_.IsCancelled()) {
+                    if (ok) {
                         auto scope = context_.auth_context()->FindPropertyValues("scope");
                         std::unique_lock<std::mutex> lock(this->mtx_);
                         std::cout << "waiting on cv : " << timeNow() << std::endl;
@@ -596,7 +596,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok && !context_.IsCancelled()) {
+                    if (ok) {
                         std::cout << "sending device\n";
                         bool sendComplete = dm_.streamDevice(&writer_, this);
                         status_ = sendComplete ? CallStatus::kPostWrite : CallStatus::kWrite;
@@ -658,7 +658,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok && !context_.IsCancelled()) {
+                    if (ok) {
                         try {
                             std::cout << "sending external object " << req_.oid() <<"\n";
                             std::string path = absl::GetFlag(FLAGS_static_root);
