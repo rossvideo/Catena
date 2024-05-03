@@ -38,6 +38,8 @@ public interface ParamManager
     }
     
     Param.Builder createOrGetParam(String oid);
+    
+    public Param.Builder getParam(String oid);
 
     public void clearParams();
 
