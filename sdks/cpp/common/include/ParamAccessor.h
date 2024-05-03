@@ -42,8 +42,6 @@
 #include <typeinfo>
 #include <typeindex>
 
-#define AUTHZ_DISABLED "__AUTHZ_DISABLED__"
-
 namespace catena {
 
 /**
@@ -67,6 +65,8 @@ template <typename V> catena::Value::KindCase getKindCase(const V& src);
  *
  */
 static constexpr ParamIndex kParamEnd = ParamIndex(-1);
+
+const std::string kAuthzDisabled("__AUTHZ_DISABLED__");
 
 /**
  * @brief true if v is a list type
@@ -578,7 +578,7 @@ class ParamAccessor {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         try {
-            if (clientScopes[0] != AUTHZ_DISABLED) {
+            if (clientScopes[0] != catena::kAuthzDisabled) {
                 if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
                     BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
                 }

@@ -232,7 +232,7 @@ TEST_F(ParamAccessorTest, Int32ValueArrayAccessTest){
 
   //test getAt and setAt
   catena::Value val;
-  std::vector<std::string> scopes = {AUTHZ_DISABLED};
+  std::vector<std::string> scopes = {catena::kAuthzDisabled};
   val.set_int32_value(50);
   numParam->setValue(context, val, 0, scopes);
   val.set_int32_value(-8);
@@ -274,7 +274,7 @@ TEST_F(ParamAccessorTest, Float32ValueArrayAccessTest){
 
   //test getAt and setAt
   catena::Value val;
-  std::vector<std::string> scopes = {AUTHZ_DISABLED};
+  std::vector<std::string> scopes = {catena::kAuthzDisabled};
   val.set_float32_value(50.5);
   numParam->setValue(context, val, 0, scopes);
   val.set_float32_value(-8.8);
@@ -318,7 +318,7 @@ TEST_F(ParamAccessorTest, StringValueArrayAccessTest){
 
   //test getAt and setAt
   catena::Value val;
-  std::vector<std::string> scopes = {AUTHZ_DISABLED};
+  std::vector<std::string> scopes = {catena::kAuthzDisabled};
   val.set_string_value("nine");
   strParam->setValue(context, val, 0, scopes);
   val.set_string_value("ten");

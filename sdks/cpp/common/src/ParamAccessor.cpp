@@ -495,7 +495,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx, std::vector<std::string>& clientScopes) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {  
-        if (clientScopes[0] != AUTHZ_DISABLED) {
+        if (clientScopes[0] != catena::kAuthzDisabled) {
             if (std::find(clientScopes.begin(), clientScopes.end(), scope_.append(":w")) == clientScopes.end()) {
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
