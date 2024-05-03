@@ -277,8 +277,8 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 }
 
 
-ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)} {
+ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid, const std::string& scope)
+    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)}, scope_{scope} {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -492,9 +492,15 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
     }
 }
 
-void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx) {
+void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx, std::vector<std::string>& clientScopes) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    try {
+    try {  
+        if (clientScopes[0] != catena::kAuthzDisabled) {
+            if (std::find(clientScopes.begin(), clientScopes.end(), scope_.append(":w")) == clientScopes.end()) {
+                BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+            }
+        }
+
         Value &value = value_.get();
         if (isList() && idx != kParamEnd) {
             // update array element

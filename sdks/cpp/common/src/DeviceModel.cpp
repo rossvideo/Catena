@@ -134,6 +134,8 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
     std::string oid(std::get<std::string>(segment));
 
+    std::string scope = device_.default_scope();
+
     if (!device_.mutable_params()->contains(oid)) {
         std::stringstream msg;
         msg << "param " << std::quoted(oid) << " not found";
@@ -144,7 +146,10 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     catena::Param &p = device_.mutable_params()->at(oid);
     std::get<0>(pad) = &p;
     std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
-    auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr);
+    if (p.access_scope() != "") {
+        scope = p.access_scope();
+    }
+    auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr, scope);
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {
             std::string oid(std::get<std::string>(path_.pop_front()));

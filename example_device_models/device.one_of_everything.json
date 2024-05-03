@@ -38,6 +38,7 @@
     "outer_nested_struct": {
       "type": "STRUCT",
       "name": { "display_strings": { "en": "Top Level Nested Struct Array Example" } },
+      "access_scope": "monitor",
       "params": {
         "inner_nested_struct": {
           "type": "STRUCT",
@@ -62,8 +63,7 @@
                 "num_2": { "value": { "int32_value": 2 } }
               } 
             } 
-          },
-          "access_scope": "operate"
+          }
         },
         "text": {
           "type": "STRING",

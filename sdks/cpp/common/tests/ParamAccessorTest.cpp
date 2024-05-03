@@ -232,13 +232,14 @@ TEST_F(ParamAccessorTest, Int32ValueArrayAccessTest){
 
   //test getAt and setAt
   catena::Value val;
+  std::vector<std::string> scopes = {catena::kAuthzDisabled};
   val.set_int32_value(50);
-  numParam->setValue(context, val, 0);
+  numParam->setValue(context, val, 0, scopes);
   val.set_int32_value(-8);
-  numParam->setValue(context, val, 3);
+  numParam->setValue(context, val, 3, scopes);
   otherArray = {50, 6, 7, -8};
   for(int i = 0; i < numValueArray.int32_array_values().ints_size(); i++){
-    numParam->getValue(&val, i);
+    numParam->getValue(&val, i, scopes);
     EXPECT_EQ(val.int32_value(), otherArray[i]);
   }
 }
@@ -273,13 +274,14 @@ TEST_F(ParamAccessorTest, Float32ValueArrayAccessTest){
 
   //test getAt and setAt
   catena::Value val;
+  std::vector<std::string> scopes = {catena::kAuthzDisabled};
   val.set_float32_value(50.5);
-  numParam->setValue(context, val, 0);
+  numParam->setValue(context, val, 0, scopes);
   val.set_float32_value(-8.8);
-  numParam->setValue(context, val, 3);
+  numParam->setValue(context, val, 3, scopes);
   otherArray = {50.5, 6.6, 7.7, -8.8};
   for(int i = 0; i < numValueArray.float32_array_values().floats_size(); i++){
-    numParam->getValue(&val, i);
+    numParam->getValue(&val, i, scopes);
     EXPECT_FLOAT_EQ(val.float32_value(), otherArray[i]);
   }
 }
@@ -316,13 +318,14 @@ TEST_F(ParamAccessorTest, StringValueArrayAccessTest){
 
   //test getAt and setAt
   catena::Value val;
+  std::vector<std::string> scopes = {catena::kAuthzDisabled};
   val.set_string_value("nine");
-  strParam->setValue(context, val, 0);
+  strParam->setValue(context, val, 0, scopes);
   val.set_string_value("ten");
-  strParam->setValue(context, val, 3);
+  strParam->setValue(context, val, 3, scopes);
   otherArray = {"nine", "six", "seven", "ten"};
   for(int i = 0; i < strValueArray.string_array_values().strings_size(); i++){
-    strParam->getValue(&val, i);
+    strParam->getValue(&val, i, scopes);
     EXPECT_EQ(val.string_value(), otherArray[i]);
   }
 }

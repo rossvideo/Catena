@@ -132,6 +132,30 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
+class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
+public:
+    grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
+                         OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override {
+                
+        auto authz = auth_metadata.find("authorization");
+        if (authz == auth_metadata.end()) {
+            return grpc::Status(grpc::StatusCode::PERMISSION_DENIED, "No bearer token provided");
+        } 
+
+        // remove the 'Bearer ' text from the beginning
+        try {
+            grpc::string_ref t = authz->second.substr(7);
+            std::string token(t.begin(), t.end());
+            auto decoded = jwt::decode(token);
+            context->AddProperty("claims", decoded.get_payload());  
+        } catch (...) {
+            return grpc::Status(grpc::StatusCode::PERMISSION_DENIED, "Invalid bearer token");
+        }
+
+        return grpc::Status::OK;
+    }
+};
+
 // creates a Security Credentials object based on the command line options
 std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     std::shared_ptr<grpc::ServerCredentials> ans;
@@ -152,6 +176,12 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
         ssl_opts.pem_key_cert_pairs.push_back(
           grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
         ans = grpc::SslServerCredentials(ssl_opts);
+
+        if (absl::GetFlag(FLAGS_authz)) {
+            const std::shared_ptr<grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
+            ans->SetAuthMetadataProcessor(authzProcessor);
+        }
+
     } else if (absl::GetFlag(FLAGS_secure_comms).compare("tls") == 0) {
         std::stringstream why;
         why << "tls support has not been implemented yet, sorry.";
@@ -163,75 +193,6 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     }
     return ans;
 }
-
-// if authz is enabled, inspect the bearer token to decide whether to grant
-// access.
-//
-// right now, it just tests that a token exists, decodes it and prints it out
-// much work required to actually validate the token
-class RPCInterceptor : public Interceptor {
-  public:
-    RPCInterceptor(ServerRpcInfo* info, DeviceModel &dm) : info_(info), dm_(dm) {}
-
-    void Intercept(InterceptorBatchMethods* methods) override {
-        auto context = info_->server_context();
-        if (methods->QueryInterceptionHookPoint(
-            InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
-
-            if (absl::GetFlag(FLAGS_authz)) {
-                auto authz = methods->GetRecvInitialMetadata();
-                auto it = authz->find("authorization");
-                if (it == authz->end()) {
-                    std::cout << "No authorization token found." << std::endl;
-                    context->TryCancel();
-                } else {
-                    /**
-                     * @todo add autorization logic
-                    */
-                    // remove the 'Bearer ' text from the beginning
-                    grpc::string_ref t = it->second.substr(7);
-                    std::string token(t.begin(), t.end());
-                    std::cout << "authz: " << token << '\n';
-                    auto decoded = jwt::decode(token);
-                    for (auto &e : decoded.get_payload_json()) {
-                        if (e.first == "scopes") {
-                            std::cout << "scope found" << '\n';
-                        }
-                        std::cout << e.first << ": " << e.second << '\n';
-                    }
-                }
-            }
-        }
-
-        /**
-         * @todo compare authorization with param scope
-        */
-        // if(methods->QueryInterceptionHookPoint(InterceptionHookPoints::POST_RECV_MESSAGE)) {
-        //     auto message = static_cast<catena::GetValuePayload *>(methods->GetRecvMessage());
-        //     if (message->oid().empty()) {
-        //         BAD_STATUS("oid is empty", catena::StatusCode::INVALID_ARGUMENT);
-        //     }
-        //     std::unique_ptr<ParamAccessor> param = dm_.param(message->oid());
-        // }
-        methods->Proceed();
-    }
-
-  private:
-    ServerRpcInfo* info_;
-    DeviceModel &dm_;
-};
-
-class RPCInterceptorFactory : public ServerInterceptorFactoryInterface {
- public:
-    RPCInterceptorFactory(DeviceModel &dm) : dm_(dm) {}
-
-    Interceptor* CreateServerInterceptor(ServerRpcInfo* info) override {
-        return new RPCInterceptor(info, dm_);
-    }
-
-  private:
-    DeviceModel &dm_;
-};
 
 /**
  * @brief Implements the Catena Service
@@ -298,6 +259,41 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         }
     }
 
+    static std::vector<std::string> getScopes(ServerContext &context) {
+        if (absl::GetFlag(FLAGS_authz) == false) {
+            return {catena::kAuthzDisabled};
+        }
+
+        std::vector<grpc::string_ref> claimsStr = context.auth_context()->FindPropertyValues("claims");
+        if (claimsStr.empty()) {
+            throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
+        }
+        // parse string of claims into a picojson object
+        picojson::value claims;
+        std::string err = picojson::parse(claims, claimsStr[0].data());
+        if (!err.empty()) {
+            throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
+        }
+
+        // extract the scopes from the claims
+        std::vector<std::string> scopes;
+        const picojson::value::object &obj = claims.get<picojson::object>();
+        for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
+            if (it->first == "scope"){
+                std::string scopeClaim = it->second.get<std::string>();
+                std::istringstream iss(scopeClaim);
+                while (std::getline(iss, scopeClaim, ' ')) {
+                    // check that reserved scope is not used
+                    if (scopeClaim == catena::kAuthzDisabled) {
+                        throw catena::exception_with_status("Invalid scope", catena::StatusCode::PERMISSION_DENIED);
+                    }
+                    scopes.push_back(scopeClaim);
+                }
+            }
+        }
+        return scopes;
+    }
+
     /**
      * Nested private classes
      */
@@ -341,13 +337,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kProcess:
                     new GetValue(service_, dm_, ok);
-                    if (ok) {
+                    if (ok){
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_() && !context_.IsCancelled()) {
+                        if (validateRequest_()) {
                             try {
+                                std::vector<std::string> clientScopes = getScopes(context_);
                                 std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
                                 catena::Value ans;  // oh dear, this is a copy refactoring needed!
-                                param->getValue(&ans, req_.element_index());
+                                param->getValue(&ans, req_.element_index(), clientScopes);
                                 responder_.Finish(ans, Status::OK, this);
                                 status_ = CallStatus::kFinish;
                             } catch (catena::exception_with_status &e) {
@@ -430,10 +427,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     new SetValue(service_, dm_, ok);
                     if (ok) {
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_()&& !context_.IsCancelled()) {
+                        if (validateRequest_()) {
                             try {
                                 std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
-                                param->setValue(context_.peer(), req_.value(), req_.element_index());
+                                std::vector<std::string> clientScopes = getScopes(context_);
+                                param->setValue(context_.peer(), req_.value(), req_.element_index(), clientScopes);
                                 responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
                                 status_ = CallStatus::kFinish;
                             } catch (catena::exception_with_status &e) {
@@ -502,8 +500,9 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             if (ok) {
                 connectId_ = dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
                     std::unique_lock<std::mutex> lock(this->mtx_);
+                    std::vector<std::string> scopes = {catena::kAuthzDisabled};
                     this->res_.mutable_value()->set_oid(p.oid());
-                    p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx);
+                    p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
                     this->hasUpdate_ = true;
                     lock.unlock();
                     this->cv_.notify_one();
@@ -629,7 +628,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok && !context_.IsCancelled()) {
+                    if (ok) {
                         std::cout << "sending device\n";
                         bool sendComplete = dm_.streamDevice(&writer_, this);
                         status_ = sendComplete ? CallStatus::kPostWrite : CallStatus::kWrite;
@@ -696,7 +695,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok && !context_.IsCancelled()) {
+                    if (ok) {
                         try {
                             std::cout << "sending external object " << req_.oid() <<"\n";
                             std::string path = absl::GetFlag(FLAGS_static_root);
@@ -772,7 +771,8 @@ void statusUpdateExample(DeviceModel *dm)
 {
     dm->valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
         catena::Value v;
-        p.getValue<false>(&v, idx);
+        std::vector<std::string> scopes = {catena::kAuthzDisabled};
+        p.getValue<false>(&v, idx, scopes);
         std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
         // a real service would do something with the value here
     });
@@ -820,11 +820,6 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
         CatenaServiceImpl service(cq.get(), *dm);
 
         builder.RegisterService(&service);
-
-        std::vector<std::unique_ptr<ServerInterceptorFactoryInterface>> creators;
-        creators.push_back(std::unique_ptr<ServerInterceptorFactoryInterface>(
-            new RPCInterceptorFactory(*dm)));
-        builder.experimental().SetInterceptorCreators(std::move(creators));
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
         std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
