@@ -264,7 +264,13 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             return {catena::kAuthzDisabled};
         }
 
-        std::vector<grpc::string_ref> claimsStr = context.auth_context()->FindPropertyValues("claims");
+        auto authContext = context.auth_context();
+        if (authContext == nullptr) {
+            // no auth context for connect RPCs that have not yet been attached to a request
+            return {catena::kAuthzDisabled};
+        }
+
+        std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
         if (claimsStr.empty()) {
             throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
         }
@@ -498,16 +504,21 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             service->registerItem(this);
             objectId_ = objectCounter_++;
             if (ok) {
-                connectId_ = dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
-                    std::unique_lock<std::mutex> lock(this->mtx_);
-                    std::vector<std::string> scopes = {catena::kAuthzDisabled};
-                    this->res_.mutable_value()->set_oid(p.oid());
-                    p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
-                    this->hasUpdate_ = true;
-                    lock.unlock();
-                    this->cv_.notify_one();
+                pushUpdatesId_ = dm_.pushUpdates.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
+                    try{
+                        std::unique_lock<std::mutex> lock(this->mtx_);
+                        std::vector<std::string> scopes = getScopes(this->context_);
+                        this->res_.mutable_value()->set_oid(p.oid());
+                        this->res_.mutable_value()->set_element_index(idx);
+                        p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
+                        this->hasUpdate_ = true;
+                        lock.unlock();
+                        this->cv_.notify_one();
+                    }catch(catena::exception_with_status& why){
+                        this->cv_.notify_one();
+                    } // Don't need to send error to every clie 
                 });
-            }
+            } 
             proceed(service, ok);  // start the process
         }
         ~Connect() {}
@@ -545,7 +556,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         if (context_.IsCancelled()) {
                             std::cout << "Connect[" << objectId_ << "] cancelled\n";
                             status_ = CallStatus::kFinish;
-                            dm_.valueSetByService.disconnect(connectId_);
+                            dm_.pushUpdates.disconnect(pushUpdatesId_);
                             service->deregisterItem(this);
                             break;
                         } else {
@@ -554,7 +565,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     } else {
                         std::cout << "Connect[" << objectId_ << "] cancelled\n";
                         status_ = CallStatus::kFinish;
-                        dm_.valueSetByService.disconnect(connectId_);
+                        dm_.pushUpdates.disconnect(pushUpdatesId_);
                         service->deregisterItem(this);
                     }
                     break;
@@ -562,13 +573,13 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kPostWrite:
                     writer_.Finish(Status::OK, this);
                     status_ = CallStatus::kFinish;
-                    dm_.valueSetByService.disconnect(connectId_);
+                    dm_.pushUpdates.disconnect(pushUpdatesId_);
                     service->deregisterItem(this);
                     break;
 
                 case CallStatus::kFinish:
                     std::cout << "Connect[" << objectId_ << "] finished\n";
-                    dm_.valueSetByService.disconnect(connectId_);
+                    dm_.pushUpdates.disconnect(pushUpdatesId_);
                     service->deregisterItem(this);
                     break;
             }
@@ -587,7 +598,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         bool hasUpdate_{false};
         int objectId_;
         static int objectCounter_;
-        unsigned int connectId_;
+        unsigned int pushUpdatesId_;
     };
 
     /**
@@ -769,20 +780,24 @@ int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
 
 void statusUpdateExample(DeviceModel *dm)
 {
-    dm->valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
-        catena::Value v;
-        std::vector<std::string> scopes = {catena::kAuthzDisabled};
-        p.getValue<false>(&v, idx, scopes);
-        std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
-        // a real service would do something with the value here
-    });
+    
     std::thread loop([dm]() {
         // a real service would possibly send status updates, telemetry or audio meters here
         auto a_number = dm->param("/a_number");
         int i = 0;
+        dm->valueSetByClient.connect([&i](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
+            catena::Value v;
+            std::vector<std::string> scopes = {catena::kAuthzDisabled};
+            p.getValue<false>(&v, idx, scopes);
+            std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
+            // a real service would do something with the value here
+            if (p.oid() == "/a_number") {
+                i = v.int32_value();
+            }
+        });
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            a_number->setValue(i++);
+            //a_number->setValue(i++);
         }
     });
     loop.detach();

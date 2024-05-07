@@ -200,9 +200,9 @@ class DeviceModel {
     vdk::signal<void(const ParamAccessor&, ParamIndex idx, const std::string&)> valueSetByClient; 
 
     /**
-    *  signal to share value changes by the service 
+    *  signal to share value changes to all connected clients with proper authorization
     */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> valueSetByService;
+    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> pushUpdates;
 };
 
 }  // namespace catena
