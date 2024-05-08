@@ -483,6 +483,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
         auto& setter = ValueSetter::getInstance();
         setter[value.kind_case()](value, src);
         deviceModel_.get().valueSetByClient.emit(*this, -1, peer);
+        deviceModel_.get().pushUpdates.emit(*this, -1);
     } catch (const catena::exception_with_status& why) {
         std::stringstream err;
         err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -511,6 +512,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
             value.CopyFrom(src);
         }
         deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
+        deviceModel_.get().pushUpdates.emit(*this, idx);
     } catch (const catena::exception_with_status& why) {
         std::stringstream err;
         err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';

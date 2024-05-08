@@ -92,8 +92,7 @@ ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to se
 
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
-std::mutex registryMutex;
-std::condition_variable registryEmptyCV;
+vdk::signal<void()> shutdownSignal;
 
 // handle SIGINT
 void handle_signal(int sig) {
@@ -101,8 +100,8 @@ void handle_signal(int sig) {
         std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
         globalLoop = false;
         if (globalServer != nullptr) {
-            std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now();
-            globalServer->Shutdown(deadline);
+            shutdownSignal.emit();
+            globalServer->Shutdown();
             globalServer = nullptr;
         }
     });
@@ -228,35 +227,29 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         }
     }
 
-    bool registryEmpty() {
-        return registry_.empty();
-    }
-
   private:
     class CallData;
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
     using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;
     Registry registry_;
+    std::mutex registryMutex_;
 
     ServerCompletionQueue *cq_;
     DeviceModel &dm_;
   
     void registerItem(CallData *cd) {
-        std::lock_guard<std::mutex> lock(registryMutex);
+        std::lock_guard<std::mutex> lock(registryMutex_);
         this->registry_.push_back(std::unique_ptr<CallData>(cd));
     }
 
     void deregisterItem(CallData *cd) {
-        std::lock_guard<std::mutex> lock(registryMutex);
+        std::lock_guard<std::mutex> lock(registryMutex_);
         auto it = std::find_if(registry_.begin(), registry_.end(),
                                [cd](const RegistryItem &i) { return i.get() == cd; });
         if (it != registry_.end()) {
             registry_.erase(it);
         }
         std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
-        if (registry_.empty()) {
-            registryEmptyCV.notify_all();
-        }
     }
 
     static std::vector<std::string> getScopes(ServerContext &context) {
@@ -264,7 +257,12 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
             return {catena::kAuthzDisabled};
         }
 
-        std::vector<grpc::string_ref> claimsStr = context.auth_context()->FindPropertyValues("claims");
+        auto authContext = context.auth_context();
+        if (authContext == nullptr) {
+            throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
+        }
+
+        std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
         if (claimsStr.empty()) {
             throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
         }
@@ -497,17 +495,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             service->registerItem(this);
             objectId_ = objectCounter_++;
-            if (ok) {
-                connectId_ = dm_.valueSetByService.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
-                    std::unique_lock<std::mutex> lock(this->mtx_);
-                    std::vector<std::string> scopes = {catena::kAuthzDisabled};
-                    this->res_.mutable_value()->set_oid(p.oid());
-                    p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
-                    this->hasUpdate_ = true;
-                    lock.unlock();
-                    this->cv_.notify_one();
-                });
-            }
             proceed(service, ok);  // start the process
         }
         ~Connect() {}
@@ -530,6 +517,26 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kProcess:
                     new Connect(service_, dm_, ok);  // to serve other clients
                     context_.AsyncNotifyWhenDone(this);
+                    shutdownSignalId_ = shutdownSignal.connect([this](){
+                        context_.TryCancel();
+                        hasUpdate_ = true;
+                        this->cv_.notify_one();
+                    });
+                    pushUpdatesId_ = dm_.pushUpdates.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
+                        try{
+                            std::unique_lock<std::mutex> lock(this->mtx_);
+                            std::vector<std::string> scopes = getScopes(this->context_);
+                            p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
+                            this->res_.mutable_value()->set_oid(p.oid());
+                            this->res_.mutable_value()->set_element_index(idx);
+                            this->hasUpdate_ = true;
+                            lock.unlock();
+                            this->cv_.notify_one();
+                        }catch(catena::exception_with_status& why){
+                            // Error is thrown for connected clients without authorization
+                            // Don't need to send any updates to unauthorized clients
+                        } 
+                    });
                     status_ = CallStatus::kWrite;
                     // fall thru to start writing
 
@@ -541,20 +548,22 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         std::cout << "cv wait over : " << timeNow() << std::endl;
                         hasUpdate_ = false;
                         lock.unlock();
-                        std::cout << "sending update\n";
                         if (context_.IsCancelled()) {
                             std::cout << "Connect[" << objectId_ << "] cancelled\n";
                             status_ = CallStatus::kFinish;
-                            dm_.valueSetByService.disconnect(connectId_);
+                            shutdownSignal.disconnect(shutdownSignalId_);
+                            dm_.pushUpdates.disconnect(pushUpdatesId_);
                             service->deregisterItem(this);
                             break;
                         } else {
+                            std::cout << "sending update\n";
                             writer_.Write(res_, this);
                         }
                     } else {
                         std::cout << "Connect[" << objectId_ << "] cancelled\n";
                         status_ = CallStatus::kFinish;
-                        dm_.valueSetByService.disconnect(connectId_);
+                        shutdownSignal.disconnect(shutdownSignalId_);
+                        dm_.pushUpdates.disconnect(pushUpdatesId_);
                         service->deregisterItem(this);
                     }
                     break;
@@ -562,13 +571,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kPostWrite:
                     writer_.Finish(Status::OK, this);
                     status_ = CallStatus::kFinish;
-                    dm_.valueSetByService.disconnect(connectId_);
                     service->deregisterItem(this);
                     break;
 
                 case CallStatus::kFinish:
                     std::cout << "Connect[" << objectId_ << "] finished\n";
-                    dm_.valueSetByService.disconnect(connectId_);
                     service->deregisterItem(this);
                     break;
             }
@@ -587,7 +594,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         bool hasUpdate_{false};
         int objectId_;
         static int objectCounter_;
-        unsigned int connectId_;
+        unsigned int pushUpdatesId_;
+        unsigned int shutdownSignalId_;
     };
 
     /**
@@ -769,17 +777,21 @@ int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
 
 void statusUpdateExample(DeviceModel *dm)
 {
-    dm->valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
-        catena::Value v;
-        std::vector<std::string> scopes = {catena::kAuthzDisabled};
-        p.getValue<false>(&v, idx, scopes);
-        std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
-        // a real service would do something with the value here
-    });
+    
     std::thread loop([dm]() {
         // a real service would possibly send status updates, telemetry or audio meters here
         auto a_number = dm->param("/a_number");
         int i = 0;
+        dm->valueSetByClient.connect([&i](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
+            catena::Value v;
+            std::vector<std::string> scopes = {catena::kAuthzDisabled};
+            p.getValue<false>(&v, idx, scopes);
+            std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
+            // a real service would do something with the value here
+            if (p.oid() == "/a_number") {
+                i = v.int32_value();
+            }
+        });
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             a_number->setValue(i++);
@@ -831,10 +843,6 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
 
         // wait for the server to shutdown and tidy up
         server->Wait();
-        std::unique_lock<std::mutex> lock(registryMutex);
-
-        //wait for all the RPCs to finish
-        registryEmptyCV.wait(lock, [&]() { return service.registryEmpty(); });
 
         cq->Shutdown();
         cq_thread.join();

@@ -38,7 +38,7 @@
     "outer_nested_struct": {
       "type": "STRUCT",
       "name": { "display_strings": { "en": "Top Level Nested Struct Array Example" } },
-      "access_scope": "monitor",
+      "access_scope": "operate",
       "params": {
         "inner_nested_struct": {
           "type": "STRUCT",

@@ -468,7 +468,7 @@ class ParamAccessor {
             } else {
                 setter[getKindCase<V>(src)](&value_.get(), &src);
             }
-            deviceModel_.get().valueSetByService(*this, kParamEnd);
+            deviceModel_.get().pushUpdates.emit(*this, kParamEnd);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -507,7 +507,7 @@ class ParamAccessor {
             auto& setterAt = SetterAt::getInstance();
             static std::vector<ElementType> x;
             setterAt[getKindCase(x)](&value_.get(), &src, idx);
-            deviceModel_.get().valueSetByService(*this, idx);
+            deviceModel_.get().pushUpdates.emit(*this, idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -578,6 +578,10 @@ class ParamAccessor {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         try {
+            if (clientScopes.size() == 0){
+                BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+            }
+            
             if (clientScopes[0] != catena::kAuthzDisabled) {
                 if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
                     BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
