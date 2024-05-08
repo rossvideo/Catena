@@ -259,8 +259,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
         auto authContext = context.auth_context();
         if (authContext == nullptr) {
-            // no auth context for connect RPCs that have not yet been attached to a request
-            return {catena::kAuthzDisabled};
+            throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
         }
 
         std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
@@ -518,28 +517,26 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kProcess:
                     new Connect(service_, dm_, ok);  // to serve other clients
                     context_.AsyncNotifyWhenDone(this);
-                    if (ok) {
-                        shutdownSignalId_ = shutdownSignal.connect([this](){
-                            context_.TryCancel();
-                            hasUpdate_ = true;
+                    shutdownSignalId_ = shutdownSignal.connect([this](){
+                        context_.TryCancel();
+                        hasUpdate_ = true;
+                        this->cv_.notify_one();
+                    });
+                    pushUpdatesId_ = dm_.pushUpdates.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
+                        try{
+                            std::unique_lock<std::mutex> lock(this->mtx_);
+                            std::vector<std::string> scopes = getScopes(this->context_);
+                            p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
+                            this->res_.mutable_value()->set_oid(p.oid());
+                            this->res_.mutable_value()->set_element_index(idx);
+                            this->hasUpdate_ = true;
+                            lock.unlock();
                             this->cv_.notify_one();
-                        });
-                        pushUpdatesId_ = dm_.pushUpdates.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
-                            try{
-                                std::unique_lock<std::mutex> lock(this->mtx_);
-                                std::vector<std::string> scopes = getScopes(this->context_);
-                                p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
-                                this->res_.mutable_value()->set_oid(p.oid());
-                                this->res_.mutable_value()->set_element_index(idx);
-                                this->hasUpdate_ = true;
-                                lock.unlock();
-                                this->cv_.notify_one();
-                            }catch(catena::exception_with_status& why){
-                                // Error is thrown for connected clients without authorization
-                                // Don't need to send any updates to unauthorized clients
-                            } 
-                        });
-                    } 
+                        }catch(catena::exception_with_status& why){
+                            // Error is thrown for connected clients without authorization
+                            // Don't need to send any updates to unauthorized clients
+                        } 
+                    });
                     status_ = CallStatus::kWrite;
                     // fall thru to start writing
 
