@@ -228,7 +228,7 @@ class ParamAccessor {
         Value& value = value_.get();
         std::string scope = childParam.access_scope();
         if (scope == "") {
-            scope = parent.access_scope();
+            scope = this->scope_;
         }
         DeviceModel::ParamAccessorData pad{};
         if (value.kind_case() == Value::KindCase::kStructValue) {
