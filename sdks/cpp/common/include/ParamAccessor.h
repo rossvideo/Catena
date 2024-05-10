@@ -226,10 +226,8 @@ class ParamAccessor {
         Param& parent = param_.get();
         Param& childParam = parent.mutable_params()->at(fieldName);
         Value& value = value_.get();
-        std::string scope = childParam.access_scope();
-        if (scope == "") {
-            scope = this->scope_;
-        }
+        // If child doesn't have a scope defined, use the parent's scope
+        const std::string& scope = childParam.access_scope() == "" ? this->scope_ : childParam.access_scope();
         DeviceModel::ParamAccessorData pad{};
         if (value.kind_case() == Value::KindCase::kStructValue) {
             // field is a struct
