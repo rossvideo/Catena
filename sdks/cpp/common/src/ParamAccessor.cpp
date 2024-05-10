@@ -503,6 +503,11 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
         }
 
         Value &value = value_.get();
+        if (src.kind_case() != value.kind_case()) {
+            BAD_STATUS("Value type mismatch", catena::StatusCode::INVALID_ARGUMENT);
+        }
+
+        
         if (isList() && idx != kParamEnd) {
             // update array element
             auto& setterAt = ValueSetterAt::getInstance();
