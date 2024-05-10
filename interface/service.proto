@@ -33,7 +33,7 @@ import "externalobject.proto";
 
 /* Catena's API */
 
-message GeneralRequest {
+message EmptyRequest {
   int32 slot = 1;
 }
 
@@ -67,5 +67,5 @@ service CatenaService {
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
 
-  rpc ListLanguages(GeneralRequest) returns (LanguageList);
+  rpc ListLanguages(EmptyRequest) returns (LanguageList);
 }
