@@ -37,12 +37,6 @@ message GeneralRequest {
   int32 slot = 1;
 }
 
-/* TODO DO WE NEED THIS OR SHOULD WE MOVE IT INTO LANGUAGE */
-message GeneralResponse {
-  int32 return_code = 1;    // 0 indicates success, non-zero a problem
-  Exception exception = 2;  // Explains non-zero return codes
-}
-
 service CatenaService {
   rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
 
@@ -69,7 +63,7 @@ service CatenaService {
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
   /* Multi-language support */
-  rpc AddLanguage(AddLanguagePayload) returns (GeneralResponse); // Optional capability to allow clients to provide additional language packs
+  rpc AddLanguage(AddLanguagePayload) returns (google.protobuf.Empty); // Optional capability to allow clients to provide additional language packs
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
 
