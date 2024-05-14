@@ -220,7 +220,8 @@ class ParamAccessor {
      *
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
-    template <bool Threadsafe> std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
+    template <bool Threadsafe> 
+    std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
@@ -587,7 +588,20 @@ class ParamAccessor {
             }
 
             const Value& value = value_.get();
-            if (isList() && idx != kParamEnd) {
+            if (value.kind_case() == Value::KindCase::kUndefinedValue) {
+                const std::string& templatejptr = param_.get().template_oid();
+                if (templatejptr != "") {
+                    try {
+                        std::unique_ptr<catena::ParamAccessor> template_param = deviceModel_.get().param(templatejptr, false);
+                        // might need to change scope
+                        template_param->getValue<false>(dst, idx, clientScopes);
+                    } catch (const catena::exception_with_status& why) {
+                        std::stringstream err;
+                        err << "template_oid getValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
+                        throw catena::exception_with_status(err.str(), why.status);
+                    }
+                }
+            } else if (isList() && idx != kParamEnd) {
                 auto& getterAt = ValueGetterAt::getInstance();
                 getterAt[value.kind_case()](dst, value, idx);
             } else {

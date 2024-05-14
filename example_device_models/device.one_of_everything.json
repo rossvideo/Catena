@@ -88,6 +88,15 @@
           }
         }
       }
+    },
+    "template_oid_example": {
+      "type": "INT32",
+      "value": { "int32_value": 1234 }
+    },
+    "template_oid_usage": {
+      "template_oid": "/template_oid_example",
+      "type": "INT32",
+      "access_scope": "operate"
     }
   },
   "menu_groups": {

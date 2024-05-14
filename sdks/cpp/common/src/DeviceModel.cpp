@@ -122,8 +122,10 @@ bool catena::DeviceModel::streamDevice(grpc::ServerAsyncWriter<::catena::DeviceC
 // for parameters that do not have values
 catena::Value catena::DeviceModel::noValue_;
 
-std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jptr) {
-    std::lock_guard<Mutex> lock(mutex_);
+std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jptr, bool threadsafe) {
+    if (threadsafe) {
+        std::lock_guard<Mutex> lock(mutex_);
+    }
     catena::Path path_(jptr);
 
     // get our oid and look for it in the params map

@@ -163,7 +163,7 @@ class DeviceModel {
      * device model
      * @return DeviceModel Param
      */
-    std::unique_ptr<ParamAccessor> param(const std::string &path);
+    std::unique_ptr<ParamAccessor> param(const std::string &path, bool threadsafe = true);
 
     /**
      * @brief moves the param into the device model
