@@ -564,6 +564,8 @@ class ParamAccessor {
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
      * @param clientScopes [in] the scopes of the client requesting the value
      * 
+     * @todo getValue from template_oid nested within template_oid struct
+     * 
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
@@ -588,7 +590,7 @@ class ParamAccessor {
             }
 
             const Value& value = value_.get();
-            if (value.kind_case() == Value::KindCase::kUndefinedValue) {
+            if (value.kind_case() == Value::KindCase::kUndefinedValue || value.kind_case() == Value::KindCase::KIND_NOT_SET) {
                 const std::string& templatejptr = param_.get().template_oid();
                 if (templatejptr != "") {
                     try {
