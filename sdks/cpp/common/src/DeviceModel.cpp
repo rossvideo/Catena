@@ -29,6 +29,7 @@
 
 
 using catena::DeviceModel;
+using catena::DeviceStream;
 using catena::ParamAccessor;
 using catena::Threading;
 using google::protobuf::Map;
@@ -164,6 +165,63 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
 
     return ans;
+}
+
+DeviceStream::DeviceStream(catena::DeviceModel &dm) 
+    : deviceModel_{dm}, component_{}, nextType_{ComponentType::BASIC_DEVICE_INFO}{
+    }
+
+DeviceStream::~DeviceStream(){}
+
+bool DeviceStream::hasNext(){
+    //return component_.kind_case() != catena::DeviceComponent::KIND_NOT_SET;
+    return nextType_ != ComponentType::FINISHED;
+}
+
+const catena::DeviceComponent& DeviceStream::next(){
+    switch(nextType_){
+        case ComponentType::BASIC_DEVICE_INFO:
+            nextType_ = ComponentType::FINISHED;
+            return basicDeviceInfo();
+            break;
+
+        case ComponentType::PARAM:
+            break;
+
+        case ComponentType::CONSTRAINT:
+            break;
+
+        case ComponentType::MENU:
+            break;
+
+        case ComponentType::COMMAND:
+            break;
+
+        case ComponentType::LANGUAGE_PACK:
+            break;
+        case ComponentType::FINISHED:
+            return component_;
+            break;
+    }
+    return component_;
+        
+
+}
+
+catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
+    Device* basicInfo = component_.mutable_device();
+    const Device& device = deviceModel_.get().device();
+         
+    basicInfo->set_slot(device.slot());
+    basicInfo->set_detail_level(device.detail_level());
+    basicInfo->set_multi_set_enabled(device.multi_set_enabled());
+    basicInfo->set_subscriptions(device.subscriptions());
+    for (const auto scope : device.access_scopes()){
+    basicInfo->add_access_scopes(scope);
+    }
+    basicInfo->set_default_scope(device.default_scope());
+
+    return component_;
 }
 
 std::ostream &operator<<(std::ostream &os, const catena::DeviceModel &dm) {

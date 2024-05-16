@@ -51,6 +51,7 @@ struct FakeLock {
 };
 
 class ParamAccessor;  // forward reference
+class DeviceStream;   // forward reference
 
 /**
  * @brief type for indexing into parameters
@@ -67,6 +68,7 @@ using ParamIndex = uint32_t;
  */
 class DeviceModel {
     friend ParamAccessor; /**< so this class can access the DeviceModel's mutex */
+    friend DeviceStream;
 
   public:
     /**
@@ -203,6 +205,36 @@ class DeviceModel {
     *  signal to share value changes to all connected clients with proper authorization
     */
     vdk::signal<void(const ParamAccessor&, ParamIndex idx)> pushUpdates;
+};
+
+class DeviceStream{
+  public:
+    DeviceStream(DeviceModel &dm);
+
+    ~DeviceStream();
+
+    const catena::DeviceComponent& next();
+
+    bool hasNext();
+
+    
+
+  private:
+    catena::DeviceComponent& basicDeviceInfo();
+
+    enum class ComponentType {
+      BASIC_DEVICE_INFO,
+      PARAM,
+      CONSTRAINT,
+      MENU,
+      COMMAND,
+      LANGUAGE_PACK,
+      FINISHED
+    };
+    
+    std::reference_wrapper<DeviceModel> deviceModel_;
+    ComponentType nextType_;
+    DeviceComponent component_;
 };
 
 }  // namespace catena
