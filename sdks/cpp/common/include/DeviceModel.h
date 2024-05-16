@@ -220,7 +220,21 @@ class DeviceStream{
     
 
   private:
+    using ParamIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
+    using ConstraintIterator = google::protobuf::Map<std::string, catena::Constraint>::const_iterator;
+    using MenuGroupIterator = google::protobuf::Map<std::string, catena::MenuGroup>::const_iterator;
+    using MenuIterator = google::protobuf::Map<std::string, catena::Menu>::const_iterator;
+    using CommandIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
+    using LanguagePackIterator = google::protobuf::Map<std::string, catena::LanguagePack>::const_iterator;
+
     catena::DeviceComponent& basicDeviceInfo();
+    catena::DeviceComponent& paramComponent();
+    catena::DeviceComponent& constraintComponent();
+    catena::DeviceComponent& menuComponent();
+    catena::DeviceComponent& commandComponent();
+    catena::DeviceComponent& languagePackComponent();
+
+    void setNextType();
 
     enum class ComponentType {
       BASIC_DEVICE_INFO,
@@ -232,6 +246,13 @@ class DeviceStream{
       FINISHED
     };
     
+    ParamIterator paramIter_;
+    ConstraintIterator constraintIter_;
+    MenuGroupIterator menuGroupIter_;
+    MenuIterator menuIter_;
+    CommandIterator commandIter_;
+    LanguagePackIterator languagePackIter_;
+
     std::reference_wrapper<DeviceModel> deviceModel_;
     ComponentType nextType_;
     DeviceComponent component_;

@@ -169,6 +169,15 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
 
 DeviceStream::DeviceStream(catena::DeviceModel &dm) 
     : deviceModel_{dm}, component_{}, nextType_{ComponentType::BASIC_DEVICE_INFO}{
+        const Device& device = deviceModel_.get().device();
+        paramIter_ = device.params().begin();
+        constraintIter_ = device.constraints().begin();
+        menuGroupIter_ = device.menu_groups().begin();
+        if (menuGroupIter_ != device.menu_groups().end()){
+            menuIter_ = menuGroupIter_->second.menus().begin();
+        }
+        commandIter_ = device.commands().begin();
+        languagePackIter_ = device.language_packs().packs().begin();
     }
 
 DeviceStream::~DeviceStream(){}
@@ -181,31 +190,50 @@ bool DeviceStream::hasNext(){
 const catena::DeviceComponent& DeviceStream::next(){
     switch(nextType_){
         case ComponentType::BASIC_DEVICE_INFO:
-            nextType_ = ComponentType::FINISHED;
             return basicDeviceInfo();
             break;
 
         case ComponentType::PARAM:
+            return paramComponent();
             break;
 
         case ComponentType::CONSTRAINT:
+            return constraintComponent();
             break;
 
         case ComponentType::MENU:
+            return menuComponent();
             break;
 
         case ComponentType::COMMAND:
+            return commandComponent();
             break;
 
         case ComponentType::LANGUAGE_PACK:
+            return languagePackComponent();
             break;
         case ComponentType::FINISHED:
+            component_.Clear();
             return component_;
             break;
     }
     return component_;
-        
+}
 
+void DeviceStream::setNextType(){
+    if(paramIter_ != deviceModel_.get().device().params().end()){
+        nextType_ = ComponentType::PARAM;
+    }else if(constraintIter_ != deviceModel_.get().device().constraints().end()){
+        nextType_ = ComponentType::CONSTRAINT;
+    }else if(menuGroupIter_ != deviceModel_.get().device().menu_groups().end()){
+        nextType_ = ComponentType::MENU;
+    }else if(commandIter_ != deviceModel_.get().device().commands().end()){
+        nextType_ = ComponentType::COMMAND;
+    }else if(languagePackIter_ != deviceModel_.get().device().language_packs().packs().end()){
+        nextType_ = ComponentType::LANGUAGE_PACK;
+    }else{
+        nextType_ = ComponentType::FINISHED;
+    }
 }
 
 catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
@@ -221,6 +249,64 @@ catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
     }
     basicInfo->set_default_scope(device.default_scope());
 
+    setNextType();
+    return component_;
+}
+
+catena::DeviceComponent& DeviceStream::paramComponent(){
+    catena::DeviceComponent_ComponentParam* param = component_.mutable_param();
+    param->set_oid(paramIter_->first);
+    *param->mutable_param() = paramIter_->second;
+    paramIter_++;
+    
+    setNextType();
+    return component_;
+}
+
+catena::DeviceComponent& DeviceStream::constraintComponent(){
+    catena::DeviceComponent_ComponentConstraint* constraint = component_.mutable_shared_constraint();
+    constraint->set_oid(constraintIter_->first);
+    *constraint->mutable_constraint() = constraintIter_->second;
+    constraintIter_++;
+    
+    setNextType();
+    return component_;
+}
+
+catena::DeviceComponent& DeviceStream::menuComponent(){
+    catena::DeviceComponent_ComponentMenu* menu = component_.mutable_menu();
+    menu->set_oid(menuIter_->first);
+    *menu->mutable_menu() = menuIter_->second;
+    menuIter_++;
+
+    if(menuIter_ == menuGroupIter_->second.menus().end()){
+        menuGroupIter_++;
+        if(menuGroupIter_ == deviceModel_.get().device().menu_groups().end()){
+            setNextType();
+        }else{
+            menuIter_ = menuGroupIter_->second.menus().begin();
+        }
+    }
+    return component_;
+}
+
+catena::DeviceComponent& DeviceStream::commandComponent(){
+    catena::DeviceComponent_ComponentCommand* command = component_.mutable_command();
+    command->set_oid(commandIter_->first);
+    *command->mutable_param() = commandIter_->second;
+    commandIter_++;
+    
+    setNextType();
+    return component_;
+}
+
+catena::DeviceComponent& DeviceStream::languagePackComponent(){
+    catena::DeviceComponent_ComponentLanguagePack* languagePack = component_.mutable_language_pack();
+    languagePack->set_language(languagePackIter_->first);
+    *languagePack->mutable_language_pack() = languagePackIter_->second;
+    languagePackIter_++;
+    
+    setNextType();
     return component_;
 }
 
