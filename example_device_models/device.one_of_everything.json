@@ -97,45 +97,6 @@
       "template_oid": "/template_oid_example",
       "type": "INT32",
       "access_scope": "operate"
-    },
-    "template_oid_array": {
-      "type": "INT32_ARRAY",
-      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } }
-    },
-    "template_oid_array_usage": {
-      "template_oid": "/template_oid_array",
-      "type": "INT32_ARRAY",
-      "access_scope": "operate"
-    },
-    "template_oid_struct": {
-      "type": "STRUCT",
-      "name": { "display_strings": { "en": "Top Level Nested Struct Array Example" } },
-      "access_scope": "operate",
-      "params": {
-        "num_1": {
-          "type": "INT32",
-          "value": { "int32_value": 1 },
-          "name": { "display_strings": { "en": "Int Example" } },
-          "access_scope": "configure"
-        },
-        "num_2": {
-          "type": "INT32",
-          "template_oid": "/template_oid_example",
-          "name": { "display_strings": { "en": "Int Example" } }
-        }
-      },
-      "value": {
-        "struct_value": {
-          "fields": {
-            "num_1": { "value": { "int32_value": 1 } }
-          }
-        }
-      }
-    },
-    "template_oid_struct_usage": {
-      "template_oid": "/template_oid_struct",
-      "type": "STRUCT",
-      "access_scope": "operate"
     }
   },
   "menu_groups": {
