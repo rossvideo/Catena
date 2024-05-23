@@ -85,6 +85,7 @@ class DeviceModel {
      * can be referenced and not only defined in-line.
      */
     using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
+    using const_ParamAccessorData = std::tuple<const catena::Param *, const catena::Value *>;
 
     /**
      * @brief Params Map
@@ -213,6 +214,8 @@ class DeviceStream{
 
     ~DeviceStream();
 
+    void attachClientScopes(std::vector<std::string>& scopes);
+
     const catena::DeviceComponent& next();
 
     bool hasNext();
@@ -256,6 +259,7 @@ class DeviceStream{
     std::reference_wrapper<DeviceModel> deviceModel_;
     ComponentType nextType_;
     DeviceComponent component_;
+    std::vector<std::string>* clientScopes_ = nullptr;
 };
 
 }  // namespace catena

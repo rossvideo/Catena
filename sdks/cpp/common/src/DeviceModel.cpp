@@ -182,12 +182,19 @@ DeviceStream::DeviceStream(catena::DeviceModel &dm)
 
 DeviceStream::~DeviceStream(){}
 
+void DeviceStream::attachClientScopes(std::vector<std::string>& scopes){
+    clientScopes_ = &scopes;
+}
+
 bool DeviceStream::hasNext(){
     //return component_.kind_case() != catena::DeviceComponent::KIND_NOT_SET;
     return nextType_ != ComponentType::FINISHED;
 }
 
 const catena::DeviceComponent& DeviceStream::next(){
+    if (clientScopes_ == nullptr){
+        throw std::runtime_error("Client scopes not attached");
+    }
     switch(nextType_){
         case ComponentType::BASIC_DEVICE_INFO:
             return basicDeviceInfo();
@@ -221,19 +228,34 @@ const catena::DeviceComponent& DeviceStream::next(){
 }
 
 void DeviceStream::setNextType(){
-    if(paramIter_ != deviceModel_.get().device().params().end()){
-        nextType_ = ComponentType::PARAM;
-    }else if(constraintIter_ != deviceModel_.get().device().constraints().end()){
-        nextType_ = ComponentType::CONSTRAINT;
-    }else if(menuGroupIter_ != deviceModel_.get().device().menu_groups().end()){
-        nextType_ = ComponentType::MENU;
-    }else if(commandIter_ != deviceModel_.get().device().commands().end()){
-        nextType_ = ComponentType::COMMAND;
-    }else if(languagePackIter_ != deviceModel_.get().device().language_packs().packs().end()){
-        nextType_ = ComponentType::LANGUAGE_PACK;
-    }else{
-        nextType_ = ComponentType::FINISHED;
+    const Device& device = deviceModel_.get().device();
+    // Skip over params that are not in the client's scope
+    std::unique_ptr<ParamAccessor> p;
+    while(paramIter_ != device.params().end()){
+        p = deviceModel_.get().param("/" + paramIter_->first);
+        if(p->checkScope(*clientScopes_) == true) {
+            nextType_ = ComponentType::PARAM;
+            return; 
+        }
+        paramIter_++;
     }
+    if(constraintIter_ != device.constraints().end()){
+        nextType_ = ComponentType::CONSTRAINT;
+        return;
+    }
+    if(menuGroupIter_ != device.menu_groups().end()){
+        nextType_ = ComponentType::MENU;
+        return;
+    }
+    if(commandIter_ != device.commands().end()){
+        nextType_ = ComponentType::COMMAND;
+        return;
+    }
+    if(languagePackIter_ != device.language_packs().packs().end()){
+        nextType_ = ComponentType::LANGUAGE_PACK;
+        return;
+    }
+    nextType_ = ComponentType::FINISHED;
 }
 
 catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
@@ -255,10 +277,15 @@ catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
 
 catena::DeviceComponent& DeviceStream::paramComponent(){
     catena::DeviceComponent_ComponentParam* param = component_.mutable_param();
-    param->set_oid(paramIter_->first);
-    *param->mutable_param() = paramIter_->second;
+    std::unique_ptr<ParamAccessor> p = deviceModel_.get().param("/" + paramIter_->first);
+    try {
+        p->getParam(param, *clientScopes_); // get the param
+    } catch(catena::exception_with_status& why){
+        // Error is thrown for clients without authorization
+        // Don't need to send any info to unauthorized clients
+    } 
+  
     paramIter_++;
-    
     setNextType();
     return component_;
 }

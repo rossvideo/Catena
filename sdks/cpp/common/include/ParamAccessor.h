@@ -224,6 +224,9 @@ class ParamAccessor {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
+        if (!parent.mutable_params()->contains(fieldName)) {
+            BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
+        }
         Param& childParam = parent.mutable_params()->at(fieldName);
         Value& value = value_.get();
         // If child doesn't have a scope defined, use the parent's scope
@@ -637,6 +640,13 @@ class ParamAccessor {
      */
     void setValue(const std::string& peer, const Value& src, ParamIndex idx, std::vector<std::string>& clientScopes);
 
+    void getParam(catena::DeviceComponent_ComponentParam *dst, std::vector<std::string>& clientScopes) const;
+
+    
+
+    bool checkScope(std::vector<std::string>& clientScopes) const;
+    bool checkScope(std::vector<std::string>& clientScopes, std::string paramScope) const;
+
     /** 
      * @brief get the parameter's fully qualified object id
     */
@@ -666,6 +676,9 @@ class ParamAccessor {
     }
 
   private:
+    void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
+            std::string parentScope, std::vector<std::string>& clientScopes) const;
+
     /** @brief a reference to the device model that contains accessed parrameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
 

@@ -632,6 +632,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kProcess:
                     new DeviceRequest(service_, dm_, ok);  // to serve other clients
                     context_.AsyncNotifyWhenDone(this);
+                    clientScopes_ = getScopes(context_);
+                    deviceStream_.attachClientScopes(clientScopes_);
                     status_ = CallStatus::kWrite;
                     // fall thru to start writing
 
@@ -668,6 +670,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
       private:
         CatenaServiceImpl *service_;
         ServerContext context_;
+        std::vector<std::string> clientScopes_;
         catena::DeviceRequestPayload req_;
         catena::PushUpdates res_;
         ServerAsyncWriter<catena::DeviceComponent> writer_;
