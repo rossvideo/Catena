@@ -119,8 +119,10 @@ bool catena::DeviceModel::streamDevice(grpc::ServerAsyncWriter<::catena::DeviceC
     return true; // we're sending the whole device for now, so signal that we're done
 }
 
-// for parameters that do not have values
+// for parameters that do not have the corresponding fields
 catena::Value catena::DeviceModel::noValue_;
+catena::PolyglotText catena::DeviceModel::noName_;
+catena::Constraint catena::DeviceModel::noConstraint_;
 
 std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jptr) {
     std::lock_guard<Mutex> lock(mutex_);
@@ -144,11 +146,45 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
 
     ParamAccessorData pad;
     catena::Param &p = device_.mutable_params()->at(oid);
+    std::reference_wrapper<catena::Param> t = std::ref(p);
+    
+    // only look for a template if the param is missing fields
+    if ((!p.has_constraint() || !p.has_name() || !p.has_value()) && p.template_oid() != "") { 
+        catena::Path template_path_(p.template_oid());
+        catena::Path::Segment segment = template_path_.pop_front();
+        if (!std::holds_alternative<std::string>(segment)) {
+            BAD_STATUS("expected template_oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        std::string toid(std::get<std::string>(segment));
+
+        if (!device_.mutable_params()->contains(toid)) {
+            std::stringstream msg;
+            msg << "param is missing fields but template " << std::quoted(toid) << " not found";
+            BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
+        }
+        
+        t = std::ref(device_.mutable_params()->at(toid));
+
+        // TODO: add subparam support for templates
+        if (template_path_.size()) {
+            BAD_STATUS("subparam into template_oid not yet implemented", catena::StatusCode::UNIMPLEMENTED);
+        }
+        // TODO: add recursing into templates
+        if (t.get().template_oid() != "") {
+            BAD_STATUS("template recursion not yet implemented", catena::StatusCode::UNIMPLEMENTED);
+        }
+    } 
+    
+    // TODO: will need to change this logic to take the most recently available fields when adding template recursion
     std::get<0>(pad) = &p;
-    std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
+    std::get<1>(pad) = (t.get().has_value() ? t.get().mutable_value() : &noValue_);
+    std::get<2>(pad) = (t.get().has_name() ? t.get().mutable_name() : &noName_);
+    std::get<3>(pad) = (t.get().has_constraint() ? t.get().mutable_constraint() : &noConstraint_);
+
     if (p.access_scope() != "") {
         scope = p.access_scope();
     }
+
     auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr, scope);
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {

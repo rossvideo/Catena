@@ -278,7 +278,8 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 
 
 ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid, const std::string& scope)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)}, scope_{scope} {
+    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, name_{*std::get<2>(pad)}, constraint_{*std::get<3>(pad)},
+    oid_{oid}, id_{std::hash<std::string>{}(oid)}, scope_{scope} {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -476,6 +477,7 @@ template <typename V> catena::Value::KindCase getKindCase(const V& src) {
     return catena::Value::KindCase::KIND_NOT_SET;
 }
 
+// FIXME: update setValue to modify local_value_ and rebind reference in value_
 void ParamAccessor::setValue(const std::string& peer, const Value &src) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {

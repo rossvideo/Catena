@@ -220,7 +220,9 @@ class ParamAccessor {
      *
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
-    template <bool Threadsafe> std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
+    // FIXME: update pad typing
+    template <bool Threadsafe>
+    std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
@@ -235,11 +237,11 @@ class ParamAccessor {
                 BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
             }
             Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
-            pad = {&childParam, v};
+            // pad = {&childParam, v};
         } else if (value.kind_case() == Value::KindCase::kStructVariantValue) {
             // field is a variant
             Value* v = value.mutable_struct_variant_value()->mutable_value();
-            pad = {&childParam, v};
+            // pad = {&childParam, v};
         } else {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
@@ -261,6 +263,7 @@ class ParamAccessor {
      *
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
+    // FIXME: update pad typing
     template <bool Threadsafe>
     const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
@@ -280,12 +283,12 @@ class ParamAccessor {
                 BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
             }
             const Value& v = value.struct_value().fields().at(fieldName).value();
-            pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+            // pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
         } else if (value.kind_case() == Value::KindCase::kStructVariantValue) {
             // field is a variant
             // yes the const_cast is gross, but ok because we re-apply constness on return
             const Value& v = value.struct_variant_value().value();
-            pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+            // pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
         } else {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
@@ -672,8 +675,17 @@ class ParamAccessor {
     /** @brief a reference to the parameter accessed by this object */
     std::reference_wrapper<catena::Param> param_;
 
-    /** @brief a reference to the accessed parameter's value object */
-    std::reference_wrapper<catena::Value> value_;
+    /** @brief a read only reference to the accessed parameter's value object */
+    std::reference_wrapper<catena::Value> value_; // FIXME: make const when implementing setValue
+
+    /** @brief the accessed parameter's overriden value object */
+    catena::Value local_value_; // TODO: might need to change this later 
+
+    /** @brief a read only reference to the accessed parameter's name object */
+    std::reference_wrapper<const catena::PolyglotText> name_;
+
+    /** @brief a read only reference to the accessed parameter's contraint object */
+    std::reference_wrapper<const catena::Constraint> constraint_;
 
     /** @brief the accessed parameter's fully qualified object id*/
     std::string oid_;
