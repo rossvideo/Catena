@@ -149,12 +149,11 @@ class DeviceModel {
 
     /**
 
-     * @brief sends device info to client via writer
+     * @brief sends device info as a single message to client via writer
      * @param writer the writer to send the device info to
      * @param tag the tag to associate with the stream
-     * @return true if the device model was sent, false is there's more to come.
      */
-    bool streamDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag);
+    void sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag);
 
     /**
      * @brief Get the Param object at path
@@ -208,19 +207,50 @@ class DeviceModel {
     vdk::signal<void(const ParamAccessor&, ParamIndex idx)> pushUpdates;
 };
 
+/**
+ * @brief Breaks device model into components that can be streamed to a client
+*/
 class DeviceStream{
   public:
+    /**
+     * @brief Construct a new Device Stream object
+     * @param dm the device model to stream
+    */
     DeviceStream(DeviceModel &dm);
 
-    ~DeviceStream();
-
+    /**
+     * @brief Attach client scopes to the stream
+     * @param scopes the access scopes of the client requesting the device model
+     * 
+     * used to filter out components that the client does not have access to
+     * 
+     * must be called before calling next()
+    */
     void attachClientScopes(std::vector<std::string>& scopes);
 
-    const catena::DeviceComponent& next();
-
+    /**
+     * @brief Check if there is another component in the stream
+     * @return true if there is another component in the stream
+    */
     bool hasNext();
 
-    
+    /**
+     * @brief Get the next component in the stream
+     * @throws std::runtime_error if called before attachClientScopes
+     * @return const catena::DeviceComponent& the next component in the stream
+     * 
+     * skips components that the client does not have access to
+     * 
+     * Generally will return components in the following order:
+     * 1. Basic Device Info
+     * 2. Params
+     * 3. Constraints
+     * 4. Menus
+     * 5. Commands
+     * 6. Language Packs
+     * The order within these categories is not guaranteed
+    */
+    const catena::DeviceComponent& next();
 
   private:
     using ParamIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
@@ -230,14 +260,47 @@ class DeviceStream{
     using CommandIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
     using LanguagePackIterator = google::protobuf::Map<std::string, catena::LanguagePack>::const_iterator;
 
-    catena::DeviceComponent& basicDeviceInfo();
-    catena::DeviceComponent& paramComponent();
-    catena::DeviceComponent& constraintComponent();
-    catena::DeviceComponent& menuComponent();
-    catena::DeviceComponent& commandComponent();
-    catena::DeviceComponent& languagePackComponent();
+    /** 
+     * @brief creates deviceComponent with basic device info
+     * @return catena::DeviceComponent& the basic device info component
+    */
+    catena::DeviceComponent& basicDeviceInfo_();
+    
+    /** 
+     * @brief creates deviceComponent with param info
+     * @return catena::DeviceComponent& the next param component
+    */
+    catena::DeviceComponent& paramComponent_();
 
-    void setNextType();
+    /** 
+     * @brief creates deviceComponent with constraint info
+     * @return catena::DeviceComponent& the next constraint component
+    */
+    catena::DeviceComponent& constraintComponent_();
+
+    /** 
+     * @brief creates deviceComponent with menu info
+     * @return catena::DeviceComponent& the next menu component
+    */
+    catena::DeviceComponent& menuComponent_();
+
+    /** 
+     * @brief creates deviceComponent with command info
+     * @return catena::DeviceComponent& the next command component
+    */
+    catena::DeviceComponent& commandComponent_();
+
+    /** 
+     * @brief creates deviceComponent with language pack info
+     * @return catena::DeviceComponent& the next language pack component
+    */
+    catena::DeviceComponent& languagePackComponent_();
+
+    /** 
+     * @brief sets nextType_ to the next component type
+     * will skip components that the client does not have access to
+    */
+    void setNextType_();
 
     enum class ComponentType {
       BASIC_DEVICE_INFO,

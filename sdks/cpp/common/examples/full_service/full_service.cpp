@@ -639,6 +639,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kWrite:
                     mtx_.lock();
+                    /** @todo possible race condition for if server is shutdown mid write */
                     if (!ok){
                         status_ = CallStatus::kFinish;
                     }

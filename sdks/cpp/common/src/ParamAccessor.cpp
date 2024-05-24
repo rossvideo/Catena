@@ -532,11 +532,12 @@ void ParamAccessor::getParam_(DeviceModel::const_ParamAccessorData &src, DeviceM
     
     // shallow copy to get basic param info
     *std::get<0>(dst) = *std::get<0>(src);
-    // clear params and value because they require extra logic
-    std::get<0>(dst)->clear_params();
-    std::get<1>(dst)->Clear();
     
     if (std::get<0>(src)->type() == catena::ParamType::STRUCT) {
+        // clear sub-params and their values because their scope needs to be checked
+        std::get<0>(dst)->clear_params();
+        std::get<1>(dst)->Clear();
+
         for (auto &it : std::get<0>(src)->params()) {
             std::string scope = it.second.access_scope() == "" ? parentScope : it.second.access_scope();
 
@@ -545,9 +546,10 @@ void ParamAccessor::getParam_(DeviceModel::const_ParamAccessorData &src, DeviceM
                 const catena::Value* srcSubValue = &std::get<1>(src)->struct_value().fields().at(it.first).value();
                 DeviceModel::const_ParamAccessorData subSrc = {srcSubParam, srcSubValue};
                 
-
+                // add a new param field to the dst struct
                 auto newSubParam = std::get<0>(dst)->mutable_params()->insert({it.first, catena::Param{}});
                 catena::Param* dstSubParam = &newSubParam.first->second;
+                // add a new value field to the dst struct
                 auto newSubValue = std::get<1>(dst)->mutable_struct_value()->mutable_fields()->insert({it.first, catena::StructField{}});
                 catena::Value* dstSubValue = newSubValue.first->second.mutable_value();
                 DeviceModel::ParamAccessorData subDst = {dstSubParam, dstSubValue};
@@ -557,7 +559,8 @@ void ParamAccessor::getParam_(DeviceModel::const_ParamAccessorData &src, DeviceM
         }
         
     } else {
-        std::get<1>(dst)->CopyFrom(*std::get<1>(src));
+        // copy value
+        *std::get<1>(dst) = *std::get<1>(src);
     }
 }
 

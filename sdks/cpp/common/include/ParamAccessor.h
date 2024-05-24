@@ -640,11 +640,31 @@ class ParamAccessor {
      */
     void setValue(const std::string& peer, const Value& src, ParamIndex idx, std::vector<std::string>& clientScopes);
 
+    /**
+     * @brief get the parameter as a device component with unauthorized fields removed
+     * @param dst [out] a parameter component with unathorized fields removed
+     * @param clientScopes [in] the scopes of the client requesting the parameter
+     * @throws catena::exception_with_status catena::Status::PERMISSION_DENIED if the client is not authorized
+    */
     void getParam(catena::DeviceComponent_ComponentParam *dst, std::vector<std::string>& clientScopes) const;
 
-    
-
+    /**
+     * @brief check if the client is authorized to access the parameter
+     * @param clientScopes the scopes of the client making the request
+     * @return true if the client is authorized, false otherwise
+     * 
+     * @todo add option to check scope for write access
+    */
     bool checkScope(std::vector<std::string>& clientScopes) const;
+
+    /**
+     * @brief check if the client is authorized to access the parameter
+     * @param clientScopes the scopes of the client making the request
+     * @param paramScope the scope of the parameter to be accessed
+     * @return true if the client is authorized, false otherwise
+     * 
+     * @todo add option to check scope for write access
+    */
     bool checkScope(std::vector<std::string>& clientScopes, std::string paramScope) const;
 
     /** 
@@ -676,6 +696,13 @@ class ParamAccessor {
     }
 
   private:
+    /**
+     * @brief copies the param data skipping unauthorized fields
+     * @param src the source param data
+     * @param dst the destination param data
+     * @param parentScope the scope of the parent param
+     * @param clientScopes the scopes of the client making the request
+    */
     void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
             std::string parentScope, std::vector<std::string>& clientScopes) const;
 

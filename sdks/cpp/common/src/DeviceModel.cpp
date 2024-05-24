@@ -111,13 +111,12 @@ const catena::Device &catena::DeviceModel::device() const {
 }
 
 // send device info to client via writer
-bool catena::DeviceModel::streamDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag) {
+void catena::DeviceModel::sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag) {
     std::lock_guard<Mutex> lock(mutex_);
     catena::DeviceComponent dc;
     dc.set_allocated_device(&device_);
     writer->Write(dc, tag);
     auto x = dc.release_device();
-    return true; // we're sending the whole device for now, so signal that we're done
 }
 
 // for parameters that do not have values
@@ -180,14 +179,11 @@ DeviceStream::DeviceStream(catena::DeviceModel &dm)
         languagePackIter_ = device.language_packs().packs().begin();
     }
 
-DeviceStream::~DeviceStream(){}
-
 void DeviceStream::attachClientScopes(std::vector<std::string>& scopes){
     clientScopes_ = &scopes;
 }
 
 bool DeviceStream::hasNext(){
-    //return component_.kind_case() != catena::DeviceComponent::KIND_NOT_SET;
     return nextType_ != ComponentType::FINISHED;
 }
 
@@ -197,27 +193,27 @@ const catena::DeviceComponent& DeviceStream::next(){
     }
     switch(nextType_){
         case ComponentType::BASIC_DEVICE_INFO:
-            return basicDeviceInfo();
+            return basicDeviceInfo_();
             break;
 
         case ComponentType::PARAM:
-            return paramComponent();
+            return paramComponent_();
             break;
 
         case ComponentType::CONSTRAINT:
-            return constraintComponent();
+            return constraintComponent_();
             break;
 
         case ComponentType::MENU:
-            return menuComponent();
+            return menuComponent_();
             break;
 
         case ComponentType::COMMAND:
-            return commandComponent();
+            return commandComponent_();
             break;
 
         case ComponentType::LANGUAGE_PACK:
-            return languagePackComponent();
+            return languagePackComponent_();
             break;
         case ComponentType::FINISHED:
             component_.Clear();
@@ -227,7 +223,7 @@ const catena::DeviceComponent& DeviceStream::next(){
     return component_;
 }
 
-void DeviceStream::setNextType(){
+void DeviceStream::setNextType_(){
     const Device& device = deviceModel_.get().device();
     // Skip over params that are not in the client's scope
     std::unique_ptr<ParamAccessor> p;
@@ -258,7 +254,7 @@ void DeviceStream::setNextType(){
     nextType_ = ComponentType::FINISHED;
 }
 
-catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
+catena::DeviceComponent& DeviceStream::basicDeviceInfo_(){
     Device* basicInfo = component_.mutable_device();
     const Device& device = deviceModel_.get().device();
          
@@ -271,11 +267,11 @@ catena::DeviceComponent& DeviceStream::basicDeviceInfo(){
     }
     basicInfo->set_default_scope(device.default_scope());
 
-    setNextType();
+    setNextType_();
     return component_;
 }
 
-catena::DeviceComponent& DeviceStream::paramComponent(){
+catena::DeviceComponent& DeviceStream::paramComponent_(){
     catena::DeviceComponent_ComponentParam* param = component_.mutable_param();
     std::unique_ptr<ParamAccessor> p = deviceModel_.get().param("/" + paramIter_->first);
     try {
@@ -286,30 +282,33 @@ catena::DeviceComponent& DeviceStream::paramComponent(){
     } 
   
     paramIter_++;
-    setNextType();
+    setNextType_();
     return component_;
 }
 
-catena::DeviceComponent& DeviceStream::constraintComponent(){
+catena::DeviceComponent& DeviceStream::constraintComponent_(){
     catena::DeviceComponent_ComponentConstraint* constraint = component_.mutable_shared_constraint();
     constraint->set_oid(constraintIter_->first);
     *constraint->mutable_constraint() = constraintIter_->second;
     constraintIter_++;
     
-    setNextType();
+    setNextType_();
     return component_;
 }
 
-catena::DeviceComponent& DeviceStream::menuComponent(){
+catena::DeviceComponent& DeviceStream::menuComponent_(){
     catena::DeviceComponent_ComponentMenu* menu = component_.mutable_menu();
     menu->set_oid(menuIter_->first);
     *menu->mutable_menu() = menuIter_->second;
     menuIter_++;
 
+    /**
+     * @todo check if the menu corresponds to a param that is in the client's scope
+    */
     if(menuIter_ == menuGroupIter_->second.menus().end()){
         menuGroupIter_++;
         if(menuGroupIter_ == deviceModel_.get().device().menu_groups().end()){
-            setNextType();
+            setNextType_();
         }else{
             menuIter_ = menuGroupIter_->second.menus().begin();
         }
@@ -317,23 +316,23 @@ catena::DeviceComponent& DeviceStream::menuComponent(){
     return component_;
 }
 
-catena::DeviceComponent& DeviceStream::commandComponent(){
+catena::DeviceComponent& DeviceStream::commandComponent_(){
     catena::DeviceComponent_ComponentCommand* command = component_.mutable_command();
     command->set_oid(commandIter_->first);
     *command->mutable_param() = commandIter_->second;
     commandIter_++;
     
-    setNextType();
+    setNextType_();
     return component_;
 }
 
-catena::DeviceComponent& DeviceStream::languagePackComponent(){
+catena::DeviceComponent& DeviceStream::languagePackComponent_(){
     catena::DeviceComponent_ComponentLanguagePack* languagePack = component_.mutable_language_pack();
     languagePack->set_language(languagePackIter_->first);
     *languagePack->mutable_language_pack() = languagePackIter_->second;
     languagePackIter_++;
     
-    setNextType();
+    setNextType_();
     return component_;
 }
 
