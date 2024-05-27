@@ -503,7 +503,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
         }
 
         Value &value = value_.get();
-        if (src.kind_case() != value.kind_case()) {
+        if (!sameKind(src, idx)) {
             BAD_STATUS("Value type mismatch", catena::StatusCode::INVALID_ARGUMENT);
         }
 
@@ -514,7 +514,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
             setterAt[value.kind_case()](value, src, idx);
         } else {
             // update scalar value or whole array
-            value.CopyFrom(src);
+            value = src;
         }
         deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
         deviceModel_.get().pushUpdates.emit(*this, idx);
@@ -524,5 +524,22 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
         throw catena::exception_with_status(err.str(), why.status);
     } catch (...) {
         throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
+    }
+}
+
+bool ParamAccessor::sameKind(const Value &src, const ParamIndex& idx) const {
+    if (!isList() || idx == kParamEnd) {
+        return src.kind_case() == value_.get().kind_case();
+    } else {
+        switch (value_.get().kind_case()) {
+            case catena::Value::KindCase::kInt32ArrayValues:
+                return src.kind_case() == catena::Value::KindCase::kInt32Value;
+            case catena::Value::KindCase::kFloat32ArrayValues:
+                return src.kind_case() == catena::Value::KindCase::kFloat32Value;
+            case catena::Value::KindCase::kStringArrayValues:
+                return src.kind_case() == catena::Value::KindCase::kStringValue;
+            default:
+                return false;
+        }
     }
 }
