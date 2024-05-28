@@ -678,7 +678,7 @@ class ParamAccessor {
      * @todo check that structs contain same sub-params
      * @todo determine how array size should be compared when idx is kParamEnd
      */
-    bool sameKind(const Value& src, const ParamIndex& idx) const;
+    bool sameKind(const Value& src, const ParamIndex idx) const;
 
     /** @brief a reference to the device model that contains accessed parrameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;

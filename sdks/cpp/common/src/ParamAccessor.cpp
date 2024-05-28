@@ -514,7 +514,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
             setterAt[value.kind_case()](value, src, idx);
         } else {
             // update scalar value or whole array
-            value = src;
+            value.CopyFrom(src);
         }
         deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
         deviceModel_.get().pushUpdates.emit(*this, idx);
@@ -527,7 +527,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
     }
 }
 
-bool ParamAccessor::sameKind(const Value &src, const ParamIndex& idx) const {
+bool ParamAccessor::sameKind(const Value &src, const ParamIndex idx) const {
     if (!isList() || idx == kParamEnd) {
         return src.kind_case() == value_.get().kind_case();
     } else {
