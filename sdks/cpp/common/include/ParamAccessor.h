@@ -655,7 +655,7 @@ class ParamAccessor {
      * 
      * @todo add option to check scope for write access
     */
-    bool checkScope(std::vector<std::string>& clientScopes) const;
+    bool checkScope(const std::vector<std::string>& clientScopes) const;
 
     /**
      * @brief check if the client is authorized to access the parameter
@@ -665,7 +665,7 @@ class ParamAccessor {
      * 
      * @todo add option to check scope for write access
     */
-    bool checkScope(std::vector<std::string>& clientScopes, std::string paramScope) const;
+    bool checkScope(const std::vector<std::string>& clientScopes, const std::string& paramScope) const;
 
     /** 
      * @brief get the parameter's fully qualified object id
@@ -704,9 +704,9 @@ class ParamAccessor {
      * @param clientScopes the scopes of the client making the request
     */
     void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
-            std::string parentScope, std::vector<std::string>& clientScopes) const;
+            const std::string& parentScope, const std::vector<std::string>& clientScopes) const;
 
-    /** @brief a reference to the device model that contains accessed parrameter */
+    /** @brief a reference to the device model that contains accessed parameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
 
     /** @brief a reference to the parameter accessed by this object */

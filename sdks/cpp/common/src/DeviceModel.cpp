@@ -167,7 +167,7 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
 }
 
 DeviceStream::DeviceStream(catena::DeviceModel &dm) 
-    : deviceModel_{dm}, component_{}, nextType_{ComponentType::BASIC_DEVICE_INFO}{
+    : deviceModel_{dm}, component_{}, nextType_{ComponentType::kBasicDeviceInfo}{
         const Device& device = deviceModel_.get().device();
         paramIter_ = device.params().begin();
         constraintIter_ = device.constraints().begin();
@@ -183,8 +183,8 @@ void DeviceStream::attachClientScopes(std::vector<std::string>& scopes){
     clientScopes_ = &scopes;
 }
 
-bool DeviceStream::hasNext(){
-    return nextType_ != ComponentType::FINISHED;
+bool DeviceStream::hasNext() const {
+    return nextType_ != ComponentType::kFinished;
 }
 
 const catena::DeviceComponent& DeviceStream::next(){
@@ -192,30 +192,30 @@ const catena::DeviceComponent& DeviceStream::next(){
         throw std::runtime_error("Client scopes not attached");
     }
     switch(nextType_){
-        case ComponentType::BASIC_DEVICE_INFO:
+        case ComponentType::kBasicDeviceInfo:
             return basicDeviceInfo_();
             break;
 
-        case ComponentType::PARAM:
+        case ComponentType::kParam:
             return paramComponent_();
             break;
 
-        case ComponentType::CONSTRAINT:
+        case ComponentType::kConstraint:
             return constraintComponent_();
             break;
 
-        case ComponentType::MENU:
+        case ComponentType::kMenu:
             return menuComponent_();
             break;
 
-        case ComponentType::COMMAND:
+        case ComponentType::kCommand:
             return commandComponent_();
             break;
 
-        case ComponentType::LANGUAGE_PACK:
+        case ComponentType::kLanguagePack:
             return languagePackComponent_();
             break;
-        case ComponentType::FINISHED:
+        case ComponentType::kFinished:
             component_.Clear();
             return component_;
             break;
@@ -230,28 +230,28 @@ void DeviceStream::setNextType_(){
     while(paramIter_ != device.params().end()){
         p = deviceModel_.get().param("/" + paramIter_->first);
         if(p->checkScope(*clientScopes_) == true) {
-            nextType_ = ComponentType::PARAM;
+            nextType_ = ComponentType::kParam;
             return; 
         }
         paramIter_++;
     }
     if(constraintIter_ != device.constraints().end()){
-        nextType_ = ComponentType::CONSTRAINT;
+        nextType_ = ComponentType::kConstraint;
         return;
     }
     if(menuGroupIter_ != device.menu_groups().end()){
-        nextType_ = ComponentType::MENU;
+        nextType_ = ComponentType::kMenu;
         return;
     }
     if(commandIter_ != device.commands().end()){
-        nextType_ = ComponentType::COMMAND;
+        nextType_ = ComponentType::kCommand;
         return;
     }
     if(languagePackIter_ != device.language_packs().packs().end()){
-        nextType_ = ComponentType::LANGUAGE_PACK;
+        nextType_ = ComponentType::kLanguagePack;
         return;
     }
-    nextType_ = ComponentType::FINISHED;
+    nextType_ = ComponentType::kFinished;
 }
 
 catena::DeviceComponent& DeviceStream::basicDeviceInfo_(){
@@ -266,6 +266,10 @@ catena::DeviceComponent& DeviceStream::basicDeviceInfo_(){
     basicInfo->add_access_scopes(scope);
     }
     basicInfo->set_default_scope(device.default_scope());
+
+    // right now dashboard does not display menus sent as components
+    // temporary fix: send menu groups as part of basic info
+    *basicInfo->mutable_menu_groups() = device.menu_groups();
 
     setNextType_();
     return component_;

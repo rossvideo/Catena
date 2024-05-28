@@ -232,7 +232,7 @@ class DeviceStream{
      * @brief Check if there is another component in the stream
      * @return true if there is another component in the stream
     */
-    bool hasNext();
+    bool hasNext() const;
 
     /**
      * @brief Get the next component in the stream
@@ -303,13 +303,13 @@ class DeviceStream{
     void setNextType_();
 
     enum class ComponentType {
-      BASIC_DEVICE_INFO,
-      PARAM,
-      CONSTRAINT,
-      MENU,
-      COMMAND,
-      LANGUAGE_PACK,
-      FINISHED
+      kBasicDeviceInfo,
+      kParam,
+      kConstraint,
+      kMenu,
+      kCommand,
+      kLanguagePack,
+      kFinished
     };
     
     ParamIterator paramIter_;
