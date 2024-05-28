@@ -706,6 +706,20 @@ class ParamAccessor {
     void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
             const std::string& parentScope, const std::vector<std::string>& clientScopes) const;
 
+     /**
+     * @brief checks if the src value is the correct type to set this parameter
+     * @param src the value to compare against
+     * @param idx the index into the array
+     * @return true if the src value is the correct type to set this parameter
+     * 
+     * for arrays if idx is not kParamEnd, the src value must be proper type for the array
+     * 
+     * @todo check struct array and variant array kinds
+     * @todo check that structs contain same sub-params
+     * @todo determine how array size should be compared when idx is kParamEnd
+     */
+    bool sameKind(const Value& src, const ParamIndex idx) const;
+
     /** @brief a reference to the device model that contains accessed parameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
 

@@ -503,7 +503,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
         }
 
         Value &value = value_.get();
-        if (src.kind_case() != value.kind_case()) {
+        if (!sameKind(src, idx)) {
             BAD_STATUS("Value type mismatch", catena::StatusCode::INVALID_ARGUMENT);
         }
 
@@ -595,3 +595,19 @@ bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes, con
     return true;
 }
 
+bool ParamAccessor::sameKind(const Value &src, const ParamIndex idx) const {
+    if (!isList() || idx == kParamEnd) {
+        return src.kind_case() == value_.get().kind_case();
+    } else {
+        switch (value_.get().kind_case()) {
+            case catena::Value::KindCase::kInt32ArrayValues:
+                return src.kind_case() == catena::Value::KindCase::kInt32Value;
+            case catena::Value::KindCase::kFloat32ArrayValues:
+                return src.kind_case() == catena::Value::KindCase::kFloat32Value;
+            case catena::Value::KindCase::kStringArrayValues:
+                return src.kind_case() == catena::Value::KindCase::kStringValue;
+            default:
+                return false;
+        }
+    }
+}
