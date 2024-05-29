@@ -33,7 +33,6 @@ import catena.core.parameter.UpdateSubscriptionsPayload;
 import catena.core.parameter.Value;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
 import catena.core.service.GeneralRequest;
-import catena.core.service.GeneralResponse;
 import io.grpc.Context;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
@@ -262,7 +261,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
     }
 
     @Override
-    public void addLanguage(AddLanguagePayload request, StreamObserver<GeneralResponse> responseObserver)
+    public void addLanguage(AddLanguagePayload request, StreamObserver<Empty> responseObserver)
     {
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
