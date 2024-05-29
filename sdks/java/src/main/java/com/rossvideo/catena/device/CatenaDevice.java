@@ -23,7 +23,7 @@ import catena.core.parameter.MultiSetValuePayload;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.UpdateSubscriptionsPayload;
 import catena.core.parameter.Value;
-import catena.core.service.GeneralRequest;
+import catena.core.service.EmptyRequest;
 import io.grpc.stub.StreamObserver;
 
 public interface CatenaDevice
@@ -39,5 +39,5 @@ public interface CatenaDevice
     public default void updateSubscriptions(UpdateSubscriptionsPayload request, StreamObserver<ComponentParam> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
     public default void addLanguage(AddLanguagePayload request, StreamObserver<Empty> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
     public default void languagePackRequest(LanguagePackRequestPayload request, StreamObserver<ComponentLanguagePack> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
-    public default void listLanguages(GeneralRequest request, StreamObserver<LanguageList> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
+    public default void listLanguages(EmptyRequest request, StreamObserver<LanguageList> responseObserver, Map<String, Object> claims) { responseObserver.onError(new UnsupportedOperationException("Not supported")); };
 }
