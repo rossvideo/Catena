@@ -83,10 +83,10 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     private void buildMenus() {
         getMenuManager().createMenuGroup("config", "Config")
         .getNameBuilder().putDisplayStrings("fr", "Configuration")
-        .putDisplayStrings("es", "Configuraci�n");
+        .putDisplayStrings("es", "Configuración");
         getMenuManager().createMenu("config", "config", "Configuration")
         .getNameBuilder().putDisplayStrings("fr", "Configuration")
-        .putDisplayStrings("es", "Configuraci�n");;
+        .putDisplayStrings("es", "Configuración");;
         getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, FLOAT_OID_RANGE, INT_OID, CHOICE_OID});
         getMenuManager().createMenu("config", "clock", "Clock")
             .getNameBuilder().putDisplayStrings("fr", "Horloge")
@@ -188,10 +188,10 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         builder = manager.createParamDescriptor(CLOCK_ON_OID, "Clock On", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
                 "Off", "On"
         }), WidgetHint.CHECKBOX);
-        addParamName(builder, "fr", "Horloge activ�e");
+        addParamName(builder, "fr", "Horloge activée");
         addParamName(builder, "es", "Reloj activado");
         builder = manager.createParamDescriptor(FLOAT_OID, "Floating Point", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build());
-        addParamName(builder, "fr", "Nombre � virgule flottante");
+        addParamName(builder, "fr", "Nombre à virgule flottante");
         addParamName(builder, "es", "Punto flotante");
         
         builder = manager.createParamDescriptor(FLOAT_OID_RANGE, "Float Range Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build(), ConstraintUtils.buildFloatRangeConstraint(0f, 100f, 0.1f));
