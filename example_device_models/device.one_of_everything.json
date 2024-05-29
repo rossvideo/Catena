@@ -112,7 +112,7 @@
         },
         "num_2": {
           "type": "INT32",
-          "template_oid": "/template_oid_example",
+          "template_oid": "/ref_int",
           "name": { "display_strings": { "en": "Int Inside Struct Example 2" } }
         }
       },
@@ -140,6 +140,10 @@
       "template_oid": "/ref_struct/num_1",
       "access_scope": "operate"
     },
+    "template_oid_int_recursive_example": {
+      "template_oid": "/ref_struct/num_1",
+      "access_scope": "operate"
+    }
   },
   "menu_groups": {
     "status": {

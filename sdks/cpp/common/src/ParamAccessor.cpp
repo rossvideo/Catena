@@ -280,7 +280,7 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid, const std::string& scope)
     : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, name_{*std::get<2>(pad)}, constraint_{*std::get<3>(pad)},
     oid_{oid}, id_{std::hash<std::string>{}(oid)}, scope_{scope} {
-    // TODO: call caching function here?
+    // TODO: call devicemodel's caching method here?
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once

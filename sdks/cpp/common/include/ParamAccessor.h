@@ -687,7 +687,6 @@ class ParamAccessor {
     /** @brief a read only reference to the accessed parameter's value object */
     std::reference_wrapper<catena::Value> value_; 
 
-    // TODO: might need to change this later 
     /** @brief the accessed parameter's overriden value object */
     catena::Value local_value_;
 
