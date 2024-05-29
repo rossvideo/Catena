@@ -575,6 +575,9 @@ void ParamAccessor::getParam(catena::DeviceComponent_ComponentParam *dst, std::v
     DeviceModel::const_ParamAccessorData srcData = {&param_.get(), &value_.get()};
     DeviceModel::ParamAccessorData dstData = {param, param->mutable_value()};
     getParam_(srcData, dstData, scope_, clientScopes);
+
+    // needed to make param aware that it's value has changed
+    param->mutable_value(); 
 }
 
 bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes) const {
