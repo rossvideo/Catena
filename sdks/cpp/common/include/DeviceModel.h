@@ -183,6 +183,14 @@ class DeviceModel {
      */
     void importSubParams_(std::filesystem::path &current_folder, ParamsMap &params);
 
+    /**
+     * @brief get template data from the device model
+     *
+     * @param dst [out] destination for the data
+     * @param path [in] template_oid to look up
+     */
+    void checkTemplateData_(ParamAccessorData &dst, const std::string &path);
+
   private:
     catena::Device device_;                  /**< the protobuf device model */
     mutable Mutex mutex_;                    /**< used to mediate access */

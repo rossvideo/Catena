@@ -136,56 +136,25 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
     std::string oid(std::get<std::string>(segment));
 
-    std::string scope = device_.default_scope();
-
     if (!device_.mutable_params()->contains(oid)) {
         std::stringstream msg;
         msg << "param " << std::quoted(oid) << " not found";
         BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
     }
 
-    ParamAccessorData pad;
+    // build the data needed to create the ParamAccessor
     catena::Param &p = device_.mutable_params()->at(oid);
-    std::reference_wrapper<catena::Param> t = std::ref(p);
-    
-    // only look for a template if the param is missing fields
-    if ((!p.has_constraint() || !p.has_name() || !p.has_value()) && p.template_oid() != "") { 
-        catena::Path template_path_(p.template_oid());
-        catena::Path::Segment segment = template_path_.pop_front();
-        if (!std::holds_alternative<std::string>(segment)) {
-            BAD_STATUS("expected template_oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
-        }
-        std::string toid(std::get<std::string>(segment));
-
-        if (!device_.mutable_params()->contains(toid)) {
-            std::stringstream msg;
-            msg << "param is missing fields but template " << std::quoted(toid) << " not found";
-            BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
-        }
-        
-        t = std::ref(device_.mutable_params()->at(toid));
-
-        // TODO: add subparam support for templates
-        if (template_path_.size()) {
-            BAD_STATUS("subparam into template_oid not yet implemented", catena::StatusCode::UNIMPLEMENTED);
-        }
-        // TODO: add recursing into templates
-        if (t.get().template_oid() != "") {
-            BAD_STATUS("template recursion not yet implemented", catena::StatusCode::UNIMPLEMENTED);
-        }
-    } 
-    
-    // TODO: will need to change this logic to take the most recently available fields when adding template recursion
+    ParamAccessorData pad;
     std::get<0>(pad) = &p;
-    std::get<1>(pad) = (t.get().has_value() ? t.get().mutable_value() : &noValue_);
-    std::get<2>(pad) = (t.get().has_name() ? t.get().mutable_name() : &noName_);
-    std::get<3>(pad) = (t.get().has_constraint() ? t.get().mutable_constraint() : &noConstraint_);
-
-    if (p.access_scope() != "") {
-        scope = p.access_scope();
-    }
+    std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
+    std::get<2>(pad) = (p.has_name() ? p.mutable_name() : &noName_);
+    std::get<3>(pad) = (p.has_constraint() ? p.mutable_constraint() : &noConstraint_);
+    std::string scope = p.access_scope() == "" ? device_.default_scope() : p.access_scope();
+    // look for missing field data in the template
+    checkTemplateData_(pad, p.template_oid());
 
     auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr, scope);
+
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {
             std::string oid(std::get<std::string>(path_.pop_front()));
@@ -200,6 +169,37 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
 
     return ans;
+}
+
+void DeviceModel::checkTemplateData_(ParamAccessorData &dst, const std::string &path) {
+    if (path == "") { return; }
+
+    catena::Path template_path_(path);
+    catena::Path::Segment segment = template_path_.pop_front();
+    if (!std::holds_alternative<std::string>(segment)) {
+        BAD_STATUS("expected template_oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
+    }
+    std::string toid(std::get<std::string>(segment));
+
+    if (!device_.mutable_params()->contains(toid)) {
+        std::stringstream msg;
+        msg << "param is missing fields but template " << std::quoted(toid) << " not found";
+        BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
+    }
+    
+    std::reference_wrapper<catena::Param> t = std::ref(device_.mutable_params()->at(toid));
+    if (t.get().has_value()) { std::get<1>(dst) = t.get().mutable_value(); }
+    if (t.get().has_name()) { std::get<2>(dst) = t.get().mutable_name(); }
+    if (t.get().has_constraint()) { std::get<3>(dst) = t.get().mutable_constraint(); }
+
+    // TODO: add subparam support for templates
+    if (template_path_.size()) {
+        BAD_STATUS("subparam into template_oid not yet implemented", catena::StatusCode::UNIMPLEMENTED);
+    }
+    // TODO: add recursing into templates
+    if (t.get().template_oid() != "") {
+        BAD_STATUS("template recursion not yet implemented", catena::StatusCode::UNIMPLEMENTED);
+    }
 }
 
 std::ostream &operator<<(std::ostream &os, const catena::DeviceModel &dm) {

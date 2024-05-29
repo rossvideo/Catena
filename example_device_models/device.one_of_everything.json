@@ -91,27 +91,29 @@
     },
     "ref_int": {
       "type": "INT32",
-      "value": { "int32_value": 1234 }
+      "value": { "int32_value": 1234 },
+      "name": { "display_strings": { "en": "Simple Int Example" } }
     },
     "ref_array": {
       "type": "INT32_ARRAY",
-      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } }
+      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } },
+      "name": { "display_strings": { "en": "Array Example" } }
     },
     "ref_struct": {
       "type": "STRUCT",
-      "name": { "display_strings": { "en": "Top Level Nested Struct Array Example" } },
+      "name": { "display_strings": { "en": "Top Level Struct Example" } },
       "access_scope": "operate",
       "params": {
         "num_1": {
           "type": "INT32",
           "value": { "int32_value": 1 },
-          "name": { "display_strings": { "en": "Int Example" } },
+          "name": { "display_strings": { "en": "Int Inside Struct Example 1" } },
           "access_scope": "configure"
         },
         "num_2": {
           "type": "INT32",
           "template_oid": "/template_oid_example",
-          "name": { "display_strings": { "en": "Int Example" } }
+          "name": { "display_strings": { "en": "Int Inside Struct Example 2" } }
         }
       },
       "value": {
@@ -133,7 +135,11 @@
     "template_oid_struct_example": {
       "template_oid": "/ref_struct",
       "access_scope": "operate"
-    }
+    },
+    "template_oid_int_subparam_example": {
+      "template_oid": "/ref_struct/num_1",
+      "access_scope": "operate"
+    },
   },
   "menu_groups": {
     "status": {
