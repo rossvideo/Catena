@@ -207,6 +207,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         new Connect(this, dm_, true);
         new DeviceRequest(this, dm_, true);
         new ExternalObjectRequest(this, dm_, true);
+        new GetParam(this, dm_, true);
     }
 
     void processEvents() {
@@ -337,24 +338,19 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     new GetValue(service_, dm_, ok);
                     if (ok){
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_()) {
-                            try {
-                                std::vector<std::string> clientScopes = getScopes(context_);
-                                std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
-                                catena::Value ans;  // oh dear, this is a copy refactoring needed!
-                                param->getValue(&ans, req_.element_index(), clientScopes);
-                                responder_.Finish(ans, Status::OK, this);
-                                status_ = CallStatus::kFinish;
-                            } catch (catena::exception_with_status &e) {
-                                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
-                                status_ = CallStatus::kFinish;
-                            } catch (...) {
-                                responder_.FinishWithError(Status::CANCELLED, this);
-                                status_ = CallStatus::kFinish;
-                            }
-                        } else {
+                        try {
+                            std::vector<std::string> clientScopes = getScopes(context_);
+                            std::unique_ptr<catena::ParamAccessor> param = dm_.param(req_.oid());
+                            catena::Value ans;  // oh dear, this is a copy refactoring needed!
+                            param->getValue(&ans, req_.element_index(), clientScopes);
+                            responder_.Finish(ans, Status::OK, this);
                             status_ = CallStatus::kFinish;
+                        } catch (catena::exception_with_status &e) {
+                            responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                            status_ = CallStatus::kFinish;
+                        } catch (...) {
                             responder_.FinishWithError(Status::CANCELLED, this);
+                            status_ = CallStatus::kFinish;
                         }
                     }
                     break;
@@ -375,13 +371,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         }
 
       private:
-        bool validateRequest_() {
-            bool valid = !req_.oid().empty();
-            if (!valid) {
-                std::cout << "GetValue[" << objectId_ << "]Ignoring invalid request: oid is empty\n";
-            }
-            return valid;
-        }
 
         CatenaServiceImpl *service_;
         ServerContext context_;
@@ -425,26 +414,20 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     new SetValue(service_, dm_, ok);
                     if (ok) {
                         context_.AsyncNotifyWhenDone(this);
-                        if (validateRequest_()) {
-                            try {
-                                std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
-                                std::vector<std::string> clientScopes = getScopes(context_);
-                                param->setValue(context_.peer(), req_.value(), req_.element_index(), clientScopes);
-                                responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
-                                status_ = CallStatus::kFinish;
-                            } catch (catena::exception_with_status &e) {
-                                errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
-                                status_ = CallStatus::kFinish;
-                                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
-                            } catch (...) {
-                                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
-                                status_ = CallStatus::kFinish;
-                                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
-                            }
-                            
-                        } else {
+                        try {
+                            std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
+                            std::vector<std::string> clientScopes = getScopes(context_);
+                            param->setValue(context_.peer(), req_.value(), req_.element_index(), clientScopes);
+                            responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
                             status_ = CallStatus::kFinish;
-                            responder_.FinishWithError(Status::CANCELLED, this);
+                        } catch (catena::exception_with_status &e) {
+                            errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
+                            status_ = CallStatus::kFinish;
+                            responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                        } catch (...) {
+                            errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+                            status_ = CallStatus::kFinish;
+                            responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
                         }
                     }
                     break;
@@ -465,13 +448,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         }
 
       private:
-        bool validateRequest_() {
-            bool valid = !req_.oid().empty();
-            if (!valid) {
-                std::cout << "SetValue[" << objectId_ << "] Ignoring invalid request: oid is empty\n";
-            }
-            return valid;
-        }
 
         CatenaServiceImpl *service_;
         ServerContext context_;
@@ -600,7 +576,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     /**
      * @brief CallData class for the DeviceRequest RPC
-     * @todo validate the request and pass it to the device model's streamDevice method
      */
     class DeviceRequest : public CallData {
       public:
@@ -780,6 +755,90 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         int objectId_;
         static int objectCounter_;
     };
+
+     /**
+     * @brief CallData class for the GetParam RPC
+     */
+    class GetParam : public CallData {
+      public:
+        GetParam(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
+            : service_{service}, dm_{dm}, writer_(&context_),
+              status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+            service->registerItem(this);
+            objectId_ = objectCounter_++;
+            proceed(service, ok);  // start the process
+        }
+        ~GetParam() {}
+
+        void proceed(CatenaServiceImpl *service, bool ok) override {
+            std::cout << "GetParam proceed[" << objectId_ << "]: " << timeNow()
+                      << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                      << std::endl;
+            
+            if(!ok){
+                status_ = CallStatus::kFinish;
+            }
+            
+            switch (status_) {
+                case CallStatus::kCreate:
+                    status_ = CallStatus::kProcess;
+                    service_->RequestGetParam(&context_, &req_, &writer_, service_->cq_, service_->cq_,
+                                                   this);
+                    break;
+
+                case CallStatus::kProcess:
+                    new GetParam(service_, dm_, ok);  // to serve other clients
+                    context_.AsyncNotifyWhenDone(this);
+                    clientScopes_ = getScopes(context_);
+                    status_ = CallStatus::kWrite;
+                    // fall thru to start writing
+
+                case CallStatus::kWrite:
+                    if (ok){
+                        try {
+                            std::cout << "sending param component\n";
+                            param_ = dm_.param(req_.oid());
+                            catena::DeviceComponent_ComponentParam ans;
+                            param_->getParam(&ans, clientScopes_);
+                            writer_.Write(ans, this);
+                            // For now we are sending whole param in one go                          
+                            writer_.Finish(Status::OK, this);
+                            status_ = CallStatus::kPostWrite;
+                        } catch (catena::exception_with_status &e) {
+                            writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                            status_ = CallStatus::kFinish;
+                        } catch (...) {
+                            writer_.Finish(Status::CANCELLED, this);
+                            status_ = CallStatus::kFinish;
+                        }
+                    }
+                    break;
+
+                case CallStatus::kPostWrite:
+                    status_ = CallStatus::kFinish;
+                    break;
+
+                case CallStatus::kFinish:
+                    std::cout << "GetParam[" << objectId_ << "] finished\n";
+                    service->deregisterItem(this);
+                    break;
+            }
+        }
+
+      private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        std::vector<std::string> clientScopes_;
+        catena::GetParamPayload req_;
+        catena::PushUpdates res_;
+        ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
+        CallStatus status_;
+        DeviceModel &dm_;
+        std::mutex mtx_;
+        std::unique_ptr<catena::ParamAccessor> param_;
+        int objectId_;
+        static int objectCounter_;
+    };
 };
 
 int CatenaServiceImpl::GetValue::objectCounter_ = 0;
@@ -787,6 +846,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
 int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
+int CatenaServiceImpl::GetParam::objectCounter_ = 0;
 
 
 void statusUpdateExample(DeviceModel *dm)
