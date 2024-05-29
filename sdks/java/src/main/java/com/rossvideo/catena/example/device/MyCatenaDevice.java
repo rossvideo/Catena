@@ -72,7 +72,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     protected void init() {
         super.init();
-        getDeviceBuilder().setAccessScopes(0, "monitor")
+        getDeviceBuilder().addAccessScopes("monitor")
         .setDefaultScope("monitor");
         buildMenus();
         buildParams();
