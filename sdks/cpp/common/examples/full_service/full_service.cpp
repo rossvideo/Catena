@@ -632,6 +632,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
                 case CallStatus::kFinish:
                     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
+                    shutdownSignal.disconnect(shutdownSignalId_);
                     service->deregisterItem(this);
                     break;
             }
