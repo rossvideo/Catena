@@ -487,7 +487,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 std::cout << "Connect[" << objectId_ << "] cancelled\n";
                 status_ = CallStatus::kFinish;
             }
-            
+
+            std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
             switch (status_) {
                 case CallStatus::kCreate:
                     status_ = CallStatus::kProcess;
@@ -522,9 +523,9 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    lock_.lock();
+                    lock.lock();
                     std::cout << "waiting on cv : " << timeNow() << std::endl;
-                    cv_.wait(lock_, [this] { return hasUpdate_; });
+                    cv_.wait(lock, [this] { return hasUpdate_; });
                     std::cout << "cv wait over : " << timeNow() << std::endl;
                     hasUpdate_ = false;
                     if (context_.IsCancelled()) {
@@ -536,7 +537,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                         std::cout << "sending update\n";
                         writer_.Write(res_, this);
                     }
-                    lock_.unlock();
+                    lock.unlock();
                     break;
 
                 case CallStatus::kPostWrite:
@@ -562,7 +563,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         CallStatus status_;
         DeviceModel &dm_;
         std::mutex mtx_;
-        std::unique_lock<std::mutex> lock_{mtx_, std::defer_lock};
         std::condition_variable cv_;
         bool hasUpdate_{false};
         int objectId_;
