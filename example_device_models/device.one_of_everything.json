@@ -12,9 +12,19 @@
     },
     "float_example": {
       "type": "FLOAT32",
-      "value": { "float32_value": 1234.5678},
+      "value": { "float32_value": 12.34},
       "name": { "display_strings": { "en": "Float Example" } },
-      "access_scope": "operate"
+      "access_scope": "operate",
+      "widget": "default",
+      "constraint": {
+        "type": "FLOAT_RANGE",
+        "float_range": {
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "step": 0.1
+        }
+      },
+      "precision": 1
     },
     "string_example": {
       "type": "STRING",
