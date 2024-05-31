@@ -224,6 +224,9 @@ class ParamAccessor {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
+        if (!parent.mutable_params()->contains(fieldName)) {
+            BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
+        }
         Param& childParam = parent.mutable_params()->at(fieldName);
         Value& value = value_.get();
         // If child doesn't have a scope defined, use the parent's scope
@@ -637,6 +640,33 @@ class ParamAccessor {
      */
     void setValue(const std::string& peer, const Value& src, ParamIndex idx, std::vector<std::string>& clientScopes);
 
+    /**
+     * @brief get the parameter as a device component with unauthorized fields removed
+     * @param dst [out] a parameter component with unathorized fields removed
+     * @param clientScopes [in] the scopes of the client requesting the parameter
+     * @throws catena::exception_with_status catena::Status::PERMISSION_DENIED if the client is not authorized
+    */
+    void getParam(catena::DeviceComponent_ComponentParam *dst, std::vector<std::string>& clientScopes) const;
+
+    /**
+     * @brief check if the client is authorized to access the parameter
+     * @param clientScopes the scopes of the client making the request
+     * @return true if the client is authorized, false otherwise
+     * 
+     * @todo add option to check scope for write access
+    */
+    bool checkScope(const std::vector<std::string>& clientScopes) const;
+
+    /**
+     * @brief check if the client is authorized to access the parameter
+     * @param clientScopes the scopes of the client making the request
+     * @param paramScope the scope of the parameter to be accessed
+     * @return true if the client is authorized, false otherwise
+     * 
+     * @todo add option to check scope for write access
+    */
+    bool checkScope(const std::vector<std::string>& clientScopes, const std::string& paramScope) const;
+
     /** 
      * @brief get the parameter's fully qualified object id
     */
@@ -666,6 +696,16 @@ class ParamAccessor {
     }
 
   private:
+    /**
+     * @brief copies the param data skipping unauthorized fields
+     * @param src the source param data
+     * @param dst the destination param data
+     * @param parentScope the scope of the parent param
+     * @param clientScopes the scopes of the client making the request
+    */
+    void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
+            const std::string& parentScope, const std::vector<std::string>& clientScopes) const;
+
      /**
      * @brief checks if the src value is the correct type to set this parameter
      * @param src the value to compare against
@@ -680,7 +720,7 @@ class ParamAccessor {
      */
     bool sameKind(const Value& src, const ParamIndex idx) const;
 
-    /** @brief a reference to the device model that contains accessed parrameter */
+    /** @brief a reference to the device model that contains accessed parameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
 
     /** @brief a reference to the parameter accessed by this object */

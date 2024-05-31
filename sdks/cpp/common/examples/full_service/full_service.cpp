@@ -605,7 +605,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class DeviceRequest : public CallData {
       public:
         DeviceRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
-            : service_{service}, dm_{dm}, writer_(&context_),
+            : service_{service}, dm_{dm}, writer_(&context_), deviceStream_(dm),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             service->registerItem(this);
             objectId_ = objectCounter_++;
@@ -632,18 +632,29 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
                 case CallStatus::kProcess:
                     new DeviceRequest(service_, dm_, ok);  // to serve other clients
                     context_.AsyncNotifyWhenDone(this);
+                    clientScopes_ = getScopes(context_);
+                    deviceStream_.attachClientScopes(clientScopes_);
                     status_ = CallStatus::kWrite;
                     // fall thru to start writing
 
                 case CallStatus::kWrite:
-                    if (ok) {
-                        std::cout << "sending device\n";
-                        bool sendComplete = dm_.streamDevice(&writer_, this);
-                        status_ = sendComplete ? CallStatus::kPostWrite : CallStatus::kWrite;
-                        writer_.Finish(Status::OK, this);
-                    } else {
+                    mtx_.lock();
+                    /** @todo possible race condition for if server is shutdown mid write */
+                    if (!ok){
                         status_ = CallStatus::kFinish;
                     }
+                    // must check status again because it could have changed while waiting for the lock
+                    if (status_ != CallStatus::kFinish) {
+                        if (deviceStream_.hasNext()){
+                            std::cout << "sending device component\n";
+                            writer_.Write(deviceStream_.next(), this);
+                        } else {
+                            std::cout << "device finished sending\n";                               
+                            writer_.Finish(Status::OK, this);
+                            status_ = CallStatus::kFinish;
+                        }
+                    }
+                    mtx_.unlock();
                     break;
 
                 case CallStatus::kPostWrite:
@@ -660,11 +671,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
       private:
         CatenaServiceImpl *service_;
         ServerContext context_;
+        std::vector<std::string> clientScopes_;
         catena::DeviceRequestPayload req_;
         catena::PushUpdates res_;
         ServerAsyncWriter<catena::DeviceComponent> writer_;
+        catena::DeviceStream deviceStream_;
         CallStatus status_;
         DeviceModel &dm_;
+        std::mutex mtx_;
         int objectId_;
         static int objectCounter_;
     };

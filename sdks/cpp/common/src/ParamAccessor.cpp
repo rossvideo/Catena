@@ -497,7 +497,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {  
         if (clientScopes[0] != catena::kAuthzDisabled) {
-            if (std::find(clientScopes.begin(), clientScopes.end(), scope_.append(":w")) == clientScopes.end()) {
+            if (std::find(clientScopes.begin(), clientScopes.end(), scope_ + ":w") == clientScopes.end()) {
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
         }
@@ -525,6 +525,74 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
     } catch (...) {
         throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
     }
+}
+
+void ParamAccessor::getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
+            const std::string& parentScope, const std::vector<std::string>& clientScopes) const {
+    
+    // copy to get basic param info
+    *std::get<0>(dst) = *std::get<0>(src);
+    
+    if (std::get<0>(src)->type() == catena::ParamType::STRUCT) {
+        // clear sub-params and their values because their scope needs to be checked
+        std::get<0>(dst)->clear_params();
+        std::get<1>(dst)->Clear();
+
+        for (auto &it : std::get<0>(src)->params()) {
+            const std::string& scope = it.second.access_scope() == "" ? parentScope : it.second.access_scope();
+
+            if (checkScope(clientScopes, scope)) {
+                const catena::Param* srcSubParam = &it.second;
+                const catena::Value* srcSubValue = &std::get<1>(src)->struct_value().fields().at(it.first).value();
+                DeviceModel::const_ParamAccessorData subSrc = {srcSubParam, srcSubValue};
+                
+                // add a new param field to the dst struct
+                auto newSubParam = std::get<0>(dst)->mutable_params()->insert({it.first, catena::Param{}});
+                catena::Param* dstSubParam = &newSubParam.first->second;
+                // add a new value field to the dst struct
+                auto newSubValue = std::get<1>(dst)->mutable_struct_value()->mutable_fields()->insert({it.first, catena::StructField{}});
+                catena::Value* dstSubValue = newSubValue.first->second.mutable_value();
+                DeviceModel::ParamAccessorData subDst = {dstSubParam, dstSubValue};
+
+                getParam_(subSrc, subDst, scope, clientScopes);
+            }
+        }
+        
+    } else {
+        // copy value
+        *std::get<1>(dst) = *std::get<1>(src);
+    }
+}
+
+void ParamAccessor::getParam(catena::DeviceComponent_ComponentParam *dst, std::vector<std::string>& clientScopes) const {
+    dst->Clear();
+    dst->set_oid(oid_);
+    catena::Param *param = dst->mutable_param();
+    if (!checkScope(clientScopes)) {
+        BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+    }
+
+    DeviceModel::const_ParamAccessorData srcData = {&param_.get(), &value_.get()};
+    DeviceModel::ParamAccessorData dstData = {param, param->mutable_value()};
+    getParam_(srcData, dstData, scope_, clientScopes);
+}
+
+bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes) const {
+    if (clientScopes[0] != catena::kAuthzDisabled) {
+        if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes, const std::string& paramScope) const {
+    if (clientScopes[0] != catena::kAuthzDisabled) {
+        if (std::find(clientScopes.begin(), clientScopes.end(), paramScope) == clientScopes.end()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool ParamAccessor::sameKind(const Value &src, const ParamIndex idx) const {
