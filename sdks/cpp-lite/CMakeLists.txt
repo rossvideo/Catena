@@ -92,10 +92,6 @@ set(proto_stems
   "service"
 )
 
-# identify the target file names that implement the messages and services
-# set a custom rule for each proto source to generate the implementations
-#
-set(sources "")
 foreach(_proto ${proto_stems})
   # preprocess proto files
   add_custom_command(
@@ -105,7 +101,13 @@ foreach(_proto ${proto_stems})
     COMMENT "Preprocessing ${catena_interface}${_proto}.proto"
     VERBATIM
   )
+endforeach()
 
+# identify the target file names that implement the messages and services
+# set a custom rule for each proto source to generate the implementations
+#
+set(sources "")
+foreach(_proto ${proto_stems})
   # put names of generated source & header files for _proto stem
   # into local variable _sources
   #
