@@ -98,15 +98,18 @@ set(proto_stems
   "service"
 )
 
+set(proto_sources "")
 foreach(_proto ${proto_stems})
   # preprocess proto files
   add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto
-    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o ${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto ${catena_interface}${_proto}.proto
-    DEPENDS ${catena_interface}${_proto}.proto
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto"
+    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto" "${catena_interface}${_proto}.proto"
+    DEPENDS "${catena_interface}${_proto}.proto"
     COMMENT "Preprocessing ${catena_interface}${_proto}.proto"
     VERBATIM
   )
+  # keep a list of preprocessed protobuf source files
+  set(proto_sources ${proto_sources} "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto")
 endforeach()
 
 # identify the target file names that implement the messages and services
@@ -117,11 +120,11 @@ foreach(_proto ${proto_stems})
   # put names of generated source & header files for _proto stem
   # into local variable _sources
   #
-  set(proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.cc")
-  set(proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.h")
-  set(proto_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
-  set(proto_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
-  set(_sources "${proto_srcs}" "${proto_hdrs}" "${proto_grpc_srcs}" "${proto_grpc_hdrs}")
+  set(proto_cc "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.cc")
+  set(proto_h "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.h")
+  set(proto_grpc_cc "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
+  set(proto_grpc_h "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
+  set(_sources "${proto_cc}" "${proto_h}" "${proto_grpc_cc}" "${proto_grpc_h}")
 
   # accumulate list of all sources
   set(sources ${sources} ${_sources})
@@ -136,7 +139,7 @@ foreach(_proto ${proto_stems})
     -I "${CMAKE_CURRENT_BINARY_DIR}"
     --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
     "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto"
-    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto")
+    DEPENDS ${proto_sources})
 endforeach()
 
 # the catena interface library
