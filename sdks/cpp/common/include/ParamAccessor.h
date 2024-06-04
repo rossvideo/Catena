@@ -69,6 +69,8 @@ template <typename V> catena::Value::KindCase getKindCase(const V& src);
  */
 static constexpr ParamIndex kParamEnd = ParamIndex(-1);
 
+const std::string kAuthzDisabled("__AUTHZ_DISABLED__");
+
 /**
  * @brief true if v is a list type
  *
@@ -152,7 +154,7 @@ class ParamAccessor {
      * @param pad the data to initialize the param accessor
      */
 
-    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad, const std::string& oid);
+    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad, const std::string& oid, const std::string& scope);
 
     /**
      * @brief ParamAccessor has no default constructor.
@@ -225,8 +227,13 @@ class ParamAccessor {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
+        if (!parent.mutable_params()->contains(fieldName)) {
+            BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
+        }
         Param& childParam = parent.mutable_params()->at(fieldName);
         Value& value = value_.get();
+        // If child doesn't have a scope defined, use the parent's scope
+        const std::string& scope = childParam.access_scope() == "" ? this->scope_ : childParam.access_scope();
         DeviceModel::ParamAccessorData pad{};
         if (value.kind_case() == Value::KindCase::kStructValue) {
             // field is a struct
@@ -243,7 +250,7 @@ class ParamAccessor {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
         }
-        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName});
+        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_, scope});
     }
 
     /**
@@ -267,6 +274,10 @@ class ParamAccessor {
         Param& parent = param_.get();
         const Param& childParam = parent.params().at(fieldName);
         const Value& value = value_.get();
+        std::string scope = childParam.access_scope();
+        if (scope == "") {
+            scope = parent.access_scope();
+        }
         DeviceModel::ParamAccessorData pad{};
         if (value.kind_case() == Value::KindCase::kStructValue) {
             // field is a struct
@@ -285,7 +296,7 @@ class ParamAccessor {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
         }
-        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName});
+        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName, scope});
     }
 
 
@@ -461,7 +472,7 @@ class ParamAccessor {
             } else {
                 setter[getKindCase<V>(src)](&value_.get(), &src);
             }
-            deviceModel_.get().valueSetByService(*this, kParamEnd);
+            deviceModel_.get().pushUpdates.emit(*this, kParamEnd);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -500,7 +511,7 @@ class ParamAccessor {
             auto& setterAt = SetterAt::getInstance();
             static std::vector<ElementType> x;
             setterAt[getKindCase(x)](&value_.get(), &src, idx);
-            deviceModel_.get().valueSetByService(*this, idx);
+            deviceModel_.get().pushUpdates.emit(*this, idx);
         } catch (const catena::exception_with_status& why) {
             std::stringstream err;
             err << "setValue failed: " << why.what() << '\n' << __PRETTY_FUNCTION__ << '\n';
@@ -556,19 +567,31 @@ class ParamAccessor {
      *
      * @param dst [out] destination for the value
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
+     * @param clientScopes [in] the scopes of the client requesting the value
      * 
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
+     * @throws catena::exception_with_status catena::Status::PERMISSION_DENIED if the client is not authorized
      * 
      * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex. If false,
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
     template<bool Threadsafe = true> 
-    void getValue(Value* dst, ParamIndex idx) const {
+    void getValue(Value* dst, ParamIndex idx, std::vector<std::string>& clientScopes) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         try {
+            if (clientScopes.size() == 0){
+                BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+            }
+            
+            if (clientScopes[0] != catena::kAuthzDisabled) {
+                if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
+                    BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+                }
+            }
+
             const Value& value = value_.get();
             if (isList() && idx != kParamEnd) {
                 auto& getterAt = ValueGetterAt::getInstance();
@@ -610,6 +633,7 @@ class ParamAccessor {
      *
      * @param dst [out] destination for the value
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
+     * @param clientScopes [in] the scopes of the client requesting the value
      * 
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
@@ -617,7 +641,34 @@ class ParamAccessor {
      * 
      * Threadsafe - asserts a lock on the DeviceModel's mutex.
      */
-    void setValue(const std::string& peer, const Value& src, ParamIndex idx);
+    void setValue(const std::string& peer, const Value& src, ParamIndex idx, std::vector<std::string>& clientScopes);
+
+    /**
+     * @brief get the parameter as a device component with unauthorized fields removed
+     * @param dst [out] a parameter component with unathorized fields removed
+     * @param clientScopes [in] the scopes of the client requesting the parameter
+     * @throws catena::exception_with_status catena::Status::PERMISSION_DENIED if the client is not authorized
+    */
+    void getParam(catena::DeviceComponent_ComponentParam *dst, std::vector<std::string>& clientScopes) const;
+
+    /**
+     * @brief check if the client is authorized to access the parameter
+     * @param clientScopes the scopes of the client making the request
+     * @return true if the client is authorized, false otherwise
+     * 
+     * @todo add option to check scope for write access
+    */
+    bool checkScope(const std::vector<std::string>& clientScopes) const;
+
+    /**
+     * @brief check if the client is authorized to access the parameter
+     * @param clientScopes the scopes of the client making the request
+     * @param paramScope the scope of the parameter to be accessed
+     * @return true if the client is authorized, false otherwise
+     * 
+     * @todo add option to check scope for write access
+    */
+    bool checkScope(const std::vector<std::string>& clientScopes, const std::string& paramScope) const;
 
     /** 
      * @brief get the parameter's fully qualified object id
@@ -655,7 +706,31 @@ class ParamAccessor {
     }
 
   private:
-    /** @brief a reference to the device model that contains accessed parrameter */
+    /**
+     * @brief copies the param data skipping unauthorized fields
+     * @param src the source param data
+     * @param dst the destination param data
+     * @param parentScope the scope of the parent param
+     * @param clientScopes the scopes of the client making the request
+    */
+    void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
+            const std::string& parentScope, const std::vector<std::string>& clientScopes) const;
+
+     /**
+     * @brief checks if the src value is the correct type to set this parameter
+     * @param src the value to compare against
+     * @param idx the index into the array
+     * @return true if the src value is the correct type to set this parameter
+     * 
+     * for arrays if idx is not kParamEnd, the src value must be proper type for the array
+     * 
+     * @todo check struct array and variant array kinds
+     * @todo check that structs contain same sub-params
+     * @todo determine how array size should be compared when idx is kParamEnd
+     */
+    bool sameKind(const Value& src, const ParamIndex idx) const;
+
+    /** @brief a reference to the device model that contains accessed parameter */
     std::reference_wrapper<catena::DeviceModel> deviceModel_;
 
     /** @brief a reference to the parameter accessed by this object */
@@ -666,6 +741,9 @@ class ParamAccessor {
 
     /** @brief the accessed parameter's fully qualified object id*/
     std::string oid_;
+
+    /** @brief the accessed parameter's access scope */
+    std::string scope_;
 
     /** 
      * @brief a unique id (probability of non-uniqueness is approx 1:10^19). 

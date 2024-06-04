@@ -70,7 +70,10 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         init();
     }
     
-    private void init() {
+    protected void init() {
+        super.init();
+        getDeviceBuilder().addAccessScopes("monitor")
+        .setDefaultScope("monitor");
         buildMenus();
         buildParams();
         buildCommands();
@@ -80,10 +83,10 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     private void buildMenus() {
         getMenuManager().createMenuGroup("config", "Config")
         .getNameBuilder().putDisplayStrings("fr", "Configuration")
-        .putDisplayStrings("es", "Configuraci�n");
+        .putDisplayStrings("es", "Configuración");
         getMenuManager().createMenu("config", "config", "Configuration")
         .getNameBuilder().putDisplayStrings("fr", "Configuration")
-        .putDisplayStrings("es", "Configuraci�n");;
+        .putDisplayStrings("es", "Configuración");;
         getMenuManager().addParamsMenu("config", "config", new String[] {FLOAT_OID, FLOAT_OID_RANGE, INT_OID, CHOICE_OID});
         getMenuManager().createMenu("config", "clock", "Clock")
             .getNameBuilder().putDisplayStrings("fr", "Horloge")
@@ -158,17 +161,25 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         ParamManager manager = getParamManager();
         Param.Builder builder = manager.createParamDescriptor(CATENA_DISPLAY_NAME, "Display Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Display Name").build(), null, WidgetHint.TEXT_DISPLAY)
             .addOidAliases("0xFF01");
-        
         addParamName(builder, "fr", "Nom de l'appareil visible");
+        addParamName(builder, "es", "Nombre para mostrar");
         
-        manager.createParamDescriptor(CATENA_PRODUCT_NAME, "Product Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Example Device").build())
+        builder = manager.createParamDescriptor(CATENA_PRODUCT_NAME, "Product Name", ParamType.STRING, true, Value.newBuilder().setStringValue("Example Device").build())
         .addOidAliases("0x105");
+        addParamName(builder, "fr", "Nom du produit");
+        addParamName(builder, "es", "Nombre del producto");
+
         
-        manager.createParamDescriptor(CATENA_ICON, "Product Icon", ParamType.STRING, true, Value.newBuilder().setStringValue("eo://icon.png").build())
+        builder = manager.createParamDescriptor(CATENA_ICON, "Product Icon", ParamType.STRING, true, Value.newBuilder().setStringValue("eo://icon.png").build())
             .addOidAliases("0xFF0C");
+        addParamName(builder, "fr", "Icône du produit");
+        addParamName(builder, "es", "Icono de producto");
         
         
-        manager.createParamDescriptor(STRUCT_OID, "Serial Number", ParamType.STRING, true, Value.newBuilder().setStringValue("12-345-6989").build(), null, WidgetHint.TEXT_DISPLAY);
+        builder = manager.createParamDescriptor(STRUCT_OID, "Serial Number", ParamType.STRING, true, Value.newBuilder().setStringValue("12-345-6989").build(), null, WidgetHint.TEXT_DISPLAY);
+        addParamName(builder, "fr", "Numéro de série");
+        addParamName(builder, "es", "Número de serie");
+
         builder = manager.createParamDescriptor(DATE_AND_TIME_OID, "Date and Time", ParamType.STRING, true, Value.newBuilder().setStringValue(getTime()).build(), null, WidgetHint.LABEL);
         addParamName(builder, "fr", "Date et heure");
         addParamName(builder, "es", "Fecha y hora");
@@ -177,19 +188,25 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         builder = manager.createParamDescriptor(CLOCK_ON_OID, "Clock On", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
                 "Off", "On"
         }), WidgetHint.CHECKBOX);
-        addParamName(builder, "fr", "Horloge activ�e");
+        addParamName(builder, "fr", "Horloge activée");
         addParamName(builder, "es", "Reloj activado");
         builder = manager.createParamDescriptor(FLOAT_OID, "Floating Point", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build());
-        addParamName(builder, "fr", "Nombre � virgule flottante");
+        addParamName(builder, "fr", "Nombre à virgule flottante");
         addParamName(builder, "es", "Punto flotante");
         
-        manager.createParamDescriptor(FLOAT_OID_RANGE, "Float Range Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build(), ConstraintUtils.buildFloatRangeConstraint(0f, 100f, 0.1f));
+        builder = manager.createParamDescriptor(FLOAT_OID_RANGE, "Float Range Parameter", ParamType.FLOAT32, false, Value.newBuilder().setFloat32Value(0f).build(), ConstraintUtils.buildFloatRangeConstraint(0f, 100f, 0.1f));
+        addParamName(builder, "fr", "Paramètre de plage flottante");
+        addParamName(builder, "es", "Parámetro de rango de flotación");
+
         builder = manager.createParamDescriptor(INT_OID, "Int Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build());
         addParamName(builder, "fr", "Nombre entier");
         addParamName(builder, "es", "Entero");
-        manager.createParamDescriptor(CHOICE_OID, "Choice Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint(new String[] {
+
+        builder = manager.createParamDescriptor(CHOICE_OID, "Choice Parameter", ParamType.INT32, false, Value.newBuilder().setInt32Value(0).build(), ConstraintUtils.buildIntChoiceConstraint("en", new String[] {
                         "Choice 1", "Choice 2", "Choice 3"
                 }));
+        addParamName(builder, "fr", "Paramètre de choix");
+        addParamName(builder, "es", "Parámetro de elección");
     }
     
     private PolyglotText.Builder addParamName(Param.Builder builder, String lang, String name)

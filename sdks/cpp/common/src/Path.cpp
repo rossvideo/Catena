@@ -26,6 +26,13 @@ catena::Path::Path(const std::string &path) : segments_{} {
     // /string_with_~0_~1_escaped_chars -- string_with_~_/_escaped_chars
     // /291834719 -- just numbers
     //
+
+    if (path.empty()) {
+        std::stringstream why;
+        why << __PRETTY_FUNCTION__ << "\npath is empty";
+        throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
+    }
+
     std::regex path_regex("((\\/-{1})|(\\/([\\w]|~[01])*))*");
     if (!std::regex_match(path, path_regex))  {
         std::stringstream why;
