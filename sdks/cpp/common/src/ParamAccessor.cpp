@@ -278,9 +278,7 @@ std::string applyStringConstraint(catena::Param &param, std::string v) {
 
 
 ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pad, const std::string& oid, const std::string& scope)
-    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, name_{*std::get<2>(pad)}, constraint_{*std::get<3>(pad)},
-    oid_{oid}, id_{std::hash<std::string>{}(oid)}, scope_{scope} {
-    // TODO: call devicemodel's caching method here?
+    : deviceModel_{dm}, param_{*std::get<0>(pad)}, value_{*std::get<1>(pad)}, oid_{oid}, id_{std::hash<std::string>{}(oid)}, scope_{scope} {
     static bool initialized = false;
     if (!initialized) {
         initialized = true;  // so we only do this once
@@ -480,12 +478,10 @@ template <typename V> catena::Value::KindCase getKindCase(const V& src) {
 
 void ParamAccessor::setValue(const std::string& peer, const Value &src) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
-    try {;
-        Value &value = local_value_;
+    try {
+        Value &value = value_.get();
         auto& setter = ValueSetter::getInstance();
-        setter[value_.get().kind_case()](value, src);
-        // update this param's visible value to the overridden value
-        value_ = std::ref(local_value_);
+        setter[value.kind_case()](value, src);
         deviceModel_.get().valueSetByClient.emit(*this, -1, peer);
         deviceModel_.get().pushUpdates.emit(*this, -1);
     } catch (const catena::exception_with_status& why) {
@@ -496,7 +492,6 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
         throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
     }
 }
-
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx, std::vector<std::string>& clientScopes) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {  
@@ -505,22 +500,19 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
         }
-
-        Value &value = local_value_;
-        if (src.kind_case() != value_.get().kind_case()) {
+        Value &value = value_.get();
+        if (src.kind_case() != value.kind_case()) {
             BAD_STATUS("Value type mismatch", catena::StatusCode::INVALID_ARGUMENT);
         }
         
         if (isList() && idx != kParamEnd) {
             // update array element
             auto& setterAt = ValueSetterAt::getInstance();
-            setterAt[value_.get().kind_case()](value, src, idx);
+            setterAt[value.kind_case()](value, src, idx);
         } else {
             // update scalar value or whole array
             value.CopyFrom(src);
         }
-        // update this param's visible value to the overridden value
-        value_ = std::ref(local_value_);
         deviceModel_.get().valueSetByClient.emit(*this, idx, peer);
         deviceModel_.get().pushUpdates.emit(*this, idx);
     } catch (const catena::exception_with_status& why) {

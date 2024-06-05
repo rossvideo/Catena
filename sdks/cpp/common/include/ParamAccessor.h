@@ -247,10 +247,7 @@ class ParamAccessor {
         }
         std::get<0>(pad) = &childParam;
         std::get<1>(pad) = v ? v : &DeviceModel::noValue_;
-        std::get<2>(pad) = childParam.has_name() ? childParam.mutable_name() : &DeviceModel::noName_;
-        std::get<3>(pad) = childParam.has_constraint() ? childParam.mutable_constraint() : &DeviceModel::noConstraint_;
         // look for missing field data in the template
-        deviceModel_.get().checkTemplateData_(pad, childParam.template_oid());
 
         return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_, scope});
     }
@@ -297,10 +294,6 @@ class ParamAccessor {
         // yes the const_cast is gross, but ok because we re-apply constness on return
         std::get<0>(pad) = const_cast<Param*>(&childParam);
         std::get<1>(pad) = v ? const_cast<Value*>(v) : &DeviceModel::noValue_;
-        std::get<2>(pad) = childParam.has_name() ? const_cast<PolyglotText*>(&childParam.name()) : &DeviceModel::noName_;
-        std::get<3>(pad) = childParam.has_constraint() ? const_cast<Constraint*>(&childParam.constraint()) : &DeviceModel::noConstraint_;
-        // look for missing field data in the template
-        deviceModel_.get().checkTemplateData_(pad, childParam.template_oid());
 
         return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName, scope});
     }
@@ -686,15 +679,6 @@ class ParamAccessor {
 
     /** @brief a read only reference to the accessed parameter's value object */
     std::reference_wrapper<catena::Value> value_; 
-
-    /** @brief the accessed parameter's overriden value object */
-    catena::Value local_value_;
-
-    /** @brief a read only reference to the accessed parameter's name object */
-    std::reference_wrapper<const catena::PolyglotText> name_;
-
-    /** @brief a read only reference to the accessed parameter's contraint object */
-    std::reference_wrapper<const catena::Constraint> constraint_;
 
     /** @brief the accessed parameter's fully qualified object id*/
     std::string oid_;
