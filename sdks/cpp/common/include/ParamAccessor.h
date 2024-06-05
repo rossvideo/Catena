@@ -247,7 +247,6 @@ class ParamAccessor {
         }
         std::get<0>(pad) = &childParam;
         std::get<1>(pad) = v ? v : &DeviceModel::noValue_;
-        // look for missing field data in the template
 
         return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_, scope});
     }
