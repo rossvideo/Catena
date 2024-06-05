@@ -157,7 +157,8 @@
         "latitude": {
           "type": "FLOAT32",
           "name": {  "display_strings": {  "en": "Latitude" } },
-          "value": { "float32_value": 37.7749 }
+          "value": { "float32_value": 37.7749 },
+          "precision": 2
         },
         "longitude": {
           "type": "FLOAT32",
