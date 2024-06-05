@@ -84,7 +84,7 @@ jobs:
         languages: ${{ matrix.language }}
         debug: true
 
-    - name: Scan with CodeQL
+    - name: Scan cpp sdk with CodeQL
       run: |
         echo "Run, Build Application using Ninja"
         cd ~
@@ -93,6 +93,16 @@ jobs:
         cd build
         cmake -DUNIT_TESTING=OFF ..
         make
+    
+    - name: Scan cpp-lite sdk with CodeQL
+      run: |
+          echo "Run, Build Application using Ninja"
+          cd ~
+          cd ./work/Catena/Catena/sdks/cpp-lite
+          mkdir -p build
+          cd build
+          cmake ..
+          make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

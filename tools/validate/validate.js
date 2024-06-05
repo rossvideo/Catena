@@ -53,7 +53,7 @@ if (!fs.existsSync(testfile)) {
 const schemaName = path.parse(testfile).name.split('.')[0];
 
 // read the schema definition file
-const schemaFilename = './schema/catena.schema.json';
+const schemaFilename = '../../schema/catena.schema.json';
 if (!fs.existsSync(schemaFilename)) {
     console.log(`Cannot open schema file at: ${schemaFilename}`);
     process.exit(1);
