@@ -51,6 +51,7 @@ struct FakeLock {
 };
 
 class ParamAccessor;  // forward reference
+class DeviceStream;   // forward reference
 
 /**
  * @brief type for indexing into parameters
@@ -67,6 +68,7 @@ using ParamIndex = uint32_t;
  */
 class DeviceModel {
     friend ParamAccessor; /**< so this class can access the DeviceModel's mutex */
+    friend DeviceStream;
 
   public:
     /**
@@ -83,6 +85,7 @@ class DeviceModel {
      * can be referenced and not only defined in-line.
      */
     using ParamAccessorData = std::tuple<catena::Param *, catena::Value *>;
+    using const_ParamAccessorData = std::tuple<const catena::Param *, const catena::Value *>;
 
     /**
      * @brief Params Map
@@ -146,12 +149,11 @@ class DeviceModel {
 
     /**
 
-     * @brief sends device info to client via writer
+     * @brief sends device info as a single message to client via writer
      * @param writer the writer to send the device info to
      * @param tag the tag to associate with the stream
-     * @return true if the device model was sent, false is there's more to come.
      */
-    bool streamDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag);
+    void sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag);
 
     /**
      * @brief Get the Param object at path
@@ -211,6 +213,124 @@ class DeviceModel {
     *  signal to share value changes to all connected clients with proper authorization
     */
     vdk::signal<void(const ParamAccessor&, ParamIndex idx)> pushUpdates;
+};
+
+/**
+ * @brief Breaks device model into components that can be streamed to a client
+*/
+class DeviceStream{
+  public:
+    /**
+     * @brief Construct a new Device Stream object
+     * @param dm the device model to stream
+    */
+    DeviceStream(DeviceModel &dm);
+
+    /**
+     * @brief Attach client scopes to the stream
+     * @param scopes the access scopes of the client requesting the device model
+     * 
+     * used to filter out components that the client does not have access to
+     * 
+     * must be called before calling next()
+    */
+    void attachClientScopes(std::vector<std::string>& scopes);
+
+    /**
+     * @brief Check if there is another component in the stream
+     * @return true if there is another component in the stream
+    */
+    bool hasNext() const;
+
+    /**
+     * @brief Get the next component in the stream
+     * @throws std::runtime_error if called before attachClientScopes
+     * @return const catena::DeviceComponent& the next component in the stream
+     * 
+     * skips components that the client does not have access to
+     * 
+     * Generally will return components in the following order:
+     * 1. Basic Device Info
+     * 2. Params
+     * 3. Constraints
+     * 4. Menus
+     * 5. Commands
+     * 6. Language Packs
+     * The order within these categories is not guaranteed
+    */
+    const catena::DeviceComponent& next();
+
+  private:
+    using ParamIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
+    using ConstraintIterator = google::protobuf::Map<std::string, catena::Constraint>::const_iterator;
+    using MenuGroupIterator = google::protobuf::Map<std::string, catena::MenuGroup>::const_iterator;
+    using MenuIterator = google::protobuf::Map<std::string, catena::Menu>::const_iterator;
+    using CommandIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
+    using LanguagePackIterator = google::protobuf::Map<std::string, catena::LanguagePack>::const_iterator;
+
+    /** 
+     * @brief creates deviceComponent with basic device info
+     * @return catena::DeviceComponent& the basic device info component
+    */
+    catena::DeviceComponent& basicDeviceInfo_();
+    
+    /** 
+     * @brief creates deviceComponent with param info
+     * @return catena::DeviceComponent& the next param component
+    */
+    catena::DeviceComponent& paramComponent_();
+
+    /** 
+     * @brief creates deviceComponent with constraint info
+     * @return catena::DeviceComponent& the next constraint component
+    */
+    catena::DeviceComponent& constraintComponent_();
+
+    /** 
+     * @brief creates deviceComponent with menu info
+     * @return catena::DeviceComponent& the next menu component
+    */
+    catena::DeviceComponent& menuComponent_();
+
+    /** 
+     * @brief creates deviceComponent with command info
+     * @return catena::DeviceComponent& the next command component
+    */
+    catena::DeviceComponent& commandComponent_();
+
+    /** 
+     * @brief creates deviceComponent with language pack info
+     * @return catena::DeviceComponent& the next language pack component
+    */
+    catena::DeviceComponent& languagePackComponent_();
+
+    /** 
+     * @brief sets nextType_ to the next component type
+     * will skip components that the client does not have access to
+    */
+    void setNextType_();
+
+    enum class ComponentType {
+      kBasicDeviceInfo,
+      kParam,
+      kConstraint,
+      kMenu,
+      kCommand,
+      kLanguagePack,
+      kFinished
+    };
+    
+    ParamIterator paramIter_;
+    ConstraintIterator constraintIter_;
+    MenuGroupIterator menuGroupIter_;
+    MenuIterator menuIter_;
+    CommandIterator commandIter_;
+    LanguagePackIterator languagePackIter_;
+
+    std::reference_wrapper<DeviceModel> deviceModel_;
+    ComponentType nextType_;
+    DeviceComponent component_;
+    std::vector<std::string>* clientScopes_ = nullptr;
 };
 
 }  // namespace catena

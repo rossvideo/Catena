@@ -1,7 +1,13 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".."
+		},
+		{
+			"path": "../sdks/cpp"
+		},
+		{
+			"path": "../sdks/cpp-lite"
 		}
 	],
 	"settings": {
@@ -78,7 +84,22 @@
 			"type_traits": "cpp",
 			"typeindex": "cpp",
 			"thread": "cpp",
-			"condition_variable": "cpp"
+			"condition_variable": "cpp",
+			"semaphore": "cpp",
+			"bit": "cpp",
+			"*.tcc": "cpp",
+			"chrono": "cpp",
+			"compare": "cpp",
+			"concepts": "cpp",
+			"functional": "cpp",
+			"iterator": "cpp",
+			"memory": "cpp",
+			"memory_resource": "cpp",
+			"random": "cpp",
+			"utility": "cpp",
+			"stop_token": "cpp",
+			"execution": "cpp",
+			"numbers": "cpp"
 		}
 	}
 }
