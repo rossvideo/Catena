@@ -119,7 +119,7 @@ void catena::DeviceModel::sendDevice(grpc::ServerAsyncWriter<::catena::DeviceCom
     auto x = dc.release_device();
 }
 
-// for parameters that do not have values
+// for parameters that do not have the corresponding fields
 catena::Value catena::DeviceModel::noValue_;
 
 std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jptr) {
@@ -134,22 +134,32 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
     std::string oid(std::get<std::string>(segment));
 
-    std::string scope = device_.default_scope();
-
     if (!device_.mutable_params()->contains(oid)) {
         std::stringstream msg;
         msg << "param " << std::quoted(oid) << " not found";
         BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
     }
 
-    ParamAccessorData pad;
+    // build the data needed to create the ParamAccessor
     catena::Param &p = device_.mutable_params()->at(oid);
+    // look for missing fields in the template
+    checkTemplateData_(p, p.template_oid());
+    if (p.params_size() > 0) {
+        for (auto &[child_oid, child_param] : *p.mutable_params()) {
+            checkTemplateData_(child_param, child_param.template_oid());
+            // update the parent's value
+            catena::StructField field;
+            field.mutable_value()->CopyFrom(child_param.value());
+            p.mutable_value()->mutable_struct_value()->mutable_fields()->insert({child_oid, field});
+        }
+    }
+    ParamAccessorData pad;
     std::get<0>(pad) = &p;
     std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
-    if (p.access_scope() != "") {
-        scope = p.access_scope();
-    }
+    std::string scope = p.access_scope() == "" ? device_.default_scope() : p.access_scope();
+
     auto ans = std::make_unique<ParamAccessor>(*this, pad, jptr, scope);
+
     while (path_.size()) {
         if (std::holds_alternative<std::string>(path_.front())) {
             std::string oid(std::get<std::string>(path_.pop_front()));
@@ -164,6 +174,103 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
 
     return ans;
+}
+
+void DeviceModel::checkTemplateData_(catena::Param &p, const std::string &path) {
+    if (path.empty()) { return; }
+
+    catena::Path template_path_(path);
+    catena::Path::Segment segment = template_path_.pop_front();
+    if (!std::holds_alternative<std::string>(segment)) {
+        BAD_STATUS("expected template_oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
+    }
+    std::string toid(std::get<std::string>(segment));
+
+    if (!device_.mutable_params()->contains(toid)) {
+        std::stringstream msg;
+        msg << "template " << std::quoted(toid) << " not found";
+        BAD_STATUS(msg.str(), catena::StatusCode::NOT_FOUND);
+    }
+    
+    // follow the template_oid as far as it goes
+    std::reference_wrapper<catena::Param> t = std::ref(device_.mutable_params()->at(toid));
+    while (template_path_.size()) {
+        if (std::holds_alternative<std::string>(template_path_.front())) {
+            if (t.get().value().kind_case() != Value::KindCase::kStructValue && 
+                t.get().value().kind_case() != Value::KindCase::kStructVariantValue) {
+                BAD_STATUS("cannot subparam into non-struct or variant type for template_oid", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            std::string toid(std::get<std::string>(template_path_.pop_front()));
+            t = std::ref(t.get().mutable_params()->at(toid));
+        } else if (std::holds_alternative<std::deque<std::string>::size_type>(template_path_.front())) {
+            // rebind t to the indexed param from the array when implementing indexing
+            BAD_STATUS("indexing into template_oid not yet implemented", catena::StatusCode::UNIMPLEMENTED);
+        } else {
+            BAD_STATUS("expected oid or index in template_oid", catena::StatusCode::INVALID_ARGUMENT);
+        }
+    }
+
+    // deep copy data into missing fields if this template has them
+    // simple typed fields
+    if (t.get().read_only()) {
+        p.set_read_only(t.get().read_only());
+    }
+    if (t.get().response()) {
+        p.set_response(t.get().response());
+    }
+    if (t.get().minimal_set()) {
+        p.set_minimal_set(t.get().minimal_set());
+    }
+    if (t.get().stateless()) {
+        p.set_stateless(t.get().stateless());
+    }
+    if (p.precision() == 0 && t.get().precision() != 0) {
+        p.set_precision(t.get().precision());
+    }  
+    if (p.max_length() == 0 && t.get().max_length() != 0) {
+        p.set_max_length(t.get().max_length());
+    }
+    if (p.widget().empty() && !t.get().widget().empty()) {
+        p.set_widget(t.get().widget());
+    }
+    if (p.access_scope().empty() && !t.get().access_scope().empty()) {
+        p.set_access_scope(t.get().access_scope());
+    }
+    if (p.type() == catena::ParamType::UNDEFINED && t.get().type() != catena::ParamType::UNDEFINED) {
+        p.set_type(t.get().type());
+    }
+    // message fields
+    if (!p.has_name() && t.get().has_name()) {
+        *p.mutable_name() = t.get().name();
+    }
+    if (!p.has_value() && t.get().has_value()) {
+        *p.mutable_value() = t.get().value();
+    }
+    if (!p.has_constraint() && t.get().has_constraint()) {
+        *p.mutable_constraint() = t.get().constraint();
+    }
+    if (!p.has_help() && t.get().has_help()) {
+        *p.mutable_help() = t.get().help();
+    }
+    if (!p.has_import() && t.get().has_import()) {
+        *p.mutable_import() = t.get().import();
+    }
+    // fields of data structures
+    if (p.params().empty() && !t.get().params().empty()) {
+        *p.mutable_params() = t.get().params();
+    }
+    if (p.client_hints().empty() && !t.get().client_hints().empty()) {
+        *p.mutable_client_hints() = t.get().client_hints();
+    }
+    if (p.commands().empty() && !t.get().commands().empty()) {
+        *p.mutable_commands() = t.get().commands();
+    }
+    if (p.oid_aliases().empty() && !t.get().oid_aliases().empty()) {
+        *p.mutable_oid_aliases() = t.get().oid_aliases();
+    }
+    
+    // go deeper if this template has a template_oid
+    checkTemplateData_(p, t.get().template_oid());
 }
 
 DeviceStream::DeviceStream(catena::DeviceModel &dm) 

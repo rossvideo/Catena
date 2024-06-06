@@ -89,6 +89,56 @@
           }
         }
       }
+    },
+    "ref_int": {
+      "type": "INT32",
+      "value": { "int32_value": 1234 },
+      "name": { "display_strings": { "en": "Simple Int Example" } }
+    },
+    "ref_array": {
+      "type": "INT32_ARRAY",
+      "value": { "int32_array_values": { "ints": [1, 2, 3, 4] } },
+      "name": { "display_strings": { "en": "Array Example" } }
+    },
+    "ref_struct": {
+      "type": "STRUCT",
+      "name": { "display_strings": { "en": "Top Level Struct Example" } },
+      "access_scope": "operate",
+      "params": {
+        "num_1": {
+          "type": "INT32",
+          "value": { "int32_value": 1 },
+          "name": { "display_strings": { "en": "Int Inside Struct Example 1" } },
+          "access_scope": "configure"
+        },
+        "num_2": {
+          "type": "INT32",
+          "template_oid": "/ref_int",
+          "name": { "display_strings": { "en": "Int Inside Struct Example 2" } }
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "num_1": { "value": { "int32_value": 1 } }
+          }
+        }
+      }
+    },
+    "template_oid_int_example": {
+      "template_oid": "/ref_int"
+    },
+    "template_oid_array_example": {
+      "template_oid": "/ref_array"
+    },
+    "template_oid_struct_example": {
+      "template_oid": "/ref_struct"
+    },
+    "template_oid_int_subparam_example": {
+      "template_oid": "/ref_struct/num_1"
+    },
+    "template_oid_int_recursive_example": {
+      "template_oid": "/ref_struct/num_2"
     }
   },
   "menu_groups": {

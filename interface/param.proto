@@ -133,7 +133,7 @@ message Param {
   Import import = 16;
 
   /* Additional OIDs represented by this parameter - used to allow a client to locate a parameter that may have been moved or renamed.
-   * The aliases must be fully-qualitfied. */
+   * The aliases must be fully-qualified. */
   repeated string oid_aliases = 17;
 
   /* When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device */

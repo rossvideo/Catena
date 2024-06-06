@@ -220,7 +220,8 @@ class ParamAccessor {
      *
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
-    template <bool Threadsafe> std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
+    template <bool Threadsafe>
+    std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
@@ -231,22 +232,25 @@ class ParamAccessor {
         Value& value = value_.get();
         // If child doesn't have a scope defined, use the parent's scope
         const std::string& scope = childParam.access_scope() == "" ? this->scope_ : childParam.access_scope();
-        DeviceModel::ParamAccessorData pad{};
+
+        DeviceModel::ParamAccessorData pad;
+        Value* v;
         if (value.kind_case() == Value::KindCase::kStructValue) {
             // field is a struct
             if (!value.struct_value().fields().contains(fieldName)) {
                 BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
             }
-            Value* v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
-            pad = {&childParam, v};
+            v = value.mutable_struct_value()->mutable_fields()->at(fieldName).mutable_value();
         } else if (value.kind_case() == Value::KindCase::kStructVariantValue) {
             // field is a variant
-            Value* v = value.mutable_struct_variant_value()->mutable_value();
-            pad = {&childParam, v};
+            v = value.mutable_struct_variant_value()->mutable_value();
         } else {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
         }
+        std::get<0>(pad) = &childParam;
+        std::get<1>(pad) = v ? v : &DeviceModel::noValue_;
+
         return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_, scope});
     }
 
@@ -271,28 +275,28 @@ class ParamAccessor {
         Param& parent = param_.get();
         const Param& childParam = parent.params().at(fieldName);
         const Value& value = value_.get();
-        std::string scope = childParam.access_scope();
-        if (scope == "") {
-            scope = parent.access_scope();
-        }
-        DeviceModel::ParamAccessorData pad{};
+        // If child doesn't have a scope defined, use the parent's scope
+        const std::string& scope = childParam.access_scope() == "" ? this->scope_ : childParam.access_scope();
+        
+        DeviceModel::ParamAccessorData pad;
+        const Value* v;
         if (value.kind_case() == Value::KindCase::kStructValue) {
             // field is a struct
-            // yes the const_cast is gross, but ok because we re-apply constness on return
             if (!value.struct_value().fields().contains(fieldName)) {
                 BAD_STATUS("subParam called on non-existent field", catena::StatusCode::INVALID_ARGUMENT);
             }
-            const Value& v = value.struct_value().fields().at(fieldName).value();
-            pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+            v = &value.struct_value().fields().at(fieldName).value();
         } else if (value.kind_case() == Value::KindCase::kStructVariantValue) {
             // field is a variant
-            // yes the const_cast is gross, but ok because we re-apply constness on return
-            const Value& v = value.struct_variant_value().value();
-            pad = {const_cast<Param*>(&childParam), const_cast<Value*>(&v)};
+            v = &value.struct_variant_value().value();
         } else {
             // field is a simple or simple array type
             BAD_STATUS("subParam called on non-struct or variant type", catena::StatusCode::INVALID_ARGUMENT);
         }
+        // yes the const_cast is gross, but ok because we re-apply constness on return
+        std::get<0>(pad) = const_cast<Param*>(&childParam);
+        std::get<1>(pad) = v ? const_cast<Value*>(v) : &DeviceModel::noValue_;
+
         return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName, scope});
     }
 
@@ -726,8 +730,8 @@ class ParamAccessor {
     /** @brief a reference to the parameter accessed by this object */
     std::reference_wrapper<catena::Param> param_;
 
-    /** @brief a reference to the accessed parameter's value object */
-    std::reference_wrapper<catena::Value> value_;
+    /** @brief a read only reference to the accessed parameter's value object */
+    std::reference_wrapper<catena::Value> value_; 
 
     /** @brief the accessed parameter's fully qualified object id*/
     std::string oid_;

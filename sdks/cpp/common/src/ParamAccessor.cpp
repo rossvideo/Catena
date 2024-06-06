@@ -492,7 +492,6 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
         throw catena::exception_with_status(__PRETTY_FUNCTION__, catena::StatusCode::UNKNOWN);
     }
 }
-
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx, std::vector<std::string>& clientScopes) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {  
@@ -501,12 +500,10 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamInd
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
         }
-
         Value &value = value_.get();
         if (!sameKind(src, idx)) {
             BAD_STATUS("Value type mismatch", catena::StatusCode::INVALID_ARGUMENT);
         }
-
         
         if (isList() && idx != kParamEnd) {
             // update array element
