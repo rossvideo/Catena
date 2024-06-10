@@ -205,10 +205,10 @@ class DeviceModel {
     void checkTemplateData_(catena::Param &p, const std::string &path);
 
   private:
-    catena::Device device_;                  /**< the protobuf device model */
-    mutable Mutex mutex_;                    /**< used to mediate access */
-    static catena::Value noValue_;           /**< to flag undefined values */
-    std::unordered_set<std::string> built_;  /**< params that have been built at least once */ 
+    catena::Device device_;                    /**< the protobuf device model */
+    mutable Mutex mutex_;                      /**< used to mediate access */
+    static catena::Value noValue_;             /**< to flag undefined values */
+    std::unordered_set<std::string> accessed_; /**< params that have been built at least once */ 
 
   public:
 
