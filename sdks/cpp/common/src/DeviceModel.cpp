@@ -142,17 +142,14 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
 
     // build the data needed to create the ParamAccessor
     catena::Param &p = device_.mutable_params()->at(oid);
-    // look for missing fields in the template
-    checkTemplateData_(p, p.template_oid());
-    if (p.params_size() > 0) {
-        for (auto &[child_oid, child_param] : *p.mutable_params()) {
-            checkTemplateData_(child_param, child_param.template_oid());
-            // update the parent's value
-            catena::StructField field;
-            field.mutable_value()->CopyFrom(child_param.value());
-            p.mutable_value()->mutable_struct_value()->mutable_fields()->insert({child_oid, field});
-        }
+    // put any one-time behaviour here
+    if (!built_.contains(oid)) {
+        // look for missing fields in the template
+        checkTemplateData_(p, p.template_oid());
+        checkSubParamTemplates_(p, oid);
+        built_.insert(oid); // mark this param as templated
     }
+
     ParamAccessorData pad;
     std::get<0>(pad) = &p;
     std::get<1>(pad) = (p.has_value() ? p.mutable_value() : &noValue_);
@@ -174,6 +171,26 @@ std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jpt
     }
 
     return ans;
+}
+
+void DeviceModel::checkSubParamTemplates_(catena::Param &p, const std::string &p_oid) {
+    if (p.params().empty()) { return; }
+
+    for (auto &[child_oid, child_param] : *p.mutable_params()) {
+        std::string qualified_child_oid = p_oid + "/" + child_oid;
+        if (built_.contains(qualified_child_oid)) {
+            continue;
+        }
+        checkTemplateData_(child_param, child_param.template_oid());
+        // recurse to check the child's children
+        checkSubParamTemplates_(child_param, qualified_child_oid);
+        // update the parent's value field
+        catena::StructField field;
+        field.mutable_value()->CopyFrom(child_param.value());
+        p.mutable_value()->mutable_struct_value()->mutable_fields()->insert({child_oid, field});
+        // if this subparam is ever retrieved alone, it will be considered built
+        built_.insert(qualified_child_oid); 
+    }
 }
 
 void DeviceModel::checkTemplateData_(catena::Param &p, const std::string &path) {
@@ -209,7 +226,7 @@ void DeviceModel::checkTemplateData_(catena::Param &p, const std::string &path) 
             BAD_STATUS("expected oid or index in template_oid", catena::StatusCode::INVALID_ARGUMENT);
         }
     }
-
+    
     // deep copy data into missing fields if this template has them
     // simple typed fields
     if (t.get().read_only()) {

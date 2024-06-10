@@ -187,11 +187,19 @@ class DeviceModel {
      * @param params the params to import into
      */
     void importSubParams_(std::filesystem::path &current_folder, ParamsMap &params);
+    
+    /**
+     * @brief fill sub-params with template data
+     *
+     * @param p [in-out] parent whose children are to be walked
+     * @param p_oid [in] oid of parent param
+     * */
+    void checkSubParamTemplates_(catena::Param &p, const std::string &p_oid);
 
     /**
      * @brief get template data from the device model
      *
-     * @param dst [out] destination for the data
+     * @param p [in-out] param to be copied into
      * @param path [in] template_oid to look up
      */
     void checkTemplateData_(catena::Param &p, const std::string &path);
@@ -200,6 +208,7 @@ class DeviceModel {
     catena::Device device_;                  /**< the protobuf device model */
     mutable Mutex mutex_;                    /**< used to mediate access */
     static catena::Value noValue_;           /**< to flag undefined values */
+    std::unordered_set<std::string> built_;  /**< params that have been built at least once */ 
 
   public:
 
