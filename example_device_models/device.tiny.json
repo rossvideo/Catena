@@ -1,0 +1,20 @@
+{
+"slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor", "operate", "configure", "administer"],
+  "default_scope": "operate",
+  "params": {
+    "a_number": {
+      "type": "INT32",
+      "name": {
+        "display_strings": {
+          "en": "A Number"
+        }
+      },
+      "value": {
+        "int32_value": 42
+      }
+    }
+  }
+}

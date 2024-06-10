@@ -147,3 +147,6 @@ target_link_libraries(catena_interface
 add_custom_target(clean-proto
   COMMAND ${CMAKE_COMMAND} -E rm ${sources}
   COMMENT "Removing generated protobuf files.")
+
+# include the common part of the Catena C++ SDK
+add_subdirectory("common")

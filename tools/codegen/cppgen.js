@@ -63,13 +63,13 @@ class CppGen {
                 for (let i = 0; i < n; ++i) {
                     hloc(`${types[i]} ${names[i]};`, indent+1);
                 }
-                hloc(`static const StructInfo& getStructInfo();`, indent+1)
+                hloc(`static const catena::StructInfo& getStructInfo();`, indent+1)
                 hloc(`};`, indent);
 
                 // write the getStructInfo method to the body file
                 let bodyIndent = 0;
-                bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
-                bloc(`static StructInfo t;`, bodyIndent+1);
+                bloc(`const catena::StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
+                bloc(`static catena::StructInfo t;`, bodyIndent+1);
                 bloc(`if (t.name.length()) return t;`, bodyIndent+1);
                 bloc(`t.name = "${name}";`, bodyIndent+1);
                 bloc(`catena::FieldInfo fi;`, bodyIndent+1);
@@ -92,7 +92,25 @@ class CppGen {
                 }
                 bloc(`return t;`, bodyIndent+1)
                 bloc('}', bodyIndent);
-            }
+            },
+            INT32: (name, desc, indent = 0) => {
+                hloc(`int32_t ${name};`, indent);
+            },
+            FLOAT32: (name, desc, indent = 0) => {
+                hloc(`float ${name};`, indent);
+            },
+            STRING: (name, desc, indent = 0) => {
+                hloc(`std::string ${name};`, indent);
+            },
+            INT32_ARRAY: (name, desc, indent = 0) => {
+                hloc(`std::vector<int32_t> ${name};`, indent);
+            },
+            FLOAT32_ARRAY: (name, desc, indent = 0) => {
+                hloc(`std::vector<float> ${name};`, indent);
+            },
+            STRING_ARRAY: (name, desc, indent = 0) => {
+                hloc(`std::vector<std::string> ${name};`, indent);
+            },
         };
     }
     
