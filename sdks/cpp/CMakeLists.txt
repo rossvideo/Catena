@@ -40,6 +40,9 @@ endif(UNIT_TESTING)
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
 
+# default c preprocessor options
+set(CPP_OPTS "-P")
+
 if (WIN32)
 # Windows toolchain and prefix_path are set through cl args
 else()
@@ -50,7 +53,8 @@ endif(WIN32)
 if (APPLE)
   set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
+  set(CPP_OPTS -E -x c -P)
+endif (APPLE)
 
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
@@ -77,8 +81,16 @@ set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 endif()
 
 # Find the C preprocessor
-find_program(CPP cpp)
-
+if (APPLE)
+  set(CPP clang)
+else()
+  find_program(CPP cpp)
+endif(APPLE)
+if (NOT CPP)
+  message(FATAL_ERROR "CPP not set")
+else()
+  message(STATUS "CPP = ${CPP}")
+endif()
 # Identify Catena proto folder as interface variable
 #
 set (relative_interface "../../interface/")
@@ -103,7 +115,7 @@ foreach(_proto ${proto_stems})
   # preprocess proto files
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto"
-    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto" "${catena_interface}${_proto}.proto"
+    COMMAND ${CPP} ${CPP_OPTS} -C -D OPTIMIZE_FOR=CODE_SIZE -o "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto" "${catena_interface}${_proto}.proto"
     DEPENDS "${catena_interface}${_proto}.proto"
     COMMENT "Preprocessing ${catena_interface}${_proto}.proto"
     VERBATIM

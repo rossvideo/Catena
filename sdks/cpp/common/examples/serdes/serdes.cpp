@@ -15,13 +15,13 @@
 
 /**
  * @brief Reads a catena device model from a JSON file and writes it to stdout.
- * 
+ *
  * Design intent: provide a handy way to validate (potentially) human-
  * authored device models. If the model is empty, the input is faulty.
- * 
- * Note that items in the input model that have default values (0 for ints, 
+ *
+ * Note that items in the input model that have default values (0 for ints,
  * false for booleans, ...) will be stripped from the model that's output.
- * 
+ *
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @file serdes.cpp
  * @copyright Copyright © 2023, Ross Video Ltd
@@ -35,6 +35,9 @@
 #include <iomanip>
 #include <stdexcept>
 #include <utility>
+
+#include <fcntl.h>
+#include <unistd.h>
 
 using Index = catena::Path::Index;
 
@@ -51,7 +54,7 @@ int main(int argc, char** argv) {
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
         catena::DeviceModel dm(argv[1]);
-        
+
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';
 
@@ -59,6 +62,23 @@ int main(int argc, char** argv) {
         std::string serialized;
         dm.device().SerializeToString(&serialized);
         std::cout << "Device model serializes to " << serialized.size() << " bytes\n";
+
+        // write the device model to a file
+        // Open the file for writing and get a file descriptor
+        int fd = open("model.bin", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+        if (fd == -1) {
+            std::cerr << "Failed to open file\n";
+            exit(EXIT_FAILURE);
+        }
+
+        // write the device model to the file
+        if(!dm.device().SerializeToFileDescriptor(fd)) {
+            std::cerr << "Failed to write to file\n";
+            exit(EXIT_FAILURE);
+        }
+
+        // Don't forget to close the file descriptor when you're done
+        close(fd);
 
     } catch (std::exception& why) {
         std::cerr << "Problem: " << why.what() << '\n';
