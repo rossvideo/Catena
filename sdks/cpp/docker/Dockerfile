@@ -1,16 +1,61 @@
-FROM ghcr.io/isaac-robert-ross/catena-env:latest
+FROM ubuntu:22.04
 
 LABEL org.opencontainers.image.source https://github.com/rossvideo/Catena
 LABEL org.opencontainers.image.description="Development environment for the Catena C++ SDK"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
 
+ENV INSTALL_DIR="/usr/local"
+ENV CLONE_DIR="/opt"
+ENV GRPC_VER="v1.64.2"
+
+RUN apt-get update && \
+    apt-get install -y \
+        ca-certificates \
+        build-essential \
+        cmake \
+        ninja-build \
+        git \
+        git-lfs \
+        wget \
+        curl \
+        tar \
+        unzip \
+        doxygen \
+        graphviz \
+        libssl-dev \
+        libgtest-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# jwt-cpp
+WORKDIR "${CLONE_DIR}"
+RUN git clone https://github.com/Thalhammer/jwt-cpp && \
+    cd jwt-cpp && \
+    mkdir build && \
+    cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" .. && \
+    make -j 5 && \
+    make install
+
+# gtest
+WORKDIR "${CLONE_DIR}"
 RUN git clone https://github.com/google/googletest.git -b v1.14.0 && \
     cd googletest && \
     mkdir build && \
     cd build && \
-    cmake .. -DBUILD_GMOCK=OFF && \
-    make && \
+    cmake .. -DBUILD_GMOCK=OFF -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" && \
+    make -j 5 && \
     make install
 
-# build without additional docs for now
-# RUN apt-get install doxygen
+# grpc
+WORKDIR "${CLONE_DIR}"
+RUN git clone --recurse-submodules -b "${GRPC_VER}" --depth 1 --shallow-submodules https://github.com/grpc/grpc && \
+    cd grpc && \
+    mkdir -p cmake/build && \
+    cd cmake/build && \
+    cmake -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" ../.. && \
+    make -j 5 && \
+    make install && \
+    make -j 5 grpc_cli && \
+    cp grpc_cli "${INSTALL_DIR}/bin" && \
+    rm -rf "${CLONE_DIR}/grpc"
