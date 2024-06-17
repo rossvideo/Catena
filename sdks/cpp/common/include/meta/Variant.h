@@ -1,10 +1,11 @@
 #pragma once
 
 /**
- * @brief Enum to switch between single & multithreading
- * @file Threading.h
- * @copyright Copyright © 2023 Ross Video Ltd
+ * @brief Meta programming to test if an object is a std::variant
+ * @file Variant.h
+ * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
+ * 
  */
 
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
@@ -21,11 +22,24 @@
 // limitations under the License.
 //
 
+#include <type_traits> // std::void_t
+#include <variant>     // std::get
+
 namespace catena {
+namespace meta {
 
 /**
- * @brief indicates threading model
- *
- */
-enum class Threading { kSingleThreaded, kMultiThreaded };
-}  // namespace catena
+ * @brief type trait to determine if a type is a std::variant
+ * default is false
+*/
+template <typename T, typename = void>
+struct is_variant : std::false_type {};
+
+/**
+ * @brief type trait to determine if a type is a std::variant
+ * those with std::get<0> defined are std::variants
+*/
+template <typename T>
+struct is_variant<T, std::void_t<decltype(std::get<0>(std::declval<T>()))>> : std::true_type {};
+} // namespace meta
+} // namespace catena

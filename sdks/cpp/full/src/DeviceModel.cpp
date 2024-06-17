@@ -31,7 +31,6 @@
 using catena::DeviceModel;
 using catena::DeviceStream;
 using catena::ParamAccessor;
-using catena::Threading;
 using google::protobuf::Map;
 
 

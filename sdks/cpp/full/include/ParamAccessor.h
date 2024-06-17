@@ -29,7 +29,7 @@
 #include <DeviceModel.h>
 #include <Path.h>
 #include <Status.h>
-#include <Threading.h>
+
 #include <TypeTraits.h>
 
 
