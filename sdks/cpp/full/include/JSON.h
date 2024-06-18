@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @brief Utility functions.
- * @file utils.h
+ * @brief Convenience functions for working with JSON and files.
+ * @file JSON.h
  * @copyright Copyright © 2023 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
@@ -21,30 +21,29 @@
 // limitations under the License.
 //
 
-#include <filesystem>
+#include <google/protobuf/message.h>
+#include <google/protobuf/util/json_util.h>
+
 #include <string>
 
 namespace catena {
+namespace full {
 
 /**
- * @brief reads a file into a std::string
+ * @brief prints a protobuf message as JSON
  *
- * @param path path/to/the/file
- * @returns string containing contents of file
- *
- * N.B relies on C++11 copy elision to be efficient!
+ * @param msg the protobuf message
+ * @return std::string JSON representation of m
  */
-std::string readFile(std::filesystem::path path);
+std::string printJSON(const google::protobuf::Message &msg);
 
 /**
- * @brief Substitutes all occurences of one char sequence in a string with
- * another.
+ * @brief parses protobuf message to JSON
  *
- * @param str in/out the string to work on, done in place
- * @param seq in sequence to match
- * @param rep in sequence to replace the match
+ * @param msg JSON message to parse
+ * @param m output protobuf message
  */
-void subs(std::string &str, const std::string &seq, const std::string &rep);
+void parseJSON(const std::string &msg, google::protobuf::Message &m);
 
-
+} // namespace full
 }  // namespace catena

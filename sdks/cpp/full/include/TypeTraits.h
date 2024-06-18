@@ -27,6 +27,7 @@
 using std::size_t;
 
 namespace catena {
+namespace full {
 
 struct FieldInfo;  // forward reference
 
@@ -35,8 +36,8 @@ struct FieldInfo;  // forward reference
  *
  */
 struct StructInfo {
-  std::string name;              /**< the data structure's name */
-  std::vector<FieldInfo> fields; /**< name and offset info per field */
+    std::string name;              /**< the data structure's name */
+    std::vector<FieldInfo> fields; /**< name and offset info per field */
 };
 
 // class TypeTraits;  // forward reference
@@ -48,72 +49,69 @@ struct StructInfo {
 class ParamAccessor;  // forward reference
 
 struct FieldInfo {
-  std::string name; /**< the field's name */
-  int offset;       /**< the offset to the field's data from struct base */
+    std::string name; /**< the field's name */
+    int offset;       /**< the offset to the field's data from struct base */
 
-  /**
-   *  method returns type info of nested struct 
-   */
-  std::function<StructInfo()> getStructInfo; 
+    /**
+     *  method returns type info of nested struct
+     */
+    std::function<StructInfo()> getStructInfo;
 
-  /**
-   * @brief recursive call into ParamAccessor::getValue<T> for nested structs
-   */
-  std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
+    /**
+     * @brief recursive call into ParamAccessor::getValue<T> for nested structs
+     */
+    std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
 
-  /**
-   * @brief recursive call into ParamAccessor::setValue<T> for nested structs
-   */
-  std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
+    /**
+     * @brief recursive call into ParamAccessor::setValue<T> for nested structs
+     */
+    std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
 
-  /**
-   * @brief class for field conversion to / back from protobuf.
-   *
-   * 'new' must beused to initialize the vtable.
-   *
-   */
-  // std::shared_ptr<TypeTraits> fieldType;
+    /**
+     * @brief class for field conversion to / back from protobuf.
+     *
+     * 'new' must beused to initialize the vtable.
+     *
+     */
+    // std::shared_ptr<TypeTraits> fieldType;
 
-  /**
-   * @brief Sets the field's name.
-   *
-   * @param fieldName value to set it to.
-   */
-  void setName(const char* fieldName) {
-    if (fieldName[0] == ' ')
-      fieldName++;  // Result of define macro expansion, we fix it here.
-    name = std::string(fieldName);
-  }
+    /**
+     * @brief Sets the field's name.
+     *
+     * @param fieldName value to set it to.
+     */
+    void setName(const char* fieldName) {
+        if (fieldName[0] == ' ')
+            fieldName++;  // Result of define macro expansion, we fix it here.
+        name = std::string(fieldName);
+    }
 };
 struct VariantMemberInfo {
-  size_t index; /**< index of the member in the variant */
-  std::function<void*(void* dst)> set; /**< function to set the variant */
-  std::function<StructInfo()> getStructInfo; /**< type info of nested struct */
-  std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
-  std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
+    size_t index;                              /**< index of the member in the variant */
+    std::function<void*(void* dst)> set;       /**< function to set the variant */
+    std::function<StructInfo()> getStructInfo; /**< type info of nested struct */
+    std::function<void(void* dstAddr, const ParamAccessor*)> wrapGetter;
+    std::function<void(ParamAccessor*, const void* srcAddr)> wrapSetter;
 };
 
 struct VariantInfo {
-  std::string name; /**< the variant's name */
-  std::vector<std::string> lookup; /**< index to member type name */
-  std::unordered_map<std::string, VariantMemberInfo> members; /**< name to member Info map */
+    std::string name;                                           /**< the variant's name */
+    std::vector<std::string> lookup;                            /**< index to member type name */
+    std::unordered_map<std::string, VariantMemberInfo> members; /**< name to member Info map */
 };
-
-
 
 
 /**
  * @brief determine at compile time if a type T has a getType method.
  *
  * default is false
- * 
+ *
  * @todo refactor using C++ 20 concepts to make the code a bit clearer
  *
  * @tparam T
  * @tparam typename
  */
-template <typename T, typename = void>
-constexpr bool has_getStructInfo{};
+template <typename T, typename = void> constexpr bool has_getStructInfo{};
 
 /**
  * @brief specialization for types that do have getStructInfo method
@@ -121,34 +119,31 @@ constexpr bool has_getStructInfo{};
  * @tparam T
  */
 template <typename T>
-constexpr bool
-    has_getStructInfo<T, std::void_t<decltype(std::declval<T>().getStructInfo())>> = true;
+constexpr bool has_getStructInfo<T, std::void_t<decltype(std::declval<T>().getStructInfo())>> = true;
 
 /**
  * @brief returns the getStructInfo method for types that have it,
  * otherwise returns a function that returns an empty StructInfo object.
-*/
-template<typename T>
-std::function<catena::StructInfo()> getStructInfoFunction() {
-  if constexpr (catena::has_getStructInfo<T>) {
-    return T::getStructInfo;
-  } else {
-    return []() -> catena::StructInfo {return catena::StructInfo{};};
-  }
+ */
+template <typename T> std::function<catena::StructInfo()> getStructInfoFunction() {
+    if constexpr (catena::has_getStructInfo<T>) {
+        return T::getStructInfo;
+    } else {
+        return []() -> catena::StructInfo { return catena::StructInfo{}; };
+    }
 }
 
 /**
  * @brief determine at compile time if a type T has a getStructInfo method.
  *
  * default is false
- * 
+ *
  * @todo refactor using C++ 20 concepts to make the code a bit clearer
  *
  * @tparam T
  * @tparam typename
  */
-template <typename T, typename = void>
-constexpr bool has_getVariant{};
+template <typename T, typename = void> constexpr bool has_getVariant{};
 
 /**
  * @brief specialization for types that do have getStructInfo method
@@ -156,19 +151,18 @@ constexpr bool has_getVariant{};
  * @tparam T
  */
 template <typename T>
-constexpr bool
-    has_getVariant<T, std::void_t<decltype(std::declval<T>().getVariant())>> = true;
+constexpr bool has_getVariant<T, std::void_t<decltype(std::declval<T>().getVariant())>> = true;
 
 /**
  * @brief returns the getStructInfo method for types that have it,
  * otherwise returns a function that returns an empty StructInfo object.
-*/
-template<typename T>
-std::function<catena::StructInfo()> getVariantFunction() {
-  if constexpr (catena::has_getVariant<T>) {
-    return T::getStructInfo;
-  } else {
-    return []() -> catena::StructInfo {return catena::StructInfo{};};
-  }
+ */
+template <typename T> std::function<catena::StructInfo()> getVariantFunction() {
+    if constexpr (catena::has_getVariant<T>) {
+        return T::getStructInfo;
+    } else {
+        return []() -> catena::StructInfo { return catena::StructInfo{}; };
+    }
 }
+}  // namespace full
 }  // namespace catena

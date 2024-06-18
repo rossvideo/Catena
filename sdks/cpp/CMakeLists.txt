@@ -43,8 +43,8 @@ endif(UNIT_TESTING)
 if (WIN32)
 # Windows toolchain and prefix_path are set through cl args
 else()
-set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
-set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
+  set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
+  set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
 endif(WIN32)
 
 if (APPLE)
@@ -59,9 +59,9 @@ message(STATUS "Using protobuf ${Protobuf_VERSION}")
 set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
 set(_REFLECTION gRPC::grpc++_reflection)
 if(CMAKE_CROSSCOMPILING)
-find_program(_PROTOBUF_PROTOC protoc)
+  find_program(_PROTOBUF_PROTOC protoc)
 else()
-set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
+  set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
 endif()
 
 # Find gRPC installation
@@ -71,9 +71,9 @@ message(STATUS "Using gRPC ${gRPC_VERSION}")
 
 set(_GRPC_GRPCPP gRPC::grpc++)
 if(CMAKE_CROSSCOMPILING)
-find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
+  find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
 else()
-set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
+  set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 endif()
 
 # Find the C preprocessor
@@ -98,64 +98,68 @@ set(proto_stems
   "service"
 )
 
-set(proto_sources "")
+# set names of full and lite build directories
+set (full_build_dir "${CMAKE_CURRENT_BINARY_DIR}/full")
+set (lite_build_dir "${CMAKE_CURRENT_BINARY_DIR}/lite")
+
+set(proto_full_sources "")
 foreach(_proto ${proto_stems})
   # preprocess proto files
   add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto"
-    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto" "${catena_interface}${_proto}.proto"
+    OUTPUT "${full_build_dir}/${_proto}.proto"
+    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o "${full_build_dir}/${_proto}.proto" "${catena_interface}${_proto}.proto"
     DEPENDS "${catena_interface}${_proto}.proto"
-    COMMENT "Preprocessing ${catena_interface}${_proto}.proto"
+    COMMENT "Preprocessing ${catena_interface}${_proto}.proto into ${full_build_dir}/${_proto}.proto"
     VERBATIM
   )
   # keep a list of preprocessed protobuf source files
-  set(proto_sources ${proto_sources} "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto")
+  set(proto_full_sources ${proto_full_sources} "${full_build_dir}/${_proto}.proto")
 endforeach()
 
 # identify the target file names that implement the messages and services
 # set a custom rule for each proto source to generate the implementations
 #
-set(sources "")
+set(full_sources "")
 foreach(_proto ${proto_stems})
   # put names of generated source & header files for _proto stem
   # into local variable _sources
   #
-  set(proto_cc "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.cc")
-  set(proto_h "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.pb.h")
-  set(proto_grpc_cc "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.cc")
-  set(proto_grpc_h "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.grpc.pb.h")
-  set(_sources "${proto_cc}" "${proto_h}" "${proto_grpc_cc}" "${proto_grpc_h}")
+  set(proto_cc "${full_build_dir}/${_proto}.pb.cc")
+  set(proto_h "${full_build_dir}/${_proto}.pb.h")
+  set(proto_grpc_cc "${full_build_dir}/${_proto}.grpc.pb.cc")
+  set(proto_grpc_h "${full_build_dir}/${_proto}.grpc.pb.h")
+  set(_full_sources "${proto_cc}" "${proto_h}")
 
   # accumulate list of all sources
-  set(sources ${sources} ${_sources})
+  set(full_sources ${full_sources} ${_full_sources})
   
-  # message(STATUS "sources for ${_proto}: ${_sources}")
+  # add custom command to generate the C++ protobuf and gRPC sources
   add_custom_command(
-    OUTPUT ${_sources}
+    OUTPUT ${_full_sources}
     PRE_BUILD
     COMMAND ${_PROTOBUF_PROTOC}
-    ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
-    --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-    -I "${CMAKE_CURRENT_BINARY_DIR}"
+    ARGS --grpc_out "${full_build_dir}"
+    --cpp_out "${full_build_dir}"
+    -I "${full_build_dir}"
     --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-    "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto"
-    DEPENDS ${proto_sources})
+    "${full_build_dir}/${_proto}.proto"
+    DEPENDS ${proto_full_sources})
 endforeach()
 
 # the catena interface library
-add_library(catena_interface ${sources})
-target_link_libraries(catena_interface
-  ${_REFLECTION}
-  ${_GRPC_GRPCPP}
-  ${_PROTOBUF_LIBPROTOBUF})
+# add_library(catena_interface ${sources})
+# target_link_libraries(catena_interface
+#   ${_REFLECTION}
+#   ${_GRPC_GRPCPP}
+#   ${_PROTOBUF_LIBPROTOBUF})
 
 # add clean target for the protobuf generated files
 add_custom_target(clean-proto
-  COMMAND ${CMAKE_COMMAND} -E rm ${sources}
+  COMMAND ${CMAKE_COMMAND} -E rm ${full_sources}
   COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
-add_subdirectory("common")
+# add_subdirectory("common")
 
 # doxygen
 #

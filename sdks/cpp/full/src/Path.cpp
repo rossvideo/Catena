@@ -18,7 +18,9 @@
 
 #include <regex>
 
-catena::Path::Path(const std::string &path) : segments_{} {
+using Path;
+
+Path::Path(const std::string &path) : segments_{} {
     // regex will split a well-formed json pointer into a sequence of strings
     // that all start with the solidus '/' character and contain these matches:
     // /- -- can be used as an array index
@@ -57,15 +59,15 @@ catena::Path::Path(const std::string &path) : segments_{} {
     }
 }
 
-catena::Path::Path(const char *literal) : Path(std::string(literal)) {}
+Path::Path(const char *literal) : Path(std::string(literal)) {}
 
-catena::Path::Segment catena::Path::pop_front() noexcept {
+Path::Segment Path::pop_front() noexcept {
     Segment ans = front();
     segments_.pop_front();
     return ans;
 }
 
-catena::Path::Segment catena::Path::front() noexcept {
+Path::Segment Path::front() noexcept {
     Segment ans;
     if (segments_.size() >= 1) {
         std::string seg = segments_[0];
@@ -86,25 +88,25 @@ catena::Path::Segment catena::Path::front() noexcept {
     return ans;
 }
 
-void catena::Path::escape(std::string &str) {
+void Path::escape(std::string &str) {
     subs(str, "~", "~0");
     subs(str, "/", "~1");
 }
 
-std::string catena::Path::unescape(const std::string &str) {
+std::string Path::unescape(const std::string &str) {
     std::string ans(str);
     subs(ans, "~0", "~");
     subs(ans, "~1", "/");
     return ans;
 }
 
-void catena::Path::push_back(const std::string &oid) {
+void Path::push_back(const std::string &oid) {
     std::string back{oid};
     escape(back);
     segments_.push_back(back);
 }
 
-std::string catena::Path::fqoid() {
+std::string Path::fqoid() {
     std::stringstream ans{""};
     for (auto it = segments_.begin(); it != segments_.end(); ++it) {
         ans << '/' << *it;
@@ -112,6 +114,6 @@ std::string catena::Path::fqoid() {
     return ans.str();
 }
 
-std::unique_ptr<catena::Path> operator"" _path(const char *lit, std::size_t sz) {
-    return std::make_unique<catena::Path>(lit);
+std::unique_ptr<Path> operator"" _path(const char *lit, std::size_t sz) {
+    return std::make_unique<Path>(lit);
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @brief Typelist meta programming
- * @file Meta.h
+ * @brief Type list meta programming
+ * @file TypeList.h
  * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  *
