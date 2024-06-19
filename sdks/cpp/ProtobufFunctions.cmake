@@ -88,7 +88,7 @@ function(generate_cpp_protobuf_sources catena_interface_dir proto_stems model gR
         set(proto_h "${_proto}.pb.h")
         set(proto_grpc_cc "${_proto}.grpc.pb.cc")
         set(proto_grpc_h "${_proto}.grpc.pb.h")
-        set(_sources "${proto_cc}" "${proto_h}")
+        set(_sources "${folder}/${proto_cc}" "${folder}/${proto_h}")
 
         # set the arguments for the protobuf compiler
         set (protoc_args 
@@ -104,7 +104,7 @@ function(generate_cpp_protobuf_sources catena_interface_dir proto_stems model gR
             "--grpc_out=${folder}"
             "--plugin=protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}")
             message(STATUS "Adding gRPC generator for ${_proto}, transport ${CONNECTIONS}")
-            set (_sources ${_sources} "${proto_grpc_cc}" "${proto_grpc_h}")
+            set (_sources ${_sources} "${folder}/${proto_grpc_cc}" "${folder}/${proto_grpc_h}")
         endif()
 
         # accumulate list of all sources
