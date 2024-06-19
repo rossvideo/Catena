@@ -18,19 +18,24 @@
 
 cmake_minimum_required(VERSION 3.20)
 
+list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local/cmake")
 
+message(STATUS "***cmake prefix path: ${CMAKE_PREFIX_PATH}")
+
+find_package(jwt-cpp CONFIG REQUIRED)
+find_package(absl CONFIG REQUIRED)
 
 get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
 
 add_executable(${TARGET})
 
-get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
-get_filename_component(CATENA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../ ABSOLUTE)
+get_filename_component(CATENA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../common ABSOLUTE)
 set(CATENA_COMMON_INCLUDE ${CATENA_COMMON_DIR}/include)
 
 target_include_directories(${TARGET}
     PUBLIC
+        $BUILD_INTERFACE:${FULL_INCLUDE_DIR}>
         $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
         $<BUILD_INTERFACE:${PARENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
@@ -41,13 +46,17 @@ target_sources(${TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>
 )
 
-message(STATUS "*** reflection: ${LIB_TARGET}")
+message(STATUS "*** reflection: ${CATENA_COMMON_LIB}")
 target_link_libraries(${TARGET}
-    ${LIB_TARGET}
-    catena_interface
+    ${FULL_TARGET}
+    ${CATENA_COMMON_LIB}
+    ${CATENA_INTERFACE_LIB}
+    absl::flags_parse
+    jwt-cpp::jwt-cpp
 )
 
 target_compile_features(${TARGET}
     PUBLIC
         cxx_std_20
 )
+

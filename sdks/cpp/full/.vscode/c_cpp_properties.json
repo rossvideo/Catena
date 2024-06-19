@@ -5,6 +5,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/../common/**",
+                "${workspaceFolder}/../build/**",
                 "${env:HOME}/.local/include"
             ],
             "defines": [],

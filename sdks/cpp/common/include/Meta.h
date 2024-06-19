@@ -25,6 +25,7 @@
 //
 
 #include <iostream>
+#include <tuple>
 
 namespace catena {
 namespace meta {

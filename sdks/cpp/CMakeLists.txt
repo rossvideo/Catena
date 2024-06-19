@@ -76,6 +76,9 @@ else()
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 endif()
 
+# check if building full or lite sdk
+option(BUILD_LITE "Build lite version of the SDK" OFF)
+
 # Find the C preprocessor
 find_program(CPP cpp)
 
@@ -83,7 +86,7 @@ find_program(CPP cpp)
 #
 set (relative_interface "../../interface/")
 cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
-cmake_path(SET catena_interface NORMALIZE ${interface})
+cmake_path(SET PROTO_SRC_DIR NORMALIZE ${interface})
 
 # this is the list of proto files to convert to implementations in
 # various languages
@@ -98,14 +101,20 @@ set(proto_stems
   "service"
 )
 
+if(BUILD_LITE)
+  set(PROTO_BUILD_MODE "LITE_RUNTIME")
+else()
+  set(PROTO_BUILD_MODE "CODE_SIZE")
+endif(BUILD_LITE)
+
 set(proto_sources "")
 foreach(_proto ${proto_stems})
   # preprocess proto files
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto"
-    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto" "${catena_interface}${_proto}.proto"
-    DEPENDS "${catena_interface}${_proto}.proto"
-    COMMENT "Preprocessing ${catena_interface}${_proto}.proto"
+    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=${PROTO_BUILD_MODE} -o "${CMAKE_CURRENT_BINARY_DIR}/${_proto}.proto" "${PROTO_SRC_DIR}${_proto}.proto"
+    DEPENDS "${PROTO_SRC_DIR}${_proto}.proto"
+    COMMENT "Preprocessing ${PROTO_SRC_DIR}${_proto}.proto"
     VERBATIM
   )
   # keep a list of preprocessed protobuf source files
@@ -143,11 +152,17 @@ foreach(_proto ${proto_stems})
 endforeach()
 
 # the catena interface library
-add_library(catena_interface ${sources})
-target_link_libraries(catena_interface
+set(CATENA_INTERFACE_LIB catena_interface)
+add_library(${CATENA_INTERFACE_LIB} ${sources})
+target_link_libraries(${CATENA_INTERFACE_LIB}
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
-  ${_PROTOBUF_LIBPROTOBUF})
+  ${_PROTOBUF_LIBPROTOBUF}
+)
+
+# parent binary directory where the generated files are stored
+get_filename_component(PARENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
+message(STATUS "*** binary dir: ${PARENT_BINARY_DIR}")
 
 # add clean target for the protobuf generated files
 add_custom_target(clean-proto
@@ -155,7 +170,15 @@ add_custom_target(clean-proto
   COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
+set(CATENA_COMMON_LIB catena_common)
 add_subdirectory("common")
+
+# include the selected version of the Catena C++ SDK
+if(BUILD_LITE)
+  add_subdirectory("lite")
+else()
+  add_subdirectory("full")
+endif()
 
 # doxygen
 #
