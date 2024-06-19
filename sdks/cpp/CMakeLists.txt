@@ -25,33 +25,38 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/ProtobufFunctions.cmake)
+
 # export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(UNIT_TESTING "Build Google test" ON)
 if(UNIT_TESTING)
-# enable unit testing
-enable_testing()
+  # enable unit testing
+  enable_testing()
 endif(UNIT_TESTING)
 
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
-# Find Protobuf installation
-# Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
 
 if (WIN32)
-# Windows toolchain and prefix_path are set through cl args
+  # Windows toolchain and prefix_path are set through command line
+  # nothing to do here
 else()
+  # set options for linux
   set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
   set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
 endif(WIN32)
 
 if (APPLE)
+  # set up for MacOS
   set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
 endif(APPLE)
 
+# Find Protobuf installation
+# Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
 message(STATUS "Using protobuf ${Protobuf_VERSION}")
@@ -76,14 +81,27 @@ else()
   set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 endif()
 
-# Find the C preprocessor
-find_program(CPP cpp)
+# find the c preprocessor and set the options to use with it
+if (APPLE)
+  set(CPP clang)
+  set(cpp_opts -E -P -x c)
+else()
+  find_program(CPP cpp)
+  set(cpp_opts -P -C)
+endif(APPLE)
+if (NOT CPP)
+  message(FATAL_ERROR "CPP not set")
+else()
+  message(STATUS "CPP = ${CPP}")
+endif()
+
 
 # Identify Catena proto folder as interface variable
 #
 set (relative_interface "../../interface/")
 cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
-cmake_path(SET catena_interface NORMALIZE ${interface})
+cmake_path(SET catena_interface_dir NORMALIZE ${interface})
+message(STATUS "Catena interface directory: ${catena_interface_dir}")
 
 # this is the list of proto files to convert to implementations in
 # various languages
@@ -98,64 +116,45 @@ set(proto_stems
   "service"
 )
 
-# set names of full and lite build directories
-set (full_build_dir "${CMAKE_CURRENT_BINARY_DIR}/full")
-set (lite_build_dir "${CMAKE_CURRENT_BINARY_DIR}/lite")
 
-set(proto_full_sources "")
-foreach(_proto ${proto_stems})
-  # preprocess proto files
-  add_custom_command(
-    OUTPUT "${full_build_dir}/${_proto}.proto"
-    COMMAND ${CPP} -P -C -D OPTIMIZE_FOR=CODE_SIZE -o "${full_build_dir}/${_proto}.proto" "${catena_interface}${_proto}.proto"
-    DEPENDS "${catena_interface}${_proto}.proto"
-    COMMENT "Preprocessing ${catena_interface}${_proto}.proto into ${full_build_dir}/${_proto}.proto"
-    VERBATIM
-  )
-  # keep a list of preprocessed protobuf source files
-  set(proto_full_sources ${proto_full_sources} "${full_build_dir}/${_proto}.proto")
-endforeach()
-
-# identify the target file names that implement the messages and services
-# set a custom rule for each proto source to generate the implementations
+# create flags _gRPC, _REST, _WSS to indicate which connections are enabled
 #
-set(full_sources "")
-foreach(_proto ${proto_stems})
-  # put names of generated source & header files for _proto stem
-  # into local variable _sources
-  #
-  set(proto_cc "${full_build_dir}/${_proto}.pb.cc")
-  set(proto_h "${full_build_dir}/${_proto}.pb.h")
-  set(proto_grpc_cc "${full_build_dir}/${_proto}.grpc.pb.cc")
-  set(proto_grpc_h "${full_build_dir}/${_proto}.grpc.pb.h")
-  set(_full_sources "${proto_cc}" "${proto_h}")
+message(STATUS "Connections: ${CONNECTIONS}")
+list(FIND CONNECTIONS "gRPC" _gRPC)
+list(FIND CONNECTIONS "REST" _REST)
+list(FIND CONNECTIONS "WSS" _WSS)
+if (${_gRPC} GREATER -1)
+  message(STATUS "gRPC transport enabled")
+endif()
+if (${_REST} GREATER -1)
+  message(STATUS "REST transport enabled")
+endif()
+if (${_WSS} GREATER -1)
+  message(STATUS "WSS transport enabled")
+endif()
 
-  # accumulate list of all sources
-  set(full_sources ${full_sources} ${_full_sources})
-  
-  # add custom command to generate the C++ protobuf and gRPC sources
-  add_custom_command(
-    OUTPUT ${_full_sources}
-    PRE_BUILD
-    COMMAND ${_PROTOBUF_PROTOC}
-    ARGS --grpc_out "${full_build_dir}"
-    --cpp_out "${full_build_dir}"
-    -I "${full_build_dir}"
-    --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-    "${full_build_dir}/${_proto}.proto"
-    DEPENDS ${proto_full_sources})
+# process the proto files to substitute the OPTMIIZE_FOR macro
+#
+foreach(_model ${CATENA_MODELS})
+  preprocess_protobuf_files(${catena_interface_dir} "${proto_stems}" ${_model})
+  message(STATUS "proto files: ${${_model}_protos}")
+  generate_cpp_protobuf_sources(${catena_interface_dir} "${proto_stems}" ${_model} ${_gRPC})
+  message(STATUS "source files: ${${_model}_sources}")
 endforeach()
+
+
+
 
 # the catena interface library
-# add_library(catena_interface ${sources})
-# target_link_libraries(catena_interface
+# add_library(catena_interface_dir ${sources})
+# target_link_libraries(catena_interface_dir
 #   ${_REFLECTION}
 #   ${_GRPC_GRPCPP}
 #   ${_PROTOBUF_LIBPROTOBUF})
 
 # add clean target for the protobuf generated files
 add_custom_target(clean-proto
-  COMMAND ${CMAKE_COMMAND} -E rm ${full_sources}
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${sources} ${full_sources} &{lite_sources}
   COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
