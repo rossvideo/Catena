@@ -154,7 +154,7 @@ endforeach()
 
 # add clean target for the protobuf generated files
 add_custom_target(clean-proto
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${sources} ${full_sources} &{lite_sources}
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${full_protos} ${lite_protos} ${full_sources} ${lite_sources}
   COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
