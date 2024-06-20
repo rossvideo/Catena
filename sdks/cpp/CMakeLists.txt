@@ -137,8 +137,7 @@ endif()
 
 foreach(_model ${CATENA_MODELS})
   preprocess_protobuf_files(${catena_interface_dir} "${proto_stems}" ${_model})
- # generate_cpp_filenames( "${proto_stems}" ${_model})
-  generate_cpp_protobuf_sources (${catena_interface_dir} "${proto_stems}" ${_model} ${_gRPC})
+  generate_cpp_protobuf_sources ("${proto_stems}" ${_model} ${_gRPC})
 
   set (protos ${${_model}_protos})
   set (sources ${${_model}_sources})
