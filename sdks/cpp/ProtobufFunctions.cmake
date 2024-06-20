@@ -66,6 +66,40 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems model)
     set("${model}_protos" "${sources}" PARENT_SCOPE)
 endfunction()
 
+# Function to generate the source file names for the protobuf and gRPC files
+# Arguments:
+function(generate_cpp_filenames proto_stems model)
+    message(STATUS "proto_stems: ${proto_stems}")
+    message(STATUS "model: ${model}")
+
+    message(STATUS "Building Catena cpp source file names for ${model}")
+    set(sources "${${model}_sources}")
+    set(folder "${CMAKE_CURRENT_BINARY_DIR}/${model}")
+
+    foreach(_proto ${proto_stems})
+
+        # generate names of output files
+        set(proto_cc "${_proto}.pb.cc")
+        set(proto_h "${_proto}.pb.h")
+        set(proto_grpc_cc "${_proto}.grpc.pb.cc")
+        set(proto_grpc_h "${_proto}.grpc.pb.h")
+        set(_sources "${folder}/${proto_cc}" "${folder}/${proto_h}")
+
+        # add grpc sources if service is enabled
+        if (${_proto} STREQUAL "service")
+            set (_sources ${_sources} "${folder}/${proto_grpc_cc}" "${folder}/${proto_grpc_h}")
+        endif()
+
+        # accumulate list of all sources and intermediates
+        set(sources ${sources} ${_sources})
+
+    endforeach()
+
+    # return the list of source filenames to parent
+    set("${model}_sources" "${sources}" PARENT_SCOPE)
+
+endfunction()
+
 # Function to run the protobuf compiler on the preprocessed proto files
 # build the list of generated source files into the sources variable
 # Arguments:
@@ -76,7 +110,9 @@ function(generate_cpp_protobuf_sources catena_interface_dir proto_stems model gR
 
     message(STATUS "Building Catena cpp sources for ${model}")
     set(sources "${${model}_sources}")
+    set(intermediates "${${model}_intermediates}")
     set(folder "${CMAKE_CURRENT_BINARY_DIR}/${model}")
+    message(STATUS "Folder: ${folder}")
 
     foreach(_proto ${proto_stems})
         set(input "${folder}/${_proto}.proto")
@@ -107,8 +143,9 @@ function(generate_cpp_protobuf_sources catena_interface_dir proto_stems model gR
             set (_sources ${_sources} "${folder}/${proto_grpc_cc}" "${folder}/${proto_grpc_h}")
         endif()
 
-        # accumulate list of all sources
+        # accumulate list of all sources and targets
         set(sources ${sources} ${_sources})
+        set(intermediates ${intermediates}  "${target}")
 
         # add custom command to generate the protobuf and gRPC sources
         add_custom_command(
@@ -127,5 +164,12 @@ function(generate_cpp_protobuf_sources catena_interface_dir proto_stems model gR
             DEPENDS "${output}"
         )
     endforeach()
+
     set("${model}_sources" "${sources}" PARENT_SCOPE)
+    set("${model}_intermediates" "${intermediates}" PARENT_SCOPE)
+
 endfunction()
+
+
+
+
