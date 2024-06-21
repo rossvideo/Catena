@@ -12,7 +12,7 @@
  * @copyright Copyright (c) 2022, Ross Video Limited. All Rights Reserved.
  */
 
-/** @example GenericFactoryExample.cpp
+/** @example factory.cpp
  * Provides example of using GenericFactory.
  */
 
