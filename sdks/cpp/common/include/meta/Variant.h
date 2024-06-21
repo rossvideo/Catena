@@ -1,10 +1,11 @@
 #pragma once
 
 /**
- * @brief Utility functions.
- * @file utils.h
- * @copyright Copyright © 2023 Ross Video Ltd
+ * @brief Meta programming to test if an object is a std::variant
+ * @file Variant.h
+ * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
+ * 
  */
 
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
@@ -21,30 +22,24 @@
 // limitations under the License.
 //
 
-#include <filesystem>
-#include <string>
+#include <type_traits> // std::void_t
+#include <variant>     // std::get
 
 namespace catena {
+namespace meta {
 
 /**
- * @brief reads a file into a std::string
- *
- * @param path path/to/the/file
- * @returns string containing contents of file
- *
- * N.B relies on C++11 copy elision to be efficient!
- */
-std::string readFile(std::filesystem::path path);
+ * @brief type trait to determine if a type is a std::variant
+ * default is false
+*/
+template <typename T, typename = void>
+struct is_variant : std::false_type {};
 
 /**
- * @brief Substitutes all occurences of one char sequence in a string with
- * another.
- *
- * @param str in/out the string to work on, done in place
- * @param seq in sequence to match
- * @param rep in sequence to replace the match
- */
-void subs(std::string &str, const std::string &seq, const std::string &rep);
-
-
-}  // namespace catena
+ * @brief type trait to determine if a type is a std::variant
+ * those with std::get<0> defined are std::variants
+*/
+template <typename T>
+struct is_variant<T, std::void_t<decltype(std::get<0>(std::declval<T>()))>> : std::true_type {};
+} // namespace meta
+} // namespace catena

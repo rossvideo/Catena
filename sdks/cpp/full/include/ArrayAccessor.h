@@ -27,25 +27,26 @@
 #include <Status.h>
 
 namespace catena {
+namespace full {
 
 class ArrayAccessor {
   public:
     /**
-        * @brief define factory for ArrayAccessor (int for key type)
-        *
-        */
+     * @brief define factory for ArrayAccessor (int for key type)
+     *
+     */
     using Factory = catena::patterns::GenericFactory<ArrayAccessor, int, catena::Value &>;
 
     /**
-        * @brief override array accessor operator
-        * @param idx index of array
-        * @return catena value
-        */
+     * @brief override array accessor operator
+     * @param idx index of array
+     * @return catena value
+     */
     virtual catena::Value operator[](std::size_t idx) const = 0;
 
     /**
-    * @brief virtual destructor
-    */
+     * @brief virtual destructor
+     */
     virtual ~ArrayAccessor() = default;
 };
 
@@ -54,44 +55,44 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
     std::reference_wrapper<catena::Value> _in;
 
     /**
-        * @brief create a concrete array accessor using a value
-        * @param v the catena value
-        * @return ConcreteArrayAccessor
-        */
+     * @brief create a concrete array accessor using a value
+     * @param v the catena value
+     * @return ConcreteArrayAccessor
+     */
     static ArrayAccessor *makeOne(catena::Value &v) { return new ConcreteArrayAccessor(v); }
 
     /*
-        * This is the key attribute that Classes to be created via a
-        * GenericFactory must declare & define.
-        */
+     * This is the key attribute that Classes to be created via a
+     * GenericFactory must declare & define.
+     */
     static bool _added;
 
   public:
     /**
-        * @brief constructor for the concrete array accessor
-        * @param in catena value
-        */
+     * @brief constructor for the concrete array accessor
+     * @param in catena value
+     */
     ConcreteArrayAccessor(catena::Value &in) : _in{in} {};
 
     /**
      * @brief destructor
-     * 
+     *
      */
     ~ConcreteArrayAccessor() = default;
 
     /**
-        * @brief read an array element
-        * @param idx index of array
-        * @return value of element at idx, packaged as a catena::Value
-        */
+     * @brief read an array element
+     * @param idx index of array
+     * @return value of element at idx, packaged as a catena::Value
+     */
     catena::Value operator[](std::size_t idx) const override;
 
 
     /**
-         * @brief register a product
-         * @param key key of product
-         * @return true if product was able to be made
-         */
+     * @brief register a product
+     * @param key key of product
+     * @return true if product was able to be made
+     */
     static bool registerWithFactory(int key) {
         Factory &fac = Factory::getInstance();
 
@@ -103,5 +104,5 @@ template <typename T> class ConcreteArrayAccessor : public ArrayAccessor {
         }
     }
 };
-
+}  // namespace full
 }  // namespace catena

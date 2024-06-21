@@ -28,15 +28,11 @@
 #include <tuple>
 
 
-using catena::DeviceModel;
-using catena::DeviceStream;
-using catena::ParamAccessor;
-using catena::Threading;
+using catena::full::DeviceModel;
+using catena::full::DeviceStream;
+using catena::full::ParamAccessor;
 using google::protobuf::Map;
-
-
-using grpc::ServerWriter;
-using grpc::Status;
+using google::protobuf::MapPair;
 
 // JSON parse options, used by a few methods defined here
 auto jpopts = google::protobuf::util::JsonParseOptions{};

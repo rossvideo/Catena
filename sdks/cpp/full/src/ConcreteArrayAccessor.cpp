@@ -14,7 +14,7 @@
 
 #include <ArrayAccessor.h>
 
-using catena::ConcreteArrayAccessor;
+using catena::full::ConcreteArrayAccessor;
 
 
 // the implementations for simple types are very similar, so we use a macro to DRY
@@ -38,7 +38,7 @@ INSTANTIATE(int, int32_array_values, ints_size, set_int32_value, ints);
 INSTANTIATE(std::string, string_array_values, strings_size, set_string_value, strings);
 
 // struct implementation
-template <> catena::Value ConcreteArrayAccessor<catena::StructList>::operator[](std::size_t idx) const {
+template <> catena::Value ConcreteArrayAccessor<catena::full::StructList>::operator[](std::size_t idx) const {
     auto &arr = _in.get().struct_array_values();
 
     if (arr.struct_values_size() > idx) {

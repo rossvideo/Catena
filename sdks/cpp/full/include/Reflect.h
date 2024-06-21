@@ -10,18 +10,17 @@
  */
 #include <ReflectionMacros.h>
 #include <TypeTraits.h>
-#include <Meta.h>
+#include <TypeList.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <variant>
 
-
-using catena::meta::TypeList;
-using catena::meta::NthElement;
 
 namespace catena {
+  namespace full {
 
 /**
  * @brief pushes the field info
@@ -37,12 +36,12 @@ namespace catena {
   fi.offset = offsetof(_className, ARGNAME(x));              \
   fi.getStructInfo = catena::getStructInfoFunction<ARGTYPE(x)>();    \
   fi.wrapGetter = [](void* dstAddr, const ParamAccessor* pa) { \
-    auto dst = reinterpret_cast<NthElement<typelist, idx>*>(dstAddr); \
-    pa->getValue<false, NthElement<typelist, idx>>(*dst); \
+    auto dst = reinterpret_cast<catena::meta::NthElement<typelist, idx>*>(dstAddr); \
+    pa->getValue<false, catena::meta::NthElement<typelist, idx>>(*dst); \
   }; \
   fi.wrapSetter = [](ParamAccessor* pa, const void* srcAddr) { \
-    auto src = reinterpret_cast<const NthElement<typelist, idx>*>(srcAddr); \
-    pa->setValue<false, NthElement<typelist, idx>>(*src); \
+    auto src = reinterpret_cast<const catena::meta::NthElement<typelist, idx>*>(srcAddr); \
+    pa->setValue<false, catena::meta::NthElement<typelist, idx>>(*src); \
   }; \
   t.fields.push_back(fi);                               
 
@@ -58,7 +57,7 @@ namespace catena {
   /* Dump field types and names */                    \
   DOFOREACH_SEMICOLON(ARGPAIR, __VA_ARGS__)           \
   /* accessible from PUSH_FIELD_INFO define */        \
-  using typelist = TypeList< DOFOREACH(ARGTYPE, __VA_ARGS__) >; \
+  using typelist = catena::meta::Typelist< DOFOREACH(ARGTYPE, __VA_ARGS__) >; \
   using _className = className;                       \
   static const catena::StructInfo& getStructInfo() {  \
     static catena::StructInfo t;                        \
@@ -118,5 +117,5 @@ const catena::VariantInfo CAT_TOKENS(&get, classname)() { \
 auto& CAT_TOKENS(classname, _funct) = catena::ParamAccessor::VariantInfoGetter::getInstance(); \
 bool CAT_TOKENS(classname, _added) = CAT_TOKENS(classname, _funct).addFunction(std::type_index(typeid(classname)),CAT_TOKENS(get, classname))
 
-
+  }  // namespace full
 }  // namespace catena

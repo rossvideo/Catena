@@ -14,8 +14,7 @@
 
 
 #include <utils.h>
-#include <google/protobuf/message.h>
-#include <google/protobuf/util/json_util.h>
+
 
 #include <cassert>
 #include <exception>
@@ -23,22 +22,6 @@
 #include <sstream>
 #include <string>
 
-
-std::string catena::printJSON(const google::protobuf::Message& m) {
-    std::string str;
-    google::protobuf::util::JsonPrintOptions jopts{};
-    jopts.add_whitespace = true;
-    jopts.preserve_proto_field_names = true;
-    auto status = google::protobuf::util::MessageToJsonString(m, &str, jopts);
-    assert(status.ok());
-    return str;
-}
-
-void catena::parseJSON(const std::string& msg, google::protobuf::Message& m) {
-    google::protobuf::util::JsonParseOptions jopts{};
-    auto status = google::protobuf::util::JsonStringToMessage(msg, &m, jopts);
-    assert(status.ok());
-}
 
 std::string catena::readFile(std::filesystem::path path) {
     std::ifstream file(path, std::ios::in | std::ios::binary);  // lock the file
@@ -53,7 +36,7 @@ std::string catena::readFile(std::filesystem::path path) {
  * @brief Substitutes all occurences of one char sequence in a string with
  * another.
  *
- * @param str in/out the string to work on, done in place
+ * @param str in/out the string to work on
  * @param seq in sequence to match
  * @param rep in sequence to replace the match
  */

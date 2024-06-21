@@ -23,7 +23,6 @@
 
 #include <device.pb.h>
 #include <param.pb.h>
-#include <service.grpc.pb.h>
 
 #include <signals.h>
 
@@ -39,9 +38,9 @@
 #include <fstream>
 #include <filesystem>
 
-using grpc::ServerWriter;
 
 namespace catena {
+namespace full {
 
 /**
  * a fake lock for use in recursive function calls
@@ -79,7 +78,7 @@ class DeviceModel {
 
     /**
      * @brief Payload for ParamAccessor
-     * 
+     *
      * Yes, this could be a std::pair, but I've a hunch that we'll need to add
      * a pointer to catena::Constraint too in the near future because constraints
      * can be referenced and not only defined in-line.
@@ -153,7 +152,7 @@ class DeviceModel {
      * @param writer the writer to send the device info to
      * @param tag the tag to associate with the stream
      */
-    void sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag);
+    void sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void *tag);
 
     /**
      * @brief Get the Param object at path
@@ -187,7 +186,7 @@ class DeviceModel {
      * @param params the params to import into
      */
     void importSubParams_(std::filesystem::path &current_folder, ParamsMap &params);
-    
+
     /**
      * @brief fill sub-params with template data
      *
@@ -208,56 +207,55 @@ class DeviceModel {
     catena::Device device_;                    /**< the protobuf device model */
     mutable Mutex mutex_;                      /**< used to mediate access */
     static catena::Value noValue_;             /**< to flag undefined values */
-    std::unordered_set<std::string> accessed_; /**< params that have been built at least once */ 
+    std::unordered_set<std::string> accessed_; /**< params that have been built at least once */
 
   public:
-
-   /**
-    *  signal to share value changes by clients 
-    * 
-    */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx, const std::string&)> valueSetByClient; 
+    /**
+     *  signal to share value changes by clients
+     *
+     */
+    vdk::signal<void(const ParamAccessor &, ParamIndex idx, const std::string &)> valueSetByClient;
 
     /**
-    *  signal to share value changes to all connected clients with proper authorization
-    */
-    vdk::signal<void(const ParamAccessor&, ParamIndex idx)> pushUpdates;
+     *  signal to share value changes to all connected clients with proper authorization
+     */
+    vdk::signal<void(const ParamAccessor &, ParamIndex idx)> pushUpdates;
 };
 
 /**
  * @brief Breaks device model into components that can be streamed to a client
-*/
-class DeviceStream{
+ */
+class DeviceStream {
   public:
     /**
      * @brief Construct a new Device Stream object
      * @param dm the device model to stream
-    */
+     */
     DeviceStream(DeviceModel &dm);
 
     /**
      * @brief Attach client scopes to the stream
      * @param scopes the access scopes of the client requesting the device model
-     * 
+     *
      * used to filter out components that the client does not have access to
-     * 
+     *
      * must be called before calling next()
-    */
-    void attachClientScopes(std::vector<std::string>& scopes);
+     */
+    void attachClientScopes(std::vector<std::string> &scopes);
 
     /**
      * @brief Check if there is another component in the stream
      * @return true if there is another component in the stream
-    */
+     */
     bool hasNext() const;
 
     /**
      * @brief Get the next component in the stream
      * @throws std::runtime_error if called before attachClientScopes
      * @return const catena::DeviceComponent& the next component in the stream
-     * 
+     *
      * skips components that the client does not have access to
-     * 
+     *
      * Generally will return components in the following order:
      * 1. Basic Device Info
      * 2. Params
@@ -266,8 +264,8 @@ class DeviceStream{
      * 5. Commands
      * 6. Language Packs
      * The order within these categories is not guaranteed
-    */
-    const catena::DeviceComponent& next();
+     */
+    const catena::DeviceComponent &next();
 
   private:
     using ParamIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
@@ -277,58 +275,58 @@ class DeviceStream{
     using CommandIterator = google::protobuf::Map<std::string, catena::Param>::const_iterator;
     using LanguagePackIterator = google::protobuf::Map<std::string, catena::LanguagePack>::const_iterator;
 
-    /** 
+    /**
      * @brief creates deviceComponent with basic device info
      * @return catena::DeviceComponent& the basic device info component
-    */
-    catena::DeviceComponent& basicDeviceInfo_();
-    
-    /** 
+     */
+    catena::DeviceComponent &basicDeviceInfo_();
+
+    /**
      * @brief creates deviceComponent with param info
      * @return catena::DeviceComponent& the next param component
-    */
-    catena::DeviceComponent& paramComponent_();
+     */
+    catena::DeviceComponent &paramComponent_();
 
-    /** 
+    /**
      * @brief creates deviceComponent with constraint info
      * @return catena::DeviceComponent& the next constraint component
-    */
-    catena::DeviceComponent& constraintComponent_();
+     */
+    catena::DeviceComponent &constraintComponent_();
 
-    /** 
+    /**
      * @brief creates deviceComponent with menu info
      * @return catena::DeviceComponent& the next menu component
-    */
-    catena::DeviceComponent& menuComponent_();
+     */
+    catena::DeviceComponent &menuComponent_();
 
-    /** 
+    /**
      * @brief creates deviceComponent with command info
      * @return catena::DeviceComponent& the next command component
-    */
-    catena::DeviceComponent& commandComponent_();
+     */
+    catena::DeviceComponent &commandComponent_();
 
-    /** 
+    /**
      * @brief creates deviceComponent with language pack info
      * @return catena::DeviceComponent& the next language pack component
-    */
-    catena::DeviceComponent& languagePackComponent_();
+     */
+    catena::DeviceComponent &languagePackComponent_();
 
-    /** 
+    /**
      * @brief sets nextType_ to the next component type
      * will skip components that the client does not have access to
-    */
+     */
     void setNextType_();
 
     enum class ComponentType {
-      kBasicDeviceInfo,
-      kParam,
-      kConstraint,
-      kMenu,
-      kCommand,
-      kLanguagePack,
-      kFinished
+        kBasicDeviceInfo,
+        kParam,
+        kConstraint,
+        kMenu,
+        kCommand,
+        kLanguagePack,
+        kFinished
     };
-    
+
     ParamIterator paramIter_;
     ConstraintIterator constraintIter_;
     MenuGroupIterator menuGroupIter_;
@@ -339,17 +337,17 @@ class DeviceStream{
     std::reference_wrapper<DeviceModel> deviceModel_;
     ComponentType nextType_;
     DeviceComponent component_;
-    std::vector<std::string>* clientScopes_ = nullptr;
+    std::vector<std::string> *clientScopes_ = nullptr;
 };
-
+}  // namespace full
 }  // namespace catena
 
 /**
  * @brief operator << for DeviceModel
  *
- * @relates catena::DeviceModel
+ * @relates catena::full::DeviceModel
  * @param os the ostream to stream to
  * @param dm the device model to stream
  * @return updated os
  */
-std::ostream &operator<<(std::ostream &os, const catena::DeviceModel &dm);
+std::ostream &operator<<(std::ostream &os, const catena::full::DeviceModel &dm);
