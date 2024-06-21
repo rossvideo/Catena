@@ -16,8 +16,9 @@
  * Provides example of using GenericFactory.
  */
 
-#include <Singleton.h>
-#include <Meta.h>
+#include <patterns/Singleton.h>
+#include <meta/Streamable.h>
+
 
 //
 // C++ runtime includes

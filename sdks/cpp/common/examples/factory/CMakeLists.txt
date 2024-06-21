@@ -1,4 +1,4 @@
-# Copyright © 2023 Ross Video Ltd
+# Copyright © 2024 Ross Video Ltd
 #
 # Licensed under the Creative Commons Attribution NoDerivatives 4.0 International Licensing (CC-BY-ND-4.0);
 # you may not use this file except in compliance with the License.
@@ -12,30 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# cmake build file for C++ SDKs and examples.
+# cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(COMMON C CXX)
+get_filename_component(target ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${target} C CXX)
 
-if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
+add_executable(${target})
 
-set(target catena_common)
+get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
+get_filename_component(CATENA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../ ABSOLUTE)
+set(CATENA_COMMON_INCLUDE ${CATENA_COMMON_DIR}/include)
 
-set(sources "src/utils.cpp" "src/vdk/signals.cpp")
-add_library(${target} STATIC ${sources})
-
-target_include_directories(
-    ${target}
+target_include_directories(${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/vdk>
+        $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )
+
+target_sources(${target}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target}.cpp>
+)
+
+
 target_compile_features(${target} PUBLIC cxx_std_20)
 
-add_subdirectory(examples)
