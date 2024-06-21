@@ -162,6 +162,11 @@ foreach(_model ${CATENA_MODELS})
     add_dependencies(${libtarget} ${target})
   endforeach()
   
+  # Set the library's output directory
+  set_target_properties(${libtarget} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
+  )
   target_include_directories(${libtarget} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} "~/.local/include")
   target_compile_features(${libtarget} PUBLIC cxx_std_20)
   
