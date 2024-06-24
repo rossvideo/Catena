@@ -193,7 +193,7 @@ add_custom_target(clean-proto
   COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
-# add_subdirectory("common")
+add_subdirectory("common")
 
 # doxygen
 #
