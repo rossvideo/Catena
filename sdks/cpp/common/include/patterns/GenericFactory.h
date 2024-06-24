@@ -28,7 +28,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
+#include <memory>
 
 namespace catena {
 namespace patterns {
@@ -40,7 +40,7 @@ namespace patterns {
  * GenericFactories are Singletons.
  *
  * @tparam P the Product made by the factory.
- * @param K the key of the
+ * @tparam K the key that uniquely identifies the product
  * @tparam Ms parameters for the Maker function.
  * @since 1.0.0
  */
@@ -123,20 +123,33 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
      * @throws std::runtime_error if key doesn't exist.
      * @since 1.0.0
      */
-    std::shared_ptr<P> makeProduct(const K key, Ms&&... args) {
+    std::unique_ptr<P> makeProduct(const K key, Ms&&... args) {
         LockGuard lock(_mtx);
-        std::shared_ptr<P> ans(nullptr);
         auto it = _registry.find(key);
         if (it != _registry.end()) {
-            ans.reset(it->second(std::forward<Ms>(args)...));
+            std::unique_ptr<P> ans;
+            try {
+                // N.B. P could be a base class with pure virtual methods, so 
+                // we can't use std::make_unique here.
+                P* p = it->second(std::forward<Ms>(args)...);
+                ans.reset(p);
+                return ans;
+            }
+            catch (std::exception& e) {
+                // in case the product maker throws an exception
+                std::stringstream err;
+                err << __PRETTY_FUNCTION__;
+                err << ", caught exception: ";
+                err << e.what();
+                throw std::runtime_error(err.str());
+            }
         } else {
             std::stringstream err;
             err << __PRETTY_FUNCTION__;
-            err << ", could not find entry with key";
+            err << ", could not find entry with key: ";
             catena::meta::stream_if_possible(err, key);
             throw std::runtime_error(err.str());
         }
-        return ans;
     }
 
     /**

@@ -171,7 +171,7 @@ int main() {
     /*
      * Create 3 dogs of different types
      */
-    std::shared_ptr<Dog> labrador, jackRussell, rabid;
+    std::unique_ptr<Dog> labrador, jackRussell, rabid;
     labrador = df.makeProduct("dog-bidi", "Labrador", 1);
     jackRussell = df.makeProduct("dog-bidi", "Jack Russell", 4);
     rabid = df.makeProduct("dog-unidi", "Rabid dog", 8);
