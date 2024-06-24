@@ -8,7 +8,9 @@
         "CATENA_MODELS": ["full", "lite"]
     },
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/sdks/cpp/build"
+        "${workspaceFolder}/sdks/cpp/build",
+        "${env:HOME}/.local/include",
+        "${workspaceFolder}/sdks/cpp/common/include"
     ],
     "json.schemas": [
         {
