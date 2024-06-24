@@ -246,7 +246,8 @@
         "stateless": {
           "$ref": "#/$defs/stateless"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "param": {
       "oneOf": [
@@ -284,8 +285,7 @@
             {
               "$ref": "#/$defs/apply_struct_variant_array"
             }
-          ],
-          "additionalProperties": false
+          ]
         },
         {
           "$ref": "#/$defs/param_inner",
@@ -322,8 +322,7 @@
               },
               "type": false
             }
-          }],
-          "additionalProperties": false
+          }]
         }
       ]
     },

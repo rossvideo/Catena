@@ -92,6 +92,14 @@ class CppGen {
                 }
                 bloc(`return t;`, bodyIndent+1)
                 bloc('}', bodyIndent);
+            },
+            "STRING": (name, desc, indent = 0) => {
+                let initializer = '';
+                if ("value" in desc) {
+                    initializer = `{"${desc.value.string_value}"}`;
+                }
+                bloc(`std::string ${name}${initializer};`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(${name},"${name}",dm);`, indent);
             }
         };
     }

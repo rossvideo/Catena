@@ -57,6 +57,11 @@ if (APPLE)
   set(CPP_OPTS -E -x c -P)
 endif (APPLE)
 
+get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
+set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "CATENA_ROOT_DIR: ${CATENA_ROOT_DIR}")
+message(STATUS "CATENA_CPP_ROOT_DIR: ${CATENA_CPP_ROOT_DIR}")
+
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
 set(protobuf_MODULE_COMPATIBLE TRUE)
@@ -197,6 +202,9 @@ add_custom_target(clean-proto
 
 # include the common part of the Catena C++ SDK
 add_subdirectory("common")
+
+#include the lite part of the Catena C++ SDK
+add_subdirectory("lite")
 
 # doxygen
 #

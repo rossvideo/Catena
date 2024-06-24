@@ -10,13 +10,15 @@
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/sdks/cpp/build",
         "${env:HOME}/.local/include",
-        "${workspaceFolder}/sdks/cpp/common/include"
+        "${workspaceFolder}/sdks/cpp/common/include",
+        "${workspaceFolder}/sdks/cpp"
     ],
     "json.schemas": [
         {
             "fileMatch": [
                 "/example_device_models/device.*.json",
-                "/nab_2024/device.*.json"
+                "/nab_2024/device.*.json",
+                "/sdks/cpp/lite/examples/start_here/device.*.json"
             ],
             "url": "./schema/catena.schema.json"
         }
@@ -85,6 +87,7 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "vector": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "forward_list": "cpp"
     }
 }
