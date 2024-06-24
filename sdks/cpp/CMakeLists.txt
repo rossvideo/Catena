@@ -40,6 +40,7 @@ endif(UNIT_TESTING)
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
+
 if (WIN32)
   # Windows toolchain and prefix_path are set through command line
   # nothing to do here
@@ -53,7 +54,8 @@ if (APPLE)
   # set up for MacOS
   set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
+  set(CPP_OPTS -E -x c -P)
+endif (APPLE)
 
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
@@ -116,6 +118,7 @@ set(proto_stems
   "device"
   "menu"
 )
+
 
 # create flags _gRPC, _REST, _WSS to indicate which connections are enabled
 #
