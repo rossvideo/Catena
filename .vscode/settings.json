@@ -3,8 +3,14 @@
     "cmake.sourceDirectory": "${workspaceFolder}/sdks/cpp",
     "cmake.buildDirectory": "${workspaceFolder}/sdks/cpp/build",
     "cmake.buildBeforeRun": false,
+    "cmake.configureSettings": {
+        "CONNECTIONS": ["gRPC", "REST"],
+        "CATENA_MODELS": ["full", "lite"]
+    },
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/sdks/cpp/build"
+        "${workspaceFolder}/sdks/cpp/build",
+        "${env:HOME}/.local/include",
+        "${workspaceFolder}/sdks/cpp/common/include"
     ],
     "json.schemas": [
         {

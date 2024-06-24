@@ -29,7 +29,7 @@
 #include <DeviceModel.h>
 #include <Path.h>
 #include <Status.h>
-#include <Threading.h>
+
 #include <TypeTraits.h>
 
 
@@ -43,6 +43,7 @@
 #include <typeindex>
 
 namespace catena {
+namespace full {
 
 /**
  * @brief helper meta function to pass small types by value and complex
@@ -121,14 +122,12 @@ class ParamAccessor {
      * @brief type alias for the function that gets values from the device model for delivery to attached
      * clients
      */
-    using ValueGetter =
-      catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&>;
+    using ValueGetter = catena::patterns::Functory<catena::Value::KindCase, void, Value*, const Value&>;
 
     /**
      * @brief type alias for the function that sets values in the device model in response to client requests
      */
-    using ValueSetter =
-      catena::patterns::Functory<catena::Value::KindCase, void, Value&, const Value&>;
+    using ValueSetter = catena::patterns::Functory<catena::Value::KindCase, void, Value&, const Value&>;
 
     /**
      * @brief type alias for the function that gets values from the device model for delivery to attached
@@ -151,7 +150,8 @@ class ParamAccessor {
      * @param pad the data to initialize the param accessor
      */
 
-    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad, const std::string& oid, const std::string& scope);
+    ParamAccessor(DeviceModel& dm, DeviceModel::ParamAccessorData& pad, const std::string& oid,
+                  const std::string& scope);
 
     /**
      * @brief ParamAccessor has no default constructor.
@@ -194,16 +194,15 @@ class ParamAccessor {
     /**
      * @brief get accessor to the value of the parameter
      */
-    // inline Value& value() { 
+    // inline Value& value() {
     //     std::lock_guard<Mutex> lock(deviceModel_.get().mutex_);
-    //     return value_.get(); 
+    //     return value_.get();
     // }
 
-    template <bool Threadsafe = true>
-    inline const Value& value() const {
+    template <bool Threadsafe = true> inline const Value& value() const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
-        return value_.get(); 
+        return value_.get();
     }
 
     /**
@@ -220,8 +219,7 @@ class ParamAccessor {
      *
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
-    template <bool Threadsafe>
-    std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
+    template <bool Threadsafe> std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
@@ -277,7 +275,7 @@ class ParamAccessor {
         const Value& value = value_.get();
         // If child doesn't have a scope defined, use the parent's scope
         const std::string& scope = childParam.access_scope() == "" ? this->scope_ : childParam.access_scope();
-        
+
         DeviceModel::ParamAccessorData pad;
         const Value* v;
         if (value.kind_case() == Value::KindCase::kStructValue) {
@@ -297,7 +295,8 @@ class ParamAccessor {
         std::get<0>(pad) = const_cast<Param*>(&childParam);
         std::get<1>(pad) = v ? const_cast<Value*>(v) : &DeviceModel::noValue_;
 
-        return std::unique_ptr<ParamAccessor>(new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName, scope});
+        return std::unique_ptr<ParamAccessor>(
+          new ParamAccessor{deviceModel_.get(), pad, oid_ + "/" + fieldName, scope});
     }
 
 
@@ -306,14 +305,13 @@ class ParamAccessor {
      * this class provide access.
      *
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not
-     * implemented, or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
+     * implemented, or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered.
      * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
-     * 
+     *
      * @tparam V type of the value stored by the param. This must be a native type.
      * @param dst reference to the destination object written to by this method.
      */
-    template <bool Threadsafe = true, typename V> 
-    void getValue(V& dst) const {
+    template <bool Threadsafe = true, typename V> void getValue(V& dst) const {
         try {
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
@@ -385,7 +383,7 @@ class ParamAccessor {
     /**
      * @brief Get the value of the stored parameter to which this object
      * provides access from an array with the specified index.
-     * 
+     *
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * objects of type V is not supported, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or catena::Status::RANGE_ERROR if the index is out of range.
@@ -394,8 +392,7 @@ class ParamAccessor {
      * @param dst reference to the destination object written to by this method.
      * @param idx index into the array
      */
-    template <bool Threadsafe = true, typename V> 
-    void getValue(V& dst, const ParamIndex idx) const {
+    template <bool Threadsafe = true, typename V> void getValue(V& dst, const ParamIndex idx) const {
         try {
             using ElementType = typename std::remove_reference<decltype(dst)>::type;
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
@@ -422,14 +419,13 @@ class ParamAccessor {
     /**
      * @brief Set the value of the stored parameter to which this object
      * provides access.
-     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not implemented, 
-     * or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
-     * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
+     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not
+     * implemented, or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. Other
+     * catena::exception_with_status exceptions are re-thrown with no change to their status.
      *
      * @tparam V type of the value stored by the param. This must be a native type.
      */
-    template <bool Threadsafe = true, typename V> 
-    void setValue(const V& src) {
+    template <bool Threadsafe = true, typename V> void setValue(const V& src) {
         try {
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
@@ -493,18 +489,17 @@ class ParamAccessor {
     /**
      * @brief Set the value of the stored parameter to which this object
      * provides access.
-     * 
-     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not implemented, 
-     * or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. 
-     * Other catena::exception_with_status exceptions are re-thrown with no change to their status.
-     * 
+     *
+     * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for V is not
+     * implemented, or with catena::Status::UNKNOWN if an unknown exception is thrown is encountered. Other
+     * catena::exception_with_status exceptions are re-thrown with no change to their status.
+     *
      * @tparam V type of the value stored by the param. This must be a native type.
      * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex.
      * @param src the value to set the parameter owned by the ParamAccessor to.
      * @param idx index into the array, if set to kParamEnd, the value is appended to the array
      */
-    template <bool Threadsafe = true, typename V> 
-    void setValue(const V& src, const ParamIndex idx) {
+    template <bool Threadsafe = true, typename V> void setValue(const V& src, const ParamIndex idx) {
         try {
             using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
             using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
@@ -535,16 +530,15 @@ class ParamAccessor {
      *
      * @param dst [out] destination for the value
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
-     * 
+     *
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
-     * 
+     *
      * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex. If false,
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
-    template<bool Threadsafe = true> 
-    void getValue(Value* dst) const {
+    template <bool Threadsafe = true> void getValue(Value* dst) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& getter = ValueGetter::getInstance();
@@ -569,27 +563,28 @@ class ParamAccessor {
      * @param dst [out] destination for the value
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
      * @param clientScopes [in] the scopes of the client requesting the value
-     * 
+     *
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
      * @throws catena::exception_with_status catena::Status::PERMISSION_DENIED if the client is not authorized
-     * 
+     *
      * @tparam Threadsafe if true, the method will assert the DeviceModel's mutex. If false,
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
-    template<bool Threadsafe = true> 
+    template <bool Threadsafe = true>
     void getValue(Value* dst, ParamIndex idx, std::vector<std::string>& clientScopes) const {
         using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         try {
-            if (clientScopes.size() == 0){
+            if (clientScopes.size() == 0) {
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
-            
+
             if (clientScopes[0] != catena::kAuthzDisabled) {
                 if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
-                    BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
+                    BAD_STATUS("Not authorized to access this parameter",
+                               catena::StatusCode::PERMISSION_DENIED);
                 }
             }
 
@@ -614,51 +609,52 @@ class ParamAccessor {
     }
 
     /**
-     * @brief set the parameter's value packaged as a catena::Value object most likely 
+     * @brief set the parameter's value packaged as a catena::Value object most likely
      * received from client
      *
      * @param dst [out] destination for the value
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
-     * 
+     *
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
-     * 
+     *
      * Threadsafe - asserts a lock on the DeviceModel's mutex.
      */
     void setValue(const std::string& peer, const Value& src);
 
     /**
-     * @brief set the parameter's value packaged as a catena::Value object most likely 
+     * @brief set the parameter's value packaged as a catena::Value object most likely
      * received from client
      *
      * @param dst [out] destination for the value
      * @param idx [in] index into the array, if set to kParamEnd, the entire array is returned
      * @param clientScopes [in] the scopes of the client requesting the value
-     * 
+     *
      * @throws catena::exception_with_status catena::Status::UNIMPLEMENTED if support for
      * the parameter type is not implemented, or with catena::Status::UNKNOWN if an unknown exception
      * is encountered, or with catena::Status::RANGE_ERROR if the index is out of range.
-     * 
+     *
      * Threadsafe - asserts a lock on the DeviceModel's mutex.
      */
-    void setValue(const std::string& peer, const Value& src, ParamIndex idx, std::vector<std::string>& clientScopes);
+    void setValue(const std::string& peer, const Value& src, ParamIndex idx,
+                  std::vector<std::string>& clientScopes);
 
     /**
      * @brief get the parameter as a device component with unauthorized fields removed
      * @param dst [out] a parameter component with unathorized fields removed
      * @param clientScopes [in] the scopes of the client requesting the parameter
      * @throws catena::exception_with_status catena::Status::PERMISSION_DENIED if the client is not authorized
-    */
-    void getParam(catena::DeviceComponent_ComponentParam *dst, std::vector<std::string>& clientScopes) const;
+     */
+    void getParam(catena::DeviceComponent_ComponentParam* dst, std::vector<std::string>& clientScopes) const;
 
     /**
      * @brief check if the client is authorized to access the parameter
      * @param clientScopes the scopes of the client making the request
      * @return true if the client is authorized, false otherwise
-     * 
+     *
      * @todo add option to check scope for write access
-    */
+     */
     bool checkScope(const std::vector<std::string>& clientScopes) const;
 
     /**
@@ -666,38 +662,30 @@ class ParamAccessor {
      * @param clientScopes the scopes of the client making the request
      * @param paramScope the scope of the parameter to be accessed
      * @return true if the client is authorized, false otherwise
-     * 
+     *
      * @todo add option to check scope for write access
-    */
+     */
     bool checkScope(const std::vector<std::string>& clientScopes, const std::string& paramScope) const;
 
-    /** 
+    /**
      * @brief get the parameter's fully qualified object id
-    */
-    inline const std::string& oid() const {
-        return oid_; 
-    }
+     */
+    inline const std::string& oid() const { return oid_; }
 
     /**
      * @brief get the parameter's unique id
-     */ 
-    inline size_t id() const {
-        return id_;
-    }
+     */
+    inline size_t id() const { return id_; }
 
     /**
      * @brief comparison operator, returns true if the 2 ids are equal
-    */
-    inline bool operator==(const ParamAccessor& rhs) const {
-        return id_ == rhs.id_;
-    }
+     */
+    inline bool operator==(const ParamAccessor& rhs) const { return id_ == rhs.id_; }
 
     /**
      * @brief returns true if the param is an array (list in protobuf) type.
-    */
-    inline bool isList() const {
-        return catena::isList(value_.get());
-    }
+     */
+    inline bool isList() const { return catena::isList(value_.get()); }
 
   private:
     /**
@@ -706,18 +694,18 @@ class ParamAccessor {
      * @param dst the destination param data
      * @param parentScope the scope of the parent param
      * @param clientScopes the scopes of the client making the request
-    */
-    void getParam_(DeviceModel::const_ParamAccessorData &src, DeviceModel::ParamAccessorData &dst, 
-            const std::string& parentScope, const std::vector<std::string>& clientScopes) const;
+     */
+    void getParam_(DeviceModel::const_ParamAccessorData& src, DeviceModel::ParamAccessorData& dst,
+                   const std::string& parentScope, const std::vector<std::string>& clientScopes) const;
 
-     /**
+    /**
      * @brief checks if the src value is the correct type to set this parameter
      * @param src the value to compare against
      * @param idx the index into the array
      * @return true if the src value is the correct type to set this parameter
-     * 
+     *
      * for arrays if idx is not kParamEnd, the src value must be proper type for the array
-     * 
+     *
      * @todo check struct array and variant array kinds
      * @todo check that structs contain same sub-params
      * @todo determine how array size should be compared when idx is kParamEnd
@@ -731,7 +719,7 @@ class ParamAccessor {
     std::reference_wrapper<catena::Param> param_;
 
     /** @brief a read only reference to the accessed parameter's value object */
-    std::reference_wrapper<catena::Value> value_; 
+    std::reference_wrapper<catena::Value> value_;
 
     /** @brief the accessed parameter's fully qualified object id*/
     std::string oid_;
@@ -739,12 +727,14 @@ class ParamAccessor {
     /** @brief the accessed parameter's access scope */
     std::string scope_;
 
-    /** 
-     * @brief a unique id (probability of non-uniqueness is approx 1:10^19). 
+    /**
+     * @brief a unique id (probability of non-uniqueness is approx 1:10^19).
      * Motivation - to allow for fast comparison of ParamAccessor objects and
      * to only compute the hash once.
-     * 
-    */
+     *
+     */
     size_t id_;
 };
+
+}  // namespace full
 }  // namespace catena

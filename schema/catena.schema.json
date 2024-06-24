@@ -181,7 +181,7 @@
       "description": "When true, indicates that the parameter is part of the minimal set of parameters that should be reported by the device.",
       "type": "boolean"
     },
-    "param": {
+    "param_inner": {
       "title": "Parameter Descriptor",
       "description": "Defines the type, value, constraints, UI, access modes and configuration options of a parameter.",
       "type": "object",
@@ -246,41 +246,86 @@
         "stateless": {
           "$ref": "#/$defs/stateless"
         }
-      },
-      "required": ["type"],
-      "allOf": [
+      }
+    },
+    "param": {
+      "oneOf": [
         {
-          "$ref": "#/$defs/apply_float32"
+          "$ref": "#/$defs/param_inner",
+          "required": ["type"],
+          "allOf": [
+            {
+              "$ref": "#/$defs/apply_float32"
+            },
+            {
+              "$ref": "#/$defs/apply_int32"
+            },
+            {
+              "$ref": "#/$defs/apply_struct"
+            },
+            {
+              "$ref": "#/$defs/apply_string"
+            },
+            {
+              "$ref": "#/$defs/apply_int32_array"
+            },
+            {
+              "$ref": "#/$defs/apply_float32_array"
+            },
+            {
+              "$ref": "#/$defs/apply_string_array"
+            },
+            {
+              "$ref": "#/$defs/apply_struct_array"
+            },
+            {
+              "$ref": "#/$defs/apply_struct_variant"
+            },
+            {
+              "$ref": "#/$defs/apply_struct_variant_array"
+            }
+          ],
+          "additionalProperties": false
         },
         {
-          "$ref": "#/$defs/apply_int32"
-        },
-        {
-          "$ref": "#/$defs/apply_struct"
-        },
-        {
-          "$ref": "#/$defs/apply_string"
-        },
-        {
-          "$ref": "#/$defs/apply_int32_array"
-        },
-        {
-          "$ref": "#/$defs/apply_float32_array"
-        },
-        {
-          "$ref": "#/$defs/apply_string_array"
-        },
-        {
-          "$ref": "#/$defs/apply_struct_array"
-        },
-        {
-          "$ref": "#/$defs/apply_struct_variant"
-        },
-        {
-          "$ref": "#/$defs/apply_struct_variant_array"
+          "$ref": "#/$defs/param_inner",
+          "required": ["template_oid"],
+          "allOf": [{
+            "properties": {
+              "value": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/float32_value"
+                  },
+                  {
+                    "$ref": "#/$defs/int32_value"
+                  },
+                  {
+                    "$ref": "#/$defs/string_value"
+                  },
+                  {
+                    "$ref": "#/$defs/struct_value"
+                  },
+                  {
+                    "$ref": "#/$defs/int32_array_values"
+                  },
+                  {
+                    "$ref": "#/$defs/float32_array_values"
+                  },
+                  {
+                    "$ref": "#/$defs/string_array_values"
+                  },
+                  {
+                    "$ref": "#/$defs/struct_array_values"
+                  }
+                ]
+              },
+              "type": false
+            }
+          }],
+          "additionalProperties": false
         }
-      ],
-      "additionalProperties": false
+      ]
     },
     "template_oid": {
       "title": "Template Object ID",

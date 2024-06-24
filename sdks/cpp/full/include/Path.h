@@ -33,21 +33,22 @@
 #include <memory>
 
 namespace catena {
+namespace full {
 /**
  * @brief Handles Path objects used to uniquely identify and access OIDs
- * 
+ *
  */
 class Path {
   public:
     /**
      * @brief what we split the path into
-     * 
+     *
      */
     using Segments = std::deque<std::string>;
 
     /**
      * @brief type of index path segments
-     * 
+     *
      */
     using Index = Segments::size_type;
 
@@ -58,10 +59,10 @@ class Path {
     static constexpr Index kEnd = Index(-1);
 
     /**
-     * @brief Segments can be interpreted either as oids (strings), 
+     * @brief Segments can be interpreted either as oids (strings),
      * or array indices (std::size_t). The "one past the end" index
      * is flagged by the value kEnd.
-     * 
+     *
      */
     using Segment = typename std::variant<Index, std::string>;
 
@@ -74,9 +75,9 @@ class Path {
 
     /**
      * @brief Construct a new Path object.
-     * 
-     * 
-     * @param path an escaped json-pointer, 
+     *
+     *
+     * @param path an escaped json-pointer,
      * i.e. '/' replaced by "~1" and '~' by "~0"
      * @throw catena::exception_with_status INVALID_ARGUMENT if path is not a valid json-pointer
      */
@@ -84,8 +85,8 @@ class Path {
 
     /**
      * @brief Construct a new Path object
-     * 
-     * @param literal an escaped json-pointer, 
+     *
+     * @param literal an escaped json-pointer,
      * i.e. '/' replaced by "~1" and '~' by "~0"
      */
     explicit Path(const char* literal);
@@ -113,7 +114,7 @@ class Path {
 
     /**
      * @brief take the front off the path and return it.
-     * @return unescaped component at front of the path, 
+     * @return unescaped component at front of the path,
      * design intent the returned value can be used as an oid lookup,
      * or an array index.
      * Will be empty string if nothing to pop, or the original path
@@ -121,9 +122,9 @@ class Path {
      */
     Segment pop_front() noexcept;
 
-      /**
+    /**
      * @brief return the front of the path.
-     * @return unescaped component at front of the path, 
+     * @return unescaped component at front of the path,
      * design intent the returned value can be used as an oid lookup,
      * or an array index.
      * Will be empty string if path is "/", or "".
@@ -132,15 +133,15 @@ class Path {
 
     /**
      * @brief escapes the oid then adds it to the end of the path.
-     * 
-     * @param oid 
+     *
+     * @param oid
      */
     void push_back(const std::string& oid);
 
     /**
      * @brief return a fully qualified, albeit escaped oid
-     * 
-     * @return std::string 
+     *
+     * @return std::string
      */
     std::string fqoid();
 
@@ -149,19 +150,21 @@ class Path {
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0
-     * 
+     *
      * @param str in|out
      */
     void escape(std::string& str);
 
     /**
      * @brief replace ~0 and ~1 with ~ and /
-     * 
-     * @param str 
+     *
+     * @param str
      * @return unescaped version of str
      */
     std::string unescape(const std::string& str);
 };
+
+}  // namespace full
 }  // namespace catena
 
-std::unique_ptr<catena::Path> operator"" _path(const char* lit, std::size_t sz);
+std::unique_ptr<catena::full::Path> operator"" _path(const char* lit, std::size_t sz);

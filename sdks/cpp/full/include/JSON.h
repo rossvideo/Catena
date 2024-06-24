@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @brief Enum to switch between single & multithreading
- * @file Threading.h
+ * @brief Convenience functions for working with JSON and files.
+ * @file JSON.h
  * @copyright Copyright © 2023 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
@@ -21,11 +21,29 @@
 // limitations under the License.
 //
 
+#include <google/protobuf/message.h>
+#include <google/protobuf/util/json_util.h>
+
+#include <string>
+
 namespace catena {
+namespace full {
 
 /**
- * @brief indicates threading model
+ * @brief prints a protobuf message as JSON
  *
+ * @param msg the protobuf message
+ * @return std::string JSON representation of m
  */
-enum class Threading { kSingleThreaded, kMultiThreaded };
+std::string printJSON(const google::protobuf::Message &msg);
+
+/**
+ * @brief parses protobuf message to JSON
+ *
+ * @param msg JSON message to parse
+ * @param m output protobuf message
+ */
+void parseJSON(const std::string &msg, google::protobuf::Message &m);
+
+} // namespace full
 }  // namespace catena

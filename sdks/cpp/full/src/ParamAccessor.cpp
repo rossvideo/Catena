@@ -15,7 +15,7 @@
 #include <ParamAccessor.h>
 #include <DeviceModel.h>
 #include <Path.h>
-#include <utils.h>
+#include <JSON.h>
 #include <ArrayAccessor.h>
 #include <TypeTraits.h>
 

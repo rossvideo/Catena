@@ -139,6 +139,18 @@
     },
     "template_oid_int_recursive_example": {
       "template_oid": "/ref_struct/num_2"
+    },
+    "nested_struct_layer_1": {
+      "type": "STRUCT",
+      "params": {
+        "nested_struct_layer_2": {
+          "template_oid": "/ref_struct"
+        },
+        "num_2": {
+          "template_oid": "/ref_int",
+          "name": { "display_strings": { "en": "Int Already Inside Struct Layer 1" } }
+        }
+      }
     }
   },
   "menu_groups": {
