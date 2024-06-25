@@ -59,8 +59,7 @@ endif (APPLE)
 
 get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-message(STATUS "CATENA_ROOT_DIR: ${CATENA_ROOT_DIR}")
-message(STATUS "CATENA_CPP_ROOT_DIR: ${CATENA_CPP_ROOT_DIR}")
+set(GRPC_INSTALL_INCLUDE_DIR "$ENV{HOME}/.local/include")
 
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
@@ -175,7 +174,7 @@ foreach(_model ${CATENA_MODELS})
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
   )
-  target_include_directories(${libtarget} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} "~/.local/include")
+  target_include_directories(${libtarget} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${GRPC_INSTALL_INCLUDE_DIR})
   target_compile_features(${libtarget} PUBLIC cxx_std_20)
   
 

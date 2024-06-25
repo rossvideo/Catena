@@ -22,6 +22,7 @@
 #include "build/lite/examples/start_here/device.start_here.json.h"
 #include <lite/include/DeviceModel.h>
 #include <lite/include/Param.h>
+#include <lite/param.pb.h>
 
 using namespace catena::lite;
 #include <iostream>
@@ -41,6 +42,11 @@ int main () {
     // and we can change the value - with the same caveat as race conditions
     helloValue = "Goodbye, Cruel World!";
     std::cout << helloValue << std::endl;
+
+    // for grins, lets serialize to a catena::Value
+    // this wouldn't be in the business logic, but in the gRPC service implementation
+    catena::Value value{};
+    helloParam.serialize(value);
 
     return EXIT_SUCCESS;
 }

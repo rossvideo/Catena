@@ -56,6 +56,11 @@ template <typename T> class Param : public IParam {
      */
     T& Get() { return value_.get(); }
 
+    /**
+     * @brief serialize the parameter value to protobuf
+     */
+    void serialize(catena::Value& value) const override;
+
   private:
     std::reference_wrapper<T> value_;
     std::reference_wrapper<DeviceModel> dm_;
