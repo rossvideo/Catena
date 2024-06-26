@@ -32,8 +32,8 @@
     "params": {
         "hello": {
             "type": "STRING",
-            "value": { "string_value": "Hello, World!" },
-            "name": {"display_strings": {"$key": "greeting"}}
+            "name": {"display_strings": {"$key": "greeting"}},
+            "value": {"string_value": "Hello, World!"}
         }
     }
 }

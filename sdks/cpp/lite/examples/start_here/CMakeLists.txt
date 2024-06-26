@@ -26,8 +26,8 @@ project(${TARGET} C CXX)
 add_executable(${TARGET})
 
 # set up some directory names
-set(HEADER device.start_here.json.h)
-set(BODY device.start_here.json.cpp)
+set(HEADER device.${TARGET}.json.h)
+set(BODY device.${TARGET}.json.cpp)
 get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
 set(CATENA_COMMON_INCLUDE ${CATENA_CPP_ROOT_DIR}/common/include)
 set(CATENA_LITE_INCLUDE ${CATENA_CPP_ROOT_DIR}/lite/include)
@@ -40,17 +40,17 @@ set(CODEGEN_OUTPUT ${HEADER} ${BODY})
 
 
 # convert json to cpp
-
+set(HEADER device.${TARGET}.json.h)
+set(BODY device.${TARGET}.json.cpp)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${HEADER}
-           ${CMAKE_CURRENT_BINARY_DIR}/{${BODY}}
+           ${CMAKE_CURRENT_BINARY_DIR}/${BODY}
     COMMAND node ${CODEGEN} --schema ${SCHEMA} --device-model "${DEVICE_MODEL_JSON}" --output ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${DEVICE_MODEL_JSON} ${SCHEMA} ${CODEGEN}
-    COMMENT "Generating device.start_here.h and device.start_here.cpp"
+    COMMENT "Generating ${HEADER} and ${BODY} from ${DEVICE_MODEL_JSON} and ${SCHEMA} using ${CODEGEN}"
 )
 
-set(HEADER device.start_here.json.h)
-set(BODY device.start_here.json.cpp)
+
 
 # Step 2: Create a custom target that depends on the output of the custom command
 add_custom_target(${TARGET}_codegen
@@ -70,14 +70,14 @@ message(STATUS "GRP_INSTALL_INCLUDE_DIR: ${GRPC_INSTALL_INCLUDE_DIR}")
 target_sources(${TARGET}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${BODY}>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>
-        
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>      
 )
 
 add_dependencies(${TARGET} ${TARGET}_codegen)
 
 target_link_libraries(${TARGET}
     ${LIB_TARGET}
+    catena_common
     catena_lite
     catena_lite_grpc
 )

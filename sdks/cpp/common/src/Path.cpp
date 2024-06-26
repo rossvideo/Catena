@@ -18,7 +18,7 @@
 
 #include <regex>
 
-using Path;
+using catena::common::Path;
 
 Path::Path(const std::string &path) : segments_{} {
     // regex will split a well-formed json pointer into a sequence of strings

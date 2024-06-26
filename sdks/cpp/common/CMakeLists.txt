@@ -26,7 +26,7 @@ endif(APPLE)
 
 set(target catena_common)
 
-set(sources "src/utils.cpp" "src/vdk/signals.cpp")
+set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp")
 add_library(${target} STATIC ${sources})
 
 target_include_directories(

@@ -22,6 +22,7 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment version")
 
 project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 
@@ -54,6 +55,7 @@ if (APPLE)
   # set up for MacOS
   set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+
   set(CPP_OPTS -E -x c -P)
 endif (APPLE)
 
