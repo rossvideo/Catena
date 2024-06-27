@@ -12,9 +12,9 @@
 // limitations under the License.
 //
 
-#include <Path.h>
-#include <utils.h>
-#include <Status.h>
+#include <common/include/Path.h>
+#include <common/include/utils.h>
+#include <common/include/Status.h>
 
 #include <regex>
 
@@ -114,6 +114,6 @@ std::string Path::fqoid() {
     return ans.str();
 }
 
-std::unique_ptr<Path> operator"" _path(const char *lit, std::size_t sz) {
-    return std::make_unique<Path>(lit);
+Path operator"" _path(const char *lit, std::size_t sz) {
+    return Path(lit);
 }

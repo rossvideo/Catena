@@ -167,4 +167,4 @@ class Path {
 }  // namespace full
 }  // namespace catena
 
-std::unique_ptr<catena::common::Path> operator"" _path(const char* lit, std::size_t sz);
+catena::common::Path operator"" _path(const char* lit, std::size_t sz);
