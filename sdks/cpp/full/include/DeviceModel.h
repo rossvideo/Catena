@@ -21,13 +21,14 @@
 // limitations under the License.
 //
 
-#include <device.pb.h>
-#include <param.pb.h>
+#include <full/device.pb.h>
+#include <full/param.pb.h>
 
-#include <signals.h>
+#include <vdk/signals.h>
 
 #include <Path.h>
 #include <Status.h>
+#include <Fake.h>
 
 #include <mutex>
 #include <memory>
@@ -42,12 +43,6 @@
 namespace catena {
 namespace full {
 
-/**
- * a fake lock for use in recursive function calls
- */
-struct FakeLock {
-    FakeLock(std::mutex &) {}
-};
 
 class ParamAccessor;  // forward reference
 class DeviceStream;   // forward reference
@@ -152,7 +147,7 @@ class DeviceModel {
      * @param writer the writer to send the device info to
      * @param tag the tag to associate with the stream
      */
-    void sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void *tag);
+    //void sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void *tag);
 
     /**
      * @brief Get the Param object at path

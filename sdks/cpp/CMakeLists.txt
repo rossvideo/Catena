@@ -207,6 +207,9 @@ add_subdirectory("common")
 #include the lite part of the Catena C++ SDK
 add_subdirectory("lite")
 
+#include the full part of the Catena C++ SDK
+add_subdirectory("full")
+
 # doxygen
 #
 option(BUILD_DOC "Build documentation" ON)
