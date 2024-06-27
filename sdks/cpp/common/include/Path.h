@@ -33,7 +33,7 @@
 #include <memory>
 
 namespace catena {
-namespace full {
+namespace common {
 /**
  * @brief Handles Path objects used to uniquely identify and access OIDs
  *
@@ -167,4 +167,4 @@ class Path {
 }  // namespace full
 }  // namespace catena
 
-std::unique_ptr<catena::full::Path> operator"" _path(const char* lit, std::size_t sz);
+catena::common::Path operator"" _path(const char* lit, std::size_t sz);

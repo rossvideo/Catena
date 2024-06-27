@@ -22,6 +22,7 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment version")
 
 project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
 
@@ -54,8 +55,13 @@ if (APPLE)
   # set up for MacOS
   set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+
   set(CPP_OPTS -E -x c -P)
 endif (APPLE)
+
+get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
+set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(GRPC_INSTALL_INCLUDE_DIR "$ENV{HOME}/.local/include")
 
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
@@ -170,7 +176,7 @@ foreach(_model ${CATENA_MODELS})
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
   )
-  target_include_directories(${libtarget} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} "~/.local/include")
+  target_include_directories(${libtarget} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${GRPC_INSTALL_INCLUDE_DIR})
   target_compile_features(${libtarget} PUBLIC cxx_std_20)
   
 
@@ -197,6 +203,9 @@ add_custom_target(clean-proto
 
 # include the common part of the Catena C++ SDK
 add_subdirectory("common")
+
+#include the lite part of the Catena C++ SDK
+add_subdirectory("lite")
 
 # doxygen
 #

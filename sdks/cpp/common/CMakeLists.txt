@@ -26,16 +26,18 @@ endif(APPLE)
 
 set(target catena_common)
 
-set(sources "src/utils.cpp" "src/vdk/signals.cpp")
+set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp")
 add_library(${target} STATIC ${sources})
 
 target_include_directories(
     ${target}
     PUBLIC
+        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/vdk>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )
+message(STATUS "CMAKE_CPP_ROOT_DIR: ${CMAKE_CPP_ROOT_DIR}")
 target_compile_features(${target} PUBLIC cxx_std_20)
 
 add_subdirectory(examples)

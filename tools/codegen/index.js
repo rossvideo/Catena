@@ -175,13 +175,15 @@ try {
         const warning = `// This file was auto-generated. Do not modify by hand.`;
         hloc(`#pragma once`);
         hloc(warning);
-        hloc(`#include <Meta.h>`);
-        hloc(`#include <TypeTraits.h>`);
-        hloc(`#include <string>`);
-        hloc(`#include <vector>`);
+        hloc(`#include <lite/include/DeviceModel.h>`);
+        hloc(`extern catena::lite::DeviceModel dm;`);
         hloc(`namespace ${namespace} {`)
         bloc(warning);
-        bloc(`#include <${headerFilename}>`);
+        bloc(`#include "${headerFilename}"`);
+        bloc(`#include <lite/include/IParam.h>`);
+        bloc(`#include <lite/include/Param.h>`);
+        bloc(`#include <lite/include/DeviceModel.h>`);
+        bloc(`catena::lite::DeviceModel dm{};`)
         let codegen = new CppGen(hloc, bloc, namespace);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);

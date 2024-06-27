@@ -1,7 +1,17 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+      {
+        "type": "cppdbg",
+        "name": "Debug start_here with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/start_here/start_here",
+        "args": [],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
       {
         "type": "cppdbg",
         "name": "Debug Full Service with lldb",
