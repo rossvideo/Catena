@@ -50,8 +50,7 @@ int main () {
     // because we designed the device model, we know it contains a parameter, hello
     // and we also know its value type - std::string
     // so we can get a reference to its Param object
-    Path helloPath("/hello");
-    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.GetParam(helloPath));
+    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.GetParam("/hello"));
 
     // With the Param object we can get a reference to the parameter's value object
     std::string& helloValue = helloParam.Get();

@@ -33,6 +33,8 @@ class DeviceModel {
 
     IParam* GetParam(catena::common::Path& path);
 
+    IParam* GetParam(const std::string& name);
+
   private:
     std::unordered_map<std::string, IParam*> params_;
     mutable std::mutex mutex_;

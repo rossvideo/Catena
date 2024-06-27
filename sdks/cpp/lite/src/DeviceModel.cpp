@@ -16,3 +16,8 @@ IParam* DeviceModel::GetParam(Path& path)  {
     
     return params_[std::get<std::string>(name)];
 }
+
+IParam* DeviceModel::GetParam(const std::string& name)  {
+    Path path(name);
+    return GetParam(path);
+}
