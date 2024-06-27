@@ -77,6 +77,12 @@ jobs:
         sudo apt-get install libssl-dev
         git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -G Ninja ..  && ninja && sudo ninja install
 
+    - name: Install Codegen
+      run: |
+        cd ./work/Catena/Catena/tools/codegen
+        echo "Install Codegen"
+        npm install  
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
@@ -91,7 +97,7 @@ jobs:
         cd ./work/Catena/Catena/sdks/cpp
         mkdir -p build
         cd build
-        cmake -DUNIT_TESTING=OFF -G Ninja ..
+        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -G Ninja ..
         ninja
 
     - name: Perform CodeQL Analysis
