@@ -14,7 +14,7 @@ name: "CodeQL-CPP"
 
 on:
   push:
-    branches: [ "develop", "main", "mejohnnaylor-patch-1-1"]
+    branches: [ "develop", "main"]
   pull_request:
     branches: [ "develop", "main" ]
   schedule:
@@ -92,7 +92,7 @@ jobs:
         mkdir -p build
         cd build
         cmake -DUNIT_TESTING=OFF ..
-        make
+        ninja
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
