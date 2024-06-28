@@ -52,6 +52,7 @@ add_library(${target} STATIC
 )
 
 add_dependencies(${target} catena_common)
+add_dependencies(${target} ${libtarget})
 
 target_include_directories(
     ${target}

@@ -121,7 +121,7 @@ function(generate_cpp_protobuf_sources proto_stems model gRPC)
             OUTPUT "${output}"
             COMMAND ${_PROTOBUF_PROTOC}
             ARGS ${protoc_args}
-            DEPENDS "${input}"
+            DEPENDS ${${model}_protos}
             COMMENT "Running C++ protocol buffer compiler on ${_proto}.proto"
             VERBATIM
         )

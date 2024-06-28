@@ -50,6 +50,7 @@ add_library(${target} STATIC
 )
 
 add_dependencies(${target} catena_common)
+add_dependencies(${target} ${libtarget})
 
 target_include_directories(
     ${target}
@@ -59,6 +60,10 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
         $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
+)
+
+target_link_libraries(${target}
+    catena_common
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
