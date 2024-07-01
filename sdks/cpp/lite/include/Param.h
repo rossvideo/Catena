@@ -2,6 +2,7 @@
 
 #include <lite/include/IParam.h>
 #include <lite/include/DeviceModel.h>
+#include <lite/include/StructInfo.h>
 
 #include <functional> // reference_wrapper
 
@@ -61,6 +62,10 @@ template <typename T> class Param : public IParam {
      */
     void serialize(catena::Value& value) const override;
 
+  private:
+    void serializeStruct(Value& value, const StructInfo& si) const {
+        std::cout << "StructInfo: " << si.name << std::endl;
+    }
   private:
     std::reference_wrapper<T> value_;
     std::reference_wrapper<DeviceModel> dm_;

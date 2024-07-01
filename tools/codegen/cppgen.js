@@ -33,6 +33,20 @@ class CppGen {
     constructor(hloc, bloc, namespace) {
         this.hloc = hloc; // write a line of code to the header file
         this.bloc = bloc; // write a line of code to the body file
+        this.arrayInitializer = (name, desc, arr, quote = '', indent = 0) => {
+            let initializer = '{}';
+            if ("value" in desc) {
+                initializer = '{';
+                for (let i = 0; i < arr.length; ++i) {
+                    initializer += `${quote}${arr[i]}${quote}`;
+                    if (i < arr.length - 1) {
+                        initializer += ',';
+                    }
+                }
+                initializer += '}';
+            }
+            return initializer;
+        };
         this.namespace = namespace;
         this.convertors = {
             "STRUCT": (name, desc, indent = 0) => {
@@ -63,43 +77,79 @@ class CppGen {
                 for (let i = 0; i < n; ++i) {
                     hloc(`${types[i]} ${names[i]};`, indent+1);
                 }
-                hloc(`static const StructInfo& getStructInfo();`, indent+1)
+
+                // declare the getStructInfo method and typelist in the header file
+                hloc(`static const catena::lite::StructInfo& getStructInfo();`, indent+1)
+                hloc(`using typelist = catena::meta::TypeList<${types.join(', ')}>;`, indent+1)
                 hloc(`};`, indent);
+
+                // instantiate the struct in the body file 
+                bloc(`${fqname} ${name};`, indent);
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"${name}",dm);`, indent);
 
                 // write the getStructInfo method to the body file
                 let bodyIndent = 0;
+                bloc(`using namespace ${namespace};`, bodyIndent);
+                bloc(`using namespace catena::lite;`, bodyIndent);
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
                 bloc(`static StructInfo t;`, bodyIndent+1);
                 bloc(`if (t.name.length()) return t;`, bodyIndent+1);
-                bloc(`t.name = "${name}";`, bodyIndent+1);
-                bloc(`catena::FieldInfo fi;`, bodyIndent+1);
+                bloc(`t.name = "${classname}";`, bodyIndent+1);
+                bloc(`FieldInfo fi;`, bodyIndent+1);
                 for (let i = 0; i < n; ++i) {
                     let indent = bodyIndent+2;
                     bloc(`// register info for the ${names[i]} field`, indent);
-                    bloc(`//`, indent);
                     bloc(`fi.name = "${names[i]}";`, indent);
                     bloc(`fi.offset = offsetof(${fqname}, ${names[i]});`, indent);
-                    // fi.getStructInfo = catena::getStructInfoFunction<types[i]>();
-                    bloc(`fi.wrapGetter = [](void* dstAddr, const ParamAccessor* pa) {`, indent);
-                      bloc(`auto dst = reinterpret_cast<${types[i]}*>(dstAddr);`, indent+1);
-                      bloc(`pa->getValue<false, ${types[i]}>(*dst);`, indent+1);
-                    bloc(`};`, indent);
-                    bloc(`fi.wrapSetter = [](ParamAccessor* pa, const void* srcAddr) {`, indent);
-                      bloc(`auto src = reinterpret_cast<const ${types[i]}*>(srcAddr);`, indent+1);
-                      bloc(`pa->setValue<false, ${types[i]}>(*src);`, indent+1);
-                    bloc(`};`, indent);
                     bloc(`t.fields.push_back(fi);`, indent);
                 }
                 bloc(`return t;`, bodyIndent+1)
                 bloc('}', bodyIndent);
+
+                // instantiate the serialize specialization
+                bloc(`template<>`, indent);
+                bloc(`void Param<${fqname}>::serialize(catena::Value& value) const {`, indent);
+                bloc(`serializeStruct(value, ${fqname}::getStructInfo());`, indent+1);
+                bloc('}', indent);
             },
             "STRING": (name, desc, indent = 0) => {
-                let initializer = '';
+                let initializer = '{}';
                 if ("value" in desc) {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
                 bloc(`catena::lite::Param<std::string> ${name}Param(${name},"${name}",dm);`, indent);
+            },
+            "INT32": (name, desc, indent = 0) => {
+                let initializer = '{}';
+                if ("value" in desc) {
+                    initializer = `{${desc.value.int32_value}}`;
+                }
+                bloc(`int32_t ${name}${initializer};`, indent);
+                bloc(`catena::lite::Param<int32_t> ${name}Param(${name},"${name}",dm);`, indent);
+            },
+            "FLOAT32": (name, desc, indent = 0) => {
+                let initializer = '{}';
+                if ("value" in desc) {
+                    initializer = `{${desc.value.float32_value}}`;
+                }
+                bloc(`float ${name}${initializer};`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(${name},"${name}",dm);`, indent);
+            },
+            "STRING_ARRAY": (name, desc, indent = 0) => {
+                let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
+                bloc(`std::vector<std::string> ${name}${initializer};`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(${name},"${name}",dm);`, indent);
+            },
+            "INT32_ARRAY": (name, desc, indent = 0) => {
+                let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
+                bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(${name},"${name}",dm);`, indent);
+            },
+            "FLOAT32_ARRAY": (name, desc, indent = 0) => {
+                let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
+                bloc(`std::vector<float> ${name}${initializer};`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(${name},"${name}",dm);`, indent);
             }
         };
     }

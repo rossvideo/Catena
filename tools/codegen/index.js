@@ -176,6 +176,7 @@ try {
         hloc(`#pragma once`);
         hloc(warning);
         hloc(`#include <lite/include/DeviceModel.h>`);
+        hloc(`#include <lite/include/StructInfo.h>`);
         hloc(`extern catena::lite::DeviceModel dm;`);
         hloc(`namespace ${namespace} {`)
         bloc(warning);

@@ -1,0 +1,58 @@
+{
+    "slot": 1,
+    "multi_set_enabled": true,
+    "detail_level": "FULL",
+    "access_scopes": ["monitor", "operate", "configure", "administer"],
+    "default_scope": "operate",
+    "language_packs": {
+      "packs": {
+        "es": {
+          "name": "Spanish",
+          "words": {
+            "greeting": "Hola",
+            "parting": "Adiós"
+          }
+        },
+        "en": {
+          "name": "English",
+          "words": {
+            "greeting": "Hello",
+            "parting": "Goodbye"
+          }
+        },
+        "fr": {
+          "name": "French",
+          "words": {
+            "greeting": "Bonjour",
+            "parting": "Adieu"
+          }
+        }
+      }
+    },
+    "params": {
+        "location": {
+            "type": "STRUCT",
+            "name": {"display_strings": {"en": "Location"}},
+            "params": {
+                "latitude": {
+                    "type": "FLOAT32",
+                    "value": {"float32_value": 0},
+                    "name": {"display_strings": {"en": "Latitude"}}
+                },
+                "longitude": {
+                    "type": "FLOAT32",
+                    "value": {"float32_value": 0},
+                    "name": {"display_strings": {"en": "Longitude"}}
+                }
+            },
+            "value": {
+                "struct_value": {
+                    "fields": {
+                        "latitude": {"value": {"float32_value": 37.7749}},
+                        "longitude": {"value": {"float32_value": -122.4194}}
+                    }
+                }
+            }
+        }
+    }
+}
