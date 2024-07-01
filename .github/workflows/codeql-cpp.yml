@@ -79,6 +79,7 @@ jobs:
 
     - name: Install Codegen
       run: |
+        cd ~
         cd ./work/Catena/Catena/tools/codegen
         echo "Install Codegen"
         npm install  
