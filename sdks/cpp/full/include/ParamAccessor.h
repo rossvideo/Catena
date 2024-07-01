@@ -21,16 +21,19 @@
 // limitations under the License.
 //
 
-#include <constraint.pb.h>
-#include <device.pb.h>
-#include <param.pb.h>
+#include <full/constraint.pb.h>
+#include <full/device.pb.h>
+#include <full/param.pb.h>
 
-#include <Functory.h>
+#include <patterns/Functory.h>
+#include <meta/Variant.h>
 #include <DeviceModel.h>
 #include <Path.h>
 #include <Status.h>
-
 #include <TypeTraits.h>
+#include <Fake.h>
+
+
 
 
 #include <functional>
@@ -116,7 +119,7 @@ class ParamAccessor {
     /**
      * @brief type alias for the function that gets the VariantInfo for a type
      */
-    using VariantInfoGetter = catena::patterns::Functory<std::type_index, const VariantInfo&>;
+    using VariantInfoGetter = catena::patterns::Functory<std::type_index, const catena::full::VariantInfo&>;
 
     /**
      * @brief type alias for the function that gets values from the device model for delivery to attached
@@ -200,7 +203,7 @@ class ParamAccessor {
     // }
 
     template <bool Threadsafe = true> inline const Value& value() const {
-        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::common::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         return value_.get();
     }
@@ -220,7 +223,7 @@ class ParamAccessor {
      * This method is threadsafe because it asserts the DeviceModel's mutex.
      */
     template <bool Threadsafe> std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) {
-        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, common::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
         if (!parent.mutable_params()->contains(fieldName)) {
@@ -268,7 +271,7 @@ class ParamAccessor {
      */
     template <bool Threadsafe>
     const std::unique_ptr<ParamAccessor> subParam(const std::string& fieldName) const {
-        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, FakeLock>;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, common::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         Param& parent = param_.get();
         const Param& childParam = parent.params().at(fieldName);
@@ -313,10 +316,10 @@ class ParamAccessor {
      */
     template <bool Threadsafe = true, typename V> void getValue(V& dst) const {
         try {
-            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::common::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& getter = Getter::getInstance();
-            if constexpr (catena::has_getStructInfo<V>) {
+            if constexpr (catena::full::has_getStructInfo<V>) {
                 // dst is a struct
                 const auto& structInfo = dst.getStructInfo();
                 char* base = reinterpret_cast<char*>(&dst);
@@ -343,9 +346,9 @@ class ParamAccessor {
                 Value::KindCase kc = src.value().kind_case();
 
                 // gather info about the native destination
-                auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
-                const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
-                const catena::VariantMemberInfo vmi = variantInfo.members.at(variant);
+                auto& variantInfoFunctory = catena::full::ParamAccessor::VariantInfoGetter::getInstance();
+                const catena::full::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
+                const catena::full::VariantMemberInfo vmi = variantInfo.members.at(variant);
 
                 // set the variant to the correct type, and return a pointer to it
                 void* ptr = vmi.set(&dst);
@@ -395,7 +398,7 @@ class ParamAccessor {
     template <bool Threadsafe = true, typename V> void getValue(V& dst, const ParamIndex idx) const {
         try {
             using ElementType = typename std::remove_reference<decltype(dst)>::type;
-            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::common::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& getter = GetterAt::getInstance();
             static std::vector<ElementType> x;
@@ -427,10 +430,10 @@ class ParamAccessor {
      */
     template <bool Threadsafe = true, typename V> void setValue(const V& src) {
         try {
-            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::common::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& setter = Setter::getInstance();
-            if constexpr (catena::has_getStructInfo<V>) {
+            if constexpr (catena::full::has_getStructInfo<V>) {
                 const auto& structInfo = src.getStructInfo();
                 const char* base = reinterpret_cast<const char*>(&src);
                 auto* dstFields = value_.get().mutable_struct_value()->mutable_fields();
@@ -454,8 +457,8 @@ class ParamAccessor {
                     }
                 }
             } else if constexpr (catena::meta::is_variant<V>::value) {
-                auto& variantInfoFunctory = catena::ParamAccessor::VariantInfoGetter::getInstance();
-                const catena::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
+                auto& variantInfoFunctory = ParamAccessor::VariantInfoGetter::getInstance();
+                const catena::full::VariantInfo& variantInfo = variantInfoFunctory[std::type_index(typeid(V))]();
                 Value& v = value_.get();
                 StructVariantValue* vv = v.mutable_struct_variant_value();
                 std::string* currentVariant = vv->mutable_struct_variant_type();
@@ -502,7 +505,7 @@ class ParamAccessor {
     template <bool Threadsafe = true, typename V> void setValue(const V& src, const ParamIndex idx) {
         try {
             using ElementType = std::remove_const<typename std::remove_reference<decltype(src)>::type>::type;
-            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::FakeLock>;
+            using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<Mutex>, catena::common::FakeLock>;
             LockGuard lock(deviceModel_.get().mutex_);
             auto& setterAt = SetterAt::getInstance();
             static std::vector<ElementType> x;
@@ -539,7 +542,7 @@ class ParamAccessor {
      * no lock is asserted - use when making recursive calls to avoid deadlock.
      */
     template <bool Threadsafe = true> void getValue(Value* dst) const {
-        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, catena::common::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         auto& getter = ValueGetter::getInstance();
         try {
@@ -574,14 +577,14 @@ class ParamAccessor {
      */
     template <bool Threadsafe = true>
     void getValue(Value* dst, ParamIndex idx, std::vector<std::string>& clientScopes) const {
-        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, FakeLock>;
+        using LockGuard = std::conditional_t<Threadsafe, std::lock_guard<DeviceModel::Mutex>, catena::common::FakeLock>;
         LockGuard lock(deviceModel_.get().mutex_);
         try {
             if (clientScopes.size() == 0) {
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
 
-            if (clientScopes[0] != catena::kAuthzDisabled) {
+            if (clientScopes[0] != kAuthzDisabled) {
                 if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
                     BAD_STATUS("Not authorized to access this parameter",
                                catena::StatusCode::PERMISSION_DENIED);
@@ -685,7 +688,7 @@ class ParamAccessor {
     /**
      * @brief returns true if the param is an array (list in protobuf) type.
      */
-    inline bool isList() const { return catena::isList(value_.get()); }
+    inline bool isList() const { return catena::full::isList(value_.get()); }
 
   private:
     /**
@@ -713,7 +716,7 @@ class ParamAccessor {
     bool sameKind(const Value& src, const ParamIndex idx) const;
 
     /** @brief a reference to the device model that contains accessed parameter */
-    std::reference_wrapper<catena::DeviceModel> deviceModel_;
+    std::reference_wrapper<catena::full::DeviceModel> deviceModel_;
 
     /** @brief a reference to the parameter accessed by this object */
     std::reference_wrapper<catena::Param> param_;

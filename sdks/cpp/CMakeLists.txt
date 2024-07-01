@@ -125,9 +125,16 @@ set(proto_stems
   "menu"
 )
 
+# Check for invalid connection types
+set(ALLOWED_CONNECTIONS "gRPC;REST;WSS")
+foreach(conn ${CONNECTIONS})
+  list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
+  if(${_IDX} EQUAL -1)
+    message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are gRPC, REST, WSS.")
+  endif()
+endforeach()
 
 # create flags _gRPC, _REST, _WSS to indicate which connections are enabled
-#
 message(STATUS "Connections: ${CONNECTIONS}")
 list(FIND CONNECTIONS "gRPC" _gRPC)
 list(FIND CONNECTIONS "REST" _REST)
@@ -143,8 +150,24 @@ if (${_WSS} GREATER -1)
   message(STATUS "WSS connection enabled")
 endif()
 
+# Check that at least one connection type is specified
+if (${_gRPC} EQUAL -1 AND ${_REST} EQUAL -1 AND ${_WSS} EQUAL -1)
+  message(FATAL_ERROR "Error: At least one connection type must be specified.")
+endif()
 
+# Check if at least one Catena Model is specified
+if (NOT CATENA_MODELS)
+  message(FATAL_ERROR "Error: At least one Catena Model must be specified.")
+endif()
+
+set(ALLOWED_MODELS "full" "lite")
 foreach(_model ${CATENA_MODELS})
+
+  # Check if the model is valid
+  if (NOT _model IN_LIST ALLOWED_MODELS)
+    message(FATAL_ERROR "Error: Unknown Catena Model specified: ${_model}")
+  endif()
+
   preprocess_protobuf_files(${catena_interface_dir} "${proto_stems}" ${_model})
   generate_cpp_protobuf_sources ("${proto_stems}" ${_model} ${_gRPC})
 
@@ -194,6 +217,7 @@ foreach(_model ${CATENA_MODELS})
     endif()
   endif()
 
+  add_subdirectory(${_model})
 endforeach()
 
 # add clean target for the protobuf generated files
@@ -203,9 +227,6 @@ add_custom_target(clean-proto
 
 # include the common part of the Catena C++ SDK
 add_subdirectory("common")
-
-#include the lite part of the Catena C++ SDK
-add_subdirectory("lite")
 
 # doxygen
 #

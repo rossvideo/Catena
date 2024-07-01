@@ -39,7 +39,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-using Index = catena::Path::Index;
+using Index = catena::common::Path::Index;
 
 int main(int argc, char** argv) {
     // process command line
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
         // read a json file into a DeviceModel object
         // we don't need this one to be threadsafe, so use false
         // as the template parameter
-        catena::DeviceModel dm(argv[1]);
+        catena::full::DeviceModel dm(argv[1]);
 
         // write the device model to stdout
         std::cout << "Read Device Model: " << dm << '\n';

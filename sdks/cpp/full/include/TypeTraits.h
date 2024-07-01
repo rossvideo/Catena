@@ -11,7 +11,7 @@
  *
  */
 
-#include <device.pb.h>
+#include <full/device.pb.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -125,11 +125,11 @@ constexpr bool has_getStructInfo<T, std::void_t<decltype(std::declval<T>().getSt
  * @brief returns the getStructInfo method for types that have it,
  * otherwise returns a function that returns an empty StructInfo object.
  */
-template <typename T> std::function<catena::StructInfo()> getStructInfoFunction() {
-    if constexpr (catena::has_getStructInfo<T>) {
+template <typename T> std::function<catena::full::StructInfo()> getStructInfoFunction() {
+    if constexpr (catena::full::has_getStructInfo<T>) {
         return T::getStructInfo;
     } else {
-        return []() -> catena::StructInfo { return catena::StructInfo{}; };
+        return []() -> catena::full::StructInfo { return catena::full::StructInfo{}; };
     }
 }
 
@@ -157,11 +157,11 @@ constexpr bool has_getVariant<T, std::void_t<decltype(std::declval<T>().getVaria
  * @brief returns the getStructInfo method for types that have it,
  * otherwise returns a function that returns an empty StructInfo object.
  */
-template <typename T> std::function<catena::StructInfo()> getVariantFunction() {
-    if constexpr (catena::has_getVariant<T>) {
+template <typename T> std::function<catena::full::StructInfo()> getVariantFunction() {
+    if constexpr (catena::full::has_getVariant<T>) {
         return T::getStructInfo;
     } else {
-        return []() -> catena::StructInfo { return catena::StructInfo{}; };
+        return []() -> catena::full::StructInfo { return catena::full::StructInfo{}; };
     }
 }
 }  // namespace full
