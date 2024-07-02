@@ -172,29 +172,12 @@ try {
         let bodyLoc = new loc(body);
         let hloc = headerLoc.write.bind(headerLoc);
         let bloc = bodyLoc.write.bind(bodyLoc);
-        const warning = `// This file was auto-generated. Do not modify by hand.`;
-        hloc(`#pragma once`);
-        hloc(warning);
-        hloc(`#include <lite/include/DeviceModel.h>`);
-        hloc(`#include <lite/include/StructInfo.h>`);
-        hloc(`extern catena::lite::DeviceModel dm;`);
-        hloc(`namespace ${namespace} {`)
-        bloc(warning);
-        bloc(`#include "${headerFilename}"`);
-        bloc(`#include <lite/include/IParam.h>`);
-        bloc(`#include <lite/include/Param.h>`);
-        bloc(`#include <lite/include/DeviceModel.h>`);
-        bloc(`catena::lite::DeviceModel dm{};`)
-        bloc(`using catena::lite::StructInfo;`);
-        bloc(`using catena::lite::FieldInfo;`);
-        bloc("void serialize_float(catena::Value& value, const void* base) {");
-        bloc("value.set_float32_value(*reinterpret_cast<const float*>(base));", 1);
-        bloc("}");
         let codegen = new CppGen(hloc, bloc, namespace);
+        codegen.init(headerFilename);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
         }
-        hloc(`} // namespace ${namespace}`);
+        codegen.finish();
         fs.close(body);
         fs.close(header);
         

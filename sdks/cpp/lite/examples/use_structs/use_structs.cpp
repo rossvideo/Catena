@@ -40,8 +40,13 @@ int main() {
 
     auto& locationParam = *dynamic_cast<Param<Location>*>(dm.GetParam("/location"));
     Location& locationValue = locationParam.Get();
-    std::cout << "latitude: " << locationValue.latitude << ", longitude: " << locationValue.longitude
+    std::cout << "Location from model - latitude: " << locationValue.latitude << ", longitude: " << locationValue.longitude
               << std::endl;
+    // create another Location object, using the default initial value specified in the model
+    Location externalToModel;
+    std::cout << "Location object external to model - latitude: " << externalToModel.latitude << ", longitude: " << externalToModel.longitude
+              << std::endl;
+    locationValue = externalToModel;
 
 
     // serialize the location parameter - will be removed from this example          

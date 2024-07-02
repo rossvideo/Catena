@@ -18,6 +18,7 @@ limitations under the License.
 'use strict';
 
 const fs = require('fs');
+const { get } = require('http');
 
 const kCppTypes = {
     "INT32": "int32_t",
@@ -27,6 +28,36 @@ const kCppTypes = {
 
 function initialCap(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+
+const getFieldInit = {
+    "INT32": (value) => `${value.int32_value}`,
+    "FLOAT32": (value) => `${value.float32_value}`,
+    "STRING": (value) => `"${value.string_value}"`
+};
+
+function structInit(names, srctypes, desc) {
+    let inits = [];
+    let fields = desc.value.struct_value.fields;
+    if ("value" in desc) {
+        for (let i = 0; i < names.length; ++i) {
+            if (names[i] in fields) {
+                let field = fields[names[i]];
+                let srctype = srctypes[i];
+                if (srctype in kCppTypes) {
+                    inits.push(getFieldInit[srctype](field.value));
+                } else {
+                    inits.push('{}');
+                }
+            } else {
+                inits.push('{}');
+            }
+        }
+    } else {
+        inits.push('{}');
+    }
+    return `{${inits.join(', ')}}`;
 }
 
 class CppGen {
@@ -57,11 +88,13 @@ class CppGen {
                 let n = 0;
                 let types = [];
                 let names = [];
+                let srctypes = [];
+                let defaults = [];
                 // gather information about the struct
                 for (p in params) {
                     const type = params[p].type;
                     names.push(p);
-                    
+                    srctypes.push(type);
                     if (type in kCppTypes) {
                         let cppType = kCppTypes[type];
                         types.push(cppType);
@@ -70,22 +103,27 @@ class CppGen {
                         types.push(userDefinedType);
                         this.convertors.STRUCT(userDefinedType, params[p], indent + 1);
                     }
+                    if ("value" in params[p]) {
+                        defaults.push(`= ${getFieldInit[type](params[p].value)}`);
+                    } else {
+                        defaults.push('{}');
+                    }
                     ++n;
                 }
-
+                
                 // write the struct to the header file
                 for (let i = 0; i < n; ++i) {
-                    hloc(`${types[i]} ${names[i]};`, indent+1);
+                    hloc(`${types[i]} ${names[i]} ${defaults[i]};`, indent+1);
                 }
 
                 // declare the getStructInfo method and typelist in the header file
                 hloc(`static const catena::lite::StructInfo& getStructInfo();`, indent+1)
-                hloc(`using typelist = catena::meta::TypeList<${types.join(', ')}>;`, indent+1)
+                // hloc(`using typelist = catena::meta::TypeList<${types.join(', ')}>;`, indent+1)
                 hloc(`};`, indent);
 
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
-                bloc(`${fqname} ${name};`, bodyIndent);
+                bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
                 bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"${name}",dm);`, bodyIndent)
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
                 bloc(`static StructInfo t;`, bodyIndent+1);
@@ -149,6 +187,29 @@ class CppGen {
                 bloc(`catena::lite::Param<std::vector<float>> ${name}Param(${name},"${name}",dm);`, indent);
             }
         };
+        this.init = (headerFilename) => {
+            const warning = `// This file was auto-generated. Do not modify by hand.`;
+            hloc(`#pragma once`);
+            hloc(warning);
+            hloc(`#include <lite/include/DeviceModel.h>`);
+            hloc(`#include <lite/include/StructInfo.h>`);
+            hloc(`extern catena::lite::DeviceModel dm;`);
+            hloc(`namespace ${namespace} {`)
+            bloc(warning);
+            bloc(`#include "${headerFilename}"`);
+            bloc(`#include <lite/include/IParam.h>`);
+            bloc(`#include <lite/include/Param.h>`);
+            bloc(`#include <lite/include/DeviceModel.h>`);
+            bloc(`catena::lite::DeviceModel dm{};`)
+            bloc(`using catena::lite::StructInfo;`);
+            bloc(`using catena::lite::FieldInfo;`);
+            bloc("void serialize_float(catena::Value& value, const void* base) {");
+            bloc("value.set_float32_value(*reinterpret_cast<const float*>(base));", 1);
+            bloc("}");
+        },
+        this.finish = () => {
+            hloc(`} // namespace ${namespace}`);
+        }
     }
     
     convert (oid, desc) {
