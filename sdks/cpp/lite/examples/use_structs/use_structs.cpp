@@ -19,8 +19,8 @@
  *
  * It does not support any connections so is not a complete example
  * of a working device.
- * 
- * It presumes the reader has understood the start_here example and 
+ *
+ * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
  */
 
@@ -40,16 +40,16 @@ int main() {
 
     auto& locationParam = *dynamic_cast<Param<Location>*>(dm.GetParam("/location"));
     Location& locationValue = locationParam.Get();
-    std::cout << "Location from model - latitude: " << locationValue.latitude << ", longitude: " << locationValue.longitude
-              << std::endl;
+    std::cout << "Location from model - latitude: " << locationValue.latitude
+              << ", longitude: " << locationValue.longitude << std::endl;
     // create another Location object, using the default initial value specified in the model
     Location externalToModel;
-    std::cout << "Location object external to model - latitude: " << externalToModel.latitude << ", longitude: " << externalToModel.longitude
-              << std::endl;
+    std::cout << "Location object external to model - latitude: " << externalToModel.latitude
+              << ", longitude: " << externalToModel.longitude << std::endl;
     locationValue = externalToModel;
 
 
-    // serialize the location parameter - will be removed from this example          
+    // serialize the location parameter - will be removed from this example
     catena::Value value;
     locationParam.serialize(value);
 
@@ -63,7 +63,7 @@ int main() {
             std::cout << "float32: " << field_value.float32_value() << std::endl;
         }
     }
- 
+
 
     return EXIT_SUCCESS;
 }
