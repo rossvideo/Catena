@@ -21,9 +21,9 @@
 // limitations under the License.
 //
 
-#include <device.pb.h>
-#include <param.pb.h>
-#include <GenericFactory.h>
+#include <full/device.pb.h>
+#include <full/param.pb.h>
+#include <patterns/GenericFactory.h>
 #include <Status.h>
 
 namespace catena {
