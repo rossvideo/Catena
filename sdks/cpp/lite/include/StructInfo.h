@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common/include/meta/Typelist.h>
+#include <lite/param.pb.h>
 
 #include <string>
 #include <cstddef>
@@ -11,6 +12,7 @@ namespace lite {
 struct FieldInfo {
     std::string name;
     std::size_t offset;
+    std::function<void(catena::Value&,const void*)> serialize;
 };
 
 struct StructInfo {

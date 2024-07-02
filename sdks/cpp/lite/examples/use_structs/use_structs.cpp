@@ -42,8 +42,23 @@ int main() {
     Location& locationValue = locationParam.Get();
     std::cout << "latitude: " << locationValue.latitude << ", longitude: " << locationValue.longitude
               << std::endl;
+
+
+    // serialize the location parameter - will be removed from this example          
     catena::Value value;
     locationParam.serialize(value);
+
+    // print the serialized value
+    auto& struct_value = value.struct_value();
+    auto& fields = struct_value.fields();
+    for (const auto& field : fields) {
+        std::cout << "Field: " << field.first << std::endl;
+        auto& field_value = field.second.value();
+        if (field_value.has_float32_value()) {
+            std::cout << "float32: " << field_value.float32_value() << std::endl;
+        }
+    }
+ 
 
     return EXIT_SUCCESS;
 }

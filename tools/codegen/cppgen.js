@@ -84,13 +84,9 @@ class CppGen {
                 hloc(`};`, indent);
 
                 // instantiate the struct in the body file 
-                bloc(`${fqname} ${name};`, indent);
-                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"${name}",dm);`, indent);
-
-                // write the getStructInfo method to the body file
                 let bodyIndent = 0;
-                bloc(`using namespace ${namespace};`, bodyIndent);
-                bloc(`using namespace catena::lite;`, bodyIndent);
+                bloc(`${fqname} ${name};`, bodyIndent);
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"${name}",dm);`, bodyIndent)
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
                 bloc(`static StructInfo t;`, bodyIndent+1);
                 bloc(`if (t.name.length()) return t;`, bodyIndent+1);
@@ -101,6 +97,7 @@ class CppGen {
                     bloc(`// register info for the ${names[i]} field`, indent);
                     bloc(`fi.name = "${names[i]}";`, indent);
                     bloc(`fi.offset = offsetof(${fqname}, ${names[i]});`, indent);
+                    bloc(`fi.serialize = serialize_${types[i]};`, indent);
                     bloc(`t.fields.push_back(fi);`, indent);
                 }
                 bloc(`return t;`, bodyIndent+1)
@@ -108,7 +105,7 @@ class CppGen {
 
                 // instantiate the serialize specialization
                 bloc(`template<>`, indent);
-                bloc(`void Param<${fqname}>::serialize(catena::Value& value) const {`, indent);
+                bloc(`void catena::lite::Param<${fqname}>::serialize(catena::Value& value) const {`, indent);
                 bloc(`serializeStruct(value, ${fqname}::getStructInfo());`, indent+1);
                 bloc('}', indent);
             },

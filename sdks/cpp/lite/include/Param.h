@@ -65,6 +65,14 @@ template <typename T> class Param : public IParam {
   private:
     void serializeStruct(Value& value, const StructInfo& si) const {
         std::cout << "StructInfo: " << si.name << std::endl;
+        auto& struct_value = *value.mutable_struct_value();
+        auto& fields = *struct_value.mutable_fields();
+        char* base = reinterpret_cast<char*>(&value_.get());
+        for (const auto& fi : si.fields) {
+            std::cout << "FieldInfo: " << fi.name << ", " << fi.offset << std::endl;
+            auto& field = fields[fi.name];
+            fi.serialize(*field.mutable_value(), base + fi.offset);
+        }
     }
   private:
     std::reference_wrapper<T> value_;

@@ -185,6 +185,11 @@ try {
         bloc(`#include <lite/include/Param.h>`);
         bloc(`#include <lite/include/DeviceModel.h>`);
         bloc(`catena::lite::DeviceModel dm{};`)
+        bloc(`using catena::lite::StructInfo;`);
+        bloc(`using catena::lite::FieldInfo;`);
+        bloc("void serialize_float(catena::Value& value, const void* base) {");
+        bloc("value.set_float32_value(*reinterpret_cast<const float*>(base));", 1);
+        bloc("}");
         let codegen = new CppGen(hloc, bloc, namespace);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
