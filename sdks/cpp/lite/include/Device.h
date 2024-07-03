@@ -10,24 +10,24 @@
 namespace catena {
 namespace lite {
 class IParam;  // forward reference
-class DeviceModel {
+class Device {
   public:
     class LockGuard {
       public:
-        LockGuard(DeviceModel& dm) : dm_(dm) {
+        LockGuard(Device& dm) : dm_(dm) {
           dm_.mutex_.lock();
         }
         ~LockGuard() {
           dm_.mutex_.unlock();
         }
       private:
-        DeviceModel& dm_;
+        Device& dm_;
     };
   friend class LockGuard;
 
   public:
-    DeviceModel() = default;
-    virtual ~DeviceModel() = default;
+    Device() = default;
+    virtual ~Device() = default;
 
     void AddParam(const std::string& name, IParam* param);
 

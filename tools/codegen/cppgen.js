@@ -135,7 +135,7 @@ class CppGen {
                     bloc(`// register info for the ${names[i]} field`, indent);
                     bloc(`fi.name = "${names[i]}";`, indent);
                     bloc(`fi.offset = offsetof(${fqname}, ${names[i]});`, indent);
-                    bloc(`fi.serialize = serialize_${types[i]};`, indent);
+                    bloc(`fi.toProto = catena::lite::toProto<${types[i]}>;`, indent);
                     bloc(`t.fields.push_back(fi);`, indent);
                 }
                 bloc(`return t;`, bodyIndent+1)
@@ -143,8 +143,8 @@ class CppGen {
 
                 // instantiate the serialize specialization
                 bloc(`template<>`, indent);
-                bloc(`void catena::lite::Param<${fqname}>::serialize(catena::Value& value) const {`, indent);
-                bloc(`serializeStruct(value, ${fqname}::getStructInfo());`, indent+1);
+                bloc(`void catena::lite::Param<${fqname}>::toProto(catena::Value& value) const {`, indent);
+                bloc(`catena::lite::toProto<${fqname}>(value, &value_.get());`, indent+1);
                 bloc('}', indent);
             },
             "STRING": (name, desc, indent = 0) => {
@@ -191,21 +191,18 @@ class CppGen {
             const warning = `// This file was auto-generated. Do not modify by hand.`;
             hloc(`#pragma once`);
             hloc(warning);
-            hloc(`#include <lite/include/DeviceModel.h>`);
+            hloc(`#include <lite/include/Device.h>`);
             hloc(`#include <lite/include/StructInfo.h>`);
-            hloc(`extern catena::lite::DeviceModel dm;`);
+            hloc(`extern catena::lite::Device dm;`);
             hloc(`namespace ${namespace} {`)
             bloc(warning);
             bloc(`#include "${headerFilename}"`);
             bloc(`#include <lite/include/IParam.h>`);
             bloc(`#include <lite/include/Param.h>`);
-            bloc(`#include <lite/include/DeviceModel.h>`);
-            bloc(`catena::lite::DeviceModel dm{};`)
+            bloc(`#include <lite/include/Device.h>`);
+            bloc(`catena::lite::Device dm{};`)
             bloc(`using catena::lite::StructInfo;`);
             bloc(`using catena::lite::FieldInfo;`);
-            bloc("void serialize_float(catena::Value& value, const void* base) {");
-            bloc("value.set_float32_value(*reinterpret_cast<const float*>(base));", 1);
-            bloc("}");
         },
         this.finish = () => {
             hloc(`} // namespace ${namespace}`);
@@ -215,6 +212,8 @@ class CppGen {
     convert (oid, desc) {
         if (desc.type in this.convertors) {
             return this.convertors[desc.type](oid, desc);
+        } else if ("template_oid" in desc) {
+            // code to handle templated params here
         } else {
             console.log(`No convertor found for ${oid} of type ${desc.type}`);
         }

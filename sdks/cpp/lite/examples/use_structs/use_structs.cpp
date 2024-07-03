@@ -26,7 +26,7 @@
 
 
 #include "lite/examples/use_structs/device.use_structs.json.h"  // dm
-#include <lite/include/DeviceModel.h>
+#include <lite/include/Device.h>
 #include <lite/include/Param.h>
 #include <lite/param.pb.h>
 
@@ -36,7 +36,7 @@ using namespace use_structs;
 #include <iostream>
 int main() {
     // lock the model
-    DeviceModel::LockGuard lg(dm);
+    Device::LockGuard lg(dm);
 
     auto& locationParam = *dynamic_cast<Param<Location>*>(dm.GetParam("/location"));
     Location& locationValue = locationParam.Get();
@@ -50,8 +50,8 @@ int main() {
 
 
     // serialize the location parameter - will be removed from this example
-    catena::Value value;
-    locationParam.serialize(value);
+    catena::Value value{};
+    locationParam.toProto(value);
 
     // print the serialized value
     auto& struct_value = value.struct_value();
@@ -61,6 +61,8 @@ int main() {
         auto& field_value = field.second.value();
         if (field_value.has_float32_value()) {
             std::cout << "float32: " << field_value.float32_value() << std::endl;
+        } else {
+            std::cout << "Unknown type" << std::endl;
         }
     }
 

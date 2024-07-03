@@ -45,8 +45,9 @@ endif(APPLE)
 set(target catena_lite)
 
 add_library(${target} STATIC 
-    src/DeviceModel.cpp
+    src/Device.cpp
     src/Param.cpp
+    src/StructInfo.cpp
 )
 
 add_dependencies(${target} catena_common)

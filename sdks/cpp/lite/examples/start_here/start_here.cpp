@@ -28,7 +28,7 @@
 
 // these includes are from the LITE SDK, they're in the SOURCE
 // folder structure.
-#include <lite/include/DeviceModel.h> // catena::lite::DeviceModel, LockGuard
+#include <lite/include/Device.h> // catena::lite::Device, LockGuard
 #include <lite/include/Param.h> // catena::lite::Param
 
 // this include header was generated from the protobuf definition
@@ -45,13 +45,13 @@ int main () {
     // client code should strive to a) use locks like this, b) assert them
     // for the shortest possible time - production code wouldn't output
     // to std::out with the lock asserted, c) avoid deadlock by nesting calls
-    // to DeviceModel methods that try to lock the mutex.
-    DeviceModel::LockGuard lg(dm); 
+    // to Device methods that try to lock the mutex.
+    Device::LockGuard lg(dm); 
 
     // because we designed the device model, we know it contains a parameter, hello
     // and we also know its value type - std::string
     // so we can get a reference to its Param object by casting it from 
-    // an IParam* supplied by the DeviceModel's look up method
+    // an IParam* supplied by the Device's look up method
     auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.GetParam("/hello"));
 
     // With the Param object we can get a reference to the parameter's value object
@@ -128,6 +128,6 @@ int main () {
 
     return EXIT_SUCCESS;
 
-    // The DeviceModel::LockGuard object will automatically release the lock
+    // The Device::LockGuard object will automatically release the lock
     // upon its destruction, when it goes out of scope here.
 }

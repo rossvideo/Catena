@@ -76,7 +76,6 @@ target_sources(${TARGET}
 add_dependencies(${TARGET} ${TARGET}_codegen)
 
 target_link_libraries(${TARGET}
-    ${LIB_TARGET}
     catena_common
     catena_lite
     catena_lite_grpc
