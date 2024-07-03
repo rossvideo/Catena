@@ -185,5 +185,5 @@ try {
 
 } catch (why) {
     console.log(why.message);
-    process.exit(why.error);
+    process.exit(typeof why.error === 'number' ? why.error : 1);
 }
