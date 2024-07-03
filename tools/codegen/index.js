@@ -172,23 +172,12 @@ try {
         let bodyLoc = new loc(body);
         let hloc = headerLoc.write.bind(headerLoc);
         let bloc = bodyLoc.write.bind(bodyLoc);
-        const warning = `// This file was auto-generated. Do not modify by hand.`;
-        hloc(`#pragma once`);
-        hloc(warning);
-        hloc(`#include <lite/include/DeviceModel.h>`);
-        hloc(`extern catena::lite::DeviceModel dm;`);
-        hloc(`namespace ${namespace} {`)
-        bloc(warning);
-        bloc(`#include "${headerFilename}"`);
-        bloc(`#include <lite/include/IParam.h>`);
-        bloc(`#include <lite/include/Param.h>`);
-        bloc(`#include <lite/include/DeviceModel.h>`);
-        bloc(`catena::lite::DeviceModel dm{};`)
         let codegen = new CppGen(hloc, bloc, namespace);
+        codegen.init(headerFilename);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
         }
-        hloc(`} // namespace ${namespace}`);
+        codegen.finish();
         fs.close(body);
         fs.close(header);
         
@@ -196,5 +185,5 @@ try {
 
 } catch (why) {
     console.log(why.message);
-    process.exit(why.error);
+    process.exit(typeof why.error === 'number' ? why.error : 1);
 }

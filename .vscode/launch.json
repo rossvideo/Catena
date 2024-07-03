@@ -3,6 +3,17 @@
     "configurations": [
       {
         "type": "cppdbg",
+        "name": "Debug use_structs with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/use_structs/use_structs",
+        "args": [],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
         "name": "Debug start_here with lldb",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/start_here/start_here",
