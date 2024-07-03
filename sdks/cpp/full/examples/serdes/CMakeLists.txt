@@ -44,7 +44,9 @@ target_sources(${TARGET}
 message(STATUS "*** reflection: ${LIB_TARGET}")
 target_link_libraries(${TARGET}
     ${LIB_TARGET}
-    catena_interface
+    catena_full
+    catena_full_grpc
+    catena_common
 )
 
 target_compile_features(${TARGET}

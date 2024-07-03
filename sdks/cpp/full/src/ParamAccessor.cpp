@@ -29,10 +29,10 @@
 #include <stdexcept>
 #include <utility>
 
-using catena::ParamAccessor;
-using catena::ParamIndex;
+using catena::full::ParamAccessor;
+using catena::full::ParamIndex;
 using VP = catena::Value *;  // shared value pointer
-using catena::DeviceModel;
+using catena::full::DeviceModel;
 using catena::Param;
 using catena::Value;
 using KindCase = Value::KindCase;
@@ -83,7 +83,7 @@ setter.addFunction(kind_case, [](catena::Value *dst, const void *srcAddr) { \
 */
 #define REGISTER_ARRAY_GETTER_AT(kind_case, cast, array_values_method, size_method, access_method) \
 getterAt.addFunction(kind_case, \
-    [](void *dstAddr, const Value *src, const catena::ParamIndex idx) { \
+    [](void *dstAddr, const Value *src, const ParamIndex idx) { \
         auto *dst = reinterpret_cast<cast *>(dstAddr); \
         if (idx >= src->array_values_method().size_method()) { \
             /* range error  */ \
@@ -103,7 +103,7 @@ getterAt.addFunction(kind_case, \
 */
 #define REGISTER_ARRAY_SETTER_AT(kind_case, cast, mutable_array_values_method, size_method, set_method) \
 setterAt.addFunction(kind_case, \
-    [](Value *dst, const void *srcAddr, catena::ParamIndex idx) { \
+    [](Value *dst, const void *srcAddr, ParamIndex idx) { \
         auto *src = reinterpret_cast<const cast *>(srcAddr); \
         if (idx >= dst->mutable_array_values_method()->size_method()) { \
             /* range error */ \
@@ -445,32 +445,32 @@ ParamAccessor::ParamAccessor(DeviceModel &dm, DeviceModel::ParamAccessorData &pa
 }
 
 
-template <> catena::Value::KindCase catena::getKindCase<int32_t>(const int32_t & src) {
+template <> catena::Value::KindCase catena::full::getKindCase<int32_t>(const int32_t & src) {
     return catena::Value::KindCase::kInt32Value;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<float>(const float &src) {
+template <> catena::Value::KindCase catena::full::getKindCase<float>(const float &src) {
     return catena::Value::KindCase::kFloat32Value;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::string>(const std::string & src) {
+template <> catena::Value::KindCase catena::full::getKindCase<std::string>(const std::string & src) {
     return catena::Value::KindCase::kStringValue;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::vector<int32_t>>(const std::vector<int32_t> & src) {
+template <> catena::Value::KindCase catena::full::getKindCase<std::vector<int32_t>>(const std::vector<int32_t> & src) {
     return catena::Value::KindCase::kInt32ArrayValues;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::vector<float>>(const std::vector<float> & src) {
+template <> catena::Value::KindCase catena::full::getKindCase<std::vector<float>>(const std::vector<float> & src) {
     return catena::Value::KindCase::kFloat32ArrayValues;
 }
 
-template <> catena::Value::KindCase catena::getKindCase<std::vector<std::string>>(const std::vector<std::string> & src) {
+template <> catena::Value::KindCase catena::full::getKindCase<std::vector<std::string>>(const std::vector<std::string> & src) {
     return catena::Value::KindCase::kStringArrayValues;
 }
 
 template <typename V> catena::Value::KindCase getKindCase(const V& src) {
-    if constexpr (catena::has_getStructInfo<V>) {
+    if constexpr (catena::full::has_getStructInfo<V>) {
         return catena::Value::KindCase::kStructValue;
     }
     return catena::Value::KindCase::KIND_NOT_SET;
@@ -495,7 +495,7 @@ void ParamAccessor::setValue(const std::string& peer, const Value &src) {
 void ParamAccessor::setValue(const std::string& peer, const Value &src, ParamIndex idx, std::vector<std::string>& clientScopes) {
     std::lock_guard<DeviceModel::Mutex> lock(deviceModel_.get().mutex_);
     try {  
-        if (clientScopes[0] != catena::kAuthzDisabled) {
+        if (clientScopes[0] != kAuthzDisabled) {
             if (std::find(clientScopes.begin(), clientScopes.end(), scope_ + ":w") == clientScopes.end()) {
                 BAD_STATUS("Not authorized to access this parameter", catena::StatusCode::PERMISSION_DENIED);
             }
@@ -578,7 +578,7 @@ void ParamAccessor::getParam(catena::DeviceComponent_ComponentParam *dst, std::v
 }
 
 bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes) const {
-    if (clientScopes[0] != catena::kAuthzDisabled) {
+    if (clientScopes[0] != kAuthzDisabled) {
         if (std::find(clientScopes.begin(), clientScopes.end(), scope_) == clientScopes.end()) {
             return false;
         }
@@ -587,7 +587,7 @@ bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes) con
 }
 
 bool ParamAccessor::checkScope(const std::vector<std::string>& clientScopes, const std::string& paramScope) const {
-    if (clientScopes[0] != catena::kAuthzDisabled) {
+    if (clientScopes[0] != kAuthzDisabled) {
         if (std::find(clientScopes.begin(), clientScopes.end(), paramScope) == clientScopes.end()) {
             return false;
         }

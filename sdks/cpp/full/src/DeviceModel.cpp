@@ -16,6 +16,7 @@
 #include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>
+#include <JSON.h>
 
 #include <google/protobuf/map.h>
 #include <google/protobuf/util/json_util.h>
@@ -101,29 +102,29 @@ void DeviceModel::importSubParams_(std::filesystem::path &current_folder, Params
     }
 }
 
-const catena::Device &catena::DeviceModel::device() const {
+const catena::Device &catena::full::DeviceModel::device() const {
     std::lock_guard<Mutex> lock(mutex_);
     return device_;
 }
 
 // send device info to client via writer
-void catena::DeviceModel::sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag) {
-    std::lock_guard<Mutex> lock(mutex_);
-    catena::DeviceComponent dc;
-    dc.set_allocated_device(&device_);
-    writer->Write(dc, tag);
-    auto x = dc.release_device();
-}
+// void catena::full::DeviceModel::sendDevice(grpc::ServerAsyncWriter<::catena::DeviceComponent> *writer, void* tag) {
+//     std::lock_guard<Mutex> lock(mutex_);
+//     catena::DeviceComponent dc;
+//     dc.set_allocated_device(&device_);
+//     writer->Write(dc, tag);
+//     auto x = dc.release_device();
+// }
 
 // for parameters that do not have the corresponding fields
-catena::Value catena::DeviceModel::noValue_;
+catena::Value catena::full::DeviceModel::noValue_;
 
-std::unique_ptr<ParamAccessor> catena::DeviceModel::param(const std::string &jptr) {
+std::unique_ptr<ParamAccessor> catena::full::DeviceModel::param(const std::string &jptr) {
     std::lock_guard<Mutex> lock(mutex_);
-    catena::Path path_(jptr);
+    catena::common::Path path_(jptr);
 
     // get our oid and look for it in the params map
-    catena::Path::Segment segment = path_.pop_front();
+    catena::common::Path::Segment segment = path_.pop_front();
 
     if (!std::holds_alternative<std::string>(segment)) {
         BAD_STATUS("expected oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
@@ -192,8 +193,8 @@ void DeviceModel::checkSubParamTemplates_(catena::Param &p, const std::string &p
 void DeviceModel::checkTemplateData_(catena::Param &p, const std::string &path) {
     if (path.empty()) { return; }
 
-    catena::Path template_path_(path);
-    catena::Path::Segment segment = template_path_.pop_front();
+    catena::common::Path template_path_(path);
+    catena::common::Path::Segment segment = template_path_.pop_front();
     if (!std::holds_alternative<std::string>(segment)) {
         BAD_STATUS("expected template_oid, got an index", catena::StatusCode::INVALID_ARGUMENT);
     }
@@ -286,7 +287,7 @@ void DeviceModel::checkTemplateData_(catena::Param &p, const std::string &path) 
     checkTemplateData_(p, t.get().template_oid());
 }
 
-DeviceStream::DeviceStream(catena::DeviceModel &dm) 
+DeviceStream::DeviceStream(catena::full::DeviceModel &dm) 
     : deviceModel_{dm}, component_{}, nextType_{ComponentType::kBasicDeviceInfo}{
         const Device& device = deviceModel_.get().device();
         paramIter_ = device.params().begin();
@@ -460,7 +461,7 @@ catena::DeviceComponent& DeviceStream::languagePackComponent_(){
     return component_;
 }
 
-std::ostream &operator<<(std::ostream &os, const catena::DeviceModel &dm) {
-    os << printJSON(dm.device());
+std::ostream &operator<<(std::ostream &os, const catena::full::DeviceModel &dm) {
+    os << catena::full::printJSON(dm.device());
     return os;
 }

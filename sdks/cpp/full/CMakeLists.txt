@@ -35,19 +35,20 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(LITE C CXX)
+project(FULL C CXX)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
 endif(APPLE)
 
 
-set(target catena_lite)
+set(target catena_full)
 
 add_library(${target} STATIC 
-    src/Device.cpp
-    src/Param.cpp
-    src/StructInfo.cpp
+    src/DeviceModel.cpp
+    src/ParamAccessor.cpp
+    src/ConcreteArrayAccessor.cpp
+    src/JSON.cpp
 )
 
 add_dependencies(${target} catena_common)
@@ -57,14 +58,10 @@ target_include_directories(
     ${target}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
+        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}/common/include>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
         $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
-)
-
-target_link_libraries(${target}
-    catena_common
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
