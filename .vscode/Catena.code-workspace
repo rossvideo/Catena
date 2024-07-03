@@ -96,7 +96,15 @@
 			"utility": "cpp",
 			"stop_token": "cpp",
 			"execution": "cpp",
-			"numbers": "cpp"
+			"numbers": "cpp",
+			"cfenv": "cpp",
+			"csignal": "cpp",
+			"numeric": "cpp",
+			"future": "cpp",
+			"ranges": "cpp",
+			"scoped_allocator": "cpp",
+			"shared_mutex": "cpp",
+			"*.inc": "cpp"
 		}
 	}
 }
