@@ -62,17 +62,6 @@ void handle_signal(int sig) {
 }
 
 
-std::string timeNow() {
-    std::stringstream ss;
-    auto now = std::chrono::system_clock::now();
-    auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    auto epoch = now_micros.time_since_epoch();
-    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
-    auto now_c = std::chrono::system_clock::to_time_t(now);
-    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
-       << micros.count() % 1000000;
-    return ss.str();
-}
 // expand env variables
 void expandEnvVariables(std::string &str) {
     static std::regex env{"\\$\\{([^}]+)\\}"};
@@ -130,10 +119,10 @@ void statusUpdateExample(DeviceModel *dm){
         // a real service would possibly send status updates, telemetry or audio meters here
         auto a_number = dm->param("/a_number");
         int i = 0;
-        dm->valueSetByClient.connect([&i](const ParamAccessor &p, catena::full::ParamIndex idx, const std::string &peer) {
+        dm->valueSetByClient.connect([&i](const ParamAccessor &p, /*catena::full::ParamIndex idx,*/ const std::string &peer) {
             catena::Value v;
             std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
-            p.getValue<false>(&v, idx, scopes);
+            //p.getValue<false>(&v, idx, scopes);
             std::cout << "Client " << peer << " set " << p.oid() << " to: " << catena::full::printJSON(v) << '\n';
             // a real service would do something with the value here
             if (p.oid() == "/a_number") {

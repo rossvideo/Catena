@@ -26,8 +26,6 @@ project(${TARGET} C CXX)
 add_executable(${TARGET})
 
 get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
-get_filename_component(CATENA_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../ ABSOLUTE)
-set(CATENA_COMMON_INCLUDE ${CATENA_COMMON_DIR}/include)
 
 target_include_directories(${TARGET}
     PUBLIC
@@ -41,9 +39,7 @@ target_sources(${TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>
 )
 
-message(STATUS "*** reflection: ${LIB_TARGET}")
 target_link_libraries(${TARGET}
-    ${LIB_TARGET}
     catena_interface
 )
 
