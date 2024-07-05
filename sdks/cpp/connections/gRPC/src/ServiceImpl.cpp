@@ -37,10 +37,10 @@ std::string timeNow() {
 }
 
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, DeviceModel &dm)
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm)
         : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm} {}
 
-void inline CatenaServiceImpl::init() {
+void CatenaServiceImpl::init() {
     new GetValue(this, dm_, true);
     // new SetValue(this, dm_, true);
     // new Connect(this, dm_, true);
@@ -123,13 +123,13 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
 //     return scopes;
 // }
 
-    
+int CatenaServiceImpl::GetValue::objectCounter_ = 0; 
 /**
  * @brief CallData class for the GetValue RPC
  */
-CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, DeviceModel &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
+CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, Device &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-            objectId_ = objectCounter_++;
+    objectId_ = objectCounter_++;
     service->registerItem(this);
     proceed(service, ok);
 }
@@ -156,7 +156,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::lite::IParam* param = dm_.GetParam(req_.oid());
                 catena::Value ans;  // oh dear, this is a copy refactoring needed!
-                param->serialize(ans);
+                param->toProto(ans);
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
             } catch (catena::exception_with_status &e) {
@@ -190,7 +190,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     //  */
     // class SetValue : public CallData {
     //   public:
-    //     SetValue(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
+    //     SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
     //         : service_{service}, dm_{dm}, responder_(&context_),
     //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     //         objectId_ = objectCounter_++;
@@ -258,7 +258,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     //  */
     // class Connect : public CallData {
     //   public:
-    //     Connect(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
+    //     Connect(CatenaServiceImpl *service, Device &dm, bool ok)
     //         : service_{service}, dm_{dm}, writer_(&context_),
     //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     //         service->registerItem(this);
@@ -351,7 +351,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     //  */
     // class DeviceRequest : public CallData {
     //   public:
-    //     DeviceRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
+    //     DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
     //         : service_{service}, dm_{dm}, writer_(&context_), deviceStream_(dm),
     //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     //         service->registerItem(this);
@@ -417,7 +417,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
 
     // class ExternalObjectRequest : public CallData {
     //   public:
-    //     ExternalObjectRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
+    //     ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
     //         : service_{service}, dm_{dm}, writer_(&context_),
     //         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     //         service->registerItem(this);
@@ -504,7 +504,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     //  */
     // class GetParam : public CallData {
     //   public:
-    //     GetParam(CatenaServiceImpl *service, DeviceModel &dm, bool ok)
+    //     GetParam(CatenaServiceImpl *service, Device &dm, bool ok)
     //         : service_{service}, dm_{dm}, writer_(&context_),
     //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     //         service->registerItem(this);
@@ -576,7 +576,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     //     catena::PushUpdates res_;
     //     ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
     //     CallStatus status_;
-    //     DeviceModel &dm_;
+    //     Device &dm_;
     //     std::unique_ptr<catena::ParamAccessor> param_;
     //     int objectId_;
     //     static int objectCounter_;

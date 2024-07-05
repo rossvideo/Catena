@@ -1,8 +1,8 @@
 
 #include <ServiceImpl.h>
 #include <utils.h>
-#include <JSON.h>
-#include <lite/include/DeviceModel.h>
+//#include <JSON.h>
+#include <lite/include/Device.h>
 #include <Param.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
@@ -125,17 +125,17 @@ void statusUpdateExample(){
         //         i = v.int32_value();
         //     }
         // });
-        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.GetParam("/a_number"));
+        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.GetParam("/counter"));
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            DeviceModel::LockGuard lg(dm); 
+            Device::LockGuard lg(dm); 
             aNumber.Get()++;
         }
     });
     loop.detach();
 }
 
-void RunRPCServer(std::string addr, DeviceModel &dm)
+void RunRPCServer(std::string addr)
 {
     // install signal handlers
     signal(SIGINT, handle_signal);
@@ -157,7 +157,6 @@ void RunRPCServer(std::string addr, DeviceModel &dm)
         grpc::ServerBuilder builder;
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
-        grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
         builder.AddListeningPort(addr, getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
@@ -172,6 +171,8 @@ void RunRPCServer(std::string addr, DeviceModel &dm)
 
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
+
+        statusUpdateExample();
 
         // wait for the server to shutdown and tidy up
         server->Wait();
@@ -192,7 +193,7 @@ int main(int argc, char* argv[])
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   
-    std::thread catenaRpcThread(RunRPCServer, addr, dm);
+    std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     return 0;
 }

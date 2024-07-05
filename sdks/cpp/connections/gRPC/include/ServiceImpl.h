@@ -4,7 +4,7 @@
 #include <vdk/signals.h>
 
 // From Catena lite library
-#include <lite/include/DeviceModel.h>
+#include <lite/include/Device.h>
 #include <Param.h>
 
 #include <service.grpc.pb.h>
@@ -22,7 +22,7 @@ using grpc::ServerAsyncResponseWriter;
 using grpc::Status;
 using grpc::ServerCompletionQueue;
 
-using catena::lite::DeviceModel;
+using catena::lite::Device;
 
 class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
 public:
@@ -32,9 +32,9 @@ public:
 
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
-    inline explicit CatenaServiceImpl(ServerCompletionQueue* cq, DeviceModel &dm);
+    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm);
 
-    void inline init();
+    void init();
 
     void processEvents();
 
@@ -64,7 +64,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     vdk::signal<void()> shutdownSignal;
 
     ServerCompletionQueue* cq_;
-    DeviceModel &dm_;
+    Device &dm_;
 
   public:
 
@@ -76,7 +76,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     class GetValue : public CallData{
         public:
-        GetValue(CatenaServiceImpl *service, DeviceModel &dm, bool ok);
+        GetValue(CatenaServiceImpl *service, Device &dm, bool ok);
 
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
@@ -88,7 +88,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         catena::Value res_;
         ServerAsyncResponseWriter<::catena::Value> responder_;
         CallStatus status_;
-        DeviceModel &dm_;
+        Device &dm_;
         int objectId_;
         static int objectCounter_;
     };
@@ -98,7 +98,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //  */
     // class SetValue : public CallData {
     //   public:
-    //     SetValue(CatenaServiceImpl *service, DeviceModel &dm, bool ok);
+    //     SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
 
     //     void proceed(CatenaServiceImpl *service, bool ok) override;
 
@@ -110,7 +110,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     catena::Value res_;
     //     ServerAsyncResponseWriter<::google::protobuf::Empty> responder_;
     //     CallStatus status_;
-    //     DeviceModel &dm_;
+    //     Device &dm_;
     //     Status errorStatus_;
     //     int objectId_;
     //     static int objectCounter_;
@@ -121,7 +121,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //  */
     // class Connect : public CallData {
     //   public:
-    //     Connect(CatenaServiceImpl *service, DeviceModel &dm, bool ok);
+    //     Connect(CatenaServiceImpl *service, Device &dm, bool ok);
     //     ~Connect() {}
 
     //     void proceed(CatenaServiceImpl *service, bool ok) override;
@@ -133,7 +133,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     catena::PushUpdates res_;
     //     ServerAsyncWriter<catena::PushUpdates> writer_;
     //     CallStatus status_;
-    //     DeviceModel &dm_;
+    //     Device &dm_;
     //     std::mutex mtx_;
     //     std::condition_variable cv_;
     //     bool hasUpdate_{false};
@@ -148,7 +148,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //  */
     // class DeviceRequest : public CallData {
     //   public:
-    //     DeviceRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok);
+    //     DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
     //     ~DeviceRequest() {}
 
     //     void proceed(CatenaServiceImpl *service, bool ok) override;
@@ -162,7 +162,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     ServerAsyncWriter<catena::DeviceComponent> writer_;
     //     catena::DeviceStream deviceStream_;
     //     CallStatus status_;
-    //     DeviceModel &dm_;
+    //     Device &dm_;
     //     int objectId_;
     //     static int objectCounter_;
     //     unsigned int shutdownSignalId_;
@@ -170,7 +170,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     // class ExternalObjectRequest : public CallData {
     //   public:
-    //     ExternalObjectRequest(CatenaServiceImpl *service, DeviceModel &dm, bool ok);
+    //     ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
     //     ~ExternalObjectRequest() {}
 
     //     void proceed(CatenaServiceImpl *service, bool ok) override;
@@ -182,7 +182,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     catena::PushUpdates res_;
     //     ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
     //     CallStatus status_;
-    //     DeviceModel &dm_;
+    //     Device &dm_;
     //     int objectId_;
     //     static int objectCounter_;
     // };
@@ -192,7 +192,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //  */
     // class GetParam : public CallData {
     //   public:
-    //     GetParam(CatenaServiceImpl *service, DeviceModel &dm, bool ok);
+    //     GetParam(CatenaServiceImpl *service, Device &dm, bool ok);
     //     ~GetParam() {}
 
     //     void proceed(CatenaServiceImpl *service, bool ok) override;
@@ -205,7 +205,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     catena::PushUpdates res_;
     //     ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
     //     CallStatus status_;
-    //     DeviceModel &dm_;
+    //     Device &dm_;
     //     std::unique_ptr<catena::ParamAccessor> param_;
     //     int objectId_;
     //     static int objectCounter_;

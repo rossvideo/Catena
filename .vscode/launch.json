@@ -46,11 +46,11 @@
         "MIMode": "lldb"
       },
       {
-        "name": "Debug full_service with gdb",
+        "name": "Debug status_update with gdb",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service", // Path to the full_service executable
-        "args": ["--device_model", "example_device_models/device.one_of_everything.json", "--secure_comms", "ssl", "--authz"], // Any command-line arguments go here
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/status_update/status_update", // Path to the full_service executable
+        "args": [], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],

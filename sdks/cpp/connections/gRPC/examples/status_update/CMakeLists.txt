@@ -60,7 +60,8 @@ target_include_directories(${TARGET}
     PUBLIC
         $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${PARENT_BINARY_DIR}>
+        $<BUILD_INTERFACE:${CATENA_CONNECTIONS_GRPC}/include>
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/lite>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
 )
@@ -75,9 +76,11 @@ target_sources(${TARGET}
 add_dependencies(${TARGET} ${TARGET}_codegen)
 
 target_link_libraries(${TARGET}
+    ${proto_interface}
     catena_common
     catena_lite
-    ${proto_interface}
+    catena_connections_grpc
+    absl::flags_parse
 )
 
 target_compile_features(${TARGET}
