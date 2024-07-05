@@ -1,0 +1,39 @@
+{
+    "slot": 1,
+    "multi_set_enabled": true,
+    "detail_level": "FULL",
+    "access_scopes": ["monitor", "operate", "configure", "administer"],
+    "default_scope": "operate",
+    "language_packs": {
+      "packs": {
+        "es": {
+          "name": "Spanish",
+          "words": {
+            "greeting": "Hola",
+            "parting": "Adiós"
+          }
+        },
+        "en": {
+          "name": "English",
+          "words": {
+            "greeting": "Hello",
+            "parting": "Goodbye"
+          }
+        },
+        "fr": {
+          "name": "French",
+          "words": {
+            "greeting": "Bonjour",
+            "parting": "Adieu"
+          }
+        }
+      }
+    },
+    "params": {
+        "counter": {
+            "type": "INT32",
+            "name": {"display_strings": {"$key": "counter"}},
+            "value": {"int32_value": 0}
+        }
+    }
+}

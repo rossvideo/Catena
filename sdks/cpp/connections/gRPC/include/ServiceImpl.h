@@ -4,7 +4,7 @@
 #include <vdk/signals.h>
 
 // From Catena lite library
-#include <DeviceModel.h>
+#include <lite/include/DeviceModel.h>
 #include <Param.h>
 
 #include <service.grpc.pb.h>
@@ -32,7 +32,7 @@ public:
 
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
-    inline explicit CatenaServiceImpl(ServerCompletionQueue *cq, DeviceModel &dm);
+    inline explicit CatenaServiceImpl(ServerCompletionQueue* cq, DeviceModel &dm);
 
     void inline init();
 
@@ -63,7 +63,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     vdk::signal<void()> shutdownSignal;
 
-    ServerCompletionQueue *cq_;
+    ServerCompletionQueue* cq_;
     DeviceModel &dm_;
 
   public:

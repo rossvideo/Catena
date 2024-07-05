@@ -2,14 +2,16 @@
 #include <ServiceImpl.h>
 #include <utils.h>
 #include <JSON.h>
-#include <DeviceModel.h>
-#include <ParamAccessor.h>
+#include <lite/include/DeviceModel.h>
+#include <Param.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
-#include <full/service.grpc.pb.h>
+#include <service.grpc.pb.h>
+
+#include "connections/gRPC/examples/status_update/device.status_update.json.h" 
 
 
 #include "absl/flags/flag.h"
@@ -30,9 +32,8 @@
 
 using grpc::Server;
 
-
-using DeviceModel = catena::full::DeviceModel;
-using ParamAccessor = catena::full::ParamAccessor;
+using namespace catena::lite;
+using namespace catena::common;
 
 // set up the command line parameters
 ABSL_FLAG(uint16_t, port, 6254, "Catena service port");
@@ -41,8 +42,6 @@ ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, optio
   \"off\", \"ssl\", \"tls\"");
 ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, device_model, "../../../example_device_models/device.minimal.json",
-          "Specify the JSON device model to use.");
 ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
 
 Server *globalServer = nullptr;
@@ -113,51 +112,47 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
 
 
 
-void statusUpdateExample(DeviceModel *dm){
+void statusUpdateExample(){
     
-    std::thread loop([dm]() {
-        // a real service would possibly send status updates, telemetry or audio meters here
-        auto a_number = dm->param("/a_number");
-        int i = 0;
-        dm->valueSetByClient.connect([&i](const ParamAccessor &p, /*catena::full::ParamIndex idx,*/ const std::string &peer) {
-            catena::Value v;
-            std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
-            //p.getValue<false>(&v, idx, scopes);
-            std::cout << "Client " << peer << " set " << p.oid() << " to: " << catena::full::printJSON(v) << '\n';
-            // a real service would do something with the value here
-            if (p.oid() == "/a_number") {
-                i = v.int32_value();
-            }
-        });
+    std::thread loop([]() {
+        // dm->valueSetByClient.connect([&i](const ParamAccessor &p, /*catena::full::ParamIndex idx,*/ const std::string &peer) {
+        //     catena::Value v;
+        //     //std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
+        //     //p.getValue<false>(&v, idx, scopes);
+        //     std::cout << "Client " << peer << " set " << p.oid() << " to: " << catena::full::printJSON(v) << '\n';
+        //     // a real service would do something with the value here
+        //     if (p.oid() == "/a_number") {
+        //         i = v.int32_value();
+        //     }
+        // });
+        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.GetParam("/a_number"));
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            a_number->setValue(i++);
+            DeviceModel::LockGuard lg(dm); 
+            aNumber.Get()++;
         }
     });
     loop.detach();
 }
 
-void RunRPCServer(std::string addr, DeviceModel *dm)
+void RunRPCServer(std::string addr, DeviceModel &dm)
 {
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
 
-    // get the path to our ssh certificates
-    std::string certs_Path(absl::GetFlag(FLAGS_certs));
-    expandEnvVariables(certs_Path);
+    // // get the path to our ssh certificates
+    // std::string certs_Path(absl::GetFlag(FLAGS_certs));
+    // expandEnvVariables(certs_Path);
 
     try {
-        // read a json file into a DeviceModel object
-        statusUpdateExample(dm);
-
-        // check that static_root is a valid file path
-        if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
-            std::stringstream why;
-            why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
-            throw std::invalid_argument(why.str());
-        }
+        // // check that static_root is a valid file path
+        // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
+        //     std::stringstream why;
+        //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
+        //     throw std::invalid_argument(why.str());
+        // }
 
         grpc::ServerBuilder builder;
         // set some grpc options
@@ -166,7 +161,7 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
 
         builder.AddListeningPort(addr, getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
-        CatenaServiceImpl service(cq.get(), *dm);
+        CatenaServiceImpl service(cq.get(), dm);
 
         builder.RegisterService(&service);
 
@@ -191,16 +186,13 @@ void RunRPCServer(std::string addr, DeviceModel *dm)
 
 int main(int argc, char* argv[])
 {
-    DeviceModel *dm;
     std::string addr;
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
-    dm = new DeviceModel(absl::GetFlag(FLAGS_device_model));
   
     std::thread catenaRpcThread(RunRPCServer, addr, dm);
     catenaRpcThread.join();
-    delete (dm);
     return 0;
 }
