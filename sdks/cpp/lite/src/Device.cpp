@@ -1,5 +1,4 @@
 #include <lite/include/Device.h>
-#include <lite/include/IParam.h>
 
 #include <cassert>
 

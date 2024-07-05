@@ -32,12 +32,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/ProtobufFunctions.cmake)
 # export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(UNIT_TESTING "Build Google test" ON)
-if(UNIT_TESTING)
-  # enable unit testing
-  enable_testing()
-endif(UNIT_TESTING)
-
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
@@ -126,11 +120,11 @@ set(proto_stems
 )
 
 # Check for invalid connection types
-set(ALLOWED_CONNECTIONS "gRPC;REST;WSS")
+set(ALLOWED_CONNECTIONS "gRPC")
 foreach(conn ${CONNECTIONS})
   list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
   if(${_IDX} EQUAL -1)
-    message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are gRPC, REST, WSS.")
+    message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
   endif()
 endforeach()
 
@@ -182,7 +176,7 @@ foreach(_model ${CATENA_MODELS})
 
 
   if (_gRPC GREATER -1)
-    set(proto_interface "proto_inteface_${_model}_grpc")
+    set(proto_interface "proto_interface_${_model}_grpc")
   else()
     set(proto_interface "proto_interface_${_model}")
   endif()
@@ -225,16 +219,11 @@ add_custom_target(clean-proto
   COMMENT "Removing generated protobuf files.")
 
 # include the common part of the Catena C++ SDK
-set(CATENA_COMMON_DIR ${CATENA_CPP_ROOT_DIR}/common)
-set(CATENA_COMMON_INCLUDE ${CATENA_COMMON_DIR}/include)
 add_subdirectory("common")
 
-set(CATENA_LITE_DIR ${CATENA_CPP_ROOT_DIR}/lite)
-set(CATENA_LITE_INCLUDE ${CATENA_LITE_DIR}/include)
 add_subdirectory("lite")
 
 # include the connections part of the Catena C++ SDK
-set(CATENA_CONNECTIONS_GRPC ${CATENA_CPP_ROOT_DIR}/connections/gRPC)
 add_subdirectory("connections")
 
 

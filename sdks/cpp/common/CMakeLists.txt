@@ -32,8 +32,7 @@ add_library(${target} STATIC ${sources})
 target_include_directories(
     ${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/vdk>
+        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )
 target_compile_features(${target} PUBLIC cxx_std_20)

@@ -1,16 +1,13 @@
 
-// From Catena common library
-#include <Status.h>
-#include <vdk/signals.h>
+#include <common/include/Status.h>
+#include <common/include/vdk/signals.h>
 
-// From Catena lite library
 #include <lite/include/Device.h>
-#include <Param.h>
+#include <lite/include/Param.h>
 
-#include <service.grpc.pb.h>
+#include <lite/service.grpc.pb.h>
 
 #include <grpcpp/grpcpp.h>
-
 #include <jwt-cpp/jwt.h>
 
 #include <condition_variable>

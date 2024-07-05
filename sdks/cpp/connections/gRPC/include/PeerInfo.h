@@ -24,9 +24,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include <IParam.h>
+#include <lite/include/IParam.h>
 
-#include <service.grpc.pb.h>
+#include <lite/service.grpc.pb.h>
 
 #include <string>
 

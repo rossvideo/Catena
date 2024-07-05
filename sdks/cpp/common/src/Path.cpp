@@ -12,9 +12,9 @@
 // limitations under the License.
 //
 
-#include <Path.h>
-#include <utils.h>
-#include <Status.h>
+#include <common/include/Path.h>
+#include <common/include/utils.h>
+#include <common/include/Status.h>
 
 #include <regex>
 

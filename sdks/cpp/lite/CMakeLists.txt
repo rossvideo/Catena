@@ -53,13 +53,15 @@ add_library(${target} STATIC
 add_dependencies(${target} catena_common)
 add_dependencies(${target} ${proto_interface})
 
+message("Prefix Path: ${CMAKE_PREFIX_PATH}")
+
 target_include_directories(
     ${target}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
 )
 

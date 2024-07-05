@@ -1,24 +1,22 @@
 
-#include <ServiceImpl.h>
-#include <utils.h>
+#include <common/include/utils.h>
 //#include <JSON.h>
+
 #include <lite/include/Device.h>
-#include <Param.h>
+
+#include <connections/gRPC/include/ServiceImpl.h>
+
+#include <lite/service.grpc.pb.h>
+#include "connections/gRPC/examples/status_update/device.status_update.json.h" 
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
-#include <service.grpc.pb.h>
-
-#include "connections/gRPC/examples/status_update/device.status_update.json.h" 
-
-
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
-
 
 #include <iomanip>
 #include <iostream>

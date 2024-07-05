@@ -1,7 +1,7 @@
 
 
 
-#include <ServiceImpl.h>
+#include <connections/gRPC/include/ServiceImpl.h>
 
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {

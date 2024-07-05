@@ -34,12 +34,9 @@ find_package(jwt-cpp CONFIG REQUIRED)
 target_include_directories(
     ${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
-        $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
-        $<BUILD_INTERFACE:${CATENA_LITE_INCLUDE}>
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/lite>
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
 )
 
 target_link_libraries(${target}
