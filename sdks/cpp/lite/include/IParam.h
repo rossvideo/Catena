@@ -13,7 +13,7 @@ class IParam {
     /**
      * @brief serialize the parameter value to protobuf
      */
-    virtual void serialize(catena::Value& value) const = 0;
+    virtual void toProto(catena::Value& value) const = 0;
 };
 }  // namespace lite
 }  // namespace catena

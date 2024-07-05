@@ -1,7 +1,9 @@
 #pragma once
 
 #include <lite/include/IParam.h>
-#include <lite/include/DeviceModel.h>
+#include <lite/include/Device.h>
+#include <lite/include/StructInfo.h>
+#include <lite/param.pb.h>
 
 #include <functional> // reference_wrapper
 
@@ -47,7 +49,7 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(T& value, const std::string& name, DeviceModel& dm) : IParam(), value_(value), dm_(dm) {
+    Param(T& value, const std::string& name, Device& dm) : IParam(), value_(value), dm_(dm) {
         dm.AddParam(name, this);
     }
 
@@ -59,11 +61,12 @@ template <typename T> class Param : public IParam {
     /**
      * @brief serialize the parameter value to protobuf
      */
-    void serialize(catena::Value& value) const override;
-
+    void toProto(catena::Value& value) const override;
+    
   private:
     std::reference_wrapper<T> value_;
-    std::reference_wrapper<DeviceModel> dm_;
+    std::reference_wrapper<Device> dm_;
 };
+
 }  // namespace lite
 }  // namespace catena
