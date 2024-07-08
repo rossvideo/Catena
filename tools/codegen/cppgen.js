@@ -39,8 +39,8 @@ const getFieldInit = {
 
 function structInit(names, srctypes, desc) {
     let inits = [];
-    let fields = desc.value.struct_value.fields;
     if ("value" in desc) {
+        let fields = desc.value.struct_value.fields;
         for (let i = 0; i < names.length; ++i) {
             if (names[i] in fields) {
                 let field = fields[names[i]];
@@ -80,10 +80,13 @@ class CppGen {
         };
         this.namespace = namespace;
         this.convertors = {
-            "STRUCT": (name, desc, indent = 0) => {
+            "STRUCT": (name, desc, scope = undefined, indent = 0) => {
                 const params = desc.params;
                 const classname = initialCap(name);
-                const fqname = `${namespace}::${classname}`;
+                if (scope === undefined) {
+                    scope = namespace;
+                }
+                const fqname = `${scope}::${classname}`;
                 hloc(`struct ${classname} {`, indent);
                 let n = 0;
                 let types = [];
@@ -91,7 +94,7 @@ class CppGen {
                 let srctypes = [];
                 let defaults = [];
                 // gather information about the struct
-                for (p in params) {
+                for (let p in params) {
                     const type = params[p].type;
                     names.push(p);
                     srctypes.push(type);
@@ -101,7 +104,7 @@ class CppGen {
                     } else if (type === "STRUCT") {
                         let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
                         types.push(userDefinedType);
-                        this.convertors.STRUCT(userDefinedType, params[p], indent + 1);
+                        this.convertors.STRUCT(userDefinedType, params[p], fqname, indent + 1);
                     }
                     if ("value" in params[p]) {
                         defaults.push(`= ${getFieldInit[type](params[p].value)}`);
