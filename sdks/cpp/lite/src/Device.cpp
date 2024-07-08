@@ -1,5 +1,4 @@
 #include <lite/include/Device.h>
-#include <lite/include/IParam.h>
 
 #include <cassert>
 
@@ -14,7 +13,12 @@ IParam* Device::GetParam(Path& path)  {
     const Path::Segment& name = path.front();
     assert(std::holds_alternative<std::string>(name));
     
-    return params_[std::get<std::string>(name)];
+    IParam* param = params_[std::get<std::string>(name)];
+
+    if (param == nullptr) {
+        throw std::runtime_error("Device model parameter \"" + std::get<std::string>(name) + "\" does not exist");
+    }
+    return param;
 }
 
 IParam* Device::GetParam(const std::string& name)  {

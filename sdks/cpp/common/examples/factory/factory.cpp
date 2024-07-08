@@ -2,7 +2,7 @@
 #include <memory>
 #include <utility>
 
-#include <patterns/GenericFactory.h>
+#include <common/include/patterns/GenericFactory.h>
 
 /*
  * Factories are useful to create objects based on values that are only known

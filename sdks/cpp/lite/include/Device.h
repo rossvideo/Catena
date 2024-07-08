@@ -20,6 +20,9 @@ class Device {
         ~LockGuard() {
           dm_.mutex_.unlock();
         }
+        void unlock() {
+          dm_.mutex_.unlock();
+        }
       private:
         Device& dm_;
     };

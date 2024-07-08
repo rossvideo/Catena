@@ -12,7 +12,7 @@
 // limitations under the License.
 //
 
-#include <DeviceModel.h>
+#include <full/include/DeviceModel.h>
 #include <ParamAccessor.h>
 #include <Path.h>
 #include <utils.h>

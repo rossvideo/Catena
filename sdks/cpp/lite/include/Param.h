@@ -3,6 +3,7 @@
 #include <lite/include/IParam.h>
 #include <lite/include/Device.h>
 #include <lite/include/StructInfo.h>
+
 #include <lite/param.pb.h>
 
 #include <functional> // reference_wrapper

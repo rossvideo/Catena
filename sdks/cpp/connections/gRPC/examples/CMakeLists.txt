@@ -12,29 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# cmake build file for C++ SDKs and examples.
+# cmake build file for Catena C++ examples.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(COMMON C CXX)
+project(CATENA_LITE_EXAMPLES C CXX)
 
-if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
-
-set(target catena_common)
-
-set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp")
-add_library(${target} STATIC ${sources})
-
-target_include_directories(
-    ${target}
-    PUBLIC
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
-)
-target_compile_features(${target} PUBLIC cxx_std_20)
-
-add_subdirectory(examples)
+add_subdirectory("status_update")
