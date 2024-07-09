@@ -67,12 +67,6 @@ class StructConverter {
         this.namespace = namespace;
     }
 
-    substituteTemplateType (name, desc) {
-        if ("template_oid" in desc) {
-            return desc.template_oid;
-        }
-    }
-
     gatherInfo (name, desc) {
         let n = 0;
         let types = [];
