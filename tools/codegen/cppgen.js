@@ -60,6 +60,48 @@ function structInit(names, srctypes, desc) {
     return `{${inits.join(', ')}}`;
 }
 
+class StructConverter {
+    constructor (hloc, bloc, namespace) {
+        this.hloc = hloc;
+        this.bloc = bloc;
+        this.namespace = namespace;
+    }
+
+    substituteTemplateType (name, desc) {
+        if ("template_oid" in desc) {
+            return desc.template_oid;
+        }
+    }
+
+    gatherInfo (name, desc) {
+        let n = 0;
+        let types = [];
+        let names = [];
+        let srctypes = [];
+        let defaults = [];
+        let typeOnly = (!"value" in desc);
+        for (let p in desc.params) {
+            const type = desc.params[p].type;
+            names.push(p);
+            srctypes.push(type);
+            if (type in kCppTypes) {
+                let cppType = kCppTypes[type];
+                types.push(cppType);
+            } else if (type === "STRUCT") {
+                let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
+                types.push(userDefinedType);
+            }
+            if ("value" in desc.params[p]) {
+                defaults.push(`= ${getFieldInit[type](desc.params[p].value)}`);
+            } else {
+                defaults.push('{}');
+            }
+            ++n;
+        }
+        return {n, typeOnly, types, names, srctypes, defaults};
+    }
+}
+
 class CppGen {
     constructor(hloc, bloc, namespace) {
         this.hloc = hloc; // write a line of code to the header file
