@@ -1,31 +1,16 @@
-FROM ubuntu:22.04
+FROM catena-base:v0.1.0
 
 LABEL org.opencontainers.image.source https://github.com/rossvideo/Catena
-LABEL org.opencontainers.image.description="Development environment for the Catena C++ SDK"
+LABEL org.opencontainers.image.name="catena-codeql"
+LABEL org.opencontainers.image.description="Github codeql environment for the Catena C++ SDK"
+LABEL org.opencontainers.image.version="v0.1.0"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
+LABEL org.opencontainers.image.vendor="Ross Video"
 
-ENV INSTALL_DIR="/usr/local"
+
 ENV CLONE_DIR="/opt"
+ENV INSTALL_DIR="/usr/local"
 ENV GRPC_VER="v1.64.2"
-
-RUN apt-get update && \
-    apt-get install -y \
-        ca-certificates \
-        build-essential \
-        cmake \
-        ninja-build \
-        git \
-        git-lfs \
-        wget \
-        curl \
-        tar \
-        unzip \
-        doxygen \
-        graphviz \
-        libssl-dev \
-        libgtest-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 # jwt-cpp
 WORKDIR "${CLONE_DIR}"
@@ -57,5 +42,4 @@ RUN git clone --recurse-submodules -b "${GRPC_VER}" --depth 1 --shallow-submodul
     make -j 5 && \
     make install && \
     make -j 5 grpc_cli && \
-    cp grpc_cli "${INSTALL_DIR}/bin" && \
-    rm -rf "${CLONE_DIR}/grpc"
+    cp grpc_cli "${INSTALL_DIR}/bin"
