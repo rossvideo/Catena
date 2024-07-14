@@ -270,7 +270,7 @@ Constraint<Int_Range> sexagesimalConstraint(dm, "/sexagesimal", 0,59,1);
 Constraint<Int_Range> degreesLatitudeConstraint(dm, "/degrees_latitude", -90,90,1);
 Constraint<Int_Range> degreesLongitudeConstraint(dm, "/degrees_longitude", -180,180,1);
 
-Latitude latidude{};
+Latitude latitude{};
 Param<Latitude> latitudeParam(dm, latitude, "/latitude", degreesLatitudeConstraint);
 const StructInfo& Latitude::getStructInfo() {
   static StructInfo t;

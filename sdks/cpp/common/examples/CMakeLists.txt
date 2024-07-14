@@ -25,5 +25,6 @@ project(CATENA_COMMON_EXAMPLES C CXX)
 # add_subdirectory("full_service")
 
 add_subdirectory("factory")
+add_subdirectory("enum_decorator")
 
 
