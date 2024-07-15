@@ -50,13 +50,13 @@ template <typename T> class Param : public IParam {
      * @brief the main constructor
      */
     Param(T& value, const std::string& name, Device& dm) : IParam(), value_(value), dm_(dm) {
-        dm.AddParam(name, this);
+        dm.addItem<Device::ParamTag>(name, this);
     }
 
     /**
      * @brief get the value of the parameter
      */
-    T& Get() { return value_.get(); }
+    inline T& get() { return value_.get(); }
 
     /**
      * @brief serialize the parameter value to protobuf

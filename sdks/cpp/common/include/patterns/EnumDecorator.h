@@ -61,7 +61,7 @@ template <typename E> class EnumDecorator {
      */
     EnumDecorator(E value) : value_{value} {}
 
-   
+
     /**
      * @brief Construct from a string.
      *
@@ -69,8 +69,7 @@ template <typename E> class EnumDecorator {
      *
      * @param str the string representation of the enum value
      */
-    EnumDecorator(const std::string& str)
-        : value_{static_cast<E>(0)} {
+    EnumDecorator(const std::string& str) : value_{static_cast<E>(0)} {
         const RevMap& revMap = getReverseMap();
         auto it = revMap.find(str);
         if (it != revMap.end()) {
@@ -109,17 +108,14 @@ template <typename E> class EnumDecorator {
      *
      * @param value the integral value
      */
-    EnumDecorator(utype value)
-        : value_{static_cast<E>(value)} {
+    EnumDecorator(utype value) : value_{static_cast<E>(value)} {
         auto it = fwdMap_.find(value_);
-        if (it != fwdMap_.end()) {
-            value_ = it->second;
-        } else {
+        if (it == fwdMap_.end()) {
             value_ = static_cast<E>(0);
         }
     }
 
-    
+
     /**
      * @brief EnumDecorators have copy semantics.
      *
@@ -147,10 +143,16 @@ template <typename E> class EnumDecorator {
     /**
      * @brief value accessor.
      *
-     * @returns the current enum value or the default value if the object is not valid.
+     * @returns the current enum value.
      *
      */
     E value() const { return value_; }
+
+    /**
+     * @brief value accessor, alternative syntax.
+     * @returns the current enum value.
+     */
+    E operator()() const { return value_; }
 
 
     /**
@@ -167,6 +169,8 @@ template <typename E> class EnumDecorator {
         auto it = fwdMap_.find(value_);
         if (it != fwdMap_.end()) {
             return it->second;
+        } else {
+            return std::string();
         }
     }
 
@@ -189,9 +193,7 @@ template <typename E> class EnumDecorator {
      * @returns true if the enum values are equal, false if they are different, and false if either object is
      * not valid.
      */
-    bool operator==(const EnumDecorator& other) const {
-        return value() == other.value();
-    }
+    bool operator==(const EnumDecorator& other) const { return value() == other.value(); }
 
     /**
      * @brief inequality operator
@@ -199,9 +201,7 @@ template <typename E> class EnumDecorator {
      * @returns true if the enum values are different, false if they are equal, and false if either object is
      * not valid.
      */
-    bool operator!=(const EnumDecorator& other) const {
-        return value_ != other.value_;
-    }
+    bool operator!=(const EnumDecorator& other) const { return value_ != other.value_; }
 };
 
 }  // namespace patterns
@@ -211,20 +211,24 @@ template <typename E> class EnumDecorator {
  * @def MAPPAIR formats a pair of enum value and string for the forward map
  */
 #define MAPPAIR(x)                                                                                           \
-    { enumName_::ARGTYPE(x), ARGNAME(x) }
+    {enumName::ARGTYPE(x), ARGNAME(x) }
 
 /**
  * @def ENUMDECORATOR declares an EnumDecorator for an enum type
- * and initializes the forward map with a list of enum value and string pairs.
  */
 #define ENUMDECORATOR_DECLARATION(className, utype, ...)                                                     \
-    enum class className##_e : utype{DOFOREACH(ARGTYPE, __VA_ARGS__)};                                       \
-    using className = catena::patterns::EnumDecorator<className##_e>;
+    enum class className##_e : utype{DOFOREACH(ARGTYPE, __VA_ARGS__)};
 
-
+/**
+ * @def ENUMDECORATOR defines the forward map for an EnumDecorator
+ * N.B. because it defines a type alias, enumName, it can only be used once per translation unit
+ * If you want to define multiple EnumDecorators in the same translation unit, you
+ * must instantiate them by hand.
+ */
 #define ENUMDECORATOR_DEFINITION(className, utype, ...)                                                      \
-    using className_ = catena::patterns::EnumDecorator<className##_e>;                                       \
-    using enumName_ = className##_e;                                                                         \
-    template <> const typename className_::FwdMap className_::fwdMap_ = {DOFOREACH(MAPPAIR, __VA_ARGS__)};
+    using enumName = className##_e; \
+    template <>                                                                                              \
+    const typename catena::patterns::EnumDecorator<className##_e>::FwdMap                                    \
+      catena::patterns::EnumDecorator<className##_e>::fwdMap_ = {DOFOREACH(MAPPAIR, __VA_ARGS__)};
 
 #define INSTANTIATE_ENUM(m, x) m x

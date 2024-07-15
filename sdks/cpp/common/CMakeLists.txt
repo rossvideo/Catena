@@ -26,7 +26,7 @@ endif(APPLE)
 
 set(target catena_common)
 
-set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp")
+set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp" "src/Enums.cpp")
 add_library(${target} STATIC ${sources})
 
 target_include_directories(
@@ -34,6 +34,7 @@ target_include_directories(
     PUBLIC
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/patterns>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/vdk>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )

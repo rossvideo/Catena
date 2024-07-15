@@ -30,6 +30,10 @@ function initialCap(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function quoted(s) {
+    return `"${s}"`;
+}
+
 
 const getFieldInit = {
     "INT32": (value) => `${value.int32_value}`,
@@ -192,7 +196,7 @@ class CppGen {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::string> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "INT32": (name, desc, indent = 0) => {
                 let initializer = '{}';
@@ -200,7 +204,7 @@ class CppGen {
                     initializer = `{${desc.value.int32_value}}`;
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<int32_t> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<int32_t> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "FLOAT32": (name, desc, indent = 0) => {
                 let initializer = '{}';
@@ -208,25 +212,25 @@ class CppGen {
                     initializer = `{${desc.value.float32_value}}`;
                 }
                 bloc(`float ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<float> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "STRING_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
                 bloc(`std::vector<std::string> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "INT32_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
                 bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "FLOAT32_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
                 bloc(`std::vector<float> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(${name},"/${name}",dm);`, indent);
             }
         };
-        this.init = (headerFilename) => {
+        this.init = (headerFilename, device) => {
             const warning = `// This file was auto-generated. Do not modify by hand.`;
             hloc(`#pragma once`);
             hloc(warning);
@@ -239,7 +243,21 @@ class CppGen {
             bloc(`#include <lite/include/IParam.h>`);
             bloc(`#include <lite/include/Param.h>`);
             bloc(`#include <lite/include/Device.h>`);
-            bloc(`catena::lite::Device dm{};`)
+            bloc(`#include <common/include/Enums.h>`);
+            bloc(`using catena::common::DetailLevel_e;`);
+            bloc(`using DetailLevel = typename catena::patterns::EnumDecorator<DetailLevel_e>;`);
+            bloc(`using catena::common::Scopes_e;`);
+            bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
+            let deviceInit = `${device.slot !== undefined ? device.slot : 0},`;
+            deviceInit += `DetailLevel(${device.detail_level !== undefined ? quoted(device.detail_level) : "FULL"})(),`;
+            if (device.access_scopes !== undefined) {
+                const scopes = device.access_scopes.map(scope => `Scope(${quoted(scope)})()`);
+                deviceInit += `{${scopes.join(',')}},`;
+            }
+            deviceInit += `Scope(${device.default_scope !== undefined ? quoted(device.default_scope) : "operate"})(),`;
+            deviceInit += `${device.multiset_enabled !== undefined ? device.multiset_enabled : false},`;
+            deviceInit += `${device.subscriptions !== undefined ? device.subscriptions : false}`;
+            bloc(`catena::lite::Device dm{${deviceInit}};`)
             bloc(`using catena::lite::StructInfo;`);
             bloc(`using catena::lite::FieldInfo;`);
         },

@@ -17,7 +17,7 @@
 template <typename T> class RangeConstraint : public IConstraint {
   public:
     RangeConstraint(T min, T max, T& value)
-        : min_(min), max_(max), value_(value), display_min_{min}, display_max_{max} {}
+        : min_(min), max_(max), value_(value), step{}, display_min_{min}, display_max_{max} {}
     RangeConstraint(T min, T max, T& value, T step, T display_min, T display_max)
         : min_(min), max_(max), value_(value), step_(step), display_min_{display_min},
           display_max_{display_max} {}

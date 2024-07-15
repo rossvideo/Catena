@@ -173,7 +173,7 @@ try {
         let hloc = headerLoc.write.bind(headerLoc);
         let bloc = bodyLoc.write.bind(bodyLoc);
         let codegen = new CppGen(hloc, bloc, namespace);
-        codegen.init(headerFilename);
+        codegen.init(headerFilename, data);
         for (p in data.params) {
             codegen.convert(p, data.params[p]);
         }
