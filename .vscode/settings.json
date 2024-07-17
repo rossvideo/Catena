@@ -11,7 +11,8 @@
         "${workspaceFolder}/sdks/cpp/build",
         "${env:HOME}/.local/include",
         "${workspaceFolder}/sdks/cpp/common/include",
-        "${workspaceFolder}/sdks/cpp"
+        "${workspaceFolder}/sdks/cpp",
+        "${workspaceFolder}/sdks/cpp/connections/gRPC/include"
     ],
     "json.schemas": [
         {
