@@ -12,25 +12,24 @@
 // limitations under the License.
 //
 
-#include <PeerInfo.h>
-#include <ParamAccessor.h>
+#include <connections/gRPC/include/PeerInfo.h>
 
 #include <iostream>
 #include <thread>
 #include <atomic>
 
 using catena::PeerInfo;
-using catena::ParamAccessor;
-using catena::ParamIndex;
+using catena::lite::IParam;
+//using catena::ParamIndex;
 
 std::atomic<bool> going{}; // flag shared among threads and methods in this translation unit
 
-void PeerInfo::handleValueUpdate(const ParamAccessor& param, ParamIndex idx) {
+void PeerInfo::handleValueUpdate(const IParam& param/*, ParamIndex idx*/) {
     if (going) {
         catena::PushUpdates update;
         update.set_slot(0);
-        *update.mutable_value()->mutable_oid() = param.oid();
-        *update.mutable_value()->mutable_value() = param.value<false>();
+        // *update.mutable_value()->mutable_oid() = param.oid();
+        // *update.mutable_value()->mutable_value() = param.value<false>();
         writer_->Write(update);
     }
 }

@@ -1,4 +1,4 @@
-# Copyright © 2024 Ross Video Ltd
+# Copyright © 2023 Ross Video Ltd
 #
 # Licensed under the Creative Commons Attribution NoDerivatives 4.0 International Licensing (CC-BY-ND-4.0);
 # you may not use this file except in compliance with the License.
@@ -12,30 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# cmake build file for the read_model_from_file example.
+# cmake build file for Catena C++ examples.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-get_filename_component(target ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-project(${target} C CXX)
+project(CATENA_LITE_EXAMPLES C CXX)
 
-add_executable(${target})
-
-get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
-
-target_include_directories(${target}
-    PUBLIC
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
-)
-
-target_sources(${target}
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target}.cpp>
-)
-
-
-target_compile_features(${target} PUBLIC cxx_std_20)
-
+add_subdirectory("status_update")

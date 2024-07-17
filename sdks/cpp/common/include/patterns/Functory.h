@@ -10,8 +10,8 @@
  * 
 */
 
-#include <Singleton.h>
-#include <Meta.h>
+#include <common/include/patterns/Singleton.h>
+#include <common/include/meta/Streamable.h>
 
 #include <mutex>
 #include <sstream>

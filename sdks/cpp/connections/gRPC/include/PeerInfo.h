@@ -24,9 +24,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include <ParamAccessor.h>
+#include <lite/include/IParam.h>
 
-#include <service.grpc.pb.h>
+#include <lite/service.grpc.pb.h>
 
 #include <string>
 
@@ -86,7 +86,7 @@ class PeerInfo {
     /**
      * @brief handles updates from the owning service
      */
-    void handleValueUpdate(const catena::ParamAccessor& param, catena::ParamIndex idx);
+    void handleValueUpdate(const catena::lite::IParam& param/*, catena::lite::ParamIndex idx*/);
 
     /**
      * @brief handles the connection with the pier

@@ -35,15 +35,9 @@
             "name": {"display_strings": {"en": "Location"}},
             "params": {
                 "latitude": {
-                    "type": "STRUCT",
-                    "name": {"display_strings": {"en": "Latitude"}},
-                    "params": {
-                      "degrees": {
-                        "type": "INT32",
-                        "value": {"int32_value": 37},
-                        "name": {"display_strings": {"en": "Degrees"}}
-                      }
-                    }
+                    "type": "FLOAT32",
+                    "value": {"float32_value": 53.4640},
+                    "name": {"display_strings": {"en": "Latitude"}}
                 },
                 "longitude": {
                     "type": "FLOAT32",
@@ -54,7 +48,7 @@
             "value": {
                 "struct_value": {
                     "fields": {
-                        "latitude": {"value": {"struct_value": {"fields": {"degrees": {"value": {"int32_value": 37}}}}}},
+                        "latitude": {"value": {"float32_value": 37.7749}},
                         "longitude": {"value": {"float32_value": -122.4194}}
                     }
                 }

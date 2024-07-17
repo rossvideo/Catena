@@ -18,24 +18,34 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-get_filename_component(target ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-project(${target} C CXX)
+project(gRPC C CXX)
 
-add_executable(${target})
+if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+endif(APPLE)
 
-get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
+set(target catena_connections_grpc)
 
-target_include_directories(${target}
+set(sources "src/PeerInfo.cpp" "src/ServiceImpl.cpp")
+add_library(${target} STATIC ${sources})
+
+find_package(jwt-cpp CONFIG REQUIRED)
+
+target_include_directories(
+    ${target}
     PUBLIC
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
 )
 
-target_sources(${target}
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target}.cpp>
+target_link_libraries(${target}
+    catena_common
+    catena_lite
+    ${proto_interface}
+    jwt-cpp::jwt-cpp
 )
-
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 
+add_subdirectory(examples)

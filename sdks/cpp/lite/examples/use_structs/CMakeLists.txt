@@ -65,7 +65,6 @@ target_include_directories(${TARGET}
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
 )
-message(STATUS "GRP_INSTALL_INCLUDE_DIR: ${GRPC_INSTALL_INCLUDE_DIR}")
 
 target_sources(${TARGET}
     PUBLIC
@@ -79,7 +78,7 @@ target_link_libraries(${TARGET}
     ${LIB_TARGET}
     catena_common
     catena_lite
-    catena_lite_grpc
+    ${proto_interface}
 )
 
 target_compile_features(${TARGET}

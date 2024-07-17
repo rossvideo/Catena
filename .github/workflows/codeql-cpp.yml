@@ -98,7 +98,7 @@ jobs:
         cd ./work/Catena/Catena/sdks/cpp
         mkdir -p build
         cd build
-        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -G Ninja ..
+        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODELS="lite" -G Ninja ..
         ninja
 
     - name: Perform CodeQL Analysis

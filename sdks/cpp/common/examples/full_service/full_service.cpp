@@ -75,8 +75,6 @@ using grpc::Status;
 using catena::CatenaService;
 
 using Index = catena::Path::Index;
-using DeviceModel = catena::DeviceModel;
-using ParamAccessor = catena::ParamAccessor;
 
 
 // set up the command line parameters

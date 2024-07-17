@@ -10,13 +10,14 @@
 #include <cassert>
 #include <type_traits>
 
-
 namespace catena {
 namespace lite {
+  
 class IParam;         // forward reference
 class IConstraint;    // forward reference
 class IMenuGroup;     // forward reference
 class ILanguagePack;  // forward reference
+
 class Device {
   public:
     class LockGuard {

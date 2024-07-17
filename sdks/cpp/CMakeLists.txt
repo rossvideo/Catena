@@ -32,12 +32,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/ProtobufFunctions.cmake)
 # export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(UNIT_TESTING "Build Google test" ON)
-if(UNIT_TESTING)
-  # enable unit testing
-  enable_testing()
-endif(UNIT_TESTING)
-
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
@@ -125,9 +119,16 @@ set(proto_stems
   "menu"
 )
 
+# Check for invalid connection types
+set(ALLOWED_CONNECTIONS "gRPC")
+foreach(conn ${CONNECTIONS})
+  list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
+  if(${_IDX} EQUAL -1)
+    message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
+  endif()
+endforeach()
 
 # create flags _gRPC, _REST, _WSS to indicate which connections are enabled
-#
 message(STATUS "Connections: ${CONNECTIONS}")
 list(FIND CONNECTIONS "gRPC" _gRPC)
 list(FIND CONNECTIONS "REST" _REST)
@@ -143,8 +144,24 @@ if (${_WSS} GREATER -1)
   message(STATUS "WSS connection enabled")
 endif()
 
+# Check that at least one connection type is specified
+if (${_gRPC} EQUAL -1 AND ${_REST} EQUAL -1 AND ${_WSS} EQUAL -1)
+  message(FATAL_ERROR "Error: At least one connection type must be specified.")
+endif()
 
+# Check if at least one Catena Model is specified
+if (NOT CATENA_MODELS)
+  message(FATAL_ERROR "Error: At least one Catena Model must be specified.")
+endif()
+
+set(ALLOWED_MODELS "full" "lite")
 foreach(_model ${CATENA_MODELS})
+
+  # Check if the model is valid
+  if (NOT _model IN_LIST ALLOWED_MODELS)
+    message(FATAL_ERROR "Error: Unknown Catena Model specified: ${_model}")
+  endif()
+
   preprocess_protobuf_files(${catena_interface_dir} "${proto_stems}" ${_model})
   generate_cpp_protobuf_sources ("${proto_stems}" ${_model} ${_gRPC})
 
@@ -159,38 +176,38 @@ foreach(_model ${CATENA_MODELS})
 
 
   if (_gRPC GREATER -1)
-    set(libtarget "catena_${_model}_grpc")
+    set(proto_interface "proto_interface_${_model}_grpc")
   else()
-    set(libtarget "catena_${_model}")
+    set(proto_interface "proto_interface_${_model}")
   endif()
 
   set_source_files_properties(${sources} PROPERTIES GENERATED TRUE)
-  add_library(${libtarget} STATIC ${sources})
+  add_library(${proto_interface} STATIC ${sources})
   foreach (target ${intermediates})
     message(STATUS "Adding dependency: ${target}")
-    add_dependencies(${libtarget} ${target})
+    add_dependencies(${proto_interface} ${target})
   endforeach()
   
   # Set the library's output directory
-  set_target_properties(${libtarget} PROPERTIES
+  set_target_properties(${proto_interface} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
   )
-  target_include_directories(${libtarget} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${GRPC_INSTALL_INCLUDE_DIR})
-  target_compile_features(${libtarget} PUBLIC cxx_std_20)
+  target_include_directories(${proto_interface} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${GRPC_INSTALL_INCLUDE_DIR})
+  target_compile_features(${proto_interface} PUBLIC cxx_std_20)
   
 
   if (_gRPC GREATER -1)
     if (${_model} STREQUAL "full")
-      target_link_libraries(${libtarget} ${_GRPC_GRPCPP} ${_REFLECTION} ${_PROTOBUF_LIBPROTOBUF})
+      target_link_libraries(${proto_interface} ${_GRPC_GRPCPP} ${_REFLECTION} ${_PROTOBUF_LIBPROTOBUF})
     else()
-      target_link_libraries(${libtarget} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF_LITE})
+      target_link_libraries(${proto_interface} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF_LITE})
     endif()
   else()
     if (${_model} STREQUAL "full")
-      target_link_libraries(${libtarget}  ${_PROTOBUF_LIBPROTOBUF})
+      target_link_libraries(${proto_interface}  ${_PROTOBUF_LIBPROTOBUF})
     else()
-      target_link_libraries(${libtarget} ${_PROTOBUF_LIBPROTOBUF_LITE})
+      target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
     endif()
   endif()
 
@@ -204,8 +221,11 @@ add_custom_target(clean-proto
 # include the common part of the Catena C++ SDK
 add_subdirectory("common")
 
-#include the lite part of the Catena C++ SDK
 add_subdirectory("lite")
+
+# include the connections part of the Catena C++ SDK
+add_subdirectory("connections")
+
 
 # doxygen
 #

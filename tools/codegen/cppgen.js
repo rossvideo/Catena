@@ -30,6 +30,7 @@ function initialCap(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+
 function quoted(s) {
     return `"${s}"`;
 }
@@ -156,6 +157,11 @@ class CppGen {
                     } else {
                         defaults.push('{}');
                     }
+                    if ("value" in params[p]) {
+                        defaults.push(`= ${getFieldInit[type](params[p].value)}`);
+                    } else {
+                        defaults.push('{}');
+                    }
                     ++n;
                 }
                 
@@ -209,6 +215,7 @@ class CppGen {
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
                 bloc(`catena::lite::Param<int32_t> ${name}Param(${name},"/${name}",dm);`, indent);
+
             },
             "FLOAT32": (name, desc, indent = 0) => {
                 let initializer = '{}';
