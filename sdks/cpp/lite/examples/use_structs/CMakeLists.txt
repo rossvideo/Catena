@@ -60,6 +60,7 @@ add_custom_target(${TARGET}_codegen
 set_source_files_properties(${CODEGEN_OUTPUT} PROPERTIES GENERATED TRUE)
 target_include_directories(${TARGET}
     PUBLIC
+        $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
         $<BUILD_INTERFACE:${PARENT_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
@@ -74,6 +75,7 @@ target_sources(${TARGET}
 add_dependencies(${TARGET} ${TARGET}_codegen)
 
 target_link_libraries(${TARGET}
+    ${LIB_TARGET}
     catena_common
     catena_lite
     ${proto_interface}

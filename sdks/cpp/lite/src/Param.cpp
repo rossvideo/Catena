@@ -1,4 +1,12 @@
+#include <lite/param.pb.h>
+
 #include <lite/include/Param.h>
+#include <lite/include/StructInfo.h>
+
+#include <vector>
+#include <string>
+#include <type_traits>
+
 
 using catena::Value;
 using catena::lite::Param;
