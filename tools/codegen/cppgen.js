@@ -119,7 +119,12 @@ class CppGen {
             return initializer;
         };
         this.namespace = namespace;
-        this.convertors = {
+        this.constraints = {
+            "FLOAT_RANGE": (name, desc, indent = 0) => {
+               // place holder for now
+            }
+        },
+        this.params = {
             "STRUCT": (name, desc, scope = undefined, indent = 0) => {
                 const params = desc.params;
                 const classname = initialCap(name);
@@ -144,7 +149,7 @@ class CppGen {
                     } else if (type === "STRUCT") {
                         let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
                         types.push(userDefinedType);
-                        this.convertors.STRUCT(userDefinedType, params[p], fqname, indent + 1);
+                        this.params.STRUCT(userDefinedType, params[p], fqname, indent + 1);
                     }
                     if ("value" in params[p]) {
                         defaults.push(`= ${getFieldInit[type](params[p].value)}`);
@@ -167,20 +172,19 @@ class CppGen {
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
                 bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"${name}",dm);`, bodyIndent)
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"/${name}",dm);`, bodyIndent)
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
-                bloc(`static StructInfo t;`, bodyIndent+1);
-                bloc(`if (t.name.length()) return t;`, bodyIndent+1);
-                bloc(`t.name = "${classname}";`, bodyIndent+1);
-                bloc(`FieldInfo fi;`, bodyIndent+1);
+                bloc(`static StructInfo t {`, bodyIndent+1);
+                bloc(`"${name}", {`, bodyIndent+2);
                 for (let i = 0; i < n; ++i) {
                     let indent = bodyIndent+2;
-                    bloc(`// register info for the ${names[i]} field`, indent);
-                    bloc(`fi.name = "${names[i]}";`, indent);
-                    bloc(`fi.offset = offsetof(${fqname}, ${names[i]});`, indent);
-                    bloc(`fi.toProto = catena::lite::toProto<${types[i]}>;`, indent);
-                    bloc(`t.fields.push_back(fi);`, indent);
+                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}> }`, indent);
+                    if (i < n - 1) {
+                        bloc(`,`, indent);
+                    }
                 }
+                bloc(`}`, bodyIndent+2);
+                bloc(`};`, bodyIndent+1);
                 bloc(`return t;`, bodyIndent+1)
                 bloc('}', bodyIndent);
 
@@ -244,6 +248,9 @@ class CppGen {
             bloc(`#include <lite/include/Param.h>`);
             bloc(`#include <lite/include/Device.h>`);
             bloc(`#include <common/include/Enums.h>`);
+            bloc(`#include <lite/include/StructInfo.h>`);
+            bloc(`#include <string>`);
+            bloc(`#include <vector>`);
             bloc(`using catena::common::DetailLevel_e;`);
             bloc(`using DetailLevel = typename catena::patterns::EnumDecorator<DetailLevel_e>;`);
             bloc(`using catena::common::Scopes_e;`);
@@ -255,7 +262,7 @@ class CppGen {
                 deviceInit += `{${scopes.join(',')}},`;
             }
             deviceInit += `Scope(${device.default_scope !== undefined ? quoted(device.default_scope) : "operate"})(),`;
-            deviceInit += `${device.multiset_enabled !== undefined ? device.multiset_enabled : false},`;
+            deviceInit += `${device.multi_set_enabled !== undefined ? device.multi_set_enabled : false},`;
             deviceInit += `${device.subscriptions !== undefined ? device.subscriptions : false}`;
             bloc(`catena::lite::Device dm{${deviceInit}};`)
             bloc(`using catena::lite::StructInfo;`);
@@ -266,9 +273,9 @@ class CppGen {
         }
     }
     
-    convert (oid, desc) {
-        if (desc.type in this.convertors) {
-            return this.convertors[desc.type](oid, desc);
+    param (oid, desc) {
+        if (desc.type in this.params) {
+            return this.params[desc.type](oid, desc);
         } else if ("template_oid" in desc) {
             // code to handle templated params here
         } else {

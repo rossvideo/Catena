@@ -96,6 +96,7 @@ template <typename T>
 typename std::enable_if<!meta::has_getStructInfo<T>, void>::type toProto(catena::Value& value, const void* src);
 
 
+
 }  // namespace lite
 }  // namespace catena
 

@@ -50,7 +50,7 @@ template <typename T> class Param : public IParam {
      * @brief the main constructor
      */
     Param(T& value, const std::string& name, Device& dm) : IParam(), value_(value), dm_(dm) {
-        dm.addItem<Device::ParamTag>(name, this);
+        dm.addItem<Device::ParamTag>(name, this, Device::ParamTag{});
     }
 
     /**

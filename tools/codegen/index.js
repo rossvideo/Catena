@@ -174,8 +174,11 @@ try {
         let bloc = bodyLoc.write.bind(bodyLoc);
         let codegen = new CppGen(hloc, bloc, namespace);
         codegen.init(headerFilename, data);
-        for (p in data.params) {
-            codegen.convert(p, data.params[p]);
+        for (let c in data.constraints) {
+            codegen.constraint(c, data.constraints[c]);
+        }
+        for (let p in data.params) {
+            codegen.param(p, data.params[p]);
         }
         codegen.finish();
         fs.close(body);

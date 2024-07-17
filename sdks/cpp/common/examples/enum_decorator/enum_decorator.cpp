@@ -30,7 +30,6 @@ INSTANTIATE_ENUM(ENUMDECORATOR_DEFINITION, COUNTER);
 
 
 
-
 // example of enum with non sequential values
 // we have to do this by hand instead of using the macros
 

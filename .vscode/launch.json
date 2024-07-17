@@ -3,9 +3,9 @@
     "configurations": [
       {
         "type": "cppdbg",
-        "name": "Debug enum_decorator with lldb",
+        "name": "Debug use_structs with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/enum_decorator/enum_decorator",
+        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/use_structs/use_structs",
         "args": [],
         "cwd": "${workspaceFolder}/sdks/cpp/build",
         "preLaunchTask": "",

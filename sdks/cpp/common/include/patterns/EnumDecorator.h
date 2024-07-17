@@ -211,14 +211,13 @@ template <typename E> class EnumDecorator {
  * @def MAPPAIR formats a pair of enum value and string for the forward map
  */
 #define MAPPAIR(x)                                                                                           \
-    {enumName::ARGTYPE(x), ARGNAME(x) }
+    { enumName::ARGTYPE(x), ARGNAME(x) }
 
 /**
  * @def ENUMDECORATOR declares an EnumDecorator for an enum type
  */
 #define ENUMDECORATOR_DECLARATION(className, utype, ...)                                                     \
     enum class className##_e : utype{DOFOREACH(ARGTYPE, __VA_ARGS__)};
-
 /**
  * @def ENUMDECORATOR defines the forward map for an EnumDecorator
  * N.B. because it defines a type alias, enumName, it can only be used once per translation unit
@@ -226,7 +225,7 @@ template <typename E> class EnumDecorator {
  * must instantiate them by hand.
  */
 #define ENUMDECORATOR_DEFINITION(className, utype, ...)                                                      \
-    using enumName = className##_e; \
+    using enumName = className##_e;                                                                          \
     template <>                                                                                              \
     const typename catena::patterns::EnumDecorator<className##_e>::FwdMap                                    \
       catena::patterns::EnumDecorator<className##_e>::fwdMap_ = {DOFOREACH(MAPPAIR, __VA_ARGS__)};

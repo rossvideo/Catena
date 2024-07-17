@@ -7,6 +7,8 @@
 #include <string>
 #include <mutex>
 #include <vector>
+#include <cassert>
+#include <type_traits>
 
 
 namespace catena {
@@ -94,14 +96,59 @@ class Device {
      * @param name the name of the item
      * @param item the item to add
      */
-    template <typename TAG> void addItem(const std::string& name, TAG::type* item);
+    template <typename TAG> void addItem(const std::string& name, TAG::type* item, TAG tag) {
+      assert(item != nullptr);
+      if constexpr(std::is_same_v<TAG, ParamTag>) {
+        params_[name] = item;
+      } else if constexpr(std::is_same_v<TAG, CommandTag>) {
+        commands_[name] = item;
+      } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
+        constraints_[name] = item;
+      } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
+        menu_groups_[name] = item;
+      } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
+        language_packs_[name] = item;
+      } else {
+        // static_assert(false, "Unknown TAG type");
+      }
+    }
 
     /**
      * @brief retreive an item from the device by json pointer.
      * item can be an IParameter, IConstraint, IMenuGroup, or ILanguagePack.
      * @param path path to the item relative to device.<items>
      */
-    template <typename TAG> TAG::type* getItem(const std::string& name, TAG tag) const;
+    template <typename TAG> TAG::type* getItem(const std::string& name, TAG tag) const {
+      if constexpr(std::is_same_v<TAG, ParamTag>) {
+        auto it = params_.find(name);
+        if (it != params_.end()) {
+          return it->second;
+        }
+      } else if constexpr(std::is_same_v<TAG, CommandTag>) {
+        auto it = commands_.find(name);
+        if (it != commands_.end()) {
+          return it->second;
+        }
+      } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
+        auto it = constraints_.find(name);
+        if (it != constraints_.end()) {
+          return it->second;
+        }
+      } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
+        auto it = menu_groups_.find(name);
+        if (it != menu_groups_.end()) {
+          return it->second;
+        }
+      } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
+        auto it = language_packs_.find(name);
+        if (it != language_packs_.end()) {
+          return it->second;
+        }
+      } else {
+        // static_assert(false, "Unknown TAG type");
+      }
+      return nullptr;
+    }
 
 
   private:
