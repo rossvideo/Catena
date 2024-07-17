@@ -52,10 +52,10 @@ int main () {
     // and we also know its value type - std::string
     // so we can get a reference to its Param object by casting it from 
     // an IParam* supplied by the Device's look up method
-    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.GetParam("/hello"));
+    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.getItem("/hello", Device::ParamTag()));
 
     // With the Param object we can get a reference to the parameter's value object
-    std::string& helloValue = helloParam.Get();
+    std::string& helloValue = helloParam.get();
 
     // and then read it, directly - which is simple and should be performant
     // The assertion of the lock, above is essential to thread safety because
@@ -68,22 +68,22 @@ int main () {
     std::cout << helloValue << std::endl;
 
     // Example with a parameter of type int
-    auto& countParam = *dynamic_cast<Param<int>*>(dm.GetParam("/count"));
-    int32_t& countValue = countParam.Get();
+    auto& countParam = *dynamic_cast<Param<int>*>(dm.getItem("/count", Device::ParamTag()));
+    int32_t& countValue = countParam.get();
     std::cout << "counter initial value: " << countValue << std::endl;
     countValue++;
     std::cout << "counter incremented value: " << countValue << std::endl;
 
     // Example with a parameter of type float
-    auto& gainParam = *dynamic_cast<Param<float>*>(dm.GetParam("/gain"));
-    float& gainValue = gainParam.Get();
+    auto& gainParam = *dynamic_cast<Param<float>*>(dm.getItem("/gain", Device::ParamTag()));
+    float& gainValue = gainParam.get();
     std::cout << "gain initial value: " << gainValue << std::endl;
     gainValue *= gainValue;
     std::cout << "gain squared value: " << gainValue << std::endl;
 
     // Example with array of strings
-    auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.GetParam("/phonetic_alphabet"));
-    std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.Get();
+    auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.getItem("/phonetic_alphabet", Device::ParamTag()));
+    std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
     std::cout << "phonetic alphabet initial value: ";
     for (const auto& s : phonetic_alphabetValue) {
         std::cout << s << " ";
@@ -98,8 +98,8 @@ int main () {
     std::cout << std::endl;
 
     // Example with array of integers
-    auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.GetParam("/primes"));
-    std::vector<int>& primesValue = primesParam.Get();
+    auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.getItem("/primes", Device::ParamTag()));
+    std::vector<int>& primesValue = primesParam.get();
     std::cout << "primes initial value: ";
     for (const auto& i : primesValue) {
         std::cout << i << " ";
@@ -114,8 +114,8 @@ int main () {
     std::cout << std::endl;
 
     // example with array of floats that's initially empty
-    auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.GetParam("/physical_constants"));
-    std::vector<float>& physical_constantsValue = physical_constantsParam.Get();
+    auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.getItem("/physical_constants", Device::ParamTag()));
+    std::vector<float>& physical_constantsValue = physical_constantsParam.get();
     std::cout << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty") << std::endl;
     physical_constantsValue.push_back(3.14159);
     physical_constantsValue.push_back(2.71828);

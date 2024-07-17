@@ -31,6 +31,11 @@ function initialCap(s) {
 }
 
 
+function quoted(s) {
+    return `"${s}"`;
+}
+
+
 const getFieldInit = {
     "INT32": (value) => `${value.int32_value}`,
     "FLOAT32": (value) => `${value.float32_value}`,
@@ -39,8 +44,8 @@ const getFieldInit = {
 
 function structInit(names, srctypes, desc) {
     let inits = [];
-    let fields = desc.value.struct_value.fields;
     if ("value" in desc) {
+        let fields = desc.value.struct_value.fields;
         for (let i = 0; i < names.length; ++i) {
             if (names[i] in fields) {
                 let field = fields[names[i]];
@@ -58,6 +63,42 @@ function structInit(names, srctypes, desc) {
         inits.push('{}');
     }
     return `{${inits.join(', ')}}`;
+}
+
+class StructConverter {
+    constructor (hloc, bloc, namespace) {
+        this.hloc = hloc;
+        this.bloc = bloc;
+        this.namespace = namespace;
+    }
+
+    gatherInfo (name, desc) {
+        let n = 0;
+        let types = [];
+        let names = [];
+        let srctypes = [];
+        let defaults = [];
+        let typeOnly = (!"value" in desc);
+        for (let p in desc.params) {
+            const type = desc.params[p].type;
+            names.push(p);
+            srctypes.push(type);
+            if (type in kCppTypes) {
+                let cppType = kCppTypes[type];
+                types.push(cppType);
+            } else if (type === "STRUCT") {
+                let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
+                types.push(userDefinedType);
+            }
+            if ("value" in desc.params[p]) {
+                defaults.push(`= ${getFieldInit[type](desc.params[p].value)}`);
+            } else {
+                defaults.push('{}');
+            }
+            ++n;
+        }
+        return {n, typeOnly, types, names, srctypes, defaults};
+    }
 }
 
 class CppGen {
@@ -79,11 +120,19 @@ class CppGen {
             return initializer;
         };
         this.namespace = namespace;
-        this.convertors = {
-            "STRUCT": (name, desc, indent = 0) => {
+        this.constraints = {
+            "FLOAT_RANGE": (name, desc, indent = 0) => {
+               // place holder for now
+            }
+        },
+        this.params = {
+            "STRUCT": (name, desc, scope = undefined, indent = 0) => {
                 const params = desc.params;
                 const classname = initialCap(name);
-                const fqname = `${namespace}::${classname}`;
+                if (scope === undefined) {
+                    scope = namespace;
+                }
+                const fqname = `${scope}::${classname}`;
                 hloc(`struct ${classname} {`, indent);
                 let n = 0;
                 let types = [];
@@ -91,7 +140,7 @@ class CppGen {
                 let srctypes = [];
                 let defaults = [];
                 // gather information about the struct
-                for (p in params) {
+                for (let p in params) {
                     const type = params[p].type;
                     names.push(p);
                     srctypes.push(type);
@@ -101,7 +150,12 @@ class CppGen {
                     } else if (type === "STRUCT") {
                         let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
                         types.push(userDefinedType);
-                        this.convertors.STRUCT(userDefinedType, params[p], indent + 1);
+                        this.params.STRUCT(userDefinedType, params[p], fqname, indent + 1);
+                    }
+                    if ("value" in params[p]) {
+                        defaults.push(`= ${getFieldInit[type](params[p].value)}`);
+                    } else {
+                        defaults.push('{}');
                     }
                     if ("value" in params[p]) {
                         defaults.push(`= ${getFieldInit[type](params[p].value)}`);
@@ -124,20 +178,19 @@ class CppGen {
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
                 bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"${name}",dm);`, bodyIndent)
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(${name},"/${name}",dm);`, bodyIndent)
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
-                bloc(`static StructInfo t;`, bodyIndent+1);
-                bloc(`if (t.name.length()) return t;`, bodyIndent+1);
-                bloc(`t.name = "${classname}";`, bodyIndent+1);
-                bloc(`FieldInfo fi;`, bodyIndent+1);
+                bloc(`static StructInfo t {`, bodyIndent+1);
+                bloc(`"${name}", {`, bodyIndent+2);
                 for (let i = 0; i < n; ++i) {
                     let indent = bodyIndent+2;
-                    bloc(`// register info for the ${names[i]} field`, indent);
-                    bloc(`fi.name = "${names[i]}";`, indent);
-                    bloc(`fi.offset = offsetof(${fqname}, ${names[i]});`, indent);
-                    bloc(`fi.toProto = catena::lite::toProto<${types[i]}>;`, indent);
-                    bloc(`t.fields.push_back(fi);`, indent);
+                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}> }`, indent);
+                    if (i < n - 1) {
+                        bloc(`,`, indent);
+                    }
                 }
+                bloc(`}`, bodyIndent+2);
+                bloc(`};`, bodyIndent+1);
                 bloc(`return t;`, bodyIndent+1)
                 bloc('}', bodyIndent);
 
@@ -153,7 +206,7 @@ class CppGen {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::string> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "INT32": (name, desc, indent = 0) => {
                 let initializer = '{}';
@@ -161,7 +214,8 @@ class CppGen {
                     initializer = `{${desc.value.int32_value}}`;
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<int32_t> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<int32_t> ${name}Param(${name},"/${name}",dm);`, indent);
+
             },
             "FLOAT32": (name, desc, indent = 0) => {
                 let initializer = '{}';
@@ -169,25 +223,25 @@ class CppGen {
                     initializer = `{${desc.value.float32_value}}`;
                 }
                 bloc(`float ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<float> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "STRING_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
                 bloc(`std::vector<std::string> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "INT32_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
                 bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(${name},"/${name}",dm);`, indent);
             },
             "FLOAT32_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
                 bloc(`std::vector<float> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(${name},"${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(${name},"/${name}",dm);`, indent);
             }
         };
-        this.init = (headerFilename) => {
+        this.init = (headerFilename, device) => {
             const warning = `// This file was auto-generated. Do not modify by hand.`;
             hloc(`#pragma once`);
             hloc(warning);
@@ -200,7 +254,24 @@ class CppGen {
             bloc(`#include <lite/include/IParam.h>`);
             bloc(`#include <lite/include/Param.h>`);
             bloc(`#include <lite/include/Device.h>`);
-            bloc(`catena::lite::Device dm{};`)
+            bloc(`#include <common/include/Enums.h>`);
+            bloc(`#include <lite/include/StructInfo.h>`);
+            bloc(`#include <string>`);
+            bloc(`#include <vector>`);
+            bloc(`using catena::common::DetailLevel_e;`);
+            bloc(`using DetailLevel = typename catena::patterns::EnumDecorator<DetailLevel_e>;`);
+            bloc(`using catena::common::Scopes_e;`);
+            bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
+            let deviceInit = `${device.slot !== undefined ? device.slot : 0},`;
+            deviceInit += `DetailLevel(${device.detail_level !== undefined ? quoted(device.detail_level) : "FULL"})(),`;
+            if (device.access_scopes !== undefined) {
+                const scopes = device.access_scopes.map(scope => `Scope(${quoted(scope)})()`);
+                deviceInit += `{${scopes.join(',')}},`;
+            }
+            deviceInit += `Scope(${device.default_scope !== undefined ? quoted(device.default_scope) : "operate"})(),`;
+            deviceInit += `${device.multi_set_enabled !== undefined ? device.multi_set_enabled : false},`;
+            deviceInit += `${device.subscriptions !== undefined ? device.subscriptions : false}`;
+            bloc(`catena::lite::Device dm{${deviceInit}};`)
             bloc(`using catena::lite::StructInfo;`);
             bloc(`using catena::lite::FieldInfo;`);
         },
@@ -209,9 +280,9 @@ class CppGen {
         }
     }
     
-    convert (oid, desc) {
-        if (desc.type in this.convertors) {
-            return this.convertors[desc.type](oid, desc);
+    param (oid, desc) {
+        if (desc.type in this.params) {
+            return this.params[desc.type](oid, desc);
         } else if ("template_oid" in desc) {
             // code to handle templated params here
         } else {

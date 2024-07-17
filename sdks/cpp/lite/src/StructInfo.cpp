@@ -1,5 +1,8 @@
 #include <lite/include/StructInfo.h>
 
+#include <lite/param.pb.h>
+
+
 template<>
 void catena::lite::toProto<float>(catena::Value& value, const void* src) {
     value.set_float32_value(*reinterpret_cast<const float*>(src));
