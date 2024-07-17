@@ -73,7 +73,6 @@ target_sources(${TARGET}
 add_dependencies(${TARGET} ${TARGET}_codegen)
 
 target_link_libraries(${TARGET}
-    catena_common
     catena_lite
     ${proto_interface}
 )
