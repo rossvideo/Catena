@@ -157,9 +157,12 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             context_.AsyncNotifyWhenDone(this);
             try {
                 // std::vector<std::string> clientScopes = getScopes(context_);
-                catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
                 catena::Value ans;
-                param->toProto(ans);
+                {
+                    Device::LockGuard lg(dm_);
+                    catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
+                    param->toProto(ans);
+                }
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
             } catch (catena::exception_with_status &e) {
