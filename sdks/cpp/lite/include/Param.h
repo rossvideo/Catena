@@ -68,9 +68,14 @@ template <typename T> class Param : public IParam {
      * @brief serialize the parameter descriptor to protobuf
      */
     void toProto(catena::Param& param) const override {
-        param.set_type(type_);
+        param.set_type(type_());
         toProto(*param.mutable_value());
     }
+
+    /**
+     * @brief get the parameter type
+     */
+    ParamType type() const override { return type_; }
     
   private:
     ParamType type_; // ParamType is from param.pb.h
