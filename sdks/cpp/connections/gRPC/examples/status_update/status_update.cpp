@@ -123,11 +123,11 @@ void statusUpdateExample(){
         //         i = v.int32_value();
         //     }
         // });
-        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.GetParam("/counter"));
+        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             Device::LockGuard lg(dm); 
-            aNumber.Get()++;
+            aNumber.get()++;
         }
     });
     loop.detach();
