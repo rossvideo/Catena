@@ -50,7 +50,7 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(T& value, const std::string& name, Device& dm) : IParam(), value_(value), dm_(dm) {
+    Param(catena::ParamType type, T& value, const std::string& name, Device& dm) : IParam(), type_{type}, value_{value}, dm_{dm} {
         dm.addItem<Device::ParamTag>(name, this, Device::ParamTag{});
     }
 
@@ -63,8 +63,17 @@ template <typename T> class Param : public IParam {
      * @brief serialize the parameter value to protobuf
      */
     void toProto(catena::Value& value) const override;
+
+    /**
+     * @brief serialize the parameter descriptor to protobuf
+     */
+    void toProto(catena::Param& param) const override {
+        param.set_type(type_);
+        toProto(*param.mutable_value());
+    }
     
   private:
+    ParamType type_; // ParamType is from param.pb.h
     std::reference_wrapper<T> value_;
     std::reference_wrapper<Device> dm_;
 };
