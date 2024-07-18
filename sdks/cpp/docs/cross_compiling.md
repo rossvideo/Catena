@@ -6,11 +6,16 @@ First you will need a cmake toolchain file that describes the target system. Cre
 For these examples we will assume this path was set to "/path/to/target_root"
 
 ## Cross Compile OpenSSL 
+To cross compile OpemSSL you need to configure the build instructions with info about the target system
+
+For an explanation of how to do this configuration see the [OpenSSL Install guide](https://github.com/openssl/openssl/blob/master/INSTALL.md#cross-compile-prefix).
+
+Here is an example of how to configure OpenSSL for a linux-x86_64 system
 ```
 git clone https://github.com/openssl/openssl.git
 cd openssl
-./Configure linux-x86_64 \ 
-	--cross-compile-prefix=path/to/toolchainfile.cmake \
+./Configure linux-x86_64 \
+	--cross-compile-prefix=path/to/target_root/bin/x86_64-target_root-linux-gnu- \
 	--prefix=/path/to/target_root \
 	-static
 make install
@@ -21,6 +26,8 @@ There is currently an issue where gRPC does not include the correct version Abse
 
 For more info see the issue on [GitHub](https://github.com/grpc/grpc/issues/35854)
 
+More info about compiling Abseil [here](https://github.com/abseil/abseil-cpp/blob/master/CMake/README.md).
+
 ```
 git clone -b lts_2024_01_16 https://github.com/abseil/abseil-cpp.git
 cd abseil-cpp/CMake
@@ -29,6 +36,8 @@ cd cross_build
 cmake ../.. \
 	-DCMAKE_BUILD_TYPE=Release   \
 	-DABSL_ENABLE_INSTALL=ON \
+	-DBUILD_TESTING=ON \
+	-DABSL_USE_GOOGLETEST_HEAD=ON
 	-DCMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake \
     -DCMAKE_INSTALL_PREFIX=/path/to/target_root
 make install
