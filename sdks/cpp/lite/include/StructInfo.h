@@ -28,7 +28,19 @@ struct FieldInfo {
      * for the field's type
      * 
      */
-    std::function<void(catena::Value&,const void*)> toProto;
+    std::function<void(catena::Value&, const void*)> toProto;
+
+    /**
+     * @brief a function that converts a protobuf value to a field
+     *
+     * @param dst the destination value
+     * @param src the source protobuf value
+     * 
+     * The code generator points this to the appropriate fromProto method
+     * for the field's type
+     * 
+     */
+    std::function<void(void*, const catena::Value&)> fromProto;
 };
 
 /**
@@ -93,7 +105,35 @@ typename std::enable_if<meta::has_getStructInfo<T>, void>::type toProto(catena::
 
 
 template <typename T>
-typename std::enable_if<!meta::has_getStructInfo<T>, void>::type toProto(catena::Value& value, const void* src);
+typename std::enable_if<!meta::has_getStructInfo<T>, void>::type toProto(catena::Value& dst, const void* src);
+
+
+/**
+ * Free standing method to stream protobuf to structured data
+ * 
+ * enabled if T has a getStructInfo method
+ * 
+ * @tparam T the type of the value
+ */
+template <typename T>
+typename std::enable_if<meta::has_getStructInfo<T>, void>::type fromProto(void* dst, const catena::Value& src) {
+    const auto& si = T::getStructInfo();
+
+    // required so that pointer math works correctly
+    char* dst_ptr = reinterpret_cast<char*>(dst);
+
+    // deserialize each field
+    for (const auto& field : si.fields) {
+        const ::catena::StructValue& structValue = src.struct_value();
+        const ::google::protobuf::Map<std::string, ::catena::StructField>& srcFields = structValue.fields();
+        const auto& srcField = srcFields.at(field.name);
+        const auto& srcValue = srcField.value();
+        field.fromProto(dst_ptr + field.offset, srcValue);
+    }
+}
+
+template <typename T>
+typename std::enable_if<!meta::has_getStructInfo<T>, void>::type fromProto(void* dst, const catena::Value& src);
 
 }  // namespace lite
 }  // namespace catena

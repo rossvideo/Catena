@@ -195,6 +195,12 @@ class CppGen {
                 bloc(`void catena::lite::Param<${fqname}>::toProto(catena::Value& value) const {`, indent);
                 bloc(`catena::lite::toProto<${fqname}>(value, &value_.get());`, indent+1);
                 bloc('}', indent);
+
+                // instantiate the deserialize specialization
+                bloc(`template<>`, indent);
+                bloc(`void catena::lite::Param<${fqname}>::fromProto(const catena::Value& value) {`, indent);
+                bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
+                bloc('}', indent);
             },
             "STRING": (name, desc, indent = 0) => {
                 let initializer = '{}';

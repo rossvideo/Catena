@@ -24,6 +24,12 @@ class IParam {
      * @param value the protobuf value to serialize to
      */
     virtual void toProto(catena::Value& value) const = 0;
+    
+    /**
+     * @brief deserialize the parameter value from protobufi
+     * @param value the protobuf value to deserialize from
+     */
+    virtual void fromProto(const catena::Value& value) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
@@ -33,8 +39,8 @@ class IParam {
 
     virtual ParamType type() const = 0;
 };
-
 }  // namespace lite
+
 template<>
 const inline lite::IParam::ParamType::FwdMap 
   lite::IParam::ParamType::fwdMap_ {
