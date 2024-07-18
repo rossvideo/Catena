@@ -3,6 +3,8 @@
 #include <common/include/Path.h>
 #include <common/include/Enums.h>
 
+#include <lite/device.pb.h>
+
 #include <unordered_map>
 #include <string>
 #include <mutex>
@@ -18,8 +20,12 @@ class IConstraint;    // forward reference
 class IMenuGroup;     // forward reference
 class ILanguagePack;  // forward reference
 
+
 class Device {
   public:
+    /**
+     * @brief LockGuard is a helper class to lock and unlock the device mutex
+     */
     class LockGuard {
       public:
         LockGuard(Device& dm) : dm_(dm) { dm_.mutex_.lock(); }
@@ -30,20 +36,45 @@ class Device {
     };
     friend class LockGuard;
 
+    /**
+     * @brief convenience type aliases to types of objects contained in the device
+     */
     using Scopes_e = catena::common::Scopes_e;
-    using DetailLevel_e = catena::common::DetailLevel_e;
+    using Scopes = catena::common::Scopes;
+    using DetailLevel_e = catena::Device_DetailLevel;
+    using DetailLevel = catena::common::DetailLevel;
+
+    /**
+     * @brief ParamTag type for addItem and getItem, and tag-dispatched methods
+     */
     struct ParamTag {
         using type = IParam;
     };
+
+    /**
+     * @brief CommandTag type for addItem and getItem, and tag-dispatched methods
+     */
     struct CommandTag {
         using type = IParam;
     };
+    
+    /**
+     * @brief ConstraintTag type for addItem and getItem, and tag-dispatched methods
+     */
     struct ConstraintTag {
         using type = IConstraint;
     };
+    
+    /**
+     * @brief MenuGroupTag type for addItem and getItem, and tag-dispatched methods
+     */
     struct MenuGroupTag {
         using type = IMenuGroup;
     };
+    
+    /**
+     * @brief LanguagePackTag type for addItem and getItem, and tag-dispatched methods
+     */
     struct LanguagePackTag {
         using type = ILanguagePack;
     };
@@ -57,10 +88,10 @@ class Device {
     /**
      * @brief Construct a new Device object
      */
-    Device(uint32_t slot, DetailLevel_e detail_level, std::vector<Scopes_e> access_scopes,
-           Scopes_e default_scope, bool multiset_enabled, bool subscriptions)
-        : slot_(slot), detail_level_(detail_level), access_scopes_(access_scopes),
-          default_scope_(default_scope), multiset_enabled_(multiset_enabled), subscriptions_(subscriptions) {}
+    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes_e> access_scopes,
+           Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
+        : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
+          default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
 
     /**
      * @brief Destroy the Device object
@@ -151,18 +182,30 @@ class Device {
       return nullptr;
     }
 
+    /**
+     * @brief Create a protobuf representation of the device.
+     * @param dst the protobuf representation of the device.
+     * @param shallow if true, only the top-level info is copied, params, commands etc 
+     * are not copied. Design intent is to permit large models to stream their parameters
+     * instead of sending a huge device model in one big lump.
+     * 
+     * N.B. This method is not thread-safe. It is the caller's responsibility to ensure
+     * that the device is not modified while this method is running. This class provides
+     * a LockGuard helper class to make this easier.
+     */
+    void toProto(::catena::Device& dst, bool shallow = true) const;
 
   private:
     uint32_t slot_;
-    DetailLevel_e detail_level_;
+    Device_DetailLevel detail_level_;
     std::unordered_map<std::string, IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
     std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, ILanguagePack*> language_packs_;
     std::vector<Scopes_e> access_scopes_;
-    Scopes_e default_scope_;
-    bool multiset_enabled_;
+    Scopes default_scope_;
+    bool multi_set_enabled_;
     bool subscriptions_;
 
     mutable std::mutex mutex_;

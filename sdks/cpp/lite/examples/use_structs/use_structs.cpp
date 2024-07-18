@@ -69,6 +69,12 @@ int main() {
         }
     }
 
+
+    catena::Device dstDevice{};
+    dm.toProto(dstDevice, false); // select the deep copy option
+    std::cout << "Device model serialized to protobuf" << std::endl;
+
+
     // deserialize the Location object - will be removed from this example
     locationParam.get() = Location{0, 0};
     std::cout << "Location from model cleared to 0 - latitude: " << locationParam.get().latitude
@@ -76,6 +82,7 @@ int main() {
     locationParam.fromProto(value);
     std::cout << "Location from model set with protobuf deserialization - latitude: " << locationParam.get().latitude
               << ", longitude: " << locationParam.get().longitude << std::endl;
+
 
     return EXIT_SUCCESS;
 }
