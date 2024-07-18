@@ -128,7 +128,7 @@ class CppGen {
         this.oid_aliases = (desc) => {
             let ans = '{}';
             if (desc.oid_aliases !== undefined) {
-                const aliases = desc.oid_aliases.map(alias => quoted(alias));
+                const aliases = desc.oid_aliases.map(alias => {return quoted(alias);});
                 ans = `{${aliases.join(',')}}`;
             }
             return ans;
@@ -191,7 +191,7 @@ class CppGen {
                 bloc(`"${name}", {`, bodyIndent+2);
                 for (let i = 0; i < n; ++i) {
                     let indent = bodyIndent+3;
-                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}> }${i<n-1?',':''}`, indent);
+                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}>, catena::lite::fromProto<${types[i]}> }${i<n-1?',':''}`, indent);
                 }
                 bloc(`}`, bodyIndent+2);
                 bloc(`};`, bodyIndent+1);
