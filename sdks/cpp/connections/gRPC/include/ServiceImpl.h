@@ -140,30 +140,28 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     unsigned int shutdownSignalId_;
     // };
 
-    // /**
-    //  * @brief CallData class for the DeviceRequest RPC
-    //  */
-    // class DeviceRequest : public CallData {
-    //   public:
-    //     DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
-    //     ~DeviceRequest() {}
+    /**
+     * @brief CallData class for the DeviceRequest RPC
+     */
+    class DeviceRequest : public CallData {
+      public:
+        DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override;
+        void proceed(CatenaServiceImpl *service, bool ok) override;
 
-    //    private:
-    //     CatenaServiceImpl *service_;
-    //     ServerContext context_;
-    //     std::vector<std::string> clientScopes_;
-    //     catena::DeviceRequestPayload req_;
-    //     catena::PushUpdates res_;
-    //     ServerAsyncWriter<catena::DeviceComponent> writer_;
-    //     catena::DeviceStream deviceStream_;
-    //     CallStatus status_;
-    //     Device &dm_;
-    //     int objectId_;
-    //     static int objectCounter_;
-    //     unsigned int shutdownSignalId_;
-    // };
+       private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        std::vector<std::string> clientScopes_;
+        catena::DeviceRequestPayload req_;
+        catena::PushUpdates res_;
+        ServerAsyncWriter<catena::DeviceComponent> writer_;
+        CallStatus status_;
+        Device &dm_;
+        int objectId_;
+        static int objectCounter_;
+        unsigned int shutdownSignalId_;
+    };
 
     // class ExternalObjectRequest : public CallData {
     //   public:

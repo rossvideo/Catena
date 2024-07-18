@@ -140,10 +140,6 @@ void RunRPCServer(std::string addr)
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
 
-    // // get the path to our ssh certificates
-    // std::string certs_Path(absl::GetFlag(FLAGS_certs));
-    // expandEnvVariables(certs_Path);
-
     try {
         // // check that static_root is a valid file path
         // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
