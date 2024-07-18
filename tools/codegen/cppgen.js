@@ -128,7 +128,8 @@ class CppGen {
         this.oid_aliases = (desc) => {
             let ans = '{}';
             if (desc.oid_aliases !== undefined) {
-                ans = `{ ${desc.oid_aliases.join(',')} }`;
+                const aliases = desc.oid_aliases.map(alias => quoted(alias));
+                ans = `{${aliases.join(',')}}`;
             }
             return ans;
         },

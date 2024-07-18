@@ -69,6 +69,13 @@ int main() {
         }
     }
 
+    catena::Param param{};
+    locationParam.toProto(param);
+    auto& aliases = param.oid_aliases();
+    for (const auto& alias : aliases) {
+        std::cout << "Alias: " << alias << std::endl;
+    }
+
 
     catena::Device dstDevice{};
     dm.toProto(dstDevice, false); // select the deep copy option
