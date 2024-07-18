@@ -64,7 +64,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
-        $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
 )
 
 target_link_libraries(${target}
