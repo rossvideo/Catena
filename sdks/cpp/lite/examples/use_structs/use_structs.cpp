@@ -45,7 +45,6 @@ int main() {
     // create another Location object, using the default initial value specified in the model
     Location externalToModel;
     std::cout << "Location object external to model - latitude: " << externalToModel.latitude
-
               << ", longitude: " << externalToModel.longitude << std::endl;
     locationValue = externalToModel;
 
@@ -70,6 +69,13 @@ int main() {
         }
     }
 
+    // deserialize the Location object - will be removed from this example
+    locationParam.get() = Location{0, 0};
+    std::cout << "Location from model cleared to 0 - latitude: " << locationParam.get().latitude
+              << ", longitude: " << locationParam.get().longitude << std::endl;
+    locationParam.fromProto(value);
+    std::cout << "Location from model set with protobuf deserialization - latitude: " << locationParam.get().latitude
+              << ", longitude: " << locationParam.get().longitude << std::endl;
 
     return EXIT_SUCCESS;
 }
