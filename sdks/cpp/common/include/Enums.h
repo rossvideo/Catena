@@ -1,6 +1,8 @@
 #pragma once
 
 #include <patterns/EnumDecorator.h>
+#include <cstdint>
+
 
 namespace catena {
 namespace common {
@@ -32,4 +34,6 @@ inline const patterns::EnumDecorator<common::DetailLevel_e>::FwdMap
                                                              {common::DetailLevel_e::kMinimal, "MINIMAL"},
                                                              {common::DetailLevel_e::kCommands, "COMMANDS"},
                                                              {common::DetailLevel_e::kNone, "NONE"}};
+
+
 }  // namespace catena

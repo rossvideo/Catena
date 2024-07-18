@@ -54,6 +54,9 @@ int main() {
     catena::Value value{};
     locationParam.toProto(value);
 
+    catena::patterns::EnumDecorator<catena::ParamType> type{locationParam.type()};
+    std::cout << "location type: " << type.toString() << std::endl;
+
     // print the serialized value
     auto& struct_value = value.struct_value();
     auto& fields = struct_value.fields();
