@@ -183,7 +183,7 @@ class CppGen {
                 bloc(`"${name}", {`, bodyIndent+2);
                 for (let i = 0; i < n; ++i) {
                     let indent = bodyIndent+2;
-                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}> }`, indent);
+                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}>, catena::lite::fromProto<${types[i]}> }`, indent);
                     if (i < n - 1) {
                         bloc(`,`, indent);
                     }
@@ -197,6 +197,12 @@ class CppGen {
                 bloc(`template<>`, indent);
                 bloc(`void catena::lite::Param<${fqname}>::toProto(catena::Value& value) const {`, indent);
                 bloc(`catena::lite::toProto<${fqname}>(value, &value_.get());`, indent+1);
+                bloc('}', indent);
+
+                // instantiate the deserialize specialization
+                bloc(`template<>`, indent);
+                bloc(`void catena::lite::Param<${fqname}>::fromProto(const catena::Value& value) {`, indent);
+                bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
                 bloc('}', indent);
             },
             "STRING": (name, desc, indent = 0) => {

@@ -65,6 +65,11 @@ template <typename T> class Param : public IParam {
     void toProto(catena::Value& value) const override;
 
     /**
+     * @brief deserialize the parameter value from protobuf
+     */
+    void fromProto(const catena::Value& value) override;
+
+    /**
      * @brief serialize the parameter descriptor to protobuf
      */
     void toProto(catena::Param& param) const override {
