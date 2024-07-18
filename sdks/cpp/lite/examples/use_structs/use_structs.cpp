@@ -70,6 +70,10 @@ int main() {
         }
     }
 
+    catena::Device dstDevice{};
+    dm.toProto(dstDevice, false); // select theh deep copy option
+    std::cout << "Device model serialized to protobuf" << std::endl;
+
 
     return EXIT_SUCCESS;
 }

@@ -182,11 +182,8 @@ class CppGen {
                 bloc(`static StructInfo t {`, bodyIndent+1);
                 bloc(`"${name}", {`, bodyIndent+2);
                 for (let i = 0; i < n; ++i) {
-                    let indent = bodyIndent+2;
-                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}> }`, indent);
-                    if (i < n - 1) {
-                        bloc(`,`, indent);
-                    }
+                    let indent = bodyIndent+3;
+                    bloc(`{ "${names[i]}", offsetof(${fqname}, ${names[i]}), catena::lite::toProto<${types[i]}> }${i<n-1?',':''}`, indent);
                 }
                 bloc(`}`, bodyIndent+2);
                 bloc(`};`, bodyIndent+1);
@@ -257,8 +254,8 @@ class CppGen {
             bloc(`#include <lite/include/StructInfo.h>`);
             bloc(`#include <string>`);
             bloc(`#include <vector>`);
-            bloc(`using catena::common::DetailLevel_e;`);
-            bloc(`using DetailLevel = typename catena::patterns::EnumDecorator<DetailLevel_e>;`);
+            bloc(`using catena::Device_DetailLevel;`);
+            bloc(`using DetailLevel = catena::common::DetailLevel;`);
             bloc(`using catena::common::Scopes_e;`);
             bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
             let deviceInit = `${device.slot !== undefined ? device.slot : 0},`;
