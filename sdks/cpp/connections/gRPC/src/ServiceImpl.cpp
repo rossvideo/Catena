@@ -48,7 +48,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std:
 
 void CatenaServiceImpl::init() {
     new GetValue(this, dm_, true);
-    // new SetValue(this, dm_, true);
+    new SetValue(this, dm_, true);
     // new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
@@ -194,70 +194,69 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-    // /**
-    //  * @brief CallData class for the SetValue RPC
-    //  */
-    // class SetValue : public CallData {
-    //   public:
-    //     SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
-    //         : service_{service}, dm_{dm}, responder_(&context_),
-    //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    //         objectId_ = objectCounter_++;
-    //         service->registerItem(this);
-    //         proceed(service, ok);
-    //     }
+int CatenaServiceImpl::SetValue::objectCounter_ = 0;
+CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, responder_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    objectId_ = objectCounter_++;
+    service->registerItem(this);
+    proceed(service, ok);
+}
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override {
-    //         std::cout << "SetValue::proceed[" << objectId_ << "]: " << timeNow()
-    //                   << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-    //                   << std::endl;
-            
-    //         if(!ok){
-    //             status_ = CallStatus::kFinish;
-    //         }
-            
-    //         switch (status_) {
-    //             case CallStatus::kCreate:
-    //                 status_ = CallStatus::kProcess;
-    //                 service_->RequestSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
-    //                 break;
+void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "SetValue::proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+    
+    if(!ok){
+        status_ = CallStatus::kFinish;
+    }
+    
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            break;
 
-    //             case CallStatus::kProcess:
-    //                 new SetValue(service_, dm_, ok);
-    //                 context_.AsyncNotifyWhenDone(this);
-    //                 try {
-    //                     std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
-    //                     std::vector<std::string> clientScopes = getScopes(context_);
-    //                     param->setValue(context_.peer(), req_.value(), req_.element_index(), clientScopes);
-    //                     status_ = CallStatus::kFinish;
-    //                     responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
-    //                 } catch (catena::exception_with_status &e) {
-    //                     errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
-    //                     status_ = CallStatus::kFinish;
-    //                     responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
-    //                 } catch (...) {
-    //                     errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
-    //                     status_ = CallStatus::kFinish;
-    //                     responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
-    //                 }
-    //                 break;
-                
-    //             case CallStatus::kWrite:
-    //                 // not needed
-    //                 status_ = CallStatus::kFinish;
-    //                 break;
+        case CallStatus::kProcess:
+            new SetValue(service_, dm_, ok);
+            context_.AsyncNotifyWhenDone(this);
+            try {
+                //std::vector<std::string> clientScopes = getScopes(context_);
+                auto dstParam = dm_.getItem(req_.oid(), Device::ParamTag{});
+                {
+                    Device::LockGuard lg(dm_);
+                    dstParam->fromProto(req_.value());
+                }
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
+            } catch (catena::exception_with_status &e) {
+                errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+            } catch (...) {
+                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+            }
+            break;
+        
+        case CallStatus::kWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
 
-    //             case CallStatus::kPostWrite:
-    //                 // not needed
-    //                 status_ = CallStatus::kFinish;
-    //                 break;
+        case CallStatus::kPostWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
 
-    //             case CallStatus::kFinish:
-    //                 std::cout << "SetValue[" << objectId_ << "] finished\n";
-    //                 service->deregisterItem(this);
-    //                 break;
-    //         }
-    //     }
+        case CallStatus::kFinish:
+            std::cout << "SetValue[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+    }
+}
 
      
     // };

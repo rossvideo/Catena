@@ -91,28 +91,27 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         static int objectCounter_;
     };
 
-    // /**
-    //  * @brief CallData class for the SetValue RPC
-    //  */
-    // class SetValue : public CallData {
-    //   public:
-    //     SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+    /**
+     * @brief CallData class for the SetValue RPC
+     */
+    class SetValue : public CallData {
+      public:
+        SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override;
+        void proceed(CatenaServiceImpl *service, bool ok) override;
 
-    //   private:
-
-    //     CatenaServiceImpl *service_;
-    //     ServerContext context_;
-    //     catena::SetValuePayload req_;
-    //     catena::Value res_;
-    //     ServerAsyncResponseWriter<::google::protobuf::Empty> responder_;
-    //     CallStatus status_;
-    //     Device &dm_;
-    //     Status errorStatus_;
-    //     int objectId_;
-    //     static int objectCounter_;
-    // };
+      private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        catena::SetValuePayload req_;
+        catena::Value res_;
+        ServerAsyncResponseWriter<::google::protobuf::Empty> responder_;
+        CallStatus status_;
+        Device &dm_;
+        Status errorStatus_;
+        int objectId_;
+        static int objectCounter_;
+    };
 
     // /**
     //  * @brief CallData class for the Connect RPC
