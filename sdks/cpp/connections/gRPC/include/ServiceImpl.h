@@ -29,7 +29,7 @@ public:
 
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
-    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm);
+    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath);
 
     void init();
 
@@ -62,6 +62,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     ServerCompletionQueue* cq_;
     Device &dm_;
+    std::string& EOPath_;
 
   public:
 
@@ -163,24 +164,24 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         unsigned int shutdownSignalId_;
     };
 
-    // class ExternalObjectRequest : public CallData {
-    //   public:
-    //     ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
-    //     ~ExternalObjectRequest() {}
+    class ExternalObjectRequest : public CallData {
+      public:
+        ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        ~ExternalObjectRequest() {}
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override;
+        void proceed(CatenaServiceImpl *service, bool ok) override;
 
-    //   private:
-    //     CatenaServiceImpl *service_;
-    //     ServerContext context_;
-    //     catena::ExternalObjectRequestPayload req_;
-    //     catena::PushUpdates res_;
-    //     ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
-    //     CallStatus status_;
-    //     Device &dm_;
-    //     int objectId_;
-    //     static int objectCounter_;
-    // };
+      private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        catena::ExternalObjectRequestPayload req_;
+        catena::PushUpdates res_;
+        ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
+        CallStatus status_;
+        Device &dm_;
+        int objectId_;
+        static int objectCounter_;
+    };
 
     // /**
     //  * @brief CallData class for the GetParam RPC
