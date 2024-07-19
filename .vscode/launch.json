@@ -63,6 +63,38 @@
                 "ignoreFailures": true
             }
         ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Codegen",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/tools/codegen/index.js",
+      "args": [
+          "--schema",
+          "${workspaceFolder}/schema/catena.schema.json",
+          "--device-model",
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
+          "--output",
+          "${workspaceFolder}/sdks/cpp/build/${input:pickDeviceModel}/..",
+          "--language",
+          "cpp"
+      ],
     }
-    ]
+  ],
+  "inputs": [
+    {
+      "id": "pickDeviceModel",
+      "description": "Select device model to generate code for",
+      "type": "pickString",
+      "options": ["lite/examples/start_here/device.start_here.json", 
+                  "lite/examples/use_structs/device.use_structs.json",
+                  "connections/gRPC/examples/status_update/device.status_update.json"
+                ],
+      "default": "lite/examples/start_here/device.start_here.json"
+    }
+  ]
+
 }

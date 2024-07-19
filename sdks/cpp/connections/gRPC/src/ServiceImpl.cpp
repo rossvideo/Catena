@@ -47,7 +47,7 @@ void CatenaServiceImpl::init() {
     new GetValue(this, dm_, true);
     // new SetValue(this, dm_, true);
     // new Connect(this, dm_, true);
-    // new DeviceRequest(this, dm_, true);
+    new DeviceRequest(this, dm_, true);
     // new ExternalObjectRequest(this, dm_, true);
     // new GetParam(this, dm_, true);
 }
@@ -352,74 +352,70 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
      
     // };
 
-    // /**
-    //  * @brief CallData class for the DeviceRequest RPC
-    //  */
-    // class DeviceRequest : public CallData {
-    //   public:
-    //     DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-    //         : service_{service}, dm_{dm}, writer_(&context_), deviceStream_(dm),
-    //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    //         service->registerItem(this);
-    //         objectId_ = objectCounter_++;
-    //         proceed(service, ok);  // start the process
-    //     }
-    //     ~DeviceRequest() {}
+    int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override {
-    //         std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
-    //                   << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-    //                   << std::endl;
-            
-    //         if(!ok){
-    //             std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
-    //             status_ = CallStatus::kFinish;
-    //         }
-            
-    //         switch (status_) {
-    //             case CallStatus::kCreate:
-    //                 status_ = CallStatus::kProcess;
-    //                 service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
-    //                                                this);
-    //                 break;
+    CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+        : service_{service}, dm_{dm}, writer_(&context_),
+            status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+        service->registerItem(this);
+        objectId_ = objectCounter_++;
+        proceed(service, ok);  // start the process
+    }
 
-    //             case CallStatus::kProcess:
-    //                 new DeviceRequest(service_, dm_, ok);  // to serve other clients
-    //                 context_.AsyncNotifyWhenDone(this);
-    //                 clientScopes_ = getScopes(context_);
-    //                 deviceStream_.attachClientScopes(clientScopes_);
-    //                 shutdownSignalId_ = shutdownSignal.connect([this](){
-    //                     context_.TryCancel();
-    //                     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
-    //                 });
-    //                 status_ = CallStatus::kWrite;
-    //                 // fall thru to start writing
+    void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
+        std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+                    << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                    << std::endl;
+        
+        if(!ok){
+            std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
+            status_ = CallStatus::kFinish;
+        }
+        
+        switch (status_) {
+            case CallStatus::kCreate:
+                status_ = CallStatus::kProcess;
+                service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
+                                                this);
+                break;
 
-    //             case CallStatus::kWrite:
-    //                 if (deviceStream_.hasNext()){
-    //                     std::cout << "sending device component\n";
-    //                     writer_.Write(deviceStream_.next(), this);
-    //                 } else {
-    //                     std::cout << "device finished sending\n"; 
-    //                     status_ = CallStatus::kFinish;                              
-    //                     writer_.Finish(Status::OK, this);
-    //                 }
-    //                 break;
+            case CallStatus::kProcess:
+                new DeviceRequest(service_, dm_, ok);  // to serve other clients
+                context_.AsyncNotifyWhenDone(this);
+                //clientScopes_ = getScopes(context_);
+                // deviceStream_.attachClientScopes(clientScopes_);
+                // shutdownSignalId_ = shutdownSignal.connect([this](){
+                //     context_.TryCancel();
+                //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
+                // });
+                status_ = CallStatus::kWrite;
+                // fall thru to start writing
 
-    //             case CallStatus::kPostWrite:
-    //                 // not needed
-    //                 status_ = CallStatus::kFinish;
-    //                 break;
+            case CallStatus::kWrite:
+                {
+                    catena::DeviceComponent deviceMessage{};
+                    catena::Device* dstDevice = deviceMessage.mutable_device();
+                    {
+                        Device::LockGuard lg(dm_);
+                        dm_.toProto(*dstDevice, false); // select the deep copy option
+                    }
+                    status_ = CallStatus::kPostWrite;
+                    writer_.Write(deviceMessage, this);
+                }
+                break;
 
-    //             case CallStatus::kFinish:
-    //                 std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
-    //                 shutdownSignal.disconnect(shutdownSignalId_);
-    //                 service->deregisterItem(this);
-    //                 break;
-    //         }
-    //     }
+            case CallStatus::kPostWrite:
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status::OK, this);
+                break;
 
-    // };
+            case CallStatus::kFinish:
+                std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
+                //shutdownSignal.disconnect(shutdownSignalId_);
+                service->deregisterItem(this);
+                break;
+        }
+    }
 
     // class ExternalObjectRequest : public CallData {
     //   public:
