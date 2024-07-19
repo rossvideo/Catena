@@ -5,6 +5,9 @@
 
 #include <iostream>
 #include <thread>
+#include <fstream>
+#include <vector>
+#include <iterator> 
 
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {
@@ -40,15 +43,15 @@ std::string timeNow() {
 }
 
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm)
-        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm} {}
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath)
+        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath} {}
 
 void CatenaServiceImpl::init() {
     new GetValue(this, dm_, true);
-    // new SetValue(this, dm_, true);
+    new SetValue(this, dm_, true);
     // new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
-    // new ExternalObjectRequest(this, dm_, true);
+    new ExternalObjectRequest(this, dm_, true);
     // new GetParam(this, dm_, true);
 }
 
@@ -191,70 +194,69 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-    // /**
-    //  * @brief CallData class for the SetValue RPC
-    //  */
-    // class SetValue : public CallData {
-    //   public:
-    //     SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
-    //         : service_{service}, dm_{dm}, responder_(&context_),
-    //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    //         objectId_ = objectCounter_++;
-    //         service->registerItem(this);
-    //         proceed(service, ok);
-    //     }
+int CatenaServiceImpl::SetValue::objectCounter_ = 0;
+CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, responder_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    objectId_ = objectCounter_++;
+    service->registerItem(this);
+    proceed(service, ok);
+}
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override {
-    //         std::cout << "SetValue::proceed[" << objectId_ << "]: " << timeNow()
-    //                   << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-    //                   << std::endl;
-            
-    //         if(!ok){
-    //             status_ = CallStatus::kFinish;
-    //         }
-            
-    //         switch (status_) {
-    //             case CallStatus::kCreate:
-    //                 status_ = CallStatus::kProcess;
-    //                 service_->RequestSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
-    //                 break;
+void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "SetValue::proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+    
+    if(!ok){
+        status_ = CallStatus::kFinish;
+    }
+    
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            break;
 
-    //             case CallStatus::kProcess:
-    //                 new SetValue(service_, dm_, ok);
-    //                 context_.AsyncNotifyWhenDone(this);
-    //                 try {
-    //                     std::unique_ptr<ParamAccessor> param = dm_.param(req_.oid());
-    //                     std::vector<std::string> clientScopes = getScopes(context_);
-    //                     param->setValue(context_.peer(), req_.value(), req_.element_index(), clientScopes);
-    //                     status_ = CallStatus::kFinish;
-    //                     responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
-    //                 } catch (catena::exception_with_status &e) {
-    //                     errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
-    //                     status_ = CallStatus::kFinish;
-    //                     responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
-    //                 } catch (...) {
-    //                     errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
-    //                     status_ = CallStatus::kFinish;
-    //                     responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
-    //                 }
-    //                 break;
-                
-    //             case CallStatus::kWrite:
-    //                 // not needed
-    //                 status_ = CallStatus::kFinish;
-    //                 break;
+        case CallStatus::kProcess:
+            new SetValue(service_, dm_, ok);
+            context_.AsyncNotifyWhenDone(this);
+            try {
+                //std::vector<std::string> clientScopes = getScopes(context_);
+                auto dstParam = dm_.getItem(req_.oid(), Device::ParamTag{});
+                {
+                    Device::LockGuard lg(dm_);
+                    dstParam->fromProto(req_.value());
+                }
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
+            } catch (catena::exception_with_status &e) {
+                errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+            } catch (...) {
+                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+            }
+            break;
+        
+        case CallStatus::kWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
 
-    //             case CallStatus::kPostWrite:
-    //                 // not needed
-    //                 status_ = CallStatus::kFinish;
-    //                 break;
+        case CallStatus::kPostWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
 
-    //             case CallStatus::kFinish:
-    //                 std::cout << "SetValue[" << objectId_ << "] finished\n";
-    //                 service->deregisterItem(this);
-    //                 break;
-    //         }
-    //     }
+        case CallStatus::kFinish:
+            std::cout << "SetValue[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+    }
+}
 
      
     // };
@@ -417,89 +419,87 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
         }
     }
 
-    // class ExternalObjectRequest : public CallData {
-    //   public:
-    //     ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-    //         : service_{service}, dm_{dm}, writer_(&context_),
-    //         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    //         service->registerItem(this);
-    //         objectId_ = objectCounter_++;
-    //         proceed(service, ok);  // start the process
-    //     }
-    //     ~ExternalObjectRequest() {}
+int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override {
-    //         std::cout << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
-    //                   << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-    //                   << std::endl;
-            
-    //         if(!ok){
-    //             std::cout << "ExternalObjectRequest[" << objectId_ << "] cancelled\n";
-    //             status_ = CallStatus::kFinish;
-    //         }
-            
-    //         switch (status_) {
-    //             case CallStatus::kCreate:
-    //                 status_ = CallStatus::kProcess;
-    //                 service_->RequestExternalObjectRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
-    //                                                this);
-    //                 break;
+CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, writer_(&context_),
+    status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    service->registerItem(this);
+    objectId_ = objectCounter_++;
+    proceed(service, ok);  // start the process
+}
 
-    //             case CallStatus::kProcess:
-    //                 new ExternalObjectRequest(service_, dm_, ok);  // to serve other clients
-    //                 context_.AsyncNotifyWhenDone(this);
-    //                 status_ = CallStatus::kWrite;
-    //                 // fall thru to start writing
+void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+    
+    if(!ok){
+        std::cout << "ExternalObjectRequest[" << objectId_ << "] cancelled\n";
+        status_ = CallStatus::kFinish;
+    }
+    
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestExternalObjectRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
+                                            this);
+            break;
 
-    //             case CallStatus::kWrite:
-    //                 try {
-    //                     std::cout << "sending external object " << req_.oid() <<"\n";
-    //                     std::string path = absl::GetFlag(FLAGS_static_root);
-    //                     path.append(req_.oid());
+        case CallStatus::kProcess:
+            new ExternalObjectRequest(service_, dm_, ok);  // to serve other clients
+            context_.AsyncNotifyWhenDone(this);
+            status_ = CallStatus::kWrite;
+            // fall thru to start writing
 
-    //                     if (!std::filesystem::exists(path)) {
-    //                         if(req_.oid()[0] != '/'){
-    //                             std::stringstream why;
-    //                             why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
-    //                             throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-    //                         }else{
-    //                             std::stringstream why;
-    //                             why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found";
-    //                             throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-    //                         }
-    //                     }
-    //                     // read the file into a byte array
-    //                     std::ifstream file(path, std::ios::binary);
-    //                     std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                        
-    //                     catena::ExternalObjectPayload obj;
-    //                     obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
+        case CallStatus::kWrite:
+            try {
+                std::cout << "sending external object " << req_.oid() <<"\n";
+                std::string path = service_->EOPath_;
+                path.append(req_.oid());
 
-    //                     //For now we are sending the whole file in one go
-    //                     std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
-    //                     status_ = CallStatus::kPostWrite;
-    //                     writer_.Write(obj, this);
-    //                 } catch (catena::exception_with_status &e) {
-    //                     status_ = CallStatus::kFinish;
-    //                     writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
-    //                 } catch (...) {
-    //                     status_ = CallStatus::kFinish;
-    //                     writer_.Finish(Status::CANCELLED, this);
-    //                 }
-    //                 break;
+                if (!std::filesystem::exists(path)) {
+                    if(req_.oid()[0] != '/'){
+                        std::stringstream why;
+                        why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
+                        throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                    }else{
+                        std::stringstream why;
+                        why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found";
+                        throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                    }
+                }
+                // read the file into a byte array
+                std::ifstream file(path, std::ios::binary);
+                std::vector<char> file_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                
+                catena::ExternalObjectPayload obj;
+                obj.mutable_payload()->set_payload(file_data.data(), file_data.size());
 
-    //             case CallStatus::kPostWrite:
-    //                 status_ = CallStatus::kFinish;
-    //                 writer_.Finish(Status::OK, this);
-    //                 break;
+                //For now we are sending the whole file in one go
+                std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
+                status_ = CallStatus::kPostWrite;
+                writer_.Write(obj, this);
+            } catch (catena::exception_with_status &e) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+            } catch (...) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status::CANCELLED, this);
+            }
+            break;
 
-    //             case CallStatus::kFinish:
-    //                 std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
-    //                 service->deregisterItem(this);
-    //                 break;
-    //         }
-    //     }
-    // };
+        case CallStatus::kPostWrite:
+            status_ = CallStatus::kFinish;
+            writer_.Finish(Status::OK, this);
+            break;
+
+        case CallStatus::kFinish:
+            std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+    }
+}
 
     //  /**
     //  * @brief CallData class for the GetParam RPC
