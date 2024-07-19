@@ -34,6 +34,11 @@
             "type": "INT32",
             "name": {"display_strings": {"$key": "counter"}},
             "value": {"int32_value": 0}
+        },
+        "dashboard_UI": {
+          "type": "STRING",
+          "oid_aliases": ["0xFF0E"],
+          "value": { "string_value": "eo://status_update.grid" }
         }
     }
 }
