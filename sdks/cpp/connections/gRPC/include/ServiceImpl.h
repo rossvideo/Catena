@@ -20,6 +20,7 @@ using grpc::Status;
 using grpc::ServerCompletionQueue;
 
 using catena::lite::Device;
+using catena::lite::IParam;
 
 class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
 public:
@@ -58,7 +59,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     Registry registry_;
     std::mutex registryMutex_;
 
-    vdk::signal<void()> shutdownSignal;
+    //vdk::signal<void()> shutdownSignal;
 
     ServerCompletionQueue* cq_;
     Device &dm_;
@@ -113,32 +114,32 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         static int objectCounter_;
     };
 
-    // /**
-    //  * @brief CallData class for the Connect RPC
-    //  */
-    // class Connect : public CallData {
-    //   public:
-    //     Connect(CatenaServiceImpl *service, Device &dm, bool ok);
-    //     ~Connect() {}
+    /**
+     * @brief CallData class for the Connect RPC
+     */
+    class Connect : public CallData {
+      public:
+        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
 
-    //     void proceed(CatenaServiceImpl *service, bool ok) override;
+        void proceed(CatenaServiceImpl *service, bool ok) override;
 
-    //  private:
-    //     CatenaServiceImpl *service_;
-    //     ServerContext context_;
-    //     catena::ConnectPayload req_;
-    //     catena::PushUpdates res_;
-    //     ServerAsyncWriter<catena::PushUpdates> writer_;
-    //     CallStatus status_;
-    //     Device &dm_;
-    //     std::mutex mtx_;
-    //     std::condition_variable cv_;
-    //     bool hasUpdate_{false};
-    //     int objectId_;
-    //     static int objectCounter_;
-    //     unsigned int pushUpdatesId_;
-    //     unsigned int shutdownSignalId_;
-    // };
+     private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        catena::ConnectPayload req_;
+        catena::PushUpdates res_;
+        ServerAsyncWriter<catena::PushUpdates> writer_;
+        CallStatus status_;
+        Device &dm_;
+        std::mutex mtx_;
+        std::condition_variable cv_;
+        bool hasUpdate_{false};
+        int objectId_;
+        static int objectCounter_;
+        unsigned int pushUpdatesId_;
+        unsigned int valueSetByClientId_;
+        //unsigned int shutdownSignalId_;
+    };
 
     /**
      * @brief CallData class for the DeviceRequest RPC

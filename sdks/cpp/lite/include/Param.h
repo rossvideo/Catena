@@ -50,8 +50,8 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const std::string& name, Device& dm) : IParam(), type_{type}, value_{value}, dm_{dm} {
-        dm.addItem<Device::ParamTag>(name, this, Device::ParamTag{});
+    Param(catena::ParamType type, T& value, const std::string& oid, Device& dm) : IParam(oid), type_{type}, value_{value}, dm_{dm} {
+        dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
 
     /**
