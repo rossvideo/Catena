@@ -9,6 +9,7 @@ namespace common {
 class IPolyglotText {
   public:
     using DisplayStrings = std::unordered_map<std::string, std::string>;
+    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
   public:
     IPolyglotText() = default;
     IPolyglotText(IPolyglotText&&) = default;

@@ -125,12 +125,34 @@ class CppGen {
                // place holder for now
             }
         },
-        this.oid_aliases = (desc) => {
-            let ans = '{}';
+        this.other_items = (desc) => {
+            let ans = '';
+
+            // add oid_aliases if they exist
+            let aliases_init = '{';
             if (desc.oid_aliases !== undefined) {
                 const aliases = desc.oid_aliases.map(alias => {return quoted(alias);});
-                ans = `{${aliases.join(',')}}`;
+                aliases_init += `${aliases.join(',')}}`;
+            } else {
+                aliases_init += '}';
             }
+            ans += `${aliases_init},`;
+
+            // add the name if it exists
+            let name_init = '{';
+            if (desc.name !== undefined) {
+                const display_strings = desc.name.display_strings;
+                const n = Object.keys(display_strings).length;
+                let i = 0;
+                for (let lang in display_strings) {
+                    name_init += `{"${lang}", ${quoted(display_strings[lang])}}`;
+                    if (i++ < n-1) {
+                        name_init += ',';
+                    }
+                }   
+            }
+            name_init += '}';
+            ans += name_init;
             return ans;
         },
         this.params = {
@@ -185,7 +207,7 @@ class CppGen {
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
                 bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.oid_aliases(desc)},"/${name}",dm);`, bodyIndent)
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(desc)},"/${name}",dm);`, bodyIndent)
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
                 bloc(`static StructInfo t {`, bodyIndent+1);
                 bloc(`"${name}", {`, bodyIndent+2);
@@ -216,7 +238,7 @@ class CppGen {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.oid_aliases(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
             },
             "INT32": (name, desc, indent = 0) => {
                 let initializer = '{}';
@@ -224,7 +246,7 @@ class CppGen {
                     initializer = `{${desc.value.int32_value}}`;
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.oid_aliases(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
 
             },
             "FLOAT32": (name, desc, indent = 0) => {
@@ -233,22 +255,22 @@ class CppGen {
                     initializer = `{${desc.value.float32_value}}`;
                 }
                 bloc(`float ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.oid_aliases(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
             },
             "STRING_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
                 bloc(`std::vector<std::string> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.oid_aliases(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
             },
             "INT32_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
                 bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.oid_aliases(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
             },
             "FLOAT32_ARRAY": (name, desc, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
                 bloc(`std::vector<float> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.oid_aliases(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
             }
         };
         this.init = (headerFilename, device) => {

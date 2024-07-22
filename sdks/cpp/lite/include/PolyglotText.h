@@ -22,7 +22,7 @@ class PolyglotText : public catena::common::IPolyglotText {
     virtual ~PolyglotText() = default;
 
     // Constructor from initializer list
-    PolyglotText(std::initializer_list<std::pair<const std::string, std::string>> list)
+    PolyglotText(ListInitializer list)
       : display_strings_(list.begin(), list.end()) {}
 
 

@@ -58,6 +58,7 @@ int main() {
     std::cout << "location type: " << type.toString() << std::endl;
 
     // print the serialized value
+    std::cout << "Location name: " << locationParam.name("en") << std::endl;
     auto& struct_value = value.struct_value();
     auto& fields = struct_value.fields();
     for (const auto& field : fields) {
@@ -76,6 +77,10 @@ int main() {
     for (const auto& alias : aliases) {
         std::cout << "Alias: " << alias << std::endl;
     }
+    auto& name = param.name();
+    for (const auto& [lang, text] : name.display_strings()) {
+        std::cout << "Language: " << lang << ", Text: " << text << std::endl;
+    }
 
 
     catena::Device dstDevice{};
@@ -91,10 +96,6 @@ int main() {
     std::cout << "Location from model set with protobuf deserialization - latitude: " << locationParam.get().latitude
               << ", longitude: " << locationParam.get().longitude << std::endl;
 
-    catena::lite::PolyglotText text {{"en", "Hello!"},{"fr", "Bonjour!"},{"es", "Hola!"}};
-    for(const auto& [lang, text] : text.displayStrings()) {
-        std::cout << "Language: " << lang << ", Text: " << text << std::endl;
-    }
-
+   
     return EXIT_SUCCESS;
 }
