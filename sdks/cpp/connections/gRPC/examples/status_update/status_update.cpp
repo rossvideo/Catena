@@ -108,19 +108,16 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-
-
 void statusUpdateExample(){
     
     std::thread loop([]() {
         dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
-            catena::Value v;
-            {
-                Device::LockGuard lg(dm);
-                p->toProto(v);
-            }
             //std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
-            std::cout << p->getOid() << " to: " << v.DebugString() << '\n';
+            /**
+             * Protobuf lite does not support converting messages to JSON strings.
+             * @todo: Implement a toString method for catena values.
+             */
+            std::cout << p->getOid() << " has been updated" << '\n';
         });
         Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
         while (globalLoop) {

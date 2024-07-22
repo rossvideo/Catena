@@ -59,8 +59,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     Registry registry_;
     std::mutex registryMutex_;
 
-    //vdk::signal<void()> shutdownSignal;
-
     ServerCompletionQueue* cq_;
     Device &dm_;
     std::string& EOPath_;
@@ -138,7 +136,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         static int objectCounter_;
         unsigned int pushUpdatesId_;
         unsigned int valueSetByClientId_;
-        //unsigned int shutdownSignalId_;
+        static vdk::signal<void()> shutdownSignal_;
+        unsigned int shutdownSignalId_;
     };
 
     /**
