@@ -15,7 +15,8 @@ class IParam {
   public:
     using ParamType = catena::patterns::EnumDecorator<catena::ParamType>;
   public:
-    IParam(const std::string oid=""): oid_{oid} {};
+    IParam() = default;
+    IParam(std::string oid) : oid_(oid) {}
     IParam(IParam&&) = default;
     IParam& operator=(IParam&&) = default;
     virtual ~IParam() = default;
@@ -46,7 +47,7 @@ class IParam {
     virtual const std::string& getOid() const { return oid_; }
     
   protected:
-    const std::string oid_;
+    std::string oid_;
 };
 }  // namespace lite
 
