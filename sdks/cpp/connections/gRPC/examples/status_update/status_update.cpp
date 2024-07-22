@@ -108,21 +108,17 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-
-
 void statusUpdateExample(){
     
     std::thread loop([]() {
-        // dm->valueSetByClient.connect([&i](const ParamAccessor &p, /*catena::full::ParamIndex idx,*/ const std::string &peer) {
-        //     catena::Value v;
-        //     //std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
-        //     //p.getValue<false>(&v, idx, scopes);
-        //     std::cout << "Client " << peer << " set " << p.oid() << " to: " << catena::full::printJSON(v) << '\n';
-        //     // a real service would do something with the value here
-        //     if (p.oid() == "/a_number") {
-        //         i = v.int32_value();
-        //     }
-        // });
+        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+            //std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
+            /**
+             * Protobuf lite does not support converting messages to JSON strings.
+             * @todo: Implement a toString method for catena values.
+             */
+            std::cout << p->getOid() << " has been updated" << '\n';
+        });
         Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));

@@ -58,10 +58,10 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const std::string& name,
+    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const std::string& oid,
           Device& dm)
-        : IParam(), type_{type}, value_{value}, oid_aliases_{oid_aliases}, dm_{dm} {
-        dm.addItem<Device::ParamTag>(name, this, Device::ParamTag{});
+        : IParam(oid), type_{type}, value_{value}, oid_aliases_{oid_aliases}, dm_{dm} {
+        dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
 
     /**

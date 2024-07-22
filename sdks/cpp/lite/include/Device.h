@@ -2,6 +2,7 @@
 
 #include <common/include/Path.h>
 #include <common/include/Enums.h>
+#include <common/include/vdk/signals.h>
 
 #include <lite/device.pb.h>
 
@@ -194,6 +195,9 @@ class Device {
      * a LockGuard helper class to make this easier.
      */
     void toProto(::catena::Device& dst, bool shallow = true) const;
+
+  public:
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
 
   private:
     uint32_t slot_;
