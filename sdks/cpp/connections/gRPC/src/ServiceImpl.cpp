@@ -49,11 +49,19 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std:
 void CatenaServiceImpl::init() {
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
-    // new Connect(this, dm_, true);
+    new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
     // new GetParam(this, dm_, true);
 }
+
+int CatenaServiceImpl::GetValue::objectCounter_ = 0; 
+int CatenaServiceImpl::SetValue::objectCounter_ = 0;
+int CatenaServiceImpl::Connect::objectCounter_ = 0;
+int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
+int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
+
+vdk::signal<void()> CatenaServiceImpl::Connect::shutdownSignal_;
 
 void CatenaServiceImpl::processEvents() {
     void *tag;
@@ -129,10 +137,6 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
 //     return scopes;
 // }
 
-int CatenaServiceImpl::GetValue::objectCounter_ = 0; 
-/**
- * @brief CallData class for the GetValue RPC
- */
 CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, Device &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
@@ -194,7 +198,6 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, responder_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -228,6 +231,7 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                     Device::LockGuard lg(dm_);
                     dstParam->fromProto(req_.value());
                 }
+                dm_.valueSetByClient.emit(req_.oid(), dstParam, req_.element_index());
                 status_ = CallStatus::kFinish;
                 responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
             } catch (catena::exception_with_status &e) {
@@ -258,168 +262,172 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-     
-    // };
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, writer_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    service->registerItem(this);
+    objectId_ = objectCounter_++;
+    proceed(service, ok);  // start the process
+}
 
-    // /**
-    //  * @brief CallData class for the Connect RPC
-    //  */
-    // class Connect : public CallData {
-    //   public:
-    //     Connect(CatenaServiceImpl *service, Device &dm, bool ok)
-    //         : service_{service}, dm_{dm}, writer_(&context_),
-    //           status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    //         service->registerItem(this);
-    //         objectId_ = objectCounter_++;
-    //         proceed(service, ok);  // start the process
-    //     }
-    //     ~Connect() {}
-
-    //     void proceed(CatenaServiceImpl *service, bool ok) override {
-    //         std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
-    //                   << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-    //                   << std::endl;
-            
-    //         if(!ok){
-    //             std::cout << "Connect[" << objectId_ << "] cancelled\n";
-    //             status_ = CallStatus::kFinish;
-    //         }
-
-    //         std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
-    //         switch (status_) {
-    //             case CallStatus::kCreate:
-    //                 status_ = CallStatus::kProcess;
-    //                 service_->RequestConnect(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
-    //                 break;
-
-    //             case CallStatus::kProcess:
-    //                 new Connect(service_, dm_, ok);  // to serve other clients
-    //                 context_.AsyncNotifyWhenDone(this);
-    //                 shutdownSignalId_ = shutdownSignal.connect([this](){
-    //                     context_.TryCancel();
-    //                     hasUpdate_ = true;
-    //                     this->cv_.notify_one();
-    //                 });
-    //                 pushUpdatesId_ = dm_.pushUpdates.connect([this](const ParamAccessor &p, catena::ParamIndex idx) {
-    //                     try{
-    //                         std::unique_lock<std::mutex> lock(this->mtx_);
-    //                         if (!this->context_.IsCancelled()){
-    //                             std::vector<std::string> scopes = getScopes(this->context_);
-    //                             p.getValue<false>(this->res_.mutable_value()->mutable_value(), idx, scopes);
-    //                             this->res_.mutable_value()->set_oid(p.oid());
-    //                             this->res_.mutable_value()->set_element_index(idx);
-    //                         }
-    //                         this->hasUpdate_ = true;
-    //                         this->cv_.notify_one();
-    //                     }catch(catena::exception_with_status& why){
-    //                         // Error is thrown for connected clients without authorization
-    //                         // Don't need to send any updates to unauthorized clients
-    //                     } 
-    //                 });
-    //                 status_ = CallStatus::kWrite;
-    //                 // fall thru to start writing
-
-    //             case CallStatus::kWrite:
-    //                 lock.lock();
-    //                 std::cout << "waiting on cv : " << timeNow() << std::endl;
-    //                 cv_.wait(lock, [this] { return hasUpdate_; });
-    //                 std::cout << "cv wait over : " << timeNow() << std::endl;
-    //                 hasUpdate_ = false;
-    //                 if (context_.IsCancelled()) {
-    //                     status_ = CallStatus::kFinish;
-    //                     std::cout << "Connect[" << objectId_ << "] cancelled\n";
-    //                     writer_.Finish(Status::CANCELLED, this);
-    //                     break;
-    //                 } else {
-    //                     std::cout << "sending update\n";
-    //                     writer_.Write(res_, this);
-    //                 }
-    //                 lock.unlock();
-    //                 break;
-
-    //             case CallStatus::kPostWrite:
-    //                 // not needed
-    //                 status_ = CallStatus::kFinish;
-    //                 break;
-
-    //             case CallStatus::kFinish:
-    //                 std::cout << "Connect[" << objectId_ << "] finished\n";
-    //                 shutdownSignal.disconnect(shutdownSignalId_);
-    //                 dm_.pushUpdates.disconnect(pushUpdatesId_);
-    //                 service->deregisterItem(this);
-    //                 break;
-    //         }
-    //     }
-
-     
-    // };
-
-    int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
-
-    CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-        : service_{service}, dm_{dm}, writer_(&context_),
-            status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-        service->registerItem(this);
-        objectId_ = objectCounter_++;
-        proceed(service, ok);  // start the process
+void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+    
+    // The newest connect object (the one that has not yet been attached to a client request)
+    // will send shutdown signal to cancel all open connections
+    if(!ok && status_ != CallStatus::kFinish){
+        std::cout << "Connect[" << objectId_ << "] cancelled\n";
+        std::cout << "Cancelling all open connections" << std::endl;
+        shutdownSignal_.emit();
+        status_ = CallStatus::kFinish;
     }
 
-    void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
-        std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
-                    << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                    << std::endl;
-        
-        if(!ok){
-            std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
-            status_ = CallStatus::kFinish;
-        }
-        
-        switch (status_) {
-            case CallStatus::kCreate:
-                status_ = CallStatus::kProcess;
-                service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
-                                                this);
-                break;
+    std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestConnect(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
+            break;
 
-            case CallStatus::kProcess:
-                new DeviceRequest(service_, dm_, ok);  // to serve other clients
-                context_.AsyncNotifyWhenDone(this);
-                //clientScopes_ = getScopes(context_);
-                // deviceStream_.attachClientScopes(clientScopes_);
-                // shutdownSignalId_ = shutdownSignal.connect([this](){
-                //     context_.TryCancel();
-                //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
-                // });
-                status_ = CallStatus::kWrite;
-                // fall thru to start writing
-
-            case CallStatus::kWrite:
-                {
-                    catena::DeviceComponent deviceMessage{};
-                    catena::Device* dstDevice = deviceMessage.mutable_device();
-                    {
+        case CallStatus::kProcess:
+            new Connect(service_, dm_, ok);  // to serve other clients
+            context_.AsyncNotifyWhenDone(this);
+            shutdownSignalId_ = shutdownSignal_.connect([this](){
+                context_.TryCancel();
+                hasUpdate_ = true;
+                this->cv_.notify_one();
+            });
+            // pushUpdatesId_ = dm_.pushUpdates.connect([this](const std::string& oid, const IParam& p, const int32_t idx){
+            //     try{
+            //         if (!this->context_.IsCancelled()){
+            //             //std::vector<std::string> scopes = getScopes(this->context_);
+            //             this->res_.mutable_value()->set_oid(oid);
+            //             this->res_.mutable_value()->set_element_index(idx);
+            //             Device::LockGuard lg(dm_);
+            //             p.toProto(*this->res_.mutable_value()->mutable_value());
+            //         }
+            //         this->hasUpdate_ = true;
+            //         this->cv_.notify_one();
+            //     }catch(catena::exception_with_status& why){
+            //         // Error is thrown for connected clients without authorization
+            //         // Don't need to send any updates to unauthorized clients
+            //     } 
+            // });
+            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                try{
+                    if (!this->context_.IsCancelled()){
+                        //std::vector<std::string> scopes = getScopes(this->context_);
+                        this->res_.mutable_value()->set_oid(oid);
+                        this->res_.mutable_value()->set_element_index(idx);
                         Device::LockGuard lg(dm_);
-                        dm_.toProto(*dstDevice, false); // select the deep copy option
+                        p->toProto(*this->res_.mutable_value()->mutable_value());
                     }
-                    status_ = CallStatus::kPostWrite;
-                    writer_.Write(deviceMessage, this);
-                }
-                break;
+                    this->hasUpdate_ = true;
+                    this->cv_.notify_one();
+                }catch(catena::exception_with_status& why){
+                    // Error is thrown for connected clients without authorization
+                    // Don't need to send any updates to unauthorized clients
+                } 
+            });
+            status_ = CallStatus::kWrite;
+            // fall thru to start writing
 
-            case CallStatus::kPostWrite:
+        case CallStatus::kWrite:
+            lock.lock();
+            std::cout << "waiting on cv : " << timeNow() << std::endl;
+            cv_.wait(lock, [this] { return hasUpdate_; });
+            std::cout << "cv wait over : " << timeNow() << std::endl;
+            hasUpdate_ = false;
+            if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
-                writer_.Finish(Status::OK, this);
+                std::cout << "Connection[" << objectId_ << "] cancelled\n";
+                writer_.Finish(Status::CANCELLED, this);
                 break;
+            } else {
+                std::cout << "sending update\n";
+                writer_.Write(res_, this);
+            }
+            lock.unlock();
+            break;
 
-            case CallStatus::kFinish:
-                std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
-                //shutdownSignal.disconnect(shutdownSignalId_);
-                service->deregisterItem(this);
-                break;
-        }
+        case CallStatus::kPostWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
+
+        case CallStatus::kFinish:
+            std::cout << "Connect[" << objectId_ << "] finished\n";
+            shutdownSignal_.disconnect(shutdownSignalId_);
+            dm_.valueSetByClient.disconnect(valueSetByClientId_);
+            service->deregisterItem(this);
+            break;
     }
+}
 
-int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
+CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, writer_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    service->registerItem(this);
+    objectId_ = objectCounter_++;
+    proceed(service, ok);  // start the process
+}
+
+void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+    
+    if(!ok){
+        std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
+        status_ = CallStatus::kFinish;
+    }
+    
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
+                                            this);
+            break;
+
+        case CallStatus::kProcess:
+            new DeviceRequest(service_, dm_, ok);  // to serve other clients
+            context_.AsyncNotifyWhenDone(this);
+            //clientScopes_ = getScopes(context_);
+            // deviceStream_.attachClientScopes(clientScopes_);
+            // shutdownSignalId_ = shutdownSignal.connect([this](){
+            //     context_.TryCancel();
+            //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
+            // });
+            status_ = CallStatus::kWrite;
+            // fall thru to start writing
+
+        case CallStatus::kWrite:
+            {
+                catena::DeviceComponent deviceMessage{};
+                catena::Device* dstDevice = deviceMessage.mutable_device();
+                {
+                    Device::LockGuard lg(dm_);
+                    dm_.toProto(*dstDevice, false); // select the deep copy option
+                }
+                status_ = CallStatus::kPostWrite;
+                writer_.Write(deviceMessage, this);
+            }
+            break;
+
+        case CallStatus::kPostWrite:
+            status_ = CallStatus::kFinish;
+            writer_.Finish(Status::OK, this);
+            break;
+
+        case CallStatus::kFinish:
+            std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
+            //shutdownSignal.disconnect(shutdownSignalId_);
+            service->deregisterItem(this);
+            break;
+    }
+}
 
 CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),

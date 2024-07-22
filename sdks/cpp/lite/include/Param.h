@@ -63,7 +63,7 @@ template <typename T> class Param : public IParam {
      */
     Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& oid,
           Device& dm)
-        : IParam(), type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, dm_{dm} {
+        : IParam(oid), type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, dm_{dm} {
         dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
 
