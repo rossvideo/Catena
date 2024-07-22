@@ -6,7 +6,9 @@
 
 #include <lite/param.pb.h>
 
-#include <functional> // reference_wrapper
+#include <functional>  // reference_wrapper
+#include <vector>
+#include <string>
 
 namespace catena {
 namespace lite {
@@ -16,6 +18,12 @@ namespace lite {
  * @tparam T the parameter's value type
  */
 template <typename T> class Param : public IParam {
+  public:
+    /**
+     * @brief OidAliases is a vector of strings
+     */
+    using OidAliases = std::vector<std::string>;
+
   public:
     /**
      * @brief Param does not have a default constructor
@@ -50,7 +58,9 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const std::string& oid, Device& dm) : IParam(oid), type_{type}, value_{value}, dm_{dm} {
+    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const std::string& oid,
+          Device& dm)
+        : IParam(oid), type_{type}, value_{value}, oid_aliases_{oid_aliases}, dm_{dm} {
         dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
 
@@ -74,6 +84,10 @@ template <typename T> class Param : public IParam {
      */
     void toProto(catena::Param& param) const override {
         param.set_type(type_());
+        param.mutable_oid_aliases()->Reserve(oid_aliases_.size());
+        for (const auto& oid_alias : oid_aliases_) {
+            param.add_oid_aliases(oid_alias);
+        }
         toProto(*param.mutable_value());
     }
 
@@ -81,9 +95,10 @@ template <typename T> class Param : public IParam {
      * @brief get the parameter type
      */
     ParamType type() const override { return type_; }
-    
+
   private:
-    ParamType type_; // ParamType is from param.pb.h
+    ParamType type_;  // ParamType is from param.pb.h
+    std::vector<std::string> oid_aliases_;
     std::reference_wrapper<T> value_;
     std::reference_wrapper<Device> dm_;
 };
