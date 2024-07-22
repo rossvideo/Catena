@@ -48,6 +48,7 @@ add_library(${target} STATIC
     src/Device.cpp
     src/Param.cpp
     src/StructInfo.cpp
+    src/PolyglotText.cpp
 )
 
 add_dependencies(${target} catena_common)

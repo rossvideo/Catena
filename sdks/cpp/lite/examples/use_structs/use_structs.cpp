@@ -28,6 +28,7 @@
 #include "lite/examples/use_structs/device.use_structs.json.h"  // dm
 #include <lite/include/Device.h>
 #include <lite/include/Param.h>
+#include <lite/include/PolyglotText.h>
 #include <lite/param.pb.h>
 
 using namespace catena::lite;
@@ -90,6 +91,10 @@ int main() {
     std::cout << "Location from model set with protobuf deserialization - latitude: " << locationParam.get().latitude
               << ", longitude: " << locationParam.get().longitude << std::endl;
 
+    catena::lite::PolyglotText text {{"en", "Hello!"},{"fr", "Bonjour!"},{"es", "Hola!"}};
+    for(const auto& [lang, text] : text.displayStrings()) {
+        std::cout << "Language: " << lang << ", Text: " << text << std::endl;
+    }
 
     return EXIT_SUCCESS;
 }
