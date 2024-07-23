@@ -32,7 +32,7 @@
     "params": {
         "counter": {
             "type": "INT32",
-            "name": {"display_strings": {"$key": "counter"}},
+            "name": {"display_strings": {"en": "counter"}},
             "value": {"int32_value": 0}
         },
         "dashboard_UI": {
