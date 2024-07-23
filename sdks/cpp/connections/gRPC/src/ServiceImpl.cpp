@@ -386,12 +386,12 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
 
             // send client a empty update with slot of the device
             {
+                status_ = CallStatus::kWrite;
                 catena::PushUpdates populatedSlots;
                 populatedSlots.set_slot(dm_.slot());
                 writer_.Write(populatedSlots, this);
             }
-            status_ = CallStatus::kWrite;
-            // fall thru to start writing
+            break;
 
         case CallStatus::kWrite:
             lock.lock();
