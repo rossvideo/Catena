@@ -63,7 +63,7 @@ template <typename T> class Param : public IParam {
      */
     Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& oid,
           Device& dm)
-        : oid_{oid}, type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, dm_{dm} {
+        : IParam(oid), type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, dm_{dm} {
         dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
 
@@ -105,11 +105,6 @@ template <typename T> class Param : public IParam {
     ParamType type() const override { return type_; }
 
     /**
-     * @brief get the oid of the param
-     */
-    const std::string& getOid() const override { return oid_; }
-
-    /**
      * @brief get the parameter name
      */
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
@@ -131,7 +126,6 @@ template <typename T> class Param : public IParam {
 
   private:
     ParamType type_;  // ParamType is from param.pb.h
-    std::string oid_;
     std::vector<std::string> oid_aliases_;
     PolyglotText name_;
     std::reference_wrapper<T> value_;
