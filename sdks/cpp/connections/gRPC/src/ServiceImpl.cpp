@@ -383,6 +383,13 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     // Don't need to send any updates to unauthorized clients
                 } 
             });
+
+            // send client a list of populated slots
+            {
+                catena::PushUpdates populatedSlots;
+                populatedSlots.mutable_slots_added()->add_slots(dm_.slot());
+                writer_.Write(populatedSlots, this);
+            }
             status_ = CallStatus::kWrite;
             // fall thru to start writing
 
@@ -519,6 +526,7 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
                 path.append(req_.oid());
 
                 if (!std::filesystem::exists(path)) {
+                    std::cout << "ExternalObjectRequest[" << objectId_ << "] file not found\n";
                     if(req_.oid()[0] != '/'){
                         std::stringstream why;
                         why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
