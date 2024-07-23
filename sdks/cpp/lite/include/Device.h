@@ -198,6 +198,7 @@ class Device {
 
   public:
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
   private:
     uint32_t slot_;

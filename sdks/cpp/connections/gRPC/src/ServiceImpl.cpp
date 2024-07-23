@@ -351,22 +351,22 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 hasUpdate_ = true;
                 this->cv_.notify_one();
             });
-            // pushUpdatesId_ = dm_.pushUpdates.connect([this](const std::string& oid, const IParam& p, const int32_t idx){
-            //     try{
-            //         if (!this->context_.IsCancelled()){
-            //             //std::vector<std::string> scopes = getScopes(this->context_);
-            //             this->res_.mutable_value()->set_oid(oid);
-            //             this->res_.mutable_value()->set_element_index(idx);
-            //             Device::LockGuard lg(dm_);
-            //             p.toProto(*this->res_.mutable_value()->mutable_value());
-            //         }
-            //         this->hasUpdate_ = true;
-            //         this->cv_.notify_one();
-            //     }catch(catena::exception_with_status& why){
-            //         // Error is thrown for connected clients without authorization
-            //         // Don't need to send any updates to unauthorized clients
-            //     } 
-            // });
+            valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                try{
+                    if (!this->context_.IsCancelled()){
+                        //std::vector<std::string> scopes = getScopes(this->context_);
+                        this->res_.mutable_value()->set_oid(oid);
+                        this->res_.mutable_value()->set_element_index(idx);
+                        Device::LockGuard lg(dm_);
+                        p->toProto(*this->res_.mutable_value()->mutable_value());
+                    }
+                    this->hasUpdate_ = true;
+                    this->cv_.notify_one();
+                }catch(catena::exception_with_status& why){
+                    // Error is thrown for connected clients without authorization
+                    // Don't need to send any updates to unauthorized clients
+                } 
+            });
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 try{
                     if (!this->context_.IsCancelled()){
@@ -421,6 +421,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             std::cout << "Connect[" << objectId_ << "] finished\n";
             shutdownSignal_.disconnect(shutdownSignalId_);
             dm_.valueSetByClient.disconnect(valueSetByClientId_);
+            dm_.valueSetByServer.disconnect(valueSetByServerId_);
             service->deregisterItem(this);
             break;
     }
