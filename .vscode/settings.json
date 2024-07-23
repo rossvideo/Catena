@@ -3,14 +3,23 @@
     "cmake.sourceDirectory": "${workspaceFolder}/sdks/cpp",
     "cmake.buildDirectory": "${workspaceFolder}/sdks/cpp/build",
     "cmake.buildBeforeRun": false,
+    "cmake.configureSettings": {
+        "CONNECTIONS": ["gRPC", "REST"],
+        "CATENA_MODELS": ["full", "lite"]
+    },
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/sdks/cpp/build"
+        "${workspaceFolder}/sdks/cpp/build",
+        "${env:HOME}/.local/include",
+        "${workspaceFolder}/sdks/cpp/common/include",
+        "${workspaceFolder}/sdks/cpp",
+        "${workspaceFolder}/sdks/cpp/connections/gRPC/include"
     ],
     "json.schemas": [
         {
             "fileMatch": [
                 "/example_device_models/device.*.json",
-                "/nab_2024/device.*.json"
+                "/nab_2024/device.*.json",
+                "/sdks/cpp/lite/examples/start_here/device.*.json"
             ],
             "url": "./schema/catena.schema.json"
         }
@@ -19,6 +28,67 @@
     "files.associations": {
         "*.tcc": "cpp",
         "map": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "__bit_reference": "cpp",
+        "__config": "cpp",
+        "__hash_table": "cpp",
+        "__locale": "cpp",
+        "__node_handle": "cpp",
+        "__split_buffer": "cpp",
+        "__threading_support": "cpp",
+        "__tree": "cpp",
+        "__verbose_abort": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "cctype": "cpp",
+        "charconv": "cpp",
+        "cinttypes": "cpp",
+        "clocale": "cpp",
+        "cmath": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "condition_variable": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "deque": "cpp",
+        "execution": "cpp",
+        "fstream": "cpp",
+        "initializer_list": "cpp",
+        "iomanip": "cpp",
+        "ios": "cpp",
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "list": "cpp",
+        "locale": "cpp",
+        "mutex": "cpp",
+        "new": "cpp",
+        "optional": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "tuple": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "variant": "cpp",
+        "vector": "cpp",
+        "algorithm": "cpp",
+        "forward_list": "cpp"
     }
 }

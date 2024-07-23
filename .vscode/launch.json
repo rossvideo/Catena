@@ -1,7 +1,28 @@
 {
     "version": "0.2.0",
     "configurations": [
-
+      {
+        "type": "cppdbg",
+        "name": "Debug use_structs with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/use_structs/use_structs",
+        "args": [],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
+        "name": "Debug start_here with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/start_here/start_here",
+        "args": [],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
       {
         "type": "cppdbg",
         "name": "Debug Full Service with lldb",
@@ -25,11 +46,11 @@
         "MIMode": "lldb"
       },
       {
-        "name": "Debug full_service with gdb",
+        "name": "Debug status_update with gdb",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service", // Path to the full_service executable
-        "args": ["--device_model", "example_device_models/device.one_of_everything.json", "--secure_comms", "ssl", "--authz"], // Any command-line arguments go here
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/status_update/status_update", // Path to the full_service executable
+        "args": [], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
@@ -42,6 +63,38 @@
                 "ignoreFailures": true
             }
         ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Codegen",
+      "skipFiles": [
+          "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/tools/codegen/index.js",
+      "args": [
+          "--schema",
+          "${workspaceFolder}/schema/catena.schema.json",
+          "--device-model",
+          "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
+          "--output",
+          "${workspaceFolder}/sdks/cpp/build/${input:pickDeviceModel}/..",
+          "--language",
+          "cpp"
+      ],
     }
-    ]
+  ],
+  "inputs": [
+    {
+      "id": "pickDeviceModel",
+      "description": "Select device model to generate code for",
+      "type": "pickString",
+      "options": ["lite/examples/start_here/device.start_here.json", 
+                  "lite/examples/use_structs/device.use_structs.json",
+                  "connections/gRPC/examples/status_update/device.status_update.json"
+                ],
+      "default": "lite/examples/start_here/device.start_here.json"
+    }
+  ]
+
 }

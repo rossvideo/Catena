@@ -172,21 +172,15 @@ try {
         let bodyLoc = new loc(body);
         let hloc = headerLoc.write.bind(headerLoc);
         let bloc = bodyLoc.write.bind(bodyLoc);
-        const warning = `// This file was auto-generated. Do not modify by hand.`;
-        hloc(`#pragma once`);
-        hloc(warning);
-        hloc(`#include <Meta.h>`);
-        hloc(`#include <TypeTraits.h>`);
-        hloc(`#include <string>`);
-        hloc(`#include <vector>`);
-        hloc(`namespace ${namespace} {`)
-        bloc(warning);
-        bloc(`#include <${headerFilename}>`);
         let codegen = new CppGen(hloc, bloc, namespace);
-        for (p in data.params) {
-            codegen.convert(p, data.params[p]);
+        codegen.init(headerFilename, data);
+        // for (let c in data.constraints) {
+        //     codegen.constraint(c, data.constraints[c]);
+        // }
+        for (let p in data.params) {
+            codegen.param(p, data.params[p]);
         }
-        hloc(`} // namespace ${namespace}`);
+        codegen.finish();
         fs.close(body);
         fs.close(header);
         
@@ -194,5 +188,5 @@ try {
 
 } catch (why) {
     console.log(why.message);
-    process.exit(why.error);
+    process.exit(typeof why.error === 'number' ? why.error : 1);
 }

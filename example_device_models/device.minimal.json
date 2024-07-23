@@ -89,6 +89,26 @@
       "oid_aliases": ["0xFF0E"],
       "value": { "string_value": "eo://custom_UI.grid" }
     },
+    "types": {
+      "type": "STRUCT",
+      "params": {
+        "string": {
+          "type": "STRING",
+          "name": {
+            "display_strings": {
+              "en": "String"
+            }
+          },
+          "value": {
+            "string_value": "Hello, World!"
+          }
+        }
+      }
+    },
+    "a_string": {
+      "template_oid": "/types/string",
+      "value":  {"string_value": "Goodbye, Cruel World!"}
+    },
     "a_number": {
       "type": "INT32",
       "name": {
@@ -105,7 +125,7 @@
       "type": "INT32_ARRAY",
       "name": { "display_strings": {  "en": "Primes"  } },
       "minimal_set": true,
-      "value": { "int32_array_values": { "ints": [] } }
+      "value": { "int32_array_values": { "ints": [2,3,5,7,11,13,17,19] } }
     },
     "constants": {
       "type": "FLOAT32_ARRAY",

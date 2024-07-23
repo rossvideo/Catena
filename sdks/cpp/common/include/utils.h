@@ -21,32 +21,10 @@
 // limitations under the License.
 //
 
-#include <google/protobuf/message.h>
-#include <google/protobuf/util/json_util.h>
-
 #include <filesystem>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
 #include <string>
 
 namespace catena {
-
-/**
- * @brief prints a protobuf message as JSON
- *
- * @param msg the protobuf message
- * @return std::string JSON representation of m
- */
-std::string printJSON(const google::protobuf::Message &msg);
-
-/**
- * @brief parses protobuf message to JSON
- *
- * @param msg JSON message to parse
- * @param m output protobuf message
- */
-void parseJSON(const std::string &msg, google::protobuf::Message &m);
 
 /**
  * @brief reads a file into a std::string
