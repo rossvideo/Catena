@@ -384,10 +384,10 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 } 
             });
 
-            // send client a list of populated slots
+            // send client a empty update with slot of the device
             {
                 catena::PushUpdates populatedSlots;
-                populatedSlots.mutable_slots_added()->add_slots(dm_.slot());
+                populatedSlots.set_slot(dm_.slot());
                 writer_.Write(populatedSlots, this);
             }
             status_ = CallStatus::kWrite;
@@ -406,6 +406,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 break;
             } else {
                 std::cout << "sending update\n";
+                res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
             lock.unlock();
