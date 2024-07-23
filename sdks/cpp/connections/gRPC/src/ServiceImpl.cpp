@@ -47,6 +47,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std:
         : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath} {}
 
 void CatenaServiceImpl::init() {
+    new GetPopulatedSlots(this, dm_, true);
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
     new Connect(this, dm_, true);
@@ -55,6 +56,7 @@ void CatenaServiceImpl::init() {
     // new GetParam(this, dm_, true);
 }
 
+int CatenaServiceImpl::GetPopulatedSlots::objectCounter_ = 0;
 int CatenaServiceImpl::GetValue::objectCounter_ = 0; 
 int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 int CatenaServiceImpl::Connect::objectCounter_ = 0;
@@ -136,6 +138,56 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
 //     }
 //     return scopes;
 // }
+
+CatenaServiceImpl::GetPopulatedSlots::GetPopulatedSlots(CatenaServiceImpl *service, Device &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
+              status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    objectId_ = objectCounter_++;
+    service->registerItem(this);
+    proceed(service, ok);
+}
+
+void CatenaServiceImpl::GetPopulatedSlots::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+
+    if(!ok){
+        status_ = CallStatus::kFinish;
+    }
+
+    switch(status_){
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestGetPopulatedSlots(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            break;
+
+        case CallStatus::kProcess:
+            {
+                new GetPopulatedSlots(service_, dm_, ok);
+                context_.AsyncNotifyWhenDone(this);
+                catena::SlotList ans;
+                ans.add_slots(dm_.slot());
+                status_ = CallStatus::kFinish;
+                responder_.Finish(ans, Status::OK, this);
+            }
+        break;
+
+        case CallStatus::kWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
+
+        case CallStatus::kPostWrite:
+            // not needed
+            status_ = CallStatus::kFinish;
+            break;
+
+        case CallStatus::kFinish:
+            std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+    }
+}
 
 CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, Device &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -331,6 +383,13 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     // Don't need to send any updates to unauthorized clients
                 } 
             });
+
+            // send client a list of populated slots
+            {
+                catena::PushUpdates populatedSlots;
+                populatedSlots.mutable_slots_added()->add_slots(dm_.slot());
+                writer_.Write(populatedSlots, this);
+            }
             status_ = CallStatus::kWrite;
             // fall thru to start writing
 
@@ -467,6 +526,7 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
                 path.append(req_.oid());
 
                 if (!std::filesystem::exists(path)) {
+                    std::cout << "ExternalObjectRequest[" << objectId_ << "] file not found\n";
                     if(req_.oid()[0] != '/'){
                         std::stringstream why;
                         why << __PRETTY_FUNCTION__ << "\nfile '" << req_.oid() << "' not found. HINT: Make sure oid starts with '/' prefix.";
