@@ -1,9 +1,8 @@
-FROM catena-base:v0.1.0
+FROM catena-base:latest
 
 LABEL org.opencontainers.image.source https://github.com/rossvideo/Catena
 LABEL org.opencontainers.image.name="catena-codeql"
 LABEL org.opencontainers.image.description="Github codeql environment for the Catena C++ SDK"
-LABEL org.opencontainers.image.version="v0.1.0"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
 LABEL org.opencontainers.image.vendor="Ross Video"
 

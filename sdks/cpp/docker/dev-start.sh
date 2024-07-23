@@ -9,7 +9,7 @@ docker_gid=$(cut -d: -f3 < <(getent group docker))
 
 docker buildx build \
     -f $1/sdks/cpp/docker/dockerfiles/Dockerfile.develop \
-    -t catena-develop:v0.1.0 \
+    -t catena-develop:latest \
     --build-arg USER_UID=$(id -u) \
     --build-arg USER_GID=$docker_gid \
     --build-arg USERNAME=$USER \
