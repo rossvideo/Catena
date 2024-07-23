@@ -20,6 +20,7 @@ docker run \
     -it \
     -v $1:/home/${USER}/Catena \
     -w /home/${USER}/Catena/sdks/cpp \
+    -p 6254:6254 \
     --rm \
     catena-develop:latest \
     /bin/bash -c "$1/sdks/cpp/docker/build.sh; /bin/bash"
