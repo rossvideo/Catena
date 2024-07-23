@@ -15,8 +15,7 @@ class IParam {
   public:
     using ParamType = catena::patterns::EnumDecorator<catena::ParamType>;
   public:
-    IParam() = default;
-    IParam(std::string oid) : oid_(oid) {};
+    IParam() : oid_{} {}
     IParam(IParam&&) = default;
     IParam& operator=(IParam&&) = default;
     virtual ~IParam() = default;
