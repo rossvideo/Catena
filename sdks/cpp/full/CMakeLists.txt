@@ -61,7 +61,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}/common/include>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-        $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
