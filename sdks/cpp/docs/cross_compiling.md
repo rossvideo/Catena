@@ -26,28 +26,6 @@ cd openssl
 make install
 ```
 
-## Cross Compile Abseil
-There is currently an issue where gRPC does not include the correct version Abseil in its third party libraries. To work around this problem, install Abseil manually, then build gRPC with '-DgRPC_ABSL_PROVIDER=package'
-
-For more info see the issue on [GitHub](https://github.com/grpc/grpc/issues/35854)
-
-More info about compiling Abseil [here](https://github.com/abseil/abseil-cpp/blob/master/CMake/README.md).
-
-```
-git clone -b lts_2024_01_16 https://github.com/abseil/abseil-cpp.git
-cd abseil-cpp/CMake
-mkdir cross_build
-cd cross_build
-cmake ../.. \
-	-DCMAKE_BUILD_TYPE=Release   \
-	-DABSL_ENABLE_INSTALL=ON \
-	-DBUILD_TESTING=ON \
-	-DABSL_USE_GOOGLETEST_HEAD=ON
-	-DCMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake \
-    -DCMAKE_INSTALL_PREFIX=/path/to/target_root
-make install
-```
-
 ## Cross Compiling gRPC
 NOTE: cross compiling gRPC requires the host system to already have gRPC installed. This is because the the gRPC build process needs to be able to run the grpc_cpp_plugin and the protoc compiler to generate C++ source files to be cross compiled.
 
@@ -70,7 +48,7 @@ cd cmake/cross_build
 cmake ../.. \
 	-D CMAKE_BUILD_TYPE=Release   \
 	-DgRPC_INSTALL=ON  \
-	-DgRPC_ABSL_PROVIDER=package \
+	-DgRPC_ABSL_PROVIDER=module \
 	-DgRPC_SSL_PROVIDER=package \
 	-D CMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake  \
 	-D CMAKE_INSTALL_PREFIX=/path/to/target_root

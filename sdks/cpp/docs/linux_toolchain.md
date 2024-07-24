@@ -63,7 +63,6 @@ sudo n stable
 Restart the terminal and run `node -v` to check that node successfully  updated.
 
 ## Building Catena
-clone the Catena repo and navigate to the build directory
 ```
 cd ~/Catena/sdks/cpp
 mkdir build
