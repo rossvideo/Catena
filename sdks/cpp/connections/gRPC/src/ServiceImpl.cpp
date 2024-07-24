@@ -292,8 +292,8 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 {
                     Device::LockGuard lg(dm_);
                     dstParam->fromProto(req_.value());
+                    dm_.valueSetByClient.emit(req_.oid(), dstParam, req_.element_index());
                 }
-                dm_.valueSetByClient.emit(req_.oid(), dstParam, req_.element_index());
                 status_ = CallStatus::kFinish;
                 responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
             } catch (catena::exception_with_status &e) {
@@ -367,7 +367,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         //std::vector<std::string> scopes = getScopes(this->context_);
                         this->res_.mutable_value()->set_oid(oid);
                         this->res_.mutable_value()->set_element_index(idx);
-                        Device::LockGuard lg(dm_);
                         p->toProto(*this->res_.mutable_value()->mutable_value());
                     }
                     this->hasUpdate_ = true;
@@ -383,7 +382,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         //std::vector<std::string> scopes = getScopes(this->context_);
                         this->res_.mutable_value()->set_oid(oid);
                         this->res_.mutable_value()->set_element_index(idx);
-                        Device::LockGuard lg(dm_);
                         p->toProto(*this->res_.mutable_value()->mutable_value());
                     }
                     this->hasUpdate_ = true;

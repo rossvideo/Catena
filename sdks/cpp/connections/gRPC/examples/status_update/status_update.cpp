@@ -125,8 +125,8 @@ void statusUpdateExample(){
             {
                 Device::LockGuard lg(dm); 
                 aNumber.get()++;
+                dm.valueSetByServer.emit("/counter", &aNumber, 0);
             }
-            dm.valueSetByServer.emit("/counter", &aNumber, 0);
         }
     });
     loop.detach();
