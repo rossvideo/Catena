@@ -8,12 +8,10 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
+#include "google/protobuf/message_lite.h" 
+
 namespace catena {
-
-class Constraint; // forward declaration
-
-
-namespace lite {
+namespace common {
 
 
 /**
@@ -28,7 +26,7 @@ public:
      * @brief check if the underlying parameter value lies within the constraint.
      * @return true if the constraint is valid, false otherwise
      */
-    virtual bool isValid() = 0;
+    virtual bool isValid() const = 0;
 
     /**
      * @brief constrain the underlying parameter value to lie within the constraint.
@@ -37,10 +35,11 @@ public:
 
     /**
      * @brief serialize the constraint to a protobuf message
-     * @param constraint the protobuf message to populate
+     * @param constraint the protobuf message to populate, NB, implementations should 
+     * dynamically cast this to catena::Constraint
      */
-    void toProto(catena::Constraint& constraint) const;
+    virtual void toProto(google::protobuf::MessageLite& constraint) const = 0;
 };
 
-} // namespace lite
+} // namespace common
 } // namespace catena

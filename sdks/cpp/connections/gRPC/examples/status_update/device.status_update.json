@@ -35,6 +35,20 @@
             "name": {"display_strings": {"en": "counter"}},
             "value": {"int32_value": 0}
         },
+        "offset": {
+            "type": "INT32",
+            "name": {"display_strings": {"en": "offset"}},
+            "value": {"int32_value": 0},
+            "constraint": {
+              "type": "INT_RANGE",
+              "int32_range": {
+                "min_value": -10,
+                "max_value": 10,
+                "step": 1
+              }
+            }
+        },
+
         "dashboard_UI": {
           "type": "STRING",
           "oid_aliases": ["0xFF0E"],
