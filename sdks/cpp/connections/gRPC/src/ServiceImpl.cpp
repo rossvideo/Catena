@@ -217,9 +217,14 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
+                catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
+                    if (param == nullptr) {
+                    std::stringstream why;
+                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                }
                 {
                     Device::LockGuard lg(dm_);
-                    catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
                     param->toProto(ans);
                 }
                 status_ = CallStatus::kFinish;
@@ -279,6 +284,11 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 //std::vector<std::string> clientScopes = getScopes(context_);
                 auto dstParam = dm_.getItem(req_.oid(), Device::ParamTag{});
+                if (dstParam == nullptr) {
+                    std::stringstream why;
+                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                }
                 {
                     Device::LockGuard lg(dm_);
                     dstParam->fromProto(req_.value());
