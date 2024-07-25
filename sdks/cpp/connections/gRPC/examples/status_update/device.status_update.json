@@ -33,7 +33,8 @@
         "counter": {
             "type": "INT32",
             "name": {"display_strings": {"en": "counter"}},
-            "value": {"int32_value": 0}
+            "value": {"int32_value": 0},
+            "widget": "t-bar"
         },
         "dashboard_UI": {
           "type": "STRING",
