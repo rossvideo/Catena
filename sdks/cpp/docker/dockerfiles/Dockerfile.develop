@@ -1,6 +1,6 @@
 FROM ghcr.io/rossvideo/catena-toolchain:latest
 
-LABEL org.opencontainers.image.source https://github.com/rossvideo/Catena
+LABEL org.opencontainers.image.source=https://github.com/rossvideo/Catena
 LABEL org.opencontainers.image.name="catena-develop"
 LABEL org.opencontainers.image.description="Development environment for the Catena C++ SDK"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0

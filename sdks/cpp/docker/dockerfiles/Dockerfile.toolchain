@@ -1,6 +1,6 @@
 FROM catena-base:latest
 
-LABEL org.opencontainers.image.source https://github.com/rossvideo/Catena
+LABEL org.opencontainers.image.source=https://github.com/rossvideo/Catena
 LABEL org.opencontainers.image.name="catena-toolchain"
 LABEL org.opencontainers.image.description="Software dependencies for the Catena C++ SDK"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
