@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <abs id="_top" keepalive="false" style="">
-   <label height="79" left="369" mid="0" name="Catena gRPC DashBoard Demo" oid="product" style="font:bold;size:Biggest;" top="23" width="583"/>
-   <param editable="false" expand="true" height="46" left="39" mid="0" oid="counter" showlabel="false" style="size:Bigger;font:bold;txt-align:center;" top="109" widget="label" width="585"/>
+   <table width="750" >
+      <tr>
+         <label name="Catena gRPC DashBoard Demo"/>
+      </tr>
+
+      <tr>
+         <param oid="counter" showlabel="true" fill="both" widget="spinner" width="200"  />
+      </tr>
+
+      <tr>
+         <param oid="hello" showlabel="true" fill="both" widget="default" />
+      </tr>
+
+      <tr>
+         <param oid="button" showlabel="true" fill="both" widget="slider"/>
+      </tr>
+
+   </table>
 </abs>
