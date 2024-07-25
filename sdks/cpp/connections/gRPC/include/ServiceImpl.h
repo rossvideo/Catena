@@ -154,6 +154,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         static int objectCounter_;
         unsigned int pushUpdatesId_;
         unsigned int valueSetByClientId_;
+        unsigned int valueSetByServerId_;
         static vdk::signal<void()> shutdownSignal_;
         unsigned int shutdownSignalId_;
     };
@@ -172,7 +173,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ServerContext context_;
         std::vector<std::string> clientScopes_;
         catena::DeviceRequestPayload req_;
-        catena::PushUpdates res_;
         ServerAsyncWriter<catena::DeviceComponent> writer_;
         CallStatus status_;
         Device &dm_;
@@ -192,7 +192,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         CatenaServiceImpl *service_;
         ServerContext context_;
         catena::ExternalObjectRequestPayload req_;
-        catena::PushUpdates res_;
         ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
         CallStatus status_;
         Device &dm_;
