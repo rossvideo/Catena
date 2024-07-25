@@ -132,10 +132,9 @@ class CppGen {
             let aliases_init = '{';
             if (desc.oid_aliases !== undefined) {
                 const aliases = desc.oid_aliases.map(alias => {return quoted(alias);});
-                aliases_init += `${aliases.join(',')}}`;
-            } else {
-                aliases_init += '}';
+                aliases_init += `${aliases.join(',')}`;
             }
+            aliases_init += '}';
             ans += `${aliases_init},`;
 
             // add the name if it exists
@@ -152,7 +151,18 @@ class CppGen {
                 }   
             }
             name_init += '}';
-            ans += name_init;
+            ans += `${name_init},`;
+            
+
+            // add the widget if it exists
+            let widget_init = '{';
+            if (desc.widget !== undefined) {
+                const widget = desc.widget;
+                widget_init += `${quoted(widget)}`;
+            }
+            widget_init += '}';
+            ans += `${widget_init}`;
+
             return ans;
         },
         this.params = {
