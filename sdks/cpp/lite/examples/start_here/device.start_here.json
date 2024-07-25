@@ -43,7 +43,8 @@
         "gain": {
           "type": "FLOAT32",
           "value": { "float32_value": 0.707 },
-          "name": { "display_strings": { "en": "Audio Gain" } }
+          "name": { "display_strings": { "en": "Audio Gain" } },
+          "widget": "fader"
         },
         "phonetic_alphabet": {
             "type": "STRING_ARRAY",
