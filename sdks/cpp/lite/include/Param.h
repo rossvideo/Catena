@@ -61,9 +61,9 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& oid,
-          Device& dm)
-        : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, dm_{dm} {
+    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
+          const std::string& oid, Device& dm)
+        : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, dm_{dm} {
         setOid(oid);
         dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
@@ -131,6 +131,7 @@ template <typename T> class Param : public IParam {
     PolyglotText name_;
     std::reference_wrapper<T> value_;
     std::reference_wrapper<Device> dm_;
+    std::string widget_;
 };
 
 }  // namespace lite
