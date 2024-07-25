@@ -6,7 +6,10 @@
 
 - If on Linux, make sure to [enable docker as non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user) 
 
-In the Catena/sdks/cpp/docker/ directory run `./dev-start.sh <path/to/Catena>`
+In the Catena/sdks/cpp/docker/ directory run `./dev-start.sh <absolute/path/to/Catena>`
+
+***Note***: if you get the error:
+``` exit status 22: unpigz: abourt: zlib version less than 1.2.3``` download the [latest version of pigz](https://zlib.net/pigz/).
 
 
 ## VSCode Workspaces
@@ -20,7 +23,7 @@ In the Catena/sdks/cpp/docker/ directory run `./dev-start.sh <path/to/Catena>`
 <!-- On Linux you can get this using `cut -d: -f3 < <(getent group docker)`. -->
 
 Press F1 to open the command palette and select the option 
-` Dev Containers: Open worspace in Container `.
+` Dev Containers: Open worspace in Container `, navigating to your Catena workspace file
 
 ***Note***: if you get the error:
 ``` exit status 22: unpigz: abourt: zlib version less than 1.2.3``` download the [latest version of pigz](https://zlib.net/pigz/).

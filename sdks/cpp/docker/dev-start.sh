@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 <path/to/Catena>"
+    echo "Usage: $0 <absolute/path/to/Catena>"
     exit 1
 fi
 
@@ -23,4 +23,4 @@ docker run \
     -p 6254:6254 \
     --rm \
     catena-develop:latest \
-    /bin/bash -c "$1/sdks/cpp/docker/build.sh; /bin/bash"
+    /bin/bash -c "~/Catena/sdks/cpp/docker/build.sh; /bin/bash"
