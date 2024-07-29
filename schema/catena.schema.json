@@ -1095,6 +1095,11 @@
           "title": "Spanish Language Group",
           "$comment": "@todo complete the regex",
           "type": "string"
+        },
+        "^(fr|fr-BE|fr-CA|fr-CF|fr-TD|fr-KM)": {
+          "title": "French Language Group",
+          "$comment": "@todo complete the regex",
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -1108,7 +1113,8 @@
           "type": "string"
         }
       },
-      "required": ["$key"]
+      "required": ["$key"],
+      "additionalProperties": false
     },
     "read_only": {
       "title": "Parameter access mode",
