@@ -1,59 +1,128 @@
 {
-    "slot": 1,
-    "multi_set_enabled": true,
-    "detail_level": "FULL",
-    "access_scopes": ["monitor", "operate", "configure", "administer"],
-    "default_scope": "operate",
-    "language_packs": {
-      "packs": {
-        "es": {
-          "name": "Spanish",
-          "words": {
-            "greeting": "Hola",
-            "parting": "Adiós"
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": [
+    "monitor",
+    "operate",
+    "configure",
+    "administer"
+  ],
+  "default_scope": "operate",
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+  "params": {
+    "location": {
+      "type": "STRUCT",
+      "name": {
+        "display_strings": {
+          "en": "Location"
+        }
+      },
+      "params": {
+        "latitude": {
+          "type": "FLOAT32",
+          "value": {
+            "float32_value": 53.4640
+          },
+          "name": {
+            "display_strings": {
+              "en": "Latitude"
+            }
           }
         },
-        "en": {
-          "name": "English",
-          "words": {
-            "greeting": "Hello",
-            "parting": "Goodbye"
+        "longitude": {
+          "type": "FLOAT32",
+          "value": {
+            "float32_value": 1.3420
+          },
+          "name": {
+            "display_strings": {
+              "en": "Longitude"
+            }
           }
-        },
-        "fr": {
-          "name": "French",
-          "words": {
-            "greeting": "Bonjour",
-            "parting": "Adieu"
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "latitude": {
+              "value": {
+                "float32_value": 37.7749
+              }
+            },
+            "longitude": {
+              "value": {
+                "float32_value": -122.4194
+              }
+            }
+          }
+        }
+      },
+      "oid_aliases": [
+        "mary",
+        "had",
+        "a little lamb"
+      ]
+    },
+    "old_trafford": {
+      "template_oid": "/location",
+      "type": "STRUCT",
+      "value": {
+        "struct_value": {
+          "fields": {
+            "latitude": {
+              "value": {
+                "float32_value": 53.43
+              }
+            },
+            "longitude": {
+              "value": {
+                "float32_value": -2.29
+              }
+            }
           }
         }
       }
     },
-    "params": {
-        "location": {
-            "type": "STRUCT",
-            "name": {"display_strings": {"en": "Location"}},
-            "params": {
-                "latitude": {
-                    "type": "FLOAT32",
-                    "value": {"float32_value": 53.4640},
-                    "name": {"display_strings": {"en": "Latitude"}}
-                },
-                "longitude": {
-                    "type": "FLOAT32",
-                    "value": {"float32_value": 1.3420},
-                    "name": {"display_strings": {"en": "Longitude"}}
-                }
+    "elland_road": {
+      "template_oid": "/location",
+      "type": "STRUCT",
+      "value": {
+        "struct_value": {
+          "fields": {
+            "latitude": {
+              "value": {"float32_value": 53.77}
             },
-            "value": {
-                "struct_value": {
-                    "fields": {
-                        "latitude": {"value": {"float32_value": 37.7749}},
-                        "longitude": {"value": {"float32_value": -122.4194}}
-                    }
-                }
-            },
-            "oid_aliases": ["mary", "had", "a little lamb"]
+            "longitude": {
+              "value": {"float32_value": -1.56}
+            }
+          }
         }
+      }
     }
+  }
 }
