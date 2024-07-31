@@ -7,30 +7,23 @@
   "language_packs": {},
   "params": {
     "city": {
-      "type": "STRING",
-      "value": {"string_value": "San Francisco"},
-      "name": {"display_strings": { "en": "City"}},
-      "widget": "textboxes"
-    },
-    "another_city": {
-      "type": "STRING",
-      "value": {"string_value": "Manchester"},
-      "name": {"display_strings": { "en": "Another City"}},
-      "template_oid": "/city"
-    },
-    "location": {
       "type": "STRUCT",
       "name": {
         "display_strings": {
-          "en": "Location"
+          "en": "City"
         }
       },
       "params": {
+        "city_name": {
+          "type": "STRING",
+          "name": {
+            "display_strings": {
+              "en": "Name"
+            }
+          }
+        },
         "latitude": {
           "type": "FLOAT32",
-          "value": {
-            "float32_value": 53.4640
-          },
           "name": {
             "display_strings": {
               "en": "Latitude"
@@ -39,48 +32,86 @@
         },
         "longitude": {
           "type": "FLOAT32",
-          "value": {
-            "float32_value": 1.3420
-          },
           "name": {
             "display_strings": {
               "en": "Longitude"
             }
           }
+        },
+        "population": {
+          "type": "INT32",
+          "name": {
+            "display_strings": {
+              "en": "Population"
+            }
+          }
+        }
+      }
+    },
+    "ottawa": {
+      "type": "STRUCT",
+      "template_oid": "/city",
+      "name": {
+        "display_strings": {
+          "en": "Ottawa"
         }
       },
       "value": {
         "struct_value": {
           "fields": {
+            "city_name": {
+              "value": {
+                "string_value": "Ottawa"
+              }
+            },
             "latitude": {
               "value": {
-                "float32_value": 37.7749
+                "float32_value": 45.4215
               }
             },
             "longitude": {
               "value": {
-                "float32_value": -122.4194
+                "float32_value": -75.6972
+              }
+            },
+            "population": {
+              "value": {
+                "int32_value": 934243
               }
             }
           }
         }
-      },
-      "oid_aliases": ["mary","had","a little lamb"]
+      }
     },
-    "old_trafford": {
-      "template_oid": "/location",
+    "toronto": {
       "type": "STRUCT",
+      "template_oid": "/city",
+      "name": {
+        "display_strings": {
+          "en": "Toronto"
+        }
+      },
       "value": {
         "struct_value": {
           "fields": {
+            "city_name": {
+              "value": {
+                "string_value": "Toronto"
+              }
+            },
             "latitude": {
               "value": {
-                "float32_value": 53.43
+                "float32_value": 43.6511
               }
             },
             "longitude": {
               "value": {
-                "float32_value": -2.29
+                "float32_value": -79.3470
+              }
+            },
+            "population": {
+              "value": {
+                "int32_value": 2731571
               }
             }
           }
