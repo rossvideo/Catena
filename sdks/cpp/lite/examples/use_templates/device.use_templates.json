@@ -2,39 +2,22 @@
   "slot": 1,
   "multi_set_enabled": true,
   "detail_level": "FULL",
-  "access_scopes": [
-    "monitor",
-    "operate",
-    "configure",
-    "administer"
-  ],
+  "access_scopes": ["monitor","operate","configure","administer"],
   "default_scope": "operate",
-  "language_packs": {
-    "packs": {
-      "es": {
-        "name": "Spanish",
-        "words": {
-          "greeting": "Hola",
-          "parting": "Adiós"
-        }
-      },
-      "en": {
-        "name": "English",
-        "words": {
-          "greeting": "Hello",
-          "parting": "Goodbye"
-        }
-      },
-      "fr": {
-        "name": "French",
-        "words": {
-          "greeting": "Bonjour",
-          "parting": "Adieu"
-        }
-      }
-    }
-  },
+  "language_packs": {},
   "params": {
+    "city": {
+      "type": "STRING",
+      "value": {"string_value": "San Francisco"},
+      "name": {"display_strings": { "en": "City"}},
+      "widget": "textboxes"
+    },
+    "another_city": {
+      "type": "STRING",
+      "value": {"string_value": "Manchester"},
+      "name": {"display_strings": { "en": "Another City"}},
+      "template_oid": "/city"
+    },
     "location": {
       "type": "STRUCT",
       "name": {
@@ -83,6 +66,26 @@
         }
       },
       "oid_aliases": ["mary","had","a little lamb"]
+    },
+    "old_trafford": {
+      "template_oid": "/location",
+      "type": "STRUCT",
+      "value": {
+        "struct_value": {
+          "fields": {
+            "latitude": {
+              "value": {
+                "float32_value": 53.43
+              }
+            },
+            "longitude": {
+              "value": {
+                "float32_value": -2.29
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
