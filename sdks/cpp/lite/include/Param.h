@@ -97,6 +97,7 @@ template <typename T> class Param : public IParam {
             (*name_proto.mutable_display_strings())[lang] = text;
         }
         param.mutable_name()->Swap(&name_proto);
+        param.set_widget(widget_);
         toProto(*param.mutable_value());
     }
 
