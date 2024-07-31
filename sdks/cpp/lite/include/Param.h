@@ -87,17 +87,31 @@ public:
      * @brief serialize the parameter descriptor to protobuf
      */
     void toProto(catena::Param& param) const override {
+        // type member
         param.set_type(type_());
+
+        // oid_aliases member
         param.mutable_oid_aliases()->Reserve(oid_aliases_.size());
         for (const auto& oid_alias : oid_aliases_) {
             param.add_oid_aliases(oid_alias);
         }
+
+        // name member
         catena::PolyglotText name_proto;
         for (const auto& [lang, text] : name_.displayStrings()) {
             (*name_proto.mutable_display_strings())[lang] = text;
         }
         param.mutable_name()->Swap(&name_proto);
+
+        // widget member
         param.set_widget(widget_);
+
+        // constraint member
+        if (constraint_ != nullptr) {
+            constraint_->toProto(*param.mutable_constraint());
+        }
+
+        // value member
         toProto(*param.mutable_value());
     }
 
