@@ -13,13 +13,12 @@
 namespace catena {
 namespace common {
 
-
 /**
  * @brief Interface for constraints
  */
 class IConstraint {
 public:
-
+    IConstraint() : oid_{}, isShared_{} {}
     virtual ~IConstraint() = default;
 
     /**
@@ -46,6 +45,33 @@ public:
      * @param dst the value to write the constrained value to
      */
     virtual void apply(void* dst, void* src) const = 0;
+
+    /**
+     * @brief check if the constraint is shared
+     * @return true if the constraint is shared, false otherwise
+     */
+    bool isShared() const { return isShared_; }
+    
+    /**
+     * @brief set the shared flag
+     * @param shared true if the constraint is shared, false otherwise
+     */
+    void setShared(bool shared) { isShared_ = shared; }
+
+    /**
+     * @brief get the oid of the constraint
+     * @return the oid of the constraint
+     */
+    const std::string& getOid() const { return oid_; }
+
+    /**
+     * @brief set the oid of the constraint
+     */
+    void setOid(const std::string& oid) { oid_ = oid; }
+
+protected:
+    std::string oid_; ///< the oid of the constraint
+    bool isShared_;   ///< true if the constraint is shared, false otherwise
 };
 
 } // namespace common

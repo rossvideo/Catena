@@ -5,29 +5,29 @@
     "access_scopes": ["monitor", "operate", "configure", "administer"],
     "default_scope": "operate",
     "language_packs": {
-      "packs": {
-        "es": {
-          "name": "Spanish",
-          "words": {
-            "greeting": "Hola",
-            "parting": "Adiós"
-          }
-        },
-        "en": {
-          "name": "English",
-          "words": {
-            "greeting": "Hello",
-            "parting": "Goodbye"
-          }
-        },
-        "fr": {
-          "name": "French",
-          "words": {
-            "greeting": "Bonjour",
-            "parting": "Adieu"
-          }
+        "packs": {
+            "es": {
+            "name": "Spanish",
+            "words": {
+                "greeting": "Hola",
+                "parting": "Adiós"
+            }
+            },
+            "en": {
+            "name": "English",
+            "words": {
+                "greeting": "Hello",
+                "parting": "Goodbye"
+            }
+            },
+            "fr": {
+            "name": "French",
+            "words": {
+                "greeting": "Bonjour",
+                "parting": "Adieu"
+            }
+            }
         }
-      }
     },
     "params": {
         "hello": {
@@ -38,15 +38,7 @@
         "count": {
             "type": "INT32",
             "value": { "int32_value": 1234 },
-            "name": { "display_strings": { "en": "Counter" } },
-            "constraint": {
-                "type": "INT_RANGE",
-                "int32_range": {
-                    "min_value": 0,
-                    "max_value": 10000,
-                    "step": 1
-                }
-            }
+            "name": { "display_strings": { "en": "Counter" } }
         },
         "gain": {
             "type": "FLOAT32",
@@ -73,17 +65,6 @@
             "name": {"display_strings": {"en": "Some Physical Constants"}},
             "value": {"float32_array_values": {
               "floats": []}
-            }
-        }
-    },
-    "constraints": {
-        "small": {
-            "type": "FLOAT_RANGE",
-            "float_range": {
-                "min_value": 0,
-                "max_value": 0.999,
-                "step": 0.001,
-                "display_max": 1.0
             }
         }
     }

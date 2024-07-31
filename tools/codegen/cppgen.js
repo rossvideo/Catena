@@ -121,67 +121,90 @@ class CppGen {
         };
         this.namespace = namespace;
         this.constraints = {
+            // TODO: shared constraints are not yet supported in the device schema
             "INT_RANGE": (name, desc, indent = 0) => {
-                // FIXME
             }, 
             "FLOAT_RANGE": (name, desc, indent = 0) => {
-                let fields = '';
-                // FIXME constraint notation type
-                fields += `${desc.float_range.min_value},${desc.float_range.max_value}`;
-                bloc(`RangeConstraint<float> ${name}Constraint {${fields}};`, indent);
+                // let fields = '';
+                // // FIXME constraint notation type
+                // fields += `${desc.float_range.min_value},${desc.float_range.max_value}`;
+                // bloc(`RangeConstraint<float> ${name}Constraint {${fields}};`, indent);
             }, 
             "INT_CHOICE": (name, desc, indent = 0) => {
-                // FIXME place holder for now
             },
             "STRING_CHOICE": (name, desc, indent = 0) => {
-                // FIXME place holder for now
             },
             "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
-                // FIXME
             },
             "ALARM_TABLE": (name, desc, indent = 0) => {
-                // FIXME
             }
         },
         this.paramConstraints = {
             "INT_RANGE": (name, desc, indent = 0) => {
                 let constraint_name = '';
-                if (desc.constraint !== undefined) {
-                    const cons = desc.constraint;
+                if (desc.constraint.int32_range !== undefined) {
+                    // FIXME: improve ctor logic
+                    const cons = desc.constraint.int32_range;
                     constraint_name += `${name}ParamConstraint`;
                     let fields = `${cons.min_value},${cons.max_value}`;
                     if (cons.steps !== undefined) { fields += `,${cons.steps}`; }
                     if (cons.display_min !== undefined) { fields += `,${cons.display_min}`; }
                     if (cons.display_max !== undefined) { fields += `,${cons.display_max}`; }
-                    bloc(`RangeConstraint<int32_t> ${constraint_name} = ${fields};`, indent);
+                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"param/${name}",false};`, indent);
                 } else {
-                    constraint_name += 'nullConstraint';
+                    constraint_name += `${desc.constraint.ref_oid}`;
                 }
                 return `${constraint_name}`;
             }, 
             "FLOAT_RANGE": (name, desc, indent = 0) => {
                 let constraint_name = '';
-                if (desc.constraint !== undefined) {
-                    const cons = desc.constraint;
+                if (desc.constraint.float_range !== undefined) {
+                    const cons = desc.constraint.float_range;
                     constraint_name += `${name}ParamConstraint`;
                     let fields = `${cons.min_value},${cons.max_value}`;
                     if (cons.steps !== undefined) { fields += `,${cons.steps}`; }
                     if (cons.display_min !== undefined) { fields += `,${cons.display_min}`; }
                     if (cons.display_max !== undefined) { fields += `,${cons.display_max}`; }
-                    bloc(`RangeConstraint<int32_t> ${constraint_name} = ${fields};`, indent);
+                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"param/${name}",false};`, indent);
                 } else {
-                    constraint_name += 'nullConstraint';
+                    constraint_name += `${desc.constraint.ref_oid}`;
                 }
                 return `${constraint_name}`;
             }, 
             "INT_CHOICE": (name, desc, indent = 0) => {
-                // FIXME place holder for now
-            },
-            "STRING_CHOICE": (name, desc, indent = 0) => {
-                // FIXME place holder for now
+                let constraint_name = '';
+                if (desc.constraint.int32_choice !== undefined) {
+                    const cons = desc.constraint.int32_choice;
+                    constraint_name += `${name}ParamConstraint`;
+                    let fields = '';
+                    // collect the polyglot names and value pairs
+                    for (let i = 0; i < cons.choices.length; ++i) {
+                        fields += `{${cons.choices[i].value},{`;
+                        let display_strings = cons.choices[i].name.display_strings;
+                        for (let lang in display_strings) {
+                            fields += `{"${lang}",${quoted(display_strings[lang])}}`;
+                            let p = 0;
+                            if (p++ < Object.keys(display_strings).length-1) {
+                                fields += ',';
+                            }
+                        }
+                        fields += '}}';
+                        if (i < cons.choices.length - 1) {
+                            fields += ',';
+                        }
+                    }
+                    let strict = cons.strict !== undefined ? cons.strict : false;
+                    bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},"param/${name}",false};`, indent);
+                } else {
+                    constraint_name += `${desc.constraint.ref_oid}`;
+                }
+                return `${constraint_name}`;
             },
             "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
                 // FIXME
+            },
+            "STRING_CHOICE": (name, desc, indent = 0) => {
+                // FIXME place holder for now
             },
             "ALARM_TABLE": (name, desc, indent = 0) => {
                 // FIXME
@@ -216,12 +239,13 @@ class CppGen {
             ans += `${name_init},`;
             
             // add the widget if it exists
-            let widget_init = '{';
+            let widget_init = '';
             if (desc.widget !== undefined) {
                 const widget = desc.widget;
                 widget_init += `${quoted(widget)}`;
+            } else {
+                widget_init += '""';
             }
-            widget_init += '}';
             ans += `${widget_init},`;
             
             // construct and add the constraint if it exists
@@ -229,7 +253,7 @@ class CppGen {
             if (desc.constraint !== undefined) {
                 constraint_init += this.paramConstraints[desc.constraint.type](name, desc);
             } else {
-                constraint_init += 'nullConstraint';
+                constraint_init = 'nullptr';
             }
             ans += `${constraint_init}`;
 
@@ -368,7 +392,6 @@ class CppGen {
             bloc(`#include <lite/include/StructInfo.h>`);
             bloc(`#include <lite/include/RangeConstraint.h>`);
             bloc(`#include <lite/include/NamedChoiceConstraint.h>`);
-            bloc(`#include <lite/include/NullConstraint.h>`);
             bloc(`#include <common/include/Enums.h>`);
             bloc(`#include <common/include/IConstraint.h>`);
             bloc(`#include <string>`);
@@ -390,7 +413,6 @@ class CppGen {
             bloc(`using catena::lite::StructInfo;`);
             bloc(`using catena::lite::FieldInfo;`);
             bloc(`std::unordered_map<std::string, catena::common::IConstraint*> constraints;`);
-            bloc(`NullConstraint nullConstraint;`);
         },
         this.finish = () => {
             hloc(`} // namespace ${namespace}`);

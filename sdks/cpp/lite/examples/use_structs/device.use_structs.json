@@ -5,29 +5,29 @@
     "access_scopes": ["monitor", "operate", "configure", "administer"],
     "default_scope": "operate",
     "language_packs": {
-      "packs": {
-        "es": {
-          "name": "Spanish",
-          "words": {
-            "greeting": "Hola",
-            "parting": "Adiós"
-          }
-        },
-        "en": {
-          "name": "English",
-          "words": {
-            "greeting": "Hello",
-            "parting": "Goodbye"
-          }
-        },
-        "fr": {
-          "name": "French",
-          "words": {
-            "greeting": "Bonjour",
-            "parting": "Adieu"
-          }
+        "packs": {
+            "es": {
+                "name": "Spanish",
+                "words": {
+                    "greeting": "Hola",
+                    "parting": "Adiós"
+                }
+            },
+            "en": {
+                "name": "English",
+                "words": {
+                    "greeting": "Hello",
+                    "parting": "Goodbye"
+                }
+            },
+            "fr": {
+                "name": "French",
+                "words": {
+                    "greeting": "Bonjour",
+                    "parting": "Adieu"
+                }
+            }
         }
-      }
     },
     "params": {
         "location": {
