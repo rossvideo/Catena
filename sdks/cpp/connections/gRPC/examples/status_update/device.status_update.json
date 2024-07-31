@@ -44,6 +44,7 @@
             "type":"INT32",
             "name": {"display_strings": {"en": "Button", "es": "Botón", "fr": "Bouton"}},
             "value": {"int32_value": 0},
+            "widget": "button",
             "constraint": {
               "type": "INT_CHOICE",
               "int32_choice": {
