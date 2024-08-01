@@ -22,6 +22,7 @@ void Param<int32_t>::toProto(Value& value) const {
 
 template <>
 void Param<int32_t>::fromProto(const Value& value) {
+    if (read_only_) throw std::runtime_error("Cannot set read-only parameter");
     catena::lite::fromProto<int32_t>(&value_.get(), value);
 }
 
@@ -32,6 +33,7 @@ void Param<std::string>::toProto(Value& value) const {
 
 template <>
 void Param<std::string>::fromProto(const Value& value) {
+    if (read_only_) throw std::runtime_error("Cannot set read-only parameter");
     catena::lite::fromProto<std::string>(&value_.get(), value);
 }
 
@@ -42,6 +44,7 @@ void Param<float>::toProto(Value& value) const {
 
 template <>
 void Param<float>::fromProto(const Value& value) {
+    if (read_only_) throw std::runtime_error("Cannot set read-only parameter");
     catena::lite::fromProto<float>(&value_.get(), value);
 }
 
@@ -52,6 +55,7 @@ void Param<std::vector<std::string>>::toProto(Value& value) const {
 
 template <>
 void Param<std::vector<std::string>>::fromProto(const Value& value) {
+    if (read_only_) throw std::runtime_error("Cannot set read-only parameter");
     catena::lite::fromProto<std::vector<std::string>>(&value_.get(), value);
 }
 
@@ -62,6 +66,7 @@ void Param<std::vector<std::int32_t>>::toProto(Value& value) const {
 
 template <>
 void Param<std::vector<std::int32_t>>::fromProto(const Value& value) {
+    if (read_only_) throw std::runtime_error("Cannot set read-only parameter");
     catena::lite::fromProto<std::vector<std::int32_t>>(&value_.get(), value);
 }
 
@@ -72,6 +77,7 @@ void Param<std::vector<float>>::toProto(Value& value) const {
 
 template <>
 void Param<std::vector<float>>::fromProto(const Value& value) {
+    if (read_only_) throw std::runtime_error("Cannot set read-only parameter");
     catena::lite::fromProto<std::vector<float>>(&value_.get(), value);
 }
 

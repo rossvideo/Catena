@@ -165,6 +165,13 @@ class CppGen {
             widget_init += '}';
             ans += `${widget_init}`;
 
+            // add the read_only flag
+            if (desc.read_only !== undefined && desc.read_only) {
+                ans += `,true`;
+            } else {
+                ans += `,false`;
+            }
+
             return ans;
         },
         this.params = {
@@ -258,6 +265,7 @@ class CppGen {
                 // instantiate the deserialize specialization
                 bloc(`template<>`, indent);
                 bloc(`void catena::lite::Param<${fqname}>::fromProto(const catena::Value& value) {`, indent);
+                bloc(`if (read_only_) throw std::runtime_error("Cannot set read-only parameter");`, indent+1);
                 bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
                 bloc('}', indent);
             },

@@ -37,6 +37,7 @@
   "params": {
     "location": {
       "type": "STRUCT",
+      "read_only": false,
       "name": {
         "display_strings": {
           "en": "Location"
