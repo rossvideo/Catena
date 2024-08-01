@@ -178,7 +178,7 @@ try {
             codegen.constraint(c, data.constraints[c]);
         }
         for (let p in data.params) {
-            codegen.param(p, data.params[p]);
+            codegen.param(p, data.params[p], data);
         }
         codegen.finish();
         fs.close(body);

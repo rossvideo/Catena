@@ -1,0 +1,122 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor","operate","configure","administer"],
+  "default_scope": "operate",
+  "language_packs": {},
+  "params": {
+    "city": {
+      "type": "STRUCT",
+      "name": {
+        "display_strings": {
+          "en": "City"
+        }
+      },
+      "params": {
+        "city_name": {
+          "type": "STRING",
+          "name": {
+            "display_strings": {
+              "en": "Name"
+            }
+          }
+        },
+        "latitude": {
+          "type": "FLOAT32",
+          "name": {
+            "display_strings": {
+              "en": "Latitude"
+            }
+          }
+        },
+        "longitude": {
+          "type": "FLOAT32",
+          "name": {
+            "display_strings": {
+              "en": "Longitude"
+            }
+          }
+        },
+        "population": {
+          "type": "INT32",
+          "name": {
+            "display_strings": {
+              "en": "Population"
+            }
+          }
+        }
+      }
+    },
+    "ottawa": {
+      "type": "STRUCT",
+      "template_oid": "/city",
+      "name": {
+        "display_strings": {
+          "en": "Ottawa"
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "city_name": {
+              "value": {
+                "string_value": "Ottawa"
+              }
+            },
+            "latitude": {
+              "value": {
+                "float32_value": 45.4215
+              }
+            },
+            "longitude": {
+              "value": {
+                "float32_value": -75.6972
+              }
+            },
+            "population": {
+              "value": {
+                "int32_value": 934243
+              }
+            }
+          }
+        }
+      }
+    },
+    "toronto": {
+      "type": "STRUCT",
+      "template_oid": "/city",
+      "name": {
+        "display_strings": {
+          "en": "Toronto"
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "city_name": {
+              "value": {
+                "string_value": "Toronto"
+              }
+            },
+            "latitude": {
+              "value": {
+                "float32_value": 43.6511
+              }
+            },
+            "longitude": {
+              "value": {
+                "float32_value": -79.3470
+              }
+            },
+            "population": {
+              "value": {
+                "int32_value": 2731571
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
