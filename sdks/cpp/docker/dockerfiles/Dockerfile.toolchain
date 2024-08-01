@@ -5,6 +5,7 @@ LABEL org.opencontainers.image.name="catena-toolchain"
 LABEL org.opencontainers.image.description="Software dependencies for the Catena C++ SDK"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
 LABEL org.opencontainers.image.vendor="Ross Video"
+LABEL org.opencontainers.image.author="isaac.robert@rossvideo.com"
 
 
 ENV CLONE_DIR="/opt"

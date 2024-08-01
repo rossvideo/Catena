@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# file: build.sh
+# description: Script used to build the Catena sdk once inside the docker container.
+# copyright: Copyright (c) 2024 Ross Video
+# author: isaac.robert@rossvideo.com
+
 sdk_path=~/Catena/sdks/cpp
 
 if [ ! -d $sdk_path ]; then

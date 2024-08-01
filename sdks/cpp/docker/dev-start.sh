@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# file: dev-start.sh
+# description: Script to pull and build the catena-toolchain docker image with required configurations.
+# copyright: Copyright (c) 2024 Ross Video
+# author: isaac.robert@rossvideo.com
+
 if [ -z "$1" ]; then
     echo "Usage: $0 <absolute/path/to/Catena>"
     exit 1

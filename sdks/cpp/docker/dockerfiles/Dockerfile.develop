@@ -5,6 +5,7 @@ LABEL org.opencontainers.image.name="catena-develop"
 LABEL org.opencontainers.image.description="Development environment for the Catena C++ SDK"
 LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
 LABEL org.opencontainers.image.vendor="Ross Video"
+LABEL org.opencontainers.image.author="isaac.robert@rossvideo.com"
 
 
 ARG USER_UID=1000
