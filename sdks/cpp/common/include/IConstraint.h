@@ -28,11 +28,6 @@ public:
     // virtual bool isValid() const = 0;
 
     /**
-     * @brief constrain the underlying parameter value to lie within the constraint.
-     */
-    // virtual void constrain() = 0;
-
-    /**
      * @brief serialize the constraint to a protobuf message
      * @param constraint the protobuf message to populate, NB, implementations should 
      * dynamically cast this to catena::Constraint

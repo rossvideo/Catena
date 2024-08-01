@@ -25,10 +25,10 @@ public:
      * @param max the maximum value
      */
     RangeConstraint(T min, T max, std::string oid, bool shared)
-        : min_(min), max_(max), step_{}, display_min_{min}, display_max_{max} {
-            setOid(oid);
-            setShared(shared);
-        }
+        : min_(min), max_(max), step_{1}, display_min_{min}, display_max_{max} {
+        setOid(oid);
+        setShared(shared);
+    }
 
     /**
      * @brief Construct a new Range Constraint object

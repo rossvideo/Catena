@@ -28,13 +28,13 @@ public:
     NamedChoiceConstraint(std::vector<std::pair<T, PolyglotText::ListInitializer>> init,
         bool strict, std::string oid, bool shared)
         : strict_{strict}, default_{init[0].first} {
-            for (size_t i = 0; i < init.size(); ++i) {
-                choices_[init[i].first] = init[i].second;
-            }
-            setOid(oid);
-            setShared(shared);
+        for (size_t i = 0; i < init.size(); ++i) {
+            choices_[init[i].first] = init[i].second;
         }
-    
+        setOid(oid);
+        setShared(shared);
+    }
+
     /**
      * @brief set the value in dst to the value in src if the value in src is valid 
      * @param dst the value to write the constrained value to
@@ -47,7 +47,10 @@ public:
             // ignore the request if src is not valid
             if (!update.has_int32_value()) { return; }
 
-            //TODO: if strict check that the value is in the choices 
+            // constrain the choice if strict 
+            if (strict_ && !choices_.contains(update.int32_value())) {
+                update.set_int32_value(default_);
+            }
             reinterpret_cast<catena::Value*>(dst)->set_int32_value(update.int32_value());
         }
 
@@ -55,7 +58,10 @@ public:
             // ignore the request if src is not valid
             if (!update.has_string_value()) { return; }
 
-            //TODO: if strict check that the value is in the choices 
+            // constrain the choice if strict 
+            if (strict_ && !choices_.contains(update.float32_value())) {
+                update.set_float32_value(default_);
+            }
             reinterpret_cast<catena::Value*>(dst)->set_string_value(update.string_value());
         } 
     }

@@ -150,7 +150,7 @@ class CppGen {
                     if (cons.steps !== undefined) { fields += `,${cons.steps}`; }
                     if (cons.display_min !== undefined) { fields += `,${cons.display_min}`; }
                     if (cons.display_max !== undefined) { fields += `,${cons.display_max}`; }
-                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"param/${name}",false};`, indent);
+                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
                 } else {
                     constraint_name += `${desc.constraint.ref_oid}`;
                 }
@@ -165,7 +165,7 @@ class CppGen {
                     if (cons.steps !== undefined) { fields += `,${cons.steps}`; }
                     if (cons.display_min !== undefined) { fields += `,${cons.display_min}`; }
                     if (cons.display_max !== undefined) { fields += `,${cons.display_max}`; }
-                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"param/${name}",false};`, indent);
+                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
                 } else {
                     constraint_name += `${desc.constraint.ref_oid}`;
                 }
@@ -194,14 +194,40 @@ class CppGen {
                         }
                     }
                     let strict = cons.strict !== undefined ? cons.strict : false;
-                    bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},"param/${name}",false};`, indent);
+                    bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
                 } else {
                     constraint_name += `${desc.constraint.ref_oid}`;
                 }
                 return `${constraint_name}`;
             },
             "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
-                // FIXME
+                let constraint_name = '';
+                if (desc.constraint.int32_choice !== undefined) {
+                    const cons = desc.constraint.int32_choice;
+                    constraint_name += `${name}ParamConstraint`;
+                    let fields = '';
+                    // collect the polyglot names and value pairs
+                    for (let i = 0; i < cons.choices.length; ++i) {
+                        fields += `{${cons.choices[i].value},{`;
+                        let display_strings = cons.choices[i].name.display_strings;
+                        for (let lang in display_strings) {
+                            fields += `{"${lang}",${quoted(display_strings[lang])}}`;
+                            let p = 0;
+                            if (p++ < Object.keys(display_strings).length-1) {
+                                fields += ',';
+                            }
+                        }
+                        fields += '}}';
+                        if (i < cons.choices.length - 1) {
+                            fields += ',';
+                        }
+                    }
+                    let strict = cons.strict !== undefined ? cons.strict : false;
+                    bloc(`NamedChoiceConstraint<std::string> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
+                } else {
+                    constraint_name += `${desc.constraint.ref_oid}`;
+                }
+                return `${constraint_name}`;
             },
             "STRING_CHOICE": (name, desc, indent = 0) => {
                 // FIXME place holder for now
