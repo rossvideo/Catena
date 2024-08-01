@@ -19,7 +19,8 @@
             "fileMatch": [
                 "/example_device_models/device.*.json",
                 "/nab_2024/device.*.json",
-                "/sdks/cpp/lite/examples/start_here/device.*.json"
+                "/sdks/cpp/lite/examples/*/device.*.json",
+                "/sdks/cpp/connections/gRPC/examples/*/device.*.json"
             ],
             "url": "./schema/catena.schema.json"
         }

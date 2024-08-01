@@ -125,7 +125,7 @@ class CppGen {
                // place holder for now
             }
         },
-        this.other_items = (desc) => {
+        this.other_items = (desc, template) => {
             let ans = '';
 
             // add oid_aliases if they exist
@@ -159,6 +159,8 @@ class CppGen {
             if (desc.widget !== undefined) {
                 const widget = desc.widget;
                 widget_init += `${quoted(widget)}`;
+            } else if (template !== undefined && template.widget !== undefined) {
+                widget_init += `${quoted(template.widget)}`;
             }
             widget_init += '}';
             ans += `${widget_init}`;
@@ -166,14 +168,20 @@ class CppGen {
             return ans;
         },
         this.params = {
-            "STRUCT": (name, desc, scope = undefined, indent = 0) => {
-                const params = desc.params;
-                const classname = initialCap(name);
+            "STRUCT": (name, desc, template, scope = undefined, indent = 0) => {
+                let params;
+                let classname;
+                if (template === undefined) {
+                    params = desc.params;
+                    classname = initialCap(name);
+                } else {
+                    params = template.params;
+                    classname = initialCap(desc.template_oid.replace(/^\//, ''));
+                }
                 if (scope === undefined) {
                     scope = namespace;
                 }
                 const fqname = `${scope}::${classname}`;
-                hloc(`struct ${classname} {`, indent);
                 let n = 0;
                 let types = [];
                 let names = [];
@@ -205,19 +213,30 @@ class CppGen {
                     ++n;
                 }
                 
-                // write the struct to the header file
-                for (let i = 0; i < n; ++i) {
-                    hloc(`${types[i]} ${names[i]} ${defaults[i]};`, indent+1);
-                }
+                if (template === undefined) {
+                    // write the struct to the header file
+                    hloc(`struct ${classname} {`, indent);
+                    for (let i = 0; i < n; ++i) {
+                        hloc(`${types[i]} ${names[i]} ${defaults[i]};`, indent+1);
+                    }
 
-                // declare the getStructInfo method and typelist in the header file
-                hloc(`static const catena::lite::StructInfo& getStructInfo();`, indent+1)
-                hloc(`};`, indent);
+                    // declare the getStructInfo method and typelist in the header file
+                    hloc(`static const catena::lite::StructInfo& getStructInfo();`, indent+1)
+                    hloc(`};`, indent);
+                }
 
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
-                bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(desc)},"/${name}",dm);`, bodyIndent)
+                
+                if (template !== undefined) {
+                    bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
+                    bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(desc)},"/${name}",dm);`, bodyIndent)
+                    // Support functions for user defined types have already been generated
+                    return;
+                } else {
+                    bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
+                    bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(desc)},"/${name}",dm);`, bodyIndent)
+                }
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
                 bloc(`static StructInfo t {`, bodyIndent+1);
                 bloc(`"${name}", {`, bodyIndent+2);
@@ -242,45 +261,45 @@ class CppGen {
                 bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
                 bloc('}', indent);
             },
-            "STRING": (name, desc, indent = 0) => {
+            "STRING": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
                 if ("value" in desc) {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
             },
-            "INT32": (name, desc, indent = 0) => {
+            "INT32": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
                 if ("value" in desc) {
                     initializer = `{${desc.value.int32_value}}`;
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
 
             },
-            "FLOAT32": (name, desc, indent = 0) => {
+            "FLOAT32": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
                 if ("value" in desc) {
                     initializer = `{${desc.value.float32_value}}`;
                 }
                 bloc(`float ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
             },
-            "STRING_ARRAY": (name, desc, indent = 0) => {
+            "STRING_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
                 bloc(`std::vector<std::string> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
             },
-            "INT32_ARRAY": (name, desc, indent = 0) => {
+            "INT32_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
                 bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
             },
-            "FLOAT32_ARRAY": (name, desc, indent = 0) => {
+            "FLOAT32_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
                 bloc(`std::vector<float> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(desc)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
             }
         };
         this.init = (headerFilename, device) => {
@@ -322,14 +341,25 @@ class CppGen {
         }
     }
     
-    param (oid, desc) {
-        if (desc.type in this.params) {
-            return this.params[desc.type](oid, desc);
-        } else if ("template_oid" in desc) {
-            // code to handle templated params here
-        } else {
-            console.log(`No convertor found for ${oid} of type ${desc.type}`);
+    param (oid, desc, device) {
+        if (!desc.type in this.params) {
+            throw new Error(`No convertor found for ${oid} of type ${desc.type}`);
         }
+        let template_param = undefined;
+        if ("template_oid" in desc) {
+            let template_oid = desc.template_oid.replace(/^\//, '');
+            template_param = device.params[template_oid];
+            if (template_param === undefined) {
+                throw new Error(`Could not find template ${template_oid} for ${oid}`);
+            }
+            if (template_param.type !== desc.type) {
+                throw new Error(`Template ${template_oid} type ${template_param.type} does not match ${oid} type ${desc.type}`);
+            }
+            if (desc.params !== undefined) {
+                throw new Error(`Param ${oid} is based off a template so it can't have params`);
+            }
+        } 
+        return this.params[desc.type](oid, desc, template_param);
     }
 };
 
