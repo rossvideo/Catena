@@ -71,6 +71,24 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     static std::vector<std::string> getScopes(grpc::ServerContext &context);
 
+    class GetPopulatedSlots : public CallData{
+        public:
+        GetPopulatedSlots(CatenaServiceImpl *service, Device &dm, bool ok);
+
+        void proceed(CatenaServiceImpl *service, bool ok) override;
+
+       private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        google::protobuf::Empty req_;
+        catena::SlotList res_;
+        ServerAsyncResponseWriter<::catena::SlotList> responder_;
+        CallStatus status_;
+        Device &dm_;
+        int objectId_;
+        static int objectCounter_;
+    };
+
     class GetValue : public CallData{
         public:
         GetValue(CatenaServiceImpl *service, Device &dm, bool ok);
@@ -136,6 +154,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         static int objectCounter_;
         unsigned int pushUpdatesId_;
         unsigned int valueSetByClientId_;
+        unsigned int valueSetByServerId_;
         static vdk::signal<void()> shutdownSignal_;
         unsigned int shutdownSignalId_;
     };
@@ -154,7 +173,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ServerContext context_;
         std::vector<std::string> clientScopes_;
         catena::DeviceRequestPayload req_;
-        catena::PushUpdates res_;
         ServerAsyncWriter<catena::DeviceComponent> writer_;
         CallStatus status_;
         Device &dm_;
@@ -174,7 +192,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         CatenaServiceImpl *service_;
         ServerContext context_;
         catena::ExternalObjectRequestPayload req_;
-        catena::PushUpdates res_;
         ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
         CallStatus status_;
         Device &dm_;

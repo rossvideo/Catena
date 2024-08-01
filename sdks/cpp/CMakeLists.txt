@@ -55,7 +55,6 @@ endif (APPLE)
 
 get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(GRPC_INSTALL_INCLUDE_DIR "$ENV{HOME}/.local/include")
 
 # Find Protobuf installation
 # Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
@@ -149,9 +148,9 @@ if (${_gRPC} EQUAL -1 AND ${_REST} EQUAL -1 AND ${_WSS} EQUAL -1)
   message(FATAL_ERROR "Error: At least one connection type must be specified.")
 endif()
 
-# Check if at least one Catena Model is specified
+# If no models are specified, default to "lite"
 if (NOT CATENA_MODELS)
-  message(FATAL_ERROR "Error: At least one Catena Model must be specified.")
+  set(CATENA_MODELS "lite")
 endif()
 
 set(ALLOWED_MODELS "full" "lite")
@@ -193,7 +192,7 @@ foreach(_model ${CATENA_MODELS})
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
   )
-  target_include_directories(${proto_interface} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${GRPC_INSTALL_INCLUDE_DIR})
+  target_include_directories(${proto_interface} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${PROTOBUF_INCLUDE_DIRS})
   target_compile_features(${proto_interface} PUBLIC cxx_std_20)
   
 

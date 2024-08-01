@@ -45,3 +45,31 @@ sudo cp lib/*.a /usr/lib
 To build without Google Test, empty the build folder and run
 `cmake .. -G Ninja -DUNIT_TESTING=OFF`
 
+## Clone Catena and install node
+```
+git clone https://github.com/rossvideo/Catena.git
+cd ~/Catena/tools/codegen
+node -v # Node must be version 14 or above
+npm install
+```
+If your version of node is below 14 then update it to the latest version with the following commands:
+```
+sudo apt-get update
+sudo apt-get install -y nodejs npm
+sudo npm cache clean -f
+sudo npm install -g n
+sudo n stable
+```
+Restart the terminal and run `node -v` to check that node successfully  updated.
+
+## Building Catena
+```
+cd ~/Catena/sdks/cpp
+mkdir build
+cd build
+cmake .. -G Ninja \
+	-D CMAKE_BUILD_TYPE=Release   \
+    -D CONNECTIONS=gRPC
+ninja
+```
+

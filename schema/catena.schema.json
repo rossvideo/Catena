@@ -250,79 +250,38 @@
       "additionalProperties": false
     },
     "param": {
-      "oneOf": [
+      "$ref": "#/$defs/param_inner",
+      "required": ["type"],
+      "allOf": [
         {
-          "$ref": "#/$defs/param_inner",
-          "required": ["type"],
-          "allOf": [
-            {
-              "$ref": "#/$defs/apply_float32"
-            },
-            {
-              "$ref": "#/$defs/apply_int32"
-            },
-            {
-              "$ref": "#/$defs/apply_struct"
-            },
-            {
-              "$ref": "#/$defs/apply_string"
-            },
-            {
-              "$ref": "#/$defs/apply_int32_array"
-            },
-            {
-              "$ref": "#/$defs/apply_float32_array"
-            },
-            {
-              "$ref": "#/$defs/apply_string_array"
-            },
-            {
-              "$ref": "#/$defs/apply_struct_array"
-            },
-            {
-              "$ref": "#/$defs/apply_struct_variant"
-            },
-            {
-              "$ref": "#/$defs/apply_struct_variant_array"
-            }
-          ]
+          "$ref": "#/$defs/apply_float32"
         },
         {
-          "$ref": "#/$defs/param_inner",
-          "required": ["template_oid"],
-          "allOf": [{
-            "properties": {
-              "value": {
-                "oneOf": [
-                  {
-                    "$ref": "#/$defs/float32_value"
-                  },
-                  {
-                    "$ref": "#/$defs/int32_value"
-                  },
-                  {
-                    "$ref": "#/$defs/string_value"
-                  },
-                  {
-                    "$ref": "#/$defs/struct_value"
-                  },
-                  {
-                    "$ref": "#/$defs/int32_array_values"
-                  },
-                  {
-                    "$ref": "#/$defs/float32_array_values"
-                  },
-                  {
-                    "$ref": "#/$defs/string_array_values"
-                  },
-                  {
-                    "$ref": "#/$defs/struct_array_values"
-                  }
-                ]
-              },
-              "type": false
-            }
-          }]
+          "$ref": "#/$defs/apply_int32"
+        },
+        {
+          "$ref": "#/$defs/apply_struct"
+        },
+        {
+          "$ref": "#/$defs/apply_string"
+        },
+        {
+          "$ref": "#/$defs/apply_int32_array"
+        },
+        {
+          "$ref": "#/$defs/apply_float32_array"
+        },
+        {
+          "$ref": "#/$defs/apply_string_array"
+        },
+        {
+          "$ref": "#/$defs/apply_struct_array"
+        },
+        {
+          "$ref": "#/$defs/apply_struct_variant"
+        },
+        {
+          "$ref": "#/$defs/apply_struct_variant_array"
         }
       ]
     },
@@ -1095,6 +1054,11 @@
           "title": "Spanish Language Group",
           "$comment": "@todo complete the regex",
           "type": "string"
+        },
+        "^(fr|fr-BE|fr-CA|fr-CF|fr-TD|fr-KM)": {
+          "title": "French Language Group",
+          "$comment": "@todo complete the regex",
+          "type": "string"
         }
       },
       "additionalProperties": false
@@ -1108,7 +1072,8 @@
           "type": "string"
         }
       },
-      "required": ["$key"]
+      "required": ["$key"],
+      "additionalProperties": false
     },
     "read_only": {
       "title": "Parameter access mode",

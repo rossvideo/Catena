@@ -31,7 +31,7 @@ set(BODY device.${TARGET}.json.cpp)
 get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
 set(DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json)
 set(TOOLS_DIR ${CATENA_ROOT_DIR}/tools)
-set(CODEGEN ${TOOLS_DIR}/codegen/index.js)
+set(CODEGEN ${TOOLS_DIR}/codegen/index.js  ${TOOLS_DIR}/codegen/cppgen.js)
 set(SCHEMA_DIR ${CATENA_ROOT_DIR}/schema)
 set(SCHEMA ${SCHEMA_DIR}/catena.schema.json)
 set(CODEGEN_OUTPUT ${HEADER} ${BODY})
@@ -61,7 +61,7 @@ target_include_directories(${TARGET}
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
         $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
-        $<BUILD_INTERFACE:${GRPC_INSTALL_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
 )
 
 target_sources(${TARGET}

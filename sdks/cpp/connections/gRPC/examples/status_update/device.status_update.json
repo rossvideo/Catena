@@ -32,7 +32,17 @@
     "params": {
         "counter": {
             "type": "INT32",
-            "name": {"display_strings": {"$key": "counter"}},
+            "name": {"display_strings": {"en": "Counter", "es": "Contador", "fr": "Compteur"}},
+            "value": {"int32_value": 0}
+        },
+        "hello": {
+            "type": "STRING",
+            "name": {"display_strings": {"en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte"}},
+            "value": {"string_value": "Hello, World!"}
+        },
+        "button": {
+            "type":"INT32",
+            "name": {"display_strings": {"en": "Button", "es": "Botón", "fr": "Bouton"}},
             "value": {"int32_value": 0}
         },
         "dashboard_UI": {
