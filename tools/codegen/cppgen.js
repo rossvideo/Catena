@@ -265,7 +265,7 @@ class CppGen {
                 // instantiate the deserialize specialization
                 bloc(`template<>`, indent);
                 bloc(`void catena::lite::Param<${fqname}>::fromProto(const catena::Value& value) {`, indent);
-                bloc(`if (read_only_) throw std::runtime_error("Cannot set read-only parameter");`, indent+1);
+                bloc(`if (read_only_) return;`, indent+1);
                 bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
                 bloc('}', indent);
             },
