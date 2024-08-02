@@ -114,7 +114,9 @@ template <typename T> class Param : public IParam {
     /**
      * @brief return the read-only status of the parameter
      */
-    const bool readOnly() const override { return read_only_; }
+    const bool isReadOnly() const override { return read_only_; }
+
+    void setReadOnly(bool read_only) { read_only_ = read_only; }
 
     /**
      * @brief get the parameter name by language
@@ -138,7 +140,7 @@ template <typename T> class Param : public IParam {
     std::reference_wrapper<T> value_;
     std::reference_wrapper<Device> dm_;
     std::string widget_;
-    const bool read_only_;
+    bool read_only_;
 };
 
 }  // namespace lite
