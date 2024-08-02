@@ -112,6 +112,11 @@ template <typename T> class Param : public IParam {
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
 
     /**
+     * @brief return the read-only status of the parameter
+     */
+    const bool readOnly() const override { return read_only_; }
+
+    /**
      * @brief get the parameter name by language
      * @param language the language to get the name for
      * @return the name in the specified language, or an empty string if the language is not found
