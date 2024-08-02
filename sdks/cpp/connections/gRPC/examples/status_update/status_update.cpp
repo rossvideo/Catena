@@ -3,6 +3,7 @@
 //#include <JSON.h>
 
 #include <lite/include/Device.h>
+#include <lite/include/Param.h>
 
 #include <connections/gRPC/include/ServiceImpl.h>
 

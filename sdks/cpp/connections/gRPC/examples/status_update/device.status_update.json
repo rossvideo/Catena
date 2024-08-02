@@ -48,6 +48,7 @@
         "dashboard_UI": {
           "type": "STRING",
           "oid_aliases": ["0xFF0E"],
+          "read_only": true,
           "value": { "string_value": "eo://status_update.grid" }
         }
     }
