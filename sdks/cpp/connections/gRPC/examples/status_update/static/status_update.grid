@@ -16,6 +16,12 @@
       <tr>
          <param oid="button" showlabel="true" fill="both" widget="toggle"/>
       </tr>
+      <tr>
+         <param oid="offset" showlabel="true" fill="both" widget="slider-horizontal"/>
+      </tr>
+      <tr>
+         <param oid="button" showlabel="true" fill="both" widget="combo"/>
+      </tr>
 
    </table>
 </abs>
