@@ -20,6 +20,7 @@ namespace common {
 class IConstraint {
 public:
     IConstraint() : oid_{}, isShared_{} {}
+    IConstraint(std::string oid, bool shared) : oid_{oid}, isShared_{shared} {}
     virtual ~IConstraint() = default;
 
     /**
@@ -31,16 +32,15 @@ public:
 
     /**
      * @brief applies constraint to src and writes constrained value to dst
-     * @param src a catena::Value containing the value to apply the constraint to
-     * @param dst a catena::Value to write the constrained value to
+     * @param src a catena::Value to apply the constraint to
      */
-    virtual void apply(void* dst, const void* src) const = 0;
+    virtual void apply(void* src) const = 0;
 
     /**
      * @brief check if the constraint is shared
      * @return true if the constraint is shared, false otherwise
      */
-    bool isShared() const { return isShared_; }
+    inline bool getShared() const { return isShared_; }
     
     /**
      * @brief set the shared flag
@@ -52,7 +52,7 @@ public:
      * @brief get the oid of the constraint
      * @return the oid of the constraint
      */
-    const std::string& getOid() const { return oid_; }
+    inline const std::string& getOid() const { return oid_; }
 
     /**
      * @brief set the oid of the constraint

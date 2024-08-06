@@ -296,7 +296,7 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 }
                 {
                     Device::LockGuard lg(dm_);
-                    dstParam->fromProto(req_.value());
+                    dstParam->fromProto(*req_.mutable_value());
                     dm_.valueSetByClient.emit(req_.oid(), dstParam, req_.element_index());
                 }
                 status_ = CallStatus::kFinish;

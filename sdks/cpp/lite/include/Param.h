@@ -85,16 +85,20 @@ public:
 
     /**
      * @brief serialize the parameter value to protobuf
+     * @param dst the protobuf value to serialize to
      */
     void toProto(catena::Value& dst) const override;
 
     /**
      * @brief deserialize the parameter value from protobuf
+     * @param src the protobuf value to deserialize from
+     * @note this method may constrain the source value and modify it
      */
-    void fromProto(const catena::Value& src) override;
+    void fromProto(catena::Value& src) override;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
+     * @param param the protobuf param to serialize to
      */
     void toProto(catena::Param& param) const override {
         // type member
@@ -127,11 +131,13 @@ public:
 
     /**
      * @brief get the parameter type
+     * @return the parameter type
      */
     ParamType type() const override { return type_; }
 
     /**
      * @brief get the parameter name
+     * @return map of languages and corresponding names
      */
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
 

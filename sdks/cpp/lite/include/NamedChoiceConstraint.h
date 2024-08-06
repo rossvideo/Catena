@@ -2,7 +2,7 @@
 
 /**
  * @file NamedChoiceConstraint.h
- * @brief A constraint that checks if a value is within a named choice
+ * @brief A constraint that checks if a value is within some named choices
  * @author isaac.robert@rossvideo.com
  * @date 2024-07-25
  * @copyright Copyright (c) 2024 Ross Video
@@ -16,7 +16,7 @@
  * @brief Named choice constraint, ensures a value is within a named choice
  * @tparam T int or string
  */
-template <typename T> 
+template <typename T>
 class NamedChoiceConstraint : public catena::common::IConstraint {
 public:
     /**
@@ -34,59 +34,45 @@ public:
     /**
      * @brief initializer list for choices
      */
-    using ListInitializer = std::vector<std::pair<T, PolyglotText::ListInitializer>>;
+    using ListInitializer = std::initializer_list<std::pair<T, PolyglotText::ListInitializer>>;
 
 public:
     /**
      * @brief Construct a new Named Choice Constraint object
      * @param init the list of choices
+     * @param strict should the value be constrained if not in choices
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     * @note  the first choice provided will be the default for the constraint
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
-        : strict_{strict} {
-        if (init.empty()) {
-            default_ = T{};
-        } else {
-            default_ = init[0].first;
-                for (size_t i = 0; i < init.size(); ++i) {
-                choices_[init[i].first] = init[i].second;
-            }
-        }
-        this->setOid(oid);
-        this->setShared(shared);
-    }
+        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+        strict_{strict}, default_{init.begin()->first} {}
 
     /**
-     * @brief applies constraint to src and writes constrained value to dst
-     * @param src a catena::Value containing the value to apply the constraint to
-     * @param dst a catena::Value to write the constrained value to
+     * @brief applies choice constraint to a catena::Value if strict
+     * @param src a catena::Value to apply the constraint to
      */
-    // TODO update apply
-    void apply(void* dst, const void* src) const override {
+    void apply(void* src) const override {
+        auto& src_val = *reinterpret_cast<catena::Value*>(src);
+
         if constexpr(std::is_same<T, int32_t>::value) {
-            auto& src_val = *reinterpret_cast<const catena::Value*>(src);
             // ignore the request if src is not valid
             if (!src_val.has_int32_value()) { return; }
-            
-            auto& update = *reinterpret_cast<T*>(dst);
+
             // constrain if strict and src is not in choices
             if (strict_ && !choices_.contains(src_val.int32_value())) {
-                update = default_;
-            } else {
-                update = src_val.int32_value();
+                src_val.set_int32_value(default_);
             }
         }
-        
+
         if constexpr(std::is_same<T, std::string>::value) {
-            auto& src_val = *reinterpret_cast<const catena::Value*>(src);
             // ignore the request if src is not valid
             if (!src_val.has_string_value()) { return; }
 
-            auto& update = *reinterpret_cast<T*>(dst);
             // constrain if strict and src is not in choices
             if (strict_ && !choices_.contains(src_val.float32_value())) {
-                update = default_;
-            } else {
-                update = src_val.string_value();
+                src_val.set_string_value(default_);
             }
         } 
     }
@@ -119,6 +105,6 @@ public:
 
 private:
     Choices choices_; ///< the choices
-    bool strict_;                                 ///< should the value be constrained on apply
-    T default_;                             ///< the default value to constrain to
+    bool strict_;     ///< should the value be constrained on apply
+    T default_;       ///< the default value to constrain to
 };

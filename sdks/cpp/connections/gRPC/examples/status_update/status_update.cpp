@@ -118,7 +118,7 @@ void statusUpdateExample(){
              * Protobuf lite does not support converting messages to JSON strings.
              * @todo: Implement a toString method for catena values.
              */
-            std::cout << p->getOid() << " has been changed by client" << '\n';
+            std::cout << "signal recieved: " << p->getOid() << " has been changed by client" << '\n';
         });
         Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
         while (globalLoop) {
@@ -126,6 +126,7 @@ void statusUpdateExample(){
             {
                 Device::LockGuard lg(dm); 
                 aNumber.get()++;
+                std::cout << aNumber.getOid() << " set to " << aNumber.get() << '\n';
                 dm.valueSetByServer.emit("/counter", &aNumber, 0);
             }
         }

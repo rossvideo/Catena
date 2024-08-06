@@ -145,10 +145,11 @@ class CppGen {
                 if (desc.constraint.int32_range !== undefined) {
                     const cons = desc.constraint.int32_range;
                     constraint_name += `${name}ParamConstraint`;
+                    // collect range bounds
                     let fields = `${cons.min_value},${cons.max_value}`;
-                    if (cons.steps !== undefined) { fields += `,${cons.steps}`; }
-                    if (cons.display_min !== undefined) { fields += `,${cons.display_min}`; }
-                    if (cons.display_max !== undefined) { fields += `,${cons.display_max}`; }
+                    fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
+                    fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
+                    fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
                     bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
                 } else {
                     constraint_name += `${desc.constraint.ref_oid}`;
@@ -160,10 +161,11 @@ class CppGen {
                 if (desc.constraint.float_range !== undefined) {
                     const cons = desc.constraint.float_range;
                     constraint_name += `${name}ParamConstraint`;
+                    // collect range bounds
                     let fields = `${cons.min_value},${cons.max_value}`;
-                    if (cons.steps !== undefined) { fields += `,${cons.steps}`; }
-                    if (cons.display_min !== undefined) { fields += `,${cons.display_min}`; }
-                    if (cons.display_max !== undefined) { fields += `,${cons.display_max}`; }
+                    fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
+                    fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
+                    fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
                     bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
                 } else {
                     constraint_name += `${desc.constraint.ref_oid}`;
@@ -192,7 +194,7 @@ class CppGen {
                             fields += ',';
                         }
                     }
-                    let strict = cons.strict !== undefined ? cons.strict : false;
+                    let strict = true;
                     bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
                 } else {
                     constraint_name += `${desc.constraint.ref_oid}`;
@@ -380,7 +382,7 @@ class CppGen {
 
                 // instantiate the deserialize specialization
                 bloc(`template<>`, indent);
-                bloc(`void catena::lite::Param<${fqname}>::fromProto(const catena::Value& value) {`, indent);
+                bloc(`void catena::lite::Param<${fqname}>::fromProto(catena::Value& value) {`, indent);
                 bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
                 bloc('}', indent);
             },
