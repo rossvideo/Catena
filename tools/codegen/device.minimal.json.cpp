@@ -13,3 +13,4 @@ using catena::common::Scopes_e;
 using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;
 using catena::lite::StructInfo;
 using catena::lite::FieldInfo;
+catena::lite::Device dm {1, DetailLevel("FULL"), {Scope("monitor")(), Scope("operate")(), Scope("configure")(), Scope("administer")()}, Scope("operate")(), false, false};

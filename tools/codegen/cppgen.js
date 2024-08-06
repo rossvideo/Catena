@@ -20,6 +20,7 @@ limitations under the License.
 const fs = require('fs');
 const { get } = require('http');
 const path = require('node:path');
+const Device = require('./device');
 
 /**
  * writes a line of code to the file descriptor constructed
@@ -47,11 +48,21 @@ const kCppTypes = {
     "STRING": "std::string",
 }
 
-function initialCap(s) {
+/**
+ * 
+ * @param {string} s 
+ * @returns input with the first letter capitalized
+ */
+function initialCap(s) {s
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 
+/**
+ * 
+ * @param {string} s 
+ * @returns input surrounded by double quotes
+ */
 function quoted(s) {
     return `"${s}"`;
 }
@@ -122,8 +133,25 @@ class StructConverter {
     }
 }
 
+
+
+
+
+/**
+ * C++ code generator
+ */
 class CppGen {
-    constructor(pathname, output, validator) {
+    /**
+     * 
+     * @param {string} pathname to the device model's top-level json file
+     * @param {string} output folder for generated code
+     * @param {Validator} validator used to validate that descriptors match catena schemas
+     * @param {object} desc json descriptor
+     */
+    constructor(pathname, output, validator, desc) {
+        this.pathname = pathname;
+        this.validator = validator;
+        this.desc = desc;
         // extract schema name from input filename
         const info = path.parse(pathname).name.split('.');
         const schemaName = info[0];
@@ -133,10 +161,10 @@ class CppGen {
         this.namespace = info[1];
         const baseFilename = path.basename(pathname);
         this.headerFilename = `${baseFilename}.h`;
-        this.header = fs.openSync(path.join(output,this.headerFilename), 'w');
-        this.body = fs.openSync(path.join(output,`${baseFilename}.cpp`), 'w');
+        this.header = fs.openSync(path.join(output, this.headerFilename), 'w');
+        this.body = fs.openSync(path.join(output, `${baseFilename}.cpp`), 'w');
     
-        this.validator = validator;
+        
         let Hloc = new loc(this.header);
         hloc = Hloc.write.bind(Hloc);
         let Bloc = new loc(this.body);
@@ -350,8 +378,29 @@ class CppGen {
 //         }
 //     };
 
+    /**
+     * generate the code to instantiate the device model
+     */
+    device () {
+        const device = new Device(this.desc);
+        bloc(`catena::lite::Device dm {${device.argsToString()}};`);
+    }
+
+    params () {
+        if ("params" in this.desc) {
+            for (let oid in this.desc.params) {
+                const desc = this.desc.params[oid];
+                this.param(oid, desc, this.desc);
+            }   
+        }
+    }
+
+    /**
+     * generate header and body files to represent the device model
+     */
     generate() {
         this.init();
+        this.device();
         this.finish();
     }
 
@@ -363,6 +412,7 @@ class CppGen {
         hloc(`#include <lite/include/StructInfo.h>`);
         hloc(`extern catena::lite::Device dm;`);
         hloc(`namespace ${this.namespace} {`)
+
         bloc(warning);
         bloc(`#include "${this.headerFilename}"`);
         bloc(`#include <lite/include/IParam.h>`);
