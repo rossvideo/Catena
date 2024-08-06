@@ -1,84 +1,110 @@
 {
-    "slot": 1,
-    "multi_set_enabled": true,
-    "detail_level": "FULL",
-    "access_scopes": ["monitor", "operate", "configure", "administer"],
-    "default_scope": "operate",
-    "language_packs": {
-      "packs": {
-        "es": {
-          "name": "Spanish",
-          "words": {
-            "greeting": "Hola",
-            "parting": "Adiós"
-          }
-        },
-        "en": {
-          "name": "English",
-          "words": {
-            "greeting": "Hello",
-            "parting": "Goodbye"
-          }
-        },
-        "fr": {
-          "name": "French",
-          "words": {
-            "greeting": "Bonjour",
-            "parting": "Adieu"
-          }
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor", "operate", "configure", "administer"],
+  "default_scope": "operate",
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+  "params": {
+    "counter": {
+      "type": "INT32",
+      "name": {
+        "display_strings": {
+          "en": "Counter",
+          "es": "Contador",
+          "fr": "Compteur"
+        }
+      },
+      "value": { "int32_value": 0 }
+    },
+    "hello": {
+      "type": "STRING",
+      "name": {
+        "display_strings": {
+          "en": "Text Box",
+          "es": "Caja de texto",
+          "fr": "Boîte de texte"
+        }
+      },
+      "value": { "string_value": "Hello, World!" }
+    },
+    "button": {
+      "type": "INT32",
+      "name": {
+        "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" }
+      },
+      "value": { "int32_value": 0 },
+      "widget": "button",
+      "constraint": {
+        "type": "INT_CHOICE",
+        "int32_choice": {
+          "choices": [
+            {
+              "name": {
+                "display_strings": {
+                  "en": "Off",
+                  "es": "Apagado",
+                  "fr": "Éteint"
+                }
+              },
+              "value": 0
+            },
+            {
+              "name": {
+                "display_strings": {
+                  "en": "On",
+                  "es": "Encendido",
+                  "fr": "Allumé"
+                }
+              },
+              "value": 1
+            }
+          ]
         }
       }
     },
-    "params": {
-        "counter": {
-            "type": "INT32",
-            "name": {"display_strings": {"en": "Counter", "es": "Contador", "fr": "Compteur"}},
-            "value": {"int32_value": 0}
-        },
-        "hello": {
-            "type": "STRING",
-            "name": {"display_strings": {"en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte"}},
-            "value": {"string_value": "Hello, World!"}
-        },
-        "button": {
-            "type":"INT32",
-            "name": {"display_strings": {"en": "Button", "es": "Botón", "fr": "Bouton"}},
-            "value": {"int32_value": 0},
-            "widget": "button",
-            "constraint": {
-              "type": "INT_CHOICE",
-              "int32_choice": {
-                "choices": [
-                  {
-                    "name": {"display_strings": {"en": "Off", "es": "Apagado", "fr": "Éteint"}},
-                    "value": 0
-                  },
-                  {
-                    "name": {"display_strings": {"en": "On", "es": "Encendido", "fr": "Allumé"}},
-                    "value": 1
-                  }
-                ]
-              }
-            }
-        },
-        "offset": {
-            "type": "INT32",
-            "name": {"display_strings": {"en": "offset"}},
-            "value": {"int32_value": 0},
-            "constraint": {
-              "type": "INT_RANGE",
-              "int32_range": {
-                "min_value": -10,
-                "max_value": 10,
-                "step": 1
-              }
-            }
-        },
-
-        "dashboard_UI": {
-          "type": "STRING",
-          "oid_aliases": ["0xFF0E"],
-          "value": { "string_value": "eo://status_update.grid" }
+    "offset": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "offset" } },
+      "value": { "int32_value": 0 },
+      "constraint": {
+        "type": "INT_RANGE",
+        "int32_range": {
+          "min_value": -10,
+          "max_value": 10,
+          "step": 1
         }
+      }
+    },
+
+    "dashboard_UI": {
+      "type": "STRING",
+      "oid_aliases": ["0xFF0E"],
+      "value": { "string_value": "eo://status_update.grid" }
     }
+  }
 }

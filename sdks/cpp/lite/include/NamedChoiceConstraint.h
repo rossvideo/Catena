@@ -12,57 +12,82 @@
 #include <google/protobuf/message_lite.h>
 #include <lite/include/PolyglotText.h>
 
-using catena::common::IConstraint;
-using catena::lite::PolyglotText;
-
 /**
- * @brief Named choice constraint, ensures a value is within a named choice.
+ * @brief Named choice constraint, ensures a value is within a named choice
+ * @tparam T int or string
  */
 template <typename T> 
-class NamedChoiceConstraint : public IConstraint {
+class NamedChoiceConstraint : public catena::common::IConstraint {
+public:
+    /**
+     * @brief local alias for IConstraint
+     */
+    using IConstraint = catena::common::IConstraint;
+    /**
+     * @brief local alias for PolyglotText
+     */
+    using PolyglotText = catena::lite::PolyglotText;
+    /**
+     * @brief map of choices with their display names
+     */
+    using Choices = std::unordered_map<T, PolyglotText>;
+    /**
+     * @brief initializer list for choices
+     */
+    using ListInitializer = std::vector<std::pair<T, PolyglotText::ListInitializer>>;
+
 public:
     /**
      * @brief Construct a new Named Choice Constraint object
      * @param init the list of choices
      */
-    NamedChoiceConstraint(std::vector<std::pair<T, PolyglotText::ListInitializer>> init,
-        bool strict, std::string oid, bool shared)
-        : strict_{strict}, default_{init[0].first} {
-        for (size_t i = 0; i < init.size(); ++i) {
-            choices_[init[i].first] = init[i].second;
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+        : strict_{strict} {
+        if (init.empty()) {
+            default_ = T{};
+        } else {
+            default_ = init[0].first;
+                for (size_t i = 0; i < init.size(); ++i) {
+                choices_[init[i].first] = init[i].second;
+            }
         }
-        setOid(oid);
-        setShared(shared);
+        this->setOid(oid);
+        this->setShared(shared);
     }
 
     /**
-     * @brief set the value in dst to the value in src if the value in src is valid 
-     * @param dst the value to write the constrained value to
-     * @param src the value to read and apply the constraint on
+     * @brief applies constraint to src and writes constrained value to dst
+     * @param src a catena::Value containing the value to apply the constraint to
+     * @param dst a catena::Value to write the constrained value to
      */
-    void apply(void* dst, void* src) const override {
-        auto& update = *reinterpret_cast<catena::Value*>(src);
-        
+    // TODO update apply
+    void apply(void* dst, const void* src) const override {
         if constexpr(std::is_same<T, int32_t>::value) {
+            auto& src_val = *reinterpret_cast<const catena::Value*>(src);
             // ignore the request if src is not valid
-            if (!update.has_int32_value()) { return; }
-
-            // constrain the choice if strict 
-            if (strict_ && !choices_.contains(update.int32_value())) {
-                update.set_int32_value(default_);
+            if (!src_val.has_int32_value()) { return; }
+            
+            auto& update = *reinterpret_cast<T*>(dst);
+            // constrain if strict and src is not in choices
+            if (strict_ && !choices_.contains(src_val.int32_value())) {
+                update = default_;
+            } else {
+                update = src_val.int32_value();
             }
-            reinterpret_cast<catena::Value*>(dst)->set_int32_value(update.int32_value());
         }
-
+        
         if constexpr(std::is_same<T, std::string>::value) {
+            auto& src_val = *reinterpret_cast<const catena::Value*>(src);
             // ignore the request if src is not valid
-            if (!update.has_string_value()) { return; }
+            if (!src_val.has_string_value()) { return; }
 
-            // constrain the choice if strict 
-            if (strict_ && !choices_.contains(update.float32_value())) {
-                update.set_float32_value(default_);
+            auto& update = *reinterpret_cast<T*>(dst);
+            // constrain if strict and src is not in choices
+            if (strict_ && !choices_.contains(src_val.float32_value())) {
+                update = default_;
+            } else {
+                update = src_val.string_value();
             }
-            reinterpret_cast<catena::Value*>(dst)->set_string_value(update.string_value());
         } 
     }
 
@@ -93,7 +118,7 @@ public:
     }
 
 private:
-    std::unordered_map<T, PolyglotText> choices_; ///< the choices
+    Choices choices_; ///< the choices
     bool strict_;                                 ///< should the value be constrained on apply
-    const T default_;                             ///< the default value to constrain to
+    T default_;                             ///< the default value to constrain to
 };

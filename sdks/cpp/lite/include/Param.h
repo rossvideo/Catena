@@ -1,5 +1,15 @@
 #pragma once
 
+/**
+ * @file Param.h
+ * @brief Param provides convenient access to parameter values
+ * @author john.naylor@rossvideo.com
+ * @author john.danen@rossvideo.com
+ * @author isaac.robert@rossvideo.com
+ * @date 2024-07-07
+ * @copyright Copyright (c) 2024 Ross Video
+ */
+
 #include <lite/include/IParam.h>
 #include <lite/include/Device.h>
 #include <lite/include/StructInfo.h>

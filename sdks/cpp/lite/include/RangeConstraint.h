@@ -3,7 +3,8 @@
 /**
  * @file RangeConstraint.h
  * @brief A constraint that checks if a value is within a range
- * @author john.naylor@rossvideo.com, isaac.robert@rossvideo.com
+ * @author john.naylor@rossvideo.com
+ * @author isaac.robert@rossvideo.com
  * @date 2024-07-07
  * @copyright Copyright (c) 2024 Ross Video
  */
@@ -11,13 +12,19 @@
 #include <common/include/IConstraint.h>
 #include  <google/protobuf/message_lite.h>
 
-using catena::common::IConstraint;
 
 /**
- * @brief Range constraint, ensures a value is within a range.
+ * @brief Range constraint, ensures a value is within a range
+ * @tparam T int or float
  */
 template <typename T> 
-class RangeConstraint : public IConstraint {
+class RangeConstraint : public catena::common::IConstraint {
+public:
+    /**
+     * @brief local alias for IConstraint
+     */
+    using IConstraint = catena::common::IConstraint;
+
 public:
     /**
      * @brief Construct a new Range Constraint object
@@ -26,8 +33,8 @@ public:
      */
     RangeConstraint(T min, T max, std::string oid, bool shared)
         : min_(min), max_(max), step_{1}, display_min_{min}, display_max_{max} {
-        setOid(oid);
-        setShared(shared);
+        this->setOid(oid);
+        this->setShared(shared);
     }
 
     /**
@@ -44,34 +51,43 @@ public:
             setShared(shared);
         }
 
-    void apply(void* dst, void* src) const override {
-        auto& update = *reinterpret_cast<catena::Value*>(src);
-
+    /**
+     * @brief applies constraint to src and writes constrained value to dst
+     * @param src a catena::Value containing the value to apply the constraint to
+     * @param dst a catena::Value to write the constrained value to
+     */
+    // TODO update apply
+    void apply(void* dst, const void* src) const override {
         if constexpr(std::is_same<T, int32_t>::value) {
-            std::cout << "applying int32_t constraint to: " << update.int32_value() << std::endl;
-
+            auto& src_val = *reinterpret_cast<const catena::Value*>(src);
             // ignore the request if src is not valid
-            if (!update.has_int32_value()) { return; }
-
-            if (update.int32_value() < min_) {
-                update.set_int32_value(min_);
-            } else if (update.int32_value() > max_) {
-                update.set_int32_value(max_);
-                std::cout << "setting to max: " << update.int32_value() << std::endl;
+            if (!src_val.has_int32_value()) { return; }
+            
+            auto& update = *reinterpret_cast<T*>(dst);
+            // constrain if not within allowed range
+            if (src_val.int32_value() < min_) {
+                update = min_;
+            } else if (src_val.int32_value() > max_) {
+                update = max_;
+            } else {
+                update = src_val.int32_value();
             }
-            reinterpret_cast<catena::Value*>(dst)->set_int32_value(update.int32_value());
         }
         
         if constexpr(std::is_same<T, float>::value) {
+            auto& src_val = *reinterpret_cast<const catena::Value*>(src);
             // ignore the request if src is not valid
-            if (!update.has_float32_value()) { return; }
+            if (!src_val.has_float32_value()) { return; }
 
-            if (update.float32_value() < min_) {
-                update.set_float32_value(min_);
-            } else if (update.float32_value() > max_) {
-                update.set_float32_value(max_);
+            auto& update = *reinterpret_cast<T*>(dst);
+            // constrain if not within allowed range
+            if (src_val.float32_value() < min_) {
+                update = min_;
+            } else if (src_val.float32_value() > max_) {
+                update = max_;
+            } else {
+                update = src_val.float32_value();
             }
-            reinterpret_cast<catena::Value*>(dst)->set_float32_value(update.float32_value());
         }
     }
 

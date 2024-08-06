@@ -3,7 +3,8 @@
 /**
  * @file IConstraint.h
  * @brief Interface for constraints
- * @author john.naylor@rossvideo.com, isaac.robert@rossvideo.com
+ * @author john.naylor@rossvideo.com
+ * @author isaac.robert@rossvideo.com
  * @date 2024-07-07
  * @copyright Copyright (c) 2024 Ross Video
  */
@@ -22,12 +23,6 @@ public:
     virtual ~IConstraint() = default;
 
     /**
-     * @brief check if the underlying parameter value lies within the constraint.
-     * @return true if the constraint is valid, false otherwise
-     */
-    // virtual bool isValid() const = 0;
-
-    /**
      * @brief serialize the constraint to a protobuf message
      * @param constraint the protobuf message to populate, NB, implementations should 
      * dynamically cast this to catena::Constraint
@@ -36,10 +31,10 @@ public:
 
     /**
      * @brief applies constraint to src and writes constrained value to dst
-     * @param src the value to read and apply the constraint on
-     * @param dst the value to write the constrained value to
+     * @param src a catena::Value containing the value to apply the constraint to
+     * @param dst a catena::Value to write the constrained value to
      */
-    virtual void apply(void* dst, void* src) const = 0;
+    virtual void apply(void* dst, const void* src) const = 0;
 
     /**
      * @brief check if the constraint is shared
