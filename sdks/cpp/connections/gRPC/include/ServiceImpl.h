@@ -3,7 +3,7 @@
 #include <common/include/vdk/signals.h>
 
 #include <lite/include/Device.h>
-#include <lite/include/Param.h>
+#include <lite/include/IParam.h>
 
 #include <lite/service.grpc.pb.h>
 

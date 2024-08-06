@@ -32,25 +32,13 @@
   "params": {
     "counter": {
       "type": "INT32",
-      "name": {
-        "display_strings": {
-          "en": "Counter",
-          "es": "Contador",
-          "fr": "Compteur"
-        }
-      },
+      "name": {"display_strings": {"en": "Counter", "es": "Contador", "fr": "Compteur"}},
       "value": { "int32_value": 0 }
     },
     "hello": {
       "type": "STRING",
-      "name": {
-        "display_strings": {
-          "en": "Text Box",
-          "es": "Caja de texto",
-          "fr": "Boîte de texte"
-        }
-      },
-      "value": { "string_value": "Hello, World!" }
+      "name": {"display_strings": {"en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte"}},
+      "value": {"string_value": "Hello, World!"}
     },
     "button": {
       "type": "INT32",
@@ -100,10 +88,10 @@
         }
       }
     },
-
     "dashboard_UI": {
       "type": "STRING",
       "oid_aliases": ["0xFF0E"],
+      "read_only": true,
       "value": { "string_value": "eo://status_update.grid" }
     }
   }

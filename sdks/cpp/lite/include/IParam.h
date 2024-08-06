@@ -47,6 +47,8 @@ class IParam {
 
     virtual void setOid(const std::string& oid) { oid_ = oid; };
 
+    virtual const bool isReadOnly() const = 0;
+
    protected:
     std::string oid_;
 };

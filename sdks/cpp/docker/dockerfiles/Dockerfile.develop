@@ -1,0 +1,21 @@
+FROM ghcr.io/rossvideo/catena-toolchain:latest
+
+LABEL org.opencontainers.image.source=https://github.com/rossvideo/Catena
+LABEL org.opencontainers.image.name="catena-develop"
+LABEL org.opencontainers.image.description="Development environment for the Catena C++ SDK"
+LABEL org.opencontainers.image.licenses=CC-BY-ND-4.0
+LABEL org.opencontainers.image.vendor="Ross Video"
+LABEL org.opencontainers.image.author="isaac.robert@rossvideo.com"
+
+
+ARG USER_UID=1000
+ARG USER_GID=1000
+ARG USERNAME=developer
+ARG GROUPNAME=developer
+
+RUN groupadd -g ${USER_GID} ${GROUPNAME} && \
+    useradd -m -s /bin/bash -u ${USER_UID} -g ${USER_GID} ${USERNAME}
+
+USER ${USERNAME}
+
+WORKDIR /home/${USERNAME}

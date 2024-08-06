@@ -289,6 +289,11 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
                     throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
                 }
+                if (dstParam->isReadOnly()) {
+                    std::stringstream why;
+                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' is read-only";
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
+                }
                 {
                     Device::LockGuard lg(dm_);
                     dstParam->fromProto(req_.value());

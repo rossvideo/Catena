@@ -71,8 +71,8 @@ public:
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, 
-        const std::string& widget, catena::common::IConstraint* constraint, const std::string& oid, Device& dm)
+    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget, 
+        const bool read_only, catena::common::IConstraint* constraint, const std::string& oid, Device& dm)
         : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, constraint_{constraint}, dm_{dm} {
         setOid(oid);
         dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
@@ -136,6 +136,13 @@ public:
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
 
     /**
+     * @brief return the read-only status of the parameter
+     */
+    const bool isReadOnly() const override { return read_only_; }
+
+    void setReadOnly(bool read_only) { read_only_ = read_only; }
+
+    /**
      * @brief get the parameter name by language
      * @param language the language to get the name for
      * @return the name in the specified language, or an empty string if the language is not found
@@ -158,6 +165,7 @@ private:
     std::reference_wrapper<T> value_;
     std::reference_wrapper<Device> dm_;
     std::string widget_;
+    bool read_only_;
 };
 
 }  // namespace lite

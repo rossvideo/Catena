@@ -284,6 +284,13 @@ class CppGen {
             }
             ans += `${constraint_init}`;
 
+            // add the read_only flag
+            if (desc.read_only !== undefined && desc.read_only) {
+                ans += `,true`;
+            } else {
+                ans += `,false`;
+            }
+
             return ans;
         },
         this.params = {
