@@ -119,7 +119,25 @@ class Param extends CppCtor {
                     }
                 );
                 return mappedFields.join(',');
+            },
+            struct_array_values: (value) => {
+                let arr = value.struct_values;
+                let mappedArr = arr.map(
+                    item => {
+                        let fields = item.fields;
+                        let fieldsArr = Object.keys(fields);
+                        let mappedFields = fieldsArr.map(
+                            field => {
+                                let key = Object.keys(fields[field].value)[0];
+                                return valueObject[key](fields[field].value[key]);
+                            }
+                        );
+                        return `{${mappedFields.join(',')}}`;
+                    }
+                );
+                return mappedArr.join(',');
             }
+
         }
         if ("value" in desc) {
             let key = Object.keys(desc.value)[0];
