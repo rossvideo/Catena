@@ -276,6 +276,13 @@ class CppGen {
                 widget_init += '""';
             }
             ans += `${widget_init},`;
+
+            // add the read_only flag
+            if (desc.read_only !== undefined && desc.read_only) {
+                ans += `true,`;
+            } else {
+                ans += `false,`;
+            }
             
             // construct and add the constraint if it exists
             let constraint_init = '&';
@@ -285,13 +292,6 @@ class CppGen {
                 constraint_init = 'nullptr';
             }
             ans += `${constraint_init}`;
-
-            // add the read_only flag
-            if (desc.read_only !== undefined && desc.read_only) {
-                ans += `,true`;
-            } else {
-                ans += `,false`;
-            }
 
             return ans;
         },
