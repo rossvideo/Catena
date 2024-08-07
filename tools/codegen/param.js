@@ -100,20 +100,31 @@ class Param extends CppCtor {
         this.arguments.push(parentArg);
     }
 
-    initializer () {
-        let desc = this.deviceParams[this.oid];
+    initializer (desc) {
         const valueObject = {
-            string_value: (value) => { return `{"${value}"}`; },
-            int32_value: (value) => { return `{${value}}`; },
-            float32_value: (value) => { return `{${value}}`; },
-            string_array_values: (value) => { return `{${value.strings.map(v => `"${v}"`).join(', ')}}`; },
-            int32_array_values: (value) => { return `{${value.ints.join(', ')}}`; },
-            float32_array_values: (value) => { return `{${value.floats.join(', ')}}`; }
+            string_value: (value) => { return `"${value}"`; },
+            int32_value: (value) => { return `${value}`; },
+            float32_value: (value) => { return `${value}`; },
+            string_array_values: (value) => { return `${value.strings.map(v => `"${v}"`).join(', ')}`; },
+            int32_array_values: (value) => { return `${value.ints.join(', ')}`; },
+            float32_array_values: (value) => { return `${value.floats.join(', ')}`; },
+            struct_value: (value) => {
+                let fields = value.fields;
+                let fieldsArr = Object.keys(fields);
+                // recursively call the correct valueObject function on each field
+                let mappedFields = fieldsArr.map(
+                    field => {
+                        let key = Object.keys(fields[field].value)[0];
+                        return valueObject[key](fields[field].value[key]);
+                    }
+                );
+                return mappedFields.join(',');
+            }
         }
         if ("value" in desc) {
             let key = Object.keys(desc.value)[0];
             if (key in valueObject) {
-                this.init = valueObject[key](desc.value[key]);
+                this.init = `{${valueObject[key](desc.value[key])}}`;
             } else {
                 throw new Error(`Unknown value type ${key}`);
             }   
@@ -131,7 +142,7 @@ class Param extends CppCtor {
 
     params (hloc, bloc) {
         if ("params" in this.desc) {
-            
+
         }
     }
 }

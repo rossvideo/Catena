@@ -393,7 +393,7 @@ class CppGen {
         let args = p.argsToString();
         let type = p.objectType();
         let name = p.objectName();
-        let init = p.initializer();
+        let init = p.initializer(params[oid]);
         bloc(`${type} ${name} ${init};`, indent);
         bloc(`catena::lite::Param<${type}> ${name}Param {${args}};`, indent);
     }
