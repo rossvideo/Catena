@@ -21,6 +21,7 @@ const fs = require('fs');
 const { get } = require('http');
 const path = require('node:path');
 const Device = require('./device');
+const Param = require('./param');
 
 /**
  * writes a line of code to the file descriptor constructed
@@ -48,14 +49,7 @@ const kCppTypes = {
     "STRING": "std::string",
 }
 
-/**
- * 
- * @param {string} s 
- * @returns input with the first letter capitalized
- */
-function initialCap(s) {s
-    return s.charAt(0).toUpperCase() + s.slice(1);
-}
+
 
 
 /**
@@ -389,10 +383,19 @@ class CppGen {
     params () {
         if ("params" in this.desc) {
             for (let oid in this.desc.params) {
-                const desc = this.desc.params[oid];
-                this.param(oid, desc, this.desc);
+                this.subparam (oid, this.desc.params, 0);
             }   
         }
+    }
+
+    subparam (oid, params, indent) {
+        let p = new Param(oid, params);
+        let args = p.argsToString();
+        let type = p.objectType();
+        let name = p.objectName();
+        let init = p.initializer();
+        bloc(`${type} ${name} ${init};`, indent);
+        bloc(`catena::lite::Param<${type}> ${name}Param {${args}};`, indent);
     }
 
     /**
@@ -401,6 +404,7 @@ class CppGen {
     generate() {
         this.init();
         this.device();
+        this.params();
         this.finish();
     }
 
@@ -434,26 +438,26 @@ class CppGen {
         hloc(`} // namespace ${this.namespace}`);
     }
 
-    param (oid, desc, device) {
-        if (!desc.type in this.params) {
-            throw new Error(`No convertor found for ${oid} of type ${desc.type}`);
-        }
-        let template_param = undefined;
-        if ("template_oid" in desc) {
-            let template_oid = desc.template_oid.replace(/^\//, '');
-            template_param = device.params[template_oid];
-            if (template_param === undefined) {
-                throw new Error(`Could not find template ${template_oid} for ${oid}`);
-            }
-            if (template_param.type !== desc.type) {
-                throw new Error(`Template ${template_oid} type ${template_param.type} does not match ${oid} type ${desc.type}`);
-            }
-            if (desc.params !== undefined) {
-                throw new Error(`Param ${oid} is based off a template so it can't have params`);
-            }
-        } 
-        return this.params[desc.type](oid, desc, template_param);
-    }
+    // param (oid, desc, device) {
+    //     if (!desc.type in this.params) {
+    //         throw new Error(`No convertor found for ${oid} of type ${desc.type}`);
+    //     }
+    //     let template_param = undefined;
+    //     if ("template_oid" in desc) {
+    //         let template_oid = desc.template_oid.replace(/^\//, '');
+    //         template_param = device.params[template_oid];
+    //         if (template_param === undefined) {
+    //             throw new Error(`Could not find template ${template_oid} for ${oid}`);
+    //         }
+    //         if (template_param.type !== desc.type) {
+    //             throw new Error(`Template ${template_oid} type ${template_param.type} does not match ${oid} type ${desc.type}`);
+    //         }
+    //         if (desc.params !== undefined) {
+    //             throw new Error(`Param ${oid} is based off a template so it can't have params`);
+    //         }
+    //     } 
+    //     return this.params[desc.type](oid, desc, template_param);
+    // }
 };
 
 module.exports = CppGen;
