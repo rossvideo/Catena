@@ -24,7 +24,7 @@
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment version")
 
-project(CATENA_CPP_SDK VERSION 0.0.1 LANGUAGES C CXX)
+project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
 # pull in the protobuf functions
 include(${CMAKE_CURRENT_SOURCE_DIR}/ProtobufFunctions.cmake)
@@ -66,7 +66,13 @@ set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
 set(_PROTOBUF_LIBPROTOBUF_LITE protobuf::libprotobuf-lite)
 set(_REFLECTION gRPC::grpc++_reflection)
 if(CMAKE_CROSSCOMPILING)
+
+  # Change protobuf::protoc to reference the protoc executable found on the host system
   find_program(_PROTOBUF_PROTOC protoc)
+  get_target_property(protoc_config protobuf::protoc IMPORTED_CONFIGURATIONS)
+  set_target_properties(protobuf::protoc PROPERTIES IMPORTED_LOCATION_${protoc_config} ${_PROTOBUF_PROTOC})
+  get_target_property(imported_location protobuf::protoc IMPORTED_LOCATION_${protoc_config})
+  message(STATUS "Using protoc compiler: ${imported_location}")
 else()
   set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
 endif()
@@ -98,26 +104,6 @@ else()
   message(STATUS "CPP = ${CPP}")
 endif()
 
-
-# Identify Catena proto folder as interface variable
-#
-set (relative_interface "../../interface/")
-cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
-cmake_path(SET catena_interface_dir NORMALIZE ${interface})
-message(STATUS "Catena interface directory: ${catena_interface_dir}")
-
-# this is the list of proto files to convert to implementations in
-# various languages
-#
-set(proto_stems 
-  "language"
-  "param"
-  "externalobject"
-  "constraint"
-  "device"
-  "menu"
-)
-
 # Check for invalid connection types
 set(ALLOWED_CONNECTIONS "gRPC")
 foreach(conn ${CONNECTIONS})
@@ -134,17 +120,19 @@ list(FIND CONNECTIONS "REST" _REST)
 list(FIND CONNECTIONS "WSS" _WSS)
 if (${_gRPC} GREATER -1)
   message(STATUS "gRPC connection enabled")
-  list(APPEND proto_stems "service")
+  set(gRPC_enabled TRUE)
 endif()
 if (${_REST} GREATER -1)
   message(STATUS "REST connection enabled")
+  set(REST_enabled TRUE)
 endif()
 if (${_WSS} GREATER -1)
   message(STATUS "WSS connection enabled")
+  set(WSS_enabled TRUE)
 endif()
 
 # Check that at least one connection type is specified
-if (${_gRPC} EQUAL -1 AND ${_REST} EQUAL -1 AND ${_WSS} EQUAL -1)
+if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
   message(FATAL_ERROR "Error: At least one connection type must be specified.")
 endif()
 
@@ -152,64 +140,94 @@ endif()
 if (NOT CATENA_MODELS)
   set(CATENA_MODELS "lite")
 endif()
-
 set(ALLOWED_MODELS "full" "lite")
-foreach(_model ${CATENA_MODELS})
 
+
+# Identify Catena proto folder as interface variable
+set (relative_interface "../../interface/")
+cmake_path(ABSOLUTE_PATH relative_interface OUTPUT_VARIABLE interface)
+cmake_path(SET catena_interface_dir NORMALIZE ${interface})
+message(STATUS "Catena interface directory: ${catena_interface_dir}")
+
+# this is the list of proto files to convert to implementations in
+# various languages
+set(proto_stems 
+  "language"
+  "param"
+  "externalobject"
+  "constraint"
+  "device"
+  "menu"
+)
+if(gRPC_enabled)
+  list(APPEND proto_stems "service")
+endif()
+message(STATUS "proto_stems: ${proto_stems}")
+
+foreach(_model ${CATENA_MODELS})
   # Check if the model is valid
   if (NOT _model IN_LIST ALLOWED_MODELS)
     message(FATAL_ERROR "Error: Unknown Catena Model specified: ${_model}")
   endif()
+  message(STATUS "model: ${_model}")
 
-  preprocess_protobuf_files(${catena_interface_dir} "${proto_stems}" ${_model})
-  generate_cpp_protobuf_sources ("${proto_stems}" ${_model} ${_gRPC})
-
-  set (protos ${${_model}_protos})
-  set (sources ${${_model}_sources})
-  set (intermediates ${${_model}_intermediates})
-
-  message(STATUS sources: ${sources})
-  message(STATUS protos: ${protos})
-  message(STATUS intermediates: "${intermediates}")
-
-
-
-  if (_gRPC GREATER -1)
+  if (gRPC_enabled)
     set(proto_interface "proto_interface_${_model}_grpc")
   else()
     set(proto_interface "proto_interface_${_model}")
   endif()
+  message(STATUS "Building library: ${proto_interface}")
 
-  set_source_files_properties(${sources} PROPERTIES GENERATED TRUE)
-  add_library(${proto_interface} STATIC ${sources})
-  foreach (target ${intermediates})
-    message(STATUS "Adding dependency: ${target}")
-    add_dependencies(${proto_interface} ${target})
-  endforeach()
+  add_library(${proto_interface} STATIC)
+
+  # preprocess the proto files and add them to proto_interface
+  preprocess_protobuf_files("${catena_interface_dir}" "${proto_stems}" "${proto_interface}" "${_model}")
+
+  # use the protobuf generate function provided by the protobuf package
+  protobuf_generate(
+    TARGET ${proto_interface}
+    APPEND_PATH FALSE
+    PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/${_model}
+    IMPORT_DIRS ${CMAKE_BINARY_DIR}/${_model}
+  )
+
+  if(gRPC_enabled)
+    # generate the gRPC sources
+    protobuf_generate(
+      PROTOS ${CMAKE_BINARY_DIR}/${_model}/service.proto
+      LANGUAGE grpc
+      GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
+      APPEND_PATH FALSE
+      PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/${_model}
+      PLUGIN "protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+      OUT_VAR output
+    )
+    target_sources(${proto_interface} PRIVATE ${output})
+  endif()
   
   # Set the library's output directory
   set_target_properties(${proto_interface} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
   )
-  target_include_directories(${proto_interface} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${PROTOBUF_INCLUDE_DIRS})
-  target_compile_features(${proto_interface} PUBLIC cxx_std_20)
-  
 
-  if (_gRPC GREATER -1)
+  if (gRPC_enabled)
+    target_link_libraries(${proto_interface} ${_GRPC_GRPCPP})
+    
     if (${_model} STREQUAL "full")
-      target_link_libraries(${proto_interface} ${_GRPC_GRPCPP} ${_REFLECTION} ${_PROTOBUF_LIBPROTOBUF})
-    else()
-      target_link_libraries(${proto_interface} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF_LITE})
-    endif()
-  else()
-    if (${_model} STREQUAL "full")
-      target_link_libraries(${proto_interface}  ${_PROTOBUF_LIBPROTOBUF})
-    else()
-      target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
+      target_link_libraries(${proto_interface} ${_REFLECTION})
     endif()
   endif()
 
+  if (${_model} STREQUAL "full")
+    target_link_libraries(${proto_interface}  ${_PROTOBUF_LIBPROTOBUF})
+  else()
+    target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
+  endif()
+  
+  target_include_directories(${proto_interface} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${PROTOBUF_INCLUDE_DIRS})
+  target_compile_features(${proto_interface} PUBLIC cxx_std_20)
+  
 endforeach()
 
 # add clean target for the protobuf generated files
