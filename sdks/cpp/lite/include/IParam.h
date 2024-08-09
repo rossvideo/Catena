@@ -22,15 +22,16 @@ class IParam {
 
     /**
      * @brief serialize the parameter value to protobuf
-     * @param value the protobuf value to serialize to
+     * @param dst the protobuf value to serialize to
      */
-    virtual void toProto(catena::Value& value) const = 0;
+    virtual void toProto(catena::Value& dst) const = 0;
     
     /**
-     * @brief deserialize the parameter value from protobufi
-     * @param value the protobuf value to deserialize from
+     * @brief deserialize the parameter value from protobuf
+     * @param src the protobuf value to deserialize from
+     * @note this method may constrain the source value and modify it
      */
-    virtual void fromProto(const catena::Value& value) = 0;
+    virtual void fromProto(catena::Value& src) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
@@ -42,10 +43,15 @@ class IParam {
 
     /**
      * @brief return the oid of the param
+     * @return the oid of the param
      */
-    virtual const std::string& getOid() const { return oid_; };
+    inline const std::string& getOid() const { return oid_; };
 
-    virtual void setOid(const std::string& oid) { oid_ = oid; };
+    /**
+     * @brief set the oid of the param
+     * @param oid the new oid to set
+     */
+    void setOid(const std::string& oid) { oid_ = oid; };
 
     virtual const bool isReadOnly() const = 0;
 
