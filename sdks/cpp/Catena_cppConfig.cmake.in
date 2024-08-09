@@ -1,0 +1,18 @@
+set(CATENA_VERSION 0.0.1)
+
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Find Protobuf installation
+find_dependency(Protobuf)
+find_dependency(gRPC)
+
+include(GNUInstallDirs)
+
+include("${CMAKE_CURRENT_LIST_DIR}/Catena_cppTargets.cmake")
+
+# set_and_check(CATENA_INCLUDE_DIR "@CATENA_INCLUDE_INSTALL_DIR@")
+# set_and_check(CATENA_LIB_DIR "@CATENA_LIB_INSTALL_DIR@")
+
+check_required_components(Catena_cpp)

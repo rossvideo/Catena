@@ -50,6 +50,7 @@ add_library(${target} STATIC
     src/StructInfo.cpp
     src/PolyglotText.cpp
 )
+add_library(Catena_cpp::lite ALIAS ${target})
 
 add_dependencies(${target} catena_common)
 add_dependencies(${target} ${proto_interface})
@@ -59,13 +60,10 @@ message("Prefix Path: ${CMAKE_PREFIX_PATH}")
 target_include_directories(
     ${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>/common/include
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
 )
 
 target_link_libraries(${target}
@@ -73,6 +71,18 @@ target_link_libraries(${target}
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/lite
+)
+
+install(TARGETS ${target} 
+    EXPORT Catena_cppTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+)
 
 add_subdirectory(examples)
 

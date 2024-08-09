@@ -32,6 +32,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/ProtobufFunctions.cmake)
 # export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Define standard installation directories for the target system
+include(GNUInstallDirs)
+
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
@@ -189,6 +192,7 @@ foreach(_model ${CATENA_MODELS})
     APPEND_PATH FALSE
     PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/${_model}
     IMPORT_DIRS ${CMAKE_BINARY_DIR}/${_model}
+    OUT_VAR cpp_sources
   )
 
   if(gRPC_enabled)
@@ -203,7 +207,20 @@ foreach(_model ${CATENA_MODELS})
       OUT_VAR output
     )
     target_sources(${proto_interface} PRIVATE ${output})
+    list(APPEND cpp_sources ${output})
   endif()
+
+  # Filter header files from cpp_sources
+  set(header_files)
+  foreach(file ${cpp_sources})
+    if(file MATCHES "\\.h$")
+      list(APPEND header_files ${file})
+    endif()
+  endforeach()
+
+  # install the header files
+  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${_model})
+  
   
   # Set the library's output directory
   set_target_properties(${proto_interface} PROPERTIES
@@ -213,7 +230,7 @@ foreach(_model ${CATENA_MODELS})
 
   if (gRPC_enabled)
     target_link_libraries(${proto_interface} ${_GRPC_GRPCPP})
-    
+
     if (${_model} STREQUAL "full")
       target_link_libraries(${proto_interface} ${_REFLECTION})
     endif()
@@ -225,8 +242,26 @@ foreach(_model ${CATENA_MODELS})
     target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
   endif()
   
-  target_include_directories(${proto_interface} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${model} ${PROTOBUF_INCLUDE_DIRS})
+  get_target_property(proto_interface_include ${proto_interface} INTERFACE_INCLUDE_DIRECTORIES)
+    message("proto_interface_include: ${proto_interface_include}")
+
+  target_include_directories(${proto_interface} PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${model}>
+    $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${_model}>
+  )
+
   target_compile_features(${proto_interface} PUBLIC cxx_std_20)
+
+  # install the library
+  install(TARGETS ${proto_interface}
+    EXPORT Catena_cppTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+  
+    get_target_property(proto_interface_include ${proto_interface} INTERFACE_INCLUDE_DIRECTORIES)
+    message("proto_interface_include: ${proto_interface_include}")
   
 endforeach()
 
@@ -243,6 +278,32 @@ add_subdirectory("lite")
 # include the connections part of the Catena C++ SDK
 add_subdirectory("connections")
 
+install(
+  EXPORT Catena_cppTargets
+  FILE Catena_cppTargets.cmake
+  NAMESPACE Catena_cpp::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+)
+
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+)
 
 # doxygen
 #
