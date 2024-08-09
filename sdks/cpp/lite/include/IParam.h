@@ -3,7 +3,7 @@
 /// @todo some cmake + preprocessing magic to include the right file - lite or full version
 #include <lite/param.pb.h>
 
-#include <Enums.h>
+#include <common/include/Enums.h>
 
 namespace catena {
 class Value; // forward reference

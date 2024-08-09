@@ -10,9 +10,7 @@
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/sdks/cpp/build",
         "${env:HOME}/.local/include",
-        "${workspaceFolder}/sdks/cpp/common/include",
-        "${workspaceFolder}/sdks/cpp",
-        "${workspaceFolder}/sdks/cpp/connections/gRPC/include"
+        "${workspaceFolder}/sdks/cpp"
     ],
     "json.schemas": [
         {
