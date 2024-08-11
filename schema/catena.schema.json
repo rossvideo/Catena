@@ -361,7 +361,7 @@
             "$ref": "#/$defs/float32_value"
           },
           "constraint": {
-            "$ref": "#/$defs/float32_constraint"
+            "$ref": "#/$defs/constraint"
           },
           "params": false,
           "commands": false,
@@ -554,7 +554,7 @@
             "$ref": "#/$defs/int32_value"
           },
           "constraint": {
-            "$ref": "#/$defs/int32_constraint"
+            "$ref": "#/$defs/constraint"
           },
           "params": false,
           "commands": false,
@@ -603,7 +603,7 @@
             "$ref": "#/$defs/int32_array_values"
           },
           "constraint": {
-            "$ref": "#/$defs/int32_constraint"
+            "$ref": "#/$defs/constraint"
           },
           "params": false
         }
@@ -648,7 +648,7 @@
             "$ref": "#/$defs/float32_array_values"
           },
           "constraint": {
-            "$ref": "#/$defs/float32_constraint"
+            "$ref": "#/$defs/constraint"
           },
           "params": false
         }
@@ -777,7 +777,7 @@
             "$ref": "#/$defs/string_value"
           },
           "constraint": {
-            "$ref": "#/$defs/string_constraint"
+            "$ref": "#/$defs/constraint"
           }
         }
       }
@@ -821,7 +821,7 @@
             "$ref": "#/$defs/string_array_values"
           },
           "constraint": {
-            "$ref": "#/$defs/string_constraint"
+            "$ref": "#/$defs/constraint"
           },
           "params": false
         }

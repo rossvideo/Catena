@@ -12,6 +12,9 @@
 #include <google/protobuf/message_lite.h>
 #include <lite/include/PolyglotText.h>
 
+#include <string>
+#include <unordered_map>
+
 /**
  * @brief Named choice constraint, ensures a value is within a named choice
  * @tparam T int or string
@@ -50,6 +53,11 @@ public:
         strict_{strict}, default_{init.begin()->first} {}
 
     /**
+     * @brief default destructor
+     */
+    virtual ~NamedChoiceConstraint() = default;
+
+    /**
      * @brief applies choice constraint to a catena::Value if strict
      * @param src a catena::Value to apply the constraint to
      */
@@ -71,7 +79,7 @@ public:
             if (!src_val.has_string_value()) { return; }
 
             // constrain if strict and src is not in choices
-            if (strict_ && !choices_.contains(src_val.float32_value())) {
+            if (strict_ && !choices_.contains(src_val.string_value())) {
                 src_val.set_string_value(default_);
             }
         } 

@@ -37,6 +37,11 @@ public:
         display_min_{min}, display_max_{max} {}
 
     /**
+     * @brief default destructor
+     */
+    virtual ~RangeConstraint() = default;
+
+    /**
      * @brief Construct a new Range Constraint object
      * @param min the minimum value
      * @param max the maximum value

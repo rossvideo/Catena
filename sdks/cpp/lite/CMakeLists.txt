@@ -49,6 +49,7 @@ add_library(${target} STATIC
     src/Param.cpp
     src/StructInfo.cpp
     src/PolyglotText.cpp
+    src/PicklistConstraint.cpp
 )
 
 add_dependencies(${target} catena_common)

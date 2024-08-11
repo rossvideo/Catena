@@ -121,122 +121,140 @@ class CppGen {
         };
         this.namespace = namespace;
         this.constraints = {
-            // TODO: shared constraints are not yet supported in the device schema
-            "INT_RANGE": (name, desc, indent = 0) => {
+            "INT_RANGE": (name, desc, shared = false, indent = 0) => {
+                let cons, constraint_name, constraint_owner; 
+                // is this a shared or param constraint 
+                if (shared) {
+                    cons = desc.int32_range;
+                    constraint_name = `${name}`;
+                    constraint_owner = `/constraints/${name}` 
+                } else {
+                    cons = desc.constraint.int32_range;
+                    constraint_name = `${name}ParamConstraint`;
+                    constraint_owner = `/param/${name}`;
+                }
+                // collect range bounds
+                let fields = `${cons.min_value},${cons.max_value}`;
+                fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
+                fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
+                fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
+                bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},${quoted(constraint_owner)},${shared}};`, indent);
+                return constraint_name;
             }, 
-            "FLOAT_RANGE": (name, desc, indent = 0) => {
-                // let fields = '';
-                // // FIXME constraint notation type
-                // fields += `${desc.float_range.min_value},${desc.float_range.max_value}`;
-                // bloc(`RangeConstraint<float> ${name}Constraint {${fields}};`, indent);
+            "FLOAT_RANGE": (name, desc, shared = false, indent = 0) => {
+                let cons, constraint_name, constraint_owner; 
+                // is this a shared or param constraint 
+                if (shared) {
+                    cons = desc.float_range;
+                    constraint_name = `${name}`;
+                    constraint_owner = `/constraints/${name}` 
+                } else {
+                    cons = desc.constraint.float_range;
+                    constraint_name = `${name}ParamConstraint`;
+                    constraint_owner = `/param/${name}`;
+                }
+                // collect range bounds
+                let fields = `${cons.min_value},${cons.max_value}`;
+                fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
+                fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
+                fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
+                bloc(`RangeConstraint<float> ${constraint_name}{${fields},${quoted(constraint_owner)},${shared}};`, indent);
+                return constraint_name;
             }, 
-            "INT_CHOICE": (name, desc, indent = 0) => {
+            "INT_CHOICE": (name, desc, shared = false, indent = 0) => {
+                let cons, constraint_name, constraint_owner; 
+                // is this a shared or param constraint 
+                if (shared) {
+                    cons = desc.int32_choice;
+                    constraint_name = `${name}`;
+                    constraint_owner = `/constraints/${name}` 
+                } else {
+                    cons = desc.constraint.int32_choice;
+                    constraint_name = `${name}ParamConstraint`;
+                    constraint_owner = `/param/${name}`;
+                }
+                // collect the polyglot names and value pairs
+                let fields = '';
+                for (let i = 0; i < cons.choices.length; ++i) {
+                    fields += `{${cons.choices[i].value},{`;
+                    let display_strings = cons.choices[i].name.display_strings;
+                    let pairs = Object.keys(display_strings).length;
+                    for (let lang in display_strings) {
+                        fields += `{${quoted(lang)},${quoted(display_strings[lang])}}`;
+                        if (--pairs > 0) {
+                            fields += ',';
+                        }
+                    }
+                    fields += '}}';
+                    if (i < cons.choices.length - 1) {
+                        fields += ',';
+                    }
+                }
+                let strict = true;
+                bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared}};`, indent);
+                return constraint_name;
             },
-            "STRING_CHOICE": (name, desc, indent = 0) => {
+            "STRING_STRING_CHOICE": (name, desc, shared = false, indent = 0) => {
+                let cons, constraint_name, constraint_owner; 
+                // is this a shared or param constraint 
+                if (shared) {
+                    cons = desc.int32_choice;
+                    constraint_name = `${name}`;
+                    constraint_owner = `/constraints/${name}` 
+                } else {
+                    cons = desc.constraint.int32_choice;
+                    constraint_name = `${name}ParamConstraint`;
+                    constraint_owner = `/param/${name}`;
+                }
+                // collect the polyglot names and value pairs
+                let fields = '';
+                for (let i = 0; i < cons.choices.length; ++i) {
+                    fields += `{${quoted(cons.choices[i].value)},{`;
+                    let display_strings = cons.choices[i].name.display_strings;
+                    let pairs = Object.keys(display_strings).length;
+                    for (let lang in display_strings) {
+                        fields += `{${quoted(lang)},${quoted(display_strings[lang])}}`;
+                        if (--pairs > 0) {
+                            fields += ',';
+                        }
+                    }
+                    fields += '}}';
+                    if (i < cons.choices.length - 1) {
+                        fields += ',';
+                    }
+                }
+                let strict = cons.strict !== undefined ? cons.strict : false;
+                bloc(`NamedChoiceConstraint<std::string> ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared}};`, indent);
+                return constraint_name;
             },
-            "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
+            "STRING_CHOICE": (name, desc, shared = false, indent = 0) => {
+                let cons, constraint_name, constraint_owner; 
+                // is this a shared or param constraint 
+                if (shared) {
+                    cons = desc.string_choice;
+                    constraint_name = `${name}`;
+                    constraint_owner = `/constraints/${name}` 
+                } else {
+                    cons = desc.constraint.string_choice;
+                    constraint_name = `${name}ParamConstraint`;
+                    constraint_owner = `/param/${name}`;
+                }
+                // collect the string list 
+                let fields = '';
+                for (let i = 0; i < cons.choices.length; ++i) {
+                    fields += `${quoted(cons.choices[i])}`;
+                    if (i < cons.choices.length - 1) {
+                        fields += ',';
+                    }
+                }
+                let strict = cons.strict !== undefined ? cons.strict : false;
+                bloc(`PicklistConstraint ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared}};`, indent);
+                return constraint_name;
             },
-            "ALARM_TABLE": (name, desc, indent = 0) => {
+            "ALARM_TABLE": (name, desc, shared = false, indent = 0) => {
+                console.log(`ALARM_TABLE constraint not yet supported`);
             }
         },
-        this.paramConstraints = {
-            "INT_RANGE": (name, desc, indent = 0) => {
-                let constraint_name = '';
-                if (desc.constraint.int32_range !== undefined) {
-                    const cons = desc.constraint.int32_range;
-                    constraint_name += `${name}ParamConstraint`;
-                    // collect range bounds
-                    let fields = `${cons.min_value},${cons.max_value}`;
-                    fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
-                    fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
-                    fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
-                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
-                } else {
-                    constraint_name += `${desc.constraint.ref_oid}`;
-                }
-                return `${constraint_name}`;
-            }, 
-            "FLOAT_RANGE": (name, desc, indent = 0) => {
-                let constraint_name = '';
-                if (desc.constraint.float_range !== undefined) {
-                    const cons = desc.constraint.float_range;
-                    constraint_name += `${name}ParamConstraint`;
-                    // collect range bounds
-                    let fields = `${cons.min_value},${cons.max_value}`;
-                    fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
-                    fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
-                    fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
-                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
-                } else {
-                    constraint_name += `${desc.constraint.ref_oid}`;
-                }
-                return `${constraint_name}`;
-            }, 
-            "INT_CHOICE": (name, desc, indent = 0) => {
-                let constraint_name = '';
-                if (desc.constraint.int32_choice !== undefined) {
-                    const cons = desc.constraint.int32_choice;
-                    constraint_name += `${name}ParamConstraint`;
-                    let fields = '';
-                    // collect the polyglot names and value pairs
-                    for (let i = 0; i < cons.choices.length; ++i) {
-                        fields += `{${cons.choices[i].value},{`;
-                        let display_strings = cons.choices[i].name.display_strings;
-                        for (let lang in display_strings) {
-                            fields += `{"${lang}",${quoted(display_strings[lang])}}`;
-                            let p = 0;
-                            if (p++ < Object.keys(display_strings).length-1) {
-                                fields += ',';
-                            }
-                        }
-                        fields += '}}';
-                        if (i < cons.choices.length - 1) {
-                            fields += ',';
-                        }
-                    }
-                    let strict = true;
-                    bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
-                } else {
-                    constraint_name += `${desc.constraint.ref_oid}`;
-                }
-                return `${constraint_name}`;
-            },
-            "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
-                let constraint_name = '';
-                if (desc.constraint.int32_choice !== undefined) {
-                    const cons = desc.constraint.int32_choice;
-                    constraint_name += `${name}ParamConstraint`;
-                    let fields = '';
-                    // collect the polyglot names and value pairs
-                    for (let i = 0; i < cons.choices.length; ++i) {
-                        fields += `{${cons.choices[i].value},{`;
-                        let display_strings = cons.choices[i].name.display_strings;
-                        for (let lang in display_strings) {
-                            fields += `{"${lang}",${quoted(display_strings[lang])}}`;
-                            let p = 0;
-                            if (p++ < Object.keys(display_strings).length-1) {
-                                fields += ',';
-                            }
-                        }
-                        fields += '}}';
-                        if (i < cons.choices.length - 1) {
-                            fields += ',';
-                        }
-                    }
-                    let strict = cons.strict !== undefined ? cons.strict : false;
-                    bloc(`NamedChoiceConstraint<std::string> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
-                } else {
-                    constraint_name += `${desc.constraint.ref_oid}`;
-                }
-                return `${constraint_name}`;
-            },
-            "STRING_CHOICE": (name, desc, indent = 0) => {
-                // FIXME place holder for now
-            },
-            "ALARM_TABLE": (name, desc, indent = 0) => {
-                // FIXME
-            }
-        }
         this.other_items = (name, desc, template) => {
             let ans = '';
 
@@ -268,8 +286,7 @@ class CppGen {
             // add the widget if it exists
             let widget_init = '';
             if (desc.widget !== undefined) {
-                const widget = desc.widget;
-                widget_init += `${quoted(widget)}`;
+                widget_init += `${quoted(desc.widget)}`;
             } else if (template !== undefined && template.widget !== undefined) {
                 widget_init += `${quoted(template.widget)}`;
             } else {
@@ -279,15 +296,19 @@ class CppGen {
 
             // add the read_only flag
             if (desc.read_only !== undefined && desc.read_only) {
-                ans += `true,`;
+                ans += 'true,';
             } else {
-                ans += `false,`;
+                ans += 'false,';
             }
             
-            // construct and add the constraint if it exists
+            // add the constraint if it exists
             let constraint_init = '&';
-            if (desc.constraint !== undefined) {
-                constraint_init += this.paramConstraints[desc.constraint.type](name, desc);
+            if (desc.constraint !== undefined && desc.constraint.ref_oid === undefined) {
+                // construct and reference the param constraint
+                constraint_init += this.constraints[desc.constraint.type](name, desc);
+            } else if (desc.constraint !== undefined) {
+                // just reference the shared constraint
+                constraint_init += desc.constraint.ref_oid.split('/').pop();
             } else {
                 constraint_init = 'nullptr';
             }
@@ -442,6 +463,7 @@ class CppGen {
             bloc(`#include <lite/include/StructInfo.h>`);
             bloc(`#include <lite/include/RangeConstraint.h>`);
             bloc(`#include <lite/include/NamedChoiceConstraint.h>`);
+            bloc(`#include <lite/include/PicklistConstraint.h>`);
             bloc(`#include <common/include/Enums.h>`);
             bloc(`#include <common/include/IConstraint.h>`);
             bloc(`#include <string>`);
@@ -492,9 +514,9 @@ class CppGen {
 
     constraint (oid, desc) {
         if (desc.type in this.constraints) {
-            return this.constraints[desc.type](oid, desc);
+            return this.constraints[desc.type](oid, desc, true);
         } else {
-            console.log(`No constraint found for ${oid} of type ${desc.type}`);
+            console.log(`No constraint of type ${desc.type} found for ${oid}`);
         }
     }
 };
