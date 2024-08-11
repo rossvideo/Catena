@@ -42,95 +42,6 @@ class loc {
 
 let hloc, bloc;
 
-
-const kCppTypes = {
-    "INT32": "int32_t",
-    "FLOAT32": "float",
-    "STRING": "std::string",
-}
-
-
-
-
-/**
- * 
- * @param {string} s 
- * @returns input surrounded by double quotes
- */
-function quoted(s) {
-    return `"${s}"`;
-}
-
-
-const getFieldInit = {
-    "INT32": (value) => `${value.int32_value}`,
-    "FLOAT32": (value) => `${value.float32_value}`,
-    "STRING": (value) => `"${value.string_value}"`
-};
-
-function structInit(names, srctypes, desc) {
-    let inits = [];
-    if ("value" in desc) {
-        let fields = desc.value.struct_value.fields;
-        for (let i = 0; i < names.length; ++i) {
-            if (names[i] in fields) {
-                let field = fields[names[i]];
-                let srctype = srctypes[i];
-                if (srctype in kCppTypes) {
-                    inits.push(getFieldInit[srctype](field.value));
-                } else {
-                    inits.push('{}');
-                }
-            } else {
-                inits.push('{}');
-            }
-        }
-    } else {
-        inits.push('{}');
-    }
-    return `{${inits.join(', ')}}`;
-}
-
-class StructConverter {
-    constructor (hloc, bloc, namespace) {
-        this.hloc = hloc;
-        this.bloc = bloc;
-        this.namespace = namespace;
-    }
-
-    gatherInfo (name, desc) {
-        let n = 0;
-        let types = [];
-        let names = [];
-        let srctypes = [];
-        let defaults = [];
-        let typeOnly = (!"value" in desc);
-        for (let p in desc.params) {
-            const type = desc.params[p].type;
-            names.push(p);
-            srctypes.push(type);
-            if (type in kCppTypes) {
-                let cppType = kCppTypes[type];
-                types.push(cppType);
-            } else if (type === "STRUCT") {
-                let userDefinedType = p.charAt(0).toUpperCase() + p.slice(1);
-                types.push(userDefinedType);
-            }
-            if ("value" in desc.params[p]) {
-                defaults.push(`= ${getFieldInit[type](desc.params[p].value)}`);
-            } else {
-                defaults.push('{}');
-            }
-            ++n;
-        }
-        return {n, typeOnly, types, names, srctypes, defaults};
-    }
-}
-
-
-
-
-
 /**
  * C++ code generator
  */
@@ -380,22 +291,51 @@ class CppGen {
         bloc(`catena::lite::Device dm {${device.argsToString()}};`);
     }
 
-    params () {
-        if ("params" in this.desc) {
-            for (let oid in this.desc.params) {
-                this.subparam (oid, this.desc.params, 0);
+    /**
+     * 
+     * @param {string} parentOid full object id of the param's parent
+     * @param {object} desc param descriptor
+     * @param {boolean} isStructChild true if the param is a member of a struct
+     * 
+     */
+    params (parentOid, desc, isStructChild = false) {
+        if ("params" in desc) {
+            for (let oid in desc.params) {
+                this.subparam (parentOid, oid, desc.params, isStructChild);
             }   
         }
     }
 
-    subparam (oid, params, indent) {
-        let p = new Param(oid, params);
+    subparam (parentOid, oid, desc, isStructChild = false) {
+        let p = new Param(parentOid, oid, desc);
         let args = p.argsToString();
         let type = p.objectType();
         let name = p.objectName();
-        let init = p.initializer(params[oid]);
-        bloc(`${type} ${name} ${init};`, indent);
-        bloc(`catena::lite::Param<${type}> ${name}Param {${args}};`, indent);
+        let pname = p.paramName();
+        if (!isStructChild) {
+            // only top-level params get initializers
+            let init = p.initializer(desc[oid]);
+            bloc(`${type} ${name} ${init};`);
+        }
+        bloc(`catena::lite::Param<${type}> ${pname}Param {${args}};`);
+    
+        if (p.hasSubparams()) {
+            this.params(parentOid + `/${oid}`, desc[oid], true);
+        }
+    }
+
+    /**
+     * 
+     * @param {object} si struct info
+     * @param {number} indent number of 2-space indents
+     */
+    structInfo (si, indent) {
+        hloc(`struct ${this.namespace}::${si.typename} {`, indent);
+        for (let field of si.fields) {
+            hloc(`${field.type} ${field.name};`, indent+1);
+        }
+        hloc(`static const StructInfo& getStructInfo();`, indent+1);
+        hloc(`};`, indent);
     }
 
     /**
@@ -404,7 +344,7 @@ class CppGen {
     generate() {
         this.init();
         this.device();
-        this.params();
+        this.params('', this.desc);
         this.finish();
     }
 
