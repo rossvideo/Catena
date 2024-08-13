@@ -1,9 +1,20 @@
 #pragma once
 
+/**
+ * @file Param.h
+ * @brief Param provides convenient access to parameter values
+ * @author john.naylor@rossvideo.com
+ * @author john.danen@rossvideo.com
+ * @author isaac.robert@rossvideo.com
+ * @date 2024-07-07
+ * @copyright Copyright (c) 2024 Ross Video
+ */
+
 #include <lite/include/IParam.h>
 #include <lite/include/Device.h>
 #include <lite/include/StructInfo.h>
 #include <lite/include/PolyglotText.h>
+#include <common/include/IConstraint.h>
 
 #include <lite/param.pb.h>
 
@@ -14,20 +25,19 @@
 namespace catena {
 namespace lite {
 
-
-
 /**
  * @brief Param provides convenient access to parameter values
  * @tparam T the parameter's value type
  */
-template <typename T> class Param : public IParam {
-  public:
+template <typename T> 
+class Param : public IParam {
+public:
     /**
      * @brief OidAliases is a vector of strings
      */
     using OidAliases = std::vector<std::string>;
 
-  public:
+public:
     /**
      * @brief Param does not have a default constructor
      */
@@ -61,9 +71,9 @@ template <typename T> class Param : public IParam {
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-          const bool read_only, const std::string& oid, Device& dm)
-        : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, dm_{dm} {
+    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget, 
+        const bool read_only, catena::common::IConstraint* constraint, const std::string& oid, Device& dm)
+        : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, constraint_{constraint}, dm_{dm} {
         setOid(oid);
         dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
     }
@@ -75,39 +85,59 @@ template <typename T> class Param : public IParam {
 
     /**
      * @brief serialize the parameter value to protobuf
+     * @param dst the protobuf value to serialize to
      */
-    void toProto(catena::Value& value) const override;
+    void toProto(catena::Value& dst) const override;
 
     /**
      * @brief deserialize the parameter value from protobuf
+     * @param src the protobuf value to deserialize from
+     * @note this method may constrain the source value and modify it
      */
-    void fromProto(const catena::Value& value) override;
+    void fromProto(catena::Value& src) override;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
+     * @param param the protobuf param to serialize to
      */
     void toProto(catena::Param& param) const override {
+        // type member
         param.set_type(type_());
+
+        // oid_aliases member
         param.mutable_oid_aliases()->Reserve(oid_aliases_.size());
         for (const auto& oid_alias : oid_aliases_) {
             param.add_oid_aliases(oid_alias);
         }
+
+        // name member
         catena::PolyglotText name_proto;
         for (const auto& [lang, text] : name_.displayStrings()) {
             (*name_proto.mutable_display_strings())[lang] = text;
         }
         param.mutable_name()->Swap(&name_proto);
+
+        // widget member
         param.set_widget(widget_);
+
+        // constraint member
+        if (constraint_ != nullptr) {
+            constraint_->toProto(*param.mutable_constraint());
+        }
+
+        // value member
         toProto(*param.mutable_value());
     }
 
     /**
      * @brief get the parameter type
+     * @return the parameter type
      */
     ParamType type() const override { return type_; }
 
     /**
      * @brief get the parameter name
+     * @return map of languages and corresponding names
      */
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
 
@@ -133,10 +163,11 @@ template <typename T> class Param : public IParam {
       }
     }
 
-  private:
+private:
     ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;
     PolyglotText name_;
+    catena::common::IConstraint* constraint_;
     std::reference_wrapper<T> value_;
     std::reference_wrapper<Device> dm_;
     std::string widget_;

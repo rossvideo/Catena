@@ -121,11 +121,123 @@ class CppGen {
         };
         this.namespace = namespace;
         this.constraints = {
+            // TODO: shared constraints are not yet supported in the device schema
+            "INT_RANGE": (name, desc, indent = 0) => {
+            }, 
             "FLOAT_RANGE": (name, desc, indent = 0) => {
-               // place holder for now
+                // let fields = '';
+                // // FIXME constraint notation type
+                // fields += `${desc.float_range.min_value},${desc.float_range.max_value}`;
+                // bloc(`RangeConstraint<float> ${name}Constraint {${fields}};`, indent);
+            }, 
+            "INT_CHOICE": (name, desc, indent = 0) => {
+            },
+            "STRING_CHOICE": (name, desc, indent = 0) => {
+            },
+            "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
+            },
+            "ALARM_TABLE": (name, desc, indent = 0) => {
             }
         },
-        this.other_items = (desc, template) => {
+        this.paramConstraints = {
+            "INT_RANGE": (name, desc, indent = 0) => {
+                let constraint_name = '';
+                if (desc.constraint.int32_range !== undefined) {
+                    const cons = desc.constraint.int32_range;
+                    constraint_name += `${name}ParamConstraint`;
+                    // collect range bounds
+                    let fields = `${cons.min_value},${cons.max_value}`;
+                    fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
+                    fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
+                    fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
+                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
+                } else {
+                    constraint_name += `${desc.constraint.ref_oid}`;
+                }
+                return `${constraint_name}`;
+            }, 
+            "FLOAT_RANGE": (name, desc, indent = 0) => {
+                let constraint_name = '';
+                if (desc.constraint.float_range !== undefined) {
+                    const cons = desc.constraint.float_range;
+                    constraint_name += `${name}ParamConstraint`;
+                    // collect range bounds
+                    let fields = `${cons.min_value},${cons.max_value}`;
+                    fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
+                    fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
+                    fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
+                    bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},"/param/${name}",false};`, indent);
+                } else {
+                    constraint_name += `${desc.constraint.ref_oid}`;
+                }
+                return `${constraint_name}`;
+            }, 
+            "INT_CHOICE": (name, desc, indent = 0) => {
+                let constraint_name = '';
+                if (desc.constraint.int32_choice !== undefined) {
+                    const cons = desc.constraint.int32_choice;
+                    constraint_name += `${name}ParamConstraint`;
+                    let fields = '';
+                    // collect the polyglot names and value pairs
+                    for (let i = 0; i < cons.choices.length; ++i) {
+                        fields += `{${cons.choices[i].value},{`;
+                        let display_strings = cons.choices[i].name.display_strings;
+                        for (let lang in display_strings) {
+                            fields += `{"${lang}",${quoted(display_strings[lang])}}`;
+                            let p = 0;
+                            if (p++ < Object.keys(display_strings).length-1) {
+                                fields += ',';
+                            }
+                        }
+                        fields += '}}';
+                        if (i < cons.choices.length - 1) {
+                            fields += ',';
+                        }
+                    }
+                    let strict = true;
+                    bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
+                } else {
+                    constraint_name += `${desc.constraint.ref_oid}`;
+                }
+                return `${constraint_name}`;
+            },
+            "STRING_STRING_CHOICE": (name, desc, indent = 0) => {
+                let constraint_name = '';
+                if (desc.constraint.int32_choice !== undefined) {
+                    const cons = desc.constraint.int32_choice;
+                    constraint_name += `${name}ParamConstraint`;
+                    let fields = '';
+                    // collect the polyglot names and value pairs
+                    for (let i = 0; i < cons.choices.length; ++i) {
+                        fields += `{${cons.choices[i].value},{`;
+                        let display_strings = cons.choices[i].name.display_strings;
+                        for (let lang in display_strings) {
+                            fields += `{"${lang}",${quoted(display_strings[lang])}}`;
+                            let p = 0;
+                            if (p++ < Object.keys(display_strings).length-1) {
+                                fields += ',';
+                            }
+                        }
+                        fields += '}}';
+                        if (i < cons.choices.length - 1) {
+                            fields += ',';
+                        }
+                    }
+                    let strict = cons.strict !== undefined ? cons.strict : false;
+                    bloc(`NamedChoiceConstraint<std::string> ${constraint_name}{{${fields}},${strict},"/param/${name}",false};`, indent);
+                } else {
+                    constraint_name += `${desc.constraint.ref_oid}`;
+                }
+                return `${constraint_name}`;
+            },
+            "STRING_CHOICE": (name, desc, indent = 0) => {
+                // FIXME place holder for now
+            },
+            "ALARM_TABLE": (name, desc, indent = 0) => {
+                // FIXME
+            }
+        }
+        this.other_items = (name, desc, template) => {
             let ans = '';
 
             // add oid_aliases if they exist
@@ -144,7 +256,7 @@ class CppGen {
                 const n = Object.keys(display_strings).length;
                 let i = 0;
                 for (let lang in display_strings) {
-                    name_init += `{"${lang}", ${quoted(display_strings[lang])}}`;
+                    name_init += `{"${lang}",${quoted(display_strings[lang])}}`;
                     if (i++ < n-1) {
                         name_init += ',';
                     }
@@ -153,24 +265,33 @@ class CppGen {
             name_init += '}';
             ans += `${name_init},`;
             
-
             // add the widget if it exists
-            let widget_init = '{';
+            let widget_init = '';
             if (desc.widget !== undefined) {
                 const widget = desc.widget;
                 widget_init += `${quoted(widget)}`;
             } else if (template !== undefined && template.widget !== undefined) {
                 widget_init += `${quoted(template.widget)}`;
+            } else {
+                widget_init += '""';
             }
-            widget_init += '}';
-            ans += `${widget_init}`;
+            ans += `${widget_init},`;
 
             // add the read_only flag
             if (desc.read_only !== undefined && desc.read_only) {
-                ans += `,true`;
+                ans += `true,`;
             } else {
-                ans += `,false`;
+                ans += `false,`;
             }
+            
+            // construct and add the constraint if it exists
+            let constraint_init = '&';
+            if (desc.constraint !== undefined) {
+                constraint_init += this.paramConstraints[desc.constraint.type](name, desc);
+            } else {
+                constraint_init = 'nullptr';
+            }
+            ans += `${constraint_init}`;
 
             return ans;
         },
@@ -234,16 +355,13 @@ class CppGen {
 
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
-                
+                bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(name, desc)},"/${name}",dm);`, bodyIndent)
                 if (template !== undefined) {
-                    bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                    bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(desc)},"/${name}",dm);`, bodyIndent)
                     // Support functions for user defined types have already been generated
                     return;
-                } else {
-                    bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                    bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(desc)},"/${name}",dm);`, bodyIndent)
                 }
+                
                 bloc(`const StructInfo& ${fqname}::getStructInfo() {`, bodyIndent);
                 bloc(`static StructInfo t {`, bodyIndent+1);
                 bloc(`"${name}", {`, bodyIndent+2);
@@ -264,7 +382,7 @@ class CppGen {
 
                 // instantiate the deserialize specialization
                 bloc(`template<>`, indent);
-                bloc(`void catena::lite::Param<${fqname}>::fromProto(const catena::Value& value) {`, indent);
+                bloc(`void catena::lite::Param<${fqname}>::fromProto(catena::Value& value) {`, indent);
                 bloc(`catena::lite::fromProto<${fqname}>(&value_.get(), value);`, indent+1);
                 bloc('}', indent);
             },
@@ -274,7 +392,7 @@ class CppGen {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
             },
             "INT32": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
@@ -282,8 +400,7 @@ class CppGen {
                     initializer = `{${desc.value.int32_value}}`;
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
-
+                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
             },
             "FLOAT32": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
@@ -291,22 +408,22 @@ class CppGen {
                     initializer = `{${desc.value.float32_value}}`;
                 }
                 bloc(`float ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
             },
             "STRING_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
                 bloc(`std::vector<std::string> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
             },
             "INT32_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
                 bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
             },
             "FLOAT32_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
                 bloc(`std::vector<float> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(desc,template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
             }
         };
         this.init = (headerFilename, device) => {
@@ -322,8 +439,11 @@ class CppGen {
             bloc(`#include <lite/include/IParam.h>`);
             bloc(`#include <lite/include/Param.h>`);
             bloc(`#include <lite/include/Device.h>`);
-            bloc(`#include <common/include/Enums.h>`);
             bloc(`#include <lite/include/StructInfo.h>`);
+            bloc(`#include <lite/include/RangeConstraint.h>`);
+            bloc(`#include <lite/include/NamedChoiceConstraint.h>`);
+            bloc(`#include <common/include/Enums.h>`);
+            bloc(`#include <common/include/IConstraint.h>`);
             bloc(`#include <string>`);
             bloc(`#include <vector>`);
             bloc(`using catena::Device_DetailLevel;`);
@@ -342,6 +462,7 @@ class CppGen {
             bloc(`catena::lite::Device dm{${deviceInit}};`)
             bloc(`using catena::lite::StructInfo;`);
             bloc(`using catena::lite::FieldInfo;`);
+            bloc(`std::unordered_map<std::string, catena::common::IConstraint*> constraints;`);
         },
         this.finish = () => {
             hloc(`} // namespace ${namespace}`);
@@ -367,6 +488,14 @@ class CppGen {
             }
         } 
         return this.params[desc.type](oid, desc, template_param);
+    }
+
+    constraint (oid, desc) {
+        if (desc.type in this.constraints) {
+            return this.constraints[desc.type](oid, desc);
+        } else {
+            console.log(`No constraint found for ${oid} of type ${desc.type}`);
+        }
     }
 };
 
