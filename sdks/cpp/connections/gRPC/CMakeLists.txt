@@ -35,8 +35,8 @@ target_include_directories(
     ${target}
     PUBLIC
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
 )
 
 target_link_libraries(${target}
@@ -47,5 +47,17 @@ target_link_libraries(${target}
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/connections/gRPC
+)
+
+install(TARGETS ${target} 
+    EXPORT Catena_cppTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+)
 
 add_subdirectory(examples)

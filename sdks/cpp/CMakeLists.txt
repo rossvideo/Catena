@@ -278,6 +278,13 @@ add_subdirectory("lite")
 # include the connections part of the Catena C++ SDK
 add_subdirectory("connections")
 
+#install the Catena device validation schema file
+install(
+  FILES ${CATENA_ROOT_DIR}/schema/catena.schema.json
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp
+)
+set(CATENA_SCHEMA_JSON ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/catena.schema.json)
+
 install(
   EXPORT Catena_cppTargets
   FILE Catena_cppTargets.cmake
@@ -290,6 +297,7 @@ configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+  PATH_VARS CATENA_SCHEMA_JSON
 )
 
 write_basic_package_version_file(
