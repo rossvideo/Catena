@@ -1,6 +1,12 @@
 #pragma once
 
-/// @todo some cmake + preprocessing magic to include the right file - lite or full version
+/**
+ * @file IParam.h
+ * @brief Interface for parameters
+ * @author John R. Naylor, john.naylor@rossvideo.com
+ * @date 2024-07-07
+ */
+
 #include <lite/param.pb.h>
 
 #include <Enums.h>
@@ -9,16 +15,26 @@ namespace catena {
 class Value; // forward reference
 class Param; // forward reference
 
-
-namespace lite {
+/// @todo move to common
+namespace lite { 
 class IParam {
   public:
     using ParamType = catena::patterns::EnumDecorator<catena::ParamType>;
   public:
-    IParam() : oid_{} {}
-    IParam(IParam&&) = default;
-    IParam& operator=(IParam&&) = default;
+    IParam() = default;
     virtual ~IParam() = default;
+
+    /**
+     * @brief IParam has move semantics
+     */
+    IParam& operator=(IParam&&) = default;
+    IParam(IParam&&) = default;
+    
+    /**
+     * @brief IParam does not have copy semantics
+     */
+    IParam(const IParam&) = delete;
+    IParam& operator=(const IParam&) = delete;
 
     /**
      * @brief serialize the parameter value to protobuf
@@ -38,19 +54,31 @@ class IParam {
      */
     virtual void toProto(catena::Param& param) const = 0;
 
+    /**
+     * @brief return the type of the param
+     */
     virtual ParamType type() const = 0;
 
     /**
      * @brief return the oid of the param
      */
-    virtual const std::string& getOid() const { return oid_; };
+    virtual const std::string& getOid() const = 0;
 
-    virtual void setOid(const std::string& oid) { oid_ = oid; };
+    /**
+     * @brief set the oid of the param
+     */
+    virtual void setOid(const std::string& oid) =0;
 
-    virtual const bool isReadOnly() const = 0;
+    /**
+     * @brief return read only status of the param
+     */
+    virtual bool readOnly() const = 0;
 
-   protected:
-    std::string oid_;
+    /**
+     * @brief set read only status of the param
+     */
+    virtual void readOnly(bool flag) = 0;
+
 };
 }  // namespace lite
 

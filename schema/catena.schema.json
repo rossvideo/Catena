@@ -777,7 +777,14 @@
             "$ref": "#/$defs/string_value"
           },
           "constraint": {
-            "$ref": "#/$defs/string_constraint"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/string_constraint"
+              },
+              {
+                "$ref": "#/$defs/constraint_ref"
+              }
+            ]
           }
         }
       }
@@ -1189,16 +1196,21 @@
               ]
           },
           {
-              "properties": {
-                  "ref_oid": {
-                      "type": "string",
-                      "format": "json-pointer"
-                  }
-              },
-              "required": ["ref_oid"],
-              "additionalProperties": false
+              "$ref": "#/$defs/constraint_ref"
           }
       ]
+    },
+    "constraint_ref": {
+        "title": "Constraint Reference",
+        "description": "Reference to a constraint that is shared amongst multiple parameters",
+        "properties": {
+            "ref_oid": {
+                "type": "string",
+                "format": "json-pointer"
+            }
+        },
+        "required": ["ref_oid"],
+        "additionalProperties": false
     },
     "constraints": {
       "oneOf": [

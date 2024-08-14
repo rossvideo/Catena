@@ -289,6 +289,8 @@ class CppGen {
     device () {
         const device = new Device(this.desc);
         bloc(`catena::lite::Device dm {${device.argsToString()}};`);
+        bloc(`ParamAdder addParamToDevice = std::bind(&Device::addItem<ParamTag>, &dm, _1, _2);`);
+        bloc(''); // blank line
     }
 
     /**
@@ -301,7 +303,7 @@ class CppGen {
     params (parentOid, desc, isStructChild = false) {
         if ("params" in desc) {
             for (let oid in desc.params) {
-                this.subparam (parentOid, oid, desc.params, isStructChild);
+                this.subparam(parentOid, oid, desc.params, isStructChild);
             }   
         }
     }
@@ -313,12 +315,19 @@ class CppGen {
         let name = p.objectName();
         let pname = p.paramName();
         if (!isStructChild) {
-            // only top-level params get initializers
+            // only top-level params get value objects
             let init = p.initializer(desc[oid]);
             bloc(`${type} ${name} ${init};`);
         }
-        bloc(`catena::lite::Param<${type}> ${pname}Param {${args}};`);
-    
+
+        // instantiate the ParamDescriptor
+        bloc(`catena::lite::ParamDescriptor<${type}> ${pname}Param {${args}};`);
+
+        if (!isStructChild) {
+            // only top-level params get ParamWithValue objects
+            bloc(`catena::lite::ParamWithValue<${type}> ${pname}ParamWithValue {${pname}Param, ${name}};`);
+        }
+
         if (p.hasSubparams()) {
             this.params(parentOid + `/${oid}`, desc[oid], true);
         }
@@ -359,19 +368,28 @@ class CppGen {
 
         bloc(warning);
         bloc(`#include "${this.headerFilename}"`);
-        bloc(`#include <lite/include/IParam.h>`);
-        bloc(`#include <lite/include/Param.h>`);
+        bloc(`#include <lite/include/ParamDescriptor.h>`);
+        bloc(`#include <lite/include/ParamWithValue.h>`);
         bloc(`#include <lite/include/Device.h>`);
         bloc(`#include <common/include/Enums.h>`);
         bloc(`#include <lite/include/StructInfo.h>`);
         bloc(`#include <string>`);
         bloc(`#include <vector>`);
+        bloc(`#include <functional>`);
         bloc(`using catena::Device_DetailLevel;`);
         bloc(`using DetailLevel = catena::common::DetailLevel;`);
         bloc(`using catena::common::Scopes_e;`);
         bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
         bloc(`using catena::lite::StructInfo;`);
         bloc(`using catena::lite::FieldInfo;`);
+        bloc(`using catena::lite::ParamDescriptor;`);
+        bloc(`using catena::lite::ParamWithValue;`);
+        bloc(`using catena::lite::Device;`);
+        bloc(`using catena::lite::IParam;`);
+        bloc(`using std::placeholders::_1;`);
+        bloc(`using std::placeholders::_2;`);
+        bloc(`using catena::common::ParamTag;`);
+        bloc(`using ParamAdder = catena::common::AddItem<ParamTag>;`);
     }
 
     finish = () => {

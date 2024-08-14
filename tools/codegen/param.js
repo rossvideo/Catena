@@ -9,6 +9,11 @@ function initialCap(s) {s
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns c++ type of the param's value as a string
+ */
 function typeArg(desc) {
     const types = {
         STRING: `std::string`,
@@ -28,10 +33,19 @@ function typeArg(desc) {
     return `catena::ParamType::${desc.type}`;
 }
 
+/**
+ * 
+ * @returns whatever string is bound to this
+ */
 function repeatString() {
     return this;
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns initializer for the oid_aliases member
+ */
 function oidAliasesArg(desc) {
     let ans = `{}`;
     if ("oid_aliases" in desc) {
@@ -40,6 +54,11 @@ function oidAliasesArg(desc) {
     return ans;
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns display strings initializer
+ */
 function nameArg(desc) {
     let ans = `{}`;
     if ("name" in desc) {
@@ -56,6 +75,11 @@ function nameArg(desc) {
     return ans;
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns the widget in quotes if present, otherwise an empty initializer
+ */
 function widgetArg (desc) {
     let ans = `{}`;
     if ("widget" in desc) {
@@ -64,6 +88,11 @@ function widgetArg (desc) {
     return ans
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns true or false reflecting presence and state of the read_only flag.
+ */
 function readOnly (desc) {
     let ans = `false`;
     if ("read_only" in desc) {
@@ -73,54 +102,65 @@ function readOnly (desc) {
 }
 
 function jpointerArg(desc) {
-    return `"/${this.oid}"`;
+    return `"${this.parentOid}/${this.oid}"`;
 }
 
 function parentArg(desc) {
-    return `dm`;
+    return this.parentOid == '' ? 'dm' : `${this.parentName()}`;
 }
 
 /**
  * Create constructor arguments for catena::lite::Device object
- * @param {object} desc device descriptor
+ * @param {Array} array of ancestors' oids
+ * @param {string} oid object id of the param being processed
+ * @param {object} desc descriptor of parent object
  */
 class Param extends CppCtor {
-    constructor(oid, desc) {
+    constructor(parentOid, oid, desc) {
         super(desc[oid]);
+        this.parentOid = parentOid;
         this.oid = oid;
         this.deviceParams = desc;
         this.init = '{}';
         this.arguments.push(typeArg.bind(this));
-        this.arguments.push(repeatString.bind(this.oid));
         this.arguments.push(oidAliasesArg);
         this.arguments.push(nameArg);
         this.arguments.push(widgetArg);
         this.arguments.push(readOnly);
         this.arguments.push(jpointerArg.bind(this));
-        this.arguments.push(parentArg);
+        this.arguments.push(parentArg.bind(this));
     }
 
+    /**
+     * 
+     * @param {object} desc param descriptor of param being processed (can be recursive)
+     * @returns initializer for the param's value object
+     */
     initializer (desc) {
         const valueObject = {
+            // simple types are pretty simple to handle
             string_value: (value) => { return `"${value}"`; },
             int32_value: (value) => { return `${value}`; },
             float32_value: (value) => { return `${value}`; },
             string_array_values: (value) => { return `${value.strings.map(v => `"${v}"`).join(', ')}`; },
             int32_array_values: (value) => { return `${value.ints.join(', ')}`; },
             float32_array_values: (value) => { return `${value.floats.join(', ')}`; },
-            struct_value: (value) => {
+
+            // structs and struct arrays are more complex
+            struct_value: (value, isStructChild=false) => {
                 let fields = value.fields;
                 let fieldsArr = Object.keys(fields);
                 // recursively call the correct valueObject function on each field
                 let mappedFields = fieldsArr.map(
                     field => {
                         let key = Object.keys(fields[field].value)[0];
-                        return valueObject[key](fields[field].value[key]);
+                        return valueObject[key](fields[field].value[key],true);
                     }
                 );
-                return mappedFields.join(',');
+
+                return isStructChild ? `{${mappedFields.join(',')}}` : mappedFields.join(',');
             },
-            struct_array_values: (value) => {
+            struct_array_values: (value, isStructChild = false) => {
                 let arr = value.struct_values;
                 let mappedArr = arr.map(
                     item => {
@@ -129,10 +169,10 @@ class Param extends CppCtor {
                         let mappedFields = fieldsArr.map(
                             field => {
                                 let key = Object.keys(fields[field].value)[0];
-                                return valueObject[key](fields[field].value[key]);
+                                return valueObject[key](fields[field].value[key],true);
                             }
                         );
-                        return `{${mappedFields.join(',')}}`;
+                        return isStructChild ? `{${mappedFields.join(',')}}` : mappedFields.join(',');
                     }
                 );
                 return mappedArr.join(',');
@@ -146,21 +186,48 @@ class Param extends CppCtor {
             } else {
                 throw new Error(`Unknown value type ${key}`);
             }   
-            return this.init;
         }
+        return this.init;
     }
 
+    /**
+     * 
+     * @returns the oid of the param
+     */
     objectName () {
         return this.oid;
     }
 
+    /**
+     * 
+     * @returns c++ type of the param's value
+     */
     objectType () {
         return this.type;
     }
 
-    params (hloc, bloc) {
-        if ("params" in this.desc) {
+    hasSubparams () {
+        return "params" in this.desc;
+    }
 
+    /**
+     * 
+     * @returns unique C++ legal identifier for the Param 
+     */
+    paramName() {
+        return `${this.parentName()}_${this.oid}`;
+    }
+
+    parentName() {
+        return this.parentOid.replace(/\//g, '_');
+    }
+
+    getStructInfo() {
+        if (this.desc.type !== 'STRUCT' && this.desc.type !== 'STRUCT_ARRAY') {
+            throw new Error(`Cannot get struct info for non-struct type ${this.desc.type}`);
+        }
+        return {
+            typename: initialCap(this.oid)
         }
     }
 }

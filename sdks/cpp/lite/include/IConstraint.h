@@ -13,7 +13,7 @@ namespace catena {
 class Constraint; // forward declaration
 
 
-namespace lite {
+namespace common {
 
 
 /**

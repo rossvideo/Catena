@@ -1,8 +1,19 @@
 #pragma once
 
+/**
+ * @file Device.h
+ * @brief Device class definition
+ * @author John R. Naylor john.naylor@rossvideo.com
+ * @date 2024-07-07
+ */
+
 #include <common/include/Path.h>
 #include <common/include/Enums.h>
 #include <common/include/vdk/signals.h>
+
+#include <lite/include/IParam.h>
+#include <lite/include/IConstraint.h>
+#include <lite/include/Tags.h>  
 
 #include <lite/device.pb.h>
 
@@ -15,13 +26,13 @@
 
 namespace catena {
 namespace lite {
-  
-class IParam;         // forward reference
-class IConstraint;    // forward reference
-class IMenuGroup;     // forward reference
-class ILanguagePack;  // forward reference
 
 
+
+/**
+ * @brief Device class
+ * Implements the Device interface defined in the protobuf.
+ */
 class Device {
   public:
     /**
@@ -44,41 +55,6 @@ class Device {
     using Scopes = catena::common::Scopes;
     using DetailLevel_e = catena::Device_DetailLevel;
     using DetailLevel = catena::common::DetailLevel;
-
-    /**
-     * @brief ParamTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct ParamTag {
-        using type = IParam;
-    };
-
-    /**
-     * @brief CommandTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct CommandTag {
-        using type = IParam;
-    };
-    
-    /**
-     * @brief ConstraintTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct ConstraintTag {
-        using type = IConstraint;
-    };
-    
-    /**
-     * @brief MenuGroupTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct MenuGroupTag {
-        using type = IMenuGroup;
-    };
-    
-    /**
-     * @brief LanguagePackTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct LanguagePackTag {
-        using type = ILanguagePack;
-    };
 
   public:
     /**
@@ -124,66 +100,6 @@ class Device {
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
     /**
-     * @brief add an item to the device.
-     * item can be a parameter, constraint, menu group, command, or language pack.
-     * @param name the name of the item
-     * @param item the item to add
-     */
-    template <typename TAG> void addItem(const std::string& name, TAG::type* item, TAG tag) {
-      assert(item != nullptr);
-      if constexpr(std::is_same_v<TAG, ParamTag>) {
-        params_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, CommandTag>) {
-        commands_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
-        constraints_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
-        menu_groups_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
-        language_packs_[name] = item;
-      } else {
-        // static_assert(false, "Unknown TAG type");
-      }
-    }
-
-    /**
-     * @brief retreive an item from the device by json pointer.
-     * item can be an IParameter, IConstraint, IMenuGroup, or ILanguagePack.
-     * @param path path to the item relative to device.<items>
-     */
-    template <typename TAG> TAG::type* getItem(const std::string& name, TAG tag) const {
-      if constexpr(std::is_same_v<TAG, ParamTag>) {
-        auto it = params_.find(name);
-        if (it != params_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, CommandTag>) {
-        auto it = commands_.find(name);
-        if (it != commands_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
-        auto it = constraints_.find(name);
-        if (it != constraints_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
-        auto it = menu_groups_.find(name);
-        if (it != menu_groups_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
-        auto it = language_packs_.find(name);
-        if (it != language_packs_.end()) {
-          return it->second;
-        }
-      } else {
-        // static_assert(false, "Unknown TAG type");
-      }
-      return nullptr;
-    }
-
-    /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
      * @param shallow if true, only the top-level info is copied, params, commands etc 
@@ -196,8 +112,56 @@ class Device {
      */
     void toProto(::catena::Device& dst, bool shallow = true) const;
 
+    /**
+     * @brief add an item to one of the collections owned by the device
+     * @tparam TAG identifies the collection to which the item will be added
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    template <typename TAG>
+    void addItem(const std::string& key, typename TAG::type* item) {
+        if constexpr (std::is_same_v<TAG, ParamTag>) {
+            params_[key] = item;
+        }
+        if constexpr (std::is_same_v<TAG, ConstraintTag>) {
+            constraints_[key] = item;
+        }
+        if constexpr (std::is_same_v<TAG, MenuGroupTag>) {
+            menu_groups_[key] = item;
+        }
+        if constexpr (std::is_same_v<TAG, CommandTag>) {
+            commands_[key] = item;
+        }
+        if constexpr (std::is_same_v<TAG, LanguagePackTag>) {
+            language_packs_[key] = item;
+        }
+    }
+
+    /**
+     * @brief gets an item from one of the collections owned by the device
+     * @return nullptr if the item is not found, otherwise the item
+     */
+    template <typename TAG>
+    typename TAG::type* getItem(const std::string& key) const {
+        GET_ITEM(ParamTag, params_)
+        GET_ITEM(ConstraintTag, constraints_)
+        GET_ITEM(MenuGroupTag, menu_groups_)
+        GET_ITEM(CommandTag, commands_)
+        GET_ITEM(LanguagePackTag, language_packs_)
+        return nullptr;
+    }
+
   public:
+    /**
+     * @brief signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
+    
+    /**
+     * @brief signal emitted when a value is set by the server, or business logic.
+     * Intended recipient is the connection manager.
+     */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
   private:
@@ -206,7 +170,7 @@ class Device {
     std::unordered_map<std::string, IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
     std::unordered_map<std::string, IMenuGroup*> menu_groups_;
-    std::unordered_map<std::string, IParam*> commands_;
+    std::unordered_map<std::string, IMenuGroup*> commands_;
     std::unordered_map<std::string, ILanguagePack*> language_packs_;
     std::vector<Scopes_e> access_scopes_;
     Scopes default_scope_;

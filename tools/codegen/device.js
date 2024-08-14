@@ -14,7 +14,7 @@ function slotArg(desc) {
  * @returns value of the detail_level member as a DetailLevel object
  */
 function detailLevelArg(desc) {
-    return `DetailLevel("${desc.detail_level}")`;
+    return `DetailLevel("${desc.detail_level}")()`;
 }
 
 /**
