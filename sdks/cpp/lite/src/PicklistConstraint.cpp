@@ -2,6 +2,13 @@
 
 #include <lite/param.pb.h>
 
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
+    bool shared)
+    : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+    strict_{strict}, default_{*init.begin()} {}
+
+PicklistConstraint::~PicklistConstraint() = default;
+
 void PicklistConstraint::apply(void* src) const {
     auto& src_val = *reinterpret_cast<catena::Value*>(src);
 

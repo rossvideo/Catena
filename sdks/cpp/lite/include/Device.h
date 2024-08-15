@@ -13,11 +13,14 @@
 #include <cassert>
 #include <type_traits>
 
+namespace catena::common {
+  class IConstraint;    // forward reference
+} 
+
 namespace catena {
 namespace lite {
   
 class IParam;         // forward reference
-class IConstraint;    // forward reference
 class IMenuGroup;     // forward reference
 class ILanguagePack;  // forward reference
 
@@ -63,7 +66,7 @@ class Device {
      * @brief ConstraintTag type for addItem and getItem, and tag-dispatched methods
      */
     struct ConstraintTag {
-        using type = IConstraint;
+        using type = catena::common::IConstraint;
     };
     
     /**
@@ -203,7 +206,7 @@ class Device {
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
-    std::unordered_map<std::string, IConstraint*> constraints_;
+    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
     std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;

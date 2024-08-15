@@ -40,16 +40,15 @@ public:
      * @param strict should the value be constrained if not in choices
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
+     * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
-        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{*init.begin()} {}
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared);
 
     /**
      * @brief default destructor
      */
-    virtual ~PicklistConstraint() = default;
+    virtual ~PicklistConstraint();
 
     /**
      * @brief applies choice constraint to a catena::Value if strict
