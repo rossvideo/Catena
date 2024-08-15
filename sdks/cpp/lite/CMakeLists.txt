@@ -55,8 +55,6 @@ add_library(Catena_cpp::lite ALIAS ${target})
 add_dependencies(${target} catena_common)
 add_dependencies(${target} ${proto_interface})
 
-message("Prefix Path: ${CMAKE_PREFIX_PATH}")
-
 target_include_directories(
     ${target}
     PUBLIC

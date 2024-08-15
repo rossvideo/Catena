@@ -136,6 +136,7 @@ endforeach()
 
 # create flags _gRPC, _REST, _WSS to indicate which connections are enabled
 message(STATUS "Connections: ${CONNECTIONS}")
+message(STATUS "Models: ${CATENA_MODELS}")
 list(FIND CONNECTIONS "gRPC" _gRPC)
 list(FIND CONNECTIONS "REST" _REST)
 list(FIND CONNECTIONS "WSS" _WSS)
@@ -190,7 +191,6 @@ foreach(_model ${CATENA_MODELS})
   if (NOT _model IN_LIST ALLOWED_MODELS)
     message(FATAL_ERROR "Error: Unknown Catena Model specified: ${_model}")
   endif()
-  message(STATUS "model: ${_model}")
 
   if (gRPC_enabled)
     set(proto_interface "proto_interface_${_model}_grpc")
@@ -260,9 +260,6 @@ foreach(_model ${CATENA_MODELS})
     target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
   endif()
   
-  get_target_property(proto_interface_include ${proto_interface} INTERFACE_INCLUDE_DIRECTORIES)
-    message("proto_interface_include: ${proto_interface_include}")
-
   target_include_directories(${proto_interface} PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${model}>
     $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
@@ -278,9 +275,6 @@ foreach(_model ${CATENA_MODELS})
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
   
-    get_target_property(proto_interface_include ${proto_interface} INTERFACE_INCLUDE_DIRECTORIES)
-    message("proto_interface_include: ${proto_interface_include}")
-  
 endforeach()
 
 # add clean target for the protobuf generated files
@@ -295,6 +289,10 @@ add_subdirectory("lite")
 
 # include the connections part of the Catena C++ SDK
 add_subdirectory("connections")
+
+#
+#
+# Package and install the Catena C++ SDK
 
 install_catena_codegen()
 

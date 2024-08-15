@@ -70,6 +70,7 @@ function(install_catena_codegen)
     )
     set(CATENA_CODEGEN_INSTALL_DIR ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/node_modules/catena-codegen PARENT_SCOPE)
     
+    install(FILES ${CMAKE_SOURCE_DIR}/CatenaCodegen.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp)
 endfunction()
 
 # Function to build the documentation for Catena
