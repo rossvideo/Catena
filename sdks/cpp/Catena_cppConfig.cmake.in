@@ -9,13 +9,7 @@ include(GNUInstallDirs)
 include("${CMAKE_CURRENT_LIST_DIR}/Catena_cppTargets.cmake")
 
 set_and_check(CATENA_SCHEMA "@PACKAGE_CATENA_SCHEMA_JSON@")
-
-message(STATUS "Installing Catena Codegen")
-execute_process(
-  COMMAND npm install https://gitpkg.vercel.app/rossvideo/Catena/tools/codegen?develop
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
-set(CATENA_CODEGEN "${CMAKE_BINARY_DIR}/node_modules/codegen")
+set_and_check(CATENA_CODEGEN "@PACKAGE_CATENA_CODEGEN_INSTALL_DIR@")
 
 # Find Protobuf installation
 # NOTE: find_dependency has to be after set_and_check to avoid overwriting relative PACKAGE_PREFIX_PATH

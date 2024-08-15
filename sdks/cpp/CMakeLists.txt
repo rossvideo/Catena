@@ -26,8 +26,26 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment ver
 
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
-# pull in the protobuf functions
-include(${CMAKE_CURRENT_SOURCE_DIR}/ProtobufFunctions.cmake)
+# pull in Catena build functions
+include(${CMAKE_CURRENT_SOURCE_DIR}/CatenaFunctions.cmake)
+
+get_filename_component(CODEGEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/codegen" ABSOLUTE) 
+get_filename_component(SCHEMA_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../schema/catena.schema.json" ABSOLUTE)
+
+# install node modules if it hasn't been done yet
+if(NOT EXISTS "${CODEGEN_DIR}/node_modules")
+  find_program(NPM npm REQUIRED)
+  message(STATUS "Installing Catena codegen node modules")
+  message("codegen_dir: ${CODEGEN_DIR}")
+  execute_process(
+      COMMAND ${NPM} install
+      WORKING_DIRECTORY "${CODEGEN_DIR}"
+  )
+endif()
+
+# Set these variable globally so that they are available when catena is attached as a submodule
+set(CATENA_CODEGEN "${CODEGEN_DIR}" CACHE STRING "Path to Catena codegen tools" FORCE)
+set(CATENA_SCHEMA "${SCHEMA_LOCATION}" CACHE STRING "Path to Catena schema file" FORCE)
 
 # export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -278,6 +296,8 @@ add_subdirectory("lite")
 # include the connections part of the Catena C++ SDK
 add_subdirectory("connections")
 
+install_catena_codegen()
+
 #install the Catena device validation schema file
 install(
   FILES ${CATENA_ROOT_DIR}/schema/catena.schema.json
@@ -297,7 +317,7 @@ configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
-  PATH_VARS CATENA_SCHEMA_JSON
+  PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR
 )
 
 write_basic_package_version_file(
@@ -313,46 +333,5 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
 )
 
-# doxygen
-#
-option(BUILD_DOC "Build documentation" ON)
-
-# check if Doxygen is installed
-find_package(Doxygen OPTIONAL_COMPONENTS dot)
-
-if (DOXYGEN_FOUND AND BUILD_DOC)
-# set input and output files
-set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxyfile.in)
-set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
-
-# find out if graphviz is installed
-if (DOXYGEN_DOT_EXECUTABLE STREQUAL "DOXYGEN_DOT_EXECUTABLE-NOTFOUND")
-# it isn't, so print a warning and suppress DOT in the doxyfile
-
-message(AUTHOR_WARNING "graphviz needs to be installed for the documentation to include \
-enhanced inheritance and collaboration diagrams.\
-Otherwise, it'll only generate standard doxygen inheritance diagrams.\
-See https://www.graphviz.org/download/ for how to install graphviz."
-)
-set(DOXYGEN_HAVE_DOT NO)
-
-else ()
-# graphviz is installed, so enable DOT in the doxyfile
-set(DOXYGEN_HAVE_DOT YES)
-
-endif ()
-
-configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-
-# Creates a target 'doxygen' to generate the documentation.
-# Run 'make doxygen' in the output directory to build the target.
-add_custom_target(doxygen
-          COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-          COMMENT "Generating documentation with Doxygen"
-          VERBATIM)
-
-
-elseif(BUILD_DOC)
-message("Doxygen needs to be installed to generate the documentation")
-endif (DOXYGEN_FOUND AND BUILD_DOC)
+# Build the documentation with Doxygen
+build_docs()
