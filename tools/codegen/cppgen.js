@@ -301,9 +301,10 @@ class CppGen {
    *
    */
   params(parentOid, desc, parentStructInfo, isStructChild = false) {
+    let isTopLevel = parentOid === "";
     if ("params" in desc) {
       for (let oid in desc.params) {
-        let structInfo = (parentOid === '') ? {} : parentStructInfo;
+        let structInfo = isTopLevel ? {} : parentStructInfo;
         structInfo[oid] = {};
         this.subparam(
           parentOid,
@@ -312,8 +313,9 @@ class CppGen {
           structInfo[oid],
           isStructChild
         );
-        if (parentStructInfo === undefined) {
+        if (isTopLevel) {
           console.log(`rollup: ${JSON.stringify(structInfo, null, 2)}`);
+          // writeStructInfo(structInfo);
         }
       }
     }
