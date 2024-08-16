@@ -19,7 +19,7 @@ void Device::toProto(::catena::Device& dst, bool shallow) const {
     /// @todo: implement deep copies for constraints, menu groups, commands, etc...
     // for now, we can make do with just params
     google::protobuf::Map<std::string, ::catena::Param> dstParams{};
-    for (const auto& [name, param] : params_) {
+    for (const auto& [name, param] : params_.getMap()) {
         ::catena::Param dstParam{};
         param->toProto(dstParam);
         dstParams[name] = dstParam;

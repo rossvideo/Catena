@@ -3,6 +3,7 @@
 #include <common/include/Path.h>
 #include <common/include/Enums.h>
 #include <common/include/vdk/signals.h>
+#include <lite/include/Collection.h>
 
 #include <lite/device.pb.h>
 
@@ -48,41 +49,6 @@ class Device {
     using DetailLevel_e = catena::Device_DetailLevel;
     using DetailLevel = catena::common::DetailLevel;
 
-    /**
-     * @brief ParamTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct ParamTag {
-        using type = IParam;
-    };
-
-    /**
-     * @brief CommandTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct CommandTag {
-        using type = IParam;
-    };
-    
-    /**
-     * @brief ConstraintTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct ConstraintTag {
-        using type = catena::common::IConstraint;
-    };
-    
-    /**
-     * @brief MenuGroupTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct MenuGroupTag {
-        using type = IMenuGroup;
-    };
-    
-    /**
-     * @brief LanguagePackTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct LanguagePackTag {
-        using type = ILanguagePack;
-    };
-
   public:
     /**
      * @brief Construct a new Device object
@@ -93,9 +59,9 @@ class Device {
      * @brief Construct a new Device object
      */
     Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes_e> access_scopes,
-           Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
-        : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
-          default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
+      Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
+      : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
+      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
 
     /**
      * @brief Destroy the Device object
@@ -127,63 +93,47 @@ class Device {
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
     /**
-     * @brief add an item to the device.
-     * item can be a parameter, constraint, menu group, command, or language pack.
-     * @param name the name of the item
-     * @param item the item to add
+     * @brief get a collection of items from the device
+     * @param tag the tag of the collection to get
+     * @return collection of items
+     * @note tag can be CommmandTag, ParamTag, ConstraintTag, MenuGroupTag, or LanguagePackTag
      */
-    template <typename TAG> void addItem(const std::string& name, TAG::type* item, TAG tag) {
-      assert(item != nullptr);
+    template <typename TAG>
+    Collection<typename TAG::type>& getCollection(TAG tag) {
       if constexpr(std::is_same_v<TAG, ParamTag>) {
-        params_[name] = item;
+        return params_;
       } else if constexpr(std::is_same_v<TAG, CommandTag>) {
-        commands_[name] = item;
+        return commands_;
       } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
-        constraints_[name] = item;
+        return constraints_;
       } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
-        menu_groups_[name] = item;
+        return menu_groups_;
       } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
-        language_packs_[name] = item;
-      } else {
-        // static_assert(false, "Unknown TAG type");
+        return language_packs_;
       }
     }
 
     /**
-     * @brief retreive an item from the device by json pointer.
-     * item can be an IParameter, IConstraint, IMenuGroup, or ILanguagePack.
-     * @param path path to the item relative to device.<items>
+     * @brief retreive an item from the device by name
+     * @param name path to the item relative to device
+     * @return item can be IParameter, IConstraint, IMenuGroup, or ILanguagePack.
+     * @note tag can be CommmandTag, ParamTag, ConstraintTag, MenuGroupTag, or LanguagePackTag
      */
-    template <typename TAG> TAG::type* getItem(const std::string& name, TAG tag) const {
+    template <typename TAG>
+    TAG::type* getItem(const std::string& name, TAG tag) const {
       if constexpr(std::is_same_v<TAG, ParamTag>) {
-        auto it = params_.find(name);
-        if (it != params_.end()) {
-          return it->second;
-        }
+        return params_.getItem(name);
       } else if constexpr(std::is_same_v<TAG, CommandTag>) {
-        auto it = commands_.find(name);
-        if (it != commands_.end()) {
-          return it->second;
-        }
+        return commands_.getItem(name);
       } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
-        auto it = constraints_.find(name);
-        if (it != constraints_.end()) {
-          return it->second;
-        }
+        return constraints_.getItem(name);
       } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
-        auto it = menu_groups_.find(name);
-        if (it != menu_groups_.end()) {
-          return it->second;
-        }
+        return menu_groups_.getItem(name);
       } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
-        auto it = language_packs_.find(name);
-        if (it != language_packs_.end()) {
-          return it->second;
-        }
+        return language_packs_.getItem(name);
       } else {
-        // static_assert(false, "Unknown TAG type");
+        return nullptr;
       }
-      return nullptr;
     }
 
     /**
@@ -206,11 +156,11 @@ class Device {
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
-    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
-    std::unordered_map<std::string, IParam*> params_;
-    std::unordered_map<std::string, IMenuGroup*> menu_groups_;
-    std::unordered_map<std::string, IParam*> commands_;
-    std::unordered_map<std::string, ILanguagePack*> language_packs_;
+    Collection<catena::common::IConstraint> constraints_;
+    Collection<IParam> params_;
+    Collection<IMenuGroup> menu_groups_;
+    Collection<IParam> commands_;
+    Collection<ILanguagePack> language_packs_;
     std::vector<Scopes_e> access_scopes_;
     Scopes default_scope_;
     bool multi_set_enabled_;

@@ -14,6 +14,7 @@
 #include <lite/include/Device.h>
 #include <lite/include/StructInfo.h>
 #include <lite/include/PolyglotText.h>
+#include <lite/include/Collection.h>
 #include <common/include/IConstraint.h>
 
 #include <lite/param.pb.h>
@@ -71,11 +72,11 @@ public:
     /**
      * @brief the main constructor
      */
-    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget, 
-        const bool read_only, catena::common::IConstraint* constraint, const std::string& oid, Device& dm)
-        : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, constraint_{constraint}, dm_{dm} {
+    Param(catena::ParamType type, T& value, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name,
+        const std::string& widget, const bool read_only, const std::string& oid, Collection<IParam>& device_params)
+        : type_{type}, value_{value}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget} {
         setOid(oid);
-        dm.addItem<Device::ParamTag>(oid, this, Device::ParamTag{});
+        device_params.addItem(oid, this);
     }
 
     /**
@@ -121,8 +122,9 @@ public:
         param.set_widget(widget_);
 
         // constraint member
-        if (constraint_ != nullptr) {
-            constraint_->toProto(*param.mutable_constraint());
+        /// @todo need to update for when more constraints are added 
+        if (constraints_.empty()) {
+            constraints_.first()->toProto(*param.mutable_constraint());
         }
 
         // value member
@@ -163,13 +165,41 @@ public:
       }
     }
 
+    /**
+     * @brief get a collection of items from this param
+     * @param tag the tag of the collection to get
+     * @return collection of items
+     * @note tag can be ConstraintTag
+     */
+    template <typename TAG>
+    Collection<typename TAG::type>& getCollection(TAG tag) {
+      if constexpr(std::is_same_v<TAG, ConstraintTag>) {
+        return constraints_;
+      }
+    }
+
+    /**
+     * @brief retreive an item from the param by name
+     * @param name path to the item relative to device
+     * @return item can be IConstraint
+     * @note tag can be ConstraintTag
+     */
+    template <typename TAG>
+    TAG::type* getItem(const std::string& name, TAG tag) const {
+      if constexpr(std::is_same_v<TAG, ConstraintTag>) {
+        return constraints_.getItem(name);
+      } else {
+        return nullptr;
+      }
+    }
+
 private:
     ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;
     PolyglotText name_;
-    catena::common::IConstraint* constraint_;
+    Collection<catena::common::IConstraint> constraints_;
     std::reference_wrapper<T> value_;
-    std::reference_wrapper<Device> dm_;
+    // std::reference_wrapper<Device> dm_;
     std::string widget_;
     bool read_only_;
 };

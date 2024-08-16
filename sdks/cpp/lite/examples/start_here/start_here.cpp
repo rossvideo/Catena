@@ -30,6 +30,7 @@
 // folder structure.
 #include <lite/include/Device.h> // catena::lite::Device, LockGuard
 #include <lite/include/Param.h> // catena::lite::Param
+#include <lite/include/Collection.h> // catena::lite::Collection
 
 // this include header was generated from the protobuf definition
 // it's in the BINARY folder structure, not SOURCE.
@@ -52,7 +53,7 @@ int main () {
     // and we also know its value type - std::string
     // so we can get a reference to its Param object by casting it from 
     // an IParam* supplied by the Device's look up method
-    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.getItem("/hello", Device::ParamTag()));
+    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.getItem("/hello", ParamTag()));
 
     // With the Param object we can get a reference to the parameter's value object
     std::string& helloValue = helloParam.get();
@@ -68,21 +69,21 @@ int main () {
     std::cout << helloValue << std::endl;
 
     // Example with a parameter of type int
-    auto& countParam = *dynamic_cast<Param<int>*>(dm.getItem("/count", Device::ParamTag()));
+    auto& countParam = *dynamic_cast<Param<int>*>(dm.getItem("/count", ParamTag()));
     int32_t& countValue = countParam.get();
     std::cout << "counter initial value: " << countValue << std::endl;
     countValue++;
     std::cout << "counter incremented value: " << countValue << std::endl;
 
     // Example with a parameter of type float
-    auto& gainParam = *dynamic_cast<Param<float>*>(dm.getItem("/gain", Device::ParamTag()));
+    auto& gainParam = *dynamic_cast<Param<float>*>(dm.getItem("/gain", ParamTag()));
     float& gainValue = gainParam.get();
     std::cout << "gain initial value: " << gainValue << std::endl;
     gainValue *= gainValue;
     std::cout << "gain squared value: " << gainValue << std::endl;
 
     // Example with array of strings
-    auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.getItem("/phonetic_alphabet", Device::ParamTag()));
+    auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.getItem("/phonetic_alphabet", ParamTag()));
     std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
     std::cout << "phonetic alphabet initial value: ";
     for (const auto& s : phonetic_alphabetValue) {
@@ -98,7 +99,7 @@ int main () {
     std::cout << std::endl;
 
     // Example with array of integers
-    auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.getItem("/primes", Device::ParamTag()));
+    auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.getItem("/primes", ParamTag()));
     std::vector<int>& primesValue = primesParam.get();
     std::cout << "primes initial value: ";
     for (const auto& i : primesValue) {
@@ -114,7 +115,7 @@ int main () {
     std::cout << std::endl;
 
     // example with array of floats that's initially empty
-    auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.getItem("/physical_constants", Device::ParamTag()));
+    auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.getItem("/physical_constants", ParamTag()));
     std::vector<float>& physical_constantsValue = physical_constantsParam.get();
     std::cout << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty") << std::endl;
     physical_constantsValue.push_back(3.14159);

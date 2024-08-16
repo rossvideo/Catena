@@ -39,7 +39,7 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    auto& locationParam = *dynamic_cast<Param<Location>*>(dm.getItem("/location", Device::ParamTag()));
+    auto& locationParam = *dynamic_cast<Param<Location>*>(dm.getItem("/location", ParamTag()));
     Location& locationValue = locationParam.get();
     std::cout << "Location from model - latitude: " << locationValue.latitude
               << ", longitude: " << locationValue.longitude << std::endl;

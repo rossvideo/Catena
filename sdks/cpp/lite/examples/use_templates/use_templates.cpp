@@ -39,7 +39,7 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    Param<City>& canadasCapital = *dynamic_cast<Param<City>*>(dm.getItem("/ottawa", Device::ParamTag()));
+    Param<City>& canadasCapital = *dynamic_cast<Param<City>*>(dm.getItem("/ottawa", ParamTag()));
     City& city = canadasCapital.get();
     std::cout << "Canada's capital city is " << city.city_name
               << " at latitude " << city.latitude
@@ -47,7 +47,7 @@ int main() {
               << " with a population of " << city.population
               << std::endl;
 
-    Param<City>& ontariosCapital = *dynamic_cast<Param<City>*>(dm.getItem("/toronto", Device::ParamTag()));
+    Param<City>& ontariosCapital = *dynamic_cast<Param<City>*>(dm.getItem("/toronto", ParamTag()));
     City& city2 = ontariosCapital.get();
     std::cout << "Ontario's capital city is " << city2.city_name
               << " at latitude " << city2.latitude

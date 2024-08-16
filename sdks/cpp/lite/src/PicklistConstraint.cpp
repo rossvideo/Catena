@@ -2,10 +2,15 @@
 
 #include <lite/param.pb.h>
 
+namespace catena {
+namespace lite {
+
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
-    bool shared)
+    bool shared, Collection<IConstraint>& parent)
     : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-    strict_{strict}, default_{*init.begin()} {}
+    strict_{strict}, default_{*init.begin()} {
+        parent.addItem(oid, this);
+    }
 
 PicklistConstraint::~PicklistConstraint() = default;
 
@@ -29,3 +34,6 @@ void PicklistConstraint::toProto(google::protobuf::MessageLite& msg) const {
         constraint.mutable_string_choice()->add_choices(choice);
     }
 }
+
+} // namespace lite
+} // namespace catena

@@ -11,9 +11,13 @@
 #include <common/include/IConstraint.h>
 #include <google/protobuf/message_lite.h>
 #include <lite/include/PolyglotText.h>
+#include <lite/include/Collection.h>
 
 #include <string>
 #include <unordered_map>
+
+namespace catena {
+namespace lite {
 
 /**
  * @brief Named choice constraint, ensures a value is within a named choice
@@ -48,9 +52,11 @@ public:
      * @param shared is the constraint shared
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Collection<IConstraint>& parent)
         : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{init.begin()->first} {}
+        strict_{strict}, default_{init.begin()->first} {
+            parent.addItem(oid, this);
+        }
 
     /**
      * @brief default destructor
@@ -116,3 +122,6 @@ private:
     bool strict_;     ///< should the value be constrained on apply
     T default_;       ///< the default value to constrain to
 };
+
+} // namespace lite
+} // namespace catena

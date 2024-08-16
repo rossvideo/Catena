@@ -120,7 +120,7 @@ void statusUpdateExample(){
              */
             std::cout << "signal recieved: " << p->getOid() << " has been changed by client" << '\n';
         });
-        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
+        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", ParamTag{}));
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {

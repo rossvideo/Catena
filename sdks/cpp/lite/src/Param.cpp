@@ -21,8 +21,8 @@ void Param<int32_t>::toProto(Value& dst) const {
 
 template <>
 void Param<int32_t>::fromProto(Value& src) {
-    if (constraint_) {
-        constraint_->apply(&src);
+    if (!constraints_.empty()) {
+        constraints_.first()->apply(&src);
     }
     catena::lite::fromProto<int32_t>(&value_.get(), src);
 }
@@ -34,8 +34,8 @@ void Param<std::string>::toProto(Value& dst) const {
 
 template <>
 void Param<std::string>::fromProto(Value& src) {
-    if (constraint_) {
-        constraint_->apply(&src);
+    if (!constraints_.empty()) {
+        constraints_.first()->apply(&src);
     }
     catena::lite::fromProto<std::string>(&value_.get(), src);
 }
@@ -47,8 +47,8 @@ void Param<float>::toProto(Value& dst) const {
 
 template <>
 void Param<float>::fromProto(Value& src) {
-    if (constraint_) {
-        constraint_->apply(&src);
+    if (!constraints_.empty()) {
+        constraints_.first()->apply(&src);
     }
     catena::lite::fromProto<float>(&value_.get(), src);
 }

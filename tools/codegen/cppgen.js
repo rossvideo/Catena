@@ -122,56 +122,62 @@ class CppGen {
         this.namespace = namespace;
         this.constraints = {
             "INT_RANGE": (name, desc, shared = false, indent = 0) => {
-                let cons, constraint_name, constraint_owner; 
+                let cons, constraint_name, constraint_owner, parent; 
                 // is this a shared or param constraint 
                 if (shared) {
                     cons = desc.int32_range;
                     constraint_name = `${name}`;
-                    constraint_owner = `/constraints/${name}` 
+                    constraint_owner = `/constraints/${name}`;
+                    parent = 'dm.getCollection(ConstraintTag{})';
                 } else {
                     cons = desc.constraint.int32_range;
                     constraint_name = `${name}ParamConstraint`;
                     constraint_owner = `/param/${name}`;
+                    parent = `${name}Param.getCollection(ConstraintTag{})`;
                 }
                 // collect range bounds
                 let fields = `${cons.min_value},${cons.max_value}`;
                 fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
                 fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
                 fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
-                bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},${quoted(constraint_owner)},${shared}};`, indent);
+                bloc(`RangeConstraint<int32_t> ${constraint_name}{${fields},${quoted(constraint_owner)},${shared},${parent}};`, indent);
                 return constraint_name;
             }, 
             "FLOAT_RANGE": (name, desc, shared = false, indent = 0) => {
-                let cons, constraint_name, constraint_owner; 
+                let cons, constraint_name, constraint_owner, parent; 
                 // is this a shared or param constraint 
                 if (shared) {
                     cons = desc.float_range;
                     constraint_name = `${name}`;
-                    constraint_owner = `/constraints/${name}` 
+                    constraint_owner = `/constraints/${name}`;
+                    parent = 'dm.getCollection(ConstraintTag{})';
                 } else {
                     cons = desc.constraint.float_range;
                     constraint_name = `${name}ParamConstraint`;
                     constraint_owner = `/param/${name}`;
+                    parent = `${name}Param.getCollection(ConstraintTag{})`;
                 }
                 // collect range bounds
                 let fields = `${cons.min_value},${cons.max_value}`;
                 fields += cons.steps !== undefined ? `,${cons.steps}` : ',1';
                 fields += cons.display_min !== undefined ? `,${cons.display_min}` : `,${cons.min_value}`;
                 fields += cons.display_max !== undefined ? `,${cons.display_max}` : `,${cons.max_value}`;
-                bloc(`RangeConstraint<float> ${constraint_name}{${fields},${quoted(constraint_owner)},${shared}};`, indent);
+                bloc(`RangeConstraint<float> ${constraint_name}{${fields},${quoted(constraint_owner)},${shared},${parent}};`, indent);
                 return constraint_name;
             }, 
             "INT_CHOICE": (name, desc, shared = false, indent = 0) => {
-                let cons, constraint_name, constraint_owner; 
+                let cons, constraint_name, constraint_owner, parent; 
                 // is this a shared or param constraint 
                 if (shared) {
                     cons = desc.int32_choice;
                     constraint_name = `${name}`;
-                    constraint_owner = `/constraints/${name}` 
+                    constraint_owner = `/constraints/${name}`;
+                    parent = 'dm.getCollection(ConstraintTag{})';
                 } else {
                     cons = desc.constraint.int32_choice;
                     constraint_name = `${name}ParamConstraint`;
                     constraint_owner = `/param/${name}`;
+                    parent = `${name}Param.getCollection(ConstraintTag{})`;
                 }
                 // collect the polyglot names and value pairs
                 let fields = '';
@@ -191,20 +197,22 @@ class CppGen {
                     }
                 }
                 let strict = true;
-                bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared}};`, indent);
+                bloc(`NamedChoiceConstraint<int32_t> ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared},${parent}};`, indent);
                 return constraint_name;
             },
             "STRING_STRING_CHOICE": (name, desc, shared = false, indent = 0) => {
-                let cons, constraint_name, constraint_owner; 
+                let cons, constraint_name, constraint_owner, parent; 
                 // is this a shared or param constraint 
                 if (shared) {
                     cons = desc.int32_choice;
                     constraint_name = `${name}`;
-                    constraint_owner = `/constraints/${name}` 
+                    constraint_owner = `/constraints/${name}`;
+                    parent = 'dm.getCollection(ConstraintTag{})';
                 } else {
                     cons = desc.constraint.int32_choice;
                     constraint_name = `${name}ParamConstraint`;
                     constraint_owner = `/param/${name}`;
+                    parent = `${name}Param.getCollection(ConstraintTag{})`;
                 }
                 // collect the polyglot names and value pairs
                 let fields = '';
@@ -224,20 +232,22 @@ class CppGen {
                     }
                 }
                 let strict = cons.strict !== undefined ? cons.strict : false;
-                bloc(`NamedChoiceConstraint<std::string> ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared}};`, indent);
+                bloc(`NamedChoiceConstraint<std::string> ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared},${parent}};`, indent);
                 return constraint_name;
             },
             "STRING_CHOICE": (name, desc, shared = false, indent = 0) => {
-                let cons, constraint_name, constraint_owner; 
+                let cons, constraint_name, constraint_owner, parent; 
                 // is this a shared or param constraint 
                 if (shared) {
                     cons = desc.string_choice;
                     constraint_name = `${name}`;
-                    constraint_owner = `/constraints/${name}` 
+                    constraint_owner = `/constraints/${name}`;
+                    parent = 'dm.getCollection(ConstraintTag{})';
                 } else {
                     cons = desc.constraint.string_choice;
                     constraint_name = `${name}ParamConstraint`;
                     constraint_owner = `/param/${name}`;
+                    parent = `${name}Param.getCollection(ConstraintTag{})`;
                 }
                 // collect the string list 
                 let fields = '';
@@ -248,7 +258,7 @@ class CppGen {
                     }
                 }
                 let strict = cons.strict !== undefined ? cons.strict : false;
-                bloc(`PicklistConstraint ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared}};`, indent);
+                bloc(`PicklistConstraint ${constraint_name}{{${fields}},${strict},${quoted(constraint_owner)},${shared},${parent}};`, indent);
                 return constraint_name;
             },
             "ALARM_TABLE": (name, desc, shared = false, indent = 0) => {
@@ -296,23 +306,10 @@ class CppGen {
 
             // add the read_only flag
             if (desc.read_only !== undefined && desc.read_only) {
-                ans += 'true,';
+                ans += 'true';
             } else {
-                ans += 'false,';
+                ans += 'false';
             }
-            
-            // add the constraint if it exists
-            let constraint_init = '&';
-            if (desc.constraint !== undefined && desc.constraint.ref_oid === undefined) {
-                // construct and reference the param constraint
-                constraint_init += this.constraints[desc.constraint.type](name, desc);
-            } else if (desc.constraint !== undefined) {
-                // just reference the shared constraint
-                constraint_init += desc.constraint.ref_oid.split('/').pop();
-            } else {
-                constraint_init = 'nullptr';
-            }
-            ans += `${constraint_init}`;
 
             return ans;
         },
@@ -377,7 +374,7 @@ class CppGen {
                 // instantiate the struct in the body file 
                 let bodyIndent = 0;
                 bloc(`${fqname} ${name} ${structInit(names, srctypes, desc)};`, bodyIndent);
-                bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(name, desc)},"/${name}",dm);`, bodyIndent)
+                bloc(`catena::lite::Param<${fqname}> ${name}Param(catena::ParamType::STRUCT,${name},${this.other_items(name, desc)},"/${name}",dm.getCollection(ParamTag{}));`, bodyIndent)
                 if (template !== undefined) {
                     // Support functions for user defined types have already been generated
                     return;
@@ -413,7 +410,7 @@ class CppGen {
                     initializer = `{"${desc.value.string_value}"}`;
                 }
                 bloc(`std::string ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::string> ${name}Param(catena::ParamType::STRING,${name},${this.other_items(name, desc, template)},"/${name}",dm.getCollection(ParamTag{}));`, indent);
             },
             "INT32": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
@@ -421,7 +418,7 @@ class CppGen {
                     initializer = `{${desc.value.int32_value}}`;
                 }
                 bloc(`int32_t ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<int32_t> ${name}Param(catena::ParamType::INT32,${name},${this.other_items(name, desc, template)},"/${name}",dm.getCollection(ParamTag{}));`, indent);
             },
             "FLOAT32": (name, desc, template, indent = 0) => {
                 let initializer = '{}';
@@ -429,22 +426,22 @@ class CppGen {
                     initializer = `{${desc.value.float32_value}}`;
                 }
                 bloc(`float ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<float> ${name}Param(catena::ParamType::FLOAT32,${name},${this.other_items(name, desc, template)},"/${name}",dm.getCollection(ParamTag{}));`, indent);
             },
             "STRING_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.string_array_values.strings, '"', indent);
                 bloc(`std::vector<std::string> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::string>> ${name}Param(catena::ParamType::STRING_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm.getCollection(ParamTag{}));`, indent);
             },
             "INT32_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.int32_array_values.ints, '', indent);
                 bloc(`std::vector<std::int32_t> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<std::int32_t>> ${name}Param(catena::ParamType::INT32_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm.getCollection(ParamTag{}));`, indent);
             },
             "FLOAT32_ARRAY": (name, desc, template, indent = 0) => {
                 let initializer = this.arrayInitializer(name, desc, desc.value.float32_array_values.floats, '', indent);
                 bloc(`std::vector<float> ${name}${initializer};`, indent);
-                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm);`, indent);
+                bloc(`catena::lite::Param<std::vector<float>> ${name}Param(catena::ParamType::FLOAT32_ARRAY,${name},${this.other_items(name, desc, template)},"/${name}",dm.getCollection(ParamTag{}));`, indent);
             }
         };
         this.init = (headerFilename, device) => {
@@ -484,7 +481,11 @@ class CppGen {
             bloc(`catena::lite::Device dm{${deviceInit}};`)
             bloc(`using catena::lite::StructInfo;`);
             bloc(`using catena::lite::FieldInfo;`);
-            bloc(`std::unordered_map<std::string, catena::common::IConstraint*> constraints;`);
+            bloc(`using catena::lite::RangeConstraint;`);
+            bloc(`using catena::lite::NamedChoiceConstraint;`);
+            bloc(`using catena::lite::PicklistConstraint;`);
+            bloc(`using catena::lite::ParamTag;`);
+            bloc(`using catena::lite::ConstraintTag;`);
         },
         this.finish = () => {
             hloc(`} // namespace ${namespace}`);
@@ -509,7 +510,16 @@ class CppGen {
                 throw new Error(`Param ${oid} is based off a template so it can't have params`);
             }
         } 
-        return this.params[desc.type](oid, desc, template_param);
+        this.params[desc.type](oid, desc, template_param);
+        // add the constraint if it exists
+        if (desc.constraint !== undefined && desc.constraint.ref_oid === undefined) {
+            // construct and reference the param constraint
+            this.constraints[desc.constraint.type](oid, desc);
+        } else if (desc.constraint !== undefined) {
+            // just reference the shared constraint
+            desc.constraint.ref_oid.split('/').pop();
+        }
+        return 
     }
 
     constraint (oid, desc) {

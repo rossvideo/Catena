@@ -10,7 +10,11 @@
  */
 
 #include <common/include/IConstraint.h>
-#include  <google/protobuf/message_lite.h>
+#include <google/protobuf/message_lite.h>
+#include <lite/include/Collection.h>
+
+namespace catena {
+namespace lite {
 
 /**
  * @brief Range constraint, ensures a value is within a range
@@ -32,9 +36,11 @@ public:
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
      */
-    RangeConstraint(T min, T max, std::string oid, bool shared)
+    RangeConstraint(T min, T max, std::string oid, bool shared, Collection<IConstraint>& parent)
         : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
-        display_min_{min}, display_max_{max} {}
+        display_min_{min}, display_max_{max} {
+            parent.addItem(oid, this);
+        }
 
     /**
      * @brief default destructor
@@ -51,9 +57,12 @@ public:
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
      */
-    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared)
+    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
+        bool shared, Collection<IConstraint>& parent)
         : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max} {}
+        display_min_{display_min}, display_max_{display_max} {
+            parent.addItem(oid, this);
+        }
 
     /**
      * @brief applies range constraint to a catena::Value
@@ -120,3 +129,6 @@ private:
     T display_min_; ///< the minimum value to display
     T display_max_; ///< the maximum value to display
 };
+
+} // namespace lite
+} // namespace catena

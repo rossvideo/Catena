@@ -10,10 +10,14 @@
 
 #include <common/include/IConstraint.h>
 #include <google/protobuf/message_lite.h>
+#include <lite/include/Collection.h>
 
 #include <string>
 #include <unordered_set>
 #include <initializer_list>
+
+namespace catena {
+namespace lite {
 
 /**
  * @brief Picklist constraint, ensures a value is in a list of strings
@@ -43,7 +47,7 @@ public:
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared);
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Collection<IConstraint>& parent);
 
     /**
      * @brief default destructor
@@ -67,3 +71,6 @@ private:
     bool strict_;         ///< should the value be constrained on apply
     std::string default_; ///< the default value to constrain to
 };
+
+} // namespace lite
+} // namespace catena
