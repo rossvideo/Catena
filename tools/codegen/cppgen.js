@@ -22,6 +22,7 @@ const { get } = require("http");
 const path = require("node:path");
 const Device = require("./device");
 const Param = require("./param");
+const { type } = require("os");
 
 /**
  * writes a line of code to the file descriptor constructed
@@ -41,6 +42,7 @@ class loc {
 }
 
 let hloc, bloc;
+let hindent, bindent;
 
 /**
  * C++ code generator
@@ -71,8 +73,10 @@ class CppGen {
 
     let Hloc = new loc(this.header);
     hloc = Hloc.write.bind(Hloc);
+    hindent = 0;
     let Bloc = new loc(this.body);
     bloc = Bloc.write.bind(Bloc);
+    bindent = 0;
   }
 
   //     arrayInitializer (name, desc, arr, quote = '', indent = 0)  {
@@ -315,7 +319,9 @@ class CppGen {
         );
         if (isTopLevel) {
           console.log(`rollup: ${JSON.stringify(structInfo, null, 2)}`);
-          // writeStructInfo(structInfo);
+          for (let type in structInfo) {
+            this.defineGetStructInfo(structInfo[type]);
+          }
         }
       }
     }
@@ -345,6 +351,8 @@ class CppGen {
 
     parentStructInfo.typename = type;
     if (p.hasSubparams()) {
+      hloc(`struct ${type} {`, hindent++);
+
       parentStructInfo.params = {};
       this.params(
         parentOid + `/${oid}`,
@@ -352,6 +360,42 @@ class CppGen {
         parentStructInfo.params,
         true
       );
+
+      hloc(`static const StructInfo& getStructInfo();`, hindent);
+      hloc(`};`, --hindent);
+      hloc(`${type} ${name};`, hindent);
+    } else {
+      hloc(`${type} ${name};`, hindent);
+    }
+  }
+
+  defineGetStructInfo(parentStructInfo) {
+    bloc(`const StructInfo& ${parentStructInfo.typename}::getStructInfo() {`, bindent++);
+    bloc(`static StructInfo si {`, bindent++);
+    bloc(`"${parentStructInfo.typename}",`, bindent);
+    bloc(`{`, bindent++);
+    
+    const keys = Object.keys(parentStructInfo.params);
+    const lastIndex = keys.length - 1;
+
+    keys.forEach((p, index) => {
+      if (index === lastIndex) {
+        bloc(`{ "${p}", offsetof(${parentStructInfo.typename}, ${p})}`, bindent);
+      } else {
+        bloc(`{ "${p}", offsetof(${parentStructInfo.typename}, ${p})},`, bindent);
+      }
+    });
+
+    bloc(`}`, --bindent);
+    bloc(`};`, --bindent);
+    bloc(`return si;`, bindent);
+    bloc(`}`, --bindent);
+
+    // defince getStructInfo for subparams structs
+    for (let p in parentStructInfo.params) {
+      if (parentStructInfo.params[p].params) {
+        this.defineGetStructInfo(parentStructInfo.params[p]);
+      }
     }
   }
 
@@ -398,6 +442,7 @@ class CppGen {
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);
     bloc(`using ParamAdder = catena::common::AddItem<ParamTag>;`);
+    bloc(`using namespace ${this.namespace};`)
   }
 
   finish = () => {
