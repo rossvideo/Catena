@@ -76,8 +76,9 @@ template <typename T> class ParamDescriptor : public IParam {
         dev.addItem<ParamTag>(oid, this);
     }
 
+    template <typename ParentT>
     ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-        const bool read_only, const std::string& oid, ParamDescriptor &parent)
+        const bool read_only, const std::string& oid, ParamDescriptor<ParentT> &parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{&parent} {
       setOid(oid);
       parent_.addItem<ParamTag>(oid, this);

@@ -304,7 +304,7 @@ class CppGen {
    * @param {boolean} isStructChild true if the param is a member of a struct
    *
    */
-  params(parentOid, desc, parentStructInfo, isStructChild = false) {
+  params(parentOid, desc, typeNamespace, parentStructInfo, isStructChild = false) {
     let isTopLevel = parentOid === "";
     if ("params" in desc) {
       for (let oid in desc.params) {
@@ -313,6 +313,7 @@ class CppGen {
         this.subparam(
           parentOid,
           oid,
+          typeNamespace,
           desc.params,
           structInfo[oid],
           isStructChild
@@ -327,7 +328,7 @@ class CppGen {
     }
   }
 
-  subparam(parentOid, oid, desc, parentStructInfo, isStructChild = false) {
+  subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false) {
     let p = new Param(parentOid, oid, desc);
     let args = p.argsToString();
     let type = p.objectType();
@@ -336,27 +337,35 @@ class CppGen {
     if (!isStructChild) {
       // only top-level params get value objects
       let init = p.initializer(desc[oid]);
-      bloc(`${type} ${name} ${init};`);
+      bloc(`${typeNamespace}::${type} ${name} ${init};`);
     }
 
     // instantiate the ParamDescriptor
-    bloc(`catena::lite::ParamDescriptor<${type}> ${pname}Param {${args}};`);
+    if(p.hasSubparams()) {
+      bloc(`catena::lite::ParamDescriptor<${typeNamespace}::${type}> ${pname}Param {${args}};`);
+    } else {
+      bloc(`catena::lite::ParamDescriptor<${type}> ${pname}Param {${args}};`);
+    }
 
     if (!isStructChild) {
       // only top-level params get ParamWithValue objects
       bloc(
-        `catena::lite::ParamWithValue<${type}> ${pname}ParamWithValue {${pname}Param, ${name}};`
+        `catena::lite::ParamWithValue<${typeNamespace}::${type}> ${pname}ParamWithValue {${pname}Param, ${name}};`
       );
     }
 
     parentStructInfo.typename = type;
+    parentStructInfo.typeNamespace = typeNamespace;
     if (p.hasSubparams()) {
+      typeNamespace = `${typeNamespace}::${type}`;
+
       hloc(`struct ${type} {`, hindent++);
 
       parentStructInfo.params = {};
       this.params(
         parentOid + `/${oid}`,
         desc[oid],
+        typeNamespace,
         parentStructInfo.params,
         true
       );
@@ -369,20 +378,20 @@ class CppGen {
     }
   }
 
-  defineGetStructInfo(parentStructInfo) {
-    bloc(`const StructInfo& ${parentStructInfo.typename}::getStructInfo() {`, bindent++);
+  defineGetStructInfo(structInfo) {
+    bloc(`const StructInfo& ${structInfo.typeNamespace}::${structInfo.typename}::getStructInfo() {`, bindent++);
     bloc(`static StructInfo si {`, bindent++);
-    bloc(`"${parentStructInfo.typename}",`, bindent);
+    bloc(`"${structInfo.typename}",`, bindent);
     bloc(`{`, bindent++);
     
-    const keys = Object.keys(parentStructInfo.params);
+    const keys = Object.keys(structInfo.params);
     const lastIndex = keys.length - 1;
 
     keys.forEach((p, index) => {
       if (index === lastIndex) {
-        bloc(`{ "${p}", offsetof(${parentStructInfo.typename}, ${p})}`, bindent);
+        bloc(`{ "${p}", offsetof(${structInfo.typename}, ${p})}`, bindent);
       } else {
-        bloc(`{ "${p}", offsetof(${parentStructInfo.typename}, ${p})},`, bindent);
+        bloc(`{ "${p}", offsetof(${structInfo.typename}, ${p})},`, bindent);
       }
     });
 
@@ -392,9 +401,9 @@ class CppGen {
     bloc(`}`, --bindent);
 
     // defince getStructInfo for subparams structs
-    for (let p in parentStructInfo.params) {
-      if (parentStructInfo.params[p].params) {
-        this.defineGetStructInfo(parentStructInfo.params[p]);
+    for (let p in structInfo.params) {
+      if (structInfo.params[p].params) {
+        this.defineGetStructInfo(structInfo.params[p]);
       }
     }
   }
@@ -405,7 +414,7 @@ class CppGen {
   generate() {
     this.init();
     this.device();
-    this.params("", this.desc);
+    this.params("", this.desc, this.namespace);
     this.finish();
   }
 
@@ -415,6 +424,7 @@ class CppGen {
     hloc(warning);
     hloc(`#include <lite/include/Device.h>`);
     hloc(`#include <lite/include/StructInfo.h>`);
+    hloc(`using catena::lite::StructInfo;`);
     hloc(`extern catena::lite::Device dm;`);
     hloc(`namespace ${this.namespace} {`);
 
@@ -442,7 +452,6 @@ class CppGen {
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);
     bloc(`using ParamAdder = catena::common::AddItem<ParamTag>;`);
-    bloc(`using namespace ${this.namespace};`)
   }
 
   finish = () => {
