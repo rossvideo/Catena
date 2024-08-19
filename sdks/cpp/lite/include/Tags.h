@@ -19,7 +19,7 @@ struct MenuGroupTag {using type = IMenuGroup;};
 struct LanguagePackTag {using type = ILanguagePack;};
 
 template<typename TAG>
-using AddItem = std::function<void(const std::string& key, TAG::type* item)>;
+using AddItem = std::function<void(const std::string& key, typename TAG::type* item)>;
 
 } // namespace common
 } // namespace catena

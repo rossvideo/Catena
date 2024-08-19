@@ -1,7 +1,13 @@
 #pragma once
 
-#include <lite/include/IParam.h> // for now, move to common later
+#include <lite/include/IParam.h>
 #include <lite/include/ParamDescriptor.h>
+#include <lite/include/Device.h>
+#include <lite/include/StructInfo.h>
+#include <lite/include/PolyglotText.h>
+#include <lite/include/Tags.h>
+
+#include <lite/param.pb.h>
 
 #include <lite/param.pb.h>
 
@@ -12,12 +18,27 @@ namespace catena {
 namespace lite {
 
 template <typename T>
-class ParamWithValue : public IParam {
+class ParamWithValue : public catena::common::IParam {
   public:
     using Descriptor = ParamDescriptor<T>;
   public:
     ParamWithValue() = delete;
-    ParamWithValue(Descriptor& desc, T& value) : descriptor_(desc), value_(value) {}
+    ParamWithValue(
+        catena::ParamType type,
+        const OidAliases& oid_aliases,
+        const PolyglotText::ListInitializer name,
+        const std::string& widget,
+        const bool read_only,
+        const std::string& oid,
+        Device &dev,
+        T& value
+    ) : descriptor_{type, oid_aliases, name, widget, read_only, oid, dev}, 
+        value_{value} {
+        dm.addItem<common::ParamTag>(oid, this);
+    }
+
+
+
     ParamWithValue(const ParamWithValue&) = delete;
     ParamWithValue& operator=(const ParamWithValue&) = delete;
     ParamWithValue(ParamWithValue&&) = default;
@@ -33,38 +54,38 @@ class ParamWithValue : public IParam {
     }
 
     void toProto(catena::Param& param) const override {
-        descriptor_.get().toProto(param);
+        descriptor_.toProto(param);
     }
 
     typename IParam::ParamType type() const override {
-        descriptor_.get().type();
+        return descriptor_.type();
     }
 
     const std::string& getOid() const override {
-        descriptor_.get().getOid();
+        return descriptor_.getOid();
     }
 
-    void setOid(const std::string& oid) {
-        descriptor_.get().setOid(oid);
+    void setOid(const std::string& oid) override{
+        descriptor_.setOid(oid);
     }
 
     bool readOnly() const override {
-        descriptor_.get().readOnly();
+        return descriptor_.readOnly();
     }
 
     void readOnly(bool flag) override {
-        descriptor_.get().readOnly(flag);
+        descriptor_.readOnly(flag);
     }
 
     /**
      * @brief get the value of the parameter
      */
-    T& get() const {
+    T& get() {
         return value_.get();
     }
 
   private:
-    std::reference_wrapper<Descriptor> descriptor_;
+    Descriptor descriptor_;
     std::reference_wrapper<T> value_;
 };
 

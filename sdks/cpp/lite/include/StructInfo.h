@@ -1,7 +1,14 @@
 #pragma once
 
-#include <common/include/meta/Typelist.h>
+/**
+ * @file StructInfo.h
+ * @brief Structured data serialization and deserialization to protobuf
+ * @author John R. Naylor
+ * @date 2024-07-07
+ */
+
 #include <lite/param.pb.h>
+#include <meta/Typelist.h>
 
 #include <string>
 #include <cstddef>
@@ -28,7 +35,7 @@ struct FieldInfo {
      * for the field's type
      * 
      */
-    std::function<void(catena::Value&, const void*)> toProto;
+    std::function<void(catena::Value& dst, const void* src)> toProto;
 
     /**
      * @brief a function that converts a protobuf value to a field
@@ -40,7 +47,7 @@ struct FieldInfo {
      * for the field's type
      * 
      */
-    std::function<void(void*, const catena::Value&)> fromProto;
+    std::function<void(void* dst, const catena::Value& src)> fromProto;
 };
 
 /**

@@ -21,8 +21,8 @@ cmake_minimum_required(VERSION 3.20)
 project(CATENA_LITE_EXAMPLES C CXX)
 
 add_subdirectory("start_here")
-add_subdirectory("use_structs")
-add_subdirectory("use_templates")
+# add_subdirectory("use_structs")
+# add_subdirectory("use_templates")
 
 
 

@@ -291,9 +291,9 @@ class CppGen {
   device() {
     const device = new Device(this.desc);
     bloc(`catena::lite::Device dm {${device.argsToString()}};`);
-    bloc(
-      `ParamAdder addParamToDevice = std::bind(&Device::addItem<ParamTag>, &dm, _1, _2);`
-    );
+    // bloc(
+    //   `ParamAdder addParamToDevice = std::bind(&Device::addItem<ParamTag>, &dm, _1, _2);`
+    // );
     bloc(""); // blank line
   }
 
@@ -318,7 +318,7 @@ class CppGen {
           structInfo[oid],
           isStructChild
         );
-        if (isTopLevel) {
+        if (isTopLevel && structInfo[oid].params) {
           console.log(`rollup: ${JSON.stringify(structInfo, null, 2)}`);
           for (let type in structInfo) {
             this.defineGetStructInfo(structInfo[type]);
@@ -337,21 +337,22 @@ class CppGen {
     if (!isStructChild) {
       // only top-level params get value objects
       let init = p.initializer(desc[oid]);
-      bloc(`${typeNamespace}::${type} ${name} ${init};`);
+      if (p.isStructType()) {
+        // add namespace scoping to typename
+        bloc(`${typeNamespace}::${type} ${name} ${init};`);
+      } else {
+        // native types don't need scoping
+        bloc(`${type} ${name} ${init};`);
+      }
+      /// @todo handle isVariant
     }
 
-    // instantiate the ParamDescriptor
-    if(p.hasSubparams()) {
-      bloc(`catena::lite::ParamDescriptor<${typeNamespace}::${type}> ${pname}Param {${args}};`);
-    } else {
-      bloc(`catena::lite::ParamDescriptor<${type}> ${pname}Param {${args}};`);
-    }
-
+    // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
+    let objectType = p.hasSubparams() ? `${typeNamespace}::${type}` : type;
     if (!isStructChild) {
-      // only top-level params get ParamWithValue objects
-      bloc(
-        `catena::lite::ParamWithValue<${typeNamespace}::${type}> ${pname}ParamWithValue {${pname}Param, ${name}};`
-      );
+      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, ${name}};`);
+    } else {
+      bloc(`catena::lite::ParamDescriptor<${objectType}> ${pname}Param {${args}};`);
     }
 
     parentStructInfo.typename = type;
@@ -372,9 +373,11 @@ class CppGen {
 
       hloc(`static const StructInfo& getStructInfo();`, hindent);
       hloc(`};`, --hindent);
-      hloc(`${type} ${name};`, hindent);
+      if (isStructChild) {
+        hloc(`${type} ${name};`, hindent);
+      }
     } else {
-      hloc(`${type} ${name};`, hindent);
+      //hloc(`${type} ${name};`, hindent);
     }
   }
 
@@ -414,7 +417,7 @@ class CppGen {
   generate() {
     this.init();
     this.device();
-    this.params("", this.desc, this.namespace);
+    this.params('', this.desc, this.namespace);
     this.finish();
   }
 
@@ -447,7 +450,7 @@ class CppGen {
     bloc(`using catena::lite::ParamDescriptor;`);
     bloc(`using catena::lite::ParamWithValue;`);
     bloc(`using catena::lite::Device;`);
-    bloc(`using catena::lite::IParam;`);
+    bloc(`using catena::common::IParam;`);
     bloc(`using std::placeholders::_1;`);
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);

@@ -38,8 +38,8 @@ function typeArg(desc) {
  *
  * @returns whatever string is bound to this
  */
-function repeatString() {
-  return this;
+function quoted() {
+  return `"${this}"`;
 }
 
 /**
@@ -109,7 +109,7 @@ function jpointerArg(desc) {
 }
 
 function parentArg(desc) {
-  return this.parentOid == "" ? "dm" : `${this.parentName()}Param`;
+  return this.parentOid == "" ? "dm" : `&${this.parentName()}Param`;
 }
 
 /**
@@ -130,7 +130,7 @@ class Param extends CppCtor {
     this.arguments.push(nameArg);
     this.arguments.push(widgetArg);
     this.arguments.push(readOnly);
-    this.arguments.push(jpointerArg.bind(this));
+    this.arguments.push(quoted.bind(this.oid));
     this.arguments.push(parentArg.bind(this));
   }
 
@@ -262,8 +262,8 @@ class Param extends CppCtor {
 
   fieldInfo() {
     return {
-        name: this.oid,
-        typename: this.type
+      name: this.oid,
+      typename: this.type,
     };
   }
 }

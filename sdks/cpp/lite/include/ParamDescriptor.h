@@ -8,7 +8,6 @@
 
 #include <lite/param.pb.h>
 
-#include <functional>  // reference_wrapper
 #include <vector>
 #include <string>
 
@@ -21,12 +20,9 @@ namespace lite {
  * @brief ParamDescriptor provides information about a parameter
  * @tparam T the parameter's value type
  */
-template <typename T> class ParamDescriptor : public IParam {
+template <typename T> class ParamDescriptor : public catena::common::IParam {
   public:
-    /**
-     * @brief OidAliases is a vector of strings
-     */
-    using OidAliases = std::vector<std::string>;
+    
 
   public:
     /**
@@ -73,44 +69,19 @@ template <typename T> class ParamDescriptor : public IParam {
           const bool read_only, const std::string& oid, Device &dev)
         : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{nullptr} {
         setOid(oid);
-        dev.addItem<ParamTag>(oid, this);
+        dev.addItem<common::ParamTag>(oid, this);
     }
 
-    template <typename ParentT>
     ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-        const bool read_only, const std::string& oid, ParamDescriptor<ParentT> &parent)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{&parent} {
+        const bool read_only, const std::string& oid, IParam* parent)
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{parent} {
       setOid(oid);
-      parent_.addItem<ParamTag>(oid, this);
-    }
-        
-
-    /**
-     * @brief serialize the parameter value to protobuf
-     */
-    void toProto(catena::Value& value) const override;
-
-    /**
-     * @brief deserialize the parameter value from protobuf
-     */
-    void fromProto(const catena::Value& value) override;
-
-    /**
-     * @brief serialize the parameter descriptor to protobuf
-     */
-    void toProto(catena::ParamDescriptor& param) const override {
-        param.set_type(type_());
-        param.mutable_oid_aliases()->Reserve(oid_aliases_.size());
-        for (const auto& oid_alias : oid_aliases_) {
-            param.add_oid_aliases(oid_alias);
-        }
-        catena::PolyglotText name_proto;
-        for (const auto& [lang, text] : name_.displayStrings()) {
-            (*name_proto.mutable_display_strings())[lang] = text;
-        }
-        param.mutable_name()->Swap(&name_proto);
-        param.set_widget(widget_);
-        toProto(*param.mutable_value());
+      auto dad = dynamic_cast<ParamDescriptor*>(parent_);
+      if (dad) {
+        dad->template addItem<common::ParamTag>(oid, this);
+      } else {
+        throw std::runtime_error("Parent is not a ParamDescriptor");
+      }
     }
 
     /**
@@ -176,10 +147,10 @@ template <typename T> class ParamDescriptor : public IParam {
      */
     template <typename TAG>
     void addItem(const std::string& key, typename TAG::type* item) {
-        if constexpr (std::is_same_v<TAG, ParamTag>) {
+        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
             params_[key] = item;
         }
-        if constexpr (std::is_same_v<TAG, CommandTag>) {
+        if constexpr (std::is_same_v<TAG, common::CommandTag>) {
             commands_[key] = item;
         }
     }
@@ -190,8 +161,8 @@ template <typename T> class ParamDescriptor : public IParam {
      */
     template <typename TAG>
     typename TAG::type* getItem(const std::string& key) const {
-        GET_ITEM(ParamTag, params_)
-        GET_ITEM(CommandTag, commands_)
+        GET_ITEM(common::ParamTag, params_)
+        GET_ITEM(common::CommandTag, commands_)
         return nullptr;
     }
 

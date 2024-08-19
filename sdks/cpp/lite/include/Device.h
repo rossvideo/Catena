@@ -12,7 +12,7 @@
 #include <common/include/vdk/signals.h>
 
 #include <lite/include/IParam.h>
-#include <lite/include/IConstraint.h>
+// #include <lite/include/IConstraint.h>
 #include <lite/include/Tags.h>  
 
 #include <lite/device.pb.h>
@@ -55,6 +55,7 @@ class Device {
     using Scopes = catena::common::Scopes;
     using DetailLevel_e = catena::Device_DetailLevel;
     using DetailLevel = catena::common::DetailLevel;
+    using IParam = catena::common::IParam;
 
   public:
     /**
@@ -120,21 +121,21 @@ class Device {
      */
     template <typename TAG>
     void addItem(const std::string& key, typename TAG::type* item) {
-        if constexpr (std::is_same_v<TAG, ParamTag>) {
+        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
             params_[key] = item;
         }
-        if constexpr (std::is_same_v<TAG, ConstraintTag>) {
-            constraints_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, MenuGroupTag>) {
-            menu_groups_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, CommandTag>) {
-            commands_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, LanguagePackTag>) {
-            language_packs_[key] = item;
-        }
+        // if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
+        //     constraints_[key] = item;
+        // }
+        // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
+        //     menu_groups_[key] = item;
+        // }
+        // if constexpr (std::is_same_v<TAG, common::CommandTag>) {
+        //     commands_[key] = item;
+        // }
+        // if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
+        //     language_packs_[key] = item;
+        // }
     }
 
     /**
@@ -143,11 +144,11 @@ class Device {
      */
     template <typename TAG>
     typename TAG::type* getItem(const std::string& key) const {
-        GET_ITEM(ParamTag, params_)
-        GET_ITEM(ConstraintTag, constraints_)
-        GET_ITEM(MenuGroupTag, menu_groups_)
-        GET_ITEM(CommandTag, commands_)
-        GET_ITEM(LanguagePackTag, language_packs_)
+        GET_ITEM(common::ParamTag, params_)
+        // GET_ITEM(common::ConstraintTag, constraints_)
+        // GET_ITEM(common::MenuGroupTag, menu_groups_)
+        // GET_ITEM(common::CommandTag, commands_)
+        // GET_ITEM(common::LanguagePackTag, language_packs_)
         return nullptr;
     }
 
@@ -167,11 +168,11 @@ class Device {
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
-    std::unordered_map<std::string, IConstraint*> constraints_;
+    // std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
-    std::unordered_map<std::string, IMenuGroup*> menu_groups_;
-    std::unordered_map<std::string, IMenuGroup*> commands_;
-    std::unordered_map<std::string, ILanguagePack*> language_packs_;
+    // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
+    std::unordered_map<std::string, IParam*> commands_;
+    // std::unordered_map<std::string, ILanguagePack*> language_packs_;
     std::vector<Scopes_e> access_scopes_;
     Scopes default_scope_;
     bool multi_set_enabled_;

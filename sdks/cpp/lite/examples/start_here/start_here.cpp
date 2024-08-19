@@ -29,7 +29,10 @@
 // these includes are from the LITE SDK, they're in the SOURCE
 // folder structure.
 #include <lite/include/Device.h> // catena::lite::Device, LockGuard
-#include <lite/include/Param.h> // catena::lite::Param
+#include <lite/include/ParamDescriptor.h> // catena::lite::Param
+#include <lite/include/IParam.h> // catena::lite::IParam
+#include <lite/include/Tags.h> // catena::lite::Device::ParamTag
+#include <lite/include/ParamWithValue.h>
 
 // this include header was generated from the protobuf definition
 // it's in the BINARY folder structure, not SOURCE.
@@ -52,7 +55,8 @@ int main () {
     // and we also know its value type - std::string
     // so we can get a reference to its Param object by casting it from 
     // an IParam* supplied by the Device's look up method
-    auto& helloParam = *dynamic_cast<Param<std::string>*>(dm.getItem("/hello", Device::ParamTag()));
+    IParam* ip = dm.getItem<catena::common::ParamTag>("hello");
+    auto& helloParam = *dynamic_cast<ParamWithValue<std::string>*>(ip);
 
     // With the Param object we can get a reference to the parameter's value object
     std::string& helloValue = helloParam.get();
@@ -67,64 +71,64 @@ int main () {
     helloValue = "Goodbye, Cruel World!";
     std::cout << helloValue << std::endl;
 
-    // Example with a parameter of type int
-    auto& countParam = *dynamic_cast<Param<int>*>(dm.getItem("/count", Device::ParamTag()));
-    int32_t& countValue = countParam.get();
-    std::cout << "counter initial value: " << countValue << std::endl;
-    countValue++;
-    std::cout << "counter incremented value: " << countValue << std::endl;
+    // // Example with a parameter of type int
+    // auto& countParam = *dynamic_cast<Param<int>*>(dm.getItem("/count", Device::ParamTag()));
+    // int32_t& countValue = countParam.get();
+    // std::cout << "counter initial value: " << countValue << std::endl;
+    // countValue++;
+    // std::cout << "counter incremented value: " << countValue << std::endl;
 
-    // Example with a parameter of type float
-    auto& gainParam = *dynamic_cast<Param<float>*>(dm.getItem("/gain", Device::ParamTag()));
-    float& gainValue = gainParam.get();
-    std::cout << "gain initial value: " << gainValue << std::endl;
-    gainValue *= gainValue;
-    std::cout << "gain squared value: " << gainValue << std::endl;
+    // // Example with a parameter of type float
+    // auto& gainParam = *dynamic_cast<Param<float>*>(dm.getItem("/gain", Device::ParamTag()));
+    // float& gainValue = gainParam.get();
+    // std::cout << "gain initial value: " << gainValue << std::endl;
+    // gainValue *= gainValue;
+    // std::cout << "gain squared value: " << gainValue << std::endl;
 
-    // Example with array of strings
-    auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.getItem("/phonetic_alphabet", Device::ParamTag()));
-    std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
-    std::cout << "phonetic alphabet initial value: ";
-    for (const auto& s : phonetic_alphabetValue) {
-        std::cout << s << " ";
-    }
-    std::cout << std::endl;
-    // note we change the length of the vector - decrease by one
-    phonetic_alphabetValue = {"Whiskey", "Yankee", "Zulu"};
-    std::cout << "phonetic alphabet new value: ";
-    for (const auto& s : phonetic_alphabetValue) {
-        std::cout << s << " ";
-    }
-    std::cout << std::endl;
+    // // Example with array of strings
+    // auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.getItem("/phonetic_alphabet", Device::ParamTag()));
+    // std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
+    // std::cout << "phonetic alphabet initial value: ";
+    // for (const auto& s : phonetic_alphabetValue) {
+    //     std::cout << s << " ";
+    // }
+    // std::cout << std::endl;
+    // // note we change the length of the vector - decrease by one
+    // phonetic_alphabetValue = {"Whiskey", "Yankee", "Zulu"};
+    // std::cout << "phonetic alphabet new value: ";
+    // for (const auto& s : phonetic_alphabetValue) {
+    //     std::cout << s << " ";
+    // }
+    // std::cout << std::endl;
 
-    // Example with array of integers
-    auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.getItem("/primes", Device::ParamTag()));
-    std::vector<int>& primesValue = primesParam.get();
-    std::cout << "primes initial value: ";
-    for (const auto& i : primesValue) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
-    // note we change the length of the vector - increase by one
-    primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
-    std::cout << "primes new value: ";
-    for (const auto& i : primesValue) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
+    // // Example with array of integers
+    // auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.getItem("/primes", Device::ParamTag()));
+    // std::vector<int>& primesValue = primesParam.get();
+    // std::cout << "primes initial value: ";
+    // for (const auto& i : primesValue) {
+    //     std::cout << i << " ";
+    // }
+    // std::cout << std::endl;
+    // // note we change the length of the vector - increase by one
+    // primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
+    // std::cout << "primes new value: ";
+    // for (const auto& i : primesValue) {
+    //     std::cout << i << " ";
+    // }
+    // std::cout << std::endl;
 
-    // example with array of floats that's initially empty
-    auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.getItem("/physical_constants", Device::ParamTag()));
-    std::vector<float>& physical_constantsValue = physical_constantsParam.get();
-    std::cout << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty") << std::endl;
-    physical_constantsValue.push_back(3.14159);
-    physical_constantsValue.push_back(2.71828);
-    physical_constantsValue.push_back(1.61803);
-    std::cout << "physical constants new value: ";
-    for (const auto& f : physical_constantsValue) {
-        std::cout << f << " ";
-    }
-    std::cout << std::endl;
+    // // example with array of floats that's initially empty
+    // auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.getItem("/physical_constants", Device::ParamTag()));
+    // std::vector<float>& physical_constantsValue = physical_constantsParam.get();
+    // std::cout << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty") << std::endl;
+    // physical_constantsValue.push_back(3.14159);
+    // physical_constantsValue.push_back(2.71828);
+    // physical_constantsValue.push_back(1.61803);
+    // std::cout << "physical constants new value: ";
+    // for (const auto& f : physical_constantsValue) {
+    //     std::cout << f << " ";
+    // }
+    // std::cout << std::endl;
 
     return EXIT_SUCCESS;
 

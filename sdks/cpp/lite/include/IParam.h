@@ -16,10 +16,19 @@ class Value; // forward reference
 class Param; // forward reference
 
 /// @todo move to common
-namespace lite { 
+namespace common { 
 class IParam {
   public:
+    /**
+     * @brief ParamType is an enum class that defines the types of parameters
+     */
     using ParamType = catena::patterns::EnumDecorator<catena::ParamType>;
+
+    /**
+     * @brief OidAliases is a vector of strings
+     */
+    using OidAliases = std::vector<std::string>;
+
   public:
     IParam() = default;
     virtual ~IParam() = default;
@@ -80,11 +89,11 @@ class IParam {
     virtual void readOnly(bool flag) = 0;
 
 };
-}  // namespace lite
+}  // namespace common
 
 template<>
-const inline lite::IParam::ParamType::FwdMap 
-  lite::IParam::ParamType::fwdMap_ {
+const inline common::IParam::ParamType::FwdMap 
+  common::IParam::ParamType::fwdMap_ {
   { ParamType::UNDEFINED, "undefined" },
   { ParamType::EMPTY, "empty"},
   { ParamType::INT32, "int32" },
