@@ -36,7 +36,10 @@ cd grpc
 git submodule update --recursive --init
 mkdir -p cmake/build
 cd cmake/build
-cmake ../.. 
+cmake ../.. \
+	-D CMAKE_BUILD_TYPE=Release   \
+	-DgRPC_INSTALL=ON \
+	-DCMAKE_INSTALL_PREFIX=$HOME/.local
 make -j4 install
 ```
 
@@ -51,7 +54,9 @@ cmake ../.. \
 	-DgRPC_ABSL_PROVIDER=module \
 	-DgRPC_SSL_PROVIDER=package \
 	-D CMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake  \
-	-D CMAKE_INSTALL_PREFIX=/path/to/target_root
+	-D CMAKE_INSTALL_PREFIX=/path/to/target_root \
+	-D_gRPC_CPP_PLUGIN=$HOME/.local/bin/grpc_cpp_plugin \
+	-D_gRPC_PROTOBUF_PROTOC_EXECUTABLE=$HOME/.local/bin/protoc
 make -j4 install
 ```
 
@@ -66,14 +71,8 @@ cmake .. \
 make install
 ```
 
-## Clone Catena and install node
-```
-git clone https://github.com/rossvideo/Catena.git
-cd ~/Catena/tools/codegen
-node -v # Node must be version 14 or above
-npm install
-```
-If your version of node is below 14 then update it to the latest version with the following commands:
+## Update node if required
+run `node -v`. If your version of node is below 14 then update it to the latest version with the following commands:
 ```
 sudo apt-get update
 sudo apt-get install -y nodejs npm
@@ -83,14 +82,15 @@ sudo n stable
 ```
 Restart the terminal and run `node -v` to check that node successfully  updated.
 
-## Cross Compiling Catena
+## Cross Compiling and installing Catena
 ```
 cd ~/Catena/sdks/cpp
 mkdir build && cd build
 cmake .. -G Ninja \
-	-D CMAKE_BUILD_TYPE=Release   \
+	-D CMAKE_BUILD_TYPE=Release \
 	-D CONNECTIONS=gRPC \
 	-D CATENA_MODELS=lite \
-    -D CMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake
-ninja
+    -D CMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake \
+	-D CMAKE_INSTALL_PREFIX=/path/to/target_root
+ninja install
 ```
