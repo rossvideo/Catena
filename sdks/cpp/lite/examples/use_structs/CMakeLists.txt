@@ -25,57 +25,24 @@ project(${TARGET} C CXX)
 
 add_executable(${TARGET})
 
-# set up some directory names
-set(HEADER device.${TARGET}.json.h)
-set(BODY device.${TARGET}.json.cpp)
-get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
-set(CATENA_COMMON_INCLUDE ${CATENA_CPP_ROOT_DIR}/common/include)
-set(CATENA_LITE_INCLUDE ${CATENA_CPP_ROOT_DIR}/lite/include)
-set(DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json)
-set(TOOLS_DIR ${CATENA_ROOT_DIR}/tools)
-set(CODEGEN ${TOOLS_DIR}/codegen/index.js  ${TOOLS_DIR}/codegen/cppgen.js)
-set(SCHEMA_DIR ${CATENA_ROOT_DIR}/schema)
-set(SCHEMA ${SCHEMA_DIR}/catena.schema.json)
-set(CODEGEN_OUTPUT ${HEADER} ${BODY})
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
-
-# convert json to cpp
-set(HEADER device.${TARGET}.json.h)
-set(BODY device.${TARGET}.json.cpp)
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${HEADER}
-           ${CMAKE_CURRENT_BINARY_DIR}/${BODY}
-    COMMAND node ${CODEGEN} --schema ${SCHEMA} --device-model "${DEVICE_MODEL_JSON}" --output ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${DEVICE_MODEL_JSON} ${SCHEMA} ${CODEGEN}
-    COMMENT "Generating ${HEADER} and ${BODY} from ${DEVICE_MODEL_JSON} and ${SCHEMA} using ${CODEGEN}"
+generate_catena_device(
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
+    TARGET ${TARGET}
 )
 
-
-
-# Step 2: Create a custom target that depends on the output of the custom command
-add_custom_target(${TARGET}_codegen
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${HEADER} ${CMAKE_CURRENT_BINARY_DIR}/${BODY}
-)
-
-set_source_files_properties(${CODEGEN_OUTPUT} PROPERTIES GENERATED TRUE)
 target_include_directories(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CATENA_COMMON_INCLUDE}>
-        $<BUILD_INTERFACE:${PARENT_BINARY_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
         $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
 )
 
 target_sources(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${BODY}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>      
 )
 
-add_dependencies(${TARGET} ${TARGET}_codegen)
-
 target_link_libraries(${TARGET}
-    ${LIB_TARGET}
     catena_lite
     ${proto_interface}
 )

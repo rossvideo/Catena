@@ -1,7 +1,7 @@
 #include <iostream>
 
 
-#include <patterns/EnumDecorator.h>
+#include <common/include/patterns/EnumDecorator.h>
 
 // example using the ENUMDECORATOR macros
 // DRY by defining a macro as an argument for the ENUMDECORATOR macros

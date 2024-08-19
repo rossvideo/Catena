@@ -33,11 +33,22 @@ target_include_directories(
     ${target}
     PUBLIC
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/patterns>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/vdk>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_compile_features(${target} PUBLIC cxx_std_20)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/common
+)
+
+install(
+    TARGETS ${target}
+    EXPORT Catena_cppTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 add_subdirectory(examples)
