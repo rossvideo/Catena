@@ -427,7 +427,6 @@ class CppGen {
     hloc(warning);
     hloc(`#include <lite/include/Device.h>`);
     hloc(`#include <lite/include/StructInfo.h>`);
-    hloc(`using catena::lite::StructInfo;`);
     hloc(`extern catena::lite::Device dm;`);
     hloc(`namespace ${this.namespace} {`);
 

@@ -40,6 +40,7 @@
 
 using namespace catena::lite;
 using namespace catena::common;
+
 #include <iostream>
 int main () {
     // The client code, below, directly accesses parts of the device model
@@ -55,7 +56,8 @@ int main () {
     // and we also know its value type - std::string
     // so we can get a reference to its Param object by casting it from 
     // an IParam* supplied by the Device's look up method
-    IParam* ip = dm.getItem<catena::common::ParamTag>("hello");
+    IParam* ip = dm.getItem<ParamTag>("hello");
+    assert(ip != nullptr);
     auto& helloParam = *dynamic_cast<ParamWithValue<std::string>*>(ip);
 
     // With the Param object we can get a reference to the parameter's value object
@@ -71,64 +73,72 @@ int main () {
     helloValue = "Goodbye, Cruel World!";
     std::cout << helloValue << std::endl;
 
-    // // Example with a parameter of type int
-    // auto& countParam = *dynamic_cast<Param<int>*>(dm.getItem("/count", Device::ParamTag()));
-    // int32_t& countValue = countParam.get();
-    // std::cout << "counter initial value: " << countValue << std::endl;
-    // countValue++;
-    // std::cout << "counter incremented value: " << countValue << std::endl;
+    // Example with a parameter of type int
+    ip = dm.getItem<ParamTag>("count");
+    assert(ip != nullptr);
+    auto& countParam = *dynamic_cast<ParamWithValue<int>*>(ip);
+    int32_t& countValue = countParam.get();
+    std::cout << "counter initial value: " << countValue << std::endl;
+    countValue++;
+    std::cout << "counter incremented value: " << countValue << std::endl;
 
-    // // Example with a parameter of type float
-    // auto& gainParam = *dynamic_cast<Param<float>*>(dm.getItem("/gain", Device::ParamTag()));
-    // float& gainValue = gainParam.get();
-    // std::cout << "gain initial value: " << gainValue << std::endl;
-    // gainValue *= gainValue;
-    // std::cout << "gain squared value: " << gainValue << std::endl;
+    // Example with a parameter of type float
+    ip = dm.getItem<ParamTag>("gain");
+    assert(ip != nullptr);
+    auto& gainParam = *dynamic_cast<ParamWithValue<float>*>(ip);
+    float& gainValue = gainParam.get();
+    std::cout << "gain initial value: " << gainValue << std::endl;
+    gainValue *= gainValue;
+    std::cout << "gain squared value: " << gainValue << std::endl;
 
-    // // Example with array of strings
-    // auto& phonetic_alphabetParam = *dynamic_cast<Param<std::vector<std::string>>*>(dm.getItem("/phonetic_alphabet", Device::ParamTag()));
-    // std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
-    // std::cout << "phonetic alphabet initial value: ";
-    // for (const auto& s : phonetic_alphabetValue) {
-    //     std::cout << s << " ";
-    // }
-    // std::cout << std::endl;
-    // // note we change the length of the vector - decrease by one
-    // phonetic_alphabetValue = {"Whiskey", "Yankee", "Zulu"};
-    // std::cout << "phonetic alphabet new value: ";
-    // for (const auto& s : phonetic_alphabetValue) {
-    //     std::cout << s << " ";
-    // }
-    // std::cout << std::endl;
+    // Example with array of strings
+    ip = dm.getItem<ParamTag>("phonetic_alphabet");
+    assert(ip != nullptr);
+    auto& phonetic_alphabetParam = *dynamic_cast<ParamWithValue<std::vector<std::string>>*>(ip);
+    std::vector<std::string>& phonetic_alphabetValue = phonetic_alphabetParam.get();
+    std::cout << "phonetic alphabet initial value: ";
+    for (const auto& s : phonetic_alphabetValue) {
+        std::cout << s << " ";
+    }
+    std::cout << std::endl;
+    // note we change the length of the vector - decrease by one
+    phonetic_alphabetValue = {"Whiskey", "Yankee", "Zulu"};
+    std::cout << "phonetic alphabet new value: ";
+    for (const auto& s : phonetic_alphabetValue) {
+        std::cout << s << " ";
+    }
+    std::cout << std::endl;
 
-    // // Example with array of integers
-    // auto& primesParam = *dynamic_cast<Param<std::vector<int>>*>(dm.getItem("/primes", Device::ParamTag()));
-    // std::vector<int>& primesValue = primesParam.get();
-    // std::cout << "primes initial value: ";
-    // for (const auto& i : primesValue) {
-    //     std::cout << i << " ";
-    // }
-    // std::cout << std::endl;
-    // // note we change the length of the vector - increase by one
-    // primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
-    // std::cout << "primes new value: ";
-    // for (const auto& i : primesValue) {
-    //     std::cout << i << " ";
-    // }
-    // std::cout << std::endl;
+    // Example with array of integers
+    ip = dm.getItem<ParamTag>("primes");
+    auto& primesParam = *dynamic_cast<ParamWithValue<std::vector<int>>*>(ip);
+    std::vector<int>& primesValue = primesParam.get();
+    std::cout << "primes initial value: ";
+    for (const auto& i : primesValue) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
+    // note we change the length of the vector - increase by one
+    primesValue = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31};
+    std::cout << "primes new value: ";
+    for (const auto& i : primesValue) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
 
-    // // example with array of floats that's initially empty
-    // auto& physical_constantsParam = *dynamic_cast<Param<std::vector<float>>*>(dm.getItem("/physical_constants", Device::ParamTag()));
-    // std::vector<float>& physical_constantsValue = physical_constantsParam.get();
-    // std::cout << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty") << std::endl;
-    // physical_constantsValue.push_back(3.14159);
-    // physical_constantsValue.push_back(2.71828);
-    // physical_constantsValue.push_back(1.61803);
-    // std::cout << "physical constants new value: ";
-    // for (const auto& f : physical_constantsValue) {
-    //     std::cout << f << " ";
-    // }
-    // std::cout << std::endl;
+    // example with array of floats that's initially empty
+    ip = dm.getItem<ParamTag>("physical_constants");
+    auto& physical_constantsParam = *dynamic_cast<ParamWithValue<std::vector<float>>*>(ip);
+    std::vector<float>& physical_constantsValue = physical_constantsParam.get();
+    std::cout << "physical constants " << (physical_constantsValue.size() == 0 ? "is empty" : "is not empty") << std::endl;
+    physical_constantsValue.push_back(3.14159);
+    physical_constantsValue.push_back(2.71828);
+    physical_constantsValue.push_back(1.61803);
+    std::cout << "physical constants new value: ";
+    for (const auto& f : physical_constantsValue) {
+        std::cout << f << " ";
+    }
+    std::cout << std::endl;
 
     return EXIT_SUCCESS;
 
