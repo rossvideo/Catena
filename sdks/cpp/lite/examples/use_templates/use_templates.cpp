@@ -13,7 +13,7 @@
 //
 
 /**
- * @file use_structs.cpp
+ * @file use_templates.cpp
  * @author john.danen@rossvideo.com
  * @brief Steps up the complexity a notch by dealing with structured data
  *
@@ -27,7 +27,8 @@
 
 #include "lite/examples/use_templates/device.use_templates.json.h"  // dm
 #include <lite/include/Device.h>
-#include <lite/include/Param.h>
+#include <lite/include/ParamWithValue.h>
+#include <lite/include/ParamDescriptor.h>
 #include <lite/include/PolyglotText.h>
 #include <lite/param.pb.h>
 
@@ -39,7 +40,9 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    Param<City>& canadasCapital = *dynamic_cast<Param<City>*>(dm.getItem("/ottawa", Device::ParamTag()));
+    IParam* ip = dm.getItem<ParamTag>("ottawa");
+    assert(ip != nullptr);
+    auto& canadasCapital = *dynamic_cast<ParamWithValue<City>*>(ip);
     City& city = canadasCapital.get();
     std::cout << "Canada's capital city is " << city.city_name
               << " at latitude " << city.latitude
@@ -47,7 +50,8 @@ int main() {
               << " with a population of " << city.population
               << std::endl;
 
-    Param<City>& ontariosCapital = *dynamic_cast<Param<City>*>(dm.getItem("/toronto", Device::ParamTag()));
+    ip = dm.getItem<ParamTag>("toronto");
+    auto& ontariosCapital = *dynamic_cast<ParamWithValue<City>*>(ip);
     City& city2 = ontariosCapital.get();
     std::cout << "Ontario's capital city is " << city2.city_name
               << " at latitude " << city2.latitude

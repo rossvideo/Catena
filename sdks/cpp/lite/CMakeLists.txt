@@ -46,7 +46,7 @@ set(target catena_lite)
 
 add_library(${target} STATIC 
     src/Device.cpp
-    src/Param.cpp
+    src/ParamDescriptor.cpp
     src/StructInfo.cpp
     src/PolyglotText.cpp
 )

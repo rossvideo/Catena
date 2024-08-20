@@ -79,435 +79,61 @@
     }
   },
   "params": {
-    "dashboard_icon": {
-      "type": "STRING",
-      "oid_aliases": ["0xFF0C"],
-      "value": { "string_value": "eo://icon.png" }
-    },
-    "dashboard_UI": {
-      "type": "STRING",
-      "oid_aliases": ["0xFF0E"],
-      "value": { "string_value": "eo://custom_UI.grid" }
-    },
-    "types": {
-      "type": "STRUCT",
-      "params": {
-        "string": {
-          "type": "STRING",
-          "name": {
-            "display_strings": {
-              "en": "String"
-            }
-          },
-          "value": {
-            "string_value": "Hello, World!"
-          }
-        }
-      }
-    },
-    "a_string": {
-      "template_oid": "/types/string",
-      "value":  {"string_value": "Goodbye, Cruel World!"}
-    },
-    "a_number": {
-      "type": "INT32",
-      "name": {
-        "display_strings": {
-          "en": "A Number"
-        }
-      },
-      "value": {
-        "int32_value": 42
-      },
-      "stateless": true
-    },
-    "primes": {
-      "type": "INT32_ARRAY",
-      "name": { "display_strings": {  "en": "Primes"  } },
-      "minimal_set": true,
-      "value": { "int32_array_values": { "ints": [2,3,5,7,11,13,17,19] } }
-    },
-    "constants": {
-      "type": "FLOAT32_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Math Constants"
-        }
-      },
-      "value": {
-        "float32_array_values": {
-          "floats": [
-            2.71828, 3.14159, 1.61803, 0.57721, 0.30103, 0.69315, 0.43429,
-            0.56714, 0.66169, 0.7854
-          ]
-        }
-      }
-    },
-    "squares": {
-      "type": "INT32_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Squares"
-        }
-      },
-      "minimal_set": false,
-      "value": {
-        "int32_array_values": {
-          "ints": [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
-        }
-      }
-    },
-    "powers_of_two": {
-      "type": "INT32_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Powers of Two"
-        }
-      },
-      "value": {
-        "int32_array_values": {
-          "ints": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
-        }
-      }
-    },
     "location": {
       "type": "STRUCT",
       "name": {  "display_strings": {  "en": "Location"  } },
       "params": {
         "latitude": {
-          "type": "FLOAT32",
+          "type": "STRUCT",
           "name": {  "display_strings": {  "en": "Latitude" } },
-          "value": { "float32_value": 37.7749 },
-          "precision": 2
+          "params": {
+            "degrees": { "type": "INT32", "value": { "int32_value": 0 } },
+            "minutes": { "type": "INT32", "value": { "int32_value": 0 } },
+            "seconds": { "type": "INT32", "value": { "int32_value": 0 } }
+          },
+          "value": { 
+            "struct_value": {
+              "fields": {
+                "degrees": { "value": { "int32_value": 0 } },
+                "minutes": { "value": { "int32_value": 0 } },
+                "seconds": { "value": { "int32_value": 0 } }
+              }
+            }
+          }
         },
         "longitude": {
-          "type": "FLOAT32",
-          "name": { "display_strings": {  "en": "Longitude" } },
-          "value": { "float32_value": -122.4194 }
-        },
-        "altitude": {
-          "type": "INT32",
-          "name": {  "display_strings": { "en": "Altitude"  } },
-          "value": { "int32_value": 100  }
-        },
-        "name": {
-          "type": "STRING",
-          "name": {  "display_strings": { "en": "Name" }
-          },
-          "value": {  "string_value": "San Francisco" }
-        },
-        "coords": {
           "type": "STRUCT",
+          "name": {  "display_strings": {  "en": "Latitude" } },
           "params": {
-            "x": { "type": "FLOAT32", "value": { "float32_value": 1 } },
-            "y": { "type": "FLOAT32", "value": { "float32_value": 1 } },
-            "z": { "type": "FLOAT32",  "value": { "float32_value": 1 } }
+            "degrees": { "type": "INT32", "value": { "int32_value": 0 } },
+            "minutes": { "type": "INT32", "value": { "int32_value": 0 } },
+            "seconds": { "type": "INT32", "value": { "int32_value": 0 } }
+          },
+          "value": { 
+            "struct_value": {
+              "fields": {
+                "degrees": { "value": { "int32_value": 0 } },
+                "minutes": { "value": { "int32_value": 0 } },
+                "seconds": { "value": { "int32_value": 0 } }
+              }
+            }
           }
         }
       },
       "value": {
         "struct_value": {
           "fields": {
-            "latitude": {  "value": { "float32_value": 37.7749 } },
-            "longitude": { "value": { "float32_value": -122.4194 } },
-            "altitude": { "value": {  "int32_value": 100 } },
-            "name": { "value": {  "string_value": "San Francisco" } },
-            "coords": {
-              "value": {
-                "struct_value": {
-                  "fields": {
-                    "x": { "value": {  "float32_value": 10.0 } },
-                    "y": { "value": {  "float32_value": 11.0 } },
-                    "z": {  "value": { "float32_value": 12.0 } }
-                  }
-                }
-              }
-            }
+            "latitude": { "value": { "struct_value": { "fields": { 
+              "degrees": {"value": {"int32_value": 0}},
+              "minutes": {"value": {"int32_value": 0}},
+              "seconds": {"value": {"int32_value": 0}}
+            } } } },
+            "longitude": { "value": { "struct_value": { "fields": { 
+              "degrees": {"value": {"int32_value": 0}},
+              "minutes": {"value": {"int32_value": 0}},
+              "seconds": {"value": {"int32_value": 0}}
+            } } } }
           }
-        }
-      }
-    },
-    "locations": {
-      "type": "STRUCT_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Location"
-        }
-      },
-      "params": {
-        "latitude": {
-          "type": "FLOAT32",
-          "name": {
-            "display_strings": {
-              "en": "Latitude"
-            }
-          },
-          "value": {
-            "float32_value": 37.7749
-          }
-        },
-        "longitude": {
-          "type": "FLOAT32",
-          "name": {
-            "display_strings": {
-              "en": "Longitude"
-            }
-          },
-          "value": {
-            "float32_value": -122.4194
-          }
-        }
-      },
-      "value": {
-        "struct_array_values": {
-          "struct_values": [
-            {
-              "fields": {
-                "latitude": {
-                  "value": {
-                    "float32_value": 37.7749
-                  }
-                },
-                "longitude": {
-                  "value": {
-                    "float32_value": -122.4194
-                  }
-                }
-              }
-            },
-            {
-              "fields": {
-                "latitude": {
-                  "value": {
-                    "float32_value": 12.34
-                  }
-                },
-                "longitude": {
-                  "value": {
-                    "float32_value": 56.78
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    "hello": {
-      "type": "FLOAT32",
-      "name": {
-        "display_strings": {
-          "en": "Hello"
-        }
-      },
-      "value": {
-        "float32_value": 123.456
-      }
-    },
-    "slot": {
-      "type": "STRUCT_VARIANT",
-      "name": { "display_strings": { "en": "Slot" } },
-      "params": {
-        "AudioSlot": {
-          "type": "STRUCT",
-          "name": {
-            "display_strings": { "en": "Audio Slot" }
-          },
-          "params": {
-            "name": {
-              "type": "STRING",
-              "name": { "display_strings": { "en": "Name" } },
-              "value": { "string_value": "I am an audio slot" }
-            },
-            "gain": {
-              "type": "FLOAT32",
-              "name": { "display_strings": { "en": "Gain" } },
-              "value": { "float32_value": 0.0 }
-            }
-          }
-        },
-        "VideoSlot": {
-          "type": "STRUCT",
-          "name": {
-            "display_strings": { "en": "Video Slot" } },
-          "params": {
-            "name": {
-              "type": "STRING",
-              "name": {  "display_strings": {  "en": "Name" } },
-              "value": {  "string_value": "I am a video slot"  }
-            }
-          }
-        }
-      },
-      "value": {
-        "struct_variant_value": {
-          "struct_variant_type": "VideoSlot",
-          "value": {
-            "struct_value": {
-              "fields": {
-                "name": {
-                  "value": { "string_value": "I am a video slot" }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "words": {
-      "type": "STRING_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Words"
-        }
-      },
-      "value": {
-        "string_array_values": {
-          "strings": [
-            "Apple",
-            "Boy",
-            "Cat",
-            "Dog",
-            "Elephant",
-            "Frog",
-            "Giraffe",
-            "Horse",
-            "Iguana",
-            "Jaguar"
-          ]
-        }
-      }
-    },
-    "struct_array": {
-      "type": "STRUCT_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Struct Array"
-        }
-      },
-      "params": {
-        "name": {
-          "type": "STRING",
-          "name": {
-            "display_strings": {
-              "en": "Name"
-            }
-          },
-          "value": {
-            "string_value": "I am a struct"
-          }
-        },
-        "age": {
-          "type": "INT32",
-          "name": {
-            "display_strings": {
-              "en": "Age"
-            }
-          },
-          "value": {
-            "int32_value": 42
-          }
-        }
-      },
-      "value": {
-        "struct_array_values": {
-          "struct_values": [
-            {
-              "fields": {
-                "name": {
-                  "value": {
-                    "string_value": "I am a struct"
-                  }
-                },
-                "age": {
-                  "value": {
-                    "int32_value": 42
-                  }
-                }
-              }
-            },
-            {
-              "fields": {
-                "name": {
-                  "value": {
-                    "string_value": "I am also a struct"
-                  }
-                },
-                "age": {
-                  "value": {
-                    "int32_value": 43
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    "variant_array": {
-      "type": "STRUCT_VARIANT_ARRAY",
-      "name": {
-        "display_strings": {
-          "en": "Variant Array"
-        }
-      },
-      "params": {
-        "INT32": {
-          "type": "INT32",
-          "name": {
-            "display_strings": {
-              "en": "INT32"
-            }
-          },
-          "value": {
-            "int32_value": 42
-          }
-        },
-        "FLOAT32": {
-          "type": "FLOAT32",
-          "name": {
-            "display_strings": {
-              "en": "FLOAT32"
-            }
-          },
-          "value": {
-            "float32_value": 3.14159
-          }
-        },
-        "STRING": {
-          "type": "STRING",
-          "name": {
-            "display_strings": {
-              "en": "STRING"
-            }
-          },
-          "value": {
-            "string_value": "Hello"
-          }
-        }
-      },
-      "value": {
-        "struct_variant_array_values": {
-          "struct_variants": [
-            {
-              "struct_variant_type": "INT32",
-              "value": {
-                "int32_value": 42
-              }
-            },
-            {
-              "struct_variant_type": "FLOAT32",
-              "value": {
-                "float32_value": 3.14159
-              }
-            },
-            {
-              "struct_variant_type": "STRING",
-              "value": {
-                "string_value": "Hello"
-              }
-            }
-          ]
         }
       }
     }

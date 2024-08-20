@@ -288,7 +288,7 @@ add_subdirectory("common")
 add_subdirectory("lite")
 
 # include the connections part of the Catena C++ SDK
-add_subdirectory("connections")
+# add_subdirectory("connections")
 
 #
 #

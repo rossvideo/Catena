@@ -9,62 +9,47 @@
     "administer"
   ],
   "default_scope": "operate",
-  "language_packs": {
-    "packs": {
-      "es": {
-        "name": "Spanish",
-        "words": {
-          "greeting": "Hola",
-          "parting": "Adiós"
-        }
-      },
-      "en": {
-        "name": "English",
-        "words": {
-          "greeting": "Hello",
-          "parting": "Goodbye"
-        }
-      },
-      "fr": {
-        "name": "French",
-        "words": {
-          "greeting": "Bonjour",
-          "parting": "Adieu"
-        }
-      }
-    }
-  },
   "params": {
     "location": {
       "type": "STRUCT",
       "read_only": false,
-      "name": {
-        "display_strings": {
-          "en": "Location"
-        }
-      },
+      "name": { "display_strings": {  "en": "Location" } },
       "params": {
         "latitude": {
-          "type": "FLOAT32",
-          "value": {
-            "float32_value": 53.4640
-          },
-          "name": {
-            "display_strings": {
-              "en": "Latitude"
+          "type": "STRUCT",
+          "params": {
+            "degrees": {
+              "type": "INT32",
+              "name": { "display_strings": { "en": "Degrees" }  }
+            },
+            "minutes": {
+              "type": "INT32",
+              "name": {  "display_strings": { "en": "Minutes" }  }
+            },
+            "seconds": {
+              "type": "INT32",
+              "name": { "display_strings": { "en": "Seconds" } }
             }
-          }
+          },
+          "name": { "display_strings": {  "en": "Latitude" } }
         },
         "longitude": {
-          "type": "FLOAT32",
-          "value": {
-            "float32_value": 1.3420
-          },
-          "name": {
-            "display_strings": {
-              "en": "Longitude"
+          "type": "STRUCT",
+          "params": {
+            "degrees": {
+              "type": "INT32",
+              "name": { "display_strings": { "en": "Degrees" } }
+            },
+            "minutes": {
+              "type": "INT32",
+              "name": { "display_strings": {  "en": "Minutes" } }
+            },
+            "seconds": {
+              "type": "INT32",
+              "name": { "display_strings": { "en": "Seconds" } }
             }
-          }
+          },
+          "name": { "display_strings": { "en": "Longitude" } }
         }
       },
       "value": {
@@ -72,18 +57,29 @@
           "fields": {
             "latitude": {
               "value": {
-                "float32_value": 37.7749
+                "struct_value": {
+                  "fields": {
+                    "degrees": { "value": { "int32_value": 1 } },
+                    "minutes": { "value": { "int32_value": 2 } },
+                    "seconds": { "value": { "int32_value": 3 } }
+                  }
+                }
               }
             },
             "longitude": {
               "value": {
-                "float32_value": -122.4194
+                "struct_value": {
+                  "fields": {
+                    "degrees": { "value": { "int32_value": 4 } },
+                    "minutes": { "value": { "int32_value": 5 } },
+                    "seconds": { "value": { "int32_value": 6 } }
+                  }
+                }
               }
             }
           }
         }
-      },
-      "oid_aliases": ["mary","had","a little lamb"]
+      }
     }
   }
 }
