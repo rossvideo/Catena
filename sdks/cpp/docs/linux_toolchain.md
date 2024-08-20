@@ -30,7 +30,6 @@ make -j4 install
 ### Install and Build jwt-cpp
 
 1. Install openSSL eg. `sudo apt-get install libssl-dev`
->>>>>>> develop
 2. Run `git clone https://github.com/Thalhammer/jwt-cpp && cd jwt-cpp && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..  && make && sudo make install`
 
 ## Optionally Install doxygen
@@ -102,5 +101,3 @@ cmake .. -G Ninja \
     -D CONNECTIONS=gRPC
 ninja
 ```
-
->>>>>>> develop
