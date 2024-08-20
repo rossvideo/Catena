@@ -8,7 +8,7 @@
  */
 
 #include <lite/param.pb.h>
-#include <meta/Typelist.h>
+#include <common/include/meta/Typelist.h>
 
 #include <string>
 #include <cstddef>

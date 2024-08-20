@@ -10,7 +10,6 @@
 
 using catena::Value;
 using catena::lite::ParamDescriptor;
-using catena::meta::has_getStructInfo;
 using catena::lite::StructInfo;
 using catena::lite::FieldInfo;
 

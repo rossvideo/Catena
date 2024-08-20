@@ -101,7 +101,7 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
         //catena::lite::toProto<T>(value, &value_.get());
     }
 
-    void fromProto(const catena::Value& value) override {
+    void fromProto(catena::Value& value) override {
         //catena::lite::fromProto<T>(&value_.get(), value);
     }
     

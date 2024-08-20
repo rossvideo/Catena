@@ -49,7 +49,7 @@ class ParamWithValue : public catena::common::IParam {
         
     }
 
-    void fromProto(const catena::Value& value) override {
+    void fromProto(catena::Value& value) override {
         
     }
 
