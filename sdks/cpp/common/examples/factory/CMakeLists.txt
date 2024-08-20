@@ -23,12 +23,9 @@ project(${target} C CXX)
 
 add_executable(${target})
 
-get_filename_component(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../ ABSOLUTE)
-
 target_include_directories(${target}
     PUBLIC
         $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
 )
 
 target_sources(${target}

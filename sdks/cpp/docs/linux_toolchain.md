@@ -8,13 +8,24 @@ This toolchain installation has been verified on x64 Ubuntu 22.04.2 LTS
 
 ## Installing cmake
 
-* `sudo apt-get install cmake`
+`sudo apt-get install cmake`
 
 ## Dependencies
 
 ### Install and Build gRPC and Protobufs
-
-Carefully follow [these steps](https://grpc.io/docs/languages/cpp/quickstart/)
+Use CMake to build and install gRPC from source. For more info about building gRPC and its submodules go to the [gRPC github](https://github.com/grpc/grpc/blob/master/BUILDING.md).
+```
+git clone -b v1.64.2 https://github.com/grpc/grpc
+cd grpc
+git submodule update --recursive --init
+mkdir -p cmake/build
+cd cmake/build
+cmake ../.. \
+	-D CMAKE_BUILD_TYPE=Release   \
+	-DgRPC_INSTALL=ON \
+	-DCMAKE_INSTALL_PREFIX=$HOME/.local
+make -j4 install
+```
 
 ### Install and Build jwt-cpp
 
@@ -45,14 +56,8 @@ sudo cp lib/*.a /usr/lib
 To build without Google Test, empty the build folder and run
 `cmake .. -G Ninja -DUNIT_TESTING=OFF`
 
-## Clone Catena and install node
-```
-git clone https://github.com/rossvideo/Catena.git
-cd ~/Catena/tools/codegen
-node -v # Node must be version 14 or above
-npm install
-```
-If your version of node is below 14 then update it to the latest version with the following commands:
+## Update node if required
+run `node -v`. If your version of node is below 14 then update it to the latest version with the following commands:
 ```
 sudo apt-get update
 sudo apt-get install -y nodejs npm

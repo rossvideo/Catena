@@ -1,6 +1,6 @@
 #pragma once
 
-#include <IPolyglotText.h>
+#include <common/include/IPolyglotText.h>
 
 #include <lite/language.pb.h>
 

@@ -9,7 +9,7 @@
 
 #include <lite/param.pb.h>
 
-#include <Enums.h>
+#include <common/include/Enums.h>
 
 namespace catena {
 class Value; // forward reference
@@ -47,15 +47,16 @@ class IParam {
 
     /**
      * @brief serialize the parameter value to protobuf
-     * @param value the protobuf value to serialize to
+     * @param dst the protobuf value to serialize to
      */
-    virtual void toProto(catena::Value& value) const = 0;
+    virtual void toProto(catena::Value& dst) const = 0;
     
     /**
-     * @brief deserialize the parameter value from protobufi
-     * @param value the protobuf value to deserialize from
+     * @brief deserialize the parameter value from protobuf
+     * @param src the protobuf value to deserialize from
+     * @note this method may constrain the source value and modify it
      */
-    virtual void fromProto(const catena::Value& value) = 0;
+    virtual void fromProto(catena::Value& src) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
@@ -70,6 +71,7 @@ class IParam {
 
     /**
      * @brief return the oid of the param
+     * @return the oid of the param
      */
     virtual const std::string& getOid() const = 0;
 

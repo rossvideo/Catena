@@ -1,4 +1,4 @@
-#include <PolyglotText.h>
+#include <lite/include/PolyglotText.h>
 
 #include <string>
 #include <unordered_map>

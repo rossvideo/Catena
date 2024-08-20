@@ -61,28 +61,10 @@ struct StructInfo {
 };
 }  // namespace lite
 
-namespace meta {
-/**
- * @brief determine at compile time if a type T has a getStructInfo method.
- *
- * default is false
- *
- * @todo refactor using C++ 20 concepts to make the code a bit clearer
- *
- * @tparam T
- * @tparam typename
- */
-template <typename T, typename = void> constexpr bool has_getStructInfo{};
-
-/**
- * @brief specialization for types that do have getStructInfo method
- *
- * @tparam T
- */
 template <typename T>
-constexpr bool has_getStructInfo<T, std::void_t<decltype(std::declval<T>().getStructInfo())>> = true;
-
-}  // namespace meta
+concept CatenaStruct = requires {
+    T::getStructInfo();
+};
 
 namespace lite {
 
@@ -93,8 +75,8 @@ namespace lite {
  * 
  * @tparam T the type of the value
  */
-template <typename T>
-typename std::enable_if<meta::has_getStructInfo<T>, void>::type toProto(catena::Value& dst, const void* src) {
+template <CatenaStruct T>
+void toProto(catena::Value& dst, const void* src) {
     const auto& si = T::getStructInfo();
 
     // required so that pointer math works correctly
@@ -112,7 +94,7 @@ typename std::enable_if<meta::has_getStructInfo<T>, void>::type toProto(catena::
 
 
 template <typename T>
-typename std::enable_if<!meta::has_getStructInfo<T>, void>::type toProto(catena::Value& dst, const void* src);
+void toProto(catena::Value& dst, const void* src);
 
 
 /**
@@ -122,8 +104,8 @@ typename std::enable_if<!meta::has_getStructInfo<T>, void>::type toProto(catena:
  * 
  * @tparam T the type of the value
  */
-template <typename T>
-typename std::enable_if<meta::has_getStructInfo<T>, void>::type fromProto(void* dst, const catena::Value& src) {
+template <CatenaStruct T>
+void fromProto(void* dst, const catena::Value& src) {
     const auto& si = T::getStructInfo();
 
     // required so that pointer math works correctly
@@ -140,7 +122,7 @@ typename std::enable_if<meta::has_getStructInfo<T>, void>::type fromProto(void* 
 }
 
 template <typename T>
-typename std::enable_if<!meta::has_getStructInfo<T>, void>::type fromProto(void* dst, const catena::Value& src);
+void fromProto(void* dst, const catena::Value& src);
 
 }  // namespace lite
 }  // namespace catena
