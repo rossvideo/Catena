@@ -32,6 +32,12 @@ hs_err_pid*
 
 **/node_modules
 
+<<<<<<< HEAD
+**/cmake-build-debug
+
+# clion ide
+/.idea
+=======
 ### Eclipse ###
 .metadata
 bin/
@@ -64,4 +70,5 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+>>>>>>> develop
 
