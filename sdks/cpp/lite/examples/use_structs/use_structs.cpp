@@ -45,9 +45,9 @@ int main() {
     auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip);
     Location& loc = locationParam.get();
 
-    std::cout << "Location: lat(" << loc.latitude.degrees << "d " << loc.latitude.minutes << "m "
-              << loc.latitude.seconds << "s) lon(" << loc.longitude.degrees << "d " << loc.longitude.minutes
-              << "m " << loc.longitude.seconds << "s)" << std::endl;
+    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+              << "' " << loc.longitude.seconds << "\")" << std::endl;
 
     return EXIT_SUCCESS;
 }

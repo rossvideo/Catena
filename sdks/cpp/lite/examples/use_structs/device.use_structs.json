@@ -13,38 +13,22 @@
     "location": {
       "type": "STRUCT",
       "read_only": false,
-      "name": {
-        "display_strings": {
-          "en": "Location"
-        }
-      },
+      "name": { "display_strings": {  "en": "Location" } },
       "params": {
         "latitude": {
           "type": "STRUCT",
           "params": {
             "degrees": {
               "type": "INT32",
-              "name": {
-                "display_strings": {
-                  "en": "Degrees"
-                }
-              }
+              "name": { "display_strings": { "en": "Degrees" }  }
             },
             "minutes": {
               "type": "INT32",
-              "name": {
-                "display_strings": {
-                  "en": "Minutes"
-                }
-              }
+              "name": {  "display_strings": { "en": "Minutes" }  }
             },
             "seconds": {
-              "type": "FLOAT32",
-              "name": {
-                "display_strings": {
-                  "en": "Seconds"
-                }
-              }
+              "type": "INT32",
+              "name": { "display_strings": { "en": "Seconds" } }
             }
           },
           "name": { "display_strings": {  "en": "Latitude" } }
