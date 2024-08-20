@@ -84,6 +84,14 @@ class ParamWithValue : public catena::common::IParam {
         return value_.get();
     }
 
+    IParam* getParam(const std::string& oid) override {
+        return descriptor_.getParam(oid);
+    }
+
+    void addParam(const std::string& oid, IParam* param) override {
+        descriptor_.addParam(oid, param);
+    }
+
   private:
     Descriptor descriptor_;
     std::reference_wrapper<T> value_;

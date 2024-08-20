@@ -232,8 +232,8 @@ class Param extends CppCtor {
    */
   isStructType() {
     return (
-      this.desc.type == "catena::ParamType::STRUCT" ||
-      this.desc.type == "catena::ParamType::STRUCT_ARRAY"
+      this.desc.type == "STRUCT" ||
+      this.desc.type == "STRUCT_ARRAY"
     );
   }
 
@@ -243,8 +243,8 @@ class Param extends CppCtor {
    */
   isVariantType() {
     return (
-      this.desc.type == "catena::ParamType::STRUCT_VARIANT" ||
-      this.desc.type == "catena::ParamType::STRUCT_VARIANT_ARRAY"
+      this.desc.type == "STRUCT_VARIANT" ||
+      this.desc.type == "STRUCT_VARIANT_ARRAY"
     );
   }
 

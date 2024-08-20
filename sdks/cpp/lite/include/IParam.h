@@ -88,6 +88,16 @@ class IParam {
      */
     virtual void readOnly(bool flag) = 0;
 
+    /**
+     * @brief get a child parameter by name
+     */
+    virtual IParam* getParam(const std::string& name) = 0;
+
+    /**
+     * @brief add a child parameter
+     */
+    virtual void addParam(const std::string& oid, IParam* param) = 0;
+
 };
 }  // namespace common
 

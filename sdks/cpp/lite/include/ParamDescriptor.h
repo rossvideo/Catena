@@ -76,12 +76,7 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
         const bool read_only, const std::string& oid, IParam* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{parent} {
       setOid(oid);
-      auto dad = dynamic_cast<ParamDescriptor*>(parent_);
-      if (dad) {
-        dad->template addItem<common::ParamTag>(oid, this);
-      } else {
-        throw std::runtime_error("Parent is not a ParamDescriptor");
-      }
+      parent_->addParam(oid, this);
     }
 
     /**
@@ -164,6 +159,18 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
         GET_ITEM(common::ParamTag, params_)
         GET_ITEM(common::CommandTag, commands_)
         return nullptr;
+    }
+
+    /**
+     * @brief get a child parameter by name
+     */
+    IParam* getParam(const std::string& oid) override {
+        return getItem<common::ParamTag>(oid);
+    }
+
+
+    void addParam(const std::string& oid, IParam* param) override {
+        addItem<common::ParamTag>(oid, param);
     }
 
   private:

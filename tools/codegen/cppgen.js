@@ -334,21 +334,15 @@ class CppGen {
     let type = p.objectType();
     let name = p.objectName();
     let pname = p.paramName();
+    let objectType = p.isStructType() ? `${typeNamespace}::${type}` : type;
     if (!isStructChild) {
       // only top-level params get value objects
       let init = p.initializer(desc[oid]);
-      if (p.isStructType()) {
-        // add namespace scoping to typename
-        bloc(`${typeNamespace}::${type} ${name} ${init};`);
-      } else {
-        // native types don't need scoping
-        bloc(`${type} ${name} ${init};`);
-      }
+      bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
     }
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    let objectType = p.hasSubparams() ? `${typeNamespace}::${type}` : type;
     if (!isStructChild) {
       bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, ${name}};`);
     } else {
@@ -358,26 +352,24 @@ class CppGen {
     parentStructInfo.typename = type;
     parentStructInfo.typeNamespace = typeNamespace;
     if (p.hasSubparams()) {
-      typeNamespace = `${typeNamespace}::${type}`;
-
       hloc(`struct ${type} {`, hindent++);
 
       parentStructInfo.params = {};
       this.params(
         parentOid + `/${oid}`,
         desc[oid],
-        typeNamespace,
+        `${typeNamespace}::${type}`,
         parentStructInfo.params,
         true
       );
 
-      hloc(`static const StructInfo& getStructInfo();`, hindent);
+      hloc(`static const catena::lite::StructInfo& getStructInfo();`, hindent);
       hloc(`};`, --hindent);
       if (isStructChild) {
         hloc(`${type} ${name};`, hindent);
       }
-    } else {
-      //hloc(`${type} ${name};`, hindent);
+    } else if (isStructChild) {
+      hloc(`${type} ${name};`, hindent);
     }
   }
 
@@ -432,6 +424,7 @@ class CppGen {
 
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
+    bloc(`using namespace ${this.namespace};`);
     bloc(`#include <lite/include/ParamDescriptor.h>`);
     bloc(`#include <lite/include/ParamWithValue.h>`);
     bloc(`#include <lite/include/Device.h>`);
