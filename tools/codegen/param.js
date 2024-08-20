@@ -26,6 +26,7 @@ function typeArg(desc) {
     STRUCT: `${initialCap(this.oid)}`,
     STRUCT_ARRAY: `std::vector<${initialCap(this.oid)}>`,
   };
+
   if (desc.type in types) {
     this.type = types[desc.type];
   } else {
@@ -125,6 +126,7 @@ class Param extends CppCtor {
     this.oid = oid;
     this.deviceParams = desc;
     this.init = "{}";
+    this.template_oid = "template_oid" in desc[oid] ? desc[oid].template_oid : "";
     this.arguments.push(typeArg.bind(this));
     this.arguments.push(oidAliasesArg);
     this.arguments.push(nameArg);
@@ -260,12 +262,13 @@ class Param extends CppCtor {
     return this.parentOid.replace(/\//g, "_");
   }
 
-  fieldInfo() {
-    return {
-      name: this.oid,
-      typename: this.type,
-    };
+  isTemplated() {
+    return this.template_oid != "";
   }
+
+  templateOid() {
+    return this.template_oid;
+  } 
 }
 
 module.exports = Param;

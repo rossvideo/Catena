@@ -41,6 +41,29 @@ class loc {
   }
 }
 
+/**
+ * @class TemplateParam
+ * stores enough information to use the parameter as a template, if needed.
+ */
+class TemplateParam {
+  constructor(typename, initializer) {
+    this.typename = typename;
+    this.initializer = initializer;
+  }
+
+  typeName() {
+    return this.typename;
+  }
+
+  initializer() {
+    return this.initializer;
+  }
+}
+
+
+/**
+ * storage for the write functions, and the current indent level
+ */
 let hloc, bloc;
 let hindent, bindent;
 
@@ -77,6 +100,9 @@ class CppGen {
     let Bloc = new loc(this.body);
     bloc = Bloc.write.bind(Bloc);
     bindent = 0;
+
+    // initialize the template param map
+    this.templateParams = {};
   }
 
   //     arrayInitializer (name, desc, arr, quote = '', indent = 0)  {
@@ -310,16 +336,8 @@ class CppGen {
       for (let oid in desc.params) {
         let structInfo = isTopLevel ? {} : parentStructInfo;
         structInfo[oid] = {};
-        this.subparam(
-          parentOid,
-          oid,
-          typeNamespace,
-          desc.params,
-          structInfo[oid],
-          isStructChild
-        );
+        this.subparam(parentOid, oid, typeNamespace, desc.params, structInfo[oid], isStructChild);
         if (isTopLevel && structInfo[oid].params) {
-          console.log(`rollup: ${JSON.stringify(structInfo, null, 2)}`);
           for (let type in structInfo) {
             this.defineGetStructInfo(structInfo[type]);
           }
@@ -331,15 +349,34 @@ class CppGen {
   subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false) {
     let p = new Param(parentOid, oid, desc);
     let args = p.argsToString();
-    let type = p.objectType();
+    let type;
+    if (p.isTemplated()) {
+      let templateParam = this.templateParam(p.templateOid());
+      if (templateParam === undefined) {
+        throw new Error(`No template param found for ${parentOid}/${oid}`);
+      }
+      type = templateParam.typeName();
+    } else {
+      type = p.objectType();
+    }
     let name = p.objectName();
     let pname = p.paramName();
-    let objectType = p.isStructType() ? `${typeNamespace}::${type}` : type;
+    let objectType = type;
+    if (p.isStructType() && !p.isTemplated()) {
+      objectType = `${typeNamespace}::${type}`;
+    }
+    let init = p.initializer(desc[oid]);
+    if (init == "{}" && p.isTemplated()) {
+      init = this.templateParam(`${parentOid}/${oid}`).initializer;
+    }
     if (!isStructChild) {
       // only top-level params get value objects
-      let init = p.initializer(desc[oid]);
       bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
+    }
+    let fqoid = `${parentOid}/${oid}`;
+    if (~p.isTemplated()) {
+      this.templateParams[fqoid] = new TemplateParam(objectType, init);
     }
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
@@ -355,13 +392,7 @@ class CppGen {
       hloc(`struct ${type} {`, hindent++);
 
       parentStructInfo.params = {};
-      this.params(
-        parentOid + `/${oid}`,
-        desc[oid],
-        `${typeNamespace}::${type}`,
-        parentStructInfo.params,
-        true
-      );
+      this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
 
       hloc(`static const catena::lite::StructInfo& getStructInfo();`, hindent);
       hloc(`};`, --hindent);
@@ -404,12 +435,31 @@ class CppGen {
   }
 
   /**
+   * 
+   * @param {string} fully qualified object id
+   * @returns undefined or the template param for the given oid
+   */
+  templateParam(oid) {
+    return this.templateParams[oid];
+  }
+
+  
+
+  /**
+   * log the template parameters to the console
+   */
+  logTemplateParams() {
+    console.log(`template params: ${JSON.stringify(this.templateParams, null, 2)}`);
+  }
+
+  /**
    * generate header and body files to represent the device model
    */
   generate() {
     this.init();
     this.device();
     this.params('', this.desc, this.namespace);
+    this.logTemplateParams();
     this.finish();
   }
 
