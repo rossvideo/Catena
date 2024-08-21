@@ -208,7 +208,14 @@
           "$ref": "#/$defs/value"
         },
         "constraint": {
-          "$ref": "#/$defs/constraint"
+          "oneOf": [
+            {
+              "$ref": "#/$defs/constraint"
+            },
+            {
+              "$ref": "#/$defs/constraint_ref"
+            }
+          ]
         },
         "max_length": {
           "$ref": "#/$defs/max_length"
@@ -807,14 +814,7 @@
           "constraint": {
             "oneOf": [
               {
-                "oneOf": [
-                  {
-                    "$ref": "#/$defs/string_constraint"
-                  },
-                  {
-                    "$ref": "#/$defs/constraint_ref"
-                  }
-                ]
+                "$ref": "#/$defs/string_constraint"
               },
               {
                 "$ref": "#/$defs/constraint_ref"
@@ -1207,41 +1207,35 @@
       "title": "Constraint to apply to parameter value",
       "description": "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
       "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UNDEFINED",
+            "INT_RANGE",
+            "FLOAT_RANGE",
+            "INT_CHOICE",
+            "STRING_CHOICE",
+            "STRING_STRING_CHOICE",
+            "ALARM_TABLE"
+          ],
+          "default": "UNDEFINED"
+        }
+      },
+      "required": ["type"],
       "oneOf": [
         {
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "UNDEFINED",
-                "INT_RANGE",
-                "FLOAT_RANGE",
-                "INT_CHOICE",
-                "STRING_CHOICE",
-                "STRING_STRING_CHOICE",
-                "ALARM_TABLE"
-              ],
-              "default": "UNDEFINED"
-            }
-          },
-          "required": ["type"],
-          "oneOf": [
-            {
-              "$ref": "#/$defs/float32_constraint"
-            },
-            {
-              "$ref": "#/$defs/int32_constraint"
-            },
-            {
-              "$ref": "#/$defs/string_constraint"
-            }
-          ]
+          "$ref": "#/$defs/float32_constraint"
+        },
+        {
+          "$ref": "#/$defs/int32_constraint"
+        },
+        {
+          "$ref": "#/$defs/string_constraint"
         }
       ]
     },
     "constraint_ref": {
-      "title": "Constraint Reference",
-      "description": "Reference to a constraint that is shared amongst multiple parameters",
       "properties": {
         "ref_oid": {
           "type": "string",
