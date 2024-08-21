@@ -26,7 +26,7 @@
 //
 #include <common/include/IParam.h>
 
-#include <lite/service.grpc.pb.h>
+#include <interface/service.grpc.pb.h>
 
 #include <string>
 

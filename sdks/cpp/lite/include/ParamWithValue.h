@@ -7,9 +7,9 @@
 #include <lite/include/PolyglotText.h>
 #include <common/include/Tags.h>
 
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 
 #include <functional>
 #include <string>

@@ -5,7 +5,7 @@
 #include <lite/include/Device.h>
 #include <common/include/IParam.h>
 
-#include <lite/service.grpc.pb.h>
+#include <interface/service.grpc.pb.h>
 
 #include <grpcpp/grpcpp.h>
 #include <jwt-cpp/jwt.h>

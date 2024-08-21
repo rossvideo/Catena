@@ -1,7 +1,7 @@
 #pragma once
 
 /** @todo this needs some cmake+preprocessor magic to work for both build types */
-#include <lite/device.pb.h>
+#include <interface/device.pb.h>
 
 #include <common/include/patterns/EnumDecorator.h>
 #include <cstdint>

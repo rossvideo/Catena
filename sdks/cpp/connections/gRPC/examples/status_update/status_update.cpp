@@ -7,7 +7,7 @@
 
 #include <connections/gRPC/include/ServiceImpl.h>
 
-#include <lite/service.grpc.pb.h>
+#include <interface/service.grpc.pb.h>
 #include "connections/gRPC/examples/status_update/device.status_update.json.h" 
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>

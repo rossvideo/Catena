@@ -1,4 +1,4 @@
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 
 #include <lite/include/ParamDescriptor.h>
 #include <lite/include/StructInfo.h>

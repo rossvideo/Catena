@@ -5,7 +5,7 @@
     "cmake.buildBeforeRun": false,
     "cmake.configureSettings": {
         "CONNECTIONS": ["gRPC", "REST"],
-        "CATENA_MODELS": ["full", "lite"]
+        "CATENA_MODEL": ["full", "lite"]
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/sdks/cpp/build",

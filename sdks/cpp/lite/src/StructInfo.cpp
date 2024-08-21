@@ -1,6 +1,6 @@
 #include <lite/include/StructInfo.h>
 
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 
 
 template<>

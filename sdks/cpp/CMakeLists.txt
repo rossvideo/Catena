@@ -125,6 +125,12 @@ else()
   message(STATUS "CPP = ${CPP}")
 endif()
 
+# Check that a valid model is specified
+if ((NOT "${CATENA_MODEL}" STREQUAL "full") AND (NOT "${CATENA_MODEL}" STREQUAL "lite"))
+  message(FATAL_ERROR "${CATENA_MODEL} is not a valid model. CATENA_MODEL must be either 'full' or 'lite'.")
+endif()
+message(STATUS "Model: ${CATENA_MODEL}")
+
 # Check for invalid connection types
 set(ALLOWED_CONNECTIONS "gRPC")
 foreach(conn ${CONNECTIONS})
@@ -136,7 +142,6 @@ endforeach()
 
 # create flags _gRPC, _REST, _WSS to indicate which connections are enabled
 message(STATUS "Connections: ${CONNECTIONS}")
-message(STATUS "Models: ${CATENA_MODELS}")
 list(FIND CONNECTIONS "gRPC" _gRPC)
 list(FIND CONNECTIONS "REST" _REST)
 list(FIND CONNECTIONS "WSS" _WSS)
@@ -157,13 +162,6 @@ endif()
 if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
   message(FATAL_ERROR "Error: At least one connection type must be specified.")
 endif()
-
-# If no models are specified, default to "lite"
-if (NOT CATENA_MODELS)
-  set(CATENA_MODELS "lite")
-endif()
-set(ALLOWED_MODELS "full" "lite")
-
 
 # Identify Catena proto folder as interface variable
 set (relative_interface "../../interface/")
@@ -186,96 +184,89 @@ if(gRPC_enabled)
 endif()
 message(STATUS "proto_stems: ${proto_stems}")
 
-foreach(_model ${CATENA_MODELS})
-  # Check if the model is valid
-  if (NOT _model IN_LIST ALLOWED_MODELS)
-    message(FATAL_ERROR "Error: Unknown Catena Model specified: ${_model}")
-  endif()
 
-  if (gRPC_enabled)
-    set(proto_interface "proto_interface_${_model}_grpc")
-  else()
-    set(proto_interface "proto_interface_${_model}")
-  endif()
-  message(STATUS "Building library: ${proto_interface}")
+if (gRPC_enabled)
+  set(proto_interface "proto_interface_${CATENA_MODEL}_grpc")
+else()
+  set(proto_interface "proto_interface_${CATENA_MODEL}")
+endif()
+message(STATUS "Building library: ${proto_interface}")
 
-  add_library(${proto_interface} STATIC)
+add_library(${proto_interface} STATIC)
 
-  # preprocess the proto files and add them to proto_interface
-  preprocess_protobuf_files("${catena_interface_dir}" "${proto_stems}" "${proto_interface}" "${_model}")
+# preprocess the proto files and add them to proto_interface
+preprocess_protobuf_files("${catena_interface_dir}" "${proto_stems}" "${proto_interface}" "${CATENA_MODEL}")
 
-  # use the protobuf generate function provided by the protobuf package
+# use the protobuf generate function provided by the protobuf package
+protobuf_generate(
+  TARGET ${proto_interface}
+  APPEND_PATH FALSE
+  PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/interface
+  IMPORT_DIRS ${CMAKE_BINARY_DIR}/${CATENA_MODEL}
+  OUT_VAR cpp_sources
+)
+
+if(gRPC_enabled)
+  # generate the gRPC sources
   protobuf_generate(
-    TARGET ${proto_interface}
+    PROTOS ${CMAKE_BINARY_DIR}/${CATENA_MODEL}/service.proto
+    LANGUAGE grpc
+    GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
     APPEND_PATH FALSE
-    PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/${_model}
-    IMPORT_DIRS ${CMAKE_BINARY_DIR}/${_model}
-    OUT_VAR cpp_sources
+    PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/interface
+    PLUGIN "protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+    OUT_VAR output
   )
+  target_sources(${proto_interface} PRIVATE ${output})
+  list(APPEND cpp_sources ${output})
+endif()
 
-  if(gRPC_enabled)
-    # generate the gRPC sources
-    protobuf_generate(
-      PROTOS ${CMAKE_BINARY_DIR}/${_model}/service.proto
-      LANGUAGE grpc
-      GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
-      APPEND_PATH FALSE
-      PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/${_model}
-      PLUGIN "protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-      OUT_VAR output
-    )
-    target_sources(${proto_interface} PRIVATE ${output})
-    list(APPEND cpp_sources ${output})
+# Filter header files from cpp_sources
+set(header_files)
+foreach(file ${cpp_sources})
+  if(file MATCHES "\\.h$")
+    list(APPEND header_files ${file})
   endif()
-
-  # Filter header files from cpp_sources
-  set(header_files)
-  foreach(file ${cpp_sources})
-    if(file MATCHES "\\.h$")
-      list(APPEND header_files ${file})
-    endif()
-  endforeach()
-
-  # install the header files
-  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${_model})
-  
-  
-  # Set the library's output directory
-  set_target_properties(${proto_interface} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${_model}"
-  )
-
-  if (gRPC_enabled)
-    target_link_libraries(${proto_interface} ${_GRPC_GRPCPP})
-
-    if (${_model} STREQUAL "full")
-      target_link_libraries(${proto_interface} ${_REFLECTION})
-    endif()
-  endif()
-
-  if (${_model} STREQUAL "full")
-    target_link_libraries(${proto_interface}  ${_PROTOBUF_LIBPROTOBUF})
-  else()
-    target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
-  endif()
-  
-  target_include_directories(${proto_interface} PUBLIC 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${model}>
-    $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${_model}>
-  )
-
-  target_compile_features(${proto_interface} PUBLIC cxx_std_20)
-
-  # install the library
-  install(TARGETS ${proto_interface}
-    EXPORT Catena_cppTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
-  
 endforeach()
+
+# install the header files
+install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${CATENA_MODEL})
+
+
+# Set the library's output directory
+set_target_properties(${proto_interface} PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CATENA_MODEL}"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CATENA_MODEL}"
+)
+
+if (gRPC_enabled)
+  target_link_libraries(${proto_interface} ${_GRPC_GRPCPP})
+
+  if (${CATENA_MODEL} STREQUAL "full")
+    target_link_libraries(${proto_interface} ${_REFLECTION})
+  endif()
+endif()
+
+if (${CATENA_MODEL} STREQUAL "full")
+  target_link_libraries(${proto_interface}  ${_PROTOBUF_LIBPROTOBUF})
+else()
+  target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
+endif()
+
+target_include_directories(${proto_interface} PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${model}>
+  $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${CATENA_MODEL}>
+)
+
+target_compile_features(${proto_interface} PUBLIC cxx_std_20)
+
+# install the library
+install(TARGETS ${proto_interface}
+  EXPORT Catena_cppTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
 # add clean target for the protobuf generated files
 add_custom_target(clean-proto
@@ -315,7 +306,7 @@ configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
-  PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR
+  PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR CATENA_MODEL
 )
 
 write_basic_package_version_file(

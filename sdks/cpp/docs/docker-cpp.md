@@ -31,6 +31,6 @@ Press F1 to open the command palette and select the option
 Ensure the C/C++ Extension pack is enabled in the container as well as any other extensions you might want.
 
 Continue to sdks/cpp/build, emptying it and using 
-``` cmake -G Ninja -DCONNECTIONS=gRPC -DCATENA_MODELS=lite .. ```
+``` cmake -G Ninja -DCONNECTIONS=gRPC -DCATENA_MODEL=lite .. ```
 
 <!-- ***Note***: set `-DUNIT_TESTING=ON` to build with Google Test enabled -->

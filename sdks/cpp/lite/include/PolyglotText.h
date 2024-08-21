@@ -2,7 +2,7 @@
 
 #include <common/include/IPolyglotText.h>
 
-#include <lite/language.pb.h>
+#include <interface/language.pb.h>
 
 #include <string>
 #include <unordered_map>

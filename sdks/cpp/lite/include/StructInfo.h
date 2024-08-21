@@ -7,7 +7,7 @@
  * @date 2024-07-07
  */
 
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 #include <common/include/meta/Typelist.h>
 
 #include <string>

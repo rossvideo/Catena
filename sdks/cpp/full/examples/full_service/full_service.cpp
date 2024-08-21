@@ -39,7 +39,7 @@
 #include <grpcpp/health_check_service_interface.h>
 #include <grpcpp/support/server_interceptor.h>
 
-#include <service.grpc.pb.h>
+#include <interface/service.grpc.pb.h>
 
 #include <jwt-cpp/jwt.h>
 

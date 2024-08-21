@@ -21,8 +21,8 @@
 // limitations under the License.
 //
 
-#include <full/device.pb.h>
-#include <full/param.pb.h>
+#include <interface/device.pb.h>
+#include <interface/param.pb.h>
 #include <patterns/GenericFactory.h>
 #include <Status.h>
 

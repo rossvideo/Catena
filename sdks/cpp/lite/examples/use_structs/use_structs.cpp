@@ -29,7 +29,7 @@
 #include <lite/include/Device.h>
 #include <lite/include/ParamWithValue.h>
 #include <lite/include/PolyglotText.h>
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 
 using namespace catena::lite;
 using namespace catena::common;

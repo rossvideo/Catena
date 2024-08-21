@@ -89,7 +89,7 @@ mkdir build && cd build
 cmake .. -G Ninja \
 	-D CMAKE_BUILD_TYPE=Release \
 	-D CONNECTIONS=gRPC \
-	-D CATENA_MODELS=lite \
+	-D CATENA_MODEL=lite \
     -D CMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake \
 	-D CMAKE_INSTALL_PREFIX=/path/to/target_root
 ninja install

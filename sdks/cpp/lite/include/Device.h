@@ -13,7 +13,7 @@
 #include <common/include/IParam.h>
 #include <common/include/Tags.h>  
 
-#include <lite/device.pb.h>
+#include <interface/device.pb.h>
 
 #include <unordered_map>
 #include <string>

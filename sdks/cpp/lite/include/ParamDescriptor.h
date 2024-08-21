@@ -8,7 +8,7 @@
 #include <lite/include/PolyglotText.h>
 
 
-#include <lite/param.pb.h>
+#include <interface/param.pb.h>
 
 #include <vector>
 #include <string>
