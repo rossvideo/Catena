@@ -154,7 +154,7 @@
       "$comment": "patternProperties regex must be same as that defined in oid schema",
       "patternProperties": {
         "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-          "$ref": "#/$defs/constraints"
+          "$ref": "#/$defs/constraint"
         }
       },
       "additionalProperties": false
@@ -361,7 +361,14 @@
             "$ref": "#/$defs/float32_value"
           },
           "constraint": {
-            "$ref": "#/$defs/float32_constraint"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/float32_constraint"
+              },
+              {
+                "$ref": "#/$defs/constraint_ref"
+              }
+            ]
           },
           "params": false,
           "commands": false,
@@ -554,7 +561,14 @@
             "$ref": "#/$defs/int32_value"
           },
           "constraint": {
-            "$ref": "#/$defs/int32_constraint"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/int32_constraint"
+              },
+              {
+                "$ref": "#/$defs/constraint_ref"
+              }
+            ]
           },
           "params": false,
           "commands": false,
@@ -603,7 +617,14 @@
             "$ref": "#/$defs/int32_array_values"
           },
           "constraint": {
-            "$ref": "#/$defs/int32_constraint"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/int32_constraint"
+              },
+              {
+                "$ref": "#/$defs/constraint_ref"
+              }
+            ]
           },
           "params": false
         }
@@ -648,7 +669,14 @@
             "$ref": "#/$defs/float32_array_values"
           },
           "constraint": {
-            "$ref": "#/$defs/float32_constraint"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/float32_constraint"
+              },
+              {
+                "$ref": "#/$defs/constraint_ref"
+              }
+            ]
           },
           "params": false
         }
@@ -779,7 +807,14 @@
           "constraint": {
             "oneOf": [
               {
-                "$ref": "#/$defs/string_constraint"
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/string_constraint"
+                  },
+                  {
+                    "$ref": "#/$defs/constraint_ref"
+                  }
+                ]
               },
               {
                 "$ref": "#/$defs/constraint_ref"
@@ -828,7 +863,14 @@
             "$ref": "#/$defs/string_array_values"
           },
           "constraint": {
-            "$ref": "#/$defs/string_constraint"
+            "oneOf": [
+              {
+                "$ref": "#/$defs/string_constraint"
+              },
+              {
+                "$ref": "#/$defs/constraint_ref"
+              }
+            ]
           },
           "params": false
         }
@@ -1162,65 +1204,52 @@
       "default": "UNDEFINED"
     },
     "constraint": {
-        "title": "Constraint to apply to parameter value",
-        "description": "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
-        "type": "object",
-        "oneOf": [
-          {
-              "properties": {
-                  "type": {
-                      "type": "string",
-                      "enum": [
-                          "UNDEFINED",
-                          "INT_RANGE",
-                          "FLOAT_RANGE",
-                          "INT_CHOICE",
-                          "STRING_CHOICE",
-                          "STRING_STRING_CHOICE",
-                          "ALARM_TABLE"
-                      ],
-                      "default": "UNDEFINED"
-                  }
-              },
-              "required": ["type"],
-              "oneOf": [
-                  {
-                  "$ref": "#/$defs/float32_constraint"
-                  },
-                  {
-                  "$ref": "#/$defs/int32_constraint"
-                  },
-                  {
-                  "$ref": "#/$defs/string_constraint"
-                  }
-              ]
+      "title": "Constraint to apply to parameter value",
+      "description": "Constraints on how the value of the parameter can change. Its schema is polymorphic dependent on type",
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UNDEFINED",
+                "INT_RANGE",
+                "FLOAT_RANGE",
+                "INT_CHOICE",
+                "STRING_CHOICE",
+                "STRING_STRING_CHOICE",
+                "ALARM_TABLE"
+              ],
+              "default": "UNDEFINED"
+            }
           },
-          {
-              "$ref": "#/$defs/constraint_ref"
-          }
+          "required": ["type"],
+          "oneOf": [
+            {
+              "$ref": "#/$defs/float32_constraint"
+            },
+            {
+              "$ref": "#/$defs/int32_constraint"
+            },
+            {
+              "$ref": "#/$defs/string_constraint"
+            }
+          ]
+        }
       ]
     },
     "constraint_ref": {
-        "title": "Constraint Reference",
-        "description": "Reference to a constraint that is shared amongst multiple parameters",
-        "properties": {
-            "ref_oid": {
-                "type": "string",
-                "format": "json-pointer"
-            }
-        },
-        "required": ["ref_oid"],
-        "additionalProperties": false
-    },
-    "constraints": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/constraint"
-        },
-        {
-          "$ref": "#/$defs/oid"
+      "title": "Constraint Reference",
+      "description": "Reference to a constraint that is shared amongst multiple parameters",
+      "properties": {
+        "ref_oid": {
+          "type": "string",
+          "format": "json-pointer"
         }
-      ]
+      },
+      "required": ["ref_oid"],
+      "additionalProperties": false
     },
     "apply_struct_variant": {
       "title": "STRUCT_VARIANT specialism",
