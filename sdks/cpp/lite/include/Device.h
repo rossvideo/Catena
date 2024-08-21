@@ -10,10 +10,8 @@
 #include <common/include/Path.h>
 #include <common/include/Enums.h>
 #include <common/include/vdk/signals.h>
-
-#include <lite/include/IParam.h>
-// #include <lite/include/IConstraint.h>
-#include <lite/include/Tags.h>  
+#include <common/include/IParam.h>
+#include <common/include/Tags.h>  
 
 #include <lite/device.pb.h>
 

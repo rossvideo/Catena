@@ -1,11 +1,11 @@
 #pragma once
 
-#include <lite/include/IParam.h>
+#include <common/include/IParam.h>
 #include <lite/include/ParamDescriptor.h>
 #include <lite/include/Device.h>
 #include <lite/include/StructInfo.h>
 #include <lite/include/PolyglotText.h>
-#include <lite/include/Tags.h>
+#include <common/include/Tags.h>
 
 #include <lite/param.pb.h>
 

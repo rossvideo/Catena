@@ -26,12 +26,13 @@
 // it's in the BINARY folder structure, not SOURCE.
 #include "lite/examples/start_here/device.start_here.json.h" // dm
 
+#include <common/include/IParam.h> // catena::common::IParam
+#include <common/include/Tags.h> // catena::common::Device::ParamTag
+
 // these includes are from the LITE SDK, they're in the SOURCE
 // folder structure.
 #include <lite/include/Device.h> // catena::lite::Device, LockGuard
 #include <lite/include/ParamDescriptor.h> // catena::lite::Param
-#include <lite/include/IParam.h> // catena::lite::IParam
-#include <lite/include/Tags.h> // catena::lite::Device::ParamTag
 #include <lite/include/ParamWithValue.h>
 
 // this include header was generated from the protobuf definition

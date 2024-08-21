@@ -217,7 +217,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
-                catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
+                catena::common::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
                     if (param == nullptr) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";

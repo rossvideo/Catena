@@ -3,7 +3,7 @@
 #include <common/include/vdk/signals.h>
 
 #include <lite/include/Device.h>
-#include <lite/include/IParam.h>
+#include <common/include/IParam.h>
 
 #include <lite/service.grpc.pb.h>
 
@@ -20,7 +20,7 @@ using grpc::Status;
 using grpc::ServerCompletionQueue;
 
 using catena::lite::Device;
-using catena::lite::IParam;
+using catena::common::IParam;
 
 class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
 public:
