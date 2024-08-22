@@ -32,19 +32,17 @@
   "params": {
     "counter": {
       "type": "INT32",
-      "name": {"display_strings": {"en": "Counter", "es": "Contador", "fr": "Compteur"}},
+      "name": { "display_strings": { "en": "Counter", "es": "Contador", "fr": "Compteur" } },
       "value": { "int32_value": 0 }
     },
     "hello": {
       "type": "STRING",
-      "name": {"display_strings": {"en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte"}},
-      "value": {"string_value": "Hello, World!"}
+      "name": { "display_strings": { "en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte" } },
+      "value": { "string_value": "Hello, World!" }
     },
     "button": {
       "type": "INT32",
-      "name": {
-        "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" }
-      },
+      "name": { "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" } },
       "value": { "int32_value": 0 },
       "widget": "button",
       "constraint": {
@@ -52,23 +50,11 @@
         "int32_choice": {
           "choices": [
             {
-              "name": {
-                "display_strings": {
-                  "en": "Off",
-                  "es": "Apagado",
-                  "fr": "Éteint"
-                }
-              },
+              "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
               "value": 0
             },
             {
-              "name": {
-                "display_strings": {
-                  "en": "On",
-                  "es": "Encendido",
-                  "fr": "Allumé"
-                }
-              },
+              "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
               "value": 1
             }
           ]
