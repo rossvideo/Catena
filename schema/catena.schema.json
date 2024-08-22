@@ -1236,10 +1236,16 @@
       ]
     },
     "constraint_ref": {
-      "properties": {
-        "ref_oid": {
-          "type": "string",
-          "format": "json-pointer"
+      "title": "Constraint Reference",
+      "description": "Reference to a constraint that is shared amongst multiple parameters",
+      "type": "object",
+      "$comment": "patternProperties regex must be same as that defined in oid schema",
+      "patternProperties": {
+        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+          "ref_oid": {
+            "type": "string",
+            "format": "json-pointer"
+          }
         }
       },
       "required": ["ref_oid"],
