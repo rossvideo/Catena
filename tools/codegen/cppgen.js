@@ -22,6 +22,7 @@ const { get } = require("http");
 const path = require("node:path");
 const Device = require("./device");
 const Param = require("./param");
+const Constraint = require("./constraint");
 const { type } = require("os");
 
 /**
@@ -140,6 +141,24 @@ class CppGen {
     }
   }
 
+  /**
+   * 
+   * @param {object} desc constraint descriptor 
+   * 
+   */
+  constraints(desc) {
+    if ("constraints" in desc) {
+      for (let oid in desc.constraints) {
+        let c = new Constraint(true, oid, desc.constraints);
+        let args = c.argsToString();
+        let objectType = c.objectType();
+        let type = c.constrainedType();
+        let cname = c.constraintName(); 
+        bloc(`catena::lite::${objectType}<${type}> ${cname}Constraint {${args}};`);
+      }
+    }
+  }
+
   subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false) {
     let p = new Param(parentOid, oid, desc);
     let args = p.argsToString();
@@ -253,6 +272,7 @@ class CppGen {
     this.init();
     this.device();
     this.params('', this.desc, this.namespace);
+    this.constraints(this.desc);
     this.logTemplateParams();
     this.finish();
   }
@@ -272,6 +292,8 @@ class CppGen {
     bloc(`#include <lite/include/ParamDescriptor.h>`);
     bloc(`#include <lite/include/ParamWithValue.h>`);
     bloc(`#include <lite/include/Device.h>`);
+    bloc(`#include <lite/include/NamedChoiceConstraint.h>`);
+    bloc(`#include <lite/include/RangeConstraint.h>`);
     bloc(`#include <common/include/Enums.h>`);
     bloc(`#include <lite/include/StructInfo.h>`);
     bloc(`#include <string>`);
@@ -286,6 +308,8 @@ class CppGen {
     bloc(`using catena::lite::ParamDescriptor;`);
     bloc(`using catena::lite::ParamWithValue;`);
     bloc(`using catena::lite::Device;`);
+    bloc(`using catena::lite::NamedChoiceConstraint;`);
+    bloc(`using catena::lite::RangeConstraint;`);
     bloc(`using catena::common::IParam;`);
     bloc(`using std::placeholders::_1;`);
     bloc(`using std::placeholders::_2;`);

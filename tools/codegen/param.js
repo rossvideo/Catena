@@ -113,13 +113,13 @@ function parentArg(desc) {
   return this.parentOid == "" ? "dm" : `&${this.parentName()}Param`;
 }
 
-/**
- * Create constructor arguments for catena::lite::Device object
- * @param {Array} array of ancestors' oids
- * @param {string} oid object id of the param being processed
- * @param {object} desc descriptor of parent object
- */
 class Param extends CppCtor {
+  /**
+   * Create constructor arguments for catena::lite::Param object
+   * @param {Array} parentOid array of ancestors' oids
+   * @param {string} oid object id of the param being processed
+   * @param {object} desc descriptor of parent object
+   */
   constructor(parentOid, oid, desc) {
     super(desc[oid]);
     this.parentOid = parentOid;

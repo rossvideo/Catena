@@ -6,6 +6,8 @@
 #include <lite/include/PolyglotText.h>
 #include <lite/include/Tags.h>
 
+#include <common/include/IConstraint.h>
+
 #include <lite/param.pb.h>
 
 #include <vector>
@@ -15,15 +17,12 @@ namespace catena {
 namespace lite {
 
 
-
 /**
  * @brief ParamDescriptor provides information about a parameter
  * @tparam T the parameter's value type
  */
-template <typename T> class ParamDescriptor : public catena::common::IParam {
-  public:
-    
-
+template <typename T> 
+class ParamDescriptor : public catena::common::IParam {
   public:
     /**
      * @brief ParamDescriptor does not have a default constructor
@@ -148,6 +147,9 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
         if constexpr (std::is_same_v<TAG, common::CommandTag>) {
             commands_[key] = item;
         }
+        if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
+            constraints_[key] = item;
+        }
     }
 
     /**
@@ -158,6 +160,7 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
     typename TAG::type* getItem(const std::string& key) const {
         GET_ITEM(common::ParamTag, params_)
         GET_ITEM(common::CommandTag, commands_)
+        GET_ITEM(common::ConstraintTag, constraints_)
         return nullptr;
     }
 
@@ -181,7 +184,7 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
     bool read_only_;
     std::unordered_map<std::string, IParam*> params_;
     std::unordered_map<std::string, IParam*> commands_;
-
+    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     
     std::string oid_;
     IParam* parent_;

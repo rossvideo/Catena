@@ -9,8 +9,15 @@
  */
 
 #include <common/include/IConstraint.h>
+#include <lite/include/Device.h>
+#include <lite/include/ParamDescriptor.h>
+#include <lite/include/Tags.h>
 #include <google/protobuf/message_lite.h>
-#include <lite/include/PolyglotText.h>
+
+#include <string>
+
+namespace catena {
+namespace lite {
 
 /**
  * @brief Named choice constraint, ensures a value is within a named choice
@@ -47,7 +54,15 @@ public:
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
         : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{init.begin()->first} {}
+        strict_{strict}, default_{init.begin()->first} {
+            // TODO
+            // parent.addItem(oid, this);
+        }
+
+    /**
+     * @brief default destructor
+     */
+    virtual ~NamedChoiceConstraint() = default;
 
     /**
      * @brief applies choice constraint to a catena::Value if strict
@@ -71,7 +86,7 @@ public:
             if (!src_val.has_string_value()) { return; }
 
             // constrain if strict and src is not in choices
-            if (strict_ && !choices_.contains(src_val.float32_value())) {
+            if (strict_ && !choices_.contains(src_val.string_value())) {
                 src_val.set_string_value(default_);
             }
         } 
@@ -108,3 +123,6 @@ private:
     bool strict_;     ///< should the value be constrained on apply
     T default_;       ///< the default value to constrain to
 };
+
+} // namespace lite
+} // namespace catena

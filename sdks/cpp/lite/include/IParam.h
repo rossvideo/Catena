@@ -78,7 +78,7 @@ class IParam {
     /**
      * @brief set the oid of the param
      */
-    virtual void setOid(const std::string& oid) =0;
+    virtual void setOid(const std::string& oid) = 0;
 
     /**
      * @brief return read only status of the param
