@@ -22,7 +22,7 @@ const { get } = require("http");
 const path = require("node:path");
 const Device = require("./device");
 const Param = require("./param");
-const { type } = require("os");
+const LanguagePacks = require("./language");
 
 /**
  * writes a line of code to the file descriptor constructed
@@ -246,14 +246,33 @@ class CppGen {
     console.log(`template params: ${JSON.stringify(this.templateParams, null, 2)}`);
   }
 
+  languagePacks() {
+    let languagePacks = new LanguagePacks(this.desc);
+    let packs = languagePacks.getLanguagePacks();    
+    bloc (`using catena::lite::LanguagePacks;`);
+    bloc (`using catena::lite::LanguagePack;`);
+    bloc(`catena::lite::LanguagePacks languagePacks {};`);
+    for (let pack in packs) {
+      let lang = packs[pack];
+      bloc(`LanguagePack ${pack} {`);
+      bloc(`"${lang.name}",`,1);
+      let keyWordPairs = Object.keys(lang.words);
+      bloc(`{`,1);
+      bloc(keyWordPairs.map((key) => {return `{ "${key}", "${lang.words[key]}" }`}).join(",\n    "),2);
+      bloc(`},`,1);
+      bloc(`languagePacks`,1);
+      bloc(`};`);
+    }
+  }
+
   /**
    * generate header and body files to represent the device model
    */
   generate() {
     this.init();
     this.device();
+    this.languagePacks();
     this.params('', this.desc, this.namespace);
-    this.logTemplateParams();
     this.finish();
   }
 
@@ -262,8 +281,10 @@ class CppGen {
     hloc(`#pragma once`);
     hloc(warning);
     hloc(`#include <lite/include/Device.h>`);
+    hloc(`#include <lite/include/Language.h>`);
     hloc(`#include <lite/include/StructInfo.h>`);
     hloc(`extern catena::lite::Device dm;`);
+    hloc(`extern catena::lite::LanguagePacks languagePacks;`);
     hloc(`namespace ${this.namespace} {`);
 
     bloc(warning);
