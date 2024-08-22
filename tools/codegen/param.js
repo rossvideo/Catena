@@ -127,6 +127,7 @@ class Param extends CppCtor {
     this.deviceParams = desc;
     this.init = "{}";
     this.template_oid = "template_oid" in desc[oid] ? desc[oid].template_oid : "";
+    this.constraint = "constraint" in desc[oid] ? desc[oid].constraint : "";
     this.arguments.push(typeArg.bind(this));
     this.arguments.push(oidAliasesArg);
     this.arguments.push(nameArg);
@@ -269,6 +270,30 @@ class Param extends CppCtor {
   templateOid() {
     return this.template_oid;
   } 
+
+  /**
+   *
+   * @returns true if the param has a constraint, false otherwise
+   */
+  isConstrained() {
+    return this.constraint != "";
+  }
+
+  /**
+   *
+   * @returns true if the param's constraint is shared, false otherwise
+   */
+  usesSharedConstraint() {
+    return this.constraint != "" && "ref_oid" in this.constraint;
+  }
+
+  /**
+   *
+   * @returns returns the oid of the shared constraint
+   */
+  constraintRef() {
+    return `_${this.constraint.ref_oid}`;
+  }
 }
 
 module.exports = Param;

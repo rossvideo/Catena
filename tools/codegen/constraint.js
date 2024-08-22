@@ -24,7 +24,7 @@ function quoted() {
  * @returns the owner of the constraint
  */
 function parentArg(desc) {
-  return this.shared ? "dm" : `&${this.oid}Param`;
+  return this.shared ? "dm" : `&${this.parentOid}_${this.oid}Param`;
 }
 
 /**
@@ -33,7 +33,13 @@ function parentArg(desc) {
  * @returns min value of the range constraint
  */
 function minArg(desc) {
-  return desc.float_range.min_value;
+  let range_desc;
+  if (this.constrainedType === "int32_t") {
+    range_desc = desc.int_range;
+  } else {
+    range_desc = desc.float_range;
+  }
+  return range_desc.min_value;
 }
 
 /**
@@ -42,7 +48,13 @@ function minArg(desc) {
  * @returns max value of the range constraint
  */
 function maxArg(desc) {
-  return desc.float_range.max_value;
+  let range_desc;
+  if (this.constrainedType === "int32_t") {
+    range_desc = desc.int_range;
+  } else {
+    range_desc = desc.float_range;
+  }
+  return range_desc.max_value;
 }
 
 /**
@@ -53,7 +65,9 @@ function maxArg(desc) {
  */
 function stepArg(desc) {
   let ans = 1;
-  if ("step" in desc) {
+  if ("step" in desc && this.constrainedType === "int32_t") {
+    ans = desc.int_range.step;
+  } else if ("step" in desc) {
     ans = desc.float_range.step;
   }
   return ans;
@@ -66,9 +80,16 @@ function stepArg(desc) {
  * defaults to min value
  */
 function displayMinArg(desc) {
-  let ans = desc.float_range.min_value;
-  if ("display_min" in desc) {
-    ans = desc.float_range.display_min;
+  let range_desc;
+  if (this.constrainedType === "int32_t") {
+    range_desc = desc.int_range;
+  } else {
+    range_desc = desc.float_range;
+  }
+
+  let ans = range_desc.min_value;
+  if ("display_min" in range_desc) {
+    ans = range_desc.display_min;
   }
   return ans;
 }
@@ -80,20 +101,73 @@ function displayMinArg(desc) {
  * defaults to max value
  */
 function displayMaxArg(desc) {
-  let ans = desc.float_range.max_value;
-  if ("display_max" in desc) {
-    ans = desc.float_range.display_max;
+  let range_desc;
+  if (this.constrainedType === "int32_t") {
+    range_desc = desc.int_range;
+  } else {
+    range_desc = desc.float_range;
+  }
+
+  let ans = range_desc.max_value;
+  if ("display_max" in range_desc) {
+    ans = range_desc.display_max;
   }
   return ans;
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns the choices for the named choice constraint
+ */
 function namedChoicesArg(desc) {
-  let ans = "{}";
+  let choices;
+  if (this.type === "int32_t") {
+    choices = desc.int32_choice.choices;
+  } else {
+    choices = desc.string_string_choice.choices;
+  }
+  let ans = '{';
+    for (let i = 0; i < choices.length; ++i) {
+      if (this.type === "int32_t") {
+        ans += `{${choices[i].value},{`;
+      } else {
+        ans += `{"${choices[i].value}",{`;
+      }
+      let display_strings = choices[i].name.display_strings;
+      let pairs = Object.keys(display_strings).length;
+      for (let lang in display_strings) {
+        ans += `{"${lang}","${display_strings[lang]}"}`;
+        if (--pairs > 0) {
+          ans += ',';
+        }
+      }
+      ans += '}}';
+      if (i < choices.length - 1) {
+        ans += ',';
+      } else {
+        ans += '}';
+      }
+    }
   return ans;
 }
 
+/**
+ * 
+ * @param {object} desc param descriptor
+ * @returns the choices for the picklist constraint
+ */
 function choicesArg(desc) {
-  let ans = "{}";
+  let choices = desc.string_choice.choices;
+  let ans = '{';
+    for (let i = 0; i < choices.length; ++i) {
+      ans += `"${choices[i]}"`;
+      if (i < choices.length - 1) {
+        ans += ',';
+      } else {
+        ans += '}';
+      }
+    }
   return ans;
 }
 
@@ -122,23 +196,28 @@ function sharedArg(desc) {
 class Constraint extends CppCtor {
   /**
    * Create constructor arguments for catena::lite::Constraint object
-   * @param {boolean} shared indicates whether the constraint is shared
-   * @param {string} oid object id of the param being processed
+   * @param {string} parentOid oid of the parent object, empty if owned by device
+   * @param {string} oid object id of the constraint being processed
    * @param {object} desc descriptor of parent object
    */
-  constructor(shared, oid, desc) {
-    super(desc[oid]);
-    this.shared = shared;
+  constructor(parentOid, oid, desc) {
+    let this_desc = desc[oid];
+    if (parentOid !== "constraints") {
+      this_desc = this_desc.constraint;
+    }
+    super(this_desc);
+    this.shared = parentOid === "constraints";
+    this.parentOid = parentOid;
     this.oid = oid;
-    this.findType(desc[oid]);
+    this.findType(this_desc);
     if (this.constraintType === "RangeConstraint") {
-      this.arguments.push(minArg);
-      this.arguments.push(maxArg);
-      this.arguments.push(stepArg);
-      this.arguments.push(displayMinArg);
-      this.arguments.push(displayMaxArg);
+      this.arguments.push(minArg.bind(this));
+      this.arguments.push(maxArg.bind(this));
+      this.arguments.push(stepArg.bind(this));
+      this.arguments.push(displayMinArg.bind(this));
+      this.arguments.push(displayMaxArg.bind(this));
     } else if (this.constraintType === "NamedChoiceConstraint") {
-      this.arguments.push(namedChoicesArg);
+      this.arguments.push(namedChoicesArg.bind(this));
       this.arguments.push(strictArg);
     } else if (this.constraintType === "PicklistConstraint") {
       this.arguments.push(choicesArg);
@@ -151,8 +230,8 @@ class Constraint extends CppCtor {
 
   /**
    *
+   * Identifies the constraint type
    * @param {object} desc constraint descriptor
-   * @returns c++ type of the constraint's value as a string
    */
   findType(desc) {
     const types = {
@@ -162,13 +241,6 @@ class Constraint extends CppCtor {
       STRING_STRING_CHOICE: ["std::string", "NamedChoiceConstraint"],
       STRING_CHOICE: ["std::string", "PicklistConstraint"],
       ALARM_TABLE: ["", ""], // not yet implemented
-    };
-
-    const fields = {
-      RangeConstraint: ["min", "max", "step", "display_min", "display_max"],
-      NamedChoiceConstraint: ["named_choices", "strict"],
-      PicklistConstraint: ["choices", "strict"],
-      ALARM_TABLE: [], // not yet implemented
     };
 
     if (desc.type in types) {
@@ -183,23 +255,20 @@ class Constraint extends CppCtor {
 
   /**
    *
-   * @returns the c++ type of the constraint
+   * @returns the C++ type of the constraint
    */
   objectType() {
-    return this.constraintType;
+    if (this.constraintType === "PicklistConstraint") {
+      return "PicklistConstraint";
+    } else {
+      return `${this.constraintType}<${this.type}>`;
+    }
   }
 
   /**
    *
-   * @returns the c++ type being constrained by this constraint
-   */
-  constrainedType() {
-    return this.type;
-  }
-
-  /**
-   *
-   * @returns true if the param has subparams, false otherwise
+   * @returns true if the constraint is owned by the device, 
+   * false if owned by a param 
    */
   isShared() {
     return this.shared;
@@ -218,7 +287,11 @@ class Constraint extends CppCtor {
    * @returns unique C++ legal identifier for the constraint
    */
   constraintName() {
-    return `_${this.oid}`;
+    return `${this.parentName()}_${this.oid}`;
+  }
+
+  parentName() {
+    return this.parentOid.replace(/\//g, "_");
   }
 }
 

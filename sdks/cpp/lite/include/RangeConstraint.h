@@ -22,14 +22,8 @@ namespace lite {
  * @brief Range constraint, ensures a value is within a range
  * @tparam T int or float
  */
-template <typename T> // TODO test if it works without namespace
+template <typename T>
 class RangeConstraint : public catena::common::IConstraint {
-public:
-    /**
-     * @brief local alias for IConstraint
-     */
-    // using IConstraint = catena::common::IConstraint;
-
 public:
     /**
      * @brief Construct a new Range Constraint object
@@ -38,13 +32,12 @@ public:
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
      * @param dm the device to add the constraint to
-     * @param p the param to add the constraint to
      */
     RangeConstraint(T min, T max, std::string oid, bool shared, Device& dm)
         : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
         display_min_{min}, display_max_{max} {
-            dm.addItem<common::ConstraintTag>(oid, this);
-        }
+        dm.addItem<common::ConstraintTag>(oid, this);
+    }
 
     /**
      * @brief Construct a new Range Constraint object
@@ -52,18 +45,14 @@ public:
      * @param max the maximum value
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
+     * @param p the param to add the constraint to
      */
     template <typename U>
     RangeConstraint(T min, T max, std::string oid, bool shared, ParamDescriptor<U>& p)
         : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
         display_min_{min}, display_max_{max} {
-            p.template addItem<common::ConstraintTag>(oid, this);
-        }
-
-    /**
-     * @brief default destructor
-     */
-    virtual ~RangeConstraint() = default;
+        p.template addItem<common::ConstraintTag>(oid, this);
+    }
 
     /**
      * @brief Construct a new Range Constraint object
@@ -76,12 +65,12 @@ public:
      * @param shared is the constraint shared
      * @param dm the device to add the constraint to
      */
-    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
+    RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid,
         bool shared, Device& dm)
         : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
         display_min_{display_min}, display_max_{display_max} {
-            dm.addItem<common::ConstraintTag>(oid, this);
-        }
+        dm.addItem<common::ConstraintTag>(oid, this);
+    }
 
     /**
      * @brief Construct a new Range Constraint object
@@ -99,8 +88,13 @@ public:
         bool shared, ParamDescriptor<U>& p)
         : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
         display_min_{display_min}, display_max_{display_max} {
-            p.template addItem<common::ConstraintTag>(oid, this);
-        }
+        p.template addItem<common::ConstraintTag>(oid, this);
+    }
+
+    /**
+     * @brief default destructor
+     */
+    virtual ~RangeConstraint() = default;
 
     /**
      * @brief applies range constraint to a catena::Value

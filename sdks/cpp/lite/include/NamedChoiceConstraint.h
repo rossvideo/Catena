@@ -11,6 +11,7 @@
 #include <common/include/IConstraint.h>
 #include <lite/include/Device.h>
 #include <lite/include/ParamDescriptor.h>
+#include <lite/include/ParamWithValue.h>
 #include <lite/include/Tags.h>
 #include <google/protobuf/message_lite.h>
 
@@ -27,14 +28,6 @@ template <typename T>
 class NamedChoiceConstraint : public catena::common::IConstraint {
 public:
     /**
-     * @brief local alias for IConstraint
-     */
-    using IConstraint = catena::common::IConstraint;
-    /**
-     * @brief local alias for PolyglotText
-     */
-    using PolyglotText = catena::lite::PolyglotText;
-    /**
      * @brief map of choices with their display names
      */
     using Choices = std::unordered_map<T, PolyglotText>;
@@ -50,14 +43,46 @@ public:
      * @param strict should the value be constrained if not in choices
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
+     * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Device& dm)
         : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
         strict_{strict}, default_{init.begin()->first} {
-            // TODO
-            // parent.addItem(oid, this);
-        }
+        dm.addItem<common::ConstraintTag>(oid, this);
+    }
+    
+    /**
+     * @brief Construct a new Named Choice Constraint object
+     * @param init the list of choices
+     * @param strict should the value be constrained if not in choices
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     * @param parent the param to add the constraint to
+     * @note  the first choice provided will be the default for the constraint
+     */
+    template <typename U>
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, ParamDescriptor<U>& parent)
+        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+        strict_{strict}, default_{init.begin()->first} {
+        p.template addItem<common::ConstraintTag>(oid, this);
+    }
+
+    // /**
+    //  * @brief Construct a new Named Choice Constraint object
+    //  * @param init the list of choices
+    //  * @param strict should the value be constrained if not in choices
+    //  * @param oid the oid of the constraint
+    //  * @param shared is the constraint shared
+    //  * @param parent the param to add the constraint to
+    //  * @note  the first choice provided will be the default for the constraint
+    //  */
+    // template <typename U>
+    // NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, ParamWithValue& parent)
+    //     : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+    //     strict_{strict}, default_{init.begin()->first} {
+    //     p.template addItem<common::ConstraintTag>(oid, this);
+    // }
 
     /**
      * @brief default destructor
