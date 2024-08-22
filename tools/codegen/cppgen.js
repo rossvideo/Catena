@@ -261,19 +261,19 @@ class CppGen {
     const warning = `// This file was auto-generated. Do not modify by hand.`;
     hloc(`#pragma once`);
     hloc(warning);
-    hloc(`#include <lite/include/Device.h>`);
-    hloc(`#include <lite/include/StructInfo.h>`);
+    hloc(`#include <Device.h>`);
+    hloc(`#include <StructInfo.h>`);
     hloc(`extern catena::lite::Device dm;`);
     hloc(`namespace ${this.namespace} {`);
 
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
     bloc(`using namespace ${this.namespace};`);
-    bloc(`#include <lite/include/ParamDescriptor.h>`);
-    bloc(`#include <lite/include/ParamWithValue.h>`);
-    bloc(`#include <lite/include/Device.h>`);
-    bloc(`#include <common/include/Enums.h>`);
-    bloc(`#include <lite/include/StructInfo.h>`);
+    bloc(`#include <ParamDescriptor.h>`);
+    bloc(`#include <ParamWithValue.h>`);
+    bloc(`#include <Device.h>`);
+    bloc(`#include <Enums.h>`);
+    bloc(`#include <StructInfo.h>`);
     bloc(`#include <string>`);
     bloc(`#include <vector>`);
     bloc(`#include <functional>`);

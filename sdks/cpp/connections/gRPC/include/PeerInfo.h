@@ -23,9 +23,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-#include <common/include/IParam.h>
 
+// common
+#include <IParam.h>
+
+// gRPC interface
 #include <interface/service.grpc.pb.h>
 
 #include <string>

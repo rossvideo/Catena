@@ -76,8 +76,8 @@ function(generate_catena_device)
     set_source_files_properties(${_OUT_DIR}/${HEADER} ${_OUT_DIR}/${BODY} PROPERTIES GENERATED TRUE)
 
     if(DEFINED _TARGET)
-        target_sources(${TARGET} PRIVATE ${_OUT_DIR}/${BODY})
-        target_include_directories(${TARGET} PRIVATE ${_OUT_DIR})
+        target_sources(${_TARGET} PRIVATE ${_OUT_DIR}/${BODY})
+        target_include_directories(${_TARGET} PRIVATE ${_OUT_DIR})
     endif()
 
     if(DEFINED _HDR_OUT_VAR)

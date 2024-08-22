@@ -1,9 +1,11 @@
 #pragma once
 
-/** @todo this needs some cmake+preprocessor magic to work for both build types */
+// common
+#include <patterns/EnumDecorator.h>
+
+// protobuf interface
 #include <interface/device.pb.h>
 
-#include <common/include/patterns/EnumDecorator.h>
 #include <cstdint>
 
 

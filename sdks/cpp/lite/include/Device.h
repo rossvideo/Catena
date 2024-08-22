@@ -7,12 +7,14 @@
  * @date 2024-07-07
  */
 
-#include <common/include/Path.h>
-#include <common/include/Enums.h>
-#include <common/include/vdk/signals.h>
-#include <common/include/IParam.h>
-#include <common/include/Tags.h>  
+// common
+#include <Path.h>
+#include <Enums.h>
+#include <vdk/signals.h>
+#include <IParam.h>
+#include <Tags.h>  
 
+// protobuf interface
 #include <interface/device.pb.h>
 
 #include <unordered_map>

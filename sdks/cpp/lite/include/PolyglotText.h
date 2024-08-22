@@ -1,7 +1,16 @@
 #pragma once
 
-#include <common/include/IPolyglotText.h>
+/**
+ * @file PolyglotText.h
+ * @brief Polyglot Text serialization and deserialization to protobuf
+ * @author John R. Naylor
+ * @date 2024-07-07
+ */
 
+// common
+#include <IPolyglotText.h>
+
+// protobuf interface
 #include <interface/language.pb.h>
 
 #include <string>

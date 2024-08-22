@@ -24,12 +24,16 @@
  * builds on that. Less chatty comments.
  */
 
+// device model
+#include "device.use_templates.json.h"  
 
-#include "lite/examples/use_templates/device.use_templates.json.h"  // dm
-#include <lite/include/Device.h>
-#include <lite/include/ParamWithValue.h>
-#include <lite/include/ParamDescriptor.h>
-#include <lite/include/PolyglotText.h>
+// lite
+#include <Device.h>
+#include <ParamWithValue.h>
+#include <ParamDescriptor.h>
+#include <PolyglotText.h>
+
+// protobuf interface
 #include <interface/param.pb.h>
 
 using namespace catena::lite;

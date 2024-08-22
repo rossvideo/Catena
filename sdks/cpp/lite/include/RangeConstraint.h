@@ -9,7 +9,9 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include <common/include/IConstraint.h>
+// common
+#include <IConstraint.h>
+
 #include  <google/protobuf/message_lite.h>
 
 /**

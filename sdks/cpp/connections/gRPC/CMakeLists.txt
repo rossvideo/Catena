@@ -34,23 +34,22 @@ find_package(jwt-cpp CONFIG REQUIRED)
 target_include_directories(
     ${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
 )
 
 target_link_libraries(${target}
-    catena_common
-    catena_lite
-    ${proto_interface}
-    jwt-cpp::jwt-cpp
+    PUBLIC
+        catena_lite
+        proto_interface_${CATENA_MODEL}_grpc
+        jwt-cpp::jwt-cpp
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 
 install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/connections/gRPC
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
 )
 
 install(TARGETS ${target} 

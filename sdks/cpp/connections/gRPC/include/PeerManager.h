@@ -25,9 +25,11 @@
 // limitations under the License.
 //
 
-#include <connections/gRPC/include/PeerInfo.h>
+// common
+#include <patterns/Singleton.h>
 
-#include <common/include/patterns/Singleton.h>
+// connections/gRPC
+#include <PeerInfo.h>
 
 #include <unordered_map>
 #include <string>

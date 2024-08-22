@@ -32,14 +32,17 @@ add_library(${target} STATIC ${sources})
 target_include_directories(
     ${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
 )
+
+target_link_libraries(${target} INTERFACE ${proto_interface})
+
 target_compile_features(${target} PUBLIC cxx_std_20)
 
 install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/common
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
 )
 
 install(

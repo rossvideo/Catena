@@ -1,10 +1,38 @@
+#pragma once
 
-#include <common/include/Status.h>
-#include <common/include/vdk/signals.h>
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
+// International Licensing (CC-BY-ND-4.0);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+// https://creativecommons.org/licenses/by-nd/4.0/
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-#include <lite/include/Device.h>
-#include <common/include/IParam.h>
+/**
+ * @file ServiceImpl.h
+ * @brief Implements Catena gRPC request handlers
+ * @author john.naylor@rossvideo.com
+ * @author john.danen@rossvideo.com
+ * @author isaac.robert@rossvideo.com
+ * @date 2024-06-08
+ * @copyright Copyright © 2024 Ross Video Ltd
+ */
 
+// common
+#include <Status.h>
+#include <vdk/signals.h>
+#include <IParam.h>
+
+//lite 
+#include <Device.h>
+
+// gRPC interface
 #include <interface/service.grpc.pb.h>
 
 #include <grpcpp/grpcpp.h>

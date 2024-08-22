@@ -8,9 +8,13 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include <common/include/IConstraint.h>
+// commmon
+#include <IConstraint.h>
+
+// lite
+#include <PolyglotText.h>
+
 #include <google/protobuf/message_lite.h>
-#include <lite/include/PolyglotText.h>
 
 /**
  * @brief Named choice constraint, ensures a value is within a named choice

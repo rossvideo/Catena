@@ -229,10 +229,6 @@ foreach(file ${cpp_sources})
   endif()
 endforeach()
 
-# install the header files
-install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${CATENA_MODEL})
-
-
 # Set the library's output directory
 set_target_properties(${proto_interface} PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CATENA_MODEL}"
@@ -240,26 +236,29 @@ set_target_properties(${proto_interface} PROPERTIES
 )
 
 if (gRPC_enabled)
-  target_link_libraries(${proto_interface} ${_GRPC_GRPCPP})
+  target_link_libraries(${proto_interface} PUBLIC ${_GRPC_GRPCPP})
 
   if (${CATENA_MODEL} STREQUAL "full")
-    target_link_libraries(${proto_interface} ${_REFLECTION})
+    target_link_libraries(${proto_interface} PUBLIC ${_REFLECTION})
   endif()
 endif()
 
 if (${CATENA_MODEL} STREQUAL "full")
-  target_link_libraries(${proto_interface}  ${_PROTOBUF_LIBPROTOBUF})
+  target_link_libraries(${proto_interface} PUBLIC ${_PROTOBUF_LIBPROTOBUF})
 else()
-  target_link_libraries(${proto_interface} ${_PROTOBUF_LIBPROTOBUF_LITE})
+  target_link_libraries(${proto_interface} PUBLIC ${_PROTOBUF_LIBPROTOBUF_LITE})
 endif()
 
-target_include_directories(${proto_interface} PUBLIC 
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${model}>
+target_include_directories(${proto_interface} PUBLIC
   $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/${CATENA_MODEL}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/interface>
 )
 
 target_compile_features(${proto_interface} PUBLIC cxx_std_20)
+
+# install the header files
+install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/interface)
 
 # install the library
 install(TARGETS ${proto_interface}

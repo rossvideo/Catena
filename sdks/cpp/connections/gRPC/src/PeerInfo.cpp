@@ -12,7 +12,8 @@
 // limitations under the License.
 //
 
-#include <connections/gRPC/include/PeerInfo.h>
+// connections/gRPC
+#include <PeerInfo.h>
 
 #include <iostream>
 #include <thread>

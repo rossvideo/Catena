@@ -16,8 +16,9 @@
  * Provides example of using GenericFactory.
  */
 
-#include <common/include/patterns/Singleton.h>
-#include <common/include/meta/Streamable.h>
+// common
+#include <patterns/Singleton.h>
+#include <meta/Streamable.h>
 
 
 //

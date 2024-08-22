@@ -1,14 +1,19 @@
 
-#include <common/include/utils.h>
-//#include <JSON.h>
+// device model
+#include "device.status_update.json.h" 
 
-#include <lite/include/Device.h>
-#include <lite/include/Param.h>
+//common
+#include <utils.h>
 
-#include <connections/gRPC/include/ServiceImpl.h>
+//lite
+#include <Device.h>
+#include <ParamWithValue.h>
 
+// connections/gRPC
+#include <ServiceImpl.h>
+
+// protobuf interface
 #include <interface/service.grpc.pb.h>
-#include "connections/gRPC/examples/status_update/device.status_update.json.h" 
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>

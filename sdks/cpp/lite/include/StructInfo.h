@@ -7,8 +7,11 @@
  * @date 2024-07-07
  */
 
+// common
+#include <meta/Typelist.h>
+
+// protobuf interface
 #include <interface/param.pb.h>
-#include <common/include/meta/Typelist.h>
 
 #include <string>
 #include <cstddef>

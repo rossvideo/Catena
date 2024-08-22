@@ -1,8 +1,7 @@
 #pragma once
 
-
-#include <common/include/ReflectionMacros.h>
-
+//common
+#include <ReflectionMacros.h>
 
 #include <cstdint>
 #include <unordered_map>

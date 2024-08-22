@@ -7,9 +7,11 @@
  * @date 2024-07-07
  */
 
-#include <interface/param.pb.h>
+//common 
+#include <Enums.h>
 
-#include <common/include/Enums.h>
+// protobuf interface
+#include <interface/param.pb.h>
 
 namespace catena {
 class Value; // forward reference

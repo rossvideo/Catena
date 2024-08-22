@@ -1,13 +1,22 @@
 #pragma once
 
-#include <common/include/Tags.h>
-#include <common/include/IParam.h>
+/**
+ * @file ParamWithDescription.h
+ * @brief Interface for accessing parameter descriptions
+ * @author John R. Naylor
+ * @date 2024-08-20
+ */
 
-#include <lite/include/Device.h>
-#include <lite/include/StructInfo.h>
-#include <lite/include/PolyglotText.h>
+//common
+#include <Tags.h>
+#include <IParam.h>
 
+// lite
+#include <Device.h>
+#include <StructInfo.h>
+#include <PolyglotText.h>
 
+// protobuf interface
 #include <interface/param.pb.h>
 
 #include <vector>
