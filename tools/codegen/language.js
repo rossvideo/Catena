@@ -7,7 +7,7 @@ class LanguagePacks {
     }
 
     getLanguagePacks(){
-        let ans = `{}`;
+        let ans = {};
         if ("language_packs" in this.desc) {
             ans = this.desc.language_packs.packs;
         }

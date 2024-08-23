@@ -12,6 +12,7 @@
 #include <common/include/vdk/signals.h>
 
 #include <lite/include/IParam.h>
+#include <common/include/ILanguagePack.h>
 // #include <lite/include/IConstraint.h>
 #include <lite/include/Tags.h>  
 
@@ -114,6 +115,18 @@ class Device {
     void toProto(::catena::Device& dst, bool shallow = true) const;
 
     /**
+     * @brief Create a protobuf representation of the language packs.
+     * @param packs the protobuf representation of the language packs.
+     */
+    void toProto(::catena::LanguagePacks& packs) const;
+
+    /**
+     * @brief Create a protobuf representation of the language list.
+     * @param list the protobuf representation of the language list.
+     */
+    void toProto(::catena::LanguageList& list) const;
+
+    /**
      * @brief add an item to one of the collections owned by the device
      * @tparam TAG identifies the collection to which the item will be added
      * @param key item's unique key
@@ -133,9 +146,9 @@ class Device {
         // if constexpr (std::is_same_v<TAG, common::CommandTag>) {
         //     commands_[key] = item;
         // }
-        // if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
-        //     language_packs_[key] = item;
-        // }
+        if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
+            language_packs_[key] = item;
+        }
     }
 
     /**
@@ -148,7 +161,7 @@ class Device {
         // GET_ITEM(common::ConstraintTag, constraints_)
         // GET_ITEM(common::MenuGroupTag, menu_groups_)
         // GET_ITEM(common::CommandTag, commands_)
-        // GET_ITEM(common::LanguagePackTag, language_packs_)
+        GET_ITEM(common::LanguagePackTag, language_packs_)
         return nullptr;
     }
 
@@ -172,7 +185,7 @@ class Device {
     std::unordered_map<std::string, IParam*> params_;
     // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
-    // std::unordered_map<std::string, ILanguagePack*> language_packs_;
+    std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
     std::vector<Scopes_e> access_scopes_;
     Scopes default_scope_;
     bool multi_set_enabled_;

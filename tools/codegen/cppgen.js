@@ -249,9 +249,7 @@ class CppGen {
   languagePacks() {
     let languagePacks = new LanguagePacks(this.desc);
     let packs = languagePacks.getLanguagePacks();    
-    bloc (`using catena::lite::LanguagePacks;`);
     bloc (`using catena::lite::LanguagePack;`);
-    bloc(`catena::lite::LanguagePacks languagePacks {};`);
     for (let pack in packs) {
       let lang = packs[pack];
       bloc(`LanguagePack ${pack} {`);
@@ -260,7 +258,7 @@ class CppGen {
       bloc(`{`,1);
       bloc(keyWordPairs.map((key) => {return `{ "${key}", "${lang.words[key]}" }`}).join(",\n    "),2);
       bloc(`},`,1);
-      bloc(`languagePacks`,1);
+      bloc(`dm`,1);
       bloc(`};`);
     }
   }
@@ -281,10 +279,8 @@ class CppGen {
     hloc(`#pragma once`);
     hloc(warning);
     hloc(`#include <lite/include/Device.h>`);
-    hloc(`#include <lite/include/Language.h>`);
     hloc(`#include <lite/include/StructInfo.h>`);
     hloc(`extern catena::lite::Device dm;`);
-    hloc(`extern catena::lite::LanguagePacks languagePacks;`);
     hloc(`namespace ${this.namespace} {`);
 
     bloc(warning);
@@ -292,6 +288,7 @@ class CppGen {
     bloc(`using namespace ${this.namespace};`);
     bloc(`#include <lite/include/ParamDescriptor.h>`);
     bloc(`#include <lite/include/ParamWithValue.h>`);
+    bloc(`#include <lite/include/LanguagePack.h>`);
     bloc(`#include <lite/include/Device.h>`);
     bloc(`#include <common/include/Enums.h>`);
     bloc(`#include <lite/include/StructInfo.h>`);
