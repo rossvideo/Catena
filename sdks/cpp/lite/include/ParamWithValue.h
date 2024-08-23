@@ -7,7 +7,7 @@
 #include <lite/include/PolyglotText.h>
 #include <lite/include/Tags.h>
 
-#include <lite/param.pb.h>
+#include <common/include/IConstraint.h>
 
 #include <lite/param.pb.h>
 
@@ -84,12 +84,32 @@ class ParamWithValue : public catena::common::IParam {
         return value_.get();
     }
 
+    /**
+     * @brief get a child parameter by name
+     */
     IParam* getParam(const std::string& oid) override {
         return descriptor_.getParam(oid);
     }
 
+    /**
+     * @brief add a child parameter
+     */
     void addParam(const std::string& oid, IParam* param) override {
         descriptor_.addParam(oid, param);
+    }
+
+    /**
+     * @brief get a constraint by oid
+     */
+    catena::common::IConstraint* getConstraint(const std::string& oid) override {
+        return descriptor_.getConstraint(oid);
+    }
+
+    /**
+     * @brief add a constraint
+     */
+    void addConstraint(const std::string& oid, catena::common::IConstraint* constraint) override {
+        descriptor_.addConstraint(oid, constraint);
     }
 
   private:
