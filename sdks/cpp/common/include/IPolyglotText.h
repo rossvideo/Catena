@@ -25,6 +25,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <initializer_list>
 
 namespace catena {
 namespace common {
