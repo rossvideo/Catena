@@ -43,7 +43,10 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    // apply constraints
+    IParam* ip = dm.getItem<ParamTag>("display");
+    assert(ip != nullptr);
+    auto& displayParam = *dynamic_cast<ParamWithValue<std::string>*>(ip);
+    // @todo example needs proto serialization to use apply
 
     return EXIT_SUCCESS;
 }
