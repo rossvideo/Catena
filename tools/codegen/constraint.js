@@ -177,6 +177,7 @@ function choicesArg(desc) {
  * @returns true or false reflecting presence and state of the strict flag.
  */
 function strictArg(desc) {
+  // @todo int_choice might need to default to true
   let ans = `false`;
   if ("strict" in desc) {
     ans = desc.strict ? `true` : `false`;
@@ -210,6 +211,7 @@ class Constraint extends CppCtor {
     this.shared = parentOid === "constraints";
     this.parentOid = parentOid;
     this.oid = oid;
+    // arguments change based on constraint type
     this.findType(this_desc);
     if (this.constraintType === "RangeConstraint") {
       this.arguments.push(minArg.bind(this));
