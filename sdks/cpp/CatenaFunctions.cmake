@@ -57,13 +57,20 @@ endfunction()
 # Function to install Catena codegen
 function(install_catena_codegen)
 
+    #install the Catena device validation schema file
+    install(
+        FILES ${CATENA_ROOT_DIR}/schema/catena.schema.json
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp
+    )
+    set(CATENA_SCHEMA_JSON ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/catena.schema.json PARENT_SCOPE)
+
     # Ensure the custom target runs during the installation process
     find_program(NPM_EXECUTABLE npm REQUIRED)
     get_filename_component(codegen_dir ${CMAKE_SOURCE_DIR}/../../tools/codegen ABSOLUTE)
     get_filename_component(install_dir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp ABSOLUTE)
-    install(CODE "message(STATUS \"Installing Catena codegen\")")
     install(CODE 
-        "execute_process(
+        "message(STATUS \"Installing Catena codegen\")
+        execute_process(
             COMMAND ${NPM_EXECUTABLE} install ${codegen_dir} --install-links
             WORKING_DIRECTORY ${install_dir}
         )"

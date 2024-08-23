@@ -286,13 +286,6 @@ add_subdirectory("lite")
 
 install_catena_codegen()
 
-#install the Catena device validation schema file
-install(
-  FILES ${CATENA_ROOT_DIR}/schema/catena.schema.json
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp
-)
-set(CATENA_SCHEMA_JSON ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/catena.schema.json)
-
 install(
   EXPORT Catena_cppTargets
   FILE Catena_cppTargets.cmake
