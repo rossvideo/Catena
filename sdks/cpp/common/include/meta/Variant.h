@@ -1,13 +1,5 @@
 #pragma once
 
-/**
- * @brief Meta programming to test if an object is a std::variant
- * @file Variant.h
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- * 
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -21,6 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
+/**
+ * @brief Meta programming to test if an object is a std::variant
+ * @file Variant.h
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ */
 
 #include <type_traits> // std::void_t
 #include <variant>     // std::get

@@ -4,13 +4,6 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-/**
- * @brief Handles Path objects used to uniquely identify and access OIDs
- * @file Path.h
- * @copyright Copyright © 2023 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -25,6 +18,12 @@
 // limitations under the License.
 //
 
+/**
+ * @brief Handles Path objects used to uniquely identify and access OIDs
+ * @file Path.h
+ * @copyright Copyright © 2023 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ */
 
 #include <iostream>
 #include <string>

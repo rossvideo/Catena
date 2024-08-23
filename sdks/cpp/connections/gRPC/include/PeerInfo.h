@@ -4,13 +4,6 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-/**
- * @brief Holds information about connected Peers
- * @file PeerInfo.h
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -23,6 +16,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+
+/**
+ * @brief Holds information about connected Peers
+ * @file PeerInfo.h
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ */
 
 // common
 #include <IParam.h>

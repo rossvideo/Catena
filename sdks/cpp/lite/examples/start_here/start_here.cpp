@@ -20,6 +20,8 @@
  * 
  * It does not support any connections so is not a complete example
  * of a working device.
+ * 
+ * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // this include header was generated from the json device model

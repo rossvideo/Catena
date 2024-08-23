@@ -15,13 +15,15 @@
 /**
  * @file use_templates.cpp
  * @author john.danen@rossvideo.com
- * @brief Steps up the complexity a notch by dealing with structured data
+ * @brief Shows how to use templates to create multiple struct params of the same type.
  *
  * It does not support any connections so is not a complete example
  * of a working device.
  *
- * It presumes the reader has understood the start_here example and
+ * It presumes the reader has understood the start_here and use_structs examples and
  * builds on that. Less chatty comments.
+ * 
+ * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // device model

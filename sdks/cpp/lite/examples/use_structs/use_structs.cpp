@@ -22,6 +22,8 @@
  *
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
+ * 
+ * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // device model
