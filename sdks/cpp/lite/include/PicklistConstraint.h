@@ -9,8 +9,8 @@
  */
 
 #include <common/include/IConstraint.h>
+#include <lite/include/IParam.h>
 #include <lite/include/Device.h>
-#include <lite/include/ParamDescriptor.h>
 #include <lite/include/Tags.h>
 #include <google/protobuf/message_lite.h>
 
@@ -53,15 +53,10 @@ public:
      * @param strict should the value be constrained if not in choices
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
-     * @param p the param to add the constraint to
+     * @param parent the param to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    template <typename U>
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, ParamDescriptor<U>& p)
-        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{*init.begin()} {
-        p.template addItem<common::ConstraintTag>(oid, this);
-    }
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, catena::common::IParam* parent);
 
     /**
      * @brief default destructor

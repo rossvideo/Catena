@@ -1,6 +1,8 @@
-#include <PicklistConstraint.h>
+#include <lite/include/PicklistConstraint.h>
 
 #include <lite/param.pb.h>
+
+using IParam = catena::common::IParam;
 
 namespace catena {
 namespace lite {
@@ -9,8 +11,15 @@ PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::s
     bool shared, Device& dm)
     : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
     strict_{strict}, default_{*init.begin()} {
-        dm.addItem<common::ConstraintTag>(oid, this);
-    }
+    dm.addItem<common::ConstraintTag>(oid, this);
+}
+
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
+    bool shared, IParam* parent)
+    : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+    strict_{strict}, default_{*init.begin()} {
+    parent->addConstraint(oid, this);
+}
 
 PicklistConstraint::~PicklistConstraint() = default;
 

@@ -141,15 +141,15 @@ class ParamDescriptor : public catena::common::IParam {
      */
     template <typename TAG>
     void addItem(const std::string& key, typename TAG::type* item) {
-        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
-            params_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, common::CommandTag>) {
-            commands_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
-            constraints_[key] = item;
-        }
+      if constexpr (std::is_same_v<TAG, common::ParamTag>) {
+        params_[key] = item;
+      }
+      if constexpr (std::is_same_v<TAG, common::CommandTag>) {
+        commands_[key] = item;
+      }
+      if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
+        constraints_[key] = item;
+      }
     }
 
     /**
@@ -158,22 +158,38 @@ class ParamDescriptor : public catena::common::IParam {
      */
     template <typename TAG>
     typename TAG::type* getItem(const std::string& key) const {
-        GET_ITEM(common::ParamTag, params_)
-        GET_ITEM(common::CommandTag, commands_)
-        GET_ITEM(common::ConstraintTag, constraints_)
-        return nullptr;
+      GET_ITEM(common::ParamTag, params_)
+      GET_ITEM(common::CommandTag, commands_)
+      GET_ITEM(common::ConstraintTag, constraints_)
+      return nullptr;
     }
 
     /**
      * @brief get a child parameter by name
      */
     IParam* getParam(const std::string& oid) override {
-        return getItem<common::ParamTag>(oid);
+      return getItem<common::ParamTag>(oid);
     }
 
-
+    /**
+     * @brief add a child parameter
+     */
     void addParam(const std::string& oid, IParam* param) override {
-        addItem<common::ParamTag>(oid, param);
+      addItem<common::ParamTag>(oid, param);
+    }
+
+    /**
+     * @brief get a constraint by oid
+     */
+    catena::common::IConstraint* getConstraint(const std::string& oid) override {
+      return getItem<common::ConstraintTag>(oid);
+    }
+
+    /**
+     * @brief add a constraint
+     */
+    void addConstraint(const std::string& oid, catena::common::IConstraint* constraint) override {
+      addItem<common::ConstraintTag>(oid, constraint);
     }
 
   private:

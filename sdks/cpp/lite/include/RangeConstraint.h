@@ -10,8 +10,8 @@
  */
 
 #include <common/include/IConstraint.h>
+#include <lite/include/IParam.h>
 #include <lite/include/Device.h>
-#include <lite/include/ParamDescriptor.h>
 #include <lite/include/Tags.h>
 #include <google/protobuf/message_lite.h>
 
@@ -45,13 +45,13 @@ public:
      * @param max the maximum value
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
-     * @param p the param to add the constraint to
+     * @param parent the param to add the constraint to
      */
     template <typename U>
-    RangeConstraint(T min, T max, std::string oid, bool shared, ParamDescriptor<U>& p)
+    RangeConstraint(T min, T max, std::string oid, bool shared, catena::common::IParam* parent)
         : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
         display_min_{min}, display_max_{max} {
-        p.template addItem<common::ConstraintTag>(oid, this);
+        parent->addConstraint(oid, this);
     }
 
     /**
@@ -81,14 +81,13 @@ public:
      * @param display_max the maximum value to display
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
-     * @param p the param to add the constraint to
+     * @param parent the param to add the constraint to
      */
-    template <typename U>
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
-        bool shared, ParamDescriptor<U>& p)
+        bool shared, catena::common::IParam* parent)
         : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
         display_min_{display_min}, display_max_{display_max} {
-        p.template addItem<common::ConstraintTag>(oid, this);
+        parent->addConstraint(oid, this);
     }
 
     /**

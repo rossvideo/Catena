@@ -9,13 +9,14 @@
  */
 
 #include <common/include/IConstraint.h>
+#include <lite/include/IParam.h>
 #include <lite/include/Device.h>
-#include <lite/include/ParamDescriptor.h>
-#include <lite/include/ParamWithValue.h>
 #include <lite/include/Tags.h>
 #include <google/protobuf/message_lite.h>
 
 #include <string>
+#include <unordered_set>
+#include <initializer_list>
 
 namespace catena {
 namespace lite {
@@ -61,28 +62,11 @@ public:
      * @param parent the param to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    template <typename U>
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, ParamDescriptor<U>& parent)
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, catena::common::IParam* parent)
         : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
         strict_{strict}, default_{init.begin()->first} {
-        p.template addItem<common::ConstraintTag>(oid, this);
+        parent->addConstraint(oid, this);
     }
-
-    // /**
-    //  * @brief Construct a new Named Choice Constraint object
-    //  * @param init the list of choices
-    //  * @param strict should the value be constrained if not in choices
-    //  * @param oid the oid of the constraint
-    //  * @param shared is the constraint shared
-    //  * @param parent the param to add the constraint to
-    //  * @note  the first choice provided will be the default for the constraint
-    //  */
-    // template <typename U>
-    // NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, ParamWithValue& parent)
-    //     : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-    //     strict_{strict}, default_{init.begin()->first} {
-    //     p.template addItem<common::ConstraintTag>(oid, this);
-    // }
 
     /**
      * @brief default destructor
