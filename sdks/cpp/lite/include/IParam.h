@@ -10,6 +10,7 @@
 #include <lite/param.pb.h>
 
 #include <common/include/Enums.h>
+#include <common/include/IConstraint.h>
 
 namespace catena {
 class Value; // forward reference
@@ -78,7 +79,7 @@ class IParam {
     /**
      * @brief set the oid of the param
      */
-    virtual void setOid(const std::string& oid) =0;
+    virtual void setOid(const std::string& oid) = 0;
 
     /**
      * @brief return read only status of the param
@@ -100,6 +101,15 @@ class IParam {
      */
     virtual void addParam(const std::string& oid, IParam* param) = 0;
 
+    /**
+     * @brief get a constraint by oid
+     */
+    virtual IConstraint* getConstraint(const std::string& oid) = 0;
+
+    /**
+     * @brief add a constraint
+     */
+    virtual void addConstraint(const std::string& oid, IConstraint* constraint) = 0;
 };
 }  // namespace common
 

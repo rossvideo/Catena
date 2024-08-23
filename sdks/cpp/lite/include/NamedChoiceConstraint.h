@@ -9,8 +9,17 @@
  */
 
 #include <common/include/IConstraint.h>
+#include <lite/include/IParam.h>
+#include <lite/include/Device.h>
+#include <lite/include/Tags.h>
 #include <google/protobuf/message_lite.h>
-#include <lite/include/PolyglotText.h>
+
+#include <string>
+#include <unordered_set>
+#include <initializer_list>
+
+namespace catena {
+namespace lite {
 
 /**
  * @brief Named choice constraint, ensures a value is within a named choice
@@ -19,14 +28,6 @@
 template <typename T>
 class NamedChoiceConstraint : public catena::common::IConstraint {
 public:
-    /**
-     * @brief local alias for IConstraint
-     */
-    using IConstraint = catena::common::IConstraint;
-    /**
-     * @brief local alias for PolyglotText
-     */
-    using PolyglotText = catena::lite::PolyglotText;
     /**
      * @brief map of choices with their display names
      */
@@ -43,11 +44,34 @@ public:
      * @param strict should the value be constrained if not in choices
      * @param oid the oid of the constraint
      * @param shared is the constraint shared
+     * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Device& dm)
         : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{init.begin()->first} {}
+        strict_{strict}, default_{init.begin()->first} {
+        dm.addItem<common::ConstraintTag>(oid, this);
+    }
+    
+    /**
+     * @brief Construct a new Named Choice Constraint object
+     * @param init the list of choices
+     * @param strict should the value be constrained if not in choices
+     * @param oid the oid of the constraint
+     * @param shared is the constraint shared
+     * @param parent the param to add the constraint to
+     * @note  the first choice provided will be the default for the constraint
+     */
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, catena::common::IParam* parent)
+        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+        strict_{strict}, default_{init.begin()->first} {
+        parent->addConstraint(oid, this);
+    }
+
+    /**
+     * @brief default destructor
+     */
+    virtual ~NamedChoiceConstraint() = default;
 
     /**
      * @brief applies choice constraint to a catena::Value if strict
@@ -71,7 +95,7 @@ public:
             if (!src_val.has_string_value()) { return; }
 
             // constrain if strict and src is not in choices
-            if (strict_ && !choices_.contains(src_val.float32_value())) {
+            if (strict_ && !choices_.contains(src_val.string_value())) {
                 src_val.set_string_value(default_);
             }
         } 
@@ -108,3 +132,6 @@ private:
     bool strict_;     ///< should the value be constrained on apply
     T default_;       ///< the default value to constrain to
 };
+
+} // namespace lite
+} // namespace catena
