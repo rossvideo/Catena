@@ -201,6 +201,7 @@ class Constraint extends CppCtor {
    * @param {object} desc descriptor of parent object
    */
   constructor(parentOid, oid, desc) {
+    // structure of shared constraints vary from param constraints
     let this_desc = desc[oid];
     if (parentOid !== "constraints") {
       this_desc = this_desc.constraint;

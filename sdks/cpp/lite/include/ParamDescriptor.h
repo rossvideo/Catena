@@ -65,14 +65,14 @@ class ParamDescriptor : public catena::common::IParam {
      * @param collection the parameter belongs to
      */
     ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-          const bool read_only, const std::string& oid, Device &dev)
-        : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{nullptr} {
-        setOid(oid);
-        dev.addItem<common::ParamTag>(oid, this);
+      const bool read_only, const std::string& oid, Device &dev)
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{nullptr} {
+      setOid(oid);
+      dev.addItem<common::ParamTag>(oid, this);
     }
 
     ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-        const bool read_only, const std::string& oid, IParam* parent)
+      const bool read_only, const std::string& oid, IParam* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{parent} {
       setOid(oid);
       parent_->addParam(oid, this);
@@ -97,11 +97,11 @@ class ParamDescriptor : public catena::common::IParam {
     inline void readOnly(bool flag) override { read_only_ = flag; }
 
     void toProto(catena::Value& value) const override {
-        //catena::lite::toProto<T>(value, &value_.get());
+      //catena::lite::toProto<T>(value, &value_.get());
     }
 
     void fromProto(catena::Value& value) override {
-        //catena::lite::fromProto<T>(&value_.get(), value);
+      //catena::lite::fromProto<T>(&value_.get(), value);
     }
     
     void toProto(catena::Param &param) const override {
