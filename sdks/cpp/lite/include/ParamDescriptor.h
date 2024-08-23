@@ -24,6 +24,7 @@
 //common
 #include <Tags.h>
 #include <IParam.h>
+#include <IConstraint.h>
 
 // lite
 #include <Device.h>
@@ -40,15 +41,12 @@ namespace catena {
 namespace lite {
 
 
-
 /**
  * @brief ParamDescriptor provides information about a parameter
  * @tparam T the parameter's value type
  */
-template <typename T> class ParamDescriptor : public catena::common::IParam {
-  public:
-    
-
+template <typename T> 
+class ParamDescriptor : public catena::common::IParam {
   public:
     /**
      * @brief ParamDescriptor does not have a default constructor
@@ -91,14 +89,14 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
      * @param collection the parameter belongs to
      */
     ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-          const bool read_only, const std::string& oid, Device &dev)
-        : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{nullptr} {
-        setOid(oid);
-        dev.addItem<common::ParamTag>(oid, this);
+      const bool read_only, const std::string& oid, Device &dev)
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{nullptr} {
+      setOid(oid);
+      dev.addItem<common::ParamTag>(oid, this);
     }
 
     ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-        const bool read_only, const std::string& oid, IParam* parent)
+      const bool read_only, const std::string& oid, IParam* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{parent} {
       setOid(oid);
       parent_->addParam(oid, this);
@@ -123,11 +121,11 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
     inline void readOnly(bool flag) override { read_only_ = flag; }
 
     void toProto(catena::Value& value) const override {
-        //catena::lite::toProto<T>(value, &value_.get());
+      //catena::lite::toProto<T>(value, &value_.get());
     }
 
     void fromProto(catena::Value& value) override {
-        //catena::lite::fromProto<T>(&value_.get(), value);
+      //catena::lite::fromProto<T>(&value_.get(), value);
     }
     
     void toProto(catena::Param &param) const override {
@@ -167,12 +165,15 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
      */
     template <typename TAG>
     void addItem(const std::string& key, typename TAG::type* item) {
-        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
-            params_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, common::CommandTag>) {
-            commands_[key] = item;
-        }
+      if constexpr (std::is_same_v<TAG, common::ParamTag>) {
+        params_[key] = item;
+      }
+      if constexpr (std::is_same_v<TAG, common::CommandTag>) {
+        commands_[key] = item;
+      }
+      if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
+        constraints_[key] = item;
+      }
     }
 
     /**
@@ -181,21 +182,38 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
      */
     template <typename TAG>
     typename TAG::type* getItem(const std::string& key) const {
-        GET_ITEM(common::ParamTag, params_)
-        GET_ITEM(common::CommandTag, commands_)
-        return nullptr;
+      GET_ITEM(common::ParamTag, params_)
+      GET_ITEM(common::CommandTag, commands_)
+      GET_ITEM(common::ConstraintTag, constraints_)
+      return nullptr;
     }
 
     /**
      * @brief get a child parameter by name
      */
     IParam* getParam(const std::string& oid) override {
-        return getItem<common::ParamTag>(oid);
+      return getItem<common::ParamTag>(oid);
     }
 
-
+    /**
+     * @brief add a child parameter
+     */
     void addParam(const std::string& oid, IParam* param) override {
-        addItem<common::ParamTag>(oid, param);
+      addItem<common::ParamTag>(oid, param);
+    }
+
+    /**
+     * @brief get a constraint by oid
+     */
+    catena::common::IConstraint* getConstraint(const std::string& oid) override {
+      return getItem<common::ConstraintTag>(oid);
+    }
+
+    /**
+     * @brief add a constraint
+     */
+    void addConstraint(const std::string& oid, catena::common::IConstraint* constraint) override {
+      addItem<common::ConstraintTag>(oid, constraint);
     }
 
   private:
@@ -206,7 +224,7 @@ template <typename T> class ParamDescriptor : public catena::common::IParam {
     bool read_only_;
     std::unordered_map<std::string, IParam*> params_;
     std::unordered_map<std::string, IParam*> commands_;
-
+    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     
     std::string oid_;
     IParam* parent_;

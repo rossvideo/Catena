@@ -19,6 +19,7 @@
  * @brief Device class definition
  * @author John R. Naylor john.naylor@rossvideo.com
  * @date 2024-07-07
+ * @copyright Copyright (c) 2024 Ross Video
  */
 
 // common
@@ -40,8 +41,6 @@
 
 namespace catena {
 namespace lite {
-
-
 
 /**
  * @brief Device class
@@ -81,9 +80,9 @@ class Device {
      * @brief Construct a new Device object
      */
     Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes_e> access_scopes,
-           Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
-        : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
-          default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
+      Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
+      : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
+      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
 
     /**
      * @brief Destroy the Device object
@@ -135,21 +134,21 @@ class Device {
      */
     template <typename TAG>
     void addItem(const std::string& key, typename TAG::type* item) {
-        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
-            params_[key] = item;
-        }
-        // if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
-        //     constraints_[key] = item;
-        // }
-        // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
-        //     menu_groups_[key] = item;
-        // }
-        // if constexpr (std::is_same_v<TAG, common::CommandTag>) {
-        //     commands_[key] = item;
-        // }
-        // if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
-        //     language_packs_[key] = item;
-        // }
+      if constexpr (std::is_same_v<TAG, common::ParamTag>) {
+        params_[key] = item;
+      }
+      if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
+        constraints_[key] = item;
+      }
+      // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
+      //   menu_groups_[key] = item;
+      // }
+      // if constexpr (std::is_same_v<TAG, common::CommandTag>) {
+      //   commands_[key] = item;
+      // }
+      // if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
+      //   language_packs_[key] = item;
+      // }
     }
 
     /**
@@ -158,12 +157,12 @@ class Device {
      */
     template <typename TAG>
     typename TAG::type* getItem(const std::string& key) const {
-        GET_ITEM(common::ParamTag, params_)
-        // GET_ITEM(common::ConstraintTag, constraints_)
-        // GET_ITEM(common::MenuGroupTag, menu_groups_)
-        // GET_ITEM(common::CommandTag, commands_)
-        // GET_ITEM(common::LanguagePackTag, language_packs_)
-        return nullptr;
+      GET_ITEM(common::ParamTag, params_)
+      GET_ITEM(common::ConstraintTag, constraints_)
+      // GET_ITEM(common::MenuGroupTag, menu_groups_)
+      // GET_ITEM(common::CommandTag, commands_)
+      // GET_ITEM(common::LanguagePackTag, language_packs_)
+      return nullptr;
     }
 
   public:
@@ -182,7 +181,7 @@ class Device {
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
-    // std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
+    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
     // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;

@@ -1,0 +1,97 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor", "operate", "configure", "administer"],
+  "default_scope": "operate",
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+  "params": {
+    "display": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "Display", "es": "Pantalla", "fr": "Affichage" } },
+      "constraint": {
+        "type": "STRING_CHOICE",
+        "string_choice": {
+          "choices": ["large", "medium", "small"],
+          "strict": true
+        }
+      }
+    },
+    "gain": {
+      "type": "FLOAT32",
+      "value": { "float32_value": 0.5 },
+      "name": { "display_strings": { "en": "Audio Gain", "es": "Ganancia de audio", "fr": "Gain audio" } },
+      "widget": "fader",
+      "constraint": { "ref_oid": "basic_slider" }
+    },
+    "volume": {
+      "type": "FLOAT32",
+      "value": { "float32_value": 0.85 },
+      "name": { "display_strings": { "en": "Audio Volume", "es": "Volumen de audio", "fr": "Volume audio" } },
+      "widget": "fader",
+      "constraint": { "ref_oid": "basic_slider" }
+    },
+    "button": {
+      "type": "INT32",
+      "name": {
+        "display_strings": { "en": "Power", "es": "Energía", "fr": "Puissance" }
+      },
+      "value": { "int32_value": 0 },
+      "widget": "button",
+      "constraint": {
+        "type": "INT_CHOICE",
+        "int32_choice": {
+          "choices": [
+            {
+              "name": {
+                "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" }
+              },
+              "value": 0
+            },
+            {
+              "name": {
+                "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" }
+              },
+              "value": 1
+            }
+          ]
+        }
+      }
+    }
+  },
+  "constraints": {
+    "basic_slider": {
+      "type": "FLOAT_RANGE",
+      "float_range": {
+        "min_value": 0.0,
+        "max_value": 10.0,
+        "display_min": 0.0,
+        "display_max": 100.0
+      }
+    }
+  }
+}
