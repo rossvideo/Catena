@@ -49,6 +49,7 @@ add_library(${target} STATIC
     src/ParamDescriptor.cpp
     src/StructInfo.cpp
     src/PolyglotText.cpp
+    src/LanguagePack.cpp
     src/PicklistConstraint.cpp
 )
 add_library(Catena_cpp::lite ALIAS ${target})

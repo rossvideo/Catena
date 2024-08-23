@@ -22,6 +22,7 @@ const { get } = require("http");
 const path = require("node:path");
 const Device = require("./device");
 const Param = require("./param");
+const LanguagePacks = require("./language");
 const Constraint = require("./constraint");
 const { type } = require("os");
 
@@ -285,15 +286,32 @@ class CppGen {
     console.log(`template params: ${JSON.stringify(this.templateParams, null, 2)}`);
   }
 
+  languagePacks() {
+    let languagePacks = new LanguagePacks(this.desc);
+    let packs = languagePacks.getLanguagePacks();    
+    bloc (`using catena::lite::LanguagePack;`);
+    for (let pack in packs) {
+      let lang = packs[pack];
+      bloc(`LanguagePack ${pack} {`);
+      bloc(`"${lang.name}",`,1);
+      let keyWordPairs = Object.keys(lang.words);
+      bloc(`{`,1);
+      bloc(keyWordPairs.map((key) => {return `{ "${key}", "${lang.words[key]}" }`}).join(",\n    "),2);
+      bloc(`},`,1);
+      bloc(`dm`,1);
+      bloc(`};`);
+    }
+  }
+
   /**
    * generate header and body files to represent the device model
    */
   generate() {
     this.init();
     this.device();
+    this.languagePacks();
     this.params('', this.desc, this.namespace);
     this.constraints(this.desc);
-    this.logTemplateParams();
     this.finish();
   }
 
@@ -311,6 +329,7 @@ class CppGen {
     bloc(`using namespace ${this.namespace};`);
     bloc(`#include <lite/include/ParamDescriptor.h>`);
     bloc(`#include <lite/include/ParamWithValue.h>`);
+    bloc(`#include <lite/include/LanguagePack.h>`);
     bloc(`#include <lite/include/Device.h>`);
     bloc(`#include <lite/include/RangeConstraint.h>`);
     bloc(`#include <lite/include/PicklistConstraint.h>`);

@@ -3,6 +3,7 @@
 #include "google/protobuf/message_lite.h" 
 #include <unordered_map>
 #include <string>
+#include <initializer_list>
 
 namespace catena {
 namespace common {
