@@ -89,7 +89,7 @@ set(_REFLECTION gRPC::grpc++_reflection)
 if(CMAKE_CROSSCOMPILING)
 
   # Change protobuf::protoc to reference the protoc executable found on the host system
-  find_program(_PROTOBUF_PROTOC protoc)
+  find_program(_PROTOBUF_PROTOC protoc REQUIRED)
   get_target_property(protoc_config protobuf::protoc IMPORTED_CONFIGURATIONS)
   set_target_properties(protobuf::protoc PROPERTIES IMPORTED_LOCATION_${protoc_config} ${_PROTOBUF_PROTOC})
   get_target_property(imported_location protobuf::protoc IMPORTED_LOCATION_${protoc_config})

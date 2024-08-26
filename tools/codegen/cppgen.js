@@ -162,7 +162,7 @@ class CppGen {
     }
     let init = p.initializer(desc[oid]);
     if (init == "{}" && p.isTemplated()) {
-      init = this.templateParam(`${parentOid}/${oid}`).initializer;
+      init = this.templateParam(p.templateOid()).initializer;
     }
     if (!isStructChild) {
       // only top-level params get value objects

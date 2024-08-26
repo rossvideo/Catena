@@ -181,7 +181,7 @@ class Param extends CppCtor {
       struct_array_values: (value, isStructChild = false) => {
         let arr = value.struct_values;
         let mappedArr = arr.map((item) => {
-          let fields = item.fields;
+          let fields = item.struct_value.fields;
           let fieldsArr = Object.keys(fields);
           let mappedFields = fieldsArr.map((field) => {
             let key = Object.keys(fields[field].value)[0];
