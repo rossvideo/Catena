@@ -1,15 +1,5 @@
 #pragma once
 
-/**
- * @brief Type list meta programming
- * @file TypeList.h
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- *
- * "I never metaprogram I understood. John R. Naylor, January 2024"
- *
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -24,6 +14,15 @@
 // limitations under the License.
 //
 
+/**
+ * @brief Type list meta programming
+ * @file TypeList.h
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ *
+ * "I never metaprogram I understood. John R. Naylor, January 2024"
+ *
+ */
 
 namespace catena {
 namespace meta {

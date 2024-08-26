@@ -37,7 +37,6 @@ generate_catena_device(
 target_include_directories(${TARGET}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-        $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
 )
 
 target_sources(${TARGET}
@@ -46,10 +45,7 @@ target_sources(${TARGET}
         $<BUILD_INTERFACE:${DEVICE_SRC}>     
 )
 
-target_link_libraries(${TARGET}
-    catena_lite
-    ${proto_interface}
-)
+target_link_libraries(${TARGET} catena_lite)
 
 target_compile_features(${TARGET}
     PUBLIC

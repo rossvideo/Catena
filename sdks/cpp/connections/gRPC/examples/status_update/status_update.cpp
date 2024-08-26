@@ -1,14 +1,40 @@
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
+// International Licensing (CC-BY-ND-4.0);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+// https://creativecommons.org/licenses/by-nd/4.0/
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-#include <common/include/utils.h>
-//#include <JSON.h>
+/**
+ * @brief Example program to demonstrate setting up a full Catena service.
+ * @file status_update.cpp
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author John Danen (john.danen@rossvideo.com)
+ */
 
-#include <lite/include/Device.h>
-#include <lite/include/Param.h>
+// device model
+#include "device.status_update.json.h" 
 
-#include <connections/gRPC/include/ServiceImpl.h>
+//common
+#include <utils.h>
 
-#include <lite/service.grpc.pb.h>
-#include "connections/gRPC/examples/status_update/device.status_update.json.h" 
+//lite
+#include <Device.h>
+#include <ParamWithValue.h>
+
+// connections/gRPC
+#include <ServiceImpl.h>
+
+// protobuf interface
+#include <interface/service.grpc.pb.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>

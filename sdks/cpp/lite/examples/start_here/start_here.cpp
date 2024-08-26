@@ -20,23 +20,26 @@
  * 
  * It does not support any connections so is not a complete example
  * of a working device.
+ * 
+ * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // this include header was generated from the json device model
 // it's in the BINARY folder structure, not SOURCE.
-#include "lite/examples/start_here/device.start_here.json.h" // dm
+#include "device.start_here.json.h" // dm
+
+#include <IParam.h> // catena::common::IParam
+#include <Tags.h> // catena::common::Device::ParamTag
 
 // these includes are from the LITE SDK, they're in the SOURCE
 // folder structure.
-#include <lite/include/Device.h> // catena::lite::Device, LockGuard
-#include <lite/include/ParamDescriptor.h> // catena::lite::Param
-#include <lite/include/IParam.h> // catena::lite::IParam
-#include <lite/include/Tags.h> // catena::lite::Device::ParamTag
-#include <lite/include/ParamWithValue.h>
+#include <Device.h> // catena::lite::Device, LockGuard
+#include <ParamDescriptor.h> // catena::lite::Param
+#include <ParamWithValue.h>
 
 // this include header was generated from the protobuf definition
 // it's in the BINARY folder structure, not SOURCE.
-#include <lite/param.pb.h> // catena::Value
+#include <interface/param.pb.h> // catena::Value
 
 using namespace catena::lite;
 using namespace catena::common;

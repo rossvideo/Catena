@@ -23,17 +23,14 @@ project(${target} C CXX)
 
 add_executable(${target})
 
-
-target_include_directories(${target}
-    PUBLIC
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}>
-)
-
 target_sources(${target}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${target}.cpp>
+        ${CMAKE_CURRENT_SOURCE_DIR}/${target}.cpp
 )
 
+target_link_libraries(${target}
+    catena_common
+)
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 

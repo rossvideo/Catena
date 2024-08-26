@@ -1,5 +1,19 @@
 #pragma once
 
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
+// International Licensing (CC-BY-ND-4.0);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+// https://creativecommons.org/licenses/by-nd/4.0/
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 /**
  * @file PicklistConstraint.h
  * @brief A constraint that checks if a value is in a list of strings
@@ -8,10 +22,14 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include <common/include/IConstraint.h>
-#include <lite/include/IParam.h>
-#include <lite/include/Device.h>
-#include <lite/include/Tags.h>
+// common
+#include <IConstraint.h>
+#include <IParam.h>
+#include <Tags.h>
+
+// lite
+#include <Device.h>
+
 #include <google/protobuf/message_lite.h>
 
 #include <string>

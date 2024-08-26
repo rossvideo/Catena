@@ -63,21 +63,24 @@ function(generate_catena_device)
     set(HEADER ${device_name}.h)
     set(BODY ${device_name}.cpp)
 
+    # Get all files in the CODEGEN_DIR
+    file(GLOB CODEGEN_FILES "${CATENA_CODEGEN}/*.js")
+
     # convert json to cpp
     find_program(NODE node REQUIRED)
     add_custom_command(
         OUTPUT ${_OUT_DIR}/${HEADER}
             ${_OUT_DIR}/${BODY}
         COMMAND ${NODE} ${CATENA_CODEGEN} --schema ${CATENA_SCHEMA} --device-model "${_DEVICE_MODEL_JSON}" --output ${_OUT_DIR}
-        DEPENDS ${_DEVICE_MODEL_JSON} ${CATENA_SCHEMA} ${CATENA_CODEGEN}
+        DEPENDS ${_DEVICE_MODEL_JSON} ${CATENA_SCHEMA} ${CODEGEN_FILES}
         COMMENT "Generating ${HEADER} and ${BODY} from ${_DEVICE_MODEL_JSON}"
     )
 
     set_source_files_properties(${_OUT_DIR}/${HEADER} ${_OUT_DIR}/${BODY} PROPERTIES GENERATED TRUE)
 
     if(DEFINED _TARGET)
-        target_sources(${TARGET} PRIVATE ${_OUT_DIR}/${BODY})
-        target_include_directories(${TARGET} PRIVATE ${_OUT_DIR})
+        target_sources(${_TARGET} PRIVATE ${_OUT_DIR}/${BODY})
+        target_include_directories(${_TARGET} PRIVATE ${_OUT_DIR})
     endif()
 
     if(DEFINED _HDR_OUT_VAR)

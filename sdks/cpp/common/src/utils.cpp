@@ -12,9 +12,8 @@
 // limitations under the License.
 //
 
-
-#include <common/include/utils.h>
-
+// common
+#include <utils.h>
 
 #include <cassert>
 #include <exception>

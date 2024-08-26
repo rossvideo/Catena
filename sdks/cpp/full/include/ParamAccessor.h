@@ -21,9 +21,9 @@
 // limitations under the License.
 //
 
-#include <full/constraint.pb.h>
-#include <full/device.pb.h>
-#include <full/param.pb.h>
+#include <interface/constraint.pb.h>
+#include <interface/device.pb.h>
+#include <interface/param.pb.h>
 
 #include <patterns/Functory.h>
 #include <meta/Variant.h>

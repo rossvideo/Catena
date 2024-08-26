@@ -4,13 +4,6 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-/**
- * @brief Handles Connections to Peers
- * @file PeerManager.h
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -25,9 +18,18 @@
 // limitations under the License.
 //
 
-#include <connections/gRPC/include/PeerInfo.h>
+/**
+ * @brief Handles Connections to Peers
+ * @file PeerManager.h
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ */
 
-#include <common/include/patterns/Singleton.h>
+// common
+#include <patterns/Singleton.h>
+
+// connections/gRPC
+#include <PeerInfo.h>
 
 #include <unordered_map>
 #include <string>

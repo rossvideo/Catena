@@ -22,23 +22,31 @@
  *
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
+ * 
+ * @copyright Copyright (c) 2024 Ross Video
  */
 
+// device model
+#include "device.use_constraints.json.h"
 
-#include "lite/examples/use_constraints/device.use_constraints.json.h"  // dm
-#include <lite/include/Device.h>
-#include <lite/include/ParamWithValue.h>
-#include <lite/include/PolyglotText.h>
-#include <lite/include/RangeConstraint.h>
-#include <lite/include/NamedChoiceConstraint.h>
-#include <lite/include/PicklistConstraint.h>
-#include <lite/param.pb.h>
+//lite
+#include <Device.h>
+#include <ParamWithValue.h>
+#include <PolyglotText.h>
+#include <RangeConstraint.h>
+#include <NamedChoiceConstraint.h>
+#include <PicklistConstraint.h>
+
+// interface
+#include <interface/param.pb.h>
+
+#include <iostream>
 
 using namespace catena::lite;
 using namespace catena::common;
 using namespace use_constraints;
 using catena::common::ParamTag;
-#include <iostream>
+
 int main() {
     // lock the model
     Device::LockGuard lg(dm);

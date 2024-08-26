@@ -12,14 +12,15 @@
 // limitations under the License.
 //
 
-#include <connections/gRPC/include/PeerInfo.h>
+// connections/gRPC
+#include <PeerInfo.h>
 
 #include <iostream>
 #include <thread>
 #include <atomic>
 
 using catena::PeerInfo;
-using catena::lite::IParam;
+using catena::common::IParam;
 //using catena::ParamIndex;
 
 std::atomic<bool> going{}; // flag shared among threads and methods in this translation unit

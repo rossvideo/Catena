@@ -1,3 +1,5 @@
+#pragma once
+
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -12,20 +14,9 @@
 // limitations under the License.
 //
 
-// lite
-#include <PolyglotText.h>
-
-#include <string>
-#include <unordered_map>
-
-namespace catena {
-namespace lite {
-void PolyglotText::toProto(google::protobuf::MessageLite& m) const {
-    auto& dst = dynamic_cast<catena::PolyglotText&>(m);
-    dst.clear_display_strings();
-    for (const auto& [key, value] : display_strings_) {
-        dst.mutable_display_strings()->insert({key, value});
-    }
-}
-}  // namespace lite
-}  // namespace catena
+/**
+ * @file IDevice.h
+ * @brief Interface for device
+ * @author 
+ * @copyright Copyright (c) 2024 Ross Video
+ */

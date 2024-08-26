@@ -22,14 +22,20 @@
  *
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
+ * 
+ * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+// device model
+#include "device.use_structs.json.h" 
 
-#include "lite/examples/use_structs/device.use_structs.json.h"  // dm
-#include <lite/include/Device.h>
-#include <lite/include/ParamWithValue.h>
-#include <lite/include/PolyglotText.h>
-#include <lite/param.pb.h>
+// lite
+#include <Device.h>
+#include <ParamWithValue.h>
+#include <PolyglotText.h>
+
+// protobuf interface
+#include <interface/param.pb.h>
 
 using namespace catena::lite;
 using namespace catena::common;

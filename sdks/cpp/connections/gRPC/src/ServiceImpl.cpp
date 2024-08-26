@@ -1,7 +1,19 @@
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
+// International Licensing (CC-BY-ND-4.0);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+// https://creativecommons.org/licenses/by-nd/4.0/
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-
-
-#include <connections/gRPC/include/ServiceImpl.h>
+// connections/gRPC
+#include <ServiceImpl.h>
 
 #include <iostream>
 #include <thread>
@@ -217,7 +229,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
-                catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
+                catena::common::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
                     if (param == nullptr) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";

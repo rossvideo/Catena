@@ -1,14 +1,38 @@
 #pragma once
 
-#include <lite/include/IParam.h>
-#include <lite/include/Device.h>
-#include <lite/include/StructInfo.h>
-#include <lite/include/PolyglotText.h>
-#include <lite/include/Tags.h>
+// Licensed under the Creative Commons Attribution NoDerivatives 4.0
+// International Licensing (CC-BY-ND-4.0);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+// https://creativecommons.org/licenses/by-nd/4.0/
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
-#include <common/include/IConstraint.h>
+/**
+ * @file ParamWithDescription.h
+ * @brief Interface for accessing parameter descriptions
+ * @author John R. Naylor
+ * @date 2024-08-20
+ */
 
-#include <lite/param.pb.h>
+//common
+#include <Tags.h>
+#include <IParam.h>
+#include <IConstraint.h>
+
+// lite
+#include <Device.h>
+#include <StructInfo.h>
+#include <PolyglotText.h>
+
+// protobuf interface
+#include <interface/param.pb.h>
 
 #include <vector>
 #include <string>

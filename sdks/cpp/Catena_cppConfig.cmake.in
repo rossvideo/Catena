@@ -12,6 +12,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/CatenaCodegen.cmake")
 
 set_and_check(CATENA_SCHEMA "@PACKAGE_CATENA_SCHEMA_JSON@")
 set_and_check(CATENA_CODEGEN "@PACKAGE_CATENA_CODEGEN_INSTALL_DIR@")
+set(CATENA_MODEL "@CATENA_MODEL@")
 
 # Find Protobuf installation
 # NOTE: find_dependency has to be after set_and_check to avoid overwriting relative PACKAGE_PREFIX_PATH

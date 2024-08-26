@@ -4,7 +4,7 @@
 *   You are welcome to contact the author at: vdksoft@gmail.com
 ===================================================================*/
 
-#include <common/include/vdk/signals.h>
+#include <vdk/signals.h>
 
 #include <atomic>
 #include <thread>

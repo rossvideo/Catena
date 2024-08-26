@@ -11,7 +11,7 @@
  *
  */
 
-#include <full/device.pb.h>
+#include <interface/device.pb.h>
 
 #include <algorithm>
 #include <cstddef>

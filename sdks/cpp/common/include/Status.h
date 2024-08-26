@@ -1,12 +1,5 @@
 #pragma once
 
-/**
- * @brief Communicates failure status using gRPC's codes
- * @file Status.h
- * @copyright Copyright © 2023 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -20,6 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
+/**
+ * @brief Communicates failure status using gRPC's codes
+ * @file Status.h
+ * @copyright Copyright © 2023 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ */
 
 #include <sstream>
 #include <stdexcept>

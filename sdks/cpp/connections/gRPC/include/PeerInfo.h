@@ -4,13 +4,6 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-/**
- * @brief Holds information about connected Peers
- * @file PeerInfo.h
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- */
-
 // Licensed under the Creative Commons Attribution NoDerivatives 4.0
 // International Licensing (CC-BY-ND-4.0);
 // you may not use this file except in compliance with the License.
@@ -24,9 +17,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include <lite/include/IParam.h>
 
-#include <lite/service.grpc.pb.h>
+/**
+ * @brief Holds information about connected Peers
+ * @file PeerInfo.h
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ */
+
+// common
+#include <IParam.h>
+
+// gRPC interface
+#include <interface/service.grpc.pb.h>
 
 #include <string>
 
@@ -86,7 +89,7 @@ class PeerInfo {
     /**
      * @brief handles updates from the owning service
      */
-    void handleValueUpdate(const catena::lite::IParam& param/*, catena::lite::ParamIndex idx*/);
+    void handleValueUpdate(const catena::common::IParam& param/*, catena::lite::ParamIndex idx*/);
 
     /**
      * @brief handles the connection with the pier
