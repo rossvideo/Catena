@@ -24,7 +24,7 @@ function typeArg(desc) {
     INT32_ARRAY: `std::vector<int32_t>`,
     FLOAT32_ARRAY: `std::vector<float>`,
     STRUCT: `${initialCap(this.oid)}`,
-    STRUCT_ARRAY: `std::vector<${initialCap(this.oid)}>`,
+    STRUCT_ARRAY: `${initialCap(this.oid)}`,
   };
 
   if (desc.type in types) {
@@ -187,11 +187,11 @@ class Param extends CppCtor {
             let key = Object.keys(fields[field].value)[0];
             return valueObject[key](fields[field].value[key], true);
           });
-          return isStructChild
-            ? `{${mappedFields.join(",")}}`
-            : mappedFields.join(",");
+          return `{${mappedFields.join(",")}}`;
         });
-        return mappedArr.join(",");
+        return isStructChild 
+          ? `{${mappedArr.join(",")}}`
+          : mappedArr.join(",");
       },
     };
     if ("value" in desc) {
@@ -227,6 +227,24 @@ class Param extends CppCtor {
    */
   hasSubparams() {
     return "params" in this.desc;
+  }
+
+  /**
+   * 
+   * @returns true if the param has a value, false otherwise
+   */
+  hasValue() {
+    return "value" in this.desc;
+  }
+
+  isArrayType() {
+    return (
+      this.desc.type == "STRING_ARRAY" ||
+      this.desc.type == "INT32_ARRAY" ||
+      this.desc.type == "FLOAT32_ARRAY" ||
+      this.desc.type == "STRUCT_ARRAY" ||
+      this.desc.type == "STRUCT_VARIANT_ARRAY"
+    );
   }
 
   /**

@@ -27,6 +27,16 @@ const Constraint = require("./constraint");
 const { type } = require("os");
 
 /**
+ *
+ * @param {string} s
+ * @returns input with the first letter capitalized
+ */
+function initialCap(s) {
+  s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
  * writes a line of code to the file descriptor constructed
  */
 class loc {
@@ -145,12 +155,19 @@ class CppGen {
     let p = new Param(parentOid, oid, desc);
     let args = p.argsToString();
     let type;
+    let elementType;
     if (p.isTemplated()) {
       let templateParam = this.templateParam(p.templateOid());
       if (templateParam === undefined) {
         throw new Error(`No template param found for ${parentOid}/${oid}`);
       }
-      type = templateParam.typeName();
+      if (p.isArrayType()) {
+        type = p.objectType();
+        elementType = templateParam.typeName();
+        hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
+      } else {
+        type = templateParam.typeName();
+      }
     } else {
       type = p.objectType();
     }
@@ -164,7 +181,7 @@ class CppGen {
     if (init == "{}" && p.isTemplated()) {
       init = this.templateParam(p.templateOid()).initializer;
     }
-    if (!isStructChild) {
+    if (!isStructChild && p.hasValue()) {
       // only top-level params get value objects
       bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
@@ -175,9 +192,10 @@ class CppGen {
     }
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    if (!isStructChild) {
+    if (!isStructChild && p.hasValue()) {
       bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, ${name}};`);
-    } else {
+      parentStructInfo.hasvalue = true;
+    } else if (parentStructInfo.hasvalue) {
       bloc(`catena::lite::ParamDescriptor<${objectType}> ${pname}Param {${args}};`);
     }
 
@@ -201,7 +219,7 @@ class CppGen {
     if (p.usesSharedConstraint()) {
       // @todo do something with the shared constraint reference
       // p.constraintRef();
-    } else if (p.isConstrained()) {
+    } else if (p.isConstrained() && p.hasValue()) {
       this.defineConstraint(parentOid, oid, desc);
     }
   }
