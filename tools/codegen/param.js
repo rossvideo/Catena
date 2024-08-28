@@ -109,10 +109,6 @@ function jpointerArg(desc) {
   return `"${this.parentOid}/${this.oid}"`;
 }
 
-function parentArg(desc) {
-  return this.parentOid == "" ? "dm" : `&${this.parentName()}Param`;
-}
-
 class Param extends CppCtor {
   /**
    * Create constructor arguments for catena::lite::Param object
@@ -134,7 +130,6 @@ class Param extends CppCtor {
     this.arguments.push(widgetArg);
     this.arguments.push(readOnly);
     this.arguments.push(quoted.bind(this.oid));
-    this.arguments.push(parentArg.bind(this));
   }
 
   /**
