@@ -233,13 +233,7 @@ class Param extends CppCtor {
   }
 
   isArrayType() {
-    return (
-      this.desc.type == "STRING_ARRAY" ||
-      this.desc.type == "INT32_ARRAY" ||
-      this.desc.type == "FLOAT32_ARRAY" ||
-      this.desc.type == "STRUCT_ARRAY" ||
-      this.desc.type == "STRUCT_VARIANT_ARRAY"
-    );
+    return this.desc.type.includes("ARRAY");
   }
 
   /**
