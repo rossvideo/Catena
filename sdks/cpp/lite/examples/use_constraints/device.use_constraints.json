@@ -39,7 +39,8 @@
           "choices": ["large", "medium", "small"],
           "strict": true
         }
-      }
+      },
+      "value": { "string_value": "medium" }
     },
     "gain": {
       "type": "FLOAT32",

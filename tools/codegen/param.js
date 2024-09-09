@@ -24,7 +24,7 @@ function typeArg(desc) {
     INT32_ARRAY: `std::vector<int32_t>`,
     FLOAT32_ARRAY: `std::vector<float>`,
     STRUCT: `${initialCap(this.oid)}`,
-    STRUCT_ARRAY: `std::vector<${initialCap(this.oid)}>`,
+    STRUCT_ARRAY: `${initialCap(this.oid)}`,
   };
 
   if (desc.type in types) {
@@ -109,10 +109,6 @@ function jpointerArg(desc) {
   return `"${this.parentOid}/${this.oid}"`;
 }
 
-function parentArg(desc) {
-  return this.parentOid == "" ? "dm" : `&${this.parentName()}Param`;
-}
-
 class Param extends CppCtor {
   /**
    * Create constructor arguments for catena::lite::Param object
@@ -134,7 +130,6 @@ class Param extends CppCtor {
     this.arguments.push(widgetArg);
     this.arguments.push(readOnly);
     this.arguments.push(quoted.bind(this.oid));
-    this.arguments.push(parentArg.bind(this));
   }
 
   /**
@@ -181,17 +176,17 @@ class Param extends CppCtor {
       struct_array_values: (value, isStructChild = false) => {
         let arr = value.struct_values;
         let mappedArr = arr.map((item) => {
-          let fields = item.fields;
+          let fields = item.struct_value.fields;
           let fieldsArr = Object.keys(fields);
           let mappedFields = fieldsArr.map((field) => {
             let key = Object.keys(fields[field].value)[0];
             return valueObject[key](fields[field].value[key], true);
           });
-          return isStructChild
-            ? `{${mappedFields.join(",")}}`
-            : mappedFields.join(",");
+          return `{${mappedFields.join(",")}}`;
         });
-        return mappedArr.join(",");
+        return isStructChild 
+          ? `{${mappedArr.join(",")}}`
+          : mappedArr.join(",");
       },
     };
     if ("value" in desc) {
@@ -227,6 +222,18 @@ class Param extends CppCtor {
    */
   hasSubparams() {
     return "params" in this.desc;
+  }
+
+  /**
+   * 
+   * @returns true if the param has a value, false otherwise
+   */
+  hasValue() {
+    return "value" in this.desc;
+  }
+
+  isArrayType() {
+    return this.desc.type.includes("ARRAY");
   }
 
   /**

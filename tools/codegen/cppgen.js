@@ -27,6 +27,16 @@ const Constraint = require("./constraint");
 const { type } = require("os");
 
 /**
+ *
+ * @param {string} s
+ * @returns input with the first letter capitalized
+ */
+function initialCap(s) {
+  s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
  * writes a line of code to the file descriptor constructed
  */
 class loc {
@@ -43,14 +53,45 @@ class loc {
   }
 }
 
+class ParamDescriptor {
+  constructor(typename, name, args) {
+    this.typename = typename;
+    this.name = `_${name}`;
+    this.args = args;
+    this.subparams = [];
+  }
+
+  addSubparam(ParamDescriptor) {
+    this.subparams.push(ParamDescriptor);
+  }
+
+  copySubparams(ParamDescriptor) {
+    this.subparams = ParamDescriptor.subparams;
+  }
+
+  write(parent) {
+    bloc(`catena::lite::ParamDescriptor<${this.typename}> ${parent}${this.name}Param {${this.args}, &${parent}Param};`);
+    for (let subparam of this.subparams) {
+      subparam.write(`${parent}${this.name}`);
+    }
+  }
+
+  writeDescriptors() {
+    for (let subparam of this.subparams) {
+      subparam.write(`${this.name}`);
+    }
+  }
+}
+
 /**
  * @class TemplateParam
  * stores enough information to use the parameter as a template, if needed.
  */
 class TemplateParam {
-  constructor(typename, initializer) {
+  constructor(typename, initializer, paramDescriptor) {
     this.typename = typename;
     this.initializer = initializer;
+    this.paramDescriptor = paramDescriptor;
   }
 
   typeName() {
@@ -145,40 +186,63 @@ class CppGen {
     let p = new Param(parentOid, oid, desc);
     let args = p.argsToString();
     let type;
+    let elementType;
     if (p.isTemplated()) {
       let templateParam = this.templateParam(p.templateOid());
       if (templateParam === undefined) {
         throw new Error(`No template param found for ${parentOid}/${oid}`);
       }
-      type = templateParam.typeName();
+      if (p.isArrayType()) {
+        type = p.objectType();
+        elementType = templateParam.typeName();
+        hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
+      } else {
+        type = templateParam.typeName();
+      }
     } else {
       type = p.objectType();
     }
     let name = p.objectName();
     let pname = p.paramName();
     let objectType = type;
-    if (p.isStructType() && !p.isTemplated()) {
+    if (p.isStructType() && (!p.isTemplated() || p.isArrayType())) {
       objectType = `${typeNamespace}::${type}`;
     }
     let init = p.initializer(desc[oid]);
     if (init == "{}" && p.isTemplated()) {
-      init = this.templateParam(`${parentOid}/${oid}`).initializer;
+      init = this.templateParam(p.templateOid()).initializer;
     }
     if (!isStructChild) {
+
+    }
+    if (!isStructChild && p.hasValue()) {
       // only top-level params get value objects
       bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
     }
     let fqoid = `${parentOid}/${oid}`;
-    if (~p.isTemplated()) {
-      this.templateParams[fqoid] = new TemplateParam(objectType, init);
+    let descriptor;
+    if (!p.isTemplated()) {
+      descriptor = new ParamDescriptor(objectType, name, args);
+      this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
+    } else {
+      if (!p.isArrayType()){
+        descriptor = new ParamDescriptor(objectType, name, args);
+        descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
+      } else {
+        descriptor = new ParamDescriptor(objectType, name, args);
+        descriptor.addSubparam(this.templateParams[p.templateOid()].paramDescriptor);
+        this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
+      }
+    }
+    if (isStructChild) {
+      this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);
     }
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    if (!isStructChild) {
-      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, ${name}};`);
-    } else {
-      bloc(`catena::lite::ParamDescriptor<${objectType}> ${pname}Param {${args}};`);
+    if (!isStructChild && p.hasValue()) {
+      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, dm, ${name}};`);
+      descriptor.writeDescriptors();
     }
 
     parentStructInfo.typename = type;
@@ -201,7 +265,7 @@ class CppGen {
     if (p.usesSharedConstraint()) {
       // @todo do something with the shared constraint reference
       // p.constraintRef();
-    } else if (p.isConstrained()) {
+    } else if (p.isConstrained() && p.hasValue()) {
       this.defineConstraint(parentOid, oid, desc);
     }
   }
