@@ -121,12 +121,12 @@ class IParam {
     /**
      * @brief get a constraint by oid
      */
-    virtual IConstraint* getConstraint(const std::string& oid) = 0;
+    virtual const IConstraint* getConstraint() const = 0;
 
     /**
      * @brief add a constraint
      */
-    virtual void addConstraint(const std::string& oid, IConstraint* constraint) = 0;
+    virtual void setConstraint(IConstraint* constraint) = 0;
 };
 }  // namespace common
 

@@ -84,7 +84,7 @@ public:
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, catena::common::IParam* parent)
         : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
         strict_{strict}, default_{init.begin()->first} {
-        parent->addConstraint(oid, this);
+        parent->setConstraint(this);
     }
 
     /**

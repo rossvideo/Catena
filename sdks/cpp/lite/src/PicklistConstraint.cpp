@@ -34,7 +34,7 @@ PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::s
     bool shared, IParam* parent)
     : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
     strict_{strict}, default_{*init.begin()} {
-    parent->addConstraint(oid, this);
+    parent->setConstraint(this);
 }
 
 PicklistConstraint::~PicklistConstraint() = default;

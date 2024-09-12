@@ -78,7 +78,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     void toProto(catena::Param& param) const override {
-        descriptor_.toProto(param);
+        descriptor_.toProto(param);        
         catena::lite::toProto<T>(*param.mutable_value(), &value_.get());
     }
 
@@ -126,15 +126,15 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief get a constraint by oid
      */
-    catena::common::IConstraint* getConstraint(const std::string& oid) override {
-        return descriptor_.getConstraint(oid);
+    const catena::common::IConstraint* getConstraint() const override {
+        return descriptor_.getConstraint();
     }
 
     /**
      * @brief add a constraint
      */
-    void addConstraint(const std::string& oid, catena::common::IConstraint* constraint) override {
-        descriptor_.addConstraint(oid, constraint);
+    void setConstraint(catena::common::IConstraint* constraint) override {
+        descriptor_.setConstraint(constraint);
     }
 
   private:
