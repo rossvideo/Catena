@@ -75,7 +75,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     void fromProto(catena::Value& value) override {
-        
+        catena::lite::fromProto<T>(&value_.get(), value);
     }
 
     void toProto(catena::Param& param) const override {
