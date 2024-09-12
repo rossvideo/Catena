@@ -239,12 +239,6 @@ class CppGen {
       this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);
     }
 
-    // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    if (!isStructChild && p.hasValue()) {
-      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, dm, ${name}};`);
-      descriptor.writeDescriptors();
-    }
-
     parentStructInfo.typename = type;
     parentStructInfo.typeNamespace = typeNamespace;
     if (p.hasSubparams()) {
@@ -260,6 +254,12 @@ class CppGen {
       }
     } else if (isStructChild) {
       hloc(`${type} ${name};`, hindent);
+    }
+
+    // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
+    if (!isStructChild && p.hasValue()) {
+      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, dm, ${name}};`);
+      descriptor.writeDescriptors();
     }
 
     if (p.usesSharedConstraint()) {
