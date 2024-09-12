@@ -58,7 +58,7 @@ public:
 
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
-    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath);
+    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
 
     void init();
 
@@ -82,6 +82,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         virtual ~CallData() {}
     };
 
+    std::vector<std::string> getScopes(grpc::ServerContext &context);
+
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
     using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;
     Registry registry_;
@@ -90,14 +92,14 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     ServerCompletionQueue* cq_;
     Device &dm_;
     std::string& EOPath_;
+    bool authz_;
+    static const std::vector<std::string> kAuthzDisabled;
 
   public:
 
     void registerItem(CallData *cd);
 
     void deregisterItem(CallData *cd);
-
-    static std::vector<std::string> getScopes(grpc::ServerContext &context);
 
     class GetPopulatedSlots : public CallData{
         public:
@@ -177,6 +179,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         Device &dm_;
         std::mutex mtx_;
         std::condition_variable cv_;
+        std::vector<std::string> clientScopes_;
         bool hasUpdate_{false};
         int objectId_;
         static int objectCounter_;

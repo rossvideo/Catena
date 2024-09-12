@@ -29,6 +29,9 @@ using catena::common::ParamTag;
 #include <vector>
 #include <iterator> 
 
+// Initialize the special AUTHZ_DISABLED scope
+const std::vector<std::string> CatenaServiceImpl::kAuthzDisabled = {"__AUTHZ_DISABLED__"};
+
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {
                 
@@ -63,8 +66,8 @@ std::string timeNow() {
 }
 
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath)
-        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath} {}
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath, bool authz)
+        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath}, authz_{authz} {}
 
 void CatenaServiceImpl::init() {
     new GetPopulatedSlots(this, dm_, true);
@@ -119,45 +122,46 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-// std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
-//     if (absl::GetFlag(FLAGS_authz) == false) {
-//         return {catena::kAuthzDisabled};
-//     }
+std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
+    if(!authz_){
+        // Authorization is disabled
+        return kAuthzDisabled;
+    }
 
-//     auto authContext = context.auth_context();
-//     if (authContext == nullptr) {
-//         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
-//     }
+    auto authContext = context.auth_context();
+    if (authContext == nullptr) {
+        throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
+    }
 
-//     std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
-//     if (claimsStr.empty()) {
-//         throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
-//     }
-//     // parse string of claims into a picojson object
-//     picojson::value claims;
-//     std::string err = picojson::parse(claims, claimsStr[0].data());
-//     if (!err.empty()) {
-//         throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
-//     }
+    std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
+    if (claimsStr.empty()) {
+        throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
+    }
+    // parse string of claims into a picojson object
+    picojson::value claims;
+    std::string err = picojson::parse(claims, claimsStr[0].data());
+    if (!err.empty()) {
+        throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
+    }
 
-//     // extract the scopes from the claims
-//     std::vector<std::string> scopes;
-//     const picojson::value::object &obj = claims.get<picojson::object>();
-//     for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
-//         if (it->first == "scope"){
-//             std::string scopeClaim = it->second.get<std::string>();
-//             std::istringstream iss(scopeClaim);
-//             while (std::getline(iss, scopeClaim, ' ')) {
-//                 // check that reserved scope is not used
-//                 if (scopeClaim == catena::kAuthzDisabled) {
-//                     throw catena::exception_with_status("Invalid scope", catena::StatusCode::PERMISSION_DENIED);
-//                 }
-//                 scopes.push_back(scopeClaim);
-//             }
-//         }
-//     }
-//     return scopes;
-// }
+    // extract the scopes from the claims
+    std::vector<std::string> scopes;
+    const picojson::value::object &obj = claims.get<picojson::object>();
+    for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
+        if (it->first == "scope"){
+            std::string scopeClaim = it->second.get<std::string>();
+            std::istringstream iss(scopeClaim);
+            while (std::getline(iss, scopeClaim, ' ')) {
+                // check that reserved scope is not used
+                if (scopeClaim == kAuthzDisabled[0]) {
+                    throw catena::exception_with_status("Invalid scope", catena::StatusCode::PERMISSION_DENIED);
+                }
+                scopes.push_back(scopeClaim);
+            }
+        }
+    }
+    return scopes;
+}
 
 CatenaServiceImpl::GetPopulatedSlots::GetPopulatedSlots(CatenaServiceImpl *service, Device &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -235,13 +239,19 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             new GetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
                 catena::common::IParam* param = dm_.getItem<ParamTag>(req_.oid());
-                    if (param == nullptr) {
+                if (param == nullptr) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
                     throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+                }
+                std::vector<std::string> clientScopes = service_->getScopes(context_);
+                const std::string& paramScope = param->getScope();
+                if (std::find(clientScopes.begin(), clientScopes.end(), paramScope) == clientScopes.end()) {
+                    std::stringstream why;
+                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not authorized";
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
                 }
                 {
                     Device::LockGuard lg(dm_);
@@ -302,7 +312,6 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
             new SetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                //std::vector<std::string> clientScopes = getScopes(context_);
                 auto dstParam = dm_.getItem<ParamTag>(req_.oid());
                 if (dstParam == nullptr) {
                     std::stringstream why;
@@ -312,6 +321,13 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 if (dstParam->readOnly()) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' is read-only";
+                    throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
+                }
+                std::vector<std::string> clientScopes = service_->getScopes(context_);
+                const std::string& paramScope = dstParam->getScope() + ":w";
+                if (std::find(clientScopes.begin(), clientScopes.end(), paramScope) == clientScopes.end()) {
+                    std::stringstream why;
+                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not authorized";
                     throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
                 }
                 {
@@ -388,14 +404,17 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 try{
-                    if (!this->context_.IsCancelled()){
-                        //std::vector<std::string> scopes = getScopes(this->context_);
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-                        p->toProto(*this->res_.mutable_value()->mutable_value());
+                    std::string paramScope = p->getScope();
+                    if (std::find(clientScopes_.begin(), clientScopes_.end(), paramScope) != clientScopes_.end()){
+                        if (!this->context_.IsCancelled()){
+                            this->res_.mutable_value()->set_oid(oid);
+                            this->res_.mutable_value()->set_element_index(idx);
+
+                            p->toProto(*this->res_.mutable_value()->mutable_value());
+                        }
+                        this->hasUpdate_ = true;
+                        this->cv_.notify_one();
                     }
-                    this->hasUpdate_ = true;
-                    this->cv_.notify_one();
                 }catch(catena::exception_with_status& why){
                     // Error is thrown for connected clients without authorization
                     // Don't need to send any updates to unauthorized clients
@@ -403,19 +422,23 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 try{
-                    if (!this->context_.IsCancelled()){
-                        //std::vector<std::string> scopes = getScopes(this->context_);
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-                        p->toProto(*this->res_.mutable_value()->mutable_value());
+                    std::string paramScope = p->getScope();
+                    if (std::find(clientScopes_.begin(), clientScopes_.end(), paramScope) != clientScopes_.end()){
+                        if (!this->context_.IsCancelled()){
+                            this->res_.mutable_value()->set_oid(oid);
+                            this->res_.mutable_value()->set_element_index(idx);
+                            p->toProto(*this->res_.mutable_value()->mutable_value());
+                        }
+                        this->hasUpdate_ = true;
+                        this->cv_.notify_one();
                     }
-                    this->hasUpdate_ = true;
-                    this->cv_.notify_one();
                 }catch(catena::exception_with_status& why){
                     // Error is thrown for connected clients without authorization
                     // Don't need to send any updates to unauthorized clients
                 } 
             });
+
+            clientScopes_ = service_->getScopes(context_);
 
             // send client a empty update with slot of the device
             {
@@ -430,8 +453,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             lock.lock();
             std::cout << "waiting on cv : " << timeNow() << std::endl;
             cv_.wait(lock, [this] { return hasUpdate_; });
-            std::cout << "cv wait over : " << timeNow() << std::endl;
             hasUpdate_ = false;
+            std::cout << "cv wait over : " << timeNow() << std::endl;
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 std::cout << "Connection[" << objectId_ << "] cancelled\n";
@@ -501,9 +524,10 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             {
                 catena::DeviceComponent deviceMessage{};
                 catena::Device* dstDevice = deviceMessage.mutable_device();
+                std::vector<std::string> clientScopes = service_->getScopes(context_);
                 {
                     Device::LockGuard lg(dm_);
-                    dm_.toProto(*dstDevice, false); // select the deep copy option
+                    dm_.toProto(*dstDevice, clientScopes, false); // select the deep copy option
                 }
                 status_ = CallStatus::kPostWrite;
                 writer_.Write(deviceMessage, this);

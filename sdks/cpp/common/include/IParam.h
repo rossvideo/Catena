@@ -127,6 +127,8 @@ class IParam {
      * @brief add a constraint
      */
     virtual void setConstraint(IConstraint* constraint) = 0;
+
+    virtual const std::string getScope() const = 0;
 };
 }  // namespace common
 

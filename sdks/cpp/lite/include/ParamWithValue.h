@@ -52,11 +52,12 @@ class ParamWithValue : public catena::common::IParam {
         const OidAliases& oid_aliases,
         const PolyglotText::ListInitializer name,
         const std::string& widget,
+        const std::string& scope,
         const bool read_only,
         const std::string& oid,
         Device &dev,
         T& value
-    ) : descriptor_{type, oid_aliases, name, widget, read_only, oid, dev}, 
+    ) : descriptor_{type, oid_aliases, name, widget, scope, read_only, oid, dev}, 
         value_{value} {
         dm.addItem<common::ParamTag>(oid, this);
     }
@@ -135,6 +136,10 @@ class ParamWithValue : public catena::common::IParam {
      */
     void setConstraint(catena::common::IConstraint* constraint) override {
         descriptor_.setConstraint(constraint);
+    }
+
+    const std::string getScope() const override {
+        return descriptor_.getScope();
     }
 
   private:

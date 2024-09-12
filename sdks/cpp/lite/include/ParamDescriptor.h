@@ -88,16 +88,33 @@ class ParamDescriptor : public catena::common::IParam {
      * @param oid the parameter's oid
      * @param collection the parameter belongs to
      */
-    ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-      const bool read_only, const std::string& oid, Device &dev)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, constraint_{nullptr}, parent_{nullptr} {
+    ParamDescriptor(
+      catena::ParamType type, 
+      const OidAliases& oid_aliases, 
+      const PolyglotText::ListInitializer name, 
+      const std::string& widget,
+      const std::string& scope, 
+      const bool read_only, 
+      const std::string& oid, 
+      Device& dev)
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only}, 
+        constraint_{nullptr}, parent_{nullptr}, dev_{dev} {
       setOid(oid);
       dev.addItem<common::ParamTag>(oid, this);
     }
 
-    ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-      const bool read_only, const std::string& oid, IParam* parent)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, constraint_{nullptr}, parent_{parent} {
+    ParamDescriptor(
+      catena::ParamType type, 
+      const OidAliases& oid_aliases, 
+      const PolyglotText::ListInitializer name, 
+      const std::string& widget,
+      const std::string& scope, 
+      const bool read_only, 
+      const std::string& oid, 
+      IParam* parent,
+      Device& dev)
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
+        constraint_{nullptr}, parent_{parent}, dev_{dev} {
       setOid(oid);
       parent_->addParam(oid, this);
     }
@@ -215,11 +232,22 @@ class ParamDescriptor : public catena::common::IParam {
       constraint_ = constraint;
     }
 
+    const std::string getScope() const override {
+      if (!scope_.empty()) {
+        return scope_;
+      } else if (parent_) {
+        return parent_->getScope();
+      } else {
+        return dev_.getDefaultScope();
+      }
+    }
+
   private:
     ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;
     PolyglotText name_;
     std::string widget_;
+    std::string scope_;
     bool read_only_;
     std::unordered_map<std::string, IParam*> params_;
     std::unordered_map<std::string, IParam*> commands_;
@@ -227,6 +255,7 @@ class ParamDescriptor : public catena::common::IParam {
     
     std::string oid_;
     IParam* parent_;
+    const Device& dev_;
 };
 
 }  // namespace lite
