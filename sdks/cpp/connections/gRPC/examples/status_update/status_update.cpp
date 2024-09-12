@@ -146,7 +146,14 @@ void statusUpdateExample(){
              */
             std::cout << "signal recieved: " << p->getOid() << " has been changed by client" << '\n';
         });
-        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
+        IParam* param = dm.getItem<ParamTag>("counter");
+        if (param == nullptr) {
+            std::stringstream why;
+            why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
+            throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+        }
+        auto& aNumber = *dynamic_cast<ParamWithValue<int32_t>*>(param);
+
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {

@@ -33,13 +33,11 @@ function parentArg(desc) {
  * @returns min value of the range constraint
  */
 function minArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  if (this.type === "int32_t") {
+    return desc.int32_range.min_value;
   } else {
-    range_desc = desc.float_range;
+    return desc.float_range.min_value;
   }
-  return range_desc.min_value;
 }
 
 /**
@@ -48,13 +46,11 @@ function minArg(desc) {
  * @returns max value of the range constraint
  */
 function maxArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  if (this.type === "int32_t") {
+    return desc.int32_range.max_value;
   } else {
-    range_desc = desc.float_range;
+    return desc.float_range.max_value;
   }
-  return range_desc.max_value;
 }
 
 /**
@@ -65,9 +61,9 @@ function maxArg(desc) {
  */
 function stepArg(desc) {
   let ans = 1;
-  if ("step" in desc && this.constrainedType === "int32_t") {
-    ans = desc.int_range.step;
-  } else if ("step" in desc) {
+  if (this.type == "int32_t" && "step" in desc.int32_range) {
+    ans = desc.int32_range.step;
+  } else if ("step" in desc.float_range) {
     ans = desc.float_range.step;
   }
   return ans;
@@ -80,16 +76,19 @@ function stepArg(desc) {
  * defaults to min value
  */
 function displayMinArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  let ans;
+  if (this.type === "int32_t") {
+    if ("display_min" in desc.int32_range) {
+      ans = desc.int32_range.display_min;
+    } else {
+      ans = desc.int32_range.min_value;
+    }
   } else {
-    range_desc = desc.float_range;
-  }
-
-  let ans = range_desc.min_value;
-  if ("display_min" in range_desc) {
-    ans = range_desc.display_min;
+    if ("display_min" in desc.float_range) {
+      ans = desc.float_range.display_min;
+    } else {
+      ans = desc.float_range.min_value;
+    }
   }
   return ans;
 }
@@ -101,16 +100,19 @@ function displayMinArg(desc) {
  * defaults to max value
  */
 function displayMaxArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  let ans;
+  if (this.type === "int32_t") {
+    if ("display_max" in desc.int32_range) {
+      ans = desc.int32_range.display_max;
+    } else {
+      ans = desc.int32_range.max_value
+    }
   } else {
-    range_desc = desc.float_range;
-  }
-
-  let ans = range_desc.max_value;
-  if ("display_max" in range_desc) {
-    ans = range_desc.display_max;
+    if ("display_max" in desc.float_range) {
+      ans = desc.float_range.display_max;
+    } else {
+      ans = desc.float_range.max_value;
+    }
   }
   return ans;
 }

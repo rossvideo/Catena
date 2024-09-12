@@ -36,6 +36,17 @@
       },
       {
         "type": "cppdbg",
+        "name": "Debug status_update with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/status_update/status_update",
+        "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/status_update/static"],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
         "name": "Debug Basic Param Access with lldb",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/basic_param_access/basic_param_access",

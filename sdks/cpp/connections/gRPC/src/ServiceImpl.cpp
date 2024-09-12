@@ -12,8 +12,16 @@
 // limitations under the License.
 //
 
+// common
+#include <Tags.h>
+
 // connections/gRPC
 #include <ServiceImpl.h>
+
+
+// type aliases
+using catena::common::ParamTag;
+
 
 #include <iostream>
 #include <thread>
@@ -229,7 +237,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
-                catena::common::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
+                catena::common::IParam* param = dm_.getItem<ParamTag>(req_.oid());
                     if (param == nullptr) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
@@ -295,13 +303,13 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
             context_.AsyncNotifyWhenDone(this);
             try {
                 //std::vector<std::string> clientScopes = getScopes(context_);
-                auto dstParam = dm_.getItem(req_.oid(), Device::ParamTag{});
+                auto dstParam = dm_.getItem<ParamTag>(req_.oid());
                 if (dstParam == nullptr) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
                     throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
                 }
-                if (dstParam->isReadOnly()) {
+                if (dstParam->readOnly()) {
                     std::stringstream why;
                     why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' is read-only";
                     throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
