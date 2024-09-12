@@ -70,7 +70,7 @@ class ParamWithValue : public catena::common::IParam {
     virtual ~ParamWithValue() = default;
 
     void toProto(catena::Value& value) const override {
-        
+        catena::lite::toProto<T>(value, &value_.get());
     }
 
     void fromProto(catena::Value& value) override {
@@ -79,6 +79,7 @@ class ParamWithValue : public catena::common::IParam {
 
     void toProto(catena::Param& param) const override {
         descriptor_.toProto(param);
+        catena::lite::toProto<T>(*param.mutable_value(), &value_.get());
     }
 
     typename IParam::ParamType type() const override {
