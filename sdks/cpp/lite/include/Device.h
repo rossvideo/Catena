@@ -186,8 +186,18 @@ class Device {
      * @param jptr, json pointer to the part of the device model to update.
      * @param src, the value to update the parameter with.
      * @todo consider using move semantics on the value parameter to emphasize new ownership.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
      */
     catena::exception_with_status fromProto (const std::string& jptr, catena::Value& src);
+
+    /**
+     * @brief serialize the parameter value to protobuf
+     * @param jptr, json pointer to the part of the device model to serialize.
+     * @param dst, the protobuf value to serialize to.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for GetValue RPCs / API calls to be serviced by this method.
+     */
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value);
 
   public:
     /**

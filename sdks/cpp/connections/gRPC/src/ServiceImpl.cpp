@@ -237,21 +237,13 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
-                catena::common::IParam* param = dm_.getItem<ParamTag>(req_.oid());
-                    if (param == nullptr) {
-                    std::stringstream why;
-                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
-                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-                }
-                {
-                    Device::LockGuard lg(dm_);
-                    param->toProto(ans);
-                }
+                catena::exception_with_status rc = dm_.getValue(req_.oid(), ans);
                 status_ = CallStatus::kFinish;
-                responder_.Finish(ans, Status::OK, this);
-            } catch (catena::exception_with_status &e) {
-                status_ = CallStatus::kFinish;
-                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                if (rc.status == catena::StatusCode::OK) {
+                    responder_.Finish(ans, Status::OK, this);
+                } else {
+                    responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                }
             } catch (...) {
                 status_ = CallStatus::kFinish;
                 responder_.FinishWithError(Status::CANCELLED, this);

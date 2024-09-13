@@ -86,6 +86,11 @@ class IParam {
     virtual void toProto(catena::Param& param) const = 0;
 
     /**
+     * @brief serialize the parameter value at src to protobuf
+     */
+    virtual void toProto(catena::Value& value, void* src) const = 0;
+
+    /**
      * @brief return the type of the param
      */
     virtual ParamType type() const = 0;

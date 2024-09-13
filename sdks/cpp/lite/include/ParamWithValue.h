@@ -74,19 +74,35 @@ class ParamWithValue : public catena::common::IParam {
         catena::lite::toProto<T>(value, &value_.get());
     }
 
-    void fromProto(catena::Value& value) override {
-        
+    void toProto(catena::Value& value, void* src) const override {
+        catena::lite::toProto<T>(value, src);
     }
 
+    void fromProto(catena::Value& value) override {
+        catena::lite::fromProto<T>(&value_.get(), value);
+    }
+
+    /**
+     * @brief deserialize the parameter value from protobuf
+     * @param dst the destination value
+     * @param value the protobuf value to deserialize from
+     * @note should only be called for non structured types
+     */
     void fromProto(void* dst, catena::Value& value) override {
         assert(dst == &value_.get());
         catena::lite::fromProto<T>(&value_.get(), value);
     }
 
+    /**
+     * @brief serialize the parameter descriptor to protobuf
+     * include both the descriptor and the value
+     * @param param the protobuf value to serialize to
+     */
     void toProto(catena::Param& param) const override {
         descriptor_.toProto(param);        
         catena::lite::toProto<T>(*param.mutable_value(), &value_.get());
     }
+
 
     typename IParam::ParamType type() const override {
         return descriptor_.type();

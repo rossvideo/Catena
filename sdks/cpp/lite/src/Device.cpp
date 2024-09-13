@@ -68,6 +68,49 @@ catena::exception_with_status Device::fromProto (const std::string& jptr, catena
     return ans;
 }
 
+catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst) {
+    Path path(jptr);
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    if (path.empty()) {
+        std::stringstream ss;
+        ss << "Invalid json pointer: " << jptr;
+        catena::exception_with_status why(ss.str(), catena::StatusCode::NOT_FOUND);
+        ans = std::move(why);
+        return ans;
+    }
+    Path::Segment top = path.front();
+    // we expect this to be a parameter name
+    if (std::holds_alternative<std::string>(top)) {
+        // get our top-level param descriptor, and a pointer to the value
+        IParam* pwv = getItem<common::ParamTag>(std::get<std::string>(top));
+        void* ptr = pwv->valuePtr();
+        path.pop_front();
+        while (!path.empty()) {
+            Path::Segment next = path.front();
+            if (std::holds_alternative<std::string>(next)) {
+                // need to recurse to the next level down
+                // this advances both the param descriptor and value pointer
+                std::string& oid = std::get<std::string>(next);
+                ptr = pwv->valuePtr(ptr, oid);
+                pwv = pwv->getParam(oid);
+            } else if (std::holds_alternative<Path::Index>(next)) {
+                // need to index into the array
+                // this only advances the value pointer
+                ptr = pwv->valuePtr(ptr, std::get<Path::Index>(next));
+            }
+            path.pop_front();
+        }
+        // we have reached the end of the path, deserialize the value
+        pwv->toProto(dst, ptr);
+    } else {
+        std::stringstream ss;
+        ss << "Invalid json pointer: " << jptr;
+        ss << ", expected first segment to be a string";
+        exception_with_status why(ss.str(), catena::StatusCode::INVALID_ARGUMENT);
+        ans = std::move(why);
+    }
+    return ans;
+}
 
 void Device::toProto(::catena::Device& dst, bool shallow) const {
     dst.set_slot(slot_);
