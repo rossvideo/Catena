@@ -189,7 +189,8 @@ void RunRPCServer(std::string addr)
         builder.AddListeningPort(addr, getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        CatenaServiceImpl service(cq.get(), dm, EOPath);
+        bool authz = absl::GetFlag(FLAGS_authz);
+        CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
 
         builder.RegisterService(&service);
 

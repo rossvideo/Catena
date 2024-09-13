@@ -70,7 +70,7 @@ class ParamDescriptor {
   }
 
   write(parent) {
-    bloc(`catena::lite::ParamDescriptor<${this.typename}> ${parent}${this.name}Param {${this.args}, &${parent}Param};`);
+    bloc(`catena::lite::ParamDescriptor<${this.typename}> ${parent}${this.name}Param {${this.args}, &${parent}Param, dm};`);
     for (let subparam of this.subparams) {
       subparam.write(`${parent}${this.name}`);
     }

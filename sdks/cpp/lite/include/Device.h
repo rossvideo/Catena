@@ -115,6 +115,8 @@ class Device {
      */
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
+    inline std::string getDefaultScope() const { return default_scope_.toString(); }
+
     /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
@@ -126,7 +128,7 @@ class Device {
      * that the device is not modified while this method is running. This class provides
      * a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, bool shallow = true) const;
+    void toProto(::catena::Device& dst, std::vector<std::string>& clientScopes, bool shallow = true) const;
 
     /**
      * @brief Create a protobuf representation of the language packs.
@@ -214,6 +216,7 @@ class Device {
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
+    static const std::vector<std::string> kAuthzDisabled;
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
@@ -226,7 +229,7 @@ class Device {
     Scopes default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-
+    
     mutable std::mutex mutex_;
 };
 }  // namespace lite

@@ -38,6 +38,7 @@
     "hello": {
       "type": "STRING",
       "name": { "display_strings": { "en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte" } },
+      "access_scope": "configure",
       "value": { "string_value": "Hello, World!" }
     },
     "button": {
@@ -64,6 +65,7 @@
     "offset": {
       "type": "INT32",
       "name": { "display_strings": { "en": "offset" } },
+      "access_scope": "configure",
       "value": { "int32_value": 0 },
       "constraint": {
         "type": "INT_RANGE",

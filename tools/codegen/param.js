@@ -93,6 +93,21 @@ function widgetArg(desc) {
 }
 
 /**
+ * 
+ * @param {object} desc param descriptor
+ * @returns param's access scope
+ */
+function accessScope(desc) {
+  let ans;
+  if ("access_scope" in desc) {
+    ans = `"${desc.access_scope}"`;
+  } else {
+    ans = `""`;
+  }
+  return ans;
+}
+
+/**
  *
  * @param {object} desc param descriptor
  * @returns true or false reflecting presence and state of the read_only flag.
@@ -128,6 +143,7 @@ class Param extends CppCtor {
     this.arguments.push(oidAliasesArg);
     this.arguments.push(nameArg);
     this.arguments.push(widgetArg);
+    this.arguments.push(accessScope);
     this.arguments.push(readOnly);
     this.arguments.push(quoted.bind(this.oid));
   }

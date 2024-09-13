@@ -136,6 +136,8 @@ class IParam {
      */
     virtual void setConstraint(IConstraint* constraint) = 0;
 
+    virtual const std::string getScope() const = 0;
+
   public:
     virtual void* valuePtr() const = 0;
 
