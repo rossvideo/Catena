@@ -54,10 +54,10 @@ catena::exception_with_status Device::fromProto (const std::string& jptr, catena
                 ptr = pwv->valuePtr(ptr, std::get<Path::Index>(next));
             }
             path.pop_front();
-            valueSetByClient.emit(jptr, pwv, 0);
         }
         // we have reached the end of the path, deserialize the value
         pwv->fromProto(ptr, src);
+        valueSetByClient.emit(jptr, pwv, 0);
     } else {
         std::stringstream ss;
         ss << "Invalid json pointer: " << jptr;
