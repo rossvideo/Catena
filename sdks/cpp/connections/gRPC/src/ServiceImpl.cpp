@@ -297,7 +297,7 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 catena::exception_with_status ans{"", catena::StatusCode::OK};
                 {   // block to minimize time lock is held
                     Device::LockGuard lg(dm_);
-                    catena::exception_with_status why = dm_.fromProto(req_.oid(), *req_.mutable_value());
+                    catena::exception_with_status why = dm_.setValue(req_.oid(), *req_.mutable_value());
                     ans = std::move(why);
                 }
                 if (ans.status == catena::StatusCode::OK) {

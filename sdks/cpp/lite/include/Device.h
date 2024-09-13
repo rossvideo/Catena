@@ -187,8 +187,10 @@ class Device {
      * @param src, the value to update the parameter with.
      * @todo consider using move semantics on the value parameter to emphasize new ownership.
      * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for SetValue RPCs / API calls to be serviced by this method.
+     * @note on success, this method will emit the valueSetByClient signal.
      */
-    catena::exception_with_status fromProto (const std::string& jptr, catena::Value& src);
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src);
 
     /**
      * @brief serialize the parameter value to protobuf

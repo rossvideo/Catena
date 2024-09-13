@@ -27,7 +27,7 @@
 using namespace catena::lite;
 using namespace catena::common;
 
-catena::exception_with_status Device::fromProto (const std::string& jptr, catena::Value& src) {
+catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src) {
     Path path(jptr);
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     if (path.empty()) {
