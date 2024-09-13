@@ -25,6 +25,7 @@
 // common
 #include <IParam.h>
 #include <Tags.h>
+#include <Path.h>
 
 // lite
 #include <ParamDescriptor.h>
@@ -75,6 +76,10 @@ class ParamWithValue : public catena::common::IParam {
 
     void fromProto(catena::Value& value) override {
         
+    }
+
+    void fromProto(void* dst, catena::Value& value) override {
+        // do nothing
     }
 
     void toProto(catena::Param& param) const override {
@@ -135,6 +140,19 @@ class ParamWithValue : public catena::common::IParam {
      */
     void setConstraint(catena::common::IConstraint* constraint) override {
         descriptor_.setConstraint(constraint);
+    }
+
+  public:
+    void* valuePtr() const override {
+        return &value_.get();
+    }
+
+    void* valuePtr(void* vp, const std::string& oid) const override {
+        return nullptr;
+    }
+
+    void* valuePtr(void* vp, const common::Path::Index index) const override {
+        return nullptr;
     }
 
   private:

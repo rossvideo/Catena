@@ -112,14 +112,15 @@ class Path {
     inline Index size() const { return segments_.size(); }
 
     /**
-     * @brief take the front off the path and return it.
-     * @return unescaped component at front of the path,
-     * design intent the returned value can be used as an oid lookup,
-     * or an array index.
-     * Will be empty string if nothing to pop, or the original path
-     * was "/", or "".
+     * @brief test whether the path is empty.
+     * @return true if empty, false otherwise.
      */
-    Segment pop_front() noexcept;
+    inline bool empty() const { return segments_.empty(); }
+
+    /**
+     * @brief pop the item off the front of the path
+     */
+    void pop_front() noexcept;
 
     /**
      * @brief return the front of the path.

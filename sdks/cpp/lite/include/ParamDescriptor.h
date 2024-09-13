@@ -31,11 +31,18 @@
 #include <StructInfo.h>
 #include <PolyglotText.h>
 
+// meta
+#include <meta/IsVector.h>
+
 // protobuf interface
 #include <interface/param.pb.h>
 
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <type_traits>
+#include <algorithm>
+#include <cassert>
 
 namespace catena {
 namespace lite {
@@ -127,6 +134,10 @@ class ParamDescriptor : public catena::common::IParam {
     void fromProto(catena::Value& value) override {
       //catena::lite::fromProto<T>(&value_.get(), value);
     }
+
+    void fromProto(void* dst, catena::Value& value) override {
+        // do nothing
+    }
     
     void toProto(catena::Param &param) const override {
       param.set_type(type_());
@@ -214,6 +225,38 @@ class ParamDescriptor : public catena::common::IParam {
     void setConstraint(catena::common::IConstraint* constraint) override {
       constraint_ = constraint;
     }
+
+  public:
+    void* valuePtr() const override {
+      return nullptr;
+    } 
+    
+    void* valuePtr(void* vp, const std::string& oid) const override {
+      if constexpr (CatenaStruct<T>) {
+        const StructInfo& si = T::getStructInfo();
+        auto it = std::find_if(si.fields.begin(), si.fields.end(), [&oid](const FieldInfo& fi) {
+          return fi.name == oid;
+        });
+        if (it != si.fields.end()) {
+          char* base = static_cast<char*>(vp);
+          return base + it->offset;
+        } else {
+          // didn't find field, so return nullptr
+          return nullptr;
+        }
+      } else {
+        return nullptr;
+      }
+    }
+
+    void* valuePtr(void* vp, const common::Path::Index idx) const override {
+      if constexpr (catena::meta::IsVector<T>) {
+        T& arr = *static_cast<T*>(vp);
+        return &arr[idx];
+      } else {
+        return nullptr;
+      }
+    };
 
   private:
     ParamType type_;  // ParamType is from param.pb.h

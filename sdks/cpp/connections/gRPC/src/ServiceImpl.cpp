@@ -302,29 +302,20 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
             new SetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                //std::vector<std::string> clientScopes = getScopes(context_);
-                auto dstParam = dm_.getItem<ParamTag>(req_.oid());
-                if (dstParam == nullptr) {
-                    std::stringstream why;
-                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
-                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-                }
-                if (dstParam->readOnly()) {
-                    std::stringstream why;
-                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' is read-only";
-                    throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
-                }
-                {
+                catena::exception_with_status ans{"", catena::StatusCode::OK};
+                {   // block to minimize time lock is held
                     Device::LockGuard lg(dm_);
-                    dstParam->fromProto(*req_.mutable_value());
-                    dm_.valueSetByClient.emit(req_.oid(), dstParam, req_.element_index());
+                    catena::exception_with_status why = dm_.fromProto(req_.oid(), *req_.mutable_value());
+                    ans = std::move(why);
                 }
-                status_ = CallStatus::kFinish;
-                responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
-            } catch (catena::exception_with_status &e) {
-                errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
-                status_ = CallStatus::kFinish;
-                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                if (ans.status == catena::StatusCode::OK) {
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
+                } else {
+                    errorStatus_ = Status(static_cast<grpc::StatusCode>(ans.status), ans.what());
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                }
             } catch (...) {
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;

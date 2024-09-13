@@ -29,6 +29,7 @@
 #include <IParam.h>
 #include <ILanguagePack.h>
 #include <Tags.h>  
+#include <Status.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
@@ -178,6 +179,15 @@ class Device {
         GET_ITEM(common::LanguagePackTag, language_packs_)
         return nullptr;
     }
+
+    /**
+     * @brief deserialize a protobuf value object into the parameter value
+     * pointed to by jptr.
+     * @param jptr, json pointer to the part of the device model to update.
+     * @param src, the value to update the parameter with.
+     * @todo consider using move semantics on the value parameter to emphasize new ownership.
+     */
+    catena::exception_with_status fromProto (const std::string& jptr, catena::Value& src);
 
   public:
     /**

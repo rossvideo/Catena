@@ -62,10 +62,8 @@ Path::Path(const std::string &path) : segments_{} {
 
 Path::Path(const char *literal) : Path(std::string(literal)) {}
 
-Path::Segment Path::pop_front() noexcept {
-    Segment ans = front();
+void Path::pop_front() noexcept {
     segments_.pop_front();
-    return ans;
 }
 
 Path::Segment Path::front() noexcept {

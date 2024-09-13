@@ -144,7 +144,7 @@ void statusUpdateExample(){
              * Protobuf lite does not support converting messages to JSON strings.
              * @todo: Implement a toString method for catena values.
              */
-            std::cout << "signal recieved: " << p->getOid() << " has been changed by client" << '\n';
+            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
         });
         IParam* param = dm.getItem<ParamTag>("counter");
         if (param == nullptr) {

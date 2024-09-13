@@ -160,7 +160,12 @@ struct exception_with_status : public std::runtime_error {
     inline explicit exception_with_status(const std::string &why, StatusCode s)
         : std::runtime_error{why}, status{s} {}
 
-    const StatusCode status;
+    inline exception_with_status(exception_with_status&&) = default;
+    inline exception_with_status(const exception_with_status&) = delete;
+    inline exception_with_status& operator=(exception_with_status&&) = default;
+    inline exception_with_status& operator=(const exception_with_status&) = delete;
+
+    StatusCode status;
 };
 
 }  // namespace catena

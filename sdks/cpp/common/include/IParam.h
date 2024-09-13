@@ -25,6 +25,7 @@
 //common 
 #include <Enums.h>
 #include <IConstraint.h>
+#include <Path.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -75,6 +76,8 @@ class IParam {
      * @note this method may constrain the source value and modify it
      */
     virtual void fromProto(catena::Value& src) = 0;
+
+    virtual void fromProto(void* dst, catena::Value& src) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
@@ -127,6 +130,13 @@ class IParam {
      * @brief add a constraint
      */
     virtual void setConstraint(IConstraint* constraint) = 0;
+
+  public:
+    virtual void* valuePtr() const = 0;
+
+    virtual void* valuePtr(void* base, const std::string& oid) const = 0;
+
+    virtual void* valuePtr(void* base, const Path::Index idx) const = 0;
 };
 }  // namespace common
 
