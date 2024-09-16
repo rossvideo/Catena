@@ -23,6 +23,7 @@
 
 // common
 #include <meta/Typelist.h>
+#include <meta/IsVector.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -76,14 +77,42 @@ struct StructInfo {
     std::string name; /*< the struct's type name */
     std::vector<FieldInfo> fields; /*< information about its fields */
 };
-}  // namespace lite
 
 template <typename T>
 concept CatenaStruct = requires {
     T::getStructInfo();
 };
 
-namespace lite {
+template <typename T>
+concept CatenaStructArray = meta::IsVector<T> && CatenaStruct<typename T::value_type>;
+
+/**
+ * Free standing method to stream an entire array of structured data to protobuf
+ * 
+ * enabled if T is a vector of struct with getStructInfo method
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStructArray T>
+void toProto(catena::Value& dst, const void* src){
+    using structType = T::value_type;
+    const auto* srcArray = reinterpret_cast<const T*>(src);
+    const auto& si = structType::getStructInfo();
+
+    catena::StructList* dstArray = dst.mutable_struct_array_values();
+    for (const structType& element : *srcArray){
+        catena::StructValue* dstElement = dstArray->add_struct_values();
+        ::google::protobuf::Map<std::string, ::catena::StructField>* dstFields = dstElement->mutable_fields();
+        for (const auto& field : si.fields) {
+            auto& dstField = (*dstFields)[field.name];
+            auto& dstValue = *dstField.mutable_value();
+
+            // required so that pointer math works correctly
+            const char* src_ptr = reinterpret_cast<const char*>(&element);
+            field.toProto(dstValue, src_ptr + field.offset);
+        }
+    }
+}
 
 /**
  * Free standing method to stream structured data to protobuf
@@ -99,10 +128,10 @@ void toProto(catena::Value& dst, const void* src) {
     // required so that pointer math works correctly
     const char* src_ptr = reinterpret_cast<const char*>(src);
 
+    ::catena::StructValue* structValue = dst.mutable_struct_value();
+    ::google::protobuf::Map<std::string, ::catena::StructField>* dstFields = structValue->mutable_fields();
     // serialize each field
     for (const auto& field : si.fields) {
-        ::catena::StructValue* structValue = dst.mutable_struct_value();
-        ::google::protobuf::Map<std::string, ::catena::StructField>* dstFields = structValue->mutable_fields();
         auto& dstField = (*dstFields)[field.name];
         auto& dstValue = *dstField.mutable_value();
         field.toProto(dstValue, src_ptr + field.offset);
@@ -136,6 +165,11 @@ void fromProto(void* dst, const catena::Value& src) {
         const auto& srcValue = srcField.value();
         field.fromProto(dst_ptr + field.offset, srcValue);
     }
+}
+
+template <CatenaStructArray T>
+void fromProto(void* dst, const catena::Value& src){
+    
 }
 
 template <typename T>

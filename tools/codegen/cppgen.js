@@ -226,14 +226,8 @@ class CppGen {
       descriptor = new ParamDescriptor(objectType, name, args);
       this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
     } else {
-      if (!p.isArrayType()){
-        descriptor = new ParamDescriptor(objectType, name, args);
-        descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
-      } else {
-        descriptor = new ParamDescriptor(objectType, name, args);
-        descriptor.addSubparam(this.templateParams[p.templateOid()].paramDescriptor);
-        this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
-      }
+      descriptor = new ParamDescriptor(objectType, name, args);
+      descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
     }
     if (isStructChild) {
       this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);

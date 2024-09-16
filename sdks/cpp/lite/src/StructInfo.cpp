@@ -19,6 +19,7 @@
 #include <interface/param.pb.h>
 
 
+
 template<>
 void catena::lite::toProto<float>(catena::Value& dst, const void* src) {
     dst.set_float32_value(*reinterpret_cast<const float*>(src));

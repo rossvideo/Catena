@@ -86,6 +86,13 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
     if (std::holds_alternative<std::string>(top)) {
         // get our top-level param descriptor, and a pointer to the value
         IParam* pwv = getItem<common::ParamTag>(std::get<std::string>(top));
+        if (pwv == nullptr) {
+            std::stringstream ss;
+            ss << "Param not found: " << jptr;
+            catena::exception_with_status why(ss.str(), catena::StatusCode::NOT_FOUND);
+            ans = std::move(why);
+            return ans;
+        }
         void* ptr = pwv->valuePtr();
         path.pop_front();
         while (!path.empty()) {

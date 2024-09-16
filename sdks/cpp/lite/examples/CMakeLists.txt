@@ -24,6 +24,7 @@ add_subdirectory("start_here")
 add_subdirectory("use_structs")
 add_subdirectory("use_templates")
 add_subdirectory("use_constraints")
+add_subdirectory("use_struct_arrays")
 
 
 

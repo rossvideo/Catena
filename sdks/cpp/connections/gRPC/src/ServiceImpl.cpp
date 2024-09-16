@@ -246,7 +246,8 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 }
             } catch (...) {
                 status_ = CallStatus::kFinish;
-                responder_.FinishWithError(Status::CANCELLED, this);
+                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
+                responder_.FinishWithError(errorStatus, this);
             }
         break;
 
