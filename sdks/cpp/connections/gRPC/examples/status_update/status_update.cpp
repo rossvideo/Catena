@@ -140,8 +140,8 @@ void statusUpdateExample(){
         // this is the "receiving end" of the status update example
         dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
             // all we do here is print out the oid of the parameter that was changed
-            // your biz logic would do somethint _even more_ interesting!
-            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
+            // your biz logic would do something _even_more_ interesting!
+            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
         });
 
         // The rest is the "sending end" of the status update example
