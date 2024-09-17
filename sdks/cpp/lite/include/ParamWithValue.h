@@ -76,7 +76,8 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     void toProto(catena::Value& value, void* src) const override {
-        catena::lite::toProto<T>(value, src);
+        T* src_ptr = reinterpret_cast<T*>(src);
+        catena::lite::toProto<T>(value, src_ptr);
     }
 
     void fromProto(catena::Value& value) override {
@@ -162,17 +163,17 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   public:
-    void* valuePtr() const override {
-        return &value_.get();
-    }
+    // void* valuePtr() const override {
+    //     return &value_.get();
+    // }
 
-    void* valuePtr(void* vp, const std::string& oid) const override {
-        return nullptr;
-    }
+    // void* valuePtr(void* vp, const std::string& oid) const override {
+    //     return nullptr;
+    // }
 
-    void* valuePtr(void* vp, const common::Path::Index index) const override {
-        return nullptr;
-    }
+    // void* valuePtr(void* vp, const common::Path::Index index) const override {
+    //     return nullptr;
+    // }
 
     const std::string getScope() const override {
         return descriptor_.getScope();

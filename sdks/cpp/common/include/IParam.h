@@ -138,12 +138,12 @@ class IParam {
 
     virtual const std::string getScope() const = 0;
 
-  public:
-    virtual void* valuePtr() const = 0;
+  // public:
+  //   virtual void* valuePtr() const = 0;
 
-    virtual void* valuePtr(void* base, const std::string& oid) const = 0;
+  //   virtual void* valuePtr(void* base, const std::string& oid) const = 0;
 
-    virtual void* valuePtr(void* base, const Path::Index idx) const = 0;
+  //   virtual void* valuePtr(void* base, const Path::Index idx) const = 0;
 };
 }  // namespace common
 

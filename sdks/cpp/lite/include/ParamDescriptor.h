@@ -149,7 +149,7 @@ class ParamDescriptor : public catena::common::IParam {
     }
 
     void toProto(catena::Value& value, void* src) const override {
-        catena::lite::toProto<T>(value, src);
+        // catena::lite::toProto<T>(value, src);
     }
     
     void fromProto(catena::Value& value) override {
@@ -248,36 +248,36 @@ class ParamDescriptor : public catena::common::IParam {
     }
 
   public:
-    void* valuePtr() const override {
-      return nullptr;
-    } 
+    // void* valuePtr() const override {
+    //   return nullptr;
+    // } 
     
-    void* valuePtr(void* vp, const std::string& oid) const override {
-      if constexpr (CatenaStruct<T>) {
-        const StructInfo& si = T::getStructInfo();
-        auto it = std::find_if(si.fields.begin(), si.fields.end(), [&oid](const FieldInfo& fi) {
-          return fi.name == oid;
-        });
-        if (it != si.fields.end()) {
-          char* base = static_cast<char*>(vp);
-          return base + it->offset;
-        } else {
-          // didn't find field, so return nullptr
-          return nullptr;
-        }
-      } else {
-        return nullptr;
-      }
-    }
+    // void* valuePtr(void* vp, const std::string& oid) const override {
+    //   if constexpr (CatenaStruct<T>) {
+    //     const StructInfo& si = T::getStructInfo();
+    //     auto it = std::find_if(si.fields.begin(), si.fields.end(), [&oid](const FieldInfo& fi) {
+    //       return fi.name == oid;
+    //     });
+    //     if (it != si.fields.end()) {
+    //       char* base = static_cast<char*>(vp);
+    //       return base + it->offset;
+    //     } else {
+    //       // didn't find field, so return nullptr
+    //       return nullptr;
+    //     }
+    //   } else {
+    //     return nullptr;
+    //   }
+    // }
 
-    void* valuePtr(void* vp, const common::Path::Index idx) const override {
-      if constexpr (catena::meta::IsVector<T>) {
-        T& arr = *static_cast<T*>(vp);
-        return &arr[idx];
-      } else {
-        return nullptr;
-      }
-    };
+    // void* valuePtr(void* vp, const common::Path::Index idx) const override {
+    //   if constexpr (catena::meta::IsVector<T>) {
+    //     T& arr = *static_cast<T*>(vp);
+    //     return &arr[idx];
+    //   } else {
+    //     return nullptr;
+    //   }
+    // };
 
     const std::string getScope() const override {
       if (!scope_.empty()) {

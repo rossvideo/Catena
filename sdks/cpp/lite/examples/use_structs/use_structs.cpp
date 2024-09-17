@@ -29,6 +29,7 @@
 // device model
 #include "device.use_structs.json.h" 
 
+
 // lite
 #include <Device.h>
 #include <ParamWithValue.h>
@@ -46,14 +47,19 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    IParam* ip = dm.getItem<ParamTag>("location");
+    // IParam* ip = dm.getItem<ParamTag>("location");
+    // assert(ip != nullptr);
+    // auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip);
+    // Location& loc = locationParam.get();
+
+    // std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+    //           << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+    //           << "' " << loc.longitude.seconds << "\")" << std::endl;
+
+    IParam* ip = dm.getItem<ParamTag>("latitude");
     assert(ip != nullptr);
-    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip);
-    Location& loc = locationParam.get();
-
-    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
-
+    catena::Value value;
+    ip->toProto(value);
+    std::cout << "Latitude: " << value.DebugString() << std::endl;
     return EXIT_SUCCESS;
 }
