@@ -20,10 +20,10 @@
 
 
 
-// template<>
-// void catena::lite::toProto<float>(catena::Value& dst, const void* src) {
-//     dst.set_float32_value(*reinterpret_cast<const float*>(src));
-// }
+template<>
+void catena::lite::toProto<float>(catena::Value& dst, const float* src) {
+    dst.set_float32_value(*src);
+}
 
 // template<>
 // void catena::lite::fromProto<float>(void* dst, const catena::Value& src) {
@@ -31,7 +31,7 @@
 // }
 
 template<>
-void catena::lite::toProto<int>(Value& dst, const int* src) {
+void catena::lite::toProto<int32_t>(Value& dst, const int32_t* src) {
     dst.set_int32_value(*src);
 }
 

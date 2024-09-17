@@ -40,7 +40,7 @@ struct Reflect{};
 
 template <typename T>
 concept CatenaStruct = requires {
-    T::getStructInfo();
+    T::isCatenaStruct();
 };
 
 template <typename T>
@@ -89,10 +89,10 @@ struct FieldInfo {
  *
  */
 
-struct StructInfo {
-    std::string name; /*< the struct's type name */
-    // std::vector<FieldInfo> fields; /*< information about its fields */
-};
+// struct StructInfo {
+//     std::string name; /*< the struct's type name */
+//     // std::vector<FieldInfo> fields; /*< information about its fields */
+// };
 
 
 
@@ -153,10 +153,10 @@ void toProto(catena::Value& dst, const T* src) {
  */
 template <CatenaStruct T>
 void fromProto(void* dst, const catena::Value& src) {
-    const auto& si = T::getStructInfo();
+    // const auto& si = T::getStructInfo();
 
-    // required so that pointer math works correctly
-    char* dst_ptr = reinterpret_cast<char*>(dst);
+    // // required so that pointer math works correctly
+    // char* dst_ptr = reinterpret_cast<char*>(dst);
 
     // deserialize each field
     // for (const auto& field : si.fields) {

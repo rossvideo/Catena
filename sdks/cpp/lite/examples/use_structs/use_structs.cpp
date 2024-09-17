@@ -56,7 +56,7 @@ int main() {
     //           << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
     //           << "' " << loc.longitude.seconds << "\")" << std::endl;
 
-    IParam* ip = dm.getItem<ParamTag>("latitude");
+    IParam* ip = dm.getItem<ParamTag>("location");
     assert(ip != nullptr);
     catena::Value value;
     ip->toProto(value);

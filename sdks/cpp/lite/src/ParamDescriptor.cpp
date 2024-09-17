@@ -26,7 +26,7 @@
 
 using catena::Value;
 using catena::lite::ParamDescriptor;
-using catena::lite::StructInfo;
+//using catena::lite::StructInfo;
 using catena::lite::FieldInfo;
 
 
