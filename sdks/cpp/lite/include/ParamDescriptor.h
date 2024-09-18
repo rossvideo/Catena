@@ -46,8 +46,6 @@
 namespace catena {
 namespace lite {
 
-template <typename T>
-class ParamWithValue; // forward declaration
 class AuthzInfo; // forward declaration
 
 /**
@@ -100,34 +98,9 @@ class ParamDescriptor {
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         constraint_{nullptr}, parent_{parent}, dev_{dev} {
       setOid(oid);
-      parent_->addSubParam(oid, this);
-    }
-
-    /**
-     * @brief the main constructor
-     * @param type the parameter type
-     * @param oid_aliases the parameter's oid aliases
-     * @param name the parameter's name
-     * @param widget the parameter's widget
-     * @param read_only the parameter's read-only status
-     * @param oid the parameter's oid
-     * @param collection the parameter belongs to
-     */
-    template <typename T>
-    ParamDescriptor(
-      catena::ParamType type, 
-      const OidAliases& oid_aliases, 
-      const PolyglotText::ListInitializer name, 
-      const std::string& widget,
-      const std::string& scope, 
-      const bool read_only, 
-      const std::string& oid, 
-      ParamWithValue<T>* parent,
-      Device& dev)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        constraint_{nullptr}, dev_{dev} {
-      setOid(oid);
-      parent->addParam(oid, this);
+      if (parent_ != nullptr) {
+        parent_->addSubParam(oid, this);
+      }
     }
 
     /**

@@ -48,18 +48,11 @@ class ParamWithValue : public catena::common::IParam {
   public:
     ParamWithValue() = delete;
     ParamWithValue(
-        catena::ParamType type,
-        const OidAliases& oid_aliases,
-        const PolyglotText::ListInitializer name,
-        const std::string& widget,
-        const std::string& scope,
-        const bool read_only,
-        const std::string& oid,
-        Device &dev,
-        T& value
-    ) : descriptor_{type, oid_aliases, name, widget, scope, read_only, oid, this, dev}, 
-        value_{value} {
-        dev.addItem<common::ParamTag>(oid, this);
+        T& value,
+        ParamDescriptor& descriptor,
+        Device &dev
+    ) : value_{value}, descriptor_{descriptor} {
+        dev.addItem<common::ParamTag>(descriptor.getOid(), this);
     }
 
     ParamWithValue(const ParamWithValue&) = delete;
@@ -165,7 +158,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   private:
-    ParamDescriptor descriptor_;
+    ParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
 };
 
