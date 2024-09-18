@@ -34,14 +34,14 @@ catena::lite::Device dm {1, DetailLevel("FULL")(), {Scope("monitor")(), Scope("o
 using catena::lite::LanguagePack;
 use_structs::Location location {{1.0f,2,3},{4.0f,5,6}};
 catena::lite::ParamWithValue<use_structs::Location> _locationParam {catena::ParamType::STRUCT, {}, {{"en", "Location"}}, {}, "", false, "location", dm, location};
-catena::lite::ParamDescriptor<use_structs::Location::Latitude> _location_latitudeParam {catena::ParamType::STRUCT, {}, {{"en", "Latitude"}}, {}, "", false, "latitude", &_locationParam, dm};
-catena::lite::ParamDescriptor<float> _location_latitude_degreesParam {catena::ParamType::FLOAT32, {}, {{"en", "Degrees"}}, {}, "", false, "degrees", &_location_latitudeParam, dm};
-catena::lite::ParamDescriptor<int32_t> _location_latitude_minutesParam {catena::ParamType::INT32, {}, {{"en", "Minutes"}}, {}, "", false, "minutes", &_location_latitudeParam, dm};
-catena::lite::ParamDescriptor<int32_t> _location_latitude_secondsParam {catena::ParamType::INT32, {}, {{"en", "Seconds"}}, {}, "", false, "seconds", &_location_latitudeParam, dm};
-catena::lite::ParamDescriptor<use_structs::Location::Longitude> _location_longitudeParam {catena::ParamType::STRUCT, {}, {{"en", "Longitude"}}, {}, "", false, "longitude", &_locationParam, dm};
-catena::lite::ParamDescriptor<float> _location_longitude_degreesParam {catena::ParamType::FLOAT32, {}, {{"en", "Degrees"}}, {}, "", false, "degrees", &_location_longitudeParam, dm};
-catena::lite::ParamDescriptor<int32_t> _location_longitude_minutesParam {catena::ParamType::INT32, {}, {{"en", "Minutes"}}, {}, "", false, "minutes", &_location_longitudeParam, dm};
-catena::lite::ParamDescriptor<int32_t> _location_longitude_secondsParam {catena::ParamType::INT32, {}, {{"en", "Seconds"}}, {}, "", false, "seconds", &_location_longitudeParam, dm};
+catena::lite::ParamDescriptor _location_latitudeParam {catena::ParamType::STRUCT, {}, {{"en", "Latitude"}}, {}, "", false, "latitude", &_locationParam, dm};
+catena::lite::ParamDescriptor _location_latitude_degreesParam {catena::ParamType::FLOAT32, {}, {{"en", "Degrees"}}, {}, "", false, "degrees", &_location_latitudeParam, dm};
+catena::lite::ParamDescriptor _location_latitude_minutesParam {catena::ParamType::INT32, {}, {{"en", "Minutes"}}, {}, "", false, "minutes", &_location_latitudeParam, dm};
+catena::lite::ParamDescriptor _location_latitude_secondsParam {catena::ParamType::INT32, {}, {{"en", "Seconds"}}, {}, "", false, "seconds", &_location_latitudeParam, dm};
+catena::lite::ParamDescriptor _location_longitudeParam {catena::ParamType::STRUCT, {}, {{"en", "Longitude"}}, {}, "", false, "longitude", &_locationParam, dm};
+catena::lite::ParamDescriptor _location_longitude_degreesParam {catena::ParamType::FLOAT32, {}, {{"en", "Degrees"}}, {}, "", false, "degrees", &_location_longitudeParam, dm};
+catena::lite::ParamDescriptor _location_longitude_minutesParam {catena::ParamType::INT32, {}, {{"en", "Minutes"}}, {}, "", false, "minutes", &_location_longitudeParam, dm};
+catena::lite::ParamDescriptor _location_longitude_secondsParam {catena::ParamType::INT32, {}, {{"en", "Seconds"}}, {}, "", false, "seconds", &_location_longitudeParam, dm};
 template <>
 struct catena::lite::Reflect<use_structs::Location> {
   using Location = use_structs::Location;

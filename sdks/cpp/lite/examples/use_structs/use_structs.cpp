@@ -59,7 +59,8 @@ int main() {
     IParam* ip = dm.getItem<ParamTag>("location");
     assert(ip != nullptr);
     catena::Value value;
-    ip->toProto(value);
+    std::string clientScope = "operate";
+    ip->toProto(value, clientScope);
     std::cout << "Latitude: " << value.DebugString() << std::endl;
     return EXIT_SUCCESS;
 }

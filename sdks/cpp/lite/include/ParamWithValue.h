@@ -32,6 +32,7 @@
 #include <Device.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
+#include <AuthzInfo.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -45,8 +46,6 @@ namespace lite {
 template <typename T>
 class ParamWithValue : public catena::common::IParam {
   public:
-    using Descriptor = ParamDescriptor<T>;
-  public:
     ParamWithValue() = delete;
     ParamWithValue(
         catena::ParamType type,
@@ -58,12 +57,10 @@ class ParamWithValue : public catena::common::IParam {
         const std::string& oid,
         Device &dev,
         T& value
-    ) : descriptor_{type, oid_aliases, name, widget, scope, read_only, oid, dev}, 
+    ) : descriptor_{type, oid_aliases, name, widget, scope, read_only, oid, this, dev}, 
         value_{value} {
-        dm.addItem<common::ParamTag>(oid, this);
+        dev.addItem<common::ParamTag>(oid, this);
     }
-
-
 
     ParamWithValue(const ParamWithValue&) = delete;
     ParamWithValue& operator=(const ParamWithValue&) = delete;
@@ -71,29 +68,11 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue& operator=(ParamWithValue&&) = default;
     virtual ~ParamWithValue() = default;
 
-    void toProto(catena::Value& value) const override {
-        catena::lite::toProto<T>(value, &value_.get());
-    }
-
-    void toProto(catena::Value& value, void* src) const override {
-        T* src_ptr = reinterpret_cast<T*>(src);
-        catena::lite::toProto<T>(value, src_ptr);
-    }
-
-    void fromProto(catena::Value& value) override {
-        catena::lite::fromProto<T>(&value_.get(), value);
-        catena::lite::fromProto<T>(&value_.get(), value);
-    }
-
-    /**
-     * @brief deserialize the parameter value from protobuf
-     * @param dst the destination value
-     * @param value the protobuf value to deserialize from
-     * @note should only be called for non structured types
-     */
-    void fromProto(void* dst, catena::Value& value) override {
-        assert(dst == &value_.get());
-        catena::lite::fromProto<T>(&value_.get(), value);
+    void toProto(catena::Value& value, std::string& clientScope) const override {
+        AuthzInfo auth(descriptor_, clientScope);
+        if (auth.readAuthz()) {
+            catena::lite::toProto<T>(value, &value_.get(), auth);
+        }
     }
 
     /**
@@ -101,11 +80,17 @@ class ParamWithValue : public catena::common::IParam {
      * include both the descriptor and the value
      * @param param the protobuf value to serialize to
      */
-    void toProto(catena::Param& param) const override {
-        descriptor_.toProto(param);        
-        catena::lite::toProto<T>(*param.mutable_value(), &value_.get());
+    void toProto(catena::Param& param, std::string& clientScope) const override {
+        AuthzInfo auth(descriptor_, clientScope);
+        if (auth.readAuthz()) {
+            descriptor_.toProto(param, auth);        
+            catena::lite::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        }
     }
 
+    void fromProto(catena::Value& value) override {
+        catena::lite::fromProto<T>(&value_.get(), value);
+    }
 
     typename IParam::ParamType type() const override {
         return descriptor_.type();
@@ -137,15 +122,15 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief get a child parameter by name
      */
-    IParam* getParam(const std::string& oid) override {
-        return descriptor_.getParam(oid);
-    }
+    // IParam* getParam(const std::string& oid) override {
+    //     return descriptor_.getSubParam(oid);
+    // }
 
     /**
      * @brief add a child parameter
      */
-    void addParam(const std::string& oid, IParam* param) override {
-        descriptor_.addParam(oid, param);
+    void addParam(const std::string& oid, ParamDescriptor* param) {
+        descriptor_.addSubParam(oid, param);
     }
 
     /**
@@ -180,7 +165,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   private:
-    Descriptor descriptor_;
+    ParamDescriptor descriptor_;
     std::reference_wrapper<T> value_;
 };
 

@@ -25,6 +25,9 @@
 #include <meta/Typelist.h>
 #include <meta/IsVector.h>
 
+// lite
+#include <AuthzInfo.h>
+
 // protobuf interface
 #include <interface/param.pb.h>
 
@@ -57,30 +60,6 @@ struct FieldInfo {
 
     constexpr FieldInfo(const char* n, const FieldType StructType::* m)
         : name(n), memberPtr(m) {}
-
-    // /**
-    //  * @brief a function that converts a field to a protobuf value
-    //  *
-    //  * @param dst the destination protobuf value
-    //  * @param src the source value
-    //  * 
-    //  * The code generator points this to the appropriate toProto method
-    //  * for the field's type
-    //  * 
-    //  */
-    // std::function<void(catena::Value& dst, const void* src)> toProto;
-
-    // /**
-    //  * @brief a function that converts a protobuf value to a field
-    //  *
-    //  * @param dst the destination value
-    //  * @param src the source protobuf value
-    //  * 
-    //  * The code generator points this to the appropriate fromProto method
-    //  * for the field's type
-    //  * 
-    //  */
-    // std::function<void(void* dst, const catena::Value& src)> fromProto;
 };
 
 /**
@@ -126,7 +105,7 @@ struct FieldInfo {
 
 
 template <typename T>
-void toProto(catena::Value& dst, const T* src);
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth);
 
 /**
  * Free standing method to stream structured data to protobuf
@@ -136,11 +115,20 @@ void toProto(catena::Value& dst, const T* src);
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-void toProto(catena::Value& dst, const T* src) {
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
     auto fields = Reflect<T>::fields;
     auto* dstFields = dst.mutable_struct_value()->mutable_fields();
+
+    auto addField = [&](const auto& field) {
+        AuthzInfo subParamAuth = auth.subParamInfo(field.name);
+        if (subParamAuth.readAuthz()) {
+            catena::Value* newFieldValue = (*dstFields)[field.name].mutable_value();
+            toProto(*newFieldValue, &(src->*(field.memberPtr)), subParamAuth);
+        }
+    };
+
     std::apply([&](auto... field) {
-        (toProto(*(*dstFields)[field.name].mutable_value(), &(src->*(field.memberPtr))), ...);
+        (addField(field), ...);
     }, fields);
 }
 

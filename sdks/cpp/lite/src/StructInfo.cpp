@@ -21,7 +21,7 @@
 
 
 template<>
-void catena::lite::toProto<float>(catena::Value& dst, const float* src) {
+void catena::lite::toProto<float>(catena::Value& dst, const float* src, const AuthzInfo& auth) {
     dst.set_float32_value(*src);
 }
 
@@ -31,7 +31,7 @@ void catena::lite::toProto<float>(catena::Value& dst, const float* src) {
 // }
 
 template<>
-void catena::lite::toProto<int32_t>(Value& dst, const int32_t* src) {
+void catena::lite::toProto<int32_t>(Value& dst, const int32_t* src, const AuthzInfo& auth) {
     dst.set_int32_value(*src);
 }
 

@@ -137,7 +137,7 @@ void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScop
         std::string paramScope = param->getScope();
         if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), paramScope) != clientScopes.end()) {
             ::catena::Param dstParam{};
-            param->toProto(dstParam);
+            param->toProto(dstParam, clientScopes[0]);
             dstParams[name] = dstParam;
         }
     }
