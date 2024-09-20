@@ -39,6 +39,7 @@
 
 #include <functional>
 #include <string>
+#include <memory>
 
 namespace catena {
 namespace lite {
@@ -47,6 +48,10 @@ template <typename T>
 class ParamWithValue : public catena::common::IParam {
   public:
     ParamWithValue() = delete;
+
+    /**
+     * @brief Construct a new ParamWithValue object and add it to the device
+     */
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
@@ -55,11 +60,30 @@ class ParamWithValue : public catena::common::IParam {
         dev.addItem<common::ParamTag>(descriptor.getOid(), this);
     }
 
+    /**
+     * @brief Construct a new ParamWithValue object without adding it to device
+     */
+    ParamWithValue(
+        T& value,
+        ParamDescriptor& descriptor
+    ) : value_{value}, descriptor_{descriptor} {}
+
+    template <typename FieldType = T, typename ParentType>
+    ParamWithValue(
+        const FieldInfo<FieldType, ParentType>& field, 
+        ParentType& parentValue,
+        ParamDescriptor& pd
+    ) : descriptor_{pd}, value_{(parentValue.*(field.memberPtr))} {}
+
     ParamWithValue(const ParamWithValue&) = delete;
     ParamWithValue& operator=(const ParamWithValue&) = delete;
     ParamWithValue(ParamWithValue&&) = default;
     ParamWithValue& operator=(ParamWithValue&&) = default;
     virtual ~ParamWithValue() = default;
+
+    std::unique_ptr<IParam> copy() const override {
+        return std::make_unique<ParamWithValue<T>>(value_.get(), descriptor_);
+    }
 
     void toProto(catena::Value& value, std::string& clientScope) const override {
         AuthzInfo auth(descriptor_, clientScope);
@@ -81,9 +105,9 @@ class ParamWithValue : public catena::common::IParam {
         }
     }
 
-    void fromProto(catena::Value& value) override {
-        catena::lite::fromProto<T>(&value_.get(), value);
-    }
+    // void fromProto(catena::Value& value) override {
+    //     catena::lite::fromProto<T>(&value_.get(), value);
+    // }
 
     typename IParam::ParamType type() const override {
         return descriptor_.type();
@@ -115,10 +139,52 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief get a child parameter by name
      */
-    // IParam* getParam(const std::string& oid) override {
-    //     return descriptor_.getSubParam(oid);
-    // }
+    std::unique_ptr<IParam> getParam(Path oid) override {
+        return getParam(oid, value_.get());
+    }
 
+  private:
+    template <typename U>
+    std::unique_ptr<IParam> getParam(Path oid, U& value) {
+        // This type is not a CatenaStruct so it has no sub-params
+        return nullptr;
+    }
+
+    template <CatenaStruct U>
+    std::unique_ptr<IParam> getParam(Path oid, U& value) {
+        catena::common::Path::Segment segment = oid.front();
+        std::string* oidStr = std::get_if<std::string>(&segment);
+        if (!oidStr) return nullptr;
+        oid.pop_front();
+        auto fields = Reflect<U>::fields;
+
+        std::size_t index = findIndexByName<U>(fields, *oidStr);
+        return getTupleElement(fields, index);
+    }
+
+    // Helper function to get tuple element by runtime index
+    template <std::size_t I, typename Tuple>
+    std::unique_ptr<IParam> getTupleElementImpl(const Tuple& tuple, std::size_t index) {
+        if constexpr (I < std::tuple_size_v<Tuple>) {
+            if (I == index) {
+                using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
+                return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
+            } else {
+                return getTupleElementImpl<I + 1>(tuple, index);
+            }
+        } else {
+            return nullptr;
+        }
+    }
+
+    // Primary function to get tuple element by runtime index
+    template <typename Tuple>
+    std::unique_ptr<IParam> getTupleElement(const Tuple& tuple, std::size_t index) {
+        return getTupleElementImpl<0>(tuple, index);
+    }
+
+
+  public:
     /**
      * @brief add a child parameter
      */

@@ -56,11 +56,31 @@ int main() {
     //           << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
     //           << "' " << loc.longitude.seconds << "\")" << std::endl;
 
-    IParam* ip = dm.getItem<ParamTag>("location");
+    std::unique_ptr<IParam> ip = dm.getParam("/latitude");
     assert(ip != nullptr);
     catena::Value value;
     std::string clientScope = "operate";
     ip->toProto(value, clientScope);
     std::cout << "Latitude: " << value.DebugString() << std::endl;
+
+
+    ip = dm.getParam("/latitude/degrees");
+    assert(ip != nullptr);
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/latitude/minutes");
+    assert(ip != nullptr);
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude minutes: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/latitude/seconds");
+    assert(ip != nullptr);
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude seconds: " << value.DebugString() << std::endl;
+
     return EXIT_SUCCESS;
 }

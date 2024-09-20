@@ -48,6 +48,8 @@ class IParam {
      */
     using OidAliases = std::vector<std::string>;
 
+    using Path = catena::common::Path;
+
   public:
     IParam() = default;
     virtual ~IParam() = default;
@@ -64,6 +66,9 @@ class IParam {
     IParam(const IParam&) = delete;
     IParam& operator=(const IParam&) = delete;
 
+    // Virtual clone method
+    virtual std::unique_ptr<IParam> copy() const = 0;
+
     /**
      * @brief serialize the parameter value to protobuf
      * @param dst the protobuf value to serialize to
@@ -75,7 +80,7 @@ class IParam {
      * @param src the protobuf value to deserialize from
      * @note this method may constrain the source value and modify it
      */
-    virtual void fromProto(catena::Value& src) = 0;
+    // virtual void fromProto(catena::Value& src) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
@@ -112,7 +117,7 @@ class IParam {
     /**
      * @brief get a child parameter by name
      */
-    // virtual IParam* getParam(const std::string& name) = 0;
+    virtual std::unique_ptr<IParam> getParam(Path oid) = 0;
 
     /**
      * @brief add a child parameter
@@ -131,12 +136,6 @@ class IParam {
 
     virtual const std::string getScope() const = 0;
 
-  // public:
-  //   virtual void* valuePtr() const = 0;
-
-  //   virtual void* valuePtr(void* base, const std::string& oid) const = 0;
-
-  //   virtual void* valuePtr(void* base, const Path::Index idx) const = 0;
 };
 }  // namespace common
 

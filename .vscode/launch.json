@@ -57,6 +57,25 @@
         "MIMode": "lldb"
       },
       {
+        "name": "Debug use_structs with gdb",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/use_structs/use_structs", // Path to the full_service executable
+        "args": [], // Any command-line arguments go here
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ]
+    },
+      {
         "name": "Debug service with gdb",
         "type": "cppdbg",
         "request": "launch",

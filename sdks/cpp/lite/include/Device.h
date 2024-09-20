@@ -182,6 +182,8 @@ class Device {
         return nullptr;
     }
 
+    std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
+
     // /**
     //  * @brief deserialize a protobuf value object into the parameter value
     //  * pointed to by jptr.

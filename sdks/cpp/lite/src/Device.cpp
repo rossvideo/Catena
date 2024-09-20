@@ -122,6 +122,26 @@ const std::vector<std::string> Device::kAuthzDisabled = {"__AUTHZ_DISABLED__"};
 //     return ans;
 // }
 
+std::unique_ptr<IParam> Device::getParam(const std::string& fqoid) const {
+    catena::common::Path path(fqoid);
+    if (path.empty()) {
+        return nullptr;
+    }
+    catena::common::Path::Segment top = path.front();
+    path.pop_front();
+    if (std::holds_alternative<std::string>(top)) {
+        IParam* topParam = getItem<common::ParamTag>(std::get<std::string>(top));
+        if (!topParam) {return nullptr;}
+        if (path.empty()) {
+        return topParam->copy();
+        } else {
+        return topParam->getParam(path);
+        }
+    } else {
+        return nullptr;
+    }
+}
+
 void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScopes, bool shallow) const {
     dst.set_slot(slot_);
     dst.set_detail_level(detail_level_);

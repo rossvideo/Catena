@@ -35,10 +35,10 @@ void catena::lite::toProto<int32_t>(Value& dst, const int32_t* src, const AuthzI
     dst.set_int32_value(*src);
 }
 
-template<>
-void catena::lite::fromProto<int32_t>(void* dst, const catena::Value& src) {
-    *reinterpret_cast<int32_t*>(dst) = src.int32_value();
-}
+// template<>
+// void catena::lite::fromProto<int32_t>(void* dst, const catena::Value& src) {
+//     *reinterpret_cast<int32_t*>(dst) = src.int32_value();
+// }
 
 // template<>
 // void catena::lite::toProto<std::string>(Value& dst, const void* src) {
