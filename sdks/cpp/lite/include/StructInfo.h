@@ -24,7 +24,6 @@
 // common
 #include <meta/Typelist.h>
 #include <meta/IsVector.h>
-#include <meta/getTupleElem.h>
 
 // lite
 #include <AuthzInfo.h>
