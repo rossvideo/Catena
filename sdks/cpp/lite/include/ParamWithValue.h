@@ -72,8 +72,9 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         const FieldInfo<FieldType, ParentType>& field, 
         ParentType& parentValue,
-        ParamDescriptor& pd
-    ) : descriptor_{pd}, value_{(parentValue.*(field.memberPtr))} {}
+        ParamDescriptor& parentDescriptor,
+        const std::string& oid
+    ) : descriptor_{parentDescriptor.getSubParam(oid)}, value_{(parentValue.*(field.memberPtr))} {}
 
     ParamWithValue(const ParamWithValue&) = delete;
     ParamWithValue& operator=(const ParamWithValue&) = delete;
@@ -159,18 +160,24 @@ class ParamWithValue : public catena::common::IParam {
         auto fields = Reflect<U>::fields;
 
         std::size_t index = findIndexByName<U>(fields, *oidStr);
-        return getTupleElement(fields, index);
+        std::unique_ptr<IParam> ip = getTupleElement(fields, index, *oidStr);
+        if (oid.empty()) {
+            return ip;
+        } else {
+            if (!ip) return nullptr;
+            return ip->getParam(oid);
+        }
     }
 
     // Helper function to get tuple element by runtime index
     template <std::size_t I, typename Tuple>
-    std::unique_ptr<IParam> getTupleElementImpl(const Tuple& tuple, std::size_t index) {
+    std::unique_ptr<IParam> getTupleElementImpl(const Tuple& tuple, std::size_t index, const std::string& oid) {
         if constexpr (I < std::tuple_size_v<Tuple>) {
             if (I == index) {
                 using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
-                return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
+                return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_, oid);
             } else {
-                return getTupleElementImpl<I + 1>(tuple, index);
+                return getTupleElementImpl<I + 1>(tuple, index, oid);
             }
         } else {
             return nullptr;
@@ -179,8 +186,8 @@ class ParamWithValue : public catena::common::IParam {
 
     // Primary function to get tuple element by runtime index
     template <typename Tuple>
-    std::unique_ptr<IParam> getTupleElement(const Tuple& tuple, std::size_t index) {
-        return getTupleElementImpl<0>(tuple, index);
+    std::unique_ptr<IParam> getTupleElement(const Tuple& tuple, std::size_t index, const std::string& oid) {
+        return getTupleElementImpl<0>(tuple, index, oid);
     }
 
 
@@ -207,18 +214,6 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   public:
-    // void* valuePtr() const override {
-    //     return &value_.get();
-    // }
-
-    // void* valuePtr(void* vp, const std::string& oid) const override {
-    //     return nullptr;
-    // }
-
-    // void* valuePtr(void* vp, const common::Path::Index index) const override {
-    //     return nullptr;
-    // }
-
     const std::string getScope() const override {
         return descriptor_.getScope();
     }
