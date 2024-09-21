@@ -275,7 +275,7 @@ add_custom_target(clean-proto
 # include the common part of the Catena C++ SDK
 add_subdirectory("common")
 
-# add_subdirectory("lite")
+add_subdirectory("lite")
 
 # include the connections part of the Catena C++ SDK
 # add_subdirectory("connections")
