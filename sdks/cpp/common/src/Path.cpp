@@ -52,9 +52,41 @@ Path::Path(const std::string &jptr) : segments_{} {
         // unescape and strip off leading solidus '/'
         std::string txt = unescape(match.str()).substr(1, std::string::npos);
 
-        
+        if (txt.compare("-") == 0) {
+            // segment is an index with the one-past-the-end value
+            Segment seg;
+            seg.emplace<Index>(kEnd);
+            segments_.push_back(seg);
+        } else if (std::all_of(txt.cbegin(), txt.cend(), ::isdigit)) {
+            // segment is an index
+            Segment seg;
+            seg.emplace<Index>(std::stoul(txt));
+            segments_.push_back(seg);
+        } else {
+            // segment is a string
+            Segment seg;
+            seg.emplace<std::string>(txt);
+            segments_.push_back(seg);
+        }
     }
     front_ = cbegin();
+
+    //     if (segments_.size() >= 1) {
+    //     std::string seg = segments_[0];
+    //     if (seg.compare("-") == 0) {
+    //         // the one-past-the-end array index
+    //         ans.emplace<Index>(kEnd);
+    //     } else if (std::all_of(seg.begin(), seg.end(), ::isdigit)) {
+    //         // segment is all digits, so convert to Index
+    //         ans.emplace<Index>(std::stoul(seg));
+    //     } else {
+    //         // segment is a string
+    //         ans.emplace<std::string>(seg);
+    //     }
+    // } else {
+    //     // return empty string
+    //     ans.emplace<std::string>("");
+    // }
 }
 
 Path::Path(const char *literal) : Path(std::string(literal)) {}

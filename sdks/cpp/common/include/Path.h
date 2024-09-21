@@ -149,6 +149,16 @@ class Path {
      */
     Index walked() const noexcept;
 
+    /**
+     * @brief restore the Path to start at its original front
+     */
+    inline void rewind() noexcept {front_ = cbegin();}
+
+    /**
+     * @brief restore the Path to it's state before the last pop
+     */
+    inline void unpop() noexcept {if (front_ != cbegin()) {--front_;}}
+
   private:
     using Segments = std::vector<Segment>;
     Segments segments_; /**< the path split into its components */

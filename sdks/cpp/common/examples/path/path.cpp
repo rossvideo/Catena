@@ -34,7 +34,14 @@ void document(Path& p) {
     cout << "path: " << p.fqoid() << "\nhas length: " << p.size() << endl;
     while (p.size()) {
         if (p.front_is_index()) {
-            cout << "segment " << p.walked() << " has type Index and value: " << p.front_as_index() << endl;
+            Path::Index idx = p.front_as_index();
+            cout << "segment " << p.walked() << " has type Index and value: ";
+            if (idx == Path::kEnd) {
+              cout << "kEnd";
+            } else {
+              cout << idx;
+            }
+            cout << endl;
         }
         if (p.front_is_string()) {
             cout << "segment " << p.walked() << " has type string and value: " << p.front_as_string() << endl;
@@ -44,9 +51,33 @@ void document(Path& p) {
 }
 
 int main() {
-    // Path top_level_oid{"/top_level_oid"};
-    // document(top_level_oid);
+    Path top_level_oid{"/top_level_oid"};
+    document(top_level_oid);
 
-    Path top_level_array_access{"/top_level_array/3"};
-    document(top_level_array_access);
+    Path top_level_array_element{"/top_level_array/3"};
+    document(top_level_array_element);
+
+    Path nested_struct{"/parent/child/grandchild"};
+    document(nested_struct);
+
+    // demos the one-past-the-end element accessor
+    Path struct_array{"/parent/-/child"};
+    document(struct_array);
+
+    // The document method consumes the Path passed to it
+    cout << "\njptr should be empty" << endl;
+    document(struct_array);
+    
+    // we can reverse this 2 ways - reverse the last pop operation
+    cout << "\njptr should have its last segment" << endl;
+    struct_array.unpop();
+    document(struct_array);
+
+    // or rewind to the very beginning
+    cout << "\njptr should be fully restored" << endl;
+    struct_array.rewind();
+    document(struct_array);
+
+    Path struct_array_element_field{"/parent/3/child"};
+    document(struct_array_element_field);
 }
