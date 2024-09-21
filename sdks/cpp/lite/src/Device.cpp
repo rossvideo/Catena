@@ -33,34 +33,37 @@ const std::vector<std::string> Device::kAuthzDisabled = {"__AUTHZ_DISABLED__"};
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src) {
     Path path(jptr);
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    if (path.empty()) {
-        return ans;
-    }
-    Path::Segment top = path.front();
     // we expect this to be a parameter name
-    if (std::holds_alternative<std::string>(top)) {
+    if (path.front_is_string()) {
         // get our top-level param descriptor, and a pointer to the value
-        IParam* pwv = getItem<common::ParamTag>(std::get<std::string>(top));
+        IParam* pwv = getItem<common::ParamTag>(path.front_as_string());
         void* ptr = pwv->valuePtr();
-        path.pop_front();
+        path.pop();
         while (!path.empty()) {
-            Path::Segment next = path.front();
-            if (std::holds_alternative<std::string>(next)) {
+            if (path.front_is_string()) {
                 // need to recurse to the next level down
                 // this advances both the param descriptor and value pointer
-                std::string& oid = std::get<std::string>(next);
+                const std::string& oid = path.front_as_string();
                 ptr = pwv->valuePtr(ptr, oid);
                 pwv = pwv->getParam(oid);
-            } else if (std::holds_alternative<Path::Index>(next)) {
+            } else if (path.front_is_index()) {
                 // need to index into the array
                 // this only advances the value pointer
-                ptr = pwv->valuePtr(ptr, std::get<Path::Index>(next));
+                ptr = pwv->valuePtr(ptr, path.front_as_index());
+            } else {
+                // path is empty but the test at the top of the loop thinks otherwise !!??
+                // so, log an error code and break out of the loop
+                catena::exception_with_status why ("Internal logic error.", catena::StatusCode::UNKNOWN);
+                ans = std::move(why);
+                break;
             }
-            path.pop_front();
+            path.pop();
         }
         // we have reached the end of the path, deserialize the value
-        pwv->fromProto(ptr, src);
-        valueSetByClient.emit(jptr, pwv, 0);
+        if (ans.status == catena::StatusCode::OK) {
+            pwv->fromProto(ptr, src);
+            valueSetByClient.emit(jptr, pwv, 0);
+        }
     } else {
         std::stringstream ss;
         ss << "Invalid json pointer: " << jptr;
@@ -74,37 +77,36 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
 catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst) {
     Path path(jptr);
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    if (path.empty()) {
-        std::stringstream ss;
-        ss << "Invalid json pointer: " << jptr;
-        catena::exception_with_status why(ss.str(), catena::StatusCode::NOT_FOUND);
-        ans = std::move(why);
-        return ans;
-    }
-    Path::Segment top = path.front();
     // we expect this to be a parameter name
-    if (std::holds_alternative<std::string>(top)) {
+    if (path.front_is_string()) {
         // get our top-level param descriptor, and a pointer to the value
-        IParam* pwv = getItem<common::ParamTag>(std::get<std::string>(top));
+        IParam* pwv = getItem<common::ParamTag>(path.front_as_string());
         void* ptr = pwv->valuePtr();
-        path.pop_front();
+        path.pop();
         while (!path.empty()) {
-            Path::Segment next = path.front();
-            if (std::holds_alternative<std::string>(next)) {
+            if (path.front_is_string()) {
                 // need to recurse to the next level down
                 // this advances both the param descriptor and value pointer
-                std::string& oid = std::get<std::string>(next);
+                const std::string& oid = path.front_as_string();
                 ptr = pwv->valuePtr(ptr, oid);
                 pwv = pwv->getParam(oid);
-            } else if (std::holds_alternative<Path::Index>(next)) {
+            } else if (path.front_is_index()) {
                 // need to index into the array
                 // this only advances the value pointer
-                ptr = pwv->valuePtr(ptr, std::get<Path::Index>(next));
+                ptr = pwv->valuePtr(ptr, path.front_as_index());
+            } else {
+                // internal logic error - the test at the top of this loop
+                // thinks the path isn't empty, but both front_is_* methods
+                // failed which only happens if the path is actually empty.
+                // create an error code and break out of the loop
+                catena::exception_with_status why ("Internal logic error.", catena::StatusCode::UNKNOWN);
+                ans = std::move(why);
+                break;
             }
-            path.pop_front();
+            path.pop();
         }
         // we have reached the end of the path, deserialize the value
-        pwv->toProto(dst, ptr);
+        if (ans.status == catena::StatusCode::OK) { pwv->toProto(dst, ptr); }
     } else {
         std::stringstream ss;
         ss << "Invalid json pointer: " << jptr;

@@ -99,6 +99,8 @@ class Path {
      */
     inline Index size() const { return cend() - front_; }
 
+    inline bool empty() const { return front_ == cend(); }
+
     /**
      * @return true if the front of the path is a string, false if it's an Index or empty.
      */
