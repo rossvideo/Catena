@@ -44,8 +44,8 @@ void document(Path& p) {
 }
 
 int main() {
-    Path top_level_oid{"/top_level_oid"};
-    document(top_level_oid);
+    // Path top_level_oid{"/top_level_oid"};
+    // document(top_level_oid);
 
     Path top_level_array_access{"/top_level_array/3"};
     document(top_level_array_access);

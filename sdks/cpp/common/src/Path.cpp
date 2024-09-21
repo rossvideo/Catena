@@ -49,9 +49,10 @@ Path::Path(const std::string &jptr) : segments_{} {
             throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
 
-        std::string txt = unescape(match.str());
-        // strip off the leading solidus '/'
-        segments_.push_back(txt.substr(1, std::string::npos));
+        // unescape and strip off leading solidus '/'
+        std::string txt = unescape(match.str()).substr(1, std::string::npos);
+
+        
     }
     front_ = cbegin();
 }
