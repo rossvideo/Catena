@@ -68,7 +68,7 @@ try {
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(options.deviceModel));
     if (validator.validate('device', data)) {
-        const CodeGen =  require(`./${options.language}gen.js`);
+        const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
         const codeGen = new CodeGen(options.deviceModel, options.output, validator, data);
         codeGen.generate();
     }
