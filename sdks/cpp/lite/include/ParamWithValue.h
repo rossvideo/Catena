@@ -148,8 +148,31 @@ class ParamWithValue : public catena::common::IParam {
   private:
     template <typename U>
     std::unique_ptr<IParam> getParam(Path oid, U& value) {
-        // This type is not a CatenaStruct so it has no sub-params
+        // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         return nullptr;
+    }
+
+    template<CatenaStructArray U>
+    std::unique_ptr<IParam> getParam(Path oid, U& value) {
+        using ElemType = U::value_type;
+        std::vector<ElemType>& val = value;
+        catena::common::Path::Segment segment = oid.front();
+        std::size_t* oidIndex = std::get_if<std::size_t>(&segment);
+
+        // If the segment is not an index or the index is out of bounds, return nullptr
+        if (!oidIndex || *oidIndex > val.size()) return nullptr;
+        oid.pop_front();
+
+        if (*oidIndex == val.size()) {
+            // If the index is the size of the array, return a new element
+            val.push_back(ElemType());
+        }
+
+        if (oid.empty()) {
+            return std::make_unique<ParamWithValue<ElemType>>(val[*oidIndex], descriptor_);
+        } else {
+            return std::make_unique<ParamWithValue<ElemType>>(val[*oidIndex], descriptor_)->getParam(oid);
+        }
     }
 
     template <CatenaStruct U>

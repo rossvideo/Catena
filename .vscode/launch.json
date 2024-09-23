@@ -57,10 +57,10 @@
         "MIMode": "lldb"
       },
       {
-        "name": "Debug use_structs with gdb",
+        "name": "Debug examples with gdb",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/use_structs/use_structs", // Path to the full_service executable
+        "program": "${workspaceFolder}/sdks/cpp/build/${input:pickExample}", // Path to the full_service executable
         "args": [], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
@@ -136,6 +136,18 @@
                   "structs_with_authz"
                 ],
       "default": "status_update"
+    },
+    {
+      "id": "pickExample",
+      "description": "Select example to run",
+      "type": "pickString",
+      "options": ["lite/examples/start_here/start_here",
+                  "lite/examples/use_structs/use_structs",
+                  "lite/examples/use_templates/use_templates",
+                  "lite/examples/use_constraints/use_constraints",
+                  "lite/examples/use_struct_arrays/use_struct_arrays",
+                ],
+      "default": "lite/examples/start_here/start_here"
     }
   ]
 

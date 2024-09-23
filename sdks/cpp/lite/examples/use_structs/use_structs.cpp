@@ -47,16 +47,15 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    // IParam* ip = dm.getItem<ParamTag>("location");
-    // assert(ip != nullptr);
-    // auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip);
-    // Location& loc = locationParam.get();
-
-    // std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-    //           << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-    //           << "' " << loc.longitude.seconds << "\")" << std::endl;
-
     std::unique_ptr<IParam> ip = dm.getParam("/location");
+    assert(ip != nullptr);
+    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
+    Location& loc = locationParam.get();
+
+    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+              << "' " << loc.longitude.seconds << "\")" << std::endl;
+
     assert(ip != nullptr);
     catena::Value value;
     std::string clientScope = "operate";

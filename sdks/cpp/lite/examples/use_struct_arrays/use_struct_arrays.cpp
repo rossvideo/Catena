@@ -53,5 +53,28 @@ int main() {
     ip->toProto(value, clientScope);
     std::cout << "audio_deck: " << value.DebugString() << std::endl;
 
+    ip = dm.getParam("/audio_deck/1");
+    assert(ip != nullptr);
+    value.Clear();
+    clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "audio_deck[1]: " << value.DebugString() << std::endl;
+
+
+    // add a new audio channel to audio_deck
+    ip = dm.getParam("/audio_deck/4");
+    assert(ip != nullptr);
+    value.Clear();
+    clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "new audio channel: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/audio_deck/1/eq_list/1/response");
+    assert(ip != nullptr);
+    value.Clear();
+    clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "/audio_deck/1/eq_list/1/response: " << value.DebugString() << std::endl;
+
     return EXIT_SUCCESS;
 }

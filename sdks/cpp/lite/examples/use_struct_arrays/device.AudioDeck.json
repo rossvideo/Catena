@@ -39,7 +39,33 @@
         "eq_list": {
           "type": "STRUCT_ARRAY",
           "name": { "display_strings": { "en": "EQ List" } },
-          "template_oid": "/eq"
+          "template_oid": "/eq",
+          "value": {
+            "struct_array_values": {
+              "struct_values": [
+                {
+                  "struct_value": {
+                    "fields": {
+                      "response": { "value": {"int32_value": 0}},
+                      "frequency": { "value": {"float32_value": 0}},
+                      "gain": { "value": {"float32_value": 0}},
+                      "q_factor": { "value": {"float32_value": 0}}
+                    }
+                  }
+                },
+                {
+                  "struct_value": {
+                    "fields": {
+                      "response": { "value": {"int32_value": 0}},
+                      "frequency": { "value": {"float32_value": 0}},
+                      "gain": { "value": {"float32_value": 0}},
+                      "q_factor": { "value": {"float32_value": 0}}
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
       }
     },
