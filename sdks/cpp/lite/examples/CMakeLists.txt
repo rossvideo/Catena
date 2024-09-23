@@ -24,7 +24,7 @@ project(CATENA_LITE_EXAMPLES C CXX)
 add_subdirectory("use_structs")
 #add_subdirectory("use_templates")
 #add_subdirectory("use_constraints")
-#add_subdirectory("use_struct_arrays")
+add_subdirectory("use_struct_arrays")
 
 
 

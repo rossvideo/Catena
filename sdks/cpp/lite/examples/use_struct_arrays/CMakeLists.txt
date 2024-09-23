@@ -27,14 +27,20 @@ add_executable(${TARGET})
 
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
-generate_catena_device(
-    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.AudioDeck.json
-    TARGET ${TARGET}
-)
+# generate_catena_device(
+#     DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.AudioDeck.json
+#     TARGET ${TARGET}
+# )
 
 target_sources(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>      
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>   
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/device.AudioDeck.json.cpp>   
+)
+
+target_include_directories(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 target_link_libraries(${TARGET} catena_lite)

@@ -18,6 +18,7 @@
  * @file StructInfo.h
  * @brief Structured data serialization and deserialization to protobuf
  * @author John R. Naylor
+ * @author John Danen
  * @date 2024-07-07
  */
 
@@ -40,7 +41,7 @@ namespace catena {
 namespace lite {
 
 template <typename T>
-struct Reflect{};
+struct StructInfo{};
 
 template <typename T>
 concept CatenaStruct = requires {
@@ -65,18 +66,8 @@ struct FieldInfo {
         : name(n), memberPtr(m) {}
 };
 
-/**
- * @brief StructInfo is a struct that contains information about a struct defined 
- * in the Catena device model.
- *
- */
-
-// struct StructInfo {
-//     std::string name; /*< the struct's type name */
-//     // std::vector<FieldInfo> fields; /*< information about its fields */
-// };
-
-
+template <typename T>
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth);
 
 /**
  * Free standing method to stream an entire array of structured data to protobuf
@@ -85,30 +76,17 @@ struct FieldInfo {
  * 
  * @tparam T the type of the value
  */
-// template <CatenaStructArray T>
-// void toProto(catena::Value& dst, const void* src){
-//     using structType = T::value_type;
-//     const auto* srcArray = reinterpret_cast<const T*>(src);
-//     const auto& si = structType::getStructInfo();
-
-//     catena::StructList* dstArray = dst.mutable_struct_array_values();
-//     for (const structType& element : *srcArray){
-//         catena::StructValue* dstElement = dstArray->add_struct_values();
-//         ::google::protobuf::Map<std::string, ::catena::StructField>* dstFields = dstElement->mutable_fields();
-//         for (const auto& field : si.fields) {
-//             auto& dstField = (*dstFields)[field.name];
-//             auto& dstValue = *dstField.mutable_value();
-
-//             // required so that pointer math works correctly
-//             const char* src_ptr = reinterpret_cast<const char*>(&element);
-//             field.toProto(dstValue, src_ptr + field.offset);
-//         }
-//     }
-// }
-
-
-template <typename T>
-void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth);
+template <CatenaStructArray T>
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
+    using structType = T::value_type;
+    auto* dstArray = dst.mutable_struct_array_values();
+    
+    for (const auto& item : *src) {
+        catena::Value elemValue;
+        toProto(elemValue, &item, auth);
+        *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
+    }
+}
 
 /**
  * Free standing method to stream structured data to protobuf
@@ -119,7 +97,7 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth);
  */
 template <CatenaStruct T>
 void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
-    auto fields = Reflect<T>::fields;
+    auto fields = StructInfo<T>::fields;
     auto* dstFields = dst.mutable_struct_value()->mutable_fields();
 
     auto addField = [&](const auto& field) {

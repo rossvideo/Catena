@@ -133,9 +133,9 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid) const {
         IParam* topParam = getItem<common::ParamTag>(std::get<std::string>(top));
         if (!topParam) {return nullptr;}
         if (path.empty()) {
-        return topParam->copy();
+            return topParam->copy();
         } else {
-        return topParam->getParam(path);
+            return topParam->getParam(path);
         }
     } else {
         return nullptr;

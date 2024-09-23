@@ -44,19 +44,19 @@ catena::lite::ParamDescriptor _location_longitude_minutesDescriptor {catena::Par
 catena::lite::ParamDescriptor _location_longitude_secondsDescriptor {catena::ParamType::INT32, {}, {{"en", "Seconds"}}, {}, "", false, "seconds", &_location_longitudeDescriptor, dm};
 catena::lite::ParamWithValue<use_structs::Location> _locationParam {location, _locationDescriptor, dm};
 template <>
-struct catena::lite::Reflect<use_structs::Location> {
+struct catena::lite::StructInfo<use_structs::Location> {
   using Location = use_structs::Location;
   using Type = std::tuple<FieldInfo<Location::Latitude, Location>, FieldInfo<Location::Longitude, Location>>;
   static constexpr Type fields = {{"latitude", &Location::latitude}, {"longitude", &Location::longitude}};
 };
 template<>
-struct catena::lite::Reflect<use_structs::Location::Latitude> {
+struct catena::lite::StructInfo<use_structs::Location::Latitude> {
   using Latitude = use_structs::Location::Latitude;
   using Type = std::tuple<FieldInfo<float, Latitude>, FieldInfo<int32_t, Latitude>, FieldInfo<int32_t, Latitude>>;
   static constexpr Type fields = {{"degrees", &Latitude::degrees}, {"minutes", &Latitude::minutes}, {"seconds", &Latitude::seconds}};
 };
 template<>
-struct catena::lite::Reflect<use_structs::Location::Longitude> {
+struct catena::lite::StructInfo<use_structs::Location::Longitude> {
   using Longitude = use_structs::Location::Longitude;
   using Type = std::tuple<FieldInfo<float, Longitude>, FieldInfo<int32_t, Longitude>, FieldInfo<int32_t, Longitude>>;
   static constexpr Type fields = {{"degrees", &Longitude::degrees}, {"minutes", &Longitude::minutes}, {"seconds", &Longitude::seconds}};
@@ -70,7 +70,7 @@ struct catena::lite::Reflect<use_structs::Location::Longitude> {
 // catena::lite::ParamDescriptor _latitude_secondsDescriptor {catena::ParamType::INT32, {}, {{"en", "Seconds"}}, {}, "", false, "seconds", &_latitudeDescriptor, dm};
 // catena::lite::ParamWithValue<use_structs::Latitude> _latitudeParam {latitude, _latitudeDescriptor, dm};
 // template<>
-// struct catena::lite::Reflect<use_structs::Latitude> {
+// struct catena::lite::StructInfo<use_structs::Latitude> {
 //   using Latitude = use_structs::Latitude;
 //   using Type = std::tuple<FieldInfo<float, Latitude>, FieldInfo<int32_t, Latitude>, FieldInfo<int32_t, Latitude>>;
 //   static constexpr Type fields = {{"degrees", &Latitude::degrees}, {"minutes", &Latitude::minutes}, {"seconds", &Latitude::seconds}};

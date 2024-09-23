@@ -46,7 +46,12 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    
+    std::unique_ptr<IParam> ip = dm.getParam("/audio_deck");
+    assert(ip != nullptr);
+    catena::Value value;
+    std::string clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "audio_deck: " << value.DebugString() << std::endl;
 
     return EXIT_SUCCESS;
 }

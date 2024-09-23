@@ -18,6 +18,7 @@
  * @file ParamWithValue.h
  * @brief Interface for acessing parameter values
  * @author John R. Naylor
+ * @author John Danen
  * @date 2024-08-20
  * @copyright Copyright (c) 2024 Ross Video
  */
@@ -157,7 +158,7 @@ class ParamWithValue : public catena::common::IParam {
         std::string* oidStr = std::get_if<std::string>(&segment);
         if (!oidStr) return nullptr;
         oid.pop_front();
-        auto fields = Reflect<U>::fields;
+        auto fields = StructInfo<U>::fields;
 
         std::size_t index = findIndexByName<U>(fields, *oidStr);
         std::unique_ptr<IParam> ip = getTupleElement(fields, index, *oidStr);
