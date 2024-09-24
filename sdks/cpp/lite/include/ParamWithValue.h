@@ -183,8 +183,8 @@ class ParamWithValue : public catena::common::IParam {
         oid.pop_front();
         auto fields = StructInfo<U>::fields;
 
-        std::size_t index = findIndexByName<U>(fields, *oidStr);
-        std::unique_ptr<IParam> ip = getTupleElement(fields, index, *oidStr);
+        //std::size_t index = findIndexByName<U>(fields, *oidStr);
+        std::unique_ptr<IParam> ip = findParamByName<U>(fields, *oidStr);
         if (oid.empty()) {
             return ip;
         } else {
@@ -193,27 +193,29 @@ class ParamWithValue : public catena::common::IParam {
         }
     }
 
-    // Helper function to get tuple element by runtime index
-    template <std::size_t I, typename Tuple>
-    std::unique_ptr<IParam> getTupleElementImpl(const Tuple& tuple, std::size_t index, const std::string& oid) {
-        if constexpr (I < std::tuple_size_v<Tuple>) {
-            if (I == index) {
-                using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
-                return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_, oid);
-            } else {
-                return getTupleElementImpl<I + 1>(tuple, index, oid);
+    // Function to find a field by name
+    template <typename Struct, typename Tuple, std::size_t... Is>
+    std::unique_ptr<IParam>  findParamByNameImpl(const Tuple& fields, const std::string& name, std::index_sequence<Is...>) {
+        std::unique_ptr<IParam> params[] = {std::get<Is>(fields).name == name ? copyParam<Is>(fields) : nullptr ...};
+        for (auto& param : params) {
+            if (param) {
+                // returns first param that isn't a nullptr
+                return std::move(param);
             }
-        } else {
-            return nullptr;
         }
+        return nullptr;
     }
 
-    // Primary function to get tuple element by runtime index
-    template <typename Tuple>
-    std::unique_ptr<IParam> getTupleElement(const Tuple& tuple, std::size_t index, const std::string& oid) {
-        return getTupleElementImpl<0>(tuple, index, oid);
+    template <typename Struct, typename Tuple>
+    std::unique_ptr<IParam>  findParamByName(const Tuple& fields, const std::string& name) {
+        return findParamByNameImpl<Struct>(fields, name, std::make_index_sequence<std::tuple_size_v<Tuple>>());
     }
 
+    template <std::size_t I, typename Tuple>
+    std::unique_ptr<IParam> copyParam(const Tuple& tuple) {
+        using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
+        return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_, std::get<I>(tuple).name);
+    }
 
   public:
     /**
