@@ -88,6 +88,31 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
     }
 }
 
+/**
+ * Free standing method to stream structured data to protobuf
+ * 
+ * enabled if T has a getStructInfo method
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStruct T>
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
+    auto fields = StructInfo<T>::fields;
+    auto* dstFields = dst.mutable_struct_value()->mutable_fields();
+
+    auto addField = [&](const auto& field) {
+        AuthzInfo subParamAuth = auth.subParamInfo(field.name);
+        if (subParamAuth.readAuthz()) {
+            catena::Value* newFieldValue = (*dstFields)[field.name].mutable_value();
+            toProto(*newFieldValue, &(src->*(field.memberPtr)), subParamAuth);
+        }
+    };
+
+    std::apply([&](auto... field) {
+        (addField(field), ...);
+    }, fields);
+}
+
 }  // namespace lite
 }  // namespace catena
 

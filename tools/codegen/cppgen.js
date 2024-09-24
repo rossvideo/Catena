@@ -70,7 +70,7 @@ class ParamDescriptor {
   }
 
   write(parent) {
-    bloc(`catena::lite::ParamDescriptor<${this.typename}> ${parent}${this.name}Param {${this.args}, &${parent}Param, dm};`);
+    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, &${parent}Descriptor, dm};`);
     for (let subparam of this.subparams) {
       subparam.write(`${parent}${this.name}`);
     }
@@ -212,11 +212,8 @@ class CppGen {
     if (init == "{}" && p.isTemplated()) {
       init = this.templateParam(p.templateOid()).initializer;
     }
-    if (!isStructChild) {
-
-    }
     if (!isStructChild && p.hasValue()) {
-      // only top-level params get value objects
+      // only top-level params get value initializers
       bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
     }
@@ -235,25 +232,32 @@ class CppGen {
 
     parentStructInfo.typename = type;
     parentStructInfo.typeNamespace = typeNamespace;
+    parentStructInfo.isArrayType = p.isArrayType();
     if (p.hasSubparams()) {
       hloc(`struct ${type} {`, hindent++);
 
       parentStructInfo.params = {};
       this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
 
-      hloc(`static const catena::lite::StructInfo& getStructInfo();`, hindent);
+      hloc(`static void isCatenaStruct() {};`, hindent);
       hloc(`};`, --hindent);
       if (isStructChild) {
         hloc(`${type} ${name};`, hindent);
       }
     } else if (isStructChild) {
-      hloc(`${type} ${name};`, hindent);
+      if (p.hasValue() ) {
+        // add default value to struct member
+        hloc(`${type} ${name} = ${p.initializer(desc[oid])};`, hindent);
+      } else {
+        hloc(`${type} ${name};`, hindent);
+      }
     }
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
     if (!isStructChild && p.hasValue()) {
-      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, dm, ${name}};`);
+      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm};`);
       descriptor.writeDescriptors();
+      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm};`);
     }
 
     if (p.usesSharedConstraint()) {
@@ -265,26 +269,31 @@ class CppGen {
   }
 
   defineGetStructInfo(structInfo) {
-    bloc(`const StructInfo& ${structInfo.typeNamespace}::${structInfo.typename}::getStructInfo() {`, bindent++);
-    bloc(`static StructInfo si {`, bindent++);
-    bloc(`"${structInfo.typename}",`, bindent);
-    bloc(`{`, bindent++);
+    bloc(`template<>`);
+    bloc(`struct catena::lite::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
+    bloc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
     
     const keys = Object.keys(structInfo.params);
     const lastIndex = keys.length - 1;
 
-    keys.forEach((p, index) => {
-      if (index === lastIndex) {
-        bloc(`{ "${p}", offsetof(${structInfo.typename}, ${p})}`, bindent);
-      } else {
-        bloc(`{ "${p}", offsetof(${structInfo.typename}, ${p})},`, bindent);
-      }
-    });
+    let fieldInfoType = "";
+    let fieldInfoInit = "";
 
-    bloc(`}`, --bindent);
+    keys.forEach((p, index) => {
+      if (structInfo.params[p].params || structInfo.params[p].isArrayType) {
+        fieldInfoType += `FieldInfo<${structInfo.typename}::${structInfo.params[p].typename}, ${structInfo.typename}>`;
+      } else {
+        fieldInfoType += `FieldInfo<${structInfo.params[p].typename}, ${structInfo.typename}>`;
+      }
+      fieldInfoInit += `{"${p}", &${structInfo.typename}::${p}}`;
+      if (index !== lastIndex) {
+        fieldInfoType += `, `;
+        fieldInfoInit += `, `;
+      } 
+    });
+    bloc(`using Type = std::tuple<${fieldInfoType}>;`, bindent);
+    bloc(`static constexpr Type fields = {${fieldInfoInit}};`, bindent);
     bloc(`};`, --bindent);
-    bloc(`return si;`, bindent);
-    bloc(`}`, --bindent);
 
     // defince getStructInfo for subparams structs
     for (let p in structInfo.params) {
@@ -401,7 +410,6 @@ class CppGen {
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
     bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
-    bloc(`using catena::lite::StructInfo;`);
     bloc(`using catena::lite::FieldInfo;`);
     bloc(`using catena::lite::ParamDescriptor;`);
     bloc(`using catena::lite::ParamWithValue;`);
