@@ -144,51 +144,50 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief get a child parameter by name
      */
-    std::unique_ptr<IParam> getParam(Path oid) override {
+    std::unique_ptr<IParam> getParam(Path& oid) override {
         return getParam(oid, value_.get());
     }
 
   private:
     template <typename U>
-    std::unique_ptr<IParam> getParam(Path oid, U& value) {
+    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         return nullptr;
     }
 
     template<CatenaStructArray U>
-    std::unique_ptr<IParam> getParam(Path oid, U& value) {
+    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
         using ElemType = U::value_type;
-        std::vector<ElemType>& val = value;
-        catena::common::Path::Segment segment = oid.front();
-        std::size_t* oidIndex = std::get_if<std::size_t>(&segment);
+        if (!oid.front_is_index()) {
+            return nullptr;
+        }
+        size_t oidIndex = oid.front_as_index();
+        oid.pop();
 
-        // If the segment is not an index or the index is out of bounds, return nullptr
-        if (!oidIndex || *oidIndex > val.size()) return nullptr;
-        oid.pop_front();
+        // If index is out of bounds, return nullptr
+        if (oidIndex > value.size()) return nullptr;
 
-        if (*oidIndex == val.size()) {
+        if (oidIndex == value.size()) {
             // If the index is the size of the array, return a new element
-            val.push_back(ElemType());
+            value.push_back(ElemType());
         }
 
         if (oid.empty()) {
-            return std::make_unique<ParamWithValue<ElemType>>(val[*oidIndex], descriptor_);
+            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
-            return std::make_unique<ParamWithValue<ElemType>>(val[*oidIndex], descriptor_)->getParam(oid);
+            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_)->getParam(oid);
         }
     }
 
     template <CatenaStruct U>
-    std::unique_ptr<IParam> getParam(Path oid, U& value) {
-        catena::common::Path::Segment segment = oid.front();
-        std::string* oidStr = std::get_if<std::string>(&segment);
-        if (!oidStr) return nullptr;
-        oid.pop_front();
+    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
+        if (!oid.front_is_string()) return nullptr;
         auto fields = StructInfo<U>::fields;
+        std::string oidStr = oid.front_as_string();
+        oid.pop();
 
-        //std::size_t index = findIndexByName<U>(fields, *oidStr);
-        std::unique_ptr<IParam> ip = findParamByName<U>(fields, *oidStr);
-        if (oid.empty()) {
+        std::unique_ptr<IParam> ip = findParamByName<U>(fields, oidStr);
+        if (oid.size() == 0) {
             return ip;
         } else {
             if (!ip) return nullptr;

@@ -40,8 +40,7 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
         valueSetByClient.emit(jptr, param.get(), 0);
     } else {
         std::stringstream ss;
-        ss << "Invalid json pointer: " << jptr;
-        ss << ", expected first segment to be a string";
+        ss << "parameter not found: " << jptr;
         exception_with_status why(ss.str(), catena::StatusCode::INVALID_ARGUMENT);
         ans = std::move(why);
     }
@@ -72,10 +71,9 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid) const {
     if (path.empty()) {
         return nullptr;
     }
-    catena::common::Path::Segment top = path.front();
-    path.pop_front();
-    if (std::holds_alternative<std::string>(top)) {
-        IParam* topParam = getItem<common::ParamTag>(std::get<std::string>(top));
+    if (path.front_is_string()) {
+        IParam* topParam = getItem<common::ParamTag>(path.front_as_string());
+        path.pop();
         if (!topParam) {return nullptr;}
         if (path.empty()) {
             return topParam->copy();

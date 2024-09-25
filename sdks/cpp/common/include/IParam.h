@@ -117,7 +117,7 @@ class IParam {
     /**
      * @brief get a child parameter by name
      */
-    virtual std::unique_ptr<IParam> getParam(Path oid) = 0;
+    virtual std::unique_ptr<IParam> getParam(Path& oid) = 0;
 
     /**
      * @brief add a child parameter

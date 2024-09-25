@@ -20,71 +20,118 @@
 #include <regex>
 
 using catena::common::Path;
+using Index = Path::Index;
 
-Path::Path(const std::string &path) : segments_{} {
-    // regex will split a well-formed json pointer into a sequence of strings
-    // that all start with the solidus '/' character and contain these matches:
+Path::Path(const std::string &jptr) : segments_{} {
+    // regex will split a well-formed json pointer into a sequence of Path Segments
+    // typed according to the regex that matches the string for th segment
     // /- -- can be used as an array index
     // /any_string_that_uses_only_word_chars -- i.e. letters & underscores.
     // /string_with_~0_~1_escaped_chars -- string_with_~_/_escaped_chars
     // /291834719 -- just numbers
     //
 
-    if (path.empty()) {
-        std::stringstream why;
-        why << __PRETTY_FUNCTION__ << "\npath is empty";
-        throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
-    }
-
     std::regex path_regex("((\\/-{1})|(\\/([\\w]|~[01])*))*");
-    if (!std::regex_match(path, path_regex))  {
+    if (!std::regex_match(jptr, path_regex))  {
         std::stringstream why;
-        why << __PRETTY_FUNCTION__ << "\n'" << path << "' is not a valid path";
+        why << __PRETTY_FUNCTION__ << "\n'" << jptr << "' is not a valid path";
         throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
     }
 
     std::regex segment_regex("(\\/-{1})|(\\/([\\w]|~[01])*)");
-    auto r_begin = std::sregex_iterator(path.begin(), path.end(), segment_regex);
+    auto r_begin = std::sregex_iterator(jptr.begin(), jptr.end(), segment_regex);
     auto r_end = std::sregex_iterator();
     for (std::sregex_iterator it = r_begin; it != r_end; ++it) {
         std::smatch match = *it;
         if (it == r_begin && match.position(0) != 0) {
             std::stringstream why;
-            why << __PRETTY_FUNCTION__ << "\n'" << path << " is invalid json pointer";
+            why << __PRETTY_FUNCTION__ << "\n'" << jptr << " is invalid json pointer";
             throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
 
-        std::string txt = unescape(match.str());
-        // strip off the leading solidus '/'
-        segments_.push_back(txt.substr(1, std::string::npos));
+        // unescape and strip off leading solidus '/'
+        std::string txt = unescape(match.str()).substr(1, std::string::npos);
+
+        if (txt.compare("-") == 0) {
+            // segment is an index with the one-past-the-end value
+            Segment seg;
+            seg.emplace<Index>(kEnd);
+            segments_.push_back(seg);
+        } else if (std::all_of(txt.cbegin(), txt.cend(), ::isdigit)) {
+            // segment is an index
+            Segment seg;
+            seg.emplace<Index>(std::stoul(txt));
+            segments_.push_back(seg);
+        } else {
+            // segment is a string
+            Segment seg;
+            seg.emplace<std::string>(txt);
+            segments_.push_back(seg);
+        }
     }
+    front_ = cbegin();
+
+    //     if (segments_.size() >= 1) {
+    //     std::string seg = segments_[0];
+    //     if (seg.compare("-") == 0) {
+    //         // the one-past-the-end array index
+    //         ans.emplace<Index>(kEnd);
+    //     } else if (std::all_of(seg.begin(), seg.end(), ::isdigit)) {
+    //         // segment is all digits, so convert to Index
+    //         ans.emplace<Index>(std::stoul(seg));
+    //     } else {
+    //         // segment is a string
+    //         ans.emplace<std::string>(seg);
+    //     }
+    // } else {
+    //     // return empty string
+    //     ans.emplace<std::string>("");
+    // }
 }
 
 Path::Path(const char *literal) : Path(std::string(literal)) {}
 
-void Path::pop_front() noexcept {
-    segments_.pop_front();
-}
-
-Path::Segment Path::front() noexcept {
-    Segment ans;
-    if (segments_.size() >= 1) {
-        std::string seg = segments_[0];
-        if (seg.compare("-") == 0) {
-            // the one-past-the-end array index
-            ans.emplace<Index>(kEnd);
-        } else if (std::all_of(seg.begin(), seg.end(), ::isdigit)) {
-            // segment is all digits, so convert to Index
-            ans.emplace<Index>(std::stoul(seg));
-        } else {
-            // segment is a string
-            ans.emplace<std::string>(seg);
-        }
-    } else {
-        // return empty string
-        ans.emplace<std::string>("");
+bool Path::front_is_index() const {
+    bool ans = false;
+    if (front_ != cend() && std::holds_alternative<Index>(*front_)) {
+        ans = true;
     }
     return ans;
+}
+
+bool Path::front_is_string() const {
+    bool ans = false;
+    if (front_ != cend() && std::holds_alternative<std::string>(*front_)) {
+        ans = true;
+    }
+    return ans;
+}
+
+Index Path::front_as_index() const {
+    Index ans = kError;
+    if (front_is_index()) {
+        ans = std::get<Index>(*front_);
+    }
+    return ans;
+}
+
+const std::string& Path::front_as_string() const {
+    static const std::string Error{""};
+    if (front_is_string()) {
+        return std::get<std::string>(*front_);
+    } else {
+        return Error;
+    }
+}
+
+void Path::pop() noexcept {
+    if (front_ != cend()) {
+        ++front_;
+    }
+}
+
+Index Path::walked() const noexcept {
+    return front_ - cbegin();
 }
 
 void Path::escape(std::string &str) {
@@ -99,16 +146,20 @@ std::string Path::unescape(const std::string &str) {
     return ans;
 }
 
-void Path::push_back(const std::string &oid) {
-    std::string back{oid};
-    escape(back);
-    segments_.push_back(back);
-}
-
 std::string Path::fqoid() {
     std::stringstream ans{""};
-    for (auto it = segments_.begin(); it != segments_.end(); ++it) {
-        ans << '/' << *it;
+    for (auto it = segments_.cbegin(); it != segments_.cend(); ++it) {
+        if (std::holds_alternative<Index>(*it)) {
+            Index idx = std::get<Index>(*it);
+            if (idx == kEnd) {
+                ans << "/-";
+            } else {
+                ans << "/" << idx;
+            }
+        }
+        if (std::holds_alternative<std::string>(*it)) {
+            ans << "/" << std::get<std::string>(*it);
+        }
     }
     return ans.str();
 }
