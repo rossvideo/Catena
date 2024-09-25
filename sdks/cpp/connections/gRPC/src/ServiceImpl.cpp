@@ -378,7 +378,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                             this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
 
-                            p->toProto(*this->res_.mutable_value()->mutable_value());
+                            std::string clientScope = "operate"; // temporary until we implement authz
+                            p->toProto(*this->res_.mutable_value()->mutable_value(), clientScope);
                         }
                         this->hasUpdate_ = true;
                         this->cv_.notify_one();
@@ -395,7 +396,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         if (!this->context_.IsCancelled()){
                             this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
-                            p->toProto(*this->res_.mutable_value()->mutable_value());
+                            std::string clientScope = "operate"; // temporary until we implement authz
+                            p->toProto(*this->res_.mutable_value()->mutable_value(), clientScope);
                         }
                         this->hasUpdate_ = true;
                         this->cv_.notify_one();
