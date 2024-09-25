@@ -113,6 +113,44 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
     }, fields);
 }
 
+template <typename T>
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth);
+
+template <CatenaStructArray T>
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
+    using structType = T::value_type;
+    auto& srcArray = src.struct_array_values().struct_values();
+    dst->clear();
+    
+    for (int i = 0; i < srcArray.size(); ++i) {
+        catena::Value item;
+        *item.mutable_struct_value() = srcArray.Get(i);
+        structType& elemValue = dst->emplace_back();
+        fromProto(item, &elemValue, auth);
+    }
+}
+
+template <CatenaStruct T>
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
+    auto fields = StructInfo<T>::fields;
+    auto& srcFields = src.struct_value().fields();
+
+    /**
+     * @todo implement error handling
+     */
+    auto writeField = [&](const auto& field) {
+        AuthzInfo subParamAuth = auth.subParamInfo(field.name);
+        if (subParamAuth.writeAuthz()) {
+            const catena::Value& fieldValue = srcFields.at(field.name).value();
+            fromProto(fieldValue, &(dst->*(field.memberPtr)), subParamAuth);
+        }
+    };
+
+    std::apply([&](auto... field) {
+        (writeField(field), ...);
+    }, fields);
+}
+
 }  // namespace lite
 }  // namespace catena
 

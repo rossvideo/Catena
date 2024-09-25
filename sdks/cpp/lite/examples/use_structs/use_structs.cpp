@@ -62,6 +62,14 @@ int main() {
     ip->toProto(value, clientScope);
     std::cout << "Location: " << value.DebugString() << std::endl;
 
+    // this line is for demonstrating the fromProto method
+    // this should never be done in a real device
+    value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_value()->mutable_struct_value()->mutable_fields()->at("degrees").mutable_value()->set_float32_value(100);
+    ip->fromProto(value, clientScope);
+
+    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+              << "' " << loc.longitude.seconds << "\")" << std::endl;
 
     ip = dm.getParam("/location/latitude");
     assert(ip != nullptr);

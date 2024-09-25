@@ -107,9 +107,12 @@ class ParamWithValue : public catena::common::IParam {
         }
     }
 
-    // void fromProto(catena::Value& value) override {
-    //     catena::lite::fromProto<T>(&value_.get(), value);
-    // }
+    void fromProto(const catena::Value& value, std::string& clientScope) override {
+        AuthzInfo auth(descriptor_, clientScope);
+        if (auth.writeAuthz()) {
+            catena::lite::fromProto<T>(value, &value_.get(), auth);
+        }
+    }
 
     typename IParam::ParamType type() const override {
         return descriptor_.type();

@@ -80,7 +80,7 @@ class IParam {
      * @param src the protobuf value to deserialize from
      * @note this method may constrain the source value and modify it
      */
-    // virtual void fromProto(catena::Value& src) = 0;
+    virtual void fromProto(const catena::Value& src, std::string& clientScope) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
