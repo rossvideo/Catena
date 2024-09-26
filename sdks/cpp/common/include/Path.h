@@ -27,44 +27,46 @@
 
 #include <iostream>
 #include <string>
-#include <deque>
+#include <vector>
 #include <variant>
 #include <memory>
 
 namespace catena {
 namespace common {
 /**
- * @brief Handles Path objects used to uniquely identify and access OIDs
+ * @brief Converts json pointers to items within the data model to
+ * a path of "segments" that can be iterated over.
+ * 
+ * Not all json pointers are supported, specifically the empty string has
+ * no meaning within a Catena use case.
  *
  */
 class Path {
   public:
     /**
-     * @brief what we split the path into
-     *
+     * @brief Type for indices, unsigned int.
      */
-    using Segments = std::deque<std::string>;
+    using Index = size_t;
 
     /**
-     * @brief type of index path segments
-     *
-     */
-    using Index = Segments::size_type;
-
-    /**
-     * @brief used to signal one-past-the-end array size
-     *
-     */
-    static constexpr Index kEnd = Index(-1);
-
-    /**
-     * @brief Segments can be interpreted either as oids (strings),
-     * or array indices (std::size_t). The "one past the end" index
+     * @brief Segment can be interpreted either as an oid (string),
+     * or array index (std::size_t). The "one past the end" index
      * is flagged by the value kEnd.
      *
      */
     using Segment = typename std::variant<Index, std::string>;
 
+    /**
+     * @brief used to signal one-past-the-end array size
+     */
+    static constexpr Index kEnd = Index(-1);
+
+    /**
+     * @brief used to signal an error
+     */
+    static constexpr Index kError = kEnd - 1;
+
+  public:
 
     Path() = default;
     Path(const Path& other) = default;
@@ -80,7 +82,7 @@ class Path {
      * i.e. '/' replaced by "~1" and '~' by "~0"
      * @throw catena::exception_with_status INVALID_ARGUMENT if path is not a valid json-pointer
      */
-    explicit Path(const std::string& path);
+    explicit Path(const std::string& jptr);
 
     /**
      * @brief Construct a new Path object
@@ -91,51 +93,44 @@ class Path {
     explicit Path(const char* literal);
 
     /**
-     * @brief iterator to the start of our segmented Path.
-     *
-     * @return std::vector::iterator
-     */
-    inline Segments::iterator begin() { return segments_.begin(); }
-
-    /**
-     * @brief iterator to the end of our segmented Path.
-     *
-     * @return std::vector::iterator
-     */
-    inline Segments::iterator end() { return segments_.end(); }
-
-    /**
      * @brief return the number of segments in the Path
      *
      * @return number of segments
      */
-    inline Index size() const { return segments_.size(); }
+    inline Index size() const { return cend() - front_; }
+
+    inline bool empty() const { return front_ == cend(); }
 
     /**
-     * @brief take the front off the path and return it.
-     * @return unescaped component at front of the path,
-     * design intent the returned value can be used as an oid lookup,
-     * or an array index.
-     * Will be empty string if nothing to pop, or the original path
-     * was "/", or "".
+     * @return true if the front of the path is a string, false if it's an Index or empty.
      */
-    Segment pop_front() noexcept;
+    bool front_is_string() const;
 
     /**
-     * @brief return the front of the path.
-     * @return unescaped component at front of the path,
-     * design intent the returned value can be used as an oid lookup,
-     * or an array index.
-     * Will be empty string if path is "/", or "".
+     * @return true if the front of the path is an Index, false if it's a string or empty.
      */
-    Segment front() noexcept;
+    bool front_is_index() const;
 
     /**
-     * @brief escapes the oid then adds it to the end of the path.
-     *
-     * @param oid
+     * @return front of Path as a string.
+     * @throws catena::exception_with_status if path is empty or front is not a string.
+     * @code
+     * // recommended usage
+     * std::string oid = p.front_is_string() ? p.front_as_string() : "";
+     * if (oid == "") { // error handling here }
+     * @endcode
      */
-    void push_back(const std::string& oid);
+    const std::string& front_as_string() const;
+
+    /**
+     * @return front of path as an Index.
+     * @throws catena::exception_with_status if path is empty or front is not an Index.
+     * @code
+     * // recommended usage
+     * Path::Index idx = p.front_is_index() ? p.front_as_index() : Path::kError;
+     * if (idx == Path::kError) { // error handling here }
+     */
+    Index front_as_index() const;
 
     /**
      * @brief return a fully qualified, albeit escaped oid
@@ -144,8 +139,32 @@ class Path {
      */
     std::string fqoid();
 
+    /**
+     * @brief pop the front of the path.
+     * Decreases the length of the path by 1 unless the path is already empty in which case it does nothing.
+     */
+    void pop() noexcept;
+
+    /**
+     * @brief show how much of the path has been consumed
+     * @return number of segments that have been popped
+     */
+    Index walked() const noexcept;
+
+    /**
+     * @brief restore the Path to start at its original front
+     */
+    inline void rewind() noexcept {front_ = cbegin();}
+
+    /**
+     * @brief restore the Path to it's state before the last pop
+     */
+    inline void unpop() noexcept {if (front_ != cbegin()) {--front_;}}
+
   private:
+    using Segments = std::vector<Segment>;
     Segments segments_; /**< the path split into its components */
+    Segments::const_iterator front_; /**< current front of path */
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0
@@ -161,9 +180,23 @@ class Path {
      * @return unescaped version of str
      */
     std::string unescape(const std::string& str);
+
+    /**
+     * @brief iterator to the start of our segmented Path.
+     *
+     * @return std::vector::iterator
+     */
+    inline Segments::const_iterator cbegin() const { return segments_.cbegin(); }
+
+    /**
+     * @brief iterator to the end of our segmented Path.
+     *
+     * @return std::vector::iterator
+     */
+    inline Segments::const_iterator cend() const { return segments_.cend(); }
 };
 
-}  // namespace full
+}  // namespace common
 }  // namespace catena
 
 catena::common::Path operator"" _path(const char* lit, std::size_t sz);

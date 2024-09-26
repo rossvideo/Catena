@@ -19,7 +19,7 @@
           "type": "STRUCT",
           "params": {
             "degrees": {
-              "type": "INT32",
+              "type": "FLOAT32",
               "name": { "display_strings": { "en": "Degrees" }  }
             },
             "minutes": {
@@ -37,7 +37,7 @@
           "type": "STRUCT",
           "params": {
             "degrees": {
-              "type": "INT32",
+              "type": "FLOAT32",
               "name": { "display_strings": { "en": "Degrees" } }
             },
             "minutes": {

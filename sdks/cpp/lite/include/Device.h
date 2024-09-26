@@ -29,6 +29,7 @@
 #include <IParam.h>
 #include <ILanguagePack.h>
 #include <Tags.h>  
+#include <Status.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
@@ -114,6 +115,8 @@ class Device {
      */
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
+    inline std::string getDefaultScope() const { return default_scope_.toString(); }
+
     /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
@@ -125,7 +128,7 @@ class Device {
      * that the device is not modified while this method is running. This class provides
      * a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, bool shallow = true) const;
+    void toProto(::catena::Device& dst, std::vector<std::string>& clientScopes, bool shallow = true) const;
 
     /**
      * @brief Create a protobuf representation of the language packs.
@@ -179,6 +182,29 @@ class Device {
         return nullptr;
     }
 
+    std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
+
+    /**
+     * @brief deserialize a protobuf value object into the parameter value
+     * pointed to by jptr.
+     * @param jptr, json pointer to the part of the device model to update.
+     * @param src, the value to update the parameter with.
+     * @todo consider using move semantics on the value parameter to emphasize new ownership.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for SetValue RPCs / API calls to be serviced by this method.
+     * @note on success, this method will emit the valueSetByClient signal.
+     */
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src);
+
+    /**
+     * @brief serialize the parameter value to protobuf
+     * @param jptr, json pointer to the part of the device model to serialize.
+     * @param dst, the protobuf value to serialize to.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for GetValue RPCs / API calls to be serviced by this method.
+     */
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value);
+
   public:
     /**
      * @brief signal emitted when a value is set by the client.
@@ -192,6 +218,7 @@ class Device {
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
+    static const std::vector<std::string> kAuthzDisabled;
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
@@ -204,7 +231,7 @@ class Device {
     Scopes default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-
+    
     mutable std::mutex mutex_;
 };
 }  // namespace lite

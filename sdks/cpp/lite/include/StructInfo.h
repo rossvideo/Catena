@@ -18,11 +18,16 @@
  * @file StructInfo.h
  * @brief Structured data serialization and deserialization to protobuf
  * @author John R. Naylor
+ * @author John Danen
  * @date 2024-07-07
  */
 
 // common
 #include <meta/Typelist.h>
+#include <meta/IsVector.h>
+
+// lite
+#include <AuthzInfo.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -30,60 +35,58 @@
 #include <string>
 #include <cstddef>
 #include <vector>
+#include <utility>
 
 namespace catena {
 namespace lite {
+
+template <typename T>
+struct StructInfo{};
+
+template <typename T>
+concept CatenaStruct = requires {
+    T::isCatenaStruct();
+};
+
+template <typename T>
+concept CatenaStructArray = meta::IsVector<T> && CatenaStruct<typename T::value_type>;
 
 /**
  * @brief FieldInfo is a struct that contains information about a field in a struct
  *
  */
+template <typename FieldType, CatenaStruct StructType>
 struct FieldInfo {
-    std::string name; /*< the name of the field */
-    std::size_t offset; /*< the field's offset from the base of its enclosing struct */
+    using Field = FieldType;
+    const char* name; /*< the name of the field */
+    FieldType StructType::* memberPtr; /*< the field's offset from the base of its enclosing struct */
 
-    /**
-     * @brief a function that converts a field to a protobuf value
-     *
-     * @param dst the destination protobuf value
-     * @param src the source value
-     * 
-     * The code generator points this to the appropriate toProto method
-     * for the field's type
-     * 
-     */
-    std::function<void(catena::Value& dst, const void* src)> toProto;
 
-    /**
-     * @brief a function that converts a protobuf value to a field
-     *
-     * @param dst the destination value
-     * @param src the source protobuf value
-     * 
-     * The code generator points this to the appropriate fromProto method
-     * for the field's type
-     * 
-     */
-    std::function<void(void* dst, const catena::Value& src)> fromProto;
+    constexpr FieldInfo(const char* n, FieldType StructType::* m)
+        : name(n), memberPtr(m) {}
 };
-
-/**
- * @brief StructInfo is a struct that contains information about a struct defined 
- * in the Catena device model.
- *
- */
-struct StructInfo {
-    std::string name; /*< the struct's type name */
-    std::vector<FieldInfo> fields; /*< information about its fields */
-};
-}  // namespace lite
 
 template <typename T>
-concept CatenaStruct = requires {
-    T::getStructInfo();
-};
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth);
 
-namespace lite {
+/**
+ * Free standing method to stream an entire array of structured data to protobuf
+ * 
+ * enabled if T is a vector of struct with getStructInfo method
+ * 
+ * @tparam T the type of the value
+ */
+template <CatenaStructArray T>
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
+    using structType = T::value_type;
+    auto* dstArray = dst.mutable_struct_array_values();
+    
+    for (const auto& item : *src) {
+        catena::Value elemValue;
+        toProto(elemValue, &item, auth);
+        *dstArray->add_struct_values() = *elemValue.mutable_struct_value();
+    }
+}
 
 /**
  * Free standing method to stream structured data to protobuf
@@ -93,53 +96,60 @@ namespace lite {
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-void toProto(catena::Value& dst, const void* src) {
-    const auto& si = T::getStructInfo();
+void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
+    auto fields = StructInfo<T>::fields;
+    auto* dstFields = dst.mutable_struct_value()->mutable_fields();
 
-    // required so that pointer math works correctly
-    const char* src_ptr = reinterpret_cast<const char*>(src);
+    auto addField = [&](const auto& field) {
+        AuthzInfo subParamAuth = auth.subParamInfo(field.name);
+        if (subParamAuth.readAuthz()) {
+            catena::Value* newFieldValue = (*dstFields)[field.name].mutable_value();
+            toProto(*newFieldValue, &(src->*(field.memberPtr)), subParamAuth);
+        }
+    };
 
-    // serialize each field
-    for (const auto& field : si.fields) {
-        ::catena::StructValue* structValue = dst.mutable_struct_value();
-        ::google::protobuf::Map<std::string, ::catena::StructField>* dstFields = structValue->mutable_fields();
-        auto& dstField = (*dstFields)[field.name];
-        auto& dstValue = *dstField.mutable_value();
-        field.toProto(dstValue, src_ptr + field.offset);
+    std::apply([&](auto... field) {
+        (addField(field), ...);
+    }, fields);
+}
+
+template <typename T>
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth);
+
+template <CatenaStructArray T>
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
+    using structType = T::value_type;
+    auto& srcArray = src.struct_array_values().struct_values();
+    dst->clear();
+    
+    for (int i = 0; i < srcArray.size(); ++i) {
+        catena::Value item;
+        *item.mutable_struct_value() = srcArray.Get(i);
+        structType& elemValue = dst->emplace_back();
+        fromProto(item, &elemValue, auth);
     }
 }
 
-
-template <typename T>
-void toProto(catena::Value& dst, const void* src);
-
-
-/**
- * Free standing method to stream protobuf to structured data
- * 
- * enabled if T has a getStructInfo method
- * 
- * @tparam T the type of the value
- */
 template <CatenaStruct T>
-void fromProto(void* dst, const catena::Value& src) {
-    const auto& si = T::getStructInfo();
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
+    auto fields = StructInfo<T>::fields;
+    auto& srcFields = src.struct_value().fields();
 
-    // required so that pointer math works correctly
-    char* dst_ptr = reinterpret_cast<char*>(dst);
+    /**
+     * @todo implement error handling
+     */
+    auto writeField = [&](const auto& field) {
+        AuthzInfo subParamAuth = auth.subParamInfo(field.name);
+        if (subParamAuth.writeAuthz()) {
+            const catena::Value& fieldValue = srcFields.at(field.name).value();
+            fromProto(fieldValue, &(dst->*(field.memberPtr)), subParamAuth);
+        }
+    };
 
-    // deserialize each field
-    for (const auto& field : si.fields) {
-        const ::catena::StructValue& structValue = src.struct_value();
-        const ::google::protobuf::Map<std::string, ::catena::StructField>& srcFields = structValue.fields();
-        const auto& srcField = srcFields.at(field.name);
-        const auto& srcValue = srcField.value();
-        field.fromProto(dst_ptr + field.offset, srcValue);
-    }
+    std::apply([&](auto... field) {
+        (writeField(field), ...);
+    }, fields);
 }
-
-template <typename T>
-void fromProto(void* dst, const catena::Value& src);
 
 }  // namespace lite
 }  // namespace catena

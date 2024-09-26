@@ -25,6 +25,7 @@
 //common 
 #include <Enums.h>
 #include <IConstraint.h>
+#include <Path.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -47,6 +48,8 @@ class IParam {
      */
     using OidAliases = std::vector<std::string>;
 
+    using Path = catena::common::Path;
+
   public:
     IParam() = default;
     virtual ~IParam() = default;
@@ -63,24 +66,27 @@ class IParam {
     IParam(const IParam&) = delete;
     IParam& operator=(const IParam&) = delete;
 
+    // Virtual clone method
+    virtual std::unique_ptr<IParam> copy() const = 0;
+
     /**
      * @brief serialize the parameter value to protobuf
      * @param dst the protobuf value to serialize to
      */
-    virtual void toProto(catena::Value& dst) const = 0;
+    virtual void toProto(catena::Value& dst, std::string& clientScope) const = 0;
     
     /**
      * @brief deserialize the parameter value from protobuf
      * @param src the protobuf value to deserialize from
      * @note this method may constrain the source value and modify it
      */
-    virtual void fromProto(catena::Value& src) = 0;
+    virtual void fromProto(const catena::Value& src, std::string& clientScope) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param param the protobuf value to serialize to
      */
-    virtual void toProto(catena::Param& param) const = 0;
+    virtual void toProto(catena::Param& param, std::string& clientScope) const = 0;
 
     /**
      * @brief return the type of the param
@@ -111,22 +117,25 @@ class IParam {
     /**
      * @brief get a child parameter by name
      */
-    virtual IParam* getParam(const std::string& name) = 0;
+    virtual std::unique_ptr<IParam> getParam(Path& oid) = 0;
 
     /**
      * @brief add a child parameter
      */
-    virtual void addParam(const std::string& oid, IParam* param) = 0;
+    // virtual void addParam(const std::string& oid, IParam* param) = 0;
 
     /**
      * @brief get a constraint by oid
      */
-    virtual IConstraint* getConstraint(const std::string& oid) = 0;
+    virtual const IConstraint* getConstraint() const = 0;
 
     /**
      * @brief add a constraint
      */
-    virtual void addConstraint(const std::string& oid, IConstraint* constraint) = 0;
+    virtual void setConstraint(IConstraint* constraint) = 0;
+
+    virtual const std::string getScope() const = 0;
+
 };
 }  // namespace common
 

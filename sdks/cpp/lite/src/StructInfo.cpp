@@ -18,93 +18,86 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
-
 template<>
-void catena::lite::toProto<float>(catena::Value& dst, const void* src) {
-    dst.set_float32_value(*reinterpret_cast<const float*>(src));
+void catena::lite::toProto<int32_t>(Value& dst, const int32_t* src, const AuthzInfo& auth) {
+    dst.set_int32_value(*src);
 }
 
 template<>
-void catena::lite::fromProto<float>(void* dst, const catena::Value& src) {
-    *reinterpret_cast<float*>(dst) = src.float32_value();
+void catena::lite::fromProto<int32_t>(const catena::Value& src, int32_t* dst, const AuthzInfo& auth) {
+    *dst = src.int32_value();
 }
 
 template<>
-void catena::lite::toProto<int32_t>(Value& dst, const void* src) {
-    dst.set_int32_value(*reinterpret_cast<const int32_t*>(src));
+void catena::lite::toProto<float>(catena::Value& dst, const float* src, const AuthzInfo& auth) {
+    dst.set_float32_value(*src);
 }
 
 template<>
-void catena::lite::fromProto<int32_t>(void* dst, const catena::Value& src) {
-    *reinterpret_cast<int32_t*>(dst) = src.int32_value();
+void catena::lite::fromProto<float>(const catena::Value& src, float* dst, const AuthzInfo& auth) {
+    *dst = src.float32_value();
 }
 
 template<>
-void catena::lite::toProto<std::string>(Value& dst, const void* src) {
-    *dst.mutable_string_value() = *reinterpret_cast<const std::string*>(src);
+void catena::lite::toProto<std::string>(Value& dst, const std::string* src, const AuthzInfo& auth) {
+    dst.set_string_value(*src);
 }
 
 template<>
-void catena::lite::fromProto<std::string>(void* dst, const catena::Value& src) {
-    *reinterpret_cast<std::string*>(dst) = src.string_value();
+void catena::lite::fromProto<std::string>(const catena::Value& src, std::string* dst, const AuthzInfo& auth) {
+    *dst = src.string_value();
 }
 
 template<>
-void catena::lite::toProto<std::vector<std::string>>(Value& dst, const void* src) {
-    dst.clear_string_array_values();
-    auto& string_array = *dst.mutable_string_array_values();
-    const auto& vec = *reinterpret_cast<const std::vector<std::string>*>(src);
-    for (const auto& s : vec) {
-        string_array.add_strings(s);
-    }
-}
-
-template<>
-void catena::lite::fromProto<std::vector<std::string>>(void* dst, const Value& src) {
-    auto* vec = reinterpret_cast<std::vector<std::string>*>(dst);
-    vec->clear();
-    const auto& string_array = src.string_array_values();
-    for (int i = 0; i < string_array.strings_size(); ++i) {
-        vec->push_back(string_array.strings(i));
-    }
-}
-
-template<>
-void catena::lite::toProto<std::vector<int32_t>>(Value& dst, const void* src) {
+void catena::lite::toProto<std::vector<int32_t>>(Value& dst, const std::vector<int32_t>* src, const AuthzInfo& auth) {
     dst.clear_int32_array_values();
-    auto& int_array = *dst.mutable_int32_array_values();
-    const auto& vec = *reinterpret_cast<const std::vector<int32_t>*>(src);
-    for (const auto& i : vec) {
+    catena::Int32List& int_array = *dst.mutable_int32_array_values();
+    for (const int32_t& i : *src) {
         int_array.add_ints(i);
     }
 }
 
 template<>
-void catena::lite::fromProto<std::vector<int32_t>>(void* dst, const Value& src) {
-    auto* vec = reinterpret_cast<std::vector<int32_t>*>(dst);
-    vec->clear();
-    const auto& int_array = src.int32_array_values();
+void catena::lite::fromProto<std::vector<int32_t>>(const Value& src, std::vector<int32_t>* dst, const AuthzInfo& auth) {
+    dst->clear();
+    const catena::Int32List& int_array = src.int32_array_values();
     for (int i = 0; i < int_array.ints_size(); ++i) {
-        vec->push_back(int_array.ints(i));
+        dst->push_back(int_array.ints(i));
     }
 }
 
 template<>
-void catena::lite::toProto<std::vector<float>>(Value& dst, const void* src) {
+void catena::lite::toProto<std::vector<float>>(Value& dst, const std::vector<float>* src, const AuthzInfo& auth) {
     dst.clear_float32_array_values();
-    auto& float_array = *dst.mutable_float32_array_values();
-    const auto& vec = *reinterpret_cast<const std::vector<float>*>(src);
-    for (const auto& f : vec) {
+    catena::Float32List& float_array = *dst.mutable_float32_array_values();
+    for (const float& f : *src) {
         float_array.add_floats(f);
     }
 }
 
 template<>
-void catena::lite::fromProto<std::vector<float>>(void* dst, const Value& src) {
-    auto* vec = reinterpret_cast<std::vector<float>*>(dst);
-    vec->clear();
-    const auto& float_array = src.float32_array_values();
+void catena::lite::fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const AuthzInfo& auth) {
+    dst->clear();
+    const catena::Float32List& float_array = src.float32_array_values();
     for (int i = 0; i < float_array.floats_size(); ++i) {
-        vec->push_back(float_array.floats(i));
+        dst->push_back(float_array.floats(i));
+    }
+}
+
+template<>
+void catena::lite::toProto<std::vector<std::string>>(Value& dst, const std::vector<std::string>* src, const AuthzInfo& auth) {
+    dst.clear_string_array_values();
+    catena::StringList& string_array = *dst.mutable_string_array_values();
+    for (const std::string& s :*src) {
+        string_array.add_strings(s);
+    }
+}
+
+template<>
+void catena::lite::fromProto<std::vector<std::string>>(const Value& src, std::vector<std::string>* dst, const AuthzInfo& auth) {
+    dst->clear();
+    const catena::StringList& string_array = src.string_array_values();
+    for (int i = 0; i < string_array.strings_size(); ++i) {
+        dst->push_back(string_array.strings(i));
     }
 }

@@ -69,7 +69,7 @@ public:
     RangeConstraint(T min, T max, std::string oid, bool shared, catena::common::IParam* parent)
         : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
         display_min_{min}, display_max_{max} {
-        parent->addConstraint(oid, this);
+        parent->setConstraint(this);
     }
 
     /**
@@ -105,7 +105,7 @@ public:
         bool shared, catena::common::IParam* parent)
         : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
         display_min_{display_min}, display_max_{display_max} {
-        parent->addConstraint(oid, this);
+        parent->setConstraint(this);
     }
 
     /**

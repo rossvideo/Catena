@@ -12,83 +12,51 @@
 // limitations under the License.
 //
 
-// lite
+//lite
 #include <ParamDescriptor.h>
-#include <StructInfo.h>
+#include <AuthzInfo.h>  
 
-// protobuf interface
-#include <interface/param.pb.h>
-
-#include <vector>
-#include <string>
-#include <type_traits>
-
-
-using catena::Value;
 using catena::lite::ParamDescriptor;
-using catena::lite::StructInfo;
-using catena::lite::FieldInfo;
 
+void ParamDescriptor::toProto(catena::Param &param, AuthzInfo& auth) const {
+    param.set_type(type_);
+    for (const auto& oid_alias : oid_aliases_) {
+        param.add_oid_aliases(oid_alias);
+    }
+    for (const auto& [lang, text] : name_.displayStrings()) {
+        (*param.mutable_name()->mutable_display_strings())[lang] = text;
+    }
+    param.set_widget(widget_);
+    param.set_read_only(read_only_);
+    if (constraint_) {
+        constraint_->toProto(*param.mutable_constraint());
+    }
 
-// template <>
-// void ParamDescriptor<int32_t>::toProto(Value& value) const {
-//     catena::lite::toProto<int32_t>(value, &value_.get());
-// }
+    auto* dstParams = param.mutable_params();
+    for (const auto& [oid, subParam] : subParams_) {
+        AuthzInfo subAuth = auth.subParamInfo(oid);
+        if (subAuth.readAuthz()) {
+            subParam->toProto((*dstParams)[oid], subAuth);
+        }
+    }
+}
 
-// template <>
-// void ParamDescriptor<int32_t>::fromProto(const Value& value) {
-//     catena::lite::fromProto<int32_t>(&value_.get(), value);
-// }
+const std::string& ParamDescriptor::name(const std::string& language) const { 
+    auto it = name_.displayStrings().find(language);
+    if (it != name_.displayStrings().end()) {
+        return it->second;
+    } else {
+        static const std::string empty;
+        return empty;
+    }
+}
 
-// template <>
-// void ParamDescriptor<std::string>::toProto(Value& value) const {
-//     catena::lite::toProto<std::string>(value, &value_.get());
-// }
-
-// template <>
-// void ParamDescriptor<std::string>::fromProto(const Value& value) {
-//     catena::lite::fromProto<std::string>(&value_.get(), value);
-// }
-
-// template <>
-// void ParamDescriptor<float>::toProto(Value& value) const {
-//     catena::lite::toProto<float>(value, &value_.get());
-// }
-
-// template <>
-// void ParamDescriptor<float>::fromProto(const Value& value) {
-//     catena::lite::fromProto<float>(&value_.get(), value);
-// }
-
-// template <>
-// void ParamDescriptor<std::vector<std::string>>::toProto(Value& value) const {
-//     catena::lite::toProto<std::vector<std::string>>(value, &value_.get());
-// }
-
-// template <>
-// void ParamDescriptor<std::vector<std::string>>::fromProto(const Value& value) {
-//     catena::lite::fromProto<std::vector<std::string>>(&value_.get(), value);
-// }
-
-// template <>
-// void ParamDescriptor<std::vector<std::int32_t>>::toProto(Value& value) const {
-//     catena::lite::toProto<std::vector<std::int32_t>>(value, &value_.get());
-// }
-
-// template <>
-// void ParamDescriptor<std::vector<std::int32_t>>::fromProto(const Value& value) {
-//     catena::lite::fromProto<std::vector<std::int32_t>>(&value_.get(), value);
-// }
-
-// template <>
-// void ParamDescriptor<std::vector<float>>::toProto(Value& value) const {
-//     catena::lite::toProto<std::vector<float>>(value, &value_.get());
-// }
-
-// template <>
-// void ParamDescriptor<std::vector<float>>::fromProto(const Value& value) {
-//     catena::lite::fromProto<std::vector<float>>(&value_.get(), value);
-// }
-
-
-
+const std::string ParamDescriptor::getScope() const {
+      if (!scope_.empty()) {
+        return scope_;
+      } else if (parent_) {
+        return parent_->getScope();
+      } else {
+        return dev_.getDefaultScope();
+      }
+    }

@@ -27,8 +27,7 @@
  */
 
 // device model
-#include "device.use_structs.json.h" 
-
+#include "device.AudioDeck.json.h" 
 
 // lite
 #include <Device.h>
@@ -40,54 +39,54 @@
 
 using namespace catena::lite;
 using namespace catena::common;
-using namespace use_structs;
+using namespace AudioDeck;
 using catena::common::ParamTag;
 #include <iostream>
 int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    std::unique_ptr<IParam> ip = dm.getParam("/location");
-    assert(ip != nullptr);
-    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
-    Location& loc = locationParam.get();
-
-    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
-
+    std::unique_ptr<IParam> ip = dm.getParam("/audio_deck");
     assert(ip != nullptr);
     catena::Value value;
     std::string clientScope = "operate";
     ip->toProto(value, clientScope);
-    std::cout << "Location: " << value.DebugString() << std::endl;
+    std::cout << "audio_deck: " << value.DebugString() << std::endl;
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
-    value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_value()->mutable_struct_value()->mutable_fields()->at("degrees").mutable_value()->set_float32_value(100);
+    value.mutable_struct_array_values()->mutable_struct_values()->at(2).mutable_fields()->at("eq_list").mutable_value()->mutable_struct_array_values()->mutable_struct_values()->at(1).mutable_fields()->at("q_factor").mutable_value()->set_float32_value(2.5);
     ip->fromProto(value, clientScope);
 
-    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
-
-    ip = dm.getParam("/location/latitude");
+    ip = dm.getParam("/audio_deck/2");
     assert(ip != nullptr);
     value.Clear();
+    clientScope = "operate";
     ip->toProto(value, clientScope);
-    std::cout << "Latitude: " << value.DebugString() << std::endl;
+    std::cout << "audio_deck[2]: " << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/location/latitude/degrees");
+
+    // add a new audio channel to audio_deck
+    ip = dm.getParam("/audio_deck/4");
     assert(ip != nullptr);
     value.Clear();
+    clientScope = "operate";
     ip->toProto(value, clientScope);
-    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
+    std::cout << "new audio channel: " << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/location/longitude/seconds");
+    ip = dm.getParam("/audio_deck/3/eq_list/0/response");
     assert(ip != nullptr);
     value.Clear();
+    clientScope = "operate";
     ip->toProto(value, clientScope);
-    std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
+    std::cout << "/audio_deck/1/eq_list/1/response: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/audio_deck/2/eq_list/1/q_factor");
+    assert(ip != nullptr);
+    value.Clear();
+    clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "/audio_deck/2/eq_list/1/q_factor: " << value.DebugString() << std::endl;
 
     return EXIT_SUCCESS;
 }
