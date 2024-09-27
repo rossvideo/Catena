@@ -180,7 +180,7 @@ class ParamDescriptor {
     
     std::string oid_;
     ParamDescriptor* parent_;
-    const Device& dev_;
+    std::reference_wrapper<Device> dev_;
 };
 
 }  // namespace lite
