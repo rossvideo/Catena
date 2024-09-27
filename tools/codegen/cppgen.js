@@ -257,7 +257,7 @@ class CppGen {
       parentStructInfo.params = {};
       this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
 
-      hloc(`static void isCatenaStruct() {};`, hindent);
+      hloc(`using isCatenaStruct = void;`, hindent);
       hloc(`};`, --hindent);
       if (isStructChild) {
         hloc(`${type} ${name};`, hindent);

@@ -18,6 +18,7 @@
  * @file AuthzInfo.h
  * @brief Class for handling authorization information
  * @author John R. Naylor john.naylor@rossvideo.com
+ * @author John Danen
  * @date 2024-09-18
  * @copyright Copyright (c) 2024 Ross Video
  */
