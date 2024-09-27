@@ -52,6 +52,21 @@ class loc {
   }
 }
 
+/**
+ * writes a line of code to a buffer
+ */
+class bufloc {
+  constructor() {
+    this.buf = "";
+  }
+  write(s, indent = 0) {
+    this.buf += `${" ".repeat(indent * 2)}${s}\n`;
+  }
+  deliver(fd) {
+    fs.writeSync(fd, this.buf);
+  }
+}
+
 class ParamDescriptor {
   constructor(typename, name, args) {
     this.typename = typename;
@@ -105,7 +120,7 @@ class TemplateParam {
 /**
  * storage for the write functions, and the current indent level
  */
-let hloc, bloc;
+let hloc, bloc, ploc, postscript;
 let hindent, bindent;
 
 /**
@@ -134,6 +149,7 @@ class CppGen {
     this.headerFilename = `${baseFilename}.h`;
     this.header = fs.openSync(path.join(output, this.headerFilename), "w");
     this.body = fs.openSync(path.join(output, `${baseFilename}.cpp`), "w");
+    this.postscript = new bufloc();
 
     let Hloc = new loc(this.header);
     hloc = Hloc.write.bind(Hloc);
@@ -141,6 +157,9 @@ class CppGen {
     let Bloc = new loc(this.body);
     bloc = Bloc.write.bind(Bloc);
     bindent = 0;
+    let Ploc = new bufloc();
+    ploc = Ploc.write.bind(Ploc);
+    postscript = Ploc.deliver.bind(Ploc);
 
     // initialize the template param map
     this.templateParams = {};
@@ -268,9 +287,9 @@ class CppGen {
   }
 
   defineGetStructInfo(structInfo) {
-    bloc(`template<>`);
-    bloc(`struct catena::lite::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
-    bloc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
+    ploc(`template<>`);
+    ploc(`struct catena::lite::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
+    ploc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
     
     const keys = Object.keys(structInfo.params);
     const lastIndex = keys.length - 1;
@@ -290,11 +309,11 @@ class CppGen {
         fieldInfoInit += `, `;
       } 
     });
-    bloc(`using Type = std::tuple<${fieldInfoType}>;`, bindent);
-    bloc(`static constexpr Type fields = {${fieldInfoInit}};`, bindent);
-    bloc(`};`, --bindent);
+    ploc(`using Type = std::tuple<${fieldInfoType}>;`, bindent);
+    ploc(`static constexpr Type fields = {${fieldInfoInit}};`, bindent);
+    ploc(`};`, --bindent);
 
-    // defince getStructInfo for subparams structs
+    // define getStructInfo for subparams structs
     for (let p in structInfo.params) {
       if (structInfo.params[p].params) {
         this.defineGetStructInfo(structInfo.params[p]);
@@ -425,6 +444,8 @@ class CppGen {
 
   finish = () => {
     hloc(`} // namespace ${this.namespace}`);
+    postscript(this.header);
+
   };
 }
 
