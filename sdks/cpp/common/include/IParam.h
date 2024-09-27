@@ -37,8 +37,15 @@ namespace catena {
 class Value; // forward reference
 class Param; // forward reference
 
-/// @todo move to common
 namespace common { 
+
+/**
+ * @brief IParam is the interface for business logic and connection logic to interact with parameters
+ * 
+ * This class creates an interface for accessing catena parameter without needing to know any 
+ * type information about the parameter. This allows the connection logic to be decoupled from the
+ * generated device code.
+ */
 class IParam {
   public:
     /**

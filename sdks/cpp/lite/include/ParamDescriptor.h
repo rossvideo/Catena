@@ -64,6 +64,16 @@ class ParamDescriptor {
     ParamDescriptor() = delete;
 
     /**
+     * @brief ParamDescriptor does not have copy semantics
+     */
+    ParamDescriptor(ParamDescriptor& value) = delete;
+
+    /**
+     * @brief ParamDescriptor does not have copy semantics
+     */
+    ParamDescriptor& operator=(const ParamDescriptor& value) = delete;
+
+    /**
      * @brief ParamDescriptor has move semantics
      */
     ParamDescriptor(ParamDescriptor&& value) = default;
@@ -116,16 +126,41 @@ class ParamDescriptor {
      */
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
 
+    /**
+     * @brief get the parameter oid
+     */
     const std::string& getOid() const { return oid_; }
 
+    /**
+     * @brief set the parameter oid
+     */
     void setOid(const std::string& oid) { oid_ = oid; }
 
+    /**
+     * @brief return the readOnly status of the parameter
+     */
     inline bool readOnly() const { return read_only_; }
 
+    /**
+     * @brief set the readOnly status of the parameter
+     */
     inline void readOnly(bool flag) { read_only_ = flag; }
-    
-    void toProto(catena::Param &param, AuthzInfo& auth) const;
 
+    /**
+     * @brief get the access scope of the parameter
+     */
+    const std::string getScope() const;
+
+    /**
+     * @brief serialize param meta data in to protobuf message
+     * @param param the protobuf message to serialize to
+     * @param auth the authorization information
+     * 
+     * this function will populate all non-value fields of the protobuf param message 
+     * with the information from the ParamDescriptor
+     * 
+     */
+    void toProto(catena::Param &param, AuthzInfo& auth) const;
 
     /**
      * @brief get the parameter name by language
@@ -164,8 +199,6 @@ class ParamDescriptor {
     void setConstraint(catena::common::IConstraint* constraint) {
       constraint_ = constraint;
     }
-
-    const std::string getScope() const;
 
   private:
     ParamType type_;  // ParamType is from param.pb.h

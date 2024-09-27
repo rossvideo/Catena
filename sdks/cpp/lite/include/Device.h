@@ -185,6 +185,11 @@ class Device {
         return nullptr;
     }
 
+    /**
+     * @brief get a parameter by oid
+     * @param fqoid the fully qualified oid of the parameter
+     * @return a unique pointer to the parameter
+     */
     std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
 
     /**
