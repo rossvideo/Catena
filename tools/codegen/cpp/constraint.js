@@ -1,3 +1,18 @@
+/*Copyright 2024 Ross Video Ltd
+*
+* Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+* INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
 /**
  * file: constraint.js
  * brief: Collect C++ information for a constraint
@@ -33,13 +48,11 @@ function parentArg(desc) {
  * @returns min value of the range constraint
  */
 function minArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  if (this.type === "int32_t") {
+    return desc.int32_range.min_value;
   } else {
-    range_desc = desc.float_range;
+    return desc.float_range.min_value;
   }
-  return range_desc.min_value;
 }
 
 /**
@@ -48,13 +61,11 @@ function minArg(desc) {
  * @returns max value of the range constraint
  */
 function maxArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  if (this.type === "int32_t") {
+    return desc.int32_range.max_value;
   } else {
-    range_desc = desc.float_range;
+    return desc.float_range.max_value;
   }
-  return range_desc.max_value;
 }
 
 /**
@@ -65,9 +76,9 @@ function maxArg(desc) {
  */
 function stepArg(desc) {
   let ans = 1;
-  if ("step" in desc && this.constrainedType === "int32_t") {
-    ans = desc.int_range.step;
-  } else if ("step" in desc) {
+  if (this.type == "int32_t" && "step" in desc.int32_range) {
+    ans = desc.int32_range.step;
+  } else if ("step" in desc.float_range) {
     ans = desc.float_range.step;
   }
   return ans;
@@ -80,16 +91,19 @@ function stepArg(desc) {
  * defaults to min value
  */
 function displayMinArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  let ans;
+  if (this.type === "int32_t") {
+    if ("display_min" in desc.int32_range) {
+      ans = desc.int32_range.display_min;
+    } else {
+      ans = desc.int32_range.min_value;
+    }
   } else {
-    range_desc = desc.float_range;
-  }
-
-  let ans = range_desc.min_value;
-  if ("display_min" in range_desc) {
-    ans = range_desc.display_min;
+    if ("display_min" in desc.float_range) {
+      ans = desc.float_range.display_min;
+    } else {
+      ans = desc.float_range.min_value;
+    }
   }
   return ans;
 }
@@ -101,16 +115,19 @@ function displayMinArg(desc) {
  * defaults to max value
  */
 function displayMaxArg(desc) {
-  let range_desc;
-  if (this.constrainedType === "int32_t") {
-    range_desc = desc.int_range;
+  let ans;
+  if (this.type === "int32_t") {
+    if ("display_max" in desc.int32_range) {
+      ans = desc.int32_range.display_max;
+    } else {
+      ans = desc.int32_range.max_value
+    }
   } else {
-    range_desc = desc.float_range;
-  }
-
-  let ans = range_desc.max_value;
-  if ("display_max" in range_desc) {
-    ans = range_desc.display_max;
+    if ("display_max" in desc.float_range) {
+      ans = desc.float_range.display_max;
+    } else {
+      ans = desc.float_range.max_value;
+    }
   }
   return ans;
 }

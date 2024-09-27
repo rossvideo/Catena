@@ -1,17 +1,20 @@
 #pragma once
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0
-// International Licensing (CC-BY-ND-4.0);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at:
-//
-// https://creativecommons.org/licenses/by-nd/4.0/
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/** Copyright 2024 Ross Video Ltd
+
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 //
 
 /**
@@ -29,6 +32,7 @@
 #include <IParam.h>
 #include <ILanguagePack.h>
 #include <Tags.h>  
+#include <Status.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
@@ -114,6 +118,8 @@ class Device {
      */
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
+    inline std::string getDefaultScope() const { return default_scope_.toString(); }
+
     /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
@@ -125,7 +131,7 @@ class Device {
      * that the device is not modified while this method is running. This class provides
      * a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, bool shallow = true) const;
+    void toProto(::catena::Device& dst, std::vector<std::string>& clientScopes, bool shallow = true) const;
 
     /**
      * @brief Create a protobuf representation of the language packs.
@@ -179,6 +185,34 @@ class Device {
         return nullptr;
     }
 
+    /**
+     * @brief get a parameter by oid
+     * @param fqoid the fully qualified oid of the parameter
+     * @return a unique pointer to the parameter
+     */
+    std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
+
+    /**
+     * @brief deserialize a protobuf value object into the parameter value
+     * pointed to by jptr.
+     * @param jptr, json pointer to the part of the device model to update.
+     * @param src, the value to update the parameter with.
+     * @todo consider using move semantics on the value parameter to emphasize new ownership.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for SetValue RPCs / API calls to be serviced by this method.
+     * @note on success, this method will emit the valueSetByClient signal.
+     */
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src);
+
+    /**
+     * @brief serialize the parameter value to protobuf
+     * @param jptr, json pointer to the part of the device model to serialize.
+     * @param dst, the protobuf value to serialize to.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for GetValue RPCs / API calls to be serviced by this method.
+     */
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value);
+
   public:
     /**
      * @brief signal emitted when a value is set by the client.
@@ -192,6 +226,7 @@ class Device {
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
+    static const std::vector<std::string> kAuthzDisabled;
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
@@ -204,7 +239,7 @@ class Device {
     Scopes default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-
+    
     mutable std::mutex mutex_;
 };
 }  // namespace lite

@@ -1,17 +1,20 @@
 #pragma once
 
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0
-// International Licensing (CC-BY-ND-4.0);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at:
-//
-// https://creativecommons.org/licenses/by-nd/4.0/
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/** Copyright 2024 Ross Video Ltd
+
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 //
 
 /**
@@ -28,25 +31,32 @@
 
 // lite
 #include <Device.h>
-#include <StructInfo.h>
 #include <PolyglotText.h>
+
+// meta
+#include <meta/IsVector.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
 
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <type_traits>
+#include <algorithm>
+#include <cassert>
 
 namespace catena {
 namespace lite {
 
+class AuthzInfo; // forward declaration
 
 /**
  * @brief ParamDescriptor provides information about a parameter
- * @tparam T the parameter's value type
  */
-template <typename T> 
-class ParamDescriptor : public catena::common::IParam {
+class ParamDescriptor {
+  using OidAliases = std::vector<std::string>;
+
   public:
     /**
      * @brief ParamDescriptor does not have a default constructor
@@ -56,12 +66,12 @@ class ParamDescriptor : public catena::common::IParam {
     /**
      * @brief ParamDescriptor does not have copy semantics
      */
-    ParamDescriptor(T& value) = delete;
+    ParamDescriptor(ParamDescriptor& value) = delete;
 
     /**
      * @brief ParamDescriptor does not have copy semantics
      */
-    T& operator=(const T& value) = delete;
+    ParamDescriptor& operator=(const ParamDescriptor& value) = delete;
 
     /**
      * @brief ParamDescriptor has move semantics
@@ -88,132 +98,106 @@ class ParamDescriptor : public catena::common::IParam {
      * @param oid the parameter's oid
      * @param collection the parameter belongs to
      */
-    ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-      const bool read_only, const std::string& oid, Device &dev)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{nullptr} {
+    ParamDescriptor(
+      catena::ParamType type, 
+      const OidAliases& oid_aliases, 
+      const PolyglotText::ListInitializer name, 
+      const std::string& widget,
+      const std::string& scope, 
+      const bool read_only, 
+      const std::string& oid, 
+      ParamDescriptor* parent,
+      Device& dev)
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
+        constraint_{nullptr}, parent_{parent}, dev_{dev} {
       setOid(oid);
-      dev.addItem<common::ParamTag>(oid, this);
-    }
-
-    ParamDescriptor(catena::ParamType type, const OidAliases& oid_aliases, const PolyglotText::ListInitializer name, const std::string& widget,
-      const bool read_only, const std::string& oid, IParam* parent)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, read_only_{read_only}, parent_{parent} {
-      setOid(oid);
-      parent_->addParam(oid, this);
+      if (parent_ != nullptr) {
+        parent_->addSubParam(oid, this);
+      }
     }
 
     /**
      * @brief get the parameter type
      */
-    ParamType type() const override { return type_; }
+    ParamType type() const { return type_; }
 
     /**
      * @brief get the parameter name
      */
     const PolyglotText::DisplayStrings& name() const { return name_.displayStrings(); }
 
-    const std::string& getOid() const override { return oid_; }
+    /**
+     * @brief get the parameter oid
+     */
+    const std::string& getOid() const { return oid_; }
 
-    void setOid(const std::string& oid) override { oid_ = oid; }
+    /**
+     * @brief set the parameter oid
+     */
+    void setOid(const std::string& oid) { oid_ = oid; }
 
-    inline bool readOnly() const override { return read_only_; }
+    /**
+     * @brief return the readOnly status of the parameter
+     */
+    inline bool readOnly() const { return read_only_; }
 
-    inline void readOnly(bool flag) override { read_only_ = flag; }
+    /**
+     * @brief set the readOnly status of the parameter
+     */
+    inline void readOnly(bool flag) { read_only_ = flag; }
 
-    void toProto(catena::Value& value) const override {
-      //catena::lite::toProto<T>(value, &value_.get());
-    }
+    /**
+     * @brief get the access scope of the parameter
+     */
+    const std::string getScope() const;
 
-    void fromProto(catena::Value& value) override {
-      //catena::lite::fromProto<T>(&value_.get(), value);
-    }
-    
-    void toProto(catena::Param &param) const override {
-      param.set_type(type_());
-      for (const auto& oid_alias : oid_aliases_) {
-        param.add_oid_aliases(oid_alias);
-      }
-      for (const auto& [lang, text] : name_.displayStrings()) {
-        (*param.mutable_name()->mutable_display_strings())[lang] = text;
-      }
-      param.set_widget(widget_);
-      param.set_read_only(read_only_);
-      toProto(*param.mutable_value());
-    }
-
+    /**
+     * @brief serialize param meta data in to protobuf message
+     * @param param the protobuf message to serialize to
+     * @param auth the authorization information
+     * 
+     * this function will populate all non-value fields of the protobuf param message 
+     * with the information from the ParamDescriptor
+     * 
+     */
+    void toProto(catena::Param &param, AuthzInfo& auth) const;
 
     /**
      * @brief get the parameter name by language
      * @param language the language to get the name for
      * @return the name in the specified language, or an empty string if the language is not found
      */
-    const std::string& name(const std::string& language) const { 
-      auto it = name_.displayStrings().find(language);
-      if (it != name_.displayStrings().end()) {
-        return it->second;
-      } else {
-        static const std::string empty;
-        return empty;
-      }
-    }
-
+    const std::string& name(const std::string& language) const;
     /**
      * @brief add an item to one of the collections owned by the device
      * @tparam TAG identifies the collection to which the item will be added
      * @param key item's unique key
      * @param item the item to be added
      */
-    template <typename TAG>
-    void addItem(const std::string& key, typename TAG::type* item) {
-      if constexpr (std::is_same_v<TAG, common::ParamTag>) {
-        params_[key] = item;
-      }
-      if constexpr (std::is_same_v<TAG, common::CommandTag>) {
-        commands_[key] = item;
-      }
-      if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
-        constraints_[key] = item;
-      }
+    void addSubParam(const std::string& oid, ParamDescriptor* item) {
+      subParams_[oid] = item;
     }
 
     /**
-     * @brief gets an item from one of the collections owned by the device
-     * @return nullptr if the item is not found, otherwise the item
+     * @brief gets a sub parameter's paramDescriptor
+     * @return ParamDescriptor of the sub parameter
      */
-    template <typename TAG>
-    typename TAG::type* getItem(const std::string& key) const {
-      GET_ITEM(common::ParamTag, params_)
-      GET_ITEM(common::CommandTag, commands_)
-      GET_ITEM(common::ConstraintTag, constraints_)
-      return nullptr;
-    }
-
-    /**
-     * @brief get a child parameter by name
-     */
-    IParam* getParam(const std::string& oid) override {
-      return getItem<common::ParamTag>(oid);
-    }
-
-    /**
-     * @brief add a child parameter
-     */
-    void addParam(const std::string& oid, IParam* param) override {
-      addItem<common::ParamTag>(oid, param);
+    ParamDescriptor& getSubParam(const std::string& oid) const {
+      return *subParams_.at(oid);
     }
 
     /**
      * @brief get a constraint by oid
      */
-    catena::common::IConstraint* getConstraint(const std::string& oid) override {
-      return getItem<common::ConstraintTag>(oid);
+    const catena::common::IConstraint* getConstraint() const {
+      return constraint_;
     }
 
     /**
      * @brief add a constraint
      */
-    void addConstraint(const std::string& oid, catena::common::IConstraint* constraint) override {
-      addItem<common::ConstraintTag>(oid, constraint);
+    void setConstraint(catena::common::IConstraint* constraint) {
+      constraint_ = constraint;
     }
 
   private:
@@ -221,13 +205,15 @@ class ParamDescriptor : public catena::common::IParam {
     std::vector<std::string> oid_aliases_;
     PolyglotText name_;
     std::string widget_;
+    std::string scope_;
     bool read_only_;
-    std::unordered_map<std::string, IParam*> params_;
-    std::unordered_map<std::string, IParam*> commands_;
-    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
+    std::unordered_map<std::string, ParamDescriptor*> subParams_;
+    std::unordered_map<std::string, catena::common::IParam*> commands_;
+    common::IConstraint* constraint_;
     
     std::string oid_;
-    IParam* parent_;
+    ParamDescriptor* parent_;
+    std::reference_wrapper<Device> dev_;
 };
 
 }  // namespace lite

@@ -1,15 +1,18 @@
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0
-// International Licensing (CC-BY-ND-4.0);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at:
-//
-// https://creativecommons.org/licenses/by-nd/4.0/
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/** Copyright 2024 Ross Video Ltd
+
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 //
 
 /**
@@ -29,6 +32,7 @@
 // device model
 #include "device.use_structs.json.h" 
 
+
 // lite
 #include <Device.h>
 #include <ParamWithValue.h>
@@ -46,14 +50,47 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    IParam* ip = dm.getItem<ParamTag>("location");
+    std::unique_ptr<IParam> ip = dm.getParam("/location");
     assert(ip != nullptr);
-    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip);
+    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
     Location& loc = locationParam.get();
 
     std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
               << "' " << loc.longitude.seconds << "\")" << std::endl;
+
+    assert(ip != nullptr);
+    catena::Value value;
+    std::string clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "Location: " << value.DebugString() << std::endl;
+
+    // this line is for demonstrating the fromProto method
+    // this should never be done in a real device
+    value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_value()->mutable_struct_value()->mutable_fields()->at("degrees").mutable_value()->set_float32_value(100);
+    ip->fromProto(value, clientScope);
+
+    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+              << "' " << loc.longitude.seconds << "\")" << std::endl;
+
+    ip = dm.getParam("/location/latitude");
+    assert(ip != nullptr);
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/location/latitude/degrees");
+    assert(ip != nullptr);
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/location/longitude/seconds");
+    assert(ip != nullptr);
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
 
     return EXIT_SUCCESS;
 }

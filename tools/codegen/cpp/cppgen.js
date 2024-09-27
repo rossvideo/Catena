@@ -1,19 +1,18 @@
-/*
-Copyright © 2024 Ross Video Limited, All Rights Reserved.
- 
-Licensed under the Creative Commons Attribution NoDerivatives 4.0
-International Licensing (CC-BY-ND-4.0);
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:
- 
-https://creativecommons.org/licenses/by-nd/4.0/
- 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/*Copyright 2024 Ross Video Ltd
+*
+* Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+* INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
 
 "use strict";
 
@@ -53,6 +52,21 @@ class loc {
   }
 }
 
+/**
+ * writes a line of code to a buffer
+ */
+class bufloc {
+  constructor() {
+    this.buf = "";
+  }
+  write(s, indent = 0) {
+    this.buf += `${" ".repeat(indent * 2)}${s}\n`;
+  }
+  deliver(fd) {
+    fs.writeSync(fd, this.buf);
+  }
+}
+
 class ParamDescriptor {
   constructor(typename, name, args) {
     this.typename = typename;
@@ -70,7 +84,7 @@ class ParamDescriptor {
   }
 
   write(parent) {
-    bloc(`catena::lite::ParamDescriptor<${this.typename}> ${parent}${this.name}Param {${this.args}, &${parent}Param};`);
+    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, &${parent}Descriptor, dm};`);
     for (let subparam of this.subparams) {
       subparam.write(`${parent}${this.name}`);
     }
@@ -106,7 +120,7 @@ class TemplateParam {
 /**
  * storage for the write functions, and the current indent level
  */
-let hloc, bloc;
+let hloc, bloc, ploc, postscript;
 let hindent, bindent;
 
 /**
@@ -135,6 +149,7 @@ class CppGen {
     this.headerFilename = `${baseFilename}.h`;
     this.header = fs.openSync(path.join(output, this.headerFilename), "w");
     this.body = fs.openSync(path.join(output, `${baseFilename}.cpp`), "w");
+    this.postscript = new bufloc();
 
     let Hloc = new loc(this.header);
     hloc = Hloc.write.bind(Hloc);
@@ -142,6 +157,9 @@ class CppGen {
     let Bloc = new loc(this.body);
     bloc = Bloc.write.bind(Bloc);
     bindent = 0;
+    let Ploc = new bufloc();
+    ploc = Ploc.write.bind(Ploc);
+    postscript = Ploc.deliver.bind(Ploc);
 
     // initialize the template param map
     this.templateParams = {};
@@ -212,11 +230,8 @@ class CppGen {
     if (init == "{}" && p.isTemplated()) {
       init = this.templateParam(p.templateOid()).initializer;
     }
-    if (!isStructChild) {
-
-    }
     if (!isStructChild && p.hasValue()) {
-      // only top-level params get value objects
+      // only top-level params get value initializers
       bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
     }
@@ -226,40 +241,41 @@ class CppGen {
       descriptor = new ParamDescriptor(objectType, name, args);
       this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
     } else {
-      if (!p.isArrayType()){
-        descriptor = new ParamDescriptor(objectType, name, args);
-        descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
-      } else {
-        descriptor = new ParamDescriptor(objectType, name, args);
-        descriptor.addSubparam(this.templateParams[p.templateOid()].paramDescriptor);
-        this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
-      }
+      descriptor = new ParamDescriptor(objectType, name, args);
+      descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
     }
     if (isStructChild) {
       this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);
     }
 
-    // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    if (!isStructChild && p.hasValue()) {
-      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${args}, dm, ${name}};`);
-      descriptor.writeDescriptors();
-    }
-
     parentStructInfo.typename = type;
     parentStructInfo.typeNamespace = typeNamespace;
+    parentStructInfo.isArrayType = p.isArrayType();
     if (p.hasSubparams()) {
       hloc(`struct ${type} {`, hindent++);
 
       parentStructInfo.params = {};
       this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
 
-      hloc(`static const catena::lite::StructInfo& getStructInfo();`, hindent);
+      hloc(`using isCatenaStruct = void;`, hindent);
       hloc(`};`, --hindent);
       if (isStructChild) {
         hloc(`${type} ${name};`, hindent);
       }
     } else if (isStructChild) {
-      hloc(`${type} ${name};`, hindent);
+      if (p.hasValue() ) {
+        // add default value to struct member
+        hloc(`${type} ${name} = ${p.initializer(desc[oid])};`, hindent);
+      } else {
+        hloc(`${type} ${name};`, hindent);
+      }
+    }
+
+    // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
+    if (!isStructChild && p.hasValue()) {
+      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm};`);
+      descriptor.writeDescriptors();
+      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm};`);
     }
 
     if (p.usesSharedConstraint()) {
@@ -271,28 +287,33 @@ class CppGen {
   }
 
   defineGetStructInfo(structInfo) {
-    bloc(`const StructInfo& ${structInfo.typeNamespace}::${structInfo.typename}::getStructInfo() {`, bindent++);
-    bloc(`static StructInfo si {`, bindent++);
-    bloc(`"${structInfo.typename}",`, bindent);
-    bloc(`{`, bindent++);
+    ploc(`template<>`);
+    ploc(`struct catena::lite::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
+    ploc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
     
     const keys = Object.keys(structInfo.params);
     const lastIndex = keys.length - 1;
 
+    let fieldInfoType = "";
+    let fieldInfoInit = "";
+
     keys.forEach((p, index) => {
-      if (index === lastIndex) {
-        bloc(`{ "${p}", offsetof(${structInfo.typename}, ${p})}`, bindent);
+      if (structInfo.params[p].params || structInfo.params[p].isArrayType) {
+        fieldInfoType += `FieldInfo<${structInfo.typename}::${structInfo.params[p].typename}, ${structInfo.typename}>`;
       } else {
-        bloc(`{ "${p}", offsetof(${structInfo.typename}, ${p})},`, bindent);
+        fieldInfoType += `FieldInfo<${structInfo.params[p].typename}, ${structInfo.typename}>`;
       }
+      fieldInfoInit += `{"${p}", &${structInfo.typename}::${p}}`;
+      if (index !== lastIndex) {
+        fieldInfoType += `, `;
+        fieldInfoInit += `, `;
+      } 
     });
+    ploc(`using Type = std::tuple<${fieldInfoType}>;`, bindent);
+    ploc(`static constexpr Type fields = {${fieldInfoInit}};`, bindent);
+    ploc(`};`, --bindent);
 
-    bloc(`}`, --bindent);
-    bloc(`};`, --bindent);
-    bloc(`return si;`, bindent);
-    bloc(`}`, --bindent);
-
-    // defince getStructInfo for subparams structs
+    // define getStructInfo for subparams structs
     for (let p in structInfo.params) {
       if (structInfo.params[p].params) {
         this.defineGetStructInfo(structInfo.params[p]);
@@ -407,7 +428,6 @@ class CppGen {
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
     bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
-    bloc(`using catena::lite::StructInfo;`);
     bloc(`using catena::lite::FieldInfo;`);
     bloc(`using catena::lite::ParamDescriptor;`);
     bloc(`using catena::lite::ParamWithValue;`);
@@ -424,6 +444,8 @@ class CppGen {
 
   finish = () => {
     hloc(`} // namespace ${this.namespace}`);
+    postscript(this.header);
+
   };
 }
 
