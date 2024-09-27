@@ -25,23 +25,31 @@
 using catena::common::Path;
 using Index = Path::Index;
 
+
 Path::Path(const std::string &jptr) : segments_{} {
     // regex will split a well-formed json pointer into a sequence of Path Segments
-    // typed according to the regex that matches the string for th segment
+    // typed according to the regex that matches the string for the segment
     // /- -- can be used as an array index
     // /any_string_that_uses_only_word_chars -- i.e. letters & underscores.
     // /string_with_~0_~1_escaped_chars -- string_with_~_/_escaped_chars
     // /291834719 -- just numbers
     //
 
-    std::regex path_regex("((\\/-{1})|(\\/([\\w]|~[01])*))*");
+    constexpr char kMatchOid[] {"(\\/[a-zA-Z_]\\w*)"}; // solidus followed by letters, underscore & digits, not starting with a digit
+    constexpr char kMatchIdx[] {"(\\/\\d+)"}; // solidus followed by at least one digit and only digits
+    constexpr char kMatchEnd[] {"(\\/-)"}; // solidus followed by dash
+    const std::string kSegmentRegex = std::string(kMatchOid) + "|" + kMatchIdx + "|" + kMatchEnd;
+    const std::string kPathRegex = "(" + kSegmentRegex + ")*";
+
+    // validate the input as a correctly formatted json pointer
+    std::regex path_regex(kPathRegex);
     if (!std::regex_match(jptr, path_regex))  {
         std::stringstream why;
         why << __PRETTY_FUNCTION__ << "\n'" << jptr << "' is not a valid path";
         throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
     }
 
-    std::regex segment_regex("(\\/-{1})|(\\/([\\w]|~[01])*)");
+    std::regex segment_regex(kSegmentRegex);
     auto r_begin = std::sregex_iterator(jptr.begin(), jptr.end(), segment_regex);
     auto r_end = std::sregex_iterator();
     for (std::sregex_iterator it = r_begin; it != r_end; ++it) {
@@ -55,41 +63,29 @@ Path::Path(const std::string &jptr) : segments_{} {
         // unescape and strip off leading solidus '/'
         std::string txt = unescape(match.str()).substr(1, std::string::npos);
 
-        if (txt.compare("-") == 0) {
-            // segment is an index with the one-past-the-end value
-            Segment seg;
-            seg.emplace<Index>(kEnd);
-            segments_.push_back(seg);
-        } else if (std::all_of(txt.cbegin(), txt.cend(), ::isdigit)) {
-            // segment is an index
-            Segment seg;
-            seg.emplace<Index>(std::stoul(txt));
-            segments_.push_back(seg);
-        } else {
+        if (match[1].matched) {
             // segment is a string
             Segment seg;
             seg.emplace<std::string>(txt);
             segments_.push_back(seg);
+        } else if (match[2].matched) {
+            // segment is an index
+            Segment seg;
+            seg.emplace<Index>(std::stoul(txt));
+            segments_.push_back(seg);
+        } else if (match[3].matched) {
+            // segment is the one-past-the-end array index
+            Segment seg;
+            seg.emplace<Index>(kEnd);
+            segments_.push_back(seg);
+        } else {
+            // this should never happen
+            std::stringstream why;
+            why << __PRETTY_FUNCTION__ << "\n'" << jptr << " is invalid json pointer";
+            throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
     }
     front_ = cbegin();
-
-    //     if (segments_.size() >= 1) {
-    //     std::string seg = segments_[0];
-    //     if (seg.compare("-") == 0) {
-    //         // the one-past-the-end array index
-    //         ans.emplace<Index>(kEnd);
-    //     } else if (std::all_of(seg.begin(), seg.end(), ::isdigit)) {
-    //         // segment is all digits, so convert to Index
-    //         ans.emplace<Index>(std::stoul(seg));
-    //     } else {
-    //         // segment is a string
-    //         ans.emplace<std::string>(seg);
-    //     }
-    // } else {
-    //     // return empty string
-    //     ans.emplace<std::string>("");
-    // }
 }
 
 Path::Path(const char *literal) : Path(std::string(literal)) {}

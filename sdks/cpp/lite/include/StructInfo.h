@@ -75,7 +75,7 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth);
 /**
  * Free standing method to stream an entire array of structured data to protobuf
  * 
- * enabled if T is a vector of struct with getStructInfo method
+ * enabled if T is a vector of CatenaStruct
  * 
  * @tparam T the type of the value
  */
@@ -94,7 +94,7 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
 /**
  * Free standing method to stream structured data to protobuf
  * 
- * enabled if T has a getStructInfo method
+ * enabled if T has matches the CatenaStruct concept
  * 
  * @tparam T the type of the value
  */
