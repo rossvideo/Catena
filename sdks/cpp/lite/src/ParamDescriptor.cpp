@@ -60,6 +60,6 @@ const std::string ParamDescriptor::getScope() const {
       } else if (parent_) {
         return parent_->getScope();
       } else {
-        return dev_.getDefaultScope();
+        return dev_.get().getDefaultScope();
       }
     }
