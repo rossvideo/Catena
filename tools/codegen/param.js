@@ -41,6 +41,7 @@ function typeArg(desc) {
     FLOAT32_ARRAY: `std::vector<float>`,
     STRUCT: `${initialCap(this.oid)}`,
     STRUCT_ARRAY: `${initialCap(this.oid)}`,
+    EMPTY: `EmptyValue`,
   };
 
   if (desc.type in types) {

@@ -63,9 +63,14 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
-        Device &dev
+        Device &dev,
+        bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
-        dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+        if (isCommand) {
+            dev.addItem<common::CommandTag>(descriptor.getOid(), this);
+        } else {
+            dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+        }
     }
 
     /**
@@ -207,6 +212,20 @@ class ParamWithValue : public catena::common::IParam {
      */
     std::unique_ptr<IParam> getParam(Path& oid) override {
         return getParam(oid, value_.get());
+    }
+
+    /**
+     * @brief define a command for the parameter
+     */
+    void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) override {
+        descriptor_.defineCommand(command);
+    }
+
+    /**
+     * @brief execute the command for the parameter
+     */
+    catena::CommandResponse executeCommand(const catena::Value& value) const override {
+        return descriptor_.executeCommand(value);
     }
 
   private:
@@ -385,6 +404,15 @@ class ParamWithValue : public catena::common::IParam {
   private:
     ParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
+};
+
+template <typename T>
+T& getParamValue(catena::lite::Device &dm, std::string jptr) {
+    std::unique_ptr<catena::common::IParam> param = dm.getParam(jptr);
+    if (param == nullptr) {
+        throw std::runtime_error("getParamValue: param not found");
+    }
+    return dynamic_cast<ParamWithValue<T>*>(param.get())->get();
 };
 
 } // namespace lite

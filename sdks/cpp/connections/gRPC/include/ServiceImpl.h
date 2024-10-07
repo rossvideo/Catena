@@ -71,7 +71,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     /**
      * Nested private classes
      */
-    enum class CallStatus { kCreate, kProcess, kWrite, kPostWrite, kFinish };
+    enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
   private:
     /**
@@ -255,5 +255,25 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     static int objectCounter_;
     // };
 
+    /**
+     * @brief CallData class for the ExecuteCommand RPC
+     */
+    class ExecuteCommand : public CallData {
+      public:
+        ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok);
+
+        void proceed(CatenaServiceImpl *service, bool ok) override;
+
+      private:
+        CatenaServiceImpl *service_;
+        ServerContext context_;
+        catena::ExecuteCommandPayload req_;
+        catena::CommandResponse res_;
+        grpc::ServerAsyncReaderWriter<catena::CommandResponse, catena::ExecuteCommandPayload> stream_;
+        CallStatus status_;
+        Device &dm_;
+        int objectId_;
+        static int objectCounter_;
+    };
 
 };

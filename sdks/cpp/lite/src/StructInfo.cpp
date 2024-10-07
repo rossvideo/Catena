@@ -15,11 +15,26 @@
 */
 //
 
+//common
+#include <IParam.h>
+
 //lite
 #include <StructInfo.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
+
+using catena::common::EmptyValue;
+
+template<>
+void catena::lite::toProto<EmptyValue>(Value& dst, const EmptyValue* src, const AuthzInfo& auth) {
+    // do nothing
+}
+
+template<>
+void catena::lite::fromProto<EmptyValue>(const catena::Value& src, EmptyValue* dst, const AuthzInfo& auth) {
+    //do_nothing
+}
 
 template<>
 void catena::lite::toProto<int32_t>(Value& dst, const int32_t* src, const AuthzInfo& auth) {
