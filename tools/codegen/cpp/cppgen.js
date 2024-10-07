@@ -21,7 +21,7 @@ const { get } = require("http");
 const path = require("node:path");
 const Device = require("./device");
 const Param = require("./param");
-const LanguagePacks = require("./language");
+const LanguagePacks = require("../language");
 const Constraint = require("./constraint");
 const { type } = require("os");
 
