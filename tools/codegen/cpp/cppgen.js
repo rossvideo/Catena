@@ -84,7 +84,7 @@ class ParamDescriptor {
   }
 
   write(parent) {
-    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, &${parent}Descriptor, dm};`);
+    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, &${parent}Descriptor, dm, false};`);
     for (let subparam of this.subparams) {
       subparam.write(`${parent}${this.name}`);
     }
@@ -184,13 +184,14 @@ class CppGen {
    * @param {boolean} isStructChild true if the param is a member of a struct
    *
    */
-  params(parentOid, desc, typeNamespace, parentStructInfo, isStructChild = false) {
+  params(parentOid, desc, typeNamespace, parentStructInfo, isStructChild = false, isCommand = false) {
     let isTopLevel = parentOid === "";
-    if ("params" in desc) {
-      for (let oid in desc.params) {
+    let subField = isCommand ? "commands" : "params";
+    if (subField in desc) {
+      for (let oid in desc[subField]) {
         let structInfo = isTopLevel ? {} : parentStructInfo;
         structInfo[oid] = {};
-        this.subparam(parentOid, oid, typeNamespace, desc.params, structInfo[oid], isStructChild);
+        this.subparam(parentOid, oid, typeNamespace, desc[subField], structInfo[oid], isStructChild, isCommand);
         if (isTopLevel && structInfo[oid].params) {
           for (let type in structInfo) {
             this.defineGetStructInfo(structInfo[type]);
@@ -200,7 +201,7 @@ class CppGen {
     }
   }
 
-  subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false) {
+  subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false, isCommand = false) {
     let p = new Param(parentOid, oid, desc);
     let args = p.argsToString();
     let type;
@@ -272,10 +273,14 @@ class CppGen {
     }
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    if (!isStructChild && p.hasValue()) {
-      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm};`);
+    if (isCommand) {
+      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm, true};`);
       descriptor.writeDescriptors();
-      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm};`);
+      bloc(`catena::lite::ParamWithValue<EmptyValue> ${pname}Param {catena::lite::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
+    } else if (!isStructChild && p.hasValue()) {
+      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm, false};`);
+      descriptor.writeDescriptors();
+      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm, false};`);
     }
 
     if (p.usesSharedConstraint()) {
@@ -284,6 +289,17 @@ class CppGen {
     } else if (p.isConstrained() && p.hasValue()) {
       this.defineConstraint(parentOid, oid, desc);
     }
+  }
+
+  /**
+   *
+   * @param {string} parentOid full object id of the param's parent
+   * @param {object} desc param descriptor
+   * @param {boolean} isStructChild true if the param is a member of a struct
+   *
+   */
+  commands() {
+    this.params('', this.desc, this.namespace, {}, false, true);
   }
 
   defineGetStructInfo(structInfo) {
@@ -396,6 +412,7 @@ class CppGen {
     this.device();
     this.languagePacks();
     this.params('', this.desc, this.namespace);
+    this.commands('', this.desc, this.namespace);
     this.constraints(this.desc);
     this.finish();
   }
@@ -436,6 +453,7 @@ class CppGen {
     bloc(`using catena::lite::PicklistConstraint;`);
     bloc(`using catena::lite::NamedChoiceConstraint;`);
     bloc(`using catena::common::IParam;`);
+    bloc(`using catena::lite::EmptyValue;`);
     bloc(`using std::placeholders::_1;`);
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);

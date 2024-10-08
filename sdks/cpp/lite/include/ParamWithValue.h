@@ -63,9 +63,14 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
-        Device &dev
+        Device &dev,
+        bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
-        dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+        if (isCommand) {
+            dev.addItem<common::CommandTag>(descriptor.getOid(), this);
+        } else {
+            dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+        }
     }
 
     /**
@@ -204,9 +209,25 @@ class ParamWithValue : public catena::common::IParam {
 
     /**
      * @brief get a child parameter by name
+     * @param oid the path to the child parameter
+     * @return a unique pointer to the child parameter, or nullptr if it does not exist
      */
     std::unique_ptr<IParam> getParam(Path& oid) override {
-        return getParam(oid, value_.get());
+        return getParam_(oid, value_.get());
+    }
+
+    /**
+     * @brief define a command for the parameter
+     */
+    void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) override {
+        descriptor_.defineCommand(command);
+    }
+
+    /**
+     * @brief execute the command for the parameter
+     */
+    catena::CommandResponse executeCommand(const catena::Value& value) const override {
+        return descriptor_.executeCommand(value);
     }
 
   private:
@@ -223,7 +244,7 @@ class ParamWithValue : public catena::common::IParam {
      * 
      */
     template <typename U>
-    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         return nullptr;
     }
@@ -239,7 +260,7 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be an index.
      */
     template<CatenaStructArray U>
-    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value) {
         using ElemType = U::value_type;
         if (!oid.front_is_index()) {
             return nullptr;
@@ -275,13 +296,13 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be a string.
      */
     template <CatenaStruct U>
-    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value) {
         if (!oid.front_is_string()) return nullptr;
         std::string oidStr = oid.front_as_string();
         oid.pop();
         auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
 
-        std::unique_ptr<IParam> ip = findParamByName<U>(fields, oidStr);
+        std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
         if (oid.empty()) {
             // we reached the end of the path, return the element
             return ip;
@@ -305,8 +326,8 @@ class ParamWithValue : public catena::common::IParam {
      * findParamByNameImpl uses the index sequence to deduce its template parameters. 
      */
     template <typename Struct, typename Tuple>
-    std::unique_ptr<IParam>  findParamByName(const Tuple& fields, const std::string& name) {
-        return findParamByNameImpl<Struct>(fields, name, std::make_index_sequence<std::tuple_size_v<Tuple>>());
+    std::unique_ptr<IParam>  findParamByName_(const Tuple& fields, const std::string& name) {
+        return findParamByNameImpl_<Struct>(fields, name, std::make_index_sequence<std::tuple_size_v<Tuple>>());
     }
 
     /**
@@ -321,13 +342,13 @@ class ParamWithValue : public catena::common::IParam {
      * This function is a helper function for findParamByName that finds the child parameter by name.
      */
     template <typename Struct, typename Tuple, std::size_t... Is>
-    std::unique_ptr<IParam>  findParamByNameImpl(const Tuple& fields, const std::string& name, std::index_sequence<Is...>) {
+    std::unique_ptr<IParam>  findParamByNameImpl_(const Tuple& fields, const std::string& name, std::index_sequence<Is...>) {
         /**
          * Creates an array of unique pointers to IParam objects. The pointer will be nullptr if the field name does not match 
          * the name parameter. If the field name does match the name parameter, the pointer will be a unique pointer to a 
          * IParam object.
          */
-        std::unique_ptr<IParam> params[] = {std::get<Is>(fields).name == name ? getParamAtIndex<Is>(fields) : nullptr ...};
+        std::unique_ptr<IParam> params[] = {std::get<Is>(fields).name == name ? getParamAtIndex_<Is>(fields) : nullptr ...};
         for (auto& param : params) {
             if (param) {
                 // returns first IParam unique_ptr element that isn't a nullptr
@@ -347,7 +368,7 @@ class ParamWithValue : public catena::common::IParam {
      * index I of the tuple.
      */
     template <std::size_t I, typename Tuple>
-    std::unique_ptr<IParam> getParamAtIndex(const Tuple& tuple) {
+    std::unique_ptr<IParam> getParamAtIndex_(const Tuple& tuple) {
         // Get the type of the field at index I so that we can create a ParamWithValue object of that type
         using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
         return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);

@@ -34,9 +34,6 @@
 #include <interface/param.pb.h>
 
 namespace catena {
-class Value; // forward reference
-class Param; // forward reference
-
 namespace common { 
 
 /**
@@ -145,6 +142,16 @@ class IParam {
     virtual void setConstraint(IConstraint* constraint) = 0;
 
     virtual const std::string getScope() const = 0;
+
+    /**
+     * @brief define a command for the parameter
+     */
+    virtual void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) = 0;
+
+    /**
+     * @brief execute the command for the parameter
+     */
+    virtual catena::CommandResponse executeCommand(const catena::Value&  value) const = 0;
 
 };
 }  // namespace common

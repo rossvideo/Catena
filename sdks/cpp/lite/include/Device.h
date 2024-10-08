@@ -162,9 +162,9 @@ class Device {
         // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
         //     menu_groups_[key] = item;
         // }
-        // if constexpr (std::is_same_v<TAG, common::CommandTag>) {
-        //     commands_[key] = item;
-        // }
+        if constexpr (std::is_same_v<TAG, common::CommandTag>) {
+            commands_[key] = item;
+        }
         if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
             language_packs_[key] = item;
         }
@@ -180,7 +180,7 @@ class Device {
         GET_ITEM(common::ParamTag, params_)
         GET_ITEM(common::ConstraintTag, constraints_)
         // GET_ITEM(common::MenuGroupTag, menu_groups_)
-        // GET_ITEM(common::CommandTag, commands_)
+        GET_ITEM(common::CommandTag, commands_)
         GET_ITEM(common::LanguagePackTag, language_packs_)
         return nullptr;
     }
@@ -188,9 +188,16 @@ class Device {
     /**
      * @brief get a parameter by oid
      * @param fqoid the fully qualified oid of the parameter
-     * @return a unique pointer to the parameter
+     * @return a unique pointer to the parameter, or nullptr if it does not exist
      */
     std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
+
+    /**
+     * @brief get a command by oid
+     * @param fqoid the fully qualified oid of the command
+     * @return a unique pointer to the command, or nullptr if it does not exist
+     */
+    std::unique_ptr<IParam> getCommand(const std::string& fqoid) const;
 
     /**
      * @brief deserialize a protobuf value object into the parameter value

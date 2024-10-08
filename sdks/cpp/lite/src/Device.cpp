@@ -21,6 +21,8 @@
 // lite
 #include <Device.h>
 #include <LanguagePack.h>
+#include <ParamWithValue.h>
+#include <ParamDescriptor.h>
 
 #include <cassert>
 #include <sstream>
@@ -82,6 +84,25 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid) const {
             return topParam->copy();
         } else {
             return topParam->getParam(path);
+        }
+    } else {
+        return nullptr;
+    }
+}
+
+std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid) const {
+    catena::common::Path path(fqoid);
+    if (path.empty()) {
+        return nullptr;
+    }
+    if (path.front_is_string()) {
+        IParam* topCommand = getItem<common::CommandTag>(path.front_as_string());
+        path.pop();
+        if (!topCommand) {return nullptr;}
+        if (path.empty()) {
+            return topCommand->copy();
+        } else {
+            return nullptr;
         }
     } else {
         return nullptr;

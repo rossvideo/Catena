@@ -76,6 +76,7 @@ void CatenaServiceImpl::init() {
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
     // new GetParam(this, dm_, true);
+    new ExecuteCommand(this, dm_, true);
 }
 
 int CatenaServiceImpl::GetPopulatedSlots::objectCounter_ = 0;
@@ -84,6 +85,7 @@ int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 int CatenaServiceImpl::Connect::objectCounter_ = 0;
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
+int CatenaServiceImpl::ExecuteCommand::objectCounter_ = 0;
 
 vdk::signal<void()> CatenaServiceImpl::Connect::shutdownSignal_;
 
@@ -381,7 +383,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                             this->res_.mutable_value()->set_element_index(idx);
 
                             std::string clientScope = "operate"; // temporary until we implement authz
-                            p->toProto(*this->res_.mutable_value()->mutable_value(), clientScope);
+                            catena::Value* value = this->res_.mutable_value()->mutable_value();
+                            p->toProto(*value, clientScope);
                         }
                         this->hasUpdate_ = true;
                         this->cv_.notify_one();
@@ -682,3 +685,71 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
     //     int objectId_;
     //     static int objectCounter_;
     // };
+
+CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, stream_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    service->registerItem(this);
+    objectId_ = objectCounter_++;
+    proceed(service, ok);  // start the process
+}
+
+void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+
+    if(!ok){
+        std::cout << "ExecuteCommand[" << objectId_ << "] cancelled\n";
+        status_ = CallStatus::kFinish;
+    }
+
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestExecuteCommand(&context_, &stream_, service_->cq_, service_->cq_, this);
+            break;
+
+        case CallStatus::kProcess:
+            new ExecuteCommand(service_, dm_, ok);
+            // ExecuteCommand RPC always begins with reading initial request from client
+            status_ = CallStatus::kRead;
+            stream_.Read(&req_, this);
+            break;
+
+        case CallStatus::kRead: // should always tranistion to this state after calling stream_.Read()
+        {
+            std::unique_ptr<IParam> command = dm_.getCommand(req_.oid());
+            if (command == nullptr) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(grpc::StatusCode::NOT_FOUND, "Command not found");
+                stream_.Finish(errorStatus, this);
+                break;
+            }
+            res_ = command->executeCommand(req_.value());
+
+            /**
+             * @todo: Implement streaming response
+             */
+            // for now we are not streaming the response so we can finish the call
+            status_ = CallStatus::kPostWrite; 
+            stream_.Write(res_, this);
+            break;
+        }
+
+        case CallStatus::kWrite:
+            status_ = CallStatus::kRead;
+            stream_.Read(&req_, this);
+            break;
+
+        case CallStatus::kPostWrite:
+            status_ = CallStatus::kFinish;
+            stream_.Finish(Status::OK, this);
+            break;
+
+        case CallStatus::kFinish:
+            std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+    }
+}
