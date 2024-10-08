@@ -38,14 +38,9 @@ class Menu; // forward reference
 namespace common {
 
 /**
- * @brief Interface for Language Packs
+ * @brief Interface for Menus
  */
 class IMenu {
-public:
-    /**
-     * @brief Const iterator to the key/word pairs
-     */
-    using const_iterator = std::unordered_map<std::string, std::string>::const_iterator;
 
 public:
     IMenu() = default;
@@ -54,26 +49,17 @@ public:
     virtual ~IMenu() = default;
 
     /**
-     * @brief serialize a language pack to a protobuf message
-     * @param pack the protobuf message
+     * @brief serialize a menu to a protobuf message
+     * @param menu the protobuf message
      */
-    virtual void toProto(catena::Menu& pack) const = 0;
+    virtual void toProto(catena::Menu& menu) const = 0;
 
     /**
-     * @brief deserialize a language pack from a protobuf message
-     * @param pack the protobuf message
+     * @brief deserialize a menu from a protobuf message
+     * @param menu the protobuf message
      */
-    virtual void fromProto(const catena::Menu& pack) = 0;
+    virtual void fromProto(const catena::Menu& menu) = 0;
 
-    /**
-     * get the begin iterator to the key/word pairs
-     */
-    virtual const_iterator begin() const = 0;
-
-    /**
-     * get the end iterator to the key/word pairs
-     */
-    virtual const_iterator end() const = 0;
 };
 }  // namespace common
 }  // namespace catena

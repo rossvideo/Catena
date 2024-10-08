@@ -34,11 +34,10 @@
 #include <Device.h>
 
 // protobuf interface
-#include <interface/Menu.pb.h> //Unsure where to create this file
+#include <interface/menu.pb.h> //Unsure where to create this file
 
 #include <string>
 #include <unordered_map>
-#include <initializer_list>
 #include <vector>
 
 namespace catena {
@@ -50,12 +49,7 @@ class Menu;  // forward declaration
  * @brief Menu list
  */
 class Menu : public common::IMenu {
-  public:
-    /**
-     * @brief Menu list initializer
-     */
-    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
-
+  
   public:
     Menu() = delete;
     /**
@@ -84,38 +78,39 @@ class Menu : public common::IMenu {
     virtual ~Menu() = default;
 
     /**
-     * @brief construct a language pack from a list of words
-     * @param name the name of the language
-     * @param list the list of key/word pairs
-     * @param dev the device model to which this language pack belongs
+     * @brief construct a menu item
+     * @param name the name of the menu
+     * @param id the identifier of the menu
+     * @param unique the unique identifier of the menu
+     * @param disabled whether the menu is disabled
+     * @param hidden whether the menu is hidden
+     * @param oids the list of oids in the menu
+     * @param client_hints map of client hints //Unsure what this is
+     * @param dev the device model to which this menu belongs
      */
-    Menu(const std::string& name, ListInitializer list, Device& dev);
+    Menu(const std::string& name, const int id, const int unique, bool disabled, bool hidden, const std::vector<std::string>& oids, Device& dev);
 
     /**
-     * @brief deserialize a language pack from a protobuf message
+     * @brief deserialize a menu from a protobuf message
      * @param pack the protobuf message
      */
-    void fromProto(const ::catena::Menu& pack) override;
+    void fromProto(const ::catena::Menu& menu) override;
 
     /**
-     * @brief serialize a language pack to a protobuf message
+     * @brief serialize a menu to a protobuf message
      * @param pack the protobuf message
      */
-    void toProto(::catena::Menu& pack) const override;
-
-    /**
-     * get the begin iterator to the key/word pairs
-     */
-    inline const_iterator begin() const override{ return words_.cbegin(); }
-
-    /**
-     * get the end iterator to the key/word pairs
-     */
-    inline const_iterator end() const override { return words_.cend(); }
+    void toProto(::catena::Menu& menu) const override;
 
   private:
     std::string name_;
-    std::unordered_map<std::string, std::string> words_;
+    int id_;
+    int unique_;
+    bool disabled_;
+    bool hidden_;
+    std::vector<std::string> oids_;
+    std::unordered_map<std::string, std::string> client_hints_;
+    Device& dev_;
 };
 
 

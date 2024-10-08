@@ -34,7 +34,7 @@
 #include <Device.h>
 
 // protobuf interface
-#include <interface/MenuGroup.pb.h> //Unsure where to create this file
+#include <interface/menu.pb.h>
 
 #include <string>
 #include <unordered_map>
@@ -50,12 +50,6 @@ class MenuGroup;  // forward declaration
  * @brief MenuGroup list
  */
 class MenuGroup : public common::IMenuGroup {
-  public:
-    /**
-     * @brief MenuGroup list initializer
-     */
-    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
-
   public:
     MenuGroup() = delete;
     /**
@@ -84,38 +78,31 @@ class MenuGroup : public common::IMenuGroup {
     virtual ~MenuGroup() = default;
 
     /**
-     * @brief construct a language pack from a list of words
+     * @brief construct a Menu Group from a list of Menus
      * @param name the name of the language
-     * @param list the list of key/word pairs
-     * @param dev the device model to which this language pack belongs
+     * @param menuid the identifier of the menu
+     * @param menus a map of menus
+     * @param dev the device model to which this menu group belongs
      */
-    MenuGroup(const std::string& name, ListInitializer list, Device& dev);
+    MenuGroup(const std::string& name, int menuid, std::unordered_map<std::string, catena::IMenu> menus, Device& dev);
 
     /**
-     * @brief deserialize a language pack from a protobuf message
+     * @brief deserialize a menu group from a protobuf message
      * @param pack the protobuf message
      */
-    void fromProto(const ::catena::MenuGroup& pack) override;
+    void fromProto(const ::catena::MenuGroup& menuGroup) override;
 
     /**
-     * @brief serialize a language pack to a protobuf message
+     * @brief serialize a menu group to a protobuf message
      * @param pack the protobuf message
      */
-    void toProto(::catena::MenuGroup& pack) const override;
-
-    /**
-     * get the begin iterator to the key/word pairs
-     */
-    inline const_iterator begin() const override{ return words_.cbegin(); }
-
-    /**
-     * get the end iterator to the key/word pairs
-     */
-    inline const_iterator end() const override { return words_.cend(); }
+    void toProto(::catena::MenuGroup& menuGroup) const override;
 
   private:
     std::string name_;
-    std::unordered_map<std::string, std::string> words_;
+    int menuid_;
+    std::unordered_map<std::string, catena::IMenu> menus_;
+    Device& dev_;
 };
 
 
