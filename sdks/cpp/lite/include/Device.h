@@ -188,14 +188,14 @@ class Device {
     /**
      * @brief get a parameter by oid
      * @param fqoid the fully qualified oid of the parameter
-     * @return a unique pointer to the parameter
+     * @return a unique pointer to the parameter, or nullptr if it does not exist
      */
     std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
 
     /**
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
-     * @return a unique pointer to the command
+     * @return a unique pointer to the command, or nullptr if it does not exist
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid) const;
 

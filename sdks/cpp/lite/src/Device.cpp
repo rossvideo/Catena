@@ -102,7 +102,7 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid) const {
         if (path.empty()) {
             return topCommand->copy();
         } else {
-            throw catena::exception_with_status("Subcommands not supported", catena::StatusCode::UNIMPLEMENTED);
+            return nullptr;
         }
     } else {
         return nullptr;

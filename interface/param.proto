@@ -293,9 +293,11 @@ message UpdateSubscriptionsPayload {
  *   bool respond = 2;     // true when the device will respond to the command, false otherwise.
  * }
  * 
+ * When streamed, only the value field will be used after the first message.
+ *
  * The proceed flag allows the client to indicate to the server that is has already recieved a payload
- * Ex. If a command steams a large file, the clent can set proceed to false to indicate that the server
- * should not send any more payloads.
+ * Ex. If a command streams a large file, the client can set proceed to false to indicate to the server
+ * that it does not need the rest of the file.
  */
 message ExecuteCommandPayload {
   uint32 slot = 1;  // Slot id of the device

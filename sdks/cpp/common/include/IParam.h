@@ -37,12 +37,6 @@ namespace catena {
 namespace common { 
 
 /**
- * @brief EmptyValue is used for commands that do not have a value
- */
-struct EmptyValue {};
-static EmptyValue emptyValue;
-
-/**
  * @brief IParam is the interface for business logic and connection logic to interact with parameters
  * 
  * This class creates an interface for accessing catena parameter without needing to know any 

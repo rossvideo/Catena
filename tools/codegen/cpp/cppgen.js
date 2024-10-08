@@ -276,7 +276,7 @@ class CppGen {
     if (isCommand) {
       bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm, true};`);
       descriptor.writeDescriptors();
-      bloc(`catena::lite::ParamWithValue<EmptyValue> ${pname}Param {catena::common::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
+      bloc(`catena::lite::ParamWithValue<EmptyValue> ${pname}Param {catena::lite::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
     } else if (!isStructChild && p.hasValue()) {
       bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm, false};`);
       descriptor.writeDescriptors();
@@ -453,7 +453,7 @@ class CppGen {
     bloc(`using catena::lite::PicklistConstraint;`);
     bloc(`using catena::lite::NamedChoiceConstraint;`);
     bloc(`using catena::common::IParam;`);
-    bloc(`using catena::common::EmptyValue;`);
+    bloc(`using catena::lite::EmptyValue;`);
     bloc(`using std::placeholders::_1;`);
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);

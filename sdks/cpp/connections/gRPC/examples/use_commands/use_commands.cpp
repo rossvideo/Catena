@@ -203,12 +203,19 @@ void defineCommands() {
     std::unique_ptr<IParam> playCommand = dm.getCommand("/play");
     assert(playCommand != nullptr);
 
-    // Define a lambda function that will be called when the command is executed
+    // Define a lambda function to be executed when the command is called
     // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
     playCommand->defineCommand([](catena::Value value) {
+        catena::CommandResponse response;
         std::unique_ptr<IParam> stateParam = dm.getParam("/state");
-        std::string& state = catena::lite::getParamValue<std::string>(dm, "/state");
+        
+        // If the state parameter does not exist, return an exception
+        if (stateParam == nullptr) {
+            response.mutable_exception()->set_type("Invalid Command");
+            return response;
+        }
 
+        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
         {
             Device::LockGuard lg(dm);
             state = "playing";
@@ -217,7 +224,6 @@ void defineCommands() {
         
 
         std::cout << "video is " << state << "\n";
-        catena::CommandResponse response;
         response.mutable_no_response();
         return response;
     });
@@ -225,9 +231,15 @@ void defineCommands() {
     std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause");
     assert(pauseCommand != nullptr);
     pauseCommand->defineCommand([](catena::Value value) {
+        catena::CommandResponse response;
         std::unique_ptr<IParam> stateParam = dm.getParam("/state");
-        std::string& state = catena::lite::getParamValue<std::string>(dm, "/state");
 
+        if (stateParam == nullptr) {
+            response.mutable_exception()->set_type("Invalid Command");
+            return response;
+        }
+
+        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
         {
             Device::LockGuard lg(dm);
             state = "paused";
@@ -235,7 +247,6 @@ void defineCommands() {
         }
 
         std::cout << "video is " << state << "\n";
-        catena::CommandResponse response;
         response.mutable_no_response();
         return response;
     });
