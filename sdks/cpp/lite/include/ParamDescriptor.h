@@ -104,11 +104,11 @@ class ParamDescriptor {
       const PolyglotText::ListInitializer name, 
       const std::string& widget,
       const std::string& scope, 
-      const bool read_only, 
+      bool read_only, 
       const std::string& oid, 
       ParamDescriptor* parent,
       Device& dev,
-      const bool isCommand)
+      bool isCommand)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         constraint_{nullptr}, parent_{parent}, dev_{dev}, isCommand_{isCommand} {
       setOid(oid);
@@ -247,7 +247,7 @@ class ParamDescriptor {
     ParamDescriptor* parent_;
     std::reference_wrapper<Device> dev_;
 
-    const bool isCommand_;
+    bool isCommand_;
 
     // default command implementation
     std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 

@@ -97,7 +97,7 @@ void toProto<std::vector<float>>(Value& dst, const std::vector<float>* src, cons
 }
 
 template<>
-void catena::lite::fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const AuthzInfo& auth) {
+void fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const AuthzInfo& auth) {
     dst->clear();
     const catena::Float32List& float_array = src.float32_array_values();
     for (int i = 0; i < float_array.floats_size(); ++i) {

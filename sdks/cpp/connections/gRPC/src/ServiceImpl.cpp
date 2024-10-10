@@ -29,7 +29,7 @@ using catena::common::ParamTag;
 #include <thread>
 #include <fstream>
 #include <vector>
-#include <iterator> 
+#include <iterator>
 
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {
@@ -211,6 +211,11 @@ void CatenaServiceImpl::GetPopulatedSlots::proceed(CatenaServiceImpl *service, b
             std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
     }
 }
 
@@ -269,6 +274,11 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             std::cout << "GetValue[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
     }
 }
 
@@ -334,6 +344,11 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
             std::cout << "SetValue[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
     }
 }
 
@@ -455,6 +470,11 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             dm_.valueSetByServer.disconnect(valueSetByServerId_);
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
 
@@ -519,6 +539,11 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             //shutdownSignal.disconnect(shutdownSignalId_);
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
 
@@ -600,6 +625,11 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
             std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
 
@@ -751,5 +781,10 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
             std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            stream_.Finish(errorStatus, this);
     }
 }
