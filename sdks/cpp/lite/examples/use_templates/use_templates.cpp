@@ -49,8 +49,12 @@ int main() {
     // lock the model
     Device::LockGuard lg(dm);
 
-    std::unique_ptr<IParam> ip = dm.getParam("/ottawa");
-    assert(ip != nullptr);
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> ip = dm.getParam("/ottawa", ans);
+    if (ip == nullptr){
+        std::cerr << "Error: " << ans.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     auto& canadasCapital = *dynamic_cast<ParamWithValue<City>*>(ip.get());
     City& city = canadasCapital.get();
     std::cout << "Canada's capital city is " << city.city_name
@@ -59,7 +63,11 @@ int main() {
               << " with a population of " << city.population
               << std::endl;
 
-    ip = dm.getParam("/toronto");
+    ip = dm.getParam("/toronto", ans);
+    if (ip == nullptr){
+        std::cerr << "Error: " << ans.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     auto& ontariosCapital = *dynamic_cast<ParamWithValue<City>*>(ip.get());
     City& city2 = ontariosCapital.get();
     std::cout << "Ontario's capital city is " << city2.city_name

@@ -197,16 +197,6 @@ void CatenaServiceImpl::GetPopulatedSlots::proceed(CatenaServiceImpl *service, b
             }
         break;
 
-        case CallStatus::kWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
         case CallStatus::kFinish:
             std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
@@ -259,16 +249,6 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 responder_.FinishWithError(errorStatus, this);
             }
         break;
-
-        case CallStatus::kWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
 
         case CallStatus::kFinish:
             std::cout << "GetValue[" << objectId_ << "] finished\n";
@@ -328,16 +308,6 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 status_ = CallStatus::kFinish;
                 responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
             }
-            break;
-        
-        case CallStatus::kWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
             break;
 
         case CallStatus::kFinish:
@@ -456,11 +426,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 writer_.Write(res_, this);
             }
             lock.unlock();
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
             break;
 
         case CallStatus::kFinish:
@@ -749,11 +714,11 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
 
         case CallStatus::kRead: // should always tranistion to this state after calling stream_.Read()
         {
-            std::unique_ptr<IParam> command = dm_.getCommand(req_.oid());
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unique_ptr<IParam> command = dm_.getCommand(req_.oid(), rc);
             if (command == nullptr) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::NOT_FOUND, "Command not found");
-                stream_.Finish(errorStatus, this);
+                stream_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                 break;
             }
             res_ = command->executeCommand(req_.value());

@@ -29,6 +29,7 @@
 #include <Enums.h>
 #include <IConstraint.h>
 #include <Path.h>
+#include <Status.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -80,20 +81,20 @@ class IParam {
      * @brief serialize the parameter value to protobuf
      * @param dst the protobuf value to serialize to
      */
-    virtual void toProto(catena::Value& dst, std::string& clientScope) const = 0;
+    virtual catena::exception_with_status toProto(catena::Value& dst, std::string& clientScope) const = 0;
     
     /**
      * @brief deserialize the parameter value from protobuf
      * @param src the protobuf value to deserialize from
      * @note this method may constrain the source value and modify it
      */
-    virtual void fromProto(const catena::Value& src, std::string& clientScope) = 0;
+    virtual catena::exception_with_status fromProto(const catena::Value& src, std::string& clientScope) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param param the protobuf value to serialize to
      */
-    virtual void toProto(catena::Param& param, std::string& clientScope) const = 0;
+    virtual catena::exception_with_status toProto(catena::Param& param, std::string& clientScope) const = 0;
 
     /**
      * @brief return the type of the param
@@ -124,7 +125,7 @@ class IParam {
     /**
      * @brief get a child parameter by name
      */
-    virtual std::unique_ptr<IParam> getParam(Path& oid) = 0;
+    virtual std::unique_ptr<IParam> getParam(Path& oid, catena::exception_with_status& status) = 0;
 
     /**
      * @brief add a child parameter
