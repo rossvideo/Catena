@@ -77,7 +77,7 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
             IParam* param = getItem<common::ParamTag>(path.front_as_string());
             path.pop();
             if (!param) {
-                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT); 
                 return nullptr;
             }
             if (path.empty()) {
