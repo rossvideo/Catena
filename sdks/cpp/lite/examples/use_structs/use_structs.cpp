@@ -49,9 +49,13 @@ using catena::common::ParamTag;
 int main() {
     // lock the model
     Device::LockGuard lg(dm);
+    catena::exception_with_status err{"", catena::StatusCode::OK};
 
-    std::unique_ptr<IParam> ip = dm.getParam("/location");
-    assert(ip != nullptr);
+    std::unique_ptr<IParam> ip = dm.getParam("/location", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
     Location& loc = locationParam.get();
 
@@ -59,7 +63,6 @@ int main() {
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
               << "' " << loc.longitude.seconds << "\")" << std::endl;
 
-    assert(ip != nullptr);
     catena::Value value;
     std::string clientScope = "operate";
     ip->toProto(value, clientScope);
@@ -74,20 +77,29 @@ int main() {
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
               << "' " << loc.longitude.seconds << "\")" << std::endl;
 
-    ip = dm.getParam("/location/latitude");
-    assert(ip != nullptr);
+    ip = dm.getParam("/location/latitude", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     ip->toProto(value, clientScope);
     std::cout << "Latitude: " << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/location/latitude/degrees");
-    assert(ip != nullptr);
+    ip = dm.getParam("/location/latitude/degrees", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     ip->toProto(value, clientScope);
     std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/location/longitude/seconds");
-    assert(ip != nullptr);
+    ip = dm.getParam("/location/longitude/seconds", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     ip->toProto(value, clientScope);
     std::cout << "Longitude seconds: " << value.DebugString() << std::endl;

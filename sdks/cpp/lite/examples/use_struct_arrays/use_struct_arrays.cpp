@@ -45,9 +45,13 @@ using catena::common::ParamTag;
 int main() {
     // lock the model
     Device::LockGuard lg(dm);
+    catena::exception_with_status err{"", catena::StatusCode::OK};
 
-    std::unique_ptr<IParam> ip = dm.getParam("/audio_deck");
-    assert(ip != nullptr);
+    std::unique_ptr<IParam> ip = dm.getParam("/audio_deck", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     catena::Value value;
     std::string clientScope = "operate";
     ip->toProto(value, clientScope);
@@ -58,8 +62,11 @@ int main() {
     value.mutable_struct_array_values()->mutable_struct_values()->at(2).mutable_fields()->at("eq_list").mutable_value()->mutable_struct_array_values()->mutable_struct_values()->at(1).mutable_fields()->at("q_factor").mutable_value()->set_float32_value(2.5);
     ip->fromProto(value, clientScope);
 
-    ip = dm.getParam("/audio_deck/2");
-    assert(ip != nullptr);
+    ip = dm.getParam("/audio_deck/2", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     clientScope = "operate";
     ip->toProto(value, clientScope);
@@ -67,22 +74,31 @@ int main() {
 
 
     // add a new audio channel to audio_deck
-    ip = dm.getParam("/audio_deck/4");
-    assert(ip != nullptr);
+    ip = dm.getParam("/audio_deck/-", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     clientScope = "operate";
     ip->toProto(value, clientScope);
     std::cout << "new audio channel: " << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/audio_deck/3/eq_list/0/response");
-    assert(ip != nullptr);
+    ip = dm.getParam("/audio_deck/3/eq_list/0/response", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     clientScope = "operate";
     ip->toProto(value, clientScope);
     std::cout << "/audio_deck/1/eq_list/1/response: " << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/audio_deck/2/eq_list/1/q_factor");
-    assert(ip != nullptr);
+    ip = dm.getParam("/audio_deck/2/eq_list/1/q_factor", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     value.Clear();
     clientScope = "operate";
     ip->toProto(value, clientScope);

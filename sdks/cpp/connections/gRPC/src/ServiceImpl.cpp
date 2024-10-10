@@ -719,11 +719,11 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
 
         case CallStatus::kRead: // should always tranistion to this state after calling stream_.Read()
         {
-            std::unique_ptr<IParam> command = dm_.getCommand(req_.oid());
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unique_ptr<IParam> command = dm_.getCommand(req_.oid(), rc);
             if (command == nullptr) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::NOT_FOUND, "Command not found");
-                stream_.Finish(errorStatus, this);
+                stream_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                 break;
             }
             res_ = command->executeCommand(req_.value());

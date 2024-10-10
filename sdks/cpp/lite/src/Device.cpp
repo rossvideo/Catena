@@ -37,74 +37,99 @@ const std::vector<std::string> Device::kAuthzDisabled = {"__AUTHZ_DISABLED__"};
 
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr);
+    std::unique_ptr<IParam> param = getParam(jptr, ans);
     // we expect this to be a parameter name
     if (param != nullptr) {
         std::string clientScope = "operate"; // temporary until we implement authz
-        param->fromProto(src, clientScope);
+        ans = param->fromProto(src, clientScope);
         valueSetByClient.emit(jptr, param.get(), 0);
-    } else {
-        std::stringstream ss;
-        ss << "parameter not found: " << jptr;
-        exception_with_status why(ss.str(), catena::StatusCode::INVALID_ARGUMENT);
-        ans = std::move(why);
     }
     return ans;
 }
 
 catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr);
+    std::unique_ptr<IParam> param = getParam(jptr, ans);
     
     // we expect this to be a parameter name
     if (param != nullptr) {
         std::string clientScope = "operate"; // temporary until we implement authz
         // we have reached the end of the path, deserialize the value
         param->toProto(dst, clientScope);
-    } else {
-        std::stringstream ss;
-        ss << "Invalid json pointer: " << jptr;
-        ss << ", expected first segment to be a string";
-        exception_with_status why(ss.str(), catena::StatusCode::INVALID_ARGUMENT);
-        ans = std::move(why);
     }
     return ans;
 }
 
-std::unique_ptr<IParam> Device::getParam(const std::string& fqoid) const {
-    catena::common::Path path(fqoid);
-    if (path.empty()) {
-        return nullptr;
-    }
-    if (path.front_is_string()) {
-        IParam* topParam = getItem<common::ParamTag>(path.front_as_string());
-        path.pop();
-        if (!topParam) {return nullptr;}
+std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status) const {
+    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
+    try {
+        catena::common::Path path(fqoid);
         if (path.empty()) {
-            return topParam->copy();
-        } else {
-            return topParam->getParam(path);
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
         }
-    } else {
+        if (path.front_is_string()) {
+            /**
+             * Top level param objects are defined in the device models generated cpp body file and exist for the lifetime of 
+             * the program. The device has a map of pointers to these params. These are not unique pointers because the 
+             * lifetime of the top level params does not need to be managed.
+             */
+            IParam* param = getItem<common::ParamTag>(path.front_as_string());
+            path.pop();
+            if (!param) {
+                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
+            if (path.empty()) {
+                /**
+                 * Top level params need to be copied into a unique pointer to be returned.
+                 * 
+                 * This is a shallow copy.
+                 */
+                return param->copy();
+            } else {
+                /**
+                 * Sub-param objects are created by the getParam function so the lifetime of the object is managed by the caller.
+                 */
+                return param->getParam(path, status);
+            }
+        } else {
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
         return nullptr;
     }
 }
 
-std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid) const {
-    catena::common::Path path(fqoid);
-    if (path.empty()) {
-        return nullptr;
-    }
-    if (path.front_is_string()) {
-        IParam* topCommand = getItem<common::CommandTag>(path.front_as_string());
-        path.pop();
-        if (!topCommand) {return nullptr;}
+std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status) const {
+   // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
+    try {
+        catena::common::Path path(fqoid);
         if (path.empty()) {
-            return topCommand->copy();
-        } else {
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
-    } else {
+        if (path.front_is_string()) {
+            IParam* param = getItem<common::CommandTag>(path.front_as_string());
+            path.pop();
+            if (!param) {
+                status = catena::exception_with_status("Command not found: " + fqoid, catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
+            if (path.empty()) {
+                return param->copy();
+            } else {
+                status = catena::exception_with_status("sub-commands not implemented", catena::StatusCode::UNIMPLEMENTED);
+                return nullptr;
+            }
+        } else {
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
         return nullptr;
     }
 }

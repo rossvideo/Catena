@@ -190,14 +190,14 @@ class Device {
      * @param fqoid the fully qualified oid of the parameter
      * @return a unique pointer to the parameter, or nullptr if it does not exist
      */
-    std::unique_ptr<IParam> getParam(const std::string& fqoid) const;
+    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status) const;
 
     /**
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
      * @return a unique pointer to the command, or nullptr if it does not exist
      */
-    std::unique_ptr<IParam> getCommand(const std::string& fqoid) const;
+    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status) const;
 
     /**
      * @brief deserialize a protobuf value object into the parameter value

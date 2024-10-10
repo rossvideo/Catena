@@ -36,7 +36,7 @@ void toProto<EmptyValue>(Value& dst, const EmptyValue* src, const AuthzInfo& aut
 
 template<>
 void fromProto<EmptyValue>(const catena::Value& src, EmptyValue* dst, const AuthzInfo& auth) {
-    //do_nothing
+    // do nothing
 }
 
 template<>
@@ -46,7 +46,12 @@ void toProto<int32_t>(Value& dst, const int32_t* src, const AuthzInfo& auth) {
 
 template<>
 void fromProto<int32_t>(const catena::Value& src, int32_t* dst, const AuthzInfo& auth) {
-    *dst = src.int32_value();
+    if (src.has_int32_value()) {
+        *dst = src.int32_value();
+        return;
+    } else {
+        return;
+    }
 }
 
 template<>
@@ -56,7 +61,12 @@ void toProto<float>(catena::Value& dst, const float* src, const AuthzInfo& auth)
 
 template<>
 void fromProto<float>(const catena::Value& src, float* dst, const AuthzInfo& auth) {
-    *dst = src.float32_value();
+    if (src.has_float32_value()) {
+        *dst = src.float32_value();
+        return;
+    } else {
+        return;
+    }
 }
 
 template<>
@@ -66,7 +76,12 @@ void toProto<std::string>(Value& dst, const std::string* src, const AuthzInfo& a
 
 template<>
 void fromProto<std::string>(const catena::Value& src, std::string* dst, const AuthzInfo& auth) {
-    *dst = src.string_value();
+    if (src.has_string_value()) {
+        *dst = src.string_value();
+        return;
+    } else {
+        return;
+    }
 }
 
 template<>
@@ -80,11 +95,18 @@ void toProto<std::vector<int32_t>>(Value& dst, const std::vector<int32_t>* src, 
 
 template<>
 void fromProto<std::vector<int32_t>>(const Value& src, std::vector<int32_t>* dst, const AuthzInfo& auth) {
+    if (!src.has_int32_array_values()) {
+        return;
+    }
     dst->clear();
     const catena::Int32List& int_array = src.int32_array_values();
+    
+    // Right now from proto is able to append any number of values to the vector
+    // Do we want to keep this behavior?
     for (int i = 0; i < int_array.ints_size(); ++i) {
         dst->push_back(int_array.ints(i));
     }
+    return;
 }
 
 template<>
@@ -97,12 +119,16 @@ void toProto<std::vector<float>>(Value& dst, const std::vector<float>* src, cons
 }
 
 template<>
-void catena::lite::fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const AuthzInfo& auth) {
+void fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, const AuthzInfo& auth) {
+    if (!src.has_float32_array_values()) {
+        return;
+    }
     dst->clear();
     const catena::Float32List& float_array = src.float32_array_values();
     for (int i = 0; i < float_array.floats_size(); ++i) {
         dst->push_back(float_array.floats(i));
     }
+    return;
 }
 
 template<>
@@ -116,11 +142,15 @@ void toProto<std::vector<std::string>>(Value& dst, const std::vector<std::string
 
 template<>
 void fromProto<std::vector<std::string>>(const Value& src, std::vector<std::string>* dst, const AuthzInfo& auth) {
+    if (!src.has_string_array_values()) {
+        return;
+    }
     dst->clear();
     const catena::StringList& string_array = src.string_array_values();
     for (int i = 0; i < string_array.strings_size(); ++i) {
         dst->push_back(string_array.strings(i));
     }
+    return;
 }
 
 } // namespace lite

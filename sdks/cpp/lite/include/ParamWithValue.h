@@ -117,7 +117,7 @@ class ParamWithValue : public catena::common::IParam {
     virtual ~ParamWithValue() = default;
 
     /**
-     * @brief copy the parameter
+     * @brief creates a shallow copy the parameter
      * 
      * Needed to copy IParam objects
      * 
@@ -132,11 +132,13 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to serialize to
      * @param clientScope the client scope
      */
-    void toProto(catena::Value& value, std::string& clientScope) const override {
+    catena::exception_with_status toProto(catena::Value& value, std::string& clientScope) const override {
         AuthzInfo auth(descriptor_, clientScope);
-        if (auth.readAuthz()) {
-            catena::lite::toProto<T>(value, &value_.get(), auth);
+        if (!auth.readAuthz()) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
+        catena::lite::toProto<T>(value, &value_.get(), auth);
+        return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
     /**
@@ -145,12 +147,14 @@ class ParamWithValue : public catena::common::IParam {
      * @param param the protobuf value to serialize to
      * @param clientScope the client scope
      */
-    void toProto(catena::Param& param, std::string& clientScope) const override {
+    catena::exception_with_status toProto(catena::Param& param, std::string& clientScope) const override {
         AuthzInfo auth(descriptor_, clientScope);
-        if (auth.readAuthz()) {
-            descriptor_.toProto(param, auth);        
-            catena::lite::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        if (!auth.readAuthz()) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
+        descriptor_.toProto(param, auth);        
+        catena::lite::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
     /**
@@ -158,10 +162,16 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope
      */
-    void fromProto(const catena::Value& value, std::string& clientScope) override {
+    catena::exception_with_status fromProto(const catena::Value& value, std::string& clientScope) override {
         AuthzInfo auth(descriptor_, clientScope);
-        if (auth.writeAuthz()) {
+        if (!auth.readAuthz()) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        if (!auth.writeAuthz()) {
+            return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+        } else {
             catena::lite::fromProto<T>(value, &value_.get(), auth);
+            return catena::exception_with_status("", catena::StatusCode::OK);
         }
     }
 
@@ -212,8 +222,8 @@ class ParamWithValue : public catena::common::IParam {
      * @param oid the path to the child parameter
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      */
-    std::unique_ptr<IParam> getParam(Path& oid) override {
-        return getParam_(oid, value_.get());
+    std::unique_ptr<IParam> getParam(Path& oid, catena::exception_with_status& status) override {
+        return getParam_(oid, value_.get(), status);
     }
 
     /**
@@ -244,8 +254,9 @@ class ParamWithValue : public catena::common::IParam {
      * 
      */
     template <typename U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
+        status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
 
@@ -260,20 +271,23 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be an index.
      */
     template<CatenaStructArray U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         if (!oid.front_is_index()) {
+            status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
         size_t oidIndex = oid.front_as_index();
         oid.pop();
 
-        // If index is out of bounds, return nullptr
-        if (oidIndex > value.size()) return nullptr;
-
-        if (oidIndex == value.size()) {
-            // If the index is the size of the array, return a new element
+        if (oidIndex == catena::common::Path::kEnd) {
+            // Index is "-", add a new element to the array
+            oidIndex = value.size();
             value.push_back(ElemType());
+        } else if (oidIndex >= value.size()) {
+            // If index is out of bounds, return nullptr
+            status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
         }
 
         if (oid.empty()) {
@@ -281,7 +295,7 @@ class ParamWithValue : public catena::common::IParam {
             return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
             // The path has more segments, keep recursing
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_)->getParam(oid);
+            return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, status);
         }
     }
 
@@ -296,20 +310,27 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be a string.
      */
     template <CatenaStruct U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value) {
-        if (!oid.front_is_string()) return nullptr;
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+        if (!oid.front_is_string()) {
+            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
         std::string oidStr = oid.front_as_string();
         oid.pop();
         auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
 
         std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
+        if (!ip) {
+            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+
         if (oid.empty()) {
             // we reached the end of the path, return the element
             return ip;
         } else {
             // The path has more segments, keep recursing
-            if (!ip) return nullptr;
-            return ip->getParam(oid);
+            return ip->getParam(oid, status);
         }
     }
 
@@ -345,8 +366,8 @@ class ParamWithValue : public catena::common::IParam {
     std::unique_ptr<IParam>  findParamByNameImpl_(const Tuple& fields, const std::string& name, std::index_sequence<Is...>) {
         /**
          * Creates an array of unique pointers to IParam objects. The pointer will be nullptr if the field name does not match 
-         * the name parameter. If the field name does match the name parameter, the pointer will be a unique pointer to a 
-         * IParam object.
+         * the name parameter. If the field name does match the name parameter, the pointer will be a unique pointer to an 
+         * IParam constructed with the field info.
          */
         std::unique_ptr<IParam> params[] = {std::get<Is>(fields).name == name ? getParamAtIndex_<Is>(fields) : nullptr ...};
         for (auto& param : params) {

@@ -197,21 +197,24 @@ void RunRPCServer(std::string addr)
 }
 
 void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
 
     // Use an oid to get a pointer to the command you want to define
     // In Catena, commands have IParam type
-    std::unique_ptr<IParam> playCommand = dm.getCommand("/play");
+    std::unique_ptr<IParam> playCommand = dm.getCommand("/play", err);
     assert(playCommand != nullptr);
 
     // Define a lambda function to be executed when the command is called
     // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
     playCommand->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
         catena::CommandResponse response;
-        std::unique_ptr<IParam> stateParam = dm.getParam("/state");
+        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
         
         // If the state parameter does not exist, return an exception
         if (stateParam == nullptr) {
             response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details(err.what());
             return response;
         }
 
@@ -228,14 +231,16 @@ void defineCommands() {
         return response;
     });
 
-    std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause");
+    std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
     assert(pauseCommand != nullptr);
     pauseCommand->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
         catena::CommandResponse response;
-        std::unique_ptr<IParam> stateParam = dm.getParam("/state");
+        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
 
         if (stateParam == nullptr) {
             response.mutable_exception()->set_type("Invalid Command");
+            response. mutable_exception()->set_details(err.what());
             return response;
         }
 
