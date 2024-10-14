@@ -41,7 +41,6 @@ namespace common {
  * @brief Interface for Menus
  */
 class IMenu {
-
 public:
     IMenu() = default;
     IMenu(IMenu&&) = default;
