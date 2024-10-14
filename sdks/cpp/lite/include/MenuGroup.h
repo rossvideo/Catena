@@ -79,30 +79,28 @@ class MenuGroup : public common::IMenuGroup {
 
     /**
      * @brief construct a Menu Group from a list of Menus
-     * @param name the name of the language
-     * @param menuid the identifier of the menu
-     * @param menus a map of menus
-     * @param dev the device model to which this menu group belongs
+     * @param name the name of the Menu Group
+     * @param menus The menus in the group
      */
-    MenuGroup(const std::string& name, int menuid, std::unordered_map<std::string, catena::IMenu> menus, Device& dev);
+    MenuGroup(const PolyglotText& name, const std::initializer_list<std::pair<std::string, catena::Menu>>& menus);
 
     /**
      * @brief deserialize a menu group from a protobuf message
-     * @param pack the protobuf message
+     * @param menuGroup the protobuf message
      */
     void fromProto(const ::catena::MenuGroup& menuGroup) override;
 
     /**
      * @brief serialize a menu group to a protobuf message
-     * @param pack the protobuf message
+     * @param menuGroup the protobuf message
      */
     void toProto(::catena::MenuGroup& menuGroup) const override;
 
   private:
     std::string name_;
-    int menuid_;
-    std::unordered_map<std::string, catena::IMenu> menus_;
-    Device& dev_;
+
+
+  
 };
 
 

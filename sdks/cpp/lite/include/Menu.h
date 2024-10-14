@@ -34,7 +34,7 @@
 #include <Device.h>
 
 // protobuf interface
-#include <interface/menu.pb.h> //Unsure where to create this file
+#include <interface/menu.pb.h> 
 
 #include <string>
 #include <unordered_map>
@@ -80,37 +80,105 @@ class Menu : public common::IMenu {
     /**
      * @brief construct a menu item
      * @param name the name of the menu
-     * @param id the identifier of the menu
-     * @param unique the unique identifier of the menu
-     * @param disabled whether the menu is disabled
      * @param hidden whether the menu is hidden
-     * @param oids the list of oids in the menu
-     * @param client_hints map of client hints //Unsure what this is
-     * @param dev the device model to which this menu belongs
+     * @param disabled whether the menu is disabled
+     * @param param_oids The menu's parameter members
+     * @param comand_oids The menu's command members
+     * @param client_hints map of client hints 
      */
-    Menu(const std::string& name, const int id, const int unique, bool disabled, bool hidden, const std::vector<std::string>& oids, Device& dev);
+    Menu(const PolyglotText& name, bool hidden, bool disabled, const std::initializer_list<std::string>& param_oids, const std::initializer_list<std::string>& command_oids, const std::initializer_list<std::pair<std::string, std::string>>& client_hints);
 
     /**
      * @brief deserialize a menu from a protobuf message
-     * @param pack the protobuf message
+     * @param menu the protobuf message
      */
     void fromProto(const ::catena::Menu& menu) override;
 
     /**
      * @brief serialize a menu to a protobuf message
-     * @param pack the protobuf message
+     * @param menu the protobuf message
      */
     void toProto(::catena::Menu& menu) const override;
 
-  private:
+    /**
+     * @brief get the hidden status of the menu
+     * @return true if the menu is hidden
+     */
+    bool isHidden() const;
+
+    /** @brief get the disabled status of the menu
+     * @return true if the menu is disabled
+     */
+    bool isDisabled() const;
+
+    /**
+     * @brief get the param_oids of the menu
+     * @return the list of parameter oids
+     */ 
+    const std::vector<std::string>& getParamOids() const;
+
+    /**
+     * @brief get the command_oids of the menu
+     * @return the list of command oids
+     */
+    const std::vector<std::string>& getCommandOids() const;
+
+    /**
+     * @brief get the client_hints of the menu
+     * @return the map of client hints
+     */
+    const std::unordered_map<std::string, std::string>& getClientHints() const;
+
+    /**
+     * @brief get the name of the menu
+     * @return the name of the menu
+     */
+    const std::string& getName() const { return name_; }
+
+    /**
+     * @brief set the name of the menu
+     * @param name the name of the menu
+     */ 
+    void setName(const std::string& name) {}
+
+    /**
+     * @brief set the hidden status of the menu
+     * @param hidden true if the menu is hidden
+     */
+    void setHidden(bool hidden) {}
+
+    /**
+     * @brief set the disabled status of the menu
+     * @param disabled true if the menu is disabled
+     */
+    void setDisabled(bool disabled) {}
+
+    /**
+     * @brief set the param_oids of the menu
+     * @param param_oids the list of parameter oids
+     */
+    void setParamOids(const std::vector<std::string>& param_oids) {}
+
+    /**
+     * @brief set the command_oids of the menu
+     * @param command_oids the list of command oids
+     */
+    void setCommandOids(const std::vector<std::string>& command_oids) {}
+
+    /**
+     * @brief set the client_hints of the menu
+     * @param client_hints the map of client hints
+     */
+    void setClientHints(const std::unordered_map<std::string, std::string>& client_hints) {}
+
+
+    private:
     std::string name_;
-    int id_;
-    int unique_;
-    bool disabled_;
     bool hidden_;
-    std::vector<std::string> oids_;
+    bool disabled_;
+    std::vector<std::string> param_oids_;
+    std::vector<std::string> command_oids_;
     std::unordered_map<std::string, std::string> client_hints_;
-    Device& dev_;
 };
 
 
