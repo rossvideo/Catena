@@ -411,13 +411,6 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief add a constraint
-     */
-    void setConstraint(catena::common::IConstraint* constraint) override {
-        descriptor_.setConstraint(constraint);
-    }
-
-    /**
      * @brief get the parameter scope
      */
     const std::string getScope() const override {

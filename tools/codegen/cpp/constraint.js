@@ -245,7 +245,6 @@ class Constraint extends CppCtor {
     }
     this.arguments.push(quoted.bind(this.oid));
     this.arguments.push(sharedArg.bind(this));
-    this.arguments.push(parentArg.bind(this));
   }
 
   /**

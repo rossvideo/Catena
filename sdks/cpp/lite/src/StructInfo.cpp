@@ -46,12 +46,25 @@ void toProto<int32_t>(Value& dst, const int32_t* src, const AuthzInfo& auth) {
 
 template<>
 void fromProto<int32_t>(const catena::Value& src, int32_t* dst, const AuthzInfo& auth) {
-    if (src.has_int32_value()) {
-        *dst = src.int32_value();
-        return;
-    } else {
+    const catena::common::IConstraint* constraint = auth.getConstraint();
+
+    if (!src.has_int32_value()) {
         return;
     }
+    if (constraint) {
+        if (!constraint->satisfied(src)) {
+            if (constraint->isRange()) {
+                // round src to a valid value in the range
+                *dst = constraint->apply(src).int32_value();
+                return;
+            } else {
+                // ignore the request
+                return;
+            }
+        }
+    }
+    *dst = src.int32_value();
+    return;
 }
 
 template<>

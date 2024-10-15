@@ -70,7 +70,7 @@ public:
      * @note  the first choice provided will be the default for the constraint
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Device& dm)
-        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+        : choices_{init.begin(), init.end()}, 
         strict_{strict}, default_{init.begin()->first} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
@@ -84,11 +84,9 @@ public:
      * @param parent the param to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, catena::common::IParam* parent)
-        : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{init.begin()->first} {
-        parent->setConstraint(this);
-    }
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
+        : choices_{init.begin(), init.end()}, 
+        strict_{strict}, default_{init.begin()->first} {}
 
     /**
      * @brief default destructor
@@ -96,39 +94,38 @@ public:
     virtual ~NamedChoiceConstraint() = default;
 
     /**
-     * @brief applies choice constraint to a catena::Value if strict
-     * @param src a catena::Value to apply the constraint to
+     * @brief checks if the value satisfies the constraint
+     * @param src the value to check
+     * @return true if the value satisfies the constraint
      */
-    void apply(void* src) const override {
-        auto& src_val = *reinterpret_cast<catena::Value*>(src);
+    bool satisfied(const catena::Value& src) const override {
+        if (!strict_) {
+            return true;
+        }
 
         if constexpr(std::is_same<T, int32_t>::value) {
-            // ignore the request if src is not valid
-            if (!src_val.has_int32_value()) { return; }
-
-            // constrain if strict and src is not in choices
-            if (strict_ && !choices_.contains(src_val.int32_value())) {
-                src_val.set_int32_value(default_);
-            }
+            return choices_.find(src.int32_value()) != choices_.end();
         }
 
         if constexpr(std::is_same<T, std::string>::value) {
-            // ignore the request if src is not valid
-            if (!src_val.has_string_value()) { return; }
+            return choices_.find(src.string_value()) != choices_.end();
+        }
+    }
 
-            // constrain if strict and src is not in choices
-            if (strict_ && !choices_.contains(src_val.string_value())) {
-                src_val.set_string_value(default_);
-            }
-        } 
+    /**
+     * Named choice constraint can't be applied. Calling this
+     * will always return an empty value.
+     */
+    catena::Value apply(const catena::Value& src) const override {
+        catena::Value val;
+        return val;
     }
 
     /**
      * @brief serialize the constraint to a protobuf message
      * @param msg the protobuf message to populate
      */
-    void toProto(google::protobuf::MessageLite& msg) const override {
-        auto& constraint = dynamic_cast<catena::Constraint&>(msg);
+    void toProto(catena::Constraint& constraint) const override {
 
         if constexpr(std::is_same<T, int32_t>::value) {
             constraint.set_type(catena::Constraint::INT_CHOICE);
@@ -148,6 +145,8 @@ public:
             }
         }
     }
+
+    bool isRange() const override { return false; }
 
 private:
     Choices choices_; ///< the choices

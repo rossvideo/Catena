@@ -55,7 +55,7 @@ public:
      * @param dm the device to add the constraint to
      */
     RangeConstraint(T min, T max, std::string oid, bool shared, Device& dm)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
+        : min_(min), max_(max), step_{1}, 
         display_min_{min}, display_max_{max} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
@@ -69,11 +69,9 @@ public:
      * @param parent the param to add the constraint to
      */
     template <typename U>
-    RangeConstraint(T min, T max, std::string oid, bool shared, catena::common::IParam* parent)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
-        display_min_{min}, display_max_{max} {
-        parent->setConstraint(this);
-    }
+    RangeConstraint(T min, T max, std::string oid, bool shared)
+        : min_(min), max_(max), step_{1}, 
+        display_min_{min}, display_max_{max} {}
 
     /**
      * @brief Construct a new Range Constraint object
@@ -88,7 +86,7 @@ public:
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid,
         bool shared, Device& dm)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
+        : min_(min), max_(max), step_(step),
         display_min_{display_min}, display_max_{display_max} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
@@ -105,11 +103,9 @@ public:
      * @param parent the param to add the constraint to
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
-        bool shared, catena::common::IParam* parent)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max} {
-        parent->setConstraint(this);
-    }
+        bool shared)
+        : min_(min), max_(max), step_(step),
+        display_min_{display_min}, display_max_{display_max} {}
 
     /**
      * @brief default destructor
@@ -117,34 +113,69 @@ public:
     virtual ~RangeConstraint() = default;
 
     /**
-     * @brief applies range constraint to a catena::Value
-     * @param src a catena::Value to apply the constraint to
+     * @brief checks if the value satisfies the constraint
+     * @param src the value to check
+     * @return true if the value satisfies the constraint
+     * 
+     * Checks if the value is within the range. This does not 
+     * check if the value matches the step size.
      */
-    void apply(void* src) const override {
-        auto& src_val = *reinterpret_cast<catena::Value*>(src);
+    bool satisfied(const catena::Value& src) const override {
+        if (!strict_) {
+            return true;
+        }
 
         if constexpr(std::is_same<T, int32_t>::value) {
-            // ignore the request if src is not valid
-            if (!src_val.has_int32_value()) { return; }
-            
-            // constrain if not within allowed range
-            if (src_val.int32_value() < min_) {
-                src_val.set_int32_value(min_);
-            } else if (src_val.int32_value() > max_) {
-                src_val.set_int32_value(max_);
-            }
+            return src.int32_value() >= min_ && src.int32_value() <= max_;
         }
 
         if constexpr(std::is_same<T, float>::value) {
-            // ignore the request if src is not valid
-            if (!src_val.has_float32_value()) { return; }
+            return src.float32_value() >= min_ && src.float32_value() <= max_;
+        }
+    }
+
+    /**
+     * @brief applies range constraint to a catena::Value
+     * @param src a catena::Value to apply the constraint to
+     * @return a catena::Value with the constraint applied
+     * 
+     * If the value is outside the range, the value will be constrained
+     * to be within the range. This does not enforce the step size.
+     * 
+     */
+    catena::Value apply(const catena::Value& src) const override {
+        catena::Value val;
+
+        if constexpr(std::is_same<T, int32_t>::value) {
+            // return empty value if src is not valid
+            if (!src.has_int32_value()) { return val; }
+            
+            // constrain if not within allowed range
+            if (src.int32_value() < min_) {
+                val = src;
+                val.set_int32_value(min_);
+            } else if (src.int32_value() > max_) {
+                val = src;
+                val.set_int32_value(max_);
+            }
+            return val;
+        }
+
+        if constexpr(std::is_same<T, float>::value) {
+            catena::Value val;
+
+            // return empty value if src is not valid
+            if (!src.has_float32_value()) { return val; }
 
             // constrain if not within allowed range
-            if (src_val.float32_value() < min_) {
-                src_val.set_float32_value(min_);
-            } else if (src_val.float32_value() > max_) {
-                src_val.set_float32_value(max_);
+            if (src.float32_value() < min_) {
+                val = src;
+                val.set_float32_value(min_);
+            } else if (src.float32_value() > max_) {
+                val = src;
+                val.set_float32_value(max_);
             }
+            return val;
         }
     }
 
@@ -152,8 +183,7 @@ public:
      * @brief serialize the constraint to a protobuf message
      * @param msg the protobuf message to populate
      */
-    void toProto(google::protobuf::MessageLite& msg) const override {
-        auto& constraint = dynamic_cast<catena::Constraint&>(msg);
+    void toProto(catena::Constraint& constraint) const override {
 
         if constexpr(std::is_same<T, int32_t>::value) {
             constraint.set_type(catena::Constraint::INT_RANGE);
@@ -174,12 +204,15 @@ public:
         }
     }
 
+    bool isRange() const override { return true; }
+
 private:
     T min_;         ///< the minimum value
     T max_;         ///< the maximum value
     T step_;        ///< the step size
     T display_min_; ///< the minimum value to display
     T display_max_; ///< the maximum value to display
+    bool strict_;   ///< should the value be constrained on apply
 };
 
 } // namespace lite

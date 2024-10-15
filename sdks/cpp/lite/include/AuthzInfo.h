@@ -88,6 +88,10 @@ class AuthzInfo {
         return true;
     }
 
+    const catena::common::IConstraint* getConstraint() const {
+        return pd_.getConstraint();
+    }
+
   private:
     const ParamDescriptor& pd_;
     const std::string clientScope_; /**< the scope of the object */

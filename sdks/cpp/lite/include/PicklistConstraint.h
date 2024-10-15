@@ -77,7 +77,7 @@ public:
      * @param parent the param to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, catena::common::IParam* parent);
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared);
 
     /**
      * @brief default destructor
@@ -85,16 +85,25 @@ public:
     virtual ~PicklistConstraint();
 
     /**
-     * @brief applies choice constraint to a catena::Value if strict
-     * @param src a catena::Value to apply the constraint to
+     * @brief check if a value satisfies the constraint
+     * @param src the value to check
+     * @return true if the value satisfies the constraint
      */
-    void apply(void* src) const override;
+    bool satisfied(const catena::Value& src) const override;
+
+    /**
+     * Picklist constraint can't be applied. Calling this
+     * will always return an empty value.
+     */
+    catena::Value apply(const catena::Value& src) const override;
 
     /**
      * @brief serialize the constraint to a protobuf message
      * @param msg the protobuf message to populate
      */
-    void toProto(google::protobuf::MessageLite& msg) const override;
+    void toProto(catena::Constraint& constraint) const override;
+
+    bool isRange() const override { return false; }
 
 private:
     Choices choices_;     ///< the choices
