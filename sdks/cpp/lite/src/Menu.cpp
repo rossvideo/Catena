@@ -1,5 +1,3 @@
-/**THIS IS A COPY OF LanguagePack.cpp NOT READY FOR RELEASE */
-
 /** Copyright 2024 Ross Video Ltd
 
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,6 +14,14 @@
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 //
+
+/**
+ * @file IMenuGroup.h
+ * @brief Interface for MenuGroup
+ * @author Ben Mostafa Ben.Mostafa@rossvideo.com
+ * @date 2024-10-10
+ * @copyright Copyright (c) 2024 Ross Video
+ */
 
 // lite
 #include <Menu.h>
@@ -54,7 +60,7 @@ using catena::common::MenuGroupTag; // There is no MenuTag in the code
     }
 
     void Menu::toProto(::catena::Menu& menu) const {
-        menu.set_name(name_);
+        *menu.mutable_name() = name_;
         menu.set_hidden(hidden_);
         menu.set_disabled(disabled_);
         for (const auto& oid : param_oids_) {
@@ -67,54 +73,55 @@ using catena::common::MenuGroupTag; // There is no MenuTag in the code
             (*menu.mutable_client_hints())[key] = value;
         }
     }
-    
-    const std::vector<std::string>& Menu::getCommandOids() const {
-        return command_oids_;
-    }
 
-    const std::vector<std::string>& Menu::getParamOids() const {
-        return param_oids_;
-    }
-
-    const std::unordered_map<std::string, std::string>& Menu::getClientHints() const {
-        return client_hints_;
-    }
-
-    bool Menu::isDisabled() const {
-        return disabled_;
-    }
-
-    bool Menu::isHidden() const {
-        return hidden_;
-    }
-
-    void Menu::setDisabled(bool disabled) {
-        disabled_ = disabled;
-    }
-
-    void Menu::setHidden(bool hidden) {
-        hidden_ = hidden;
-    }
-
-    void Menu::setName(const std::string& name) {
+    void Menu::setName(const PolyglotText& name) {
         name_ = name;
     }
 
-    const std::string& Menu::getName() const {
+    const catena::PolyglotText& Menu::getName() const {
         return name_;
-    }
-
-    void Menu::setClientHints(const std::unordered_map<std::string, std::string>& hints) {
-        client_hints_ = hints;
     }
 
     void Menu::setCommandOids(const std::vector<std::string>& oids) {
         command_oids_ = oids;
     }
 
+    const std::vector<std::string>& Menu::getCommandOids() const {
+        return command_oids_;
+    }
+
     void Menu::setParamOids(const std::vector<std::string>& oids) {
         param_oids_ = oids;
     }
+
+    const std::vector<std::string>& Menu::getParamOids() const {
+        return param_oids_;
+    }
+
+    void Menu::setClientHints(const std::unordered_map<std::string, std::string>& hints) {
+        client_hints_ = hints;
+    }
+
+    const std::unordered_map<std::string, std::string>& Menu::getClientHints() const {
+        return client_hints_;
+    }
+
+    void Menu::setDisabled(bool disabled) {
+        disabled_ = disabled;
+    }
+    
+    bool Menu::isDisabled() const {
+        return disabled_;
+    }
+
+    void Menu::setHidden(bool hidden) {
+        hidden_ = hidden;
+    }
+
+    bool Menu::isHidden() const {
+        return hidden_;
+    }
+
 
 
 

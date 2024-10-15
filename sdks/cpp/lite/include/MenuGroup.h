@@ -1,7 +1,5 @@
 #pragma once
 
-/**THIS IS A COPY OF LanguagePack.h NOT READY FOR RELEASE */
-
 /** Copyright 2024 Ross Video Ltd
 
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -96,10 +94,61 @@ class MenuGroup : public common::IMenuGroup {
      */
     void toProto(::catena::MenuGroup& menuGroup) const override;
 
+    /**
+     * @brief get the name of the menu group
+     * @return the name of the menu group
+     */
+    const PolyglotText& getName() const;
+
+    /**
+     * @brief set the name of the menu group
+     * @param name the name of the menu group
+     */
+    void setName(const PolyglotText& name);
+
+    /**
+     * @brief set the menus in the group
+     * @param menus the menus in the group
+     */
+    void setMenus(const std::unordered_map<std::string, Menu>& menus);
+
+    /**
+     * @brief add a menu to the group
+     * @param key the key of the menu
+     * @param menu the menu
+     */
+
+    void addMenu(const std::string& key, const Menu& menu);
+
+    /**
+     * @brief remove a menu from the group
+     * @param key the key of the menu
+     */
+    void removeMenu(const std::string& key);
+
+    /**
+     * @brief check if the group has a menu
+     * @param key the key of the menu
+     * @return true if the group has the menu
+     */
+    bool hasMenu(const std::string& key) const;
+
+    /**
+     * @brief get a menu from the group
+     * @param key the key of the menu
+     * @return the menu
+     */
+    const Menu& getMenu(const std::string& key) const;
+
+    /**
+     * @brief get the menus in the group
+     * @return the menus in the group
+     */
+    const std::unordered_map<std::string, Menu>& getMenus() const;
+
   private:
-    std::string name_;
-
-
+    PolyglotText name_;
+    std::unordered_map<std::string, catena::Menu> menus_;
   
 };
 

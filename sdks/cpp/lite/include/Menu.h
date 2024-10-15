@@ -1,7 +1,5 @@
 #pragma once
 
-/**THIS IS A COPY OF LanguagePack.h NOT READY FOR RELEASE */
-
 /** Copyright 2024 Ross Video Ltd
 
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -133,13 +131,13 @@ class Menu : public common::IMenu {
      * @brief get the name of the menu
      * @return the name of the menu
      */
-    const std::string& getName() const { return name_; }
+    const PolyglotText& getName() const { return name_; }
 
     /**
      * @brief set the name of the menu
      * @param name the name of the menu
      */ 
-    void setName(const std::string& name) {}
+    void setName(const PolyglotText& name) {}
 
     /**
      * @brief set the hidden status of the menu
@@ -173,7 +171,7 @@ class Menu : public common::IMenu {
 
 
     private:
-    std::string name_;
+    PolyglotText name_;
     bool hidden_;
     bool disabled_;
     std::vector<std::string> param_oids_;

@@ -1,7 +1,5 @@
 #pragma once
 
-/**THIS IS A COPY OF ILanguagePack.h NOT READY FOR RELEASE */
-
 /** Copyright 2024 Ross Video Ltd
 
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:

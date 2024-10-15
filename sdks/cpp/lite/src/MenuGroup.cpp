@@ -1,5 +1,3 @@
-#pragma once
-
 /** Copyright 2024 Ross Video Ltd
 
  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -21,41 +19,58 @@
  * @file IMenuGroup.h
  * @brief Interface for MenuGroup
  * @author Ben Mostafa Ben.Mostafa@rossvideo.com
- * @date 2024-10-04
+ * @date 2024-10-10
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-//
-#include <string>
-#include <unordered_map>
+// lite
 
-namespace catena {
+#include <MenuGroup.h>
 
-class MenuGroup; // forward reference
+using namespace catena::lite;
+using catena::common::MenuGroupTag;
 
-namespace common {
+  MenuGroup::MenuGroup(const PolyglotText& name, const std::initializer_list<std::pair<std::string, catena::Menu>>& menus) {
+        name_ = name;
+        for (const auto& [key, value] : menus) {
+            menus_[key] = value;
+        }
+    }
 
-/**
- * @brief Interface for Menu Group
- */
-class IMenuGroup {
-public:
-    IMenuGroup() = default;
-    IMenuGroup(IMenuGroup&&) = default;
-    IMenuGroup& operator=(IMenuGroup&&) = default;
-    virtual ~IMenuGroup() = default;
+    void MenuGroup::fromProto(const ::catena::MenuGroup& menuGroup) {
+        name_ = menuGroup.name();
+        for (const auto& [key, value] : menuGroup.menus()) {
+            menus_[key] = value;
+        }
+    }
 
-    /**
-     * @brief serialize a menu group to a protobuf message
-     * @param menuGroup the protobuf message
-     */
-    virtual void toProto(catena::MenuGroup& menuGroup) const = 0;
+    void MenuGroup::toProto(::catena::MenuGroup& menuGroup) const {
+        *menuGroup.mutable_name() = name_;
+        for (const auto& [key, value] : menus_) {
+            (*menuGroup.mutable_menus())[key] = value;
+        }
+    }
 
-    /**
-     * @brief deserialize a menu group from a protobuf message
-     * @param menuGroup the protobuf message
-     */
-    virtual void fromProto(const catena::MenuGroup& menuGroup) = 0;
-};
-}  // namespace common
-}  // namespace catena
+    const catena::PolyglotText& MenuGroup::getName() const {
+        return name_;
+    }
+
+    void MenuGroup::setName(const PolyglotText& name) {
+        name_ = name;
+    }
+
+    void MenuGroup::setMenus(const std::unordered_map<std::string, Menu>& menus) {
+        menus_ = menus;
+    }
+
+    void MenuGroup::addMenu(const std::string& key, const Menu& menu) {
+        menus_[key] = menu;
+    }
+
+    void MenuGroup::removeMenu(const std::string& key) {
+        menus_.erase(key);
+    }
+
+    bool MenuGroup::hasMenu(const std::string& key) const {
+        return menus_.find(key) != menus_.end();
+    }
