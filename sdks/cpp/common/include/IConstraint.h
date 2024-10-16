@@ -26,7 +26,9 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include "google/protobuf/message_lite.h" 
+// protobuf interface
+#include "interface/param.pb.h"
+#include "interface/constraint.pb.h" 
 
 namespace catena {
 namespace common {
@@ -36,8 +38,7 @@ namespace common {
  */
 class IConstraint {
 public:
-    IConstraint() : oid_{}, isShared_{} {}
-    IConstraint(std::string oid, bool shared) : oid_{oid}, isShared_{shared} {}
+    IConstraint() = default;
     virtual ~IConstraint() = default;
 
     /**
@@ -45,40 +46,27 @@ public:
      * @param constraint the protobuf message to populate, NB, implementations should 
      * dynamically cast this to catena::Constraint
      */
-    virtual void toProto(google::protobuf::MessageLite& constraint) const = 0;
+    virtual void toProto(catena::Constraint& constraint) const = 0;
+
+    /**
+     * @brief check if the constraint is satisfied by src
+     * @param src a catena::Value to check the constraint against
+     * @return true if the constraint is satisfied, false otherwise
+     */
+    virtual bool satisfied(const catena::Value& src) const = 0;
 
     /**
      * @brief applies constraint to src and writes constrained value to dst
      * @param src a catena::Value to apply the constraint to
      */
-    virtual void apply(void* src) const = 0;
+    virtual catena::Value apply(const catena::Value& src) const = 0;
 
     /**
-     * @brief check if the constraint is shared
-     * @return true if the constraint is shared, false otherwise
+     * @brief check if the constraint is a range constraint
+     * @return true if the constraint is a range constraint, false otherwise
      */
-    inline bool getShared() const { return isShared_; }
-    
-    /**
-     * @brief set the shared flag
-     * @param shared true if the constraint is shared, false otherwise
-     */
-    void setShared(bool shared) { isShared_ = shared; }
+    virtual bool isRange() const = 0;
 
-    /**
-     * @brief get the oid of the constraint
-     * @return the oid of the constraint
-     */
-    inline const std::string& getOid() const { return oid_; }
-
-    /**
-     * @brief set the oid of the constraint
-     */
-    void setOid(const std::string& oid) { oid_ = oid; }
-
-protected:
-    std::string oid_; ///< the oid of the constraint
-    bool isShared_;   ///< true if the constraint is shared, false otherwise
 };
 
 } // namespace common

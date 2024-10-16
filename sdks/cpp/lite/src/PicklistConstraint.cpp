@@ -28,36 +28,38 @@ namespace lite {
 
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
     bool shared, Device& dm)
-    : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
+    : choices_{init.begin(), init.end()}, 
     strict_{strict}, default_{*init.begin()} {
     dm.addItem<common::ConstraintTag>(oid, this);
 }
 
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
-    bool shared, IParam* parent)
-    : IConstraint{oid, shared}, choices_{init.begin(), init.end()}, 
-    strict_{strict}, default_{*init.begin()} {
-    parent->setConstraint(this);
-}
+    bool shared)
+    : choices_{init.begin(), init.end()}, 
+    strict_{strict}, default_{*init.begin()} {}
 
 PicklistConstraint::~PicklistConstraint() = default;
 
-void PicklistConstraint::apply(void* src) const {
-    auto& src_val = *reinterpret_cast<catena::Value*>(src);
-
-    // ignore the request if src is not valid
-    if (!src_val.has_string_value()) { return; }
-
-    // constrain if strict and src is not in choices
-    if (strict_ && !choices_.contains(src_val.string_value())) {
-        src_val.set_string_value(default_);
+bool PicklistConstraint::satisfied(const catena::Value& src) const {
+    if (!strict_) {
+        return true;
     }
+
+    return choices_.find(src.string_value()) != choices_.end();
 }
 
-void PicklistConstraint::toProto(google::protobuf::MessageLite& msg) const {
-    auto& constraint = dynamic_cast<catena::Constraint&>(msg);
+/**
+ * Named choice constraint can't be applied. Calling this
+ * will always return an empty value.
+ */
+catena::Value PicklistConstraint::apply(const catena::Value& src) const {
+    catena::Value val;
+    return val;
+}
 
-    constraint.set_type(catena::Constraint::STRING_STRING_CHOICE);
+void PicklistConstraint::toProto(catena::Constraint& constraint) const {
+
+    constraint.set_type(catena::Constraint::STRING_CHOICE);
     for (std::string choice : choices_) {
         constraint.mutable_string_choice()->add_choices(choice);
     }
