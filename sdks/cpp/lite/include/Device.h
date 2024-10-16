@@ -232,7 +232,7 @@ class Device {
     Device_DetailLevel detail_level_;
     std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
-    // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
+    std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
     std::vector<Scopes_e> access_scopes_;

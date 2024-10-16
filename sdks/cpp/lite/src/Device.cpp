@@ -21,6 +21,7 @@
 // lite
 #include <Device.h>
 #include <LanguagePack.h>
+#include <IMenuGroup.h> 
 
 #include <cassert>
 #include <sstream>
@@ -118,6 +119,14 @@ void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScop
     }
     dst.mutable_language_packs()->Swap(&dstPacks); // N.B uppercase Swap, not an error
 
+    // make a copy of the menu groups
+    google::protobuf::Map<std::string, ::catena::MenuGroup> dstMenuGroups{};
+    for (const auto& [name, group] : menu_groups_) {
+        ::catena::MenuGroup dstGroup{};
+        group->toProto(dstGroup);
+        dstMenuGroups[name] = dstGroup;
+    }
+    dst.mutable_menu_groups()->swap(dstMenuGroups); // n.b. lowercase swap, not an error
 }
 
 
