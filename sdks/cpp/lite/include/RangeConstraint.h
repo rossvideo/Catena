@@ -121,9 +121,6 @@ public:
      * check if the value matches the step size.
      */
     bool satisfied(const catena::Value& src) const override {
-        if (!strict_) {
-            return true;
-        }
 
         if constexpr(std::is_same<T, int32_t>::value) {
             return src.int32_value() >= min_ && src.int32_value() <= max_;

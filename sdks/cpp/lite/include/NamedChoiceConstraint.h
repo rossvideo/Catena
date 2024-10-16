@@ -99,15 +99,15 @@ public:
      * @return true if the value satisfies the constraint
      */
     bool satisfied(const catena::Value& src) const override {
-        if (!strict_) {
-            return true;
-        }
 
         if constexpr(std::is_same<T, int32_t>::value) {
             return choices_.find(src.int32_value()) != choices_.end();
         }
 
         if constexpr(std::is_same<T, std::string>::value) {
+            if (!strict_) {
+                return true;
+            }
             return choices_.find(src.string_value()) != choices_.end();
         }
     }

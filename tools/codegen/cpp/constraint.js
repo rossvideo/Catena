@@ -196,8 +196,14 @@ function choicesArg(desc) {
 function strictArg(desc) {
   // @todo int_choice might need to default to true
   let ans = `false`;
-  if ("strict" in desc) {
-    ans = desc.strict ? `true` : `false`;
+  if (desc.type === "STRING_CHOICE") {
+    if ("strict" in desc.string_choice) {
+      ans = desc.string_choice.strict ? `true` : `false`;
+    }
+  } else if (desc.type === "STRING_STRING_CHOICE") {
+    if ("strict" in desc.string_string_choice) {
+      ans = desc.string_string_choice.strict ? `true` : `false`;
+    }
   }
   return ans;
 }

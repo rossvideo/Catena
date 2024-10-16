@@ -51,19 +51,13 @@ void fromProto<int32_t>(const catena::Value& src, int32_t* dst, const AuthzInfo&
     if (!src.has_int32_value()) {
         return;
     }
-    if (constraint) {
-        if (!constraint->satisfied(src)) {
-            if (constraint->isRange()) {
-                // round src to a valid value in the range
-                *dst = constraint->apply(src).int32_value();
-                return;
-            } else {
-                // ignore the request
-                return;
-            }
-        }
-    }
-    *dst = src.int32_value();
+    if (!constraint || constraint->satisfied(src)) {
+        *dst = src.int32_value();
+    } else  if (constraint->isRange()) {
+        // round src to a valid value in the range
+        *dst = constraint->apply(src).int32_value();
+    } 
+    // if the constraint is not satified and not a range, then the value is unchanged
     return;
 }
 
@@ -74,11 +68,17 @@ void toProto<float>(catena::Value& dst, const float* src, const AuthzInfo& auth)
 
 template<>
 void fromProto<float>(const catena::Value& src, float* dst, const AuthzInfo& auth) {
-    if (src.has_float32_value()) {
+    const catena::common::IConstraint* constraint = auth.getConstraint();
+
+    if (!src.has_float32_value()) {
+        return;
+    }
+    if (!constraint || constraint->satisfied(src)) {
         *dst = src.float32_value();
-        return;
     } else {
-        return;
+        // float32 constraint is always a range
+        // round src to a valid value in the range
+        *dst = constraint->apply(src).float32_value();
     }
 }
 
@@ -89,12 +89,17 @@ void toProto<std::string>(Value& dst, const std::string* src, const AuthzInfo& a
 
 template<>
 void fromProto<std::string>(const catena::Value& src, std::string* dst, const AuthzInfo& auth) {
-    if (src.has_string_value()) {
-        *dst = src.string_value();
-        return;
-    } else {
+    const catena::common::IConstraint* constraint = auth.getConstraint();
+
+    if (!src.has_string_value()) {
         return;
     }
+
+    // if the parameter does not satisfy the constraint, then the element is unchanged
+    if (!constraint || constraint->satisfied(src)) {
+        *dst = src.string_value();
+    }
+    return;
 }
 
 template<>
@@ -111,13 +116,28 @@ void fromProto<std::vector<int32_t>>(const Value& src, std::vector<int32_t>* dst
     if (!src.has_int32_array_values()) {
         return;
     }
-    dst->clear();
     const catena::Int32List& int_array = src.int32_array_values();
+    const catena::common::IConstraint* constraint = auth.getConstraint();
+    catena::Value item;
     
     // Right now from proto is able to append any number of values to the vector
     // Do we want to keep this behavior?
     for (int i = 0; i < int_array.ints_size(); ++i) {
-        dst->push_back(int_array.ints(i));
+        item.set_int32_value(int_array.ints(i));
+        if (!constraint || constraint->satisfied(item)) {
+            if (i < dst->size()) {
+                (*dst)[i] = int_array.ints(i);
+            } else {
+                dst->push_back(int_array.ints(i));
+            }
+        } else if (constraint->isRange()) {
+            // round src to a valid value in the range
+            if (i < dst->size()) {
+                (*dst)[i] = constraint->apply(item).int32_value();
+            } else {
+                dst->push_back(constraint->apply(item).int32_value());
+            }
+        }
     }
     return;
 }
@@ -138,8 +158,20 @@ void fromProto<std::vector<float>>(const Value& src, std::vector<float>* dst, co
     }
     dst->clear();
     const catena::Float32List& float_array = src.float32_array_values();
+    const catena::common::IConstraint* constraint = auth.getConstraint();
+    catena::Value item;
+
+    // Right now from proto is able to append any number of values to the vector
+    // Do we want to keep this behavior?
     for (int i = 0; i < float_array.floats_size(); ++i) {
-        dst->push_back(float_array.floats(i));
+        item.set_float32_value(float_array.floats(i));
+        if (!constraint || constraint->satisfied(item)) {
+            dst->push_back(float_array.floats(i));
+        } else {
+            // float32 constraint is always a range
+            // round src to a valid value in the range
+            dst->push_back(constraint->apply(item).float32_value());
+        }
     }
     return;
 }
@@ -160,8 +192,16 @@ void fromProto<std::vector<std::string>>(const Value& src, std::vector<std::stri
     }
     dst->clear();
     const catena::StringList& string_array = src.string_array_values();
+    const catena::common::IConstraint* constraint = auth.getConstraint();
+    catena::Value item;
+
     for (int i = 0; i < string_array.strings_size(); ++i) {
-        dst->push_back(string_array.strings(i));
+        item.set_string_value(string_array.strings(i));
+        // if parameter does not satisfy the constraint, then the element is unchanged
+        if (!constraint || constraint->satisfied(item)) {
+            dst->push_back(string_array.strings(i));
+        }
+            
     }
     return;
 }
