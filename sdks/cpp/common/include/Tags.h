@@ -33,12 +33,14 @@ namespace common {
 
 class IConstraint; // forward declaration
 class IParam; // forward declaration
+class IMenu; // forward declaration
 class IMenuGroup; // forward declaration
 class ILanguagePack; // forward declaration
 
 struct ConstraintTag {using type = IConstraint;};
 struct ParamTag {using type = IParam;};
 struct CommandTag {using type = IParam;};
+struct MenuTag {using type = IMenu;};
 struct MenuGroupTag {using type = IMenuGroup;};
 struct LanguagePackTag {using type = ILanguagePack;};
 

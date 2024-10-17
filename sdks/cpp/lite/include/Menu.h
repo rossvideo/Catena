@@ -84,7 +84,11 @@ class Menu : public common::IMenu {
      * @param comand_oids The menu's command members
      * @param client_hints map of client hints 
      */
-    Menu(const PolyglotText& name, bool hidden, bool disabled, const std::initializer_list<std::string>& param_oids, const std::initializer_list<std::string>& command_oids, const std::initializer_list<std::pair<std::string, std::string>>& client_hints);
+    Menu(const PolyglotText& name, bool hidden, bool disabled, \
+    const std::initializer_list<std::string>& param_oids, \
+    const std::initializer_list<std::string>& command_oids, \
+    const std::initializer_list<std::pair<std::string, std::string>>& client_hints, \
+    catena::lite::MenuGroup& menuGroup);
 
     /**
      * @brief deserialize a menu from a protobuf message

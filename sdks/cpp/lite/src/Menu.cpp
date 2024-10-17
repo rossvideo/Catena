@@ -25,24 +25,20 @@
 
 // lite
 #include <Menu.h>
+#include <MenuGroup.h>
 
 using namespace catena::lite;
-using catena::common::MenuGroupTag; // There is no MenuTag in the code
+using catena::common::MenuTag; // There is no MenuTag in the code
 
-  Menu::Menu(const PolyglotText& name, bool hidden, bool disabled, const std::initializer_list<std::string>& param_oids, const std::initializer_list<std::string>& command_oids, const std::initializer_list<std::pair<std::string, std::string>>& client_hints) {
-        name_ = name;
-        hidden_ = hidden;
-        disabled_ = disabled;
-        for (const auto& oid : param_oids) {
-            param_oids_.push_back(oid);
+    Menu::Menu(const PolyglotText& name, bool hidden, bool disabled, 
+        const std::initializer_list<std::string>& param_oids, 
+        const std::initializer_list<std::string>& command_oids, 
+        const std::initializer_list<std::pair<std::string, std::string>>& client_hints, catena::lite::MenuGroup& menuGroup)
+        : name_{name}, hidden_{hidden}, disabled_{disabled}, param_oids_{param_oids}, 
+          command_oids_{command_oids}, client_hints_{client_hints.begin(), client_hints.end()} {
+        menuGroup.addMenu(name, *this); // Unsure what the Key should be for addMenu as it takes a string and name is PolyglotText
         }
-        for (const auto& oid : command_oids) {
-            command_oids_.push_back(oid);
-        }
-        for (const auto& [key, value] : client_hints) {
-            client_hints_[key] = value;
-        }
-    }
+
 
     void Menu::fromProto(const ::catena::Menu& menu) {
         name_ = menu.name();
