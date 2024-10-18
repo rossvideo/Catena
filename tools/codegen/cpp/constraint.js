@@ -72,13 +72,14 @@ function maxArg(desc) {
  * 
  * @param {object} desc param descriptor
  * @returns step value of the range constraint.
- * defaults to 1
+ * 
+ * If not present, step is set to 0
  */
 function stepArg(desc) {
-  let ans = 1;
+  let ans = 0;
   if (this.type == "int32_t" && "step" in desc.int32_range) {
     ans = desc.int32_range.step;
-  } else if ("step" in desc.float_range) {
+  } else if (this.type == "float" && "step" in desc.float_range) {
     ans = desc.float_range.step;
   }
   return ans;

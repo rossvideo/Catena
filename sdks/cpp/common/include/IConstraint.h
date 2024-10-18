@@ -43,8 +43,7 @@ public:
 
     /**
      * @brief serialize the constraint to a protobuf message
-     * @param constraint the protobuf message to populate, NB, implementations should 
-     * dynamically cast this to catena::Constraint
+     * @param constraint the protobuf message to serialize to
      */
     virtual void toProto(catena::Constraint& constraint) const = 0;
 

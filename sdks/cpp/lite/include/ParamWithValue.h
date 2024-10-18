@@ -428,5 +428,10 @@ class ParamWithValue : public catena::common::IParam {
     std::reference_wrapper<T> value_;
 };
 
+template<typename T>
+inline T& getParamValue(catena::common::IParam* param) {
+  return dynamic_cast<ParamWithValue<T>*>(param)->get();
+}
+
 } // namespace lite
 } // namespace catena

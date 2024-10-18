@@ -36,6 +36,8 @@
 
 #include <google/protobuf/message_lite.h>
 
+#include <cmath>
+
 namespace catena {
 namespace lite {
 
@@ -54,8 +56,8 @@ public:
      * @param shared is the constraint shared
      * @param dm the device to add the constraint to
      */
-    RangeConstraint(T min, T max, std::string oid, bool shared, Device& dm)
-        : min_(min), max_(max), step_{1}, 
+    RangeConstraint(T min, T max, T step, std::string oid, bool shared, Device& dm)
+        : min_(min), max_(max), step_{step}, 
         display_min_{min}, display_max_{max} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
@@ -69,8 +71,8 @@ public:
      * @param parent the param to add the constraint to
      */
     template <typename U>
-    RangeConstraint(T min, T max, std::string oid, bool shared)
-        : min_(min), max_(max), step_{1}, 
+    RangeConstraint(T min, T max, T step, std::string oid, bool shared)
+        : min_(min), max_(max), step_{step}, 
         display_min_{min}, display_max_{max} {}
 
     /**
@@ -117,17 +119,22 @@ public:
      * @param src the value to check
      * @return true if the value satisfies the constraint
      * 
-     * Checks if the value is within the range. This does not 
-     * check if the value matches the step size.
+     * Checks if the value is within the range. 
+     * 
+     * If the step size is not 0, the value must also be a multiple of the step size.
      */
     bool satisfied(const catena::Value& src) const override {
 
         if constexpr(std::is_same<T, int32_t>::value) {
-            return src.int32_value() >= min_ && src.int32_value() <= max_;
+            return src.int32_value() >= min_ 
+                && src.int32_value() <= max_
+                && (!step_ || (src.int32_value() - min_) % step_ == 0);
         }
 
         if constexpr(std::is_same<T, float>::value) {
-            return src.float32_value() >= min_ && src.float32_value() <= max_;
+            return src.float32_value() >= min_ 
+                && src.float32_value() <= max_
+                && (!step_ || std::fmod(src.float32_value() - min_, step_) == 0);
         }
     }
 
@@ -137,42 +144,43 @@ public:
      * @return a catena::Value with the constraint applied
      * 
      * If the value is outside the range, the value will be constrained
-     * to be within the range. This does not enforce the step size.
-     * 
+     * to be within the range. If the step size is not 0, the value will
+     * be constrained to be a multiple of the step size.
      */
     catena::Value apply(const catena::Value& src) const override {
-        catena::Value val;
+        catena::Value constrainedVal;
 
         if constexpr(std::is_same<T, int32_t>::value) {
             // return empty value if src is not valid
-            if (!src.has_int32_value()) { return val; }
-            
+            if (!src.has_int32_value()) { return constrainedVal; }
+            int32_t s = src.int32_value();
+
             // constrain if not within allowed range
-            if (src.int32_value() < min_) {
-                val = src;
-                val.set_int32_value(min_);
-            } else if (src.int32_value() > max_) {
-                val = src;
-                val.set_int32_value(max_);
+            if (s < min_) {
+                constrainedVal.set_int32_value(min_);
+            } else if (s > max_) {
+                constrainedVal.set_int32_value(max_);
+            } else if (!step_ || (s - min_) % step_ != 0) {
+                constrainedVal.set_int32_value(s - ((s - min_) % step_));
             }
-            return val;
+            return constrainedVal;
         }
 
         if constexpr(std::is_same<T, float>::value) {
-            catena::Value val;
 
             // return empty value if src is not valid
-            if (!src.has_float32_value()) { return val; }
+            if (!src.has_float32_value()) { return constrainedVal; }
+            float s = src.float32_value();
 
             // constrain if not within allowed range
-            if (src.float32_value() < min_) {
-                val = src;
-                val.set_float32_value(min_);
-            } else if (src.float32_value() > max_) {
-                val = src;
-                val.set_float32_value(max_);
+            if (s < min_) {
+                constrainedVal.set_float32_value(min_);
+            } else if (s > max_) {
+                constrainedVal.set_float32_value(max_);
+            } else if (!step_ || std::fmod(s - min_, step_) != 0) {
+                constrainedVal.set_float32_value(s - std::fmod(s - min_, step_));
             }
-            return val;
+            return constrainedVal;
         }
     }
 

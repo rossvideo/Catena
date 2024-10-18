@@ -113,8 +113,10 @@ public:
     }
 
     /**
-     * Named choice constraint can't be applied. Calling this
-     * will always return an empty value.
+     * If a request does not satisfy a choice constraint, then
+     * the request is invalid and should be ignored.
+     * 
+     * Calling this will always return an empty value.
      */
     catena::Value apply(const catena::Value& src) const override {
         catena::Value val;
