@@ -146,21 +146,25 @@ void statusUpdateExample(){
              */
             std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
         });
-        IParam* param = dm.getItem<ParamTag>("counter");
+
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+
+        // The rest is the "sending end" of the status update example
+        std::unique_ptr<IParam> param = dm.getParam("/counter", err);
         if (param == nullptr) {
-            std::stringstream why;
-            why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
-            throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+            throw err;
         }
-        auto& aNumber = *dynamic_cast<ParamWithValue<int32_t>*>(param);
+
+        // downcast the IParam to a ParamWithValue<int32_t>
+        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
 
         while (globalLoop) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {
                 Device::LockGuard lg(dm); 
-                aNumber.get()++;
-                std::cout << aNumber.getOid() << " set to " << aNumber.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &aNumber, 0);
+                counter.get()++;
+                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+                dm.valueSetByServer.emit("/counter", &counter, 0);
             }
         }
     });
