@@ -55,8 +55,9 @@ public:
     virtual bool satisfied(const catena::Value& src) const = 0;
 
     /**
-     * @brief applies constraint to src and writes constrained value to dst
+     * @brief applies constraint to src and returns the constrained value
      * @param src a catena::Value to apply the constraint to
+     * @return a catena::Value with the constraint applied
      */
     virtual catena::Value apply(const catena::Value& src) const = 0;
 

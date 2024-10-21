@@ -92,6 +92,10 @@ public:
     bool satisfied(const catena::Value& src) const override;
 
      /**
+     * @brief applies constraint to src and returns the constrained value
+     * @param src a catena::Value to apply the constraint to
+     * @return an empty catena::value
+     * 
      * If a request does not satisfy a choice constraint, then
      * the request is invalid and should be ignored.
      * 
