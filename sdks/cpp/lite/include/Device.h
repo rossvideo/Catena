@@ -74,6 +74,7 @@ class Device {
     using DetailLevel_e = catena::Device_DetailLevel;
     using DetailLevel = catena::common::DetailLevel;
     using IParam = catena::common::IParam;
+    using Path = catena::common::Path;
 
   public:
     /**
@@ -225,7 +226,7 @@ class Device {
      * @brief signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, IParam*, const int32_t)> valueSetByClient;
+    vdk::signal<void(const Path&, const IParam*, const int32_t)> valueSetByClient;
     
     /**
      * @brief signal emitted when a value is set by the server, or business logic.

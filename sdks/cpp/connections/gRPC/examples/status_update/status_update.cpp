@@ -138,45 +138,45 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-void counterUpdateHandler(const std::string& oid, IParam* p, const int32_t idx) {
+void counterUpdateHandler(const Path& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
-    int32_t& counter = dynamic_cast<ParamWithValue<int32_t>*>(p)->get();
+    const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
     std::cout << "*** client set counter to " << counter << '\n';
 }
 
-void helloUpdateHandler(const std::string& oid, IParam* p, const int32_t idx) {
+void helloUpdateHandler(const Path& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
-    std::string& hello = dynamic_cast<ParamWithValue<std::string>*>(p)->get();
+    const std::string& hello = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
     std::cout << "*** client set hello to " << hello << '\n';
 }
 
-void buttonUpdateHandler(const std::string& oid, IParam* p, const int32_t idx) {
+void buttonUpdateHandler(const Path& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
-    int32_t& button = dynamic_cast<ParamWithValue<int32_t>*>(p)->get();
+    const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
     std::cout << "*** client set button to " << button << '\n';
 }
 
-void offsetUpdateHandler(const std::string& oid, IParam* p, const int32_t idx) {
+void offsetUpdateHandler(const Path& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
-    int32_t& offset = dynamic_cast<ParamWithValue<int32_t>*>(p)->get();
+    const int32_t& offset = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
     std::cout << "*** client set offset to " << offset << '\n';
 }
 
 void statusUpdateExample(){   
     std::thread loop([]() {
-        std::map<std::string, std::function<void(const std::string&, IParam*, const int32_t)>> handlers;
+        std::map<std::string, std::function<void(const Path&, const IParam*, const int32_t)>> handlers;
         handlers["/counter"] = counterUpdateHandler;
         handlers["/hello"] = helloUpdateHandler;
         handlers["/button"] = buttonUpdateHandler;
         handlers["/offset"] = offsetUpdateHandler;
 
         // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, IParam* p, const int32_t idx) {
-            handlers[oid](oid, p, idx);
+        dm.valueSetByClient.connect([&handlers](const Path& oid, const IParam* p, const int32_t idx) {
+            handlers[oid.fqoid()](oid, p, idx);
         });
 
         catena::exception_with_status err{"", catena::StatusCode::OK};
