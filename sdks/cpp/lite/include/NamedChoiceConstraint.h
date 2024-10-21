@@ -71,7 +71,7 @@ public:
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Device& dm)
         : choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{init.begin()->first} {
+        strict_{strict}, default_{init.begin()->first}, oid_{oid}, shared_{shared} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
     
@@ -86,7 +86,7 @@ public:
      */
     NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared)
         : choices_{init.begin(), init.end()}, 
-        strict_{strict}, default_{init.begin()->first} {}
+        strict_{strict}, default_{init.begin()->first}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief default destructor
@@ -113,6 +113,10 @@ public:
     }
 
     /**
+     * @brief applies constraint to src and returns the constrained value
+     * @param src a catena::Value to apply the constraint to
+     * @return an empty catena::Value
+     * 
      * If a request does not satisfy a choice constraint, then
      * the request is invalid and should be ignored.
      * 
@@ -148,12 +152,30 @@ public:
         }
     }
 
+    /**
+     * @brief This constraint is not a range constraint so return false
+     * @return false
+     */
     bool isRange() const override { return false; }
+
+    /**
+     * @brief check if the constraint is shared
+     * @return true if the constraint is shared
+     */
+    bool isShared() const override { return shared_; }
+
+    /**
+     * @brief get the constraint oid
+     * @return the oid of the constraint
+     */
+    const std::string& getOid() const override { return oid_; }
 
 private:
     Choices choices_; ///< the choices
     bool strict_;     ///< should the value be constrained on apply
     T default_;       ///< the default value to constrain to
+    bool shared_;     ///< is the constraint shared
+    std::string oid_; ///< the oid of the constraint
 };
 
 } // namespace lite

@@ -156,6 +156,27 @@ void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScop
     }
     dst.mutable_params()->swap(dstParams); // n.b. lowercase swap, not an error
 
+    // make deep copy of the commands
+    google::protobuf::Map<std::string, ::catena::Param> dstCommands{};
+    for (const auto& [name, command] : commands_) {
+        std::string commandScope = command->getScope();
+        if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), commandScope) != clientScopes.end()) {
+            ::catena::Param dstCommand{};
+            command->toProto(dstCommand, clientScopes[0]); // uses param's toProto method
+            dstCommands[name] = dstCommand;
+        }
+    }
+    dst.mutable_commands()->swap(dstCommands); // n.b. lowercase swap, not an error
+
+    // make deep copy of the constraints
+    google::protobuf::Map<std::string, ::catena::Constraint> dstConstraints{};
+    for (const auto& [name, constraint] : constraints_) {
+        ::catena::Constraint dstConstraint{};
+        constraint->toProto(dstConstraint);
+        dstConstraints[name] = dstConstraint;
+    }
+    dst.mutable_constraints()->swap(dstConstraints); // n.b. lowercase swap, not an error
+
     // make deep copy of the language packs
     ::catena::LanguagePacks dstPacks{};
     for (const auto& [name, pack] : language_packs_) {

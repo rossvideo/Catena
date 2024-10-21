@@ -58,7 +58,7 @@ public:
      */
     RangeConstraint(T min, T max, T step, std::string oid, bool shared, Device& dm)
         : min_(min), max_(max), step_{step}, 
-        display_min_{min}, display_max_{max} {
+        display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
 
@@ -73,7 +73,7 @@ public:
     template <typename U>
     RangeConstraint(T min, T max, T step, std::string oid, bool shared)
         : min_(min), max_(max), step_{step}, 
-        display_min_{min}, display_max_{max} {}
+        display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief Construct a new Range Constraint object
@@ -89,7 +89,7 @@ public:
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid,
         bool shared, Device& dm)
         : min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max} {
+        display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
 
@@ -107,7 +107,7 @@ public:
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
         bool shared)
         : min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max} {}
+        display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief default destructor
@@ -209,7 +209,23 @@ public:
         }
     }
 
+    /**
+     * @brief This constraint is a range constraint so return true
+     * @return true
+     */
     bool isRange() const override { return true; }
+
+    /**
+     * @brief check if the constraint is shared
+     * @return true if the constraint is shared
+     */
+    bool isShared() const override { return shared_; }
+
+    /**
+     * @brief get the constraint oid
+     * @return the oid of the constraint
+     */
+    const std::string& getOid() const override { return oid_; }
 
 private:
     T min_;         ///< the minimum value
@@ -218,6 +234,8 @@ private:
     T display_min_; ///< the minimum value to display
     T display_max_; ///< the maximum value to display
     bool strict_;   ///< should the value be constrained on apply
+    bool shared_;   ///< is the constraint shared
+    std::string oid_; ///< the oid of the constraint
 };
 
 } // namespace lite

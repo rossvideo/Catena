@@ -55,8 +55,9 @@ public:
     virtual bool satisfied(const catena::Value& src) const = 0;
 
     /**
-     * @brief applies constraint to src and writes constrained value to dst
+     * @brief applies constraint to src and returns the constrained value
      * @param src a catena::Value to apply the constraint to
+     * @return a catena::Value with the constraint applied
      */
     virtual catena::Value apply(const catena::Value& src) const = 0;
 
@@ -65,6 +66,18 @@ public:
      * @return true if the constraint is a range constraint, false otherwise
      */
     virtual bool isRange() const = 0;
+
+    /**
+     * @brief check if the constraint is a shared constraint
+     * @return true if the constraint is shared, false otherwise
+     */
+    virtual bool isShared() const = 0;
+
+    /**
+     * @brief get the constraint oid
+     * @return the oid of the constraint
+     */
+    virtual const std::string& getOid() const = 0;
 
 };
 
