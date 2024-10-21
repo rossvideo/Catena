@@ -66,6 +66,18 @@ public:
      */
     virtual bool isRange() const = 0;
 
+    /**
+     * @brief check if the constraint is a shared constraint
+     * @return true if the constraint is shared, false otherwise
+     */
+    virtual bool isShared() const = 0;
+
+    /**
+     * @brief get the constraint oid
+     * @return the oid of the constraint
+     */
+    virtual const std::string& getOid() const = 0;
+
 };
 
 } // namespace common

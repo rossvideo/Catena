@@ -29,14 +29,14 @@ namespace lite {
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
     bool shared, Device& dm)
     : choices_{init.begin(), init.end()}, 
-    strict_{strict}, default_{*init.begin()} {
+    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {
     dm.addItem<common::ConstraintTag>(oid, this);
 }
 
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
     bool shared)
     : choices_{init.begin(), init.end()}, 
-    strict_{strict}, default_{*init.begin()} {}
+    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {}
 
 PicklistConstraint::~PicklistConstraint() = default;
 

@@ -213,9 +213,14 @@ function strictArg(desc) {
  *
  * @param {object} desc param descriptor
  * @returns true or false if the constraint is shared
+ * If shared, devive model reference is passed as an argument
  */
 function sharedArg(desc) {
-  return this.shared;
+  if (this.shared) {
+    return "true, dm";
+  } else {
+    return "false";
+  }
 }
 
 class Constraint extends CppCtor {

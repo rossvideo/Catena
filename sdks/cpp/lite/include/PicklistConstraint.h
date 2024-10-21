@@ -105,12 +105,30 @@ public:
      */
     void toProto(catena::Constraint& constraint) const override;
 
+    /**
+     * @brief This constraint is not a range constraint so return false
+     * @return false
+     */
     bool isRange() const override { return false; }
+
+    /**
+     * @brief check if the constraint is shared
+     * @return true if the constraint is shared
+     */
+    bool isShared() const override { return shared_; }
+
+    /**
+     * @brief get the constraint oid
+     * @return the oid of the constraint
+     */
+    const std::string& getOid() const override { return oid_; }
 
 private:
     Choices choices_;     ///< the choices
     bool strict_;         ///< should the value be constrained on apply
     std::string default_; ///< the default value to constrain to
+    bool shared_;         ///< is the constraint shared
+    std::string oid_;     ///< the oid of the constraint
 };
 
 } // namespace lite
