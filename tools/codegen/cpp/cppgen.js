@@ -68,11 +68,12 @@ class bufloc {
 }
 
 class ParamDescriptor {
-  constructor(typename, name, args) {
+  constructor(typename, name, args, constraint) {
     this.typename = typename;
     this.name = `_${name}`;
     this.args = args;
     this.subparams = [];
+    this.constraint = constraint;
   }
 
   addSubparam(ParamDescriptor) {
@@ -84,7 +85,7 @@ class ParamDescriptor {
   }
 
   write(parent) {
-    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, &${parent}Descriptor, dm, false};`);
+    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, ${this.constraint}, &${parent}Descriptor, dm, false};`);
     for (let subparam of this.subparams) {
       subparam.write(`${parent}${this.name}`);
     }
@@ -214,7 +215,9 @@ class CppGen {
       if (p.isArrayType()) {
         type = p.objectType();
         elementType = templateParam.typeName();
-        hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
+        if (p.isStructType()) {          
+          hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
+        }
       } else {
         type = templateParam.typeName();
       }
@@ -236,14 +239,27 @@ class CppGen {
       bloc(`${objectType} ${name} ${init};`);
       /// @todo handle isVariant
     }
+
+    let constraint = "nullptr";
+    if (p.isConstrained()) {
+      if (p.usesSharedConstraint()) {
+        constraint = "&constraints" + p.constraintRef() + "Constraint";
+      } else {
+        constraint = "&" + this.defineConstraint(parentOid, oid, desc);
+      }
+    }
+
     let fqoid = `${parentOid}/${oid}`;
     let descriptor;
     if (!p.isTemplated()) {
-      descriptor = new ParamDescriptor(objectType, name, args);
+      descriptor = new ParamDescriptor(objectType, name, args, constraint);
       this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
     } else {
-      descriptor = new ParamDescriptor(objectType, name, args);
+      descriptor = new ParamDescriptor(objectType, name, args, constraint);
       descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
+      if (constraint === "nullptr") {
+        descriptor.constraint = this.templateParams[p.templateOid()].paramDescriptor.constraint;
+      }
     }
     if (isStructChild) {
       this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);
@@ -274,21 +290,15 @@ class CppGen {
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
     if (isCommand) {
-      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm, true};`);
+      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, true};`);
       descriptor.writeDescriptors();
       bloc(`catena::lite::ParamWithValue<EmptyValue> ${pname}Param {catena::lite::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
     } else if (!isStructChild && p.hasValue()) {
-      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, nullptr, dm, false};`);
+      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, false};`);
       descriptor.writeDescriptors();
       bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm, false};`);
     }
 
-    if (p.usesSharedConstraint()) {
-      // @todo do something with the shared constraint reference
-      // p.constraintRef();
-    } else if (p.isConstrained() && p.hasValue()) {
-      this.defineConstraint(parentOid, oid, desc);
-    }
   }
 
   /**
@@ -364,13 +374,10 @@ class CppGen {
     let args = c.argsToString();
     let constraintType = c.objectType();
     let cname = c.constraintName(); 
-    if (c.isShared()) {
-      bloc(`catena::lite::${constraintType} ${cname}Constraint {${args}};`);
-    } else {
-      bloc(`catena::lite::${constraintType} ${cname}ParamConstraint {${args}};`);
-    }
+    bloc(`catena::lite::${constraintType} ${cname}Constraint {${args}};`);
+    return `${cname}Constraint`;
   }
-
+  
   /**
    * 
    * @param {string} fully qualified object id
@@ -411,9 +418,9 @@ class CppGen {
     this.init();
     this.device();
     this.languagePacks();
+    this.constraints(this.desc);
     this.params('', this.desc, this.namespace);
     this.commands('', this.desc, this.namespace);
-    this.constraints(this.desc);
     this.finish();
   }
 

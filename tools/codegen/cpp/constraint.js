@@ -72,13 +72,14 @@ function maxArg(desc) {
  * 
  * @param {object} desc param descriptor
  * @returns step value of the range constraint.
- * defaults to 1
+ * 
+ * If not present, step is set to 0
  */
 function stepArg(desc) {
-  let ans = 1;
+  let ans = 0;
   if (this.type == "int32_t" && "step" in desc.int32_range) {
     ans = desc.int32_range.step;
-  } else if ("step" in desc.float_range) {
+  } else if (this.type == "float" && "step" in desc.float_range) {
     ans = desc.float_range.step;
   }
   return ans;
@@ -196,8 +197,14 @@ function choicesArg(desc) {
 function strictArg(desc) {
   // @todo int_choice might need to default to true
   let ans = `false`;
-  if ("strict" in desc) {
-    ans = desc.strict ? `true` : `false`;
+  if (desc.type === "STRING_CHOICE") {
+    if ("strict" in desc.string_choice) {
+      ans = desc.string_choice.strict ? `true` : `false`;
+    }
+  } else if (desc.type === "STRING_STRING_CHOICE") {
+    if ("strict" in desc.string_string_choice) {
+      ans = desc.string_string_choice.strict ? `true` : `false`;
+    }
   }
   return ans;
 }
@@ -206,9 +213,14 @@ function strictArg(desc) {
  *
  * @param {object} desc param descriptor
  * @returns true or false if the constraint is shared
+ * If shared, devive model reference is passed as an argument
  */
 function sharedArg(desc) {
-  return this.shared;
+  if (this.shared) {
+    return "true, dm";
+  } else {
+    return "false";
+  }
 }
 
 class Constraint extends CppCtor {
@@ -245,7 +257,6 @@ class Constraint extends CppCtor {
     }
     this.arguments.push(quoted.bind(this.oid));
     this.arguments.push(sharedArg.bind(this));
-    this.arguments.push(parentArg.bind(this));
   }
 
   /**

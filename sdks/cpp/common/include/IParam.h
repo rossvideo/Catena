@@ -137,11 +137,6 @@ class IParam {
      */
     virtual const IConstraint* getConstraint() const = 0;
 
-    /**
-     * @brief add a constraint
-     */
-    virtual void setConstraint(IConstraint* constraint) = 0;
-
     virtual const std::string getScope() const = 0;
 
     /**

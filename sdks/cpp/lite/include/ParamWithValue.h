@@ -270,7 +270,7 @@ class ParamWithValue : public catena::common::IParam {
      * this specialization is used when the type is a CatenaStructArray.
      * This function expects the front segment of the oid to be an index.
      */
-    template<CatenaStructArray U>
+    template<meta::IsVector U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         if (!oid.front_is_index()) {
@@ -294,8 +294,14 @@ class ParamWithValue : public catena::common::IParam {
             // we reached the end of the path, return the element
             return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
-            // The path has more segments, keep recursing
-            return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, status);
+            if constexpr (CatenaStruct<ElemType>) {
+                // The path has more segments, keep recursing
+                return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, status);
+            } else {
+                // This type is not a CatenaStructArray so it has no sub-params
+                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
         }
     }
 
@@ -411,13 +417,6 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief add a constraint
-     */
-    void setConstraint(catena::common::IConstraint* constraint) override {
-        descriptor_.setConstraint(constraint);
-    }
-
-    /**
      * @brief get the parameter scope
      */
     const std::string getScope() const override {
@@ -428,6 +427,11 @@ class ParamWithValue : public catena::common::IParam {
     ParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
 };
+
+template<typename T>
+inline T& getParamValue(catena::common::IParam* param) {
+  return dynamic_cast<ParamWithValue<T>*>(param)->get();
+}
 
 } // namespace lite
 } // namespace catena

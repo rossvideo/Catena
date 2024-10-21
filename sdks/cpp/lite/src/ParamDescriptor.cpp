@@ -32,7 +32,11 @@ void ParamDescriptor::toProto(catena::Param &param, AuthzInfo& auth) const {
     param.set_widget(widget_);
     param.set_read_only(read_only_);
     if (constraint_) {
-        constraint_->toProto(*param.mutable_constraint());
+        if (constraint_->isShared()) {
+            *param.mutable_constraint()->mutable_ref_oid() = constraint_->getOid();
+        } else {
+            constraint_->toProto(*param.mutable_constraint());
+        }
     }
 
     auto* dstParams = param.mutable_params();
