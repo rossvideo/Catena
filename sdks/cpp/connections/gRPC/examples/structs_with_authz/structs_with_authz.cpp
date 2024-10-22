@@ -135,7 +135,8 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-void audioDeckUpdateHandler(const Path& oid, const IParam* p, const int32_t idx) {
+void audioDeckUpdateHandler(const std::string& jptr, const IParam* p, const int32_t idx) {
+    Path oid(jptr);
     if(oid.empty()){
         std::cout << "*** Whole struct array was updated" << '\n';
     } else{
@@ -187,18 +188,18 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        std::map<std::string, std::function<void(const Path&, const IParam*, const int32_t)>> handlers;
+        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
-        dm.valueSetByClient.connect([&handlers](const Path& oid, const IParam* p, const int32_t idx) {
-            std::cout << "signal recieved: " << oid.fqoid() << " has been changed by client" << '\n';
+        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
 
             // make a copy of the path that we can safely pop segments from
             Path jptr(oid); 
             std::string front = jptr.front_as_string();
             jptr.pop();
 
-            handlers[front](jptr, p, idx);
+            handlers[front](jptr.toString(), p, idx);
         });
 
         // wait for the server to shutdown and tidy up

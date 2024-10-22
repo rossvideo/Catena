@@ -42,8 +42,7 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
     if (param != nullptr) {
         std::string clientScope = "operate"; // temporary until we implement authz
         ans = param->fromProto(src, clientScope);
-        Path path(jptr);
-        valueSetByClient.emit(path, param.get(), 0);
+        valueSetByClient.emit(jptr, param.get(), 0);
     }
     return ans;
 }

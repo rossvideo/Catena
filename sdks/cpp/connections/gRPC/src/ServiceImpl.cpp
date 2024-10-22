@@ -380,12 +380,12 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     // Don't need to send any updates to unauthorized clients
                 } 
             });
-            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const Path& oid, const IParam* p, const int32_t idx){
+            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 try{
                     // std::string paramScope = p->getScope();
                     // if (std::find(clientScopes_.begin(), clientScopes_.end(), paramScope) != clientScopes_.end()){
                         if (!this->context_.IsCancelled()){
-                            this->res_.mutable_value()->set_oid(oid.fqoid());
+                            this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
                             std::string clientScope = "operate"; // temporary until we implement authz
                             p->toProto(*this->res_.mutable_value()->mutable_value(), clientScope);

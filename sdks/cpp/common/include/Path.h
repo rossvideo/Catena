@@ -141,9 +141,18 @@ class Path {
     Index front_as_index() const;
 
     /**
+     * @brief return a string representation of the Path
+     * @return std::string the path as a string
+     * 
+     * any popped segments are not included in the  returned string.
+     */
+    std::string toString() const;
+
+    /**
      * @brief return a fully qualified, albeit escaped oid
-     *
      * @return std::string
+     * 
+     * The fully qualified oid is rooted at the device and includes all popped segments.
      */
     std::string fqoid() const;
 

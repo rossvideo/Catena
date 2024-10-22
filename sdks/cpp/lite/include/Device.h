@@ -226,7 +226,7 @@ class Device {
      * @brief signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const Path&, const IParam*, const int32_t)> valueSetByClient;
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
     
     /**
      * @brief signal emitted when a value is set by the server, or business logic.
