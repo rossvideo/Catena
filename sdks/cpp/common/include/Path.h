@@ -100,9 +100,14 @@ class Path {
      *
      * @return number of segments
      */
-    inline Index size() const { return cend() - front_; }
+    inline Index size() const { return segments_.size() - frontIdx_; }
 
-    inline bool empty() const { return front_ == cend(); }
+    /**
+     * @brief return true if the Path is empty
+     *
+     * @return true if the Path is empty
+     */
+    inline bool empty() const { return frontIdx_ >= segments_.size(); }
 
     /**
      * @return true if the front of the path is a string, false if it's an Index or empty.
@@ -136,11 +141,20 @@ class Path {
     Index front_as_index() const;
 
     /**
-     * @brief return a fully qualified, albeit escaped oid
-     *
-     * @return std::string
+     * @brief return a string representation of the Path
+     * @return std::string the path as a string
+     * 
+     * any popped segments are not included in the  returned string.
      */
-    std::string fqoid();
+    std::string toString() const;
+
+    /**
+     * @brief return a fully qualified, albeit escaped oid
+     * @return std::string
+     * 
+     * The fully qualified oid is rooted at the device and includes all popped segments.
+     */
+    std::string fqoid() const;
 
     /**
      * @brief pop the front of the path.
@@ -157,17 +171,17 @@ class Path {
     /**
      * @brief restore the Path to start at its original front
      */
-    inline void rewind() noexcept {front_ = cbegin();}
+    inline void rewind() noexcept {frontIdx_ = 0;}
 
     /**
      * @brief restore the Path to it's state before the last pop
      */
-    inline void unpop() noexcept {if (front_ != cbegin()) {--front_;}}
+    inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 
   private:
     using Segments = std::vector<Segment>;
     Segments segments_; /**< the path split into its components */
-    Segments::const_iterator front_; /**< current front of path */
+    std::size_t frontIdx_; /**< index of current front of path */
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0
@@ -183,20 +197,6 @@ class Path {
      * @return unescaped version of str
      */
     std::string unescape(const std::string& str);
-
-    /**
-     * @brief iterator to the start of our segmented Path.
-     *
-     * @return std::vector::iterator
-     */
-    inline Segments::const_iterator cbegin() const { return segments_.cbegin(); }
-
-    /**
-     * @brief iterator to the end of our segmented Path.
-     *
-     * @return std::vector::iterator
-     */
-    inline Segments::const_iterator cend() const { return segments_.cend(); }
 };
 
 }  // namespace common

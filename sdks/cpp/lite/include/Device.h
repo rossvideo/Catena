@@ -74,6 +74,7 @@ class Device {
     using DetailLevel_e = catena::Device_DetailLevel;
     using DetailLevel = catena::common::DetailLevel;
     using IParam = catena::common::IParam;
+    using Path = catena::common::Path;
 
   public:
     /**

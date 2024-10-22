@@ -218,6 +218,13 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
+     * @brief get the value of the parameter (const version)
+     */
+    const T& get() const {
+        return value_.get();
+    }
+
+    /**
      * @brief get a child parameter by name
      * @param oid the path to the child parameter
      * @return a unique pointer to the child parameter, or nullptr if it does not exist

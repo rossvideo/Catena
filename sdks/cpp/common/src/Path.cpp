@@ -85,14 +85,14 @@ Path::Path(const std::string &jptr) : segments_{} {
             throw catena::exception_with_status(why.str(), catena::StatusCode::INVALID_ARGUMENT);
         }
     }
-    front_ = cbegin();
+    frontIdx_ = 0;
 }
 
 Path::Path(const char *literal) : Path(std::string(literal)) {}
 
 bool Path::front_is_index() const {
     bool ans = false;
-    if (front_ != cend() && std::holds_alternative<Index>(*front_)) {
+    if (frontIdx_ < segments_.size() && std::holds_alternative<Index>(segments_[frontIdx_])) {
         ans = true;
     }
     return ans;
@@ -100,7 +100,7 @@ bool Path::front_is_index() const {
 
 bool Path::front_is_string() const {
     bool ans = false;
-    if (front_ != cend() && std::holds_alternative<std::string>(*front_)) {
+    if (frontIdx_ < segments_.size() && std::holds_alternative<std::string>(segments_[frontIdx_])) {
         ans = true;
     }
     return ans;
@@ -109,7 +109,7 @@ bool Path::front_is_string() const {
 Index Path::front_as_index() const {
     Index ans = kError;
     if (front_is_index()) {
-        ans = std::get<Index>(*front_);
+        ans = std::get<Index>(segments_[frontIdx_]);
     }
     return ans;
 }
@@ -117,20 +117,20 @@ Index Path::front_as_index() const {
 const std::string& Path::front_as_string() const {
     static const std::string Error{""};
     if (front_is_string()) {
-        return std::get<std::string>(*front_);
+        return std::get<std::string>(segments_[frontIdx_]);
     } else {
         return Error;
     }
 }
 
 void Path::pop() noexcept {
-    if (front_ != cend()) {
-        ++front_;
+    if (frontIdx_ < segments_.size()) {
+        ++frontIdx_;
     }
 }
 
 Index Path::walked() const noexcept {
-    return front_ - cbegin();
+    return frontIdx_;
 }
 
 void Path::escape(std::string &str) {
@@ -145,7 +145,25 @@ std::string Path::unescape(const std::string &str) {
     return ans;
 }
 
-std::string Path::fqoid() {
+std::string Path::toString() const {
+    std::stringstream ans{""};
+    for (auto it = segments_.cbegin() + frontIdx_; it != segments_.cend(); ++it) {
+        if (std::holds_alternative<Index>(*it)) {
+            Index idx = std::get<Index>(*it);
+            if (idx == kEnd) {
+                ans << "/-";
+            } else {
+                ans << "/" << idx;
+            }
+        }
+        if (std::holds_alternative<std::string>(*it)) {
+            ans << "/" << std::get<std::string>(*it);
+        }
+    }
+    return ans.str();
+}
+
+std::string Path::fqoid() const {
     std::stringstream ans{""};
     for (auto it = segments_.cbegin(); it != segments_.cend(); ++it) {
         if (std::holds_alternative<Index>(*it)) {

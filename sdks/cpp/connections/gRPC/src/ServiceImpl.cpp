@@ -23,6 +23,7 @@
 
 // type aliases
 using catena::common::ParamTag;
+using catena::common::Path;
 
 
 #include <iostream>

@@ -135,37 +135,23 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-void statusUpdateExample(){
-    
-    std::thread loop([]() {
-        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
-            //std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
-            /**
-             * Protobuf lite does not support converting messages to JSON strings.
-             * @todo: Implement a toString method for catena values.
-             */
-            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
-        });
-        IParam* param = dm.getItem<ParamTag>("counter");
-        if (param == nullptr) {
-            std::stringstream why;
-            why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
-            throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+void audioDeckUpdateHandler(const std::string& jptr, const IParam* p, const int32_t idx) {
+    Path oid(jptr);
+    if(oid.empty()){
+        std::cout << "*** Whole struct array was updated" << '\n';
+    } else{
+        std::size_t index = oid.front_as_index();
+        if (index == Path::kEnd) {
+            std::cout << "*** Index is \"-\", new element added to struct array" << '\n';
+        } else {
+            std::cout << "*** audio_channel[" << index << "] was updated" << '\n';
         }
-        auto& aNumber = *dynamic_cast<ParamWithValue<int32_t>*>(param);
+    }
 
-        while (globalLoop) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            {
-                Device::LockGuard lg(dm); 
-                aNumber.get()++;
-                std::cout << aNumber.getOid() << " set to " << aNumber.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &aNumber, 0);
-            }
-        }
-    });
-    loop.detach();
 }
+
+
+        
 
 void RunRPCServer(std::string addr)
 {
@@ -202,7 +188,19 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        statusUpdateExample();
+        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
+        handlers["audio_deck"] = audioDeckUpdateHandler;
+
+        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
+
+            // make a copy of the path that we can safely pop segments from
+            Path jptr(oid); 
+            std::string front = jptr.front_as_string();
+            jptr.pop();
+
+            handlers[front](jptr.toString(), p, idx);
+        });
 
         // wait for the server to shutdown and tidy up
         server->Wait();
