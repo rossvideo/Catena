@@ -24,7 +24,7 @@ option java_multiple_files = true;
 option java_package = "catena.core.externalobject";
 option java_outer_classname = "ExternalObjectProtos";
 
-option optimize_for = OPTIMIZE_FOR;
+option optimize_for = SPEED;
 
 message ExternalObjectRequestPayload {
   uint32 slot = 1; // Uniquely identifies the device at node scope.

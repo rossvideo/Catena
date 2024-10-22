@@ -22,7 +22,7 @@ option java_multiple_files = true;
 option java_package = "catena.core.language";
 option java_outer_classname = "LanguageProtos";
 
-option optimize_for = OPTIMIZE_FOR;
+option optimize_for = SPEED;
 
 /* Language Pack
  * A map of string identifiers, e.g. "greeting" to strings which are all

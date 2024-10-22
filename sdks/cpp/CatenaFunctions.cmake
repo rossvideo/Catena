@@ -32,7 +32,7 @@ cmake_minimum_required(VERSION 3.20)
 #
 function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target model)
     
-    set(optimize_for CODE_SIZE)
+    set(optimize_for SPEED)
     if (${model} STREQUAL "lite")
         set(optimize_for LITE_RUNTIME)
     endif()
@@ -45,7 +45,7 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target
         
         add_custom_command(
             OUTPUT "${output}"
-            COMMAND ${CPP} ${cpp_opts} -D OPTIMIZE_FOR=${optimize_for} -o "${output}" "${input}"
+            COMMAND ${CPP} ${cpp_opts} -D SPEED=${optimize_for} -o "${output}" "${input}"
             DEPENDS "${input}"
             COMMENT "Preprocessing ${input} into ${output}"
             VERBATIM
