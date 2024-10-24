@@ -1,14 +1,42 @@
+// Copyright 2024 Ross Video Ltd
+//
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 
-#include <common/include/utils.h>
-//#include <JSON.h>
+/**
+ * @brief Example program to demonstrate setting up a full Catena service.
+ * @file status_update.cpp
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author John Danen (john.danen@rossvideo.com)
+ */
 
-#include <lite/include/Device.h>
-#include <lite/include/Param.h>
+// device model
+#include "device.status_update.json.h" 
 
-#include <connections/gRPC/include/ServiceImpl.h>
+//common
+#include <utils.h>
 
-#include <lite/service.grpc.pb.h>
-#include "connections/gRPC/examples/status_update/device.status_update.json.h" 
+//lite
+#include <Device.h>
+#include <ParamWithValue.h>
+
+// connections/gRPC
+#include <ServiceImpl.h>
+
+// protobuf interface
+#include <interface/service.grpc.pb.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
@@ -28,6 +56,7 @@
 #include <thread>
 #include <chrono>
 #include <signal.h>
+#include <functional>
 
 using grpc::Server;
 
@@ -109,25 +138,66 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-void statusUpdateExample(){
-    
+void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+    // all we do here is print out the oid of the parameter that was changed
+    // your biz logic would do something _even_more_ interesting!
+    const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
+    std::cout << "*** client set counter to " << counter << '\n';
+}
+
+void helloUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+    // all we do here is print out the oid of the parameter that was changed
+    // your biz logic would do something _even_more_ interesting!
+    const std::string& hello = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
+    std::cout << "*** client set hello to " << hello << '\n';
+}
+
+void buttonUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+    // all we do here is print out the oid of the parameter that was changed
+    // your biz logic would do something _even_more_ interesting!
+    const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
+    std::cout << "*** client set button to " << button << '\n';
+}
+
+void offsetUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+    // all we do here is print out the oid of the parameter that was changed
+    // your biz logic would do something _even_more_ interesting!
+    const int32_t& offset = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
+    std::cout << "*** client set offset to " << offset << '\n';
+}
+
+void statusUpdateExample(){   
     std::thread loop([]() {
-        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
-            //std::vector<std::string> scopes = {catena::full::kAuthzDisabled};
-            /**
-             * Protobuf lite does not support converting messages to JSON strings.
-             * @todo: Implement a toString method for catena values.
-             */
-            std::cout << "signal recieved: " << p->getOid() << " has been changed by client" << '\n';
+        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
+        handlers["/counter"] = counterUpdateHandler;
+        handlers["/hello"] = helloUpdateHandler;
+        handlers["/button"] = buttonUpdateHandler;
+        handlers["/offset"] = offsetUpdateHandler;
+
+        // this is the "receiving end" of the status update example
+        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+            handlers[oid](oid, p, idx);
         });
-        Param<int32_t>& aNumber = *dynamic_cast<Param<int32_t>*>(dm.getItem("/counter", Device::ParamTag{}));
+
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+
+        // The rest is the "sending end" of the status update example
+        std::unique_ptr<IParam> param = dm.getParam("/counter", err);
+        if (param == nullptr) {
+            throw err;
+        }
+
+        // downcast the IParam to a ParamWithValue<int32_t>
+        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
+
         while (globalLoop) {
+            // update the counter once per second, and emit the event
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {
                 Device::LockGuard lg(dm); 
-                aNumber.get()++;
-                std::cout << aNumber.getOid() << " set to " << aNumber.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &aNumber, 0);
+                counter.get()++;
+                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+                dm.valueSetByServer.emit("/counter", &counter, 0);
             }
         }
     });
@@ -156,7 +226,8 @@ void RunRPCServer(std::string addr)
         builder.AddListeningPort(addr, getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        CatenaServiceImpl service(cq.get(), dm, EOPath);
+        bool authz = absl::GetFlag(FLAGS_authz);
+        CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
 
         builder.RegisterService(&service);
 

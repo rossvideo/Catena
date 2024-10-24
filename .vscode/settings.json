@@ -89,12 +89,14 @@
     "cmake.buildBeforeRun": false,
     "cmake.configureSettings": {
         "CONNECTIONS": ["gRPC", "REST"],
-        "CATENA_MODELS": ["full", "lite"]
+        "CATENA_MODEL": ["full", "lite"]
     },
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/sdks/cpp/build",
+        "${workspaceFolder}/sdks/cpp/build/**",
         "${env:HOME}/.local/include",
-        "${workspaceFolder}/sdks/cpp"
+        "${workspaceFolder}/sdks/cpp/common/**",
+        "${workspaceFolder}/sdks/cpp/connections/**",
+        "${workspaceFolder}/sdks/cpp/lite/**"
     ],
     "json.schemas": [
         {

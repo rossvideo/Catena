@@ -36,6 +36,17 @@
       },
       {
         "type": "cppdbg",
+        "name": "Debug status_update with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/status_update/status_update",
+        "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/status_update/static"],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
         "name": "Debug Basic Param Access with lldb",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/basic_param_access/basic_param_access",
@@ -46,11 +57,30 @@
         "MIMode": "lldb"
       },
       {
-        "name": "Debug status_update with gdb",
+        "name": "Debug examples with gdb",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/status_update/status_update", // Path to the full_service executable
-        "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/status_update/static"], // Any command-line arguments go here
+        "program": "${workspaceFolder}/sdks/cpp/build/${input:pickExample}", // Path to the full_service executable
+        "args": [], // Any command-line arguments go here
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ]
+    },
+      {
+        "name": "Debug service with gdb",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
+        "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static"], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
@@ -92,9 +122,34 @@
       "options": ["lite/examples/start_here/device.start_here.json", 
                   "lite/examples/use_structs/device.use_structs.json",
                   "lite/examples/use_templates/device.use_templates.json",
-                  "connections/gRPC/examples/status_update/device.status_update.json"
+                  "lite/examples/use_constraints/device.use_constraints.json",
+                  "lite/examples/use_struct_arrays/device.AudioDeck.json",
+                  "connections/gRPC/examples/status_update/device.status_update.json",
+                  "connections/gRPC/examples/use_commands/device.video_player.json"
                 ],
       "default": "lite/examples/start_here/device.start_here.json"
+    },
+    {
+      "id": "pickService",
+      "description": "Select service to run",
+      "type": "pickString",
+      "options": ["status_update",
+                  "structs_with_authz",
+                  "use_commands"
+                ],
+      "default": "status_update"
+    },
+    {
+      "id": "pickExample",
+      "description": "Select example to run",
+      "type": "pickString",
+      "options": ["lite/examples/start_here/start_here",
+                  "lite/examples/use_structs/use_structs",
+                  "lite/examples/use_templates/use_templates",
+                  "lite/examples/use_constraints/use_constraints",
+                  "lite/examples/use_struct_arrays/use_struct_arrays",
+                ],
+      "default": "lite/examples/start_here/start_here"
     }
   ]
 

@@ -1,15 +1,18 @@
+# Copyright 2024 Ross Video Ltd
 #
-# Licensed under the Creative Commons Attribution NoDerivatives 4.0 International Licensing (CC-BY-ND-4.0);
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at:
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
-#  https://creativecommons.org/licenses/by-nd/4.0/
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 #
 # Function definition for protobuf preprocessor
 #
@@ -29,7 +32,7 @@ cmake_minimum_required(VERSION 3.20)
 #
 function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target model)
     
-    set(optimize_for CODE_SIZE)
+    set(optimize_for SPEED)
     if (${model} STREQUAL "lite")
         set(optimize_for LITE_RUNTIME)
     endif()
@@ -42,7 +45,7 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target
         
         add_custom_command(
             OUTPUT "${output}"
-            COMMAND ${CPP} ${cpp_opts} -D OPTIMIZE_FOR=${optimize_for} -o "${output}" "${input}"
+            COMMAND ${CPP} ${cpp_opts} -D SPEED=${optimize_for} -o "${output}" "${input}"
             DEPENDS "${input}"
             COMMENT "Preprocessing ${input} into ${output}"
             VERBATIM
@@ -57,13 +60,20 @@ endfunction()
 # Function to install Catena codegen
 function(install_catena_codegen)
 
+    #install the Catena device validation schema file
+    install(
+        FILES ${CATENA_ROOT_DIR}/schema/catena.schema.json
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp
+    )
+    set(CATENA_SCHEMA_JSON ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/catena.schema.json PARENT_SCOPE)
+
     # Ensure the custom target runs during the installation process
     find_program(NPM_EXECUTABLE npm REQUIRED)
     get_filename_component(codegen_dir ${CMAKE_SOURCE_DIR}/../../tools/codegen ABSOLUTE)
     get_filename_component(install_dir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp ABSOLUTE)
-    install(CODE "message(STATUS \"Installing Catena codegen\")")
     install(CODE 
-        "execute_process(
+        "message(STATUS \"Installing Catena codegen\")
+        execute_process(
             COMMAND ${NPM_EXECUTABLE} install ${codegen_dir} --install-links
             WORKING_DIRECTORY ${install_dir}
         )"

@@ -21,5 +21,5 @@ rm -r ${sdk_path}/build
 mkdir -p ${sdk_path}/build
 cd ${sdk_path}/build
 # Change the cmake flags here as needed
-cmake -G Ninja -DCONNECTIONS=gRPC -DCATENA_MODELS=lite ..
+cmake -G Ninja -DCONNECTIONS=gRPC -DCATENA_MODEL=lite ..
 ninja

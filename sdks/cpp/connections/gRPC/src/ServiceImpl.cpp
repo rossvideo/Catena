@@ -1,13 +1,36 @@
+// Copyright 2024 Ross Video Ltd
+//
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+// common
+#include <Tags.h>
 
-#include <connections/gRPC/include/ServiceImpl.h>
+// connections/gRPC
+#include <ServiceImpl.h>
+
+
+// type aliases
+using catena::common::ParamTag;
+using catena::common::Path;
+
 
 #include <iostream>
 #include <thread>
 #include <fstream>
 #include <vector>
-#include <iterator> 
+#include <iterator>
 
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {
@@ -43,8 +66,8 @@ std::string timeNow() {
 }
 
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath)
-        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath} {}
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath, bool authz)
+        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath}, authz_{authz} {}
 
 void CatenaServiceImpl::init() {
     new GetPopulatedSlots(this, dm_, true);
@@ -54,6 +77,7 @@ void CatenaServiceImpl::init() {
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
     // new GetParam(this, dm_, true);
+    new ExecuteCommand(this, dm_, true);
 }
 
 int CatenaServiceImpl::GetPopulatedSlots::objectCounter_ = 0;
@@ -62,6 +86,7 @@ int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 int CatenaServiceImpl::Connect::objectCounter_ = 0;
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
+int CatenaServiceImpl::ExecuteCommand::objectCounter_ = 0;
 
 vdk::signal<void()> CatenaServiceImpl::Connect::shutdownSignal_;
 
@@ -99,45 +124,46 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-// std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
-//     if (absl::GetFlag(FLAGS_authz) == false) {
-//         return {catena::kAuthzDisabled};
-//     }
+std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
+    if(!authz_){
+        // Authorization is disabled
+        return Device::kAuthzDisabled;
+    }
 
-//     auto authContext = context.auth_context();
-//     if (authContext == nullptr) {
-//         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
-//     }
+    auto authContext = context.auth_context();
+    if (authContext == nullptr) {
+        throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
+    }
 
-//     std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
-//     if (claimsStr.empty()) {
-//         throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
-//     }
-//     // parse string of claims into a picojson object
-//     picojson::value claims;
-//     std::string err = picojson::parse(claims, claimsStr[0].data());
-//     if (!err.empty()) {
-//         throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
-//     }
+    std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
+    if (claimsStr.empty()) {
+        throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
+    }
+    // parse string of claims into a picojson object
+    picojson::value claims;
+    std::string err = picojson::parse(claims, claimsStr[0].data());
+    if (!err.empty()) {
+        throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
+    }
 
-//     // extract the scopes from the claims
-//     std::vector<std::string> scopes;
-//     const picojson::value::object &obj = claims.get<picojson::object>();
-//     for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
-//         if (it->first == "scope"){
-//             std::string scopeClaim = it->second.get<std::string>();
-//             std::istringstream iss(scopeClaim);
-//             while (std::getline(iss, scopeClaim, ' ')) {
-//                 // check that reserved scope is not used
-//                 if (scopeClaim == catena::kAuthzDisabled) {
-//                     throw catena::exception_with_status("Invalid scope", catena::StatusCode::PERMISSION_DENIED);
-//                 }
-//                 scopes.push_back(scopeClaim);
-//             }
-//         }
-//     }
-//     return scopes;
-// }
+    // extract the scopes from the claims
+    std::vector<std::string> scopes;
+    const picojson::value::object &obj = claims.get<picojson::object>();
+    for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
+        if (it->first == "scope"){
+            std::string scopeClaim = it->second.get<std::string>();
+            std::istringstream iss(scopeClaim);
+            while (std::getline(iss, scopeClaim, ' ')) {
+                // check that reserved scope is not used
+                if (scopeClaim == Device::kAuthzDisabled[0]) {
+                    throw catena::exception_with_status("Invalid scope", catena::StatusCode::PERMISSION_DENIED);
+                }
+                scopes.push_back(scopeClaim);
+            }
+        }
+    }
+    return scopes;
+}
 
 CatenaServiceImpl::GetPopulatedSlots::GetPopulatedSlots(CatenaServiceImpl *service, Device &dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -172,20 +198,15 @@ void CatenaServiceImpl::GetPopulatedSlots::proceed(CatenaServiceImpl *service, b
             }
         break;
 
-        case CallStatus::kWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
         case CallStatus::kFinish:
             std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
     }
 }
 
@@ -215,43 +236,30 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             new GetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                // std::vector<std::string> clientScopes = getScopes(context_);
                 catena::Value ans;
-                catena::lite::IParam* param = dm_.getItem(req_.oid(), Device::ParamTag{});
-                    if (param == nullptr) {
-                    std::stringstream why;
-                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
-                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-                }
-                {
-                    Device::LockGuard lg(dm_);
-                    param->toProto(ans);
-                }
+                catena::exception_with_status rc = dm_.getValue(req_.oid(), ans);
                 status_ = CallStatus::kFinish;
-                responder_.Finish(ans, Status::OK, this);
-            } catch (catena::exception_with_status &e) {
-                status_ = CallStatus::kFinish;
-                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                if (rc.status == catena::StatusCode::OK) {
+                    responder_.Finish(ans, Status::OK, this);
+                } else {
+                    responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                }
             } catch (...) {
                 status_ = CallStatus::kFinish;
-                responder_.FinishWithError(Status::CANCELLED, this);
+                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
+                responder_.FinishWithError(errorStatus, this);
             }
         break;
-
-        case CallStatus::kWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
 
         case CallStatus::kFinish:
             std::cout << "GetValue[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
     }
 }
 
@@ -282,50 +290,36 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
             new SetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                //std::vector<std::string> clientScopes = getScopes(context_);
-                auto dstParam = dm_.getItem(req_.oid(), Device::ParamTag{});
-                if (dstParam == nullptr) {
-                    std::stringstream why;
-                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' not found";
-                    throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-                }
-                if (dstParam->isReadOnly()) {
-                    std::stringstream why;
-                    why << __PRETTY_FUNCTION__ << "\nparam '" << req_.oid() << "' is read-only";
-                    throw catena::exception_with_status(why.str(), catena::StatusCode::PERMISSION_DENIED);
-                }
-                {
+                catena::exception_with_status ans{"", catena::StatusCode::OK};
+                {   // block to minimize time lock is held
                     Device::LockGuard lg(dm_);
-                    dstParam->fromProto(*req_.mutable_value());
-                    dm_.valueSetByClient.emit(req_.oid(), dstParam, req_.element_index());
+                    catena::exception_with_status why = dm_.setValue(req_.oid(), *req_.mutable_value());
+                    ans = std::move(why);
                 }
-                status_ = CallStatus::kFinish;
-                responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
-            } catch (catena::exception_with_status &e) {
-                errorStatus_ = Status(static_cast<grpc::StatusCode>(e.status), e.what());
-                status_ = CallStatus::kFinish;
-                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                if (ans.status == catena::StatusCode::OK) {
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
+                } else {
+                    errorStatus_ = Status(static_cast<grpc::StatusCode>(ans.status), ans.what());
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                }
             } catch (...) {
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;
                 responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
             }
             break;
-        
-        case CallStatus::kWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
 
         case CallStatus::kFinish:
             std::cout << "SetValue[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
     }
 }
 
@@ -368,14 +362,19 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 try{
-                    if (!this->context_.IsCancelled()){
-                        //std::vector<std::string> scopes = getScopes(this->context_);
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-                        p->toProto(*this->res_.mutable_value()->mutable_value());
-                    }
-                    this->hasUpdate_ = true;
-                    this->cv_.notify_one();
+                    // std::string paramScope = p->getScope();
+                    // if (std::find(clientScopes_.begin(), clientScopes_.end(), paramScope) != clientScopes_.end()){
+                        if (!this->context_.IsCancelled()){
+                            this->res_.mutable_value()->set_oid(oid);
+                            this->res_.mutable_value()->set_element_index(idx);
+
+                            std::string clientScope = "operate"; // temporary until we implement authz
+                            catena::Value* value = this->res_.mutable_value()->mutable_value();
+                            p->toProto(*value, clientScope);
+                        }
+                        this->hasUpdate_ = true;
+                        this->cv_.notify_one();
+                    // }
                 }catch(catena::exception_with_status& why){
                     // Error is thrown for connected clients without authorization
                     // Don't need to send any updates to unauthorized clients
@@ -383,19 +382,24 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 try{
-                    if (!this->context_.IsCancelled()){
-                        //std::vector<std::string> scopes = getScopes(this->context_);
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-                        p->toProto(*this->res_.mutable_value()->mutable_value());
-                    }
-                    this->hasUpdate_ = true;
-                    this->cv_.notify_one();
+                    // std::string paramScope = p->getScope();
+                    // if (std::find(clientScopes_.begin(), clientScopes_.end(), paramScope) != clientScopes_.end()){
+                        if (!this->context_.IsCancelled()){
+                            this->res_.mutable_value()->set_oid(oid);
+                            this->res_.mutable_value()->set_element_index(idx);
+                            std::string clientScope = "operate"; // temporary until we implement authz
+                            p->toProto(*this->res_.mutable_value()->mutable_value(), clientScope);
+                        }
+                        this->hasUpdate_ = true;
+                        this->cv_.notify_one();
+                    // }
                 }catch(catena::exception_with_status& why){
                     // Error is thrown for connected clients without authorization
                     // Don't need to send any updates to unauthorized clients
                 } 
             });
+
+            clientScopes_ = service_->getScopes(context_);
 
             // send client a empty update with slot of the device
             {
@@ -410,8 +414,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             lock.lock();
             std::cout << "waiting on cv : " << timeNow() << std::endl;
             cv_.wait(lock, [this] { return hasUpdate_; });
-            std::cout << "cv wait over : " << timeNow() << std::endl;
             hasUpdate_ = false;
+            std::cout << "cv wait over : " << timeNow() << std::endl;
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 std::cout << "Connection[" << objectId_ << "] cancelled\n";
@@ -425,11 +429,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             lock.unlock();
             break;
 
-        case CallStatus::kPostWrite:
-            // not needed
-            status_ = CallStatus::kFinish;
-            break;
-
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
             shutdownSignal_.disconnect(shutdownSignalId_);
@@ -437,6 +436,11 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             dm_.valueSetByServer.disconnect(valueSetByServerId_);
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
 
@@ -481,9 +485,10 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             {
                 catena::DeviceComponent deviceMessage{};
                 catena::Device* dstDevice = deviceMessage.mutable_device();
+                std::vector<std::string> clientScopes = service_->getScopes(context_);
                 {
                     Device::LockGuard lg(dm_);
-                    dm_.toProto(*dstDevice, false); // select the deep copy option
+                    dm_.toProto(*dstDevice, clientScopes, false); // select the deep copy option
                 }
                 status_ = CallStatus::kPostWrite;
                 writer_.Write(deviceMessage, this);
@@ -500,6 +505,11 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             //shutdownSignal.disconnect(shutdownSignalId_);
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
 
@@ -581,6 +591,11 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
             std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
 
@@ -666,3 +681,76 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
     //     int objectId_;
     //     static int objectCounter_;
     // };
+
+CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, stream_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    service->registerItem(this);
+    objectId_ = objectCounter_++;
+    proceed(service, ok);  // start the process
+}
+
+void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+
+    if(!ok){
+        std::cout << "ExecuteCommand[" << objectId_ << "] cancelled\n";
+        status_ = CallStatus::kFinish;
+    }
+
+    switch (status_) {
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            service_->RequestExecuteCommand(&context_, &stream_, service_->cq_, service_->cq_, this);
+            break;
+
+        case CallStatus::kProcess:
+            new ExecuteCommand(service_, dm_, ok);
+            // ExecuteCommand RPC always begins with reading initial request from client
+            status_ = CallStatus::kRead;
+            stream_.Read(&req_, this);
+            break;
+
+        case CallStatus::kRead: // should always tranistion to this state after calling stream_.Read()
+        {
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unique_ptr<IParam> command = dm_.getCommand(req_.oid(), rc);
+            if (command == nullptr) {
+                status_ = CallStatus::kFinish;
+                stream_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                break;
+            }
+            res_ = command->executeCommand(req_.value());
+
+            /**
+             * @todo: Implement streaming response
+             */
+            // for now we are not streaming the response so we can finish the call
+            status_ = CallStatus::kPostWrite; 
+            stream_.Write(res_, this);
+            break;
+        }
+
+        case CallStatus::kWrite:
+            status_ = CallStatus::kRead;
+            stream_.Read(&req_, this);
+            break;
+
+        case CallStatus::kPostWrite:
+            status_ = CallStatus::kFinish;
+            stream_.Finish(Status::OK, this);
+            break;
+
+        case CallStatus::kFinish:
+            std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            stream_.Finish(errorStatus, this);
+    }
+}

@@ -1,15 +1,18 @@
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0
-// International Licensing (CC-BY-ND-4.0);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at:
-//
-// https://creativecommons.org/licenses/by-nd/4.0/
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/** Copyright 2024 Ross Video Ltd
+
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 //
 
 /**
@@ -22,80 +25,84 @@
  *
  * It presumes the reader has understood the start_here example and
  * builds on that. Less chatty comments.
+ * 
+ * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+// device model
+#include "device.use_structs.json.h" 
 
-#include "lite/examples/use_structs/device.use_structs.json.h"  // dm
-#include <lite/include/Device.h>
-#include <lite/include/Param.h>
-#include <lite/include/PolyglotText.h>
-#include <lite/param.pb.h>
+
+// lite
+#include <Device.h>
+#include <ParamWithValue.h>
+#include <PolyglotText.h>
+
+// protobuf interface
+#include <interface/param.pb.h>
 
 using namespace catena::lite;
 using namespace catena::common;
 using namespace use_structs;
+using catena::common::ParamTag;
 #include <iostream>
 int main() {
     // lock the model
     Device::LockGuard lg(dm);
+    catena::exception_with_status err{"", catena::StatusCode::OK};
 
-    auto& locationParam = *dynamic_cast<Param<Location>*>(dm.getItem("/location", Device::ParamTag()));
-    Location& locationValue = locationParam.get();
-    std::cout << "Location from model - latitude: " << locationValue.latitude
-              << ", longitude: " << locationValue.longitude << std::endl;
-    // create another Location object, using the default initial value specified in the model
-    Location externalToModel;
-    std::cout << "Location object external to model - latitude: " << externalToModel.latitude
-              << ", longitude: " << externalToModel.longitude << std::endl;
-    locationValue = externalToModel;
-
-
-    // serialize the location parameter - will be removed from this example
-    catena::Value value{};
-    locationParam.toProto(value);
-
-    catena::patterns::EnumDecorator<catena::ParamType> type{locationParam.type()};
-    std::cout << "location type: " << type.toString() << std::endl;
-
-    // print the serialized value
-    std::cout << "Location name: " << locationParam.name("en") << std::endl;
-    auto& struct_value = value.struct_value();
-    auto& fields = struct_value.fields();
-    for (const auto& field : fields) {
-        std::cout << "Field: " << field.first << std::endl;
-        auto& field_value = field.second.value();
-        if (field_value.has_float32_value()) {
-            std::cout << "float32: " << field_value.float32_value() << std::endl;
-        } else {
-            std::cout << "Unknown type" << std::endl;
-        }
+    std::unique_ptr<IParam> ip = dm.getParam("/location", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
     }
+    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
+    Location& loc = locationParam.get();
 
-    catena::Param param{};
-    locationParam.toProto(param);
-    auto& aliases = param.oid_aliases();
-    for (const auto& alias : aliases) {
-        std::cout << "Alias: " << alias << std::endl;
+    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+              << "' " << loc.longitude.seconds << "\")" << std::endl;
+
+    catena::Value value;
+    std::string clientScope = "operate";
+    ip->toProto(value, clientScope);
+    std::cout << "Location: " << value.DebugString() << std::endl;
+
+    // this line is for demonstrating the fromProto method
+    // this should never be done in a real device
+    value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_value()->mutable_struct_value()->mutable_fields()->at("degrees").mutable_value()->set_float32_value(100);
+    ip->fromProto(value, clientScope);
+
+    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
+              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
+              << "' " << loc.longitude.seconds << "\")" << std::endl;
+
+    ip = dm.getParam("/location/latitude", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
     }
-    auto& name = param.name();
-    for (const auto& [lang, text] : name.display_strings()) {
-        std::cout << "Language: " << lang << ", Text: " << text << std::endl;
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude: " << value.DebugString() << std::endl;
+
+    ip = dm.getParam("/location/latitude/degrees", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
     }
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
 
+    ip = dm.getParam("/location/longitude/seconds", err);
+    if (ip == nullptr){
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    value.Clear();
+    ip->toProto(value, clientScope);
+    std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
 
-    catena::Device dstDevice{};
-    dm.toProto(dstDevice, false); // select the deep copy option
-    std::cout << "Device model serialized to protobuf" << std::endl;
-
-
-    // deserialize the Location object - will be removed from this example
-    locationParam.get() = Location{0, 0};
-    std::cout << "Location from model cleared to 0 - latitude: " << locationParam.get().latitude
-              << ", longitude: " << locationParam.get().longitude << std::endl;
-    locationParam.fromProto(value);
-    std::cout << "Location from model set with protobuf deserialization - latitude: " << locationParam.get().latitude
-              << ", longitude: " << locationParam.get().longitude << std::endl;
-
-   
     return EXIT_SUCCESS;
 }

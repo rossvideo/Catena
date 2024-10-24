@@ -1,42 +1,22 @@
-/*
-Copyright © 2024 Ross Video Limited, All Rights Reserved.
- 
-Licensed under the Creative Commons Attribution NoDerivatives 4.0
-International Licensing (CC-BY-ND-4.0);
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at:
- 
-https://creativecommons.org/licenses/by-nd/4.0/
- 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+/*Copyright 2024 Ross Video Ltd
+*
+* Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+*
+* 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+*
+* 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+*
+* 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+* INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+* INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
 
 //
 // Converts Catena compatible Device Models to computer code in a variety of languages
 //
-
-// load the validation engine
-const Ajv = require('ajv');
-const addFormats = require('ajv-formats').default;
-const ajv = new Ajv({strict: false});  
-addFormats(ajv);
-
-// our use of "strict" as a schema interferes with ajv's strict mode.
-// so we only turn it on after loading ajv
-'use strict';
-
-class loc {
-    constructor(fd) {
-        this.fd = fd;
-    }
-    write(s, indent = 0) {
-        fs.writeSync(this.fd, `${" ".repeat(indent*2)}${s}\n`);
-    }
-}
 
 // load the command line parser
 const { program } = require('commander');
@@ -62,8 +42,7 @@ if (options.output) {
 }
 
 
-// import the json-source-map library
-const jsonMap = require('json-source-map');
+
 
 // import the path and fs libraries
 const path = require('node:path');
@@ -75,115 +54,22 @@ if (!fs.existsSync(options.deviceModel)) {
     process.exit(1);
 }
 
-// extract schema name from input filename
-const info = path.parse(options.deviceModel).name.split('.');
-const schemaName = info[0];
-const namespace = info[1];
-const pathname = options.deviceModel;
-const baseFilename = path.basename(pathname);
-const headerFilename = `${baseFilename}.h`;
-const bodyFilename = `${baseFilename}.cpp`;
+
 // read the schema definition file
 const schemaFilename = options.schema;
-if (!fs.existsSync(schemaFilename)) {
-    console.log(`Cannot open schema file at: ${schemaFilename}`);
-    process.exit(1);
-}
-let schema = JSON.parse(fs.readFileSync(schemaFilename));
 
-// let the user know what we're doing
-console.log(`applying: ${schemaName} schema to input file ${options.deviceModel}`);
+const Validator = require('./validator.js');
 
-// adds schemas to the avj engine
-function addSchemas(genus) {
-    let schemaMap = jsonMap.stringify(schema, null, 2)
-
-    for (species in schema[genus]) {
-        if (species.indexOf('$comment') === 0) {
-            // ignore comments
-        } else {
-            // treat as a schema
-            try {
-                ajv.addSchema(schema[genus][species], `#/${genus}/${species}`);
-            } catch (why) {
-                let errorPointer = schemaMap.pointers[`/${genus}/${species}`];
-
-                throw Error(`${why} at #/${genus}/${species} on lines ${errorPointer.value.line}-${
-                  errorPointer.valueEnd.line}`)
-            }
-        }
-    }
-}
-
-// show errors
-function showErrors(errors, sourceMap) {
-    for (const err of errors) {
-        switch (err.keyword) {
-            case "maximum":
-                console.log(err.limit);
-                break;
-            default:
-                let errorPointer = sourceMap.pointers[err.instancePath];
-                console.log(`${err.message} at ${err.instancePath} on lines ${errorPointer.value.line}-${
-                  errorPointer.valueEnd.line}`);
-                break;
-        }
-    }
-}
-
-const kDeviceSchema = schemaName.indexOf('device') === 0;
+const validator = new Validator(schemaFilename);
 
 try {
-    // the top-level schemas are under $defs, so add them
-    addSchemas('$defs');
-    if (!kDeviceSchema && !(schemaName in schema.$defs)) {
-        throw {error: 2, message: `Could not find ${schemaName} in schema definition file.`};
-    }
-
+ 
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(options.deviceModel));
-    const map = jsonMap.stringify(data, null, 2);
-    let valid = false;
-
-    if (kDeviceSchema) {
-        const validate = ajv.compile(schema);
-        if (validate(data)) {
-            console.log('Device model is valid.');
-            valid = true;
-        } else {
-            showErrors(validate.errors, map);
-        }
-    } else {
-        if (ajv.validate(schema.$defs[schemaName], data)) {
-            console.log(`Input was valid against the ${schemaName} schema.`);
-            valid = true;
-        } else {
-            showErrors(ajv.errors, map);
-        }
-    }
-
-
-    if (valid && kDeviceSchema) {
-        // load the code generator
-        const CppGen = require(`./${options.language}gen.js`);
-        let header = fs.openSync(path.join(options.output,headerFilename), 'w');
-        let body = fs.openSync(path.join(options.output,bodyFilename), 'w');
-        let headerLoc = new loc(header);
-        let bodyLoc = new loc(body);
-        let hloc = headerLoc.write.bind(headerLoc);
-        let bloc = bodyLoc.write.bind(bodyLoc);
-        let codegen = new CppGen(hloc, bloc, namespace);
-        codegen.init(headerFilename, data);
-        for (let c in data.constraints) {
-            codegen.constraint(c, data.constraints[c]);
-        }
-        for (let p in data.params) {
-            codegen.param(p, data.params[p], data);
-        }
-        codegen.finish();
-        fs.close(body);
-        fs.close(header);
-        
+    if (validator.validate('device', data)) {
+        const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
+        const codeGen = new CodeGen(options.deviceModel, options.output, validator, data);
+        codeGen.generate();
     }
 
 } catch (why) {

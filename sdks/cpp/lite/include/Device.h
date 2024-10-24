@@ -1,10 +1,41 @@
 #pragma once
 
-#include <common/include/Path.h>
-#include <common/include/Enums.h>
-#include <common/include/vdk/signals.h>
+/** Copyright 2024 Ross Video Ltd
 
-#include <lite/device.pb.h>
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+//
+
+/**
+ * @file Device.h
+ * @brief Device class definition
+ * @author John R. Naylor john.naylor@rossvideo.com
+ * @date 2024-07-07
+ * @copyright Copyright (c) 2024 Ross Video
+ */
+
+// common
+#include <Path.h>
+#include <Enums.h>
+#include <vdk/signals.h>
+#include <IParam.h>
+#include <ILanguagePack.h>
+#include <Tags.h>  
+#include <Status.h>
+
+// protobuf interface
+#include <interface/device.pb.h>
 
 #include <unordered_map>
 #include <string>
@@ -15,13 +46,11 @@
 
 namespace catena {
 namespace lite {
-  
-class IParam;         // forward reference
-class IConstraint;    // forward reference
-class IMenuGroup;     // forward reference
-class ILanguagePack;  // forward reference
 
-
+/**
+ * @brief Device class
+ * Implements the Device interface defined in the protobuf.
+ */
 class Device {
   public:
     /**
@@ -44,41 +73,8 @@ class Device {
     using Scopes = catena::common::Scopes;
     using DetailLevel_e = catena::Device_DetailLevel;
     using DetailLevel = catena::common::DetailLevel;
-
-    /**
-     * @brief ParamTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct ParamTag {
-        using type = IParam;
-    };
-
-    /**
-     * @brief CommandTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct CommandTag {
-        using type = IParam;
-    };
-    
-    /**
-     * @brief ConstraintTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct ConstraintTag {
-        using type = IConstraint;
-    };
-    
-    /**
-     * @brief MenuGroupTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct MenuGroupTag {
-        using type = IMenuGroup;
-    };
-    
-    /**
-     * @brief LanguagePackTag type for addItem and getItem, and tag-dispatched methods
-     */
-    struct LanguagePackTag {
-        using type = ILanguagePack;
-    };
+    using IParam = catena::common::IParam;
+    using Path = catena::common::Path;
 
   public:
     /**
@@ -90,9 +86,9 @@ class Device {
      * @brief Construct a new Device object
      */
     Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes_e> access_scopes,
-           Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
-        : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
-          default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
+      Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
+      : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
+      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
 
     /**
      * @brief Destroy the Device object
@@ -123,65 +119,7 @@ class Device {
      */
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
-    /**
-     * @brief add an item to the device.
-     * item can be a parameter, constraint, menu group, command, or language pack.
-     * @param name the name of the item
-     * @param item the item to add
-     */
-    template <typename TAG> void addItem(const std::string& name, TAG::type* item, TAG tag) {
-      assert(item != nullptr);
-      if constexpr(std::is_same_v<TAG, ParamTag>) {
-        params_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, CommandTag>) {
-        commands_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
-        constraints_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
-        menu_groups_[name] = item;
-      } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
-        language_packs_[name] = item;
-      } else {
-        // static_assert(false, "Unknown TAG type");
-      }
-    }
-
-    /**
-     * @brief retreive an item from the device by json pointer.
-     * item can be an IParameter, IConstraint, IMenuGroup, or ILanguagePack.
-     * @param path path to the item relative to device.<items>
-     */
-    template <typename TAG> TAG::type* getItem(const std::string& name, TAG tag) const {
-      if constexpr(std::is_same_v<TAG, ParamTag>) {
-        auto it = params_.find(name);
-        if (it != params_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, CommandTag>) {
-        auto it = commands_.find(name);
-        if (it != commands_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, ConstraintTag>) {
-        auto it = constraints_.find(name);
-        if (it != constraints_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, MenuGroupTag>) {
-        auto it = menu_groups_.find(name);
-        if (it != menu_groups_.end()) {
-          return it->second;
-        }
-      } else if constexpr(std::is_same_v<TAG, LanguagePackTag>) {
-        auto it = language_packs_.find(name);
-        if (it != language_packs_.end()) {
-          return it->second;
-        }
-      } else {
-        // static_assert(false, "Unknown TAG type");
-      }
-      return nullptr;
-    }
+    inline std::string getDefaultScope() const { return default_scope_.toString(); }
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -194,25 +132,122 @@ class Device {
      * that the device is not modified while this method is running. This class provides
      * a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, bool shallow = true) const;
+    void toProto(::catena::Device& dst, std::vector<std::string>& clientScopes, bool shallow = true) const;
+
+    /**
+     * @brief Create a protobuf representation of the language packs.
+     * @param packs the protobuf representation of the language packs.
+     */
+    void toProto(::catena::LanguagePacks& packs) const;
+
+    /**
+     * @brief Create a protobuf representation of the language list.
+     * @param list the protobuf representation of the language list.
+     */
+    void toProto(::catena::LanguageList& list) const;
+
+    /**
+     * @brief add an item to one of the collections owned by the device
+     * @tparam TAG identifies the collection to which the item will be added
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    template <typename TAG>
+    void addItem(const std::string& key, typename TAG::type* item) {
+        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
+            params_[key] = item;
+        }
+        if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
+            constraints_[key] = item;
+        }
+        // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
+        //     menu_groups_[key] = item;
+        // }
+        if constexpr (std::is_same_v<TAG, common::CommandTag>) {
+            commands_[key] = item;
+        }
+        if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
+            language_packs_[key] = item;
+        }
+    }
+
+    /**
+     * @brief gets an item from one of the collections owned by the device
+     * @return nullptr if the item is not found, otherwise the item
+     */
+    template <typename TAG>
+    typename TAG::type* getItem(const std::string& key) const {
+
+        GET_ITEM(common::ParamTag, params_)
+        GET_ITEM(common::ConstraintTag, constraints_)
+        // GET_ITEM(common::MenuGroupTag, menu_groups_)
+        GET_ITEM(common::CommandTag, commands_)
+        GET_ITEM(common::LanguagePackTag, language_packs_)
+        return nullptr;
+    }
+
+    /**
+     * @brief get a parameter by oid
+     * @param fqoid the fully qualified oid of the parameter
+     * @return a unique pointer to the parameter, or nullptr if it does not exist
+     */
+    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status) const;
+
+    /**
+     * @brief get a command by oid
+     * @param fqoid the fully qualified oid of the command
+     * @return a unique pointer to the command, or nullptr if it does not exist
+     */
+    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status) const;
+
+    /**
+     * @brief deserialize a protobuf value object into the parameter value
+     * pointed to by jptr.
+     * @param jptr, json pointer to the part of the device model to update.
+     * @param src, the value to update the parameter with.
+     * @todo consider using move semantics on the value parameter to emphasize new ownership.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for SetValue RPCs / API calls to be serviced by this method.
+     * @note on success, this method will emit the valueSetByClient signal.
+     */
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src);
+
+    /**
+     * @brief serialize the parameter value to protobuf
+     * @param jptr, json pointer to the part of the device model to serialize.
+     * @param dst, the protobuf value to serialize to.
+     * @return an exception_with_status with status set OK if successful, otherwise an error.
+     * Intention is to for GetValue RPCs / API calls to be serviced by this method.
+     */
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value);
 
   public:
+    /**
+     * @brief signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
+    
+    /**
+     * @brief signal emitted when a value is set by the server, or business logic.
+     * Intended recipient is the connection manager.
+     */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
+    static const std::vector<std::string> kAuthzDisabled;
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
-    std::unordered_map<std::string, IConstraint*> constraints_;
+    std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
-    std::unordered_map<std::string, IMenuGroup*> menu_groups_;
+    // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
-    std::unordered_map<std::string, ILanguagePack*> language_packs_;
+    std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
     std::vector<Scopes_e> access_scopes_;
     Scopes default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-
+    
     mutable std::mutex mutex_;
 };
 }  // namespace lite
