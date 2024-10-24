@@ -126,7 +126,7 @@ void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScop
         group->toProto(dstGroup);
         dstMenuGroups[name] = dstGroup;
     }
-    dst.mutable_menu_groups()->swap(dstMenuGroups); // n.b. lowercase swap, not an error
+    dst.mutable_menu_groups()->swap(dstMenuGroups); // lowercase swap, not an error
 }
 
 

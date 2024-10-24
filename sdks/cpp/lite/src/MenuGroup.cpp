@@ -30,7 +30,7 @@
 using namespace catena::lite;
 using catena::common::MenuGroupTag;
 
-  MenuGroup::MenuGroup(const PolyglotText& name, const std::initializer_list<std::pair<std::string, catena::Menu>>& menus) {
+MenuGroup::MenuGroup(const PolyglotText& name, const GroupInitializer& menus, Device& dev) {
         name_ = name;
         for (const auto& [key, value] : menus) {
             menus_[key] = value;
@@ -49,28 +49,4 @@ using catena::common::MenuGroupTag;
         for (const auto& [key, value] : menus_) {
             (*menuGroup.mutable_menus())[key] = value;
         }
-    }
-
-    const catena::PolyglotText& MenuGroup::getName() const {
-        return name_;
-    }
-
-    void MenuGroup::setName(const PolyglotText& name) {
-        name_ = name;
-    }
-
-    void MenuGroup::setMenus(const std::unordered_map<std::string, Menu>& menus) {
-        menus_ = menus;
-    }
-
-    void MenuGroup::addMenu(const std::string& key, const Menu& menu) {
-        menus_[key] = menu;
-    }
-
-    void MenuGroup::removeMenu(const std::string& key) {
-        menus_.erase(key);
-    }
-
-    bool MenuGroup::hasMenu(const std::string& key) const {
-        return menus_.find(key) != menus_.end();
     }

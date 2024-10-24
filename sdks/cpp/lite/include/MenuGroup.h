@@ -30,6 +30,7 @@
 
 // lite
 #include <Device.h>
+#include <Menu.h>
 
 // protobuf interface
 #include <interface/menu.pb.h>
@@ -42,12 +43,18 @@
 namespace catena {
 namespace lite {
 
-class MenuGroup;  // forward declaration
+  class MenuGroup;  // forward declaration
 
 /**
- * @brief MenuGroup list
+ * @brief A Group of device menus 
  */
 class MenuGroup : public common::IMenuGroup {
+  public:
+    /**
+     * @brief a list of menus in a group, used by main constructor
+     */
+    using GroupInitializer = std::initializer_list<std::pair<std::string, catena::Menu>>;
+
   public:
     MenuGroup() = delete;
     /**
@@ -79,8 +86,9 @@ class MenuGroup : public common::IMenuGroup {
      * @brief construct a Menu Group from a list of Menus
      * @param name the name of the Menu Group
      * @param menus The menus in the group
+     * @param dev the device to add the menu group to
      */
-    MenuGroup(const PolyglotText& name, const std::initializer_list<std::pair<std::string, catena::Menu>>& menus);
+    MenuGroup(const PolyglotText& name, const GroupInitializer& menus, Device& dev);
 
     /**
      * @brief deserialize a menu group from a protobuf message
@@ -95,61 +103,14 @@ class MenuGroup : public common::IMenuGroup {
     void toProto(::catena::MenuGroup& menuGroup) const override;
 
     /**
-     * @brief get the name of the menu group
-     * @return the name of the menu group
-     */
-    const PolyglotText& getName() const;
-
-    /**
-     * @brief set the name of the menu group
-     * @param name the name of the menu group
-     */
-    void setName(const PolyglotText& name);
-
-    /**
-     * @brief set the menus in the group
-     * @param menus the menus in the group
-     */
-    void setMenus(const std::unordered_map<std::string, Menu>& menus);
-
-    /**
      * @brief add a menu to the group
      * @param key the key of the menu
      * @param menu the menu
      */
-
-    void addMenu(const std::string& key, const Menu& menu);
-
-    /**
-     * @brief remove a menu from the group
-     * @param key the key of the menu
-     */
-    void removeMenu(const std::string& key);
-
-    /**
-     * @brief check if the group has a menu
-     * @param key the key of the menu
-     * @return true if the group has the menu
-     */
-    bool hasMenu(const std::string& key) const;
-
-    /**
-     * @brief get a menu from the group
-     * @param key the key of the menu
-     * @return the menu
-     */
-    const Menu& getMenu(const std::string& key) const;
-
-    /**
-     * @brief get the menus in the group
-     * @return the menus in the group
-     */
-    const std::unordered_map<std::string, Menu>& getMenus() const;
-
+    void addMenu(const std::string& key, const catena::lite::Menu& menu);
   private:
     PolyglotText name_;
-    std::unordered_map<std::string, catena::Menu> menus_;
-  
+    std::unordered_map<std::string, catena::lite::Menu> menus_;  
 };
 
 
