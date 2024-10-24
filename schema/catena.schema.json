@@ -1040,6 +1040,17 @@
       "maximum": 65535,
       "default": 0
     },
+    "slot_list": {
+      "title": "Slot List",
+      "description": "A list of slot IDs",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/slot"
+      },
+      "additionalItems": false
+    },
     "detail_level": {
       "title": "Level of Detail",
       "description": "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, 'subscription' reports the minimal set plus identified subscribed parameters, 'commands' reports only descriptors for commands and not for parameters, and 'none' indicates that no parameters or commands should be automatically reported by the device (parameter descriptors, command descriptors, and values can still be pulled). ",
