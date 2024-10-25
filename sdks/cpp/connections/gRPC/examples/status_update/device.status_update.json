@@ -4,6 +4,7 @@
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
   "default_scope": "operate",
+  "subscriptions": true,
   "language_packs": {
     "packs": {
       "es": {

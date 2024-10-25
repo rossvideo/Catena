@@ -205,4 +205,70 @@ void Device::toProto(::catena::LanguageList& list) const {
     }
 }
 
+Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>& clientScopes, bool shallow) const {
+    catena::DeviceComponent component{};
+    if (!shallow) {
+        // If not shallow, send the whole device as a single message
+        toProto(*component.mutable_device(), clientScopes, shallow);
+        co_return component; 
+    }
+
+    // If shallow, send the device in parts
+    // send the basic device info first
+    catena::Device* dst = component.mutable_device();
+    dst->set_slot(slot_);
+    dst->set_detail_level(detail_level_);
+    *dst->mutable_default_scope() = default_scope_.toString();
+    dst->set_multi_set_enabled(multi_set_enabled_);
+    dst->set_subscriptions(subscriptions_);
+    for (auto& scope : access_scopes_) {
+        dst->add_access_scopes(scope.toString());
+    }
+    /**
+     * @todo add MenuGroups to initial response
+     * There is no MenuGroup component so empty menu groups are sent with the initial device component.
+     * The menus of each menu group are sent later as separate components.
+     */
+
+    for (const auto& [language, language_pack] : language_packs_) {
+        co_yield component; // yield the previous component before overwriting it
+        ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+        language_pack->toProto(*dstPack);
+        component.mutable_language_pack()->set_language(language);
+    }
+
+    for (const auto& [name, constraint] : constraints_) {
+        co_yield component; // yield the previous component before overwriting it
+        ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+        constraint->toProto(*dstConstraint);
+        component.mutable_shared_constraint()->set_oid(name);
+    }
+
+    for (const auto& [name, param] : params_) {
+        std::string paramScope = param->getScope();
+        if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), paramScope) != clientScopes.end()) {
+            co_yield component; // yield the previous component before overwriting it
+            ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+            param->toProto(*dstParam, clientScopes[0]);
+            component.mutable_param()->set_oid(name);
+        }
+    }
+
+    for (const auto& [name, command] : commands_) {
+        std::string commandScope = command->getScope();
+        if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), commandScope) != clientScopes.end()) {
+            co_yield component; // yield the previous component before overwriting it
+            ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
+            command->toProto(*dstCommand, clientScopes[0]);
+            component.mutable_command()->set_oid(name);
+        }
+    }
+
+    /**
+     * @todo send menu components
+     */
+
+    // return the last component
+    co_return component;
+}
 

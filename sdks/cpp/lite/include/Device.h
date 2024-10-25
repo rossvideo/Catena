@@ -43,6 +43,7 @@
 #include <vector>
 #include <cassert>
 #include <type_traits>
+#include <coroutine>
 
 namespace catena {
 namespace lite {
@@ -85,7 +86,7 @@ class Device {
     /**
      * @brief Construct a new Device object
      */
-    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes_e> access_scopes,
+    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes> access_scopes,
       Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
@@ -145,6 +146,60 @@ class Device {
      * @param list the protobuf representation of the language list.
      */
     void toProto(::catena::LanguageList& list) const;
+
+    /**
+     * This struct maintains the state of the coroutine.
+     */
+    struct DeviceSerializer {
+        struct promise_type;
+        using handle_type = std::coroutine_handle<promise_type>;
+
+        struct promise_type {
+
+            DeviceSerializer get_return_object() { 
+              return DeviceSerializer(handle_type::from_promise(*this)); 
+            }
+            std::suspend_always initial_suspend() { return {}; }
+            std::suspend_always final_suspend() noexcept { return {}; }
+            void return_value(catena::DeviceComponent component) { this->deviceMessage = component; }
+            void unhandled_exception() {}
+
+            std::suspend_always yield_value(catena::DeviceComponent& component) { 
+              deviceMessage = component;
+              return {}; 
+            }
+
+            catena::DeviceComponent deviceMessage{};
+        };
+
+        DeviceSerializer(handle_type h) : handle(h) {}
+        DeviceSerializer(const DeviceSerializer&) = delete;
+        DeviceSerializer& operator=(const DeviceSerializer&) = delete;
+        DeviceSerializer(DeviceSerializer&& other) : handle(other.handle) { other.handle = nullptr; }
+        DeviceSerializer& operator=(DeviceSerializer&& other) { 
+          handle = other.handle; 
+          other.handle = nullptr; 
+          return *this; 
+        }
+        ~DeviceSerializer() { 
+          if (handle) handle.destroy();  
+        }
+
+        std::coroutine_handle<promise_type> handle;
+
+        bool hasMore() const { return !handle.done(); }
+
+        catena::DeviceComponent operator()() { 
+          if (handle.done()) {
+            std::cout << "DeviceSerializer::operator() called on a completed coroutine\n";
+            return {};
+          }
+          handle.resume();
+          return handle.promise().deviceMessage; 
+        }
+    };
+
+    DeviceSerializer getComponentSerializer(std::vector<std::string>& clientScopes, bool shallow = false) const;
 
     /**
      * @brief add an item to one of the collections owned by the device
@@ -243,7 +298,7 @@ class Device {
     // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
-    std::vector<Scopes_e> access_scopes_;
+    std::vector<Scopes> access_scopes_;
     Scopes default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
