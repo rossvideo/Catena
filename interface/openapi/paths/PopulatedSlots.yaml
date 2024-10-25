@@ -37,5 +37,5 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../../../schema/catena.schema.json#/$defs/slot_list"
+            $ref: "../../../schema/catena.schema.json#/$defs/slot_list"
           example: [1, 2, 3]
