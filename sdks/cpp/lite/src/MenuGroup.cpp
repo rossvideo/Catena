@@ -1,23 +1,31 @@
 /** Copyright 2024 Ross Video Ltd
 
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+ the following conditions are met:
 
- 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the
+ following disclaimer.
 
- 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ following disclaimer in the documentation and/or other materials provided with the distribution.
 
- 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or
+ promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED
+ WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ DAMAGE.
 */
 //
 
 /**
- * @file IMenuGroup.h
- * @brief Interface for MenuGroup
+ * @file MenuGroup.cpp
+ * @brief Implements the MenuGroup class
  * @author Ben Mostafa Ben.Mostafa@rossvideo.com
  * @date 2024-10-10
  * @copyright Copyright (c) 2024 Ross Video
@@ -30,23 +38,25 @@
 using namespace catena::lite;
 using catena::common::MenuGroupTag;
 
-MenuGroup::MenuGroup(const PolyglotText& name, const GroupInitializer& menus, Device& dev) {
-        name_ = name;
-        for (const auto& [key, value] : menus) {
-            menus_[key] = value;
-        }
-    }
+// void MenuGroup::fromProto(const ::catena::MenuGroup& menuGroup) {
+//     for (auto& [lang, srcName] : name_.displayStrings()) {
+//         std::string dstName;
+//         dstName = menuGroup.name().display_strings().at(lang);
+//         name_.setDisplayString(lang, dstName);
+//     }
+//     for (const auto& [oid, srcMenu] : menuGroup.menus()) {
+//         Menu& dstMenu = menus_[oid];
+//         dstMenu.fromProto(srcMenu);
+//     }
+// }
 
-    void MenuGroup::fromProto(const ::catena::MenuGroup& menuGroup) {
-        name_ = menuGroup.name();
-        for (const auto& [key, value] : menuGroup.menus()) {
-            menus_[key] = value;
-        }
+void MenuGroup::toProto(::catena::MenuGroup& menuGroup) const {
+    for (const auto& [lang, name] : name_.displayStrings()) {
+        (*menuGroup.mutable_name()->mutable_display_strings())[lang] = name;
     }
+    for (const auto& [oid, srcMenu] : menus_) {
+        catena::Menu& dstMenu = (*menuGroup.mutable_menus())[oid];
+        srcMenu.toProto(dstMenu);
+    }
+}
 
-    void MenuGroup::toProto(::catena::MenuGroup& menuGroup) const {
-        *menuGroup.mutable_name() = name_;
-        for (const auto& [key, value] : menus_) {
-            (*menuGroup.mutable_menus())[key] = value;
-        }
-    }

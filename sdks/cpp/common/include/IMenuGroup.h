@@ -51,11 +51,12 @@ public:
      */
     virtual void toProto(catena::MenuGroup& menuGroup) const = 0;
 
-    /**
-     * @brief deserialize a menu group from a protobuf message
-     * @param menuGroup the protobuf message
-     */
-    virtual void fromProto(const catena::MenuGroup& menuGroup) = 0;
+    // /**
+    //  * @brief deserialize a menu group from a protobuf message
+    //  * @param menuGroup the protobuf message
+    //  */
+    // virtual void fromProto(const catena::MenuGroup& menuGroup) = 0;
+
 };
 }  // namespace common
 }  // namespace catena

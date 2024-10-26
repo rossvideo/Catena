@@ -24,8 +24,8 @@
 //
 
 /**
- * @file IMenuGroup.h
- * @brief Interface for MenuGroup
+ * @file Menu.cpp
+ * @brief Implements the Menu class
  * @author Ben Mostafa Ben.Mostafa@rossvideo.com
  * @date 2024-10-10
  * @copyright Copyright (c) 2024 Ross Video
@@ -38,41 +38,42 @@
 using namespace catena::lite;
 using catena::common::MenuTag;
 
-Menu::Menu(const PolyglotText& name, bool hidden, bool disabled,
-    const OidInitializer param_oids,
-    const OidInitializer command_oids,
-    const PairInitializer& client_hints,
-    std::string oid, catena::lite::MenuGroup& menuGroup)
-    : name_{name}, hidden_{hidden}, disabled_{disabled}, param_oids_{param_oids},
-      command_oids_{command_oids}, oid_{oid}, client_hints_{client_hints.begin(), client_hints.end()} {
-    menuGroup.addMenu(this->oid_, *this);
-    }
-
-
-void Menu::fromProto(const ::catena::Menu& menu) {
-    name_ = menu.name();
-    hidden_ = menu.hidden();
-    disabled_ = menu.disabled();
-    param_oids_.clear();
-    for (const auto& oid : menu.param_oids()) {
-        param_oids_.push_back(oid);
-    }
-    command_oids_.clear();
-    for (const auto& oid : menu.command_oids()) {
-        command_oids_.push_back(oid);
-    }
-    client_hints_.clear();
-    for (const auto& [key, value] : menu.client_hints()) {
-        client_hints_[key] = value;
-    }
+Menu::Menu(const catena::lite::PolyglotText::ListInitializer name, bool hidden, bool disabled, const OidInitializer param_oids,
+           const OidInitializer command_oids, const PairInitializer& client_hints, std::string oid,
+           catena::lite::MenuGroup& menuGroup)
+    : name_{name}, hidden_{hidden}, disabled_{disabled}, param_oids_{param_oids}, command_oids_{command_oids},
+      client_hints_{client_hints.begin(), client_hints.end()} {
+    menuGroup.addMenu(oid, std::move(*this));
 }
 
+
+// void Menu::fromProto(const ::catena::Menu& menu) {
+//     name_ = menu.name();
+//     hidden_ = menu.hidden();
+//     disabled_ = menu.disabled();
+//     param_oids_.clear();
+//     command_oids_.clear();
+//     client_hints_.clear();
+//     for (const auto& oid : menu.param_oids()) {
+//         param_oids_.push_back(oid);
+//     }
+//     for (const auto& oid : menu.command_oids()) {
+//         command_oids_.push_back(oid);
+//     }
+//     for (const auto& [key, value] : menu.client_hints()) {
+//         client_hints_[key] = value;
+//     }
+// }
+
 void Menu::toProto(::catena::Menu& menu) const {
-    *menu.mutable_name() = name_;
+    name_.toProto(*menu.mutable_name());
     menu.set_hidden(hidden_);
     menu.set_disabled(disabled_);
+    menu.clear_param_oids();
+    menu.clear_command_oids();
+    menu.clear_client_hints();
     for (const auto& oid : param_oids_) {
-        menu.add_param_oids(oid);  // clear before setting
+        menu.add_param_oids(oid);
     }
     for (const auto& oid : command_oids_) {
         menu.add_command_oids(oid);

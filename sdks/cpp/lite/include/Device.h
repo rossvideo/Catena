@@ -161,9 +161,9 @@ class Device {
         if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
             constraints_[key] = item;
         }
-        // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
-        //     menu_groups_[key] = item;
-        // }
+        if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
+            menu_groups_[key] = item;
+        }
         // if constexpr (std::is_same_v<TAG, common::CommandTag>) {
         //     commands_[key] = item;
         // }
@@ -181,7 +181,7 @@ class Device {
 
         GET_ITEM(common::ParamTag, params_)
         GET_ITEM(common::ConstraintTag, constraints_)
-        // GET_ITEM(common::MenuGroupTag, menu_groups_)
+        GET_ITEM(common::MenuGroupTag, menu_groups_)
         // GET_ITEM(common::CommandTag, commands_)
         GET_ITEM(common::LanguagePackTag, language_packs_)
         return nullptr;

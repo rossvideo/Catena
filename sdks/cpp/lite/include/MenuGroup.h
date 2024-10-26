@@ -2,18 +2,26 @@
 
 /** Copyright 2024 Ross Video Ltd
 
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+ the following conditions are met:
 
- 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the
+ following disclaimer.
 
- 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ following disclaimer in the documentation and/or other materials provided with the distribution.
 
- 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or
+ promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED
+ WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+ DAMAGE.
 */
 //
 
@@ -25,8 +33,9 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
-//common
+// common
 #include <IMenuGroup.h>
+#include <PolyglotText.h>
 
 // lite
 #include <Device.h>
@@ -43,17 +52,10 @@
 namespace catena {
 namespace lite {
 
-  class MenuGroup;  // forward declaration
-
 /**
- * @brief A Group of device menus 
+ * @brief A Group of device menus
  */
 class MenuGroup : public common::IMenuGroup {
-  public:
-    /**
-     * @brief a list of menus in a group, used by main constructor
-     */
-    using GroupInitializer = std::initializer_list<std::pair<std::string, catena::Menu>>;
 
   public:
     MenuGroup() = delete;
@@ -80,21 +82,23 @@ class MenuGroup : public common::IMenuGroup {
     /**
      * destructor
      */
-    virtual ~MenuGroup() = default;
+    ~MenuGroup() = default;
 
     /**
      * @brief construct a Menu Group from a list of Menus
+     * @param oid the oid of the Menu Group
      * @param name the name of the Menu Group
-     * @param menus The menus in the group
      * @param dev the device to add the menu group to
      */
-    MenuGroup(const PolyglotText& name, const GroupInitializer& menus, Device& dev);
+    MenuGroup(std::string oid, const PolyglotText::ListInitializer name, Device& dev) : name_{name} {
+        dev.addItem<common::MenuGroupTag>(oid, this);
+    }
 
-    /**
-     * @brief deserialize a menu group from a protobuf message
-     * @param menuGroup the protobuf message
-     */
-    void fromProto(const ::catena::MenuGroup& menuGroup) override;
+    // /**
+    //  * @brief deserialize a menu group from a protobuf message
+    //  * @param menuGroup the protobuf message
+    //  */
+    // void fromProto(const ::catena::MenuGroup& menuGroup) override;
 
     /**
      * @brief serialize a menu group to a protobuf message
@@ -103,14 +107,14 @@ class MenuGroup : public common::IMenuGroup {
     void toProto(::catena::MenuGroup& menuGroup) const override;
 
     /**
-     * @brief add a menu to the group
-     * @param key the key of the menu
+     * @brief add a menu to the group using move semantics
+     * @param oid the key of the menu
      * @param menu the menu
      */
-    void addMenu(const std::string& key, const catena::lite::Menu& menu);
+    void addMenu(const std::string& oid, catena::lite::Menu&& menu) { menus_.emplace(oid, std::move(menu)); }
   private:
     PolyglotText name_;
-    std::unordered_map<std::string, catena::lite::Menu> menus_;  
+    std::unordered_map<std::string, catena::lite::Menu> menus_;
 };
 
 

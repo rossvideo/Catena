@@ -38,7 +38,7 @@
 
 // lite
 #include <Device.h>
-#include <MenuGroup.h>
+#include <PolyglotText.h>
 
 // protobuf interface
 #include <interface/menu.pb.h>
@@ -100,7 +100,7 @@ class Menu : public common::IMenu {
     /**
      * destructor
      */
-    virtual ~Menu() = default;
+    ~Menu() = default;
 
     /**
      * @brief construct a menu item
@@ -113,17 +113,17 @@ class Menu : public common::IMenu {
      * @param oid the oid of the menu
      * @param menuGroup the menu group to add the menu to
      */
-    Menu(const PolyglotText& name, bool hidden, bool disabled,
+    Menu(const catena::lite::PolyglotText::ListInitializer name, bool hidden, bool disabled,
          const OidInitializer param_oids,
          const OidInitializer command_oids,
          const PairInitializer& client_hints, 
          std::string oid, catena::lite::MenuGroup& menuGroup);
 
-    /**
-     * @brief deserialize a menu from a protobuf message
-     * @param menu the protobuf message
-     */
-    void fromProto(const ::catena::Menu& menu) override;
+    // /**
+    //  * @brief deserialize a menu from a protobuf message
+    //  * @param menu the protobuf message
+    //  */
+    // void fromProto(const ::catena::Menu& menu) override;
 
     /**
      * @brief serialize a menu to a protobuf message
@@ -137,7 +137,6 @@ class Menu : public common::IMenu {
     bool disabled_;
     std::vector<std::string> param_oids_;
     std::vector<std::string> command_oids_;
-    std::string oid_;
     std::unordered_map<std::string, std::string> client_hints_;
 };
 

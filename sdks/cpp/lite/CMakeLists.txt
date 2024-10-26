@@ -36,6 +36,8 @@ add_library(${target} STATIC
     src/PolyglotText.cpp
     src/LanguagePack.cpp
     src/PicklistConstraint.cpp
+    src/Menu.cpp
+    src/MenuGroup.cpp
 )
 add_library(Catena_cpp::lite ALIAS ${target})
 
