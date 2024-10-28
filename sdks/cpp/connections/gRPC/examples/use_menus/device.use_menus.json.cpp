@@ -60,9 +60,9 @@ LanguagePack fr {
 };
 
 catena::lite::MenuGroup _statusGroup {"status", {{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, dm};
-catena::lite::Menu _statusMenu {{{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, false, false, {"/counter", "/hello"}, {}, {}, "status", _statusGroup};
+catena::lite::Menu _statusMenu {{{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, false, false, {"/counter", "/hello"}, {}, {}, "Status", _statusGroup};
 catena::lite::MenuGroup _configGroup {"config", {{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, dm};
-catena::lite::Menu _configMenu {{{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, false, false, {"/offset", "/button"}, {}, {}, "config", _configGroup};
+catena::lite::Menu _configMenu {{{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, false, false, {"/offset", "/button"}, {}, {}, "Config", _configGroup};
 int32_t counter {0};
 ParamDescriptor _counterDescriptor {catena::ParamType::INT32, {}, {{"en", "Counter"},{"es", "Contador"},{"fr", "Compteur"}}, {}, "", false, "counter", nullptr, dm};
 ParamWithValue<int32_t> _counterParam {counter, _counterDescriptor, dm};
@@ -77,6 +77,6 @@ int32_t offset {0};
 ParamDescriptor _offsetDescriptor {catena::ParamType::INT32, {}, {{"en", "offset"}}, {}, "configure", false, "offset", nullptr, dm};
 ParamWithValue<int32_t> _offsetParam {offset, _offsetDescriptor, dm};
 RangeConstraint<int32_t> _offsetParamConstraint {-10, 10, 1, -10, 10, "offset", false, &_offsetParam};
-std::string dashboard_UI {"eo://status_update.grid"};
-ParamDescriptor _dashboard_UIDescriptor {catena::ParamType::STRING, {{"0xFF0E"}}, {}, {}, "", true, "dashboard_UI", nullptr, dm};
-ParamWithValue<std::string> _dashboard_UIParam {dashboard_UI, _dashboard_UIDescriptor, dm};
+// std::string dashboard_UI {"eo://status_update.grid"};
+// ParamDescriptor _dashboard_UIDescriptor {catena::ParamType::STRING, {{"0xFF0E"}}, {}, {}, "", true, "dashboard_UI", nullptr, dm};
+// ParamWithValue<std::string> _dashboard_UIParam {dashboard_UI, _dashboard_UIDescriptor, dm};
