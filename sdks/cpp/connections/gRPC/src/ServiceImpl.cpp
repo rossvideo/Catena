@@ -491,15 +491,24 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                     grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
                     writer_.Finish(errorStatus, this);
                     break;
-                }      
-                catena::DeviceComponent component{};
-                std::vector<std::string> clientScopes = service_->getScopes(context_);
-                {
-                    Device::LockGuard lg(dm_);
-                    component = serializer_->operator()();
+                } 
+                
+                try {     
+                    catena::DeviceComponent component{};
+                    std::vector<std::string> clientScopes = service_->getScopes(context_);
+                    {
+                        Device::LockGuard lg(dm_);
+                        component = serializer_->getNext();
+                    }
+                    status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
+                    writer_.Write(component, this);
+                } catch (catena::exception_with_status &e) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                } catch (...) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(Status::CANCELLED, this);
                 }
-                status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
-                writer_.Write(component, this);
             }
             break;
 

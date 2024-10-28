@@ -232,6 +232,7 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
 
     for (const auto& [language, language_pack] : language_packs_) {
         co_yield component; // yield the previous component before overwriting it
+        component.Clear();
         ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
         language_pack->toProto(*dstPack);
         component.mutable_language_pack()->set_language(language);
@@ -239,6 +240,7 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
 
     for (const auto& [name, constraint] : constraints_) {
         co_yield component; // yield the previous component before overwriting it
+        component.Clear();
         ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
         constraint->toProto(*dstConstraint);
         component.mutable_shared_constraint()->set_oid(name);
@@ -248,6 +250,7 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
         std::string paramScope = param->getScope();
         if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), paramScope) != clientScopes.end()) {
             co_yield component; // yield the previous component before overwriting it
+            component.Clear();
             ::catena::Param* dstParam = component.mutable_param()->mutable_param();
             param->toProto(*dstParam, clientScopes[0]);
             component.mutable_param()->set_oid(name);
@@ -258,6 +261,7 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
         std::string commandScope = command->getScope();
         if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), commandScope) != clientScopes.end()) {
             co_yield component; // yield the previous component before overwriting it
+            component.Clear();
             ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
             command->toProto(*dstCommand, clientScopes[0]);
             component.mutable_command()->set_oid(name);
