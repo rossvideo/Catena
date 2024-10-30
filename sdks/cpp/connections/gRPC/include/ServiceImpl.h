@@ -206,6 +206,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         std::vector<std::string> clientScopes_;
         catena::DeviceRequestPayload req_;
         ServerAsyncWriter<catena::DeviceComponent> writer_;
+        std::optional<Device::DeviceSerializer> serializer_ = std::nullopt; //Can't create serializer until we have client scopes
         CallStatus status_;
         Device &dm_;
         int objectId_;

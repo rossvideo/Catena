@@ -66,8 +66,8 @@ function defaultScopeArg(desc) {
  */
 function multisetArg(desc) {
     let ans = `false`;
-    if ("multiset" in desc) {
-        ans = desc.multiset ? `true` : `false`;
+    if ("multi_set_enabled" in desc) {
+        ans = desc.multi_set_enabled ? `true` : `false`;
     }
     return ans;
 }
