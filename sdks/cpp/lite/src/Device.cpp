@@ -205,6 +205,14 @@ void Device::toProto(::catena::LanguageList& list) const {
     }
 }
 
+catena::DeviceComponent Device::DeviceSerializer::getNext() {
+    if (hasMore()) {
+        handle_.resume();
+        handle_.promise().rethrow_if_exception();
+    }
+    return std::move(handle_.promise().deviceMessage); 
+}
+
 Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>& clientScopes, bool shallow) const {
     catena::DeviceComponent component{};
     if (!shallow) {

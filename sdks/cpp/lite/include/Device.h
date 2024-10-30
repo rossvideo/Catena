@@ -151,7 +151,8 @@ class Device {
      * @brief DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents
      * This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.
      */
-    struct DeviceSerializer {
+    class DeviceSerializer {
+      public:
         struct promise_type; // forward declaration
 
       private:
@@ -180,7 +181,7 @@ class Device {
              * get_return_object() is called when the coroutine is created (i.e. when getComponentSerializer() 
              * is called). It creates the handle for the coroutine and returns the DeviceSerializer object.
              */
-            DeviceSerializer get_return_object() { 
+            inline DeviceSerializer get_return_object() { 
               return DeviceSerializer(handle_type::from_promise(*this)); 
             }
 
@@ -189,20 +190,20 @@ class Device {
              * so that the coroutine will be immediately suspended. This means the first component will not be created
              * until getNext() is called.
              */
-            std::suspend_always initial_suspend() { return {}; }
+            inline std::suspend_always initial_suspend() { return {}; }
 
             /** 
              * final_suspend() is called when the coroutine is completed. It returns a std::suspend_always awaitable
              * causing the coroutine to be suspended before it destroys itself. The coroutine will be destroyed when
              * the device serializer destructor is called.
              */
-            std::suspend_always final_suspend() noexcept { return {}; }
+            inline std::suspend_always final_suspend() noexcept { return {}; }
 
             /**
              * yield_value() is called when the coroutine reaches a co_yield statement. It stores the yielded
              * DeviceComponent then suspends the coroutine.
              */
-            std::suspend_always yield_value(catena::DeviceComponent& component) { 
+            inline std::suspend_always yield_value(catena::DeviceComponent& component) { 
               deviceMessage = component;
               return {}; 
             }
@@ -211,13 +212,13 @@ class Device {
              * return_value() is called when the coroutine reaches a co_return statement. It stores the returned
              * DeviceComponent. The coroutine is then set as done.
              */
-            void return_value(catena::DeviceComponent component) { this->deviceMessage = component; }
+            inline void return_value(catena::DeviceComponent component) { this->deviceMessage = component; }
 
             /**
              * unhandled_exception() is called if an exception is thrown in the coroutine. It stores the exception
              * so that it can be rethrown by the function that resumed the coroutine.
              */
-            void unhandled_exception() {
+            inline void unhandled_exception() {
               exception_ = std::current_exception();
             }
 
@@ -225,7 +226,7 @@ class Device {
              * rethrow_if_exception() is not called by the compiler but instead is called by the function that
              * resumes the coroutine. It rethrows the exception that was caught by unhandled_exception().
              */
-            void rethrow_if_exception() {
+            inline void rethrow_if_exception() {
               if (exception_) std::rethrow_exception(exception_);
             }
 
@@ -255,7 +256,7 @@ class Device {
         /**
          * @brief returns true if there are more DeviceComponents to be serialized
          */
-        bool hasMore() const { return handle_ && !handle_.done(); }
+        inline bool hasMore() const { return handle_ && !handle_.done(); }
 
         /**
          * @brief get the next DeviceComponent to be serialized.
@@ -264,13 +265,7 @@ class Device {
          * If the coroutine is done and there are no more components to serialize then
          * an empty DeviceComponent is returned.
          */
-        catena::DeviceComponent getNext() { 
-          if (hasMore()) {
-            handle_.resume();
-            handle_.promise().rethrow_if_exception();
-          }
-          return std::move(handle_.promise().deviceMessage); 
-        }
+        catena::DeviceComponent getNext();
     };
 
     /**
