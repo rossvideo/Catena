@@ -1,0 +1,71 @@
+{
+  "type": "STRUCT",
+  "read_only": false,
+  "name": { "display_strings": { "en": "Location" } },
+  "params": {
+    "latitude": {
+      "type": "STRUCT",
+      "params": {
+        "degrees": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Degrees" } }
+        },
+        "minutes": {
+          "type": "INT32",
+          "name": { "display_strings": { "en": "Minutes" } }
+        },
+        "seconds": {
+          "type": "INT32",
+          "name": { "display_strings": { "en": "Seconds" } }
+        }
+      },
+      "name": { "display_strings": { "en": "Latitude" } }
+    },
+    "longitude": {
+      "type": "STRUCT",
+      "params": {
+        "degrees": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Degrees" } }
+        },
+        "minutes": {
+          "type": "INT32",
+          "name": { "display_strings": { "en": "Minutes" } }
+        },
+        "seconds": {
+          "type": "INT32",
+          "name": { "display_strings": { "en": "Seconds" } }
+        }
+      },
+      "name": { "display_strings": { "en": "Longitude" } }
+    }
+  },
+  "value": {
+    "struct_value": {
+      "fields": {
+        "latitude": {
+          "value": {
+            "struct_value": {
+              "fields": {
+                "degrees": { "value": { "int32_value": 1 } },
+                "minutes": { "value": { "int32_value": 2 } },
+                "seconds": { "value": { "int32_value": 3 } }
+              }
+            }
+          }
+        },
+        "longitude": {
+          "value": {
+            "struct_value": {
+              "fields": {
+                "degrees": { "value": { "int32_value": 4 } },
+                "minutes": { "value": { "int32_value": 5 } },
+                "seconds": { "value": { "int32_value": 6 } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

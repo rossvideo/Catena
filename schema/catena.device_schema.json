@@ -1,0 +1,189 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Catena Device Model Schema",
+  "description": "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
+  "type": "object",
+  "properties": {
+    "slot": {
+      "$ref": "#/$defs/slot"
+    },
+    "detail_level": {
+      "$ref": "#/$defs/detail_level"
+    },
+    "multi_set_enabled": {
+      "title": "Multi Set Message Enabled Flag",
+      "description": "Enables use of the multi-value message to report multiple parameter changes in one message. Otherwise changes will be reported individually using the value message. Defaults to true.",
+      "type": "boolean"
+    },
+    "subscriptions": {
+      "title": "Subscriptions Flag",
+      "description": "When true, indicates that the device supports subscription-based access to subsets of parameters.",
+      "type": "boolean"
+    },
+    "constraints": {
+      "$ref": "#/$defs/constraint_map"
+    },
+    "params": {
+      "$ref": "catena.param_schema.json/#/$defs/param_map"
+    },
+    "commands": {
+      "$ref": "catena.param_schema.json/#/$defs/param_map"
+    },
+    "access_scopes": {
+      "title": "Access Scopes",
+      "description": "The access scopes recognised by this device",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "uniqueItems": true,
+        "maxItems": 5,
+        "$comment": "discussion needed on min & max items"
+      },
+      "additionalItems": false
+    },
+    "default_scope": {
+      "$id": "Default Access Scope",
+      "description": "Objects in the model will have this access scope unless overridden explicitly, or implicitly by inheritance",
+      "type": "string"
+    },
+    "language_packs": {
+      "$ref": "#/$defs/language_packs",
+      "additionalProperties": true,
+      "description": "The devices language packs"
+    },
+    "menu_groups": { "$ref": "#/$defs/menu_groups" }
+  },
+  "required": ["slot"],
+  "additionalProperties": false,
+  "$defs": {
+    "menu_groups": {
+      "title": "Menu Groups",
+      "description": "An operationally logical grouping of menus.",
+      "type": "object",
+      "patternProperties": {
+        "^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$": {
+          "$ref": "#/$defs/menu_group"
+        }
+      },
+      "additionalProperties": false
+    },
+    "menu_group": {
+      "title": "Menu Group",
+      "description": "A group of menus",
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "catena.param_schema.json/#/$defs/polyglot_text" },
+        "menus": { "$ref": "#/$defs/menus" }
+      },
+      "additionalProperties": false
+    },
+    "menus": {
+      "title": "Menus",
+      "description": "The menus recognised by this device",
+      "type": "object",
+      "patternProperties": {
+        "^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$": {
+          "$ref": "#/$defs/menu"
+        }
+      },
+      "additionalProperties": false
+    },
+    "menu": {
+      "title": "Menu",
+      "description": "A menu",
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "catena.param_schema.json/#/$defs/polyglot_text" },
+        "param_oids": { "$ref": "#/$defs/oids_list" },
+        "command_oids": { "$ref": "#/$defs/oids_list" },
+        "client_hints": { "$ref": "catena.param_schema.json/#/$defs/client_hints" },
+        "hidden": {
+          "type": "boolean",
+          "default": false
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "oids_list": {
+      "title": "OIDs List",
+      "description": "A list of Fully Qualified Object IDs",
+      "type": "array",
+      "items": { "type": "string", "format": "json-pointer" },
+      "additionalItems": false
+    },
+    "language_pack": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "words": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Language Pack",
+      "description": "Language Pack A map of string identifiers, e.g. \"greeting\" to strings which are all in the same language."
+    },
+    "language_packs": {
+      "properties": {
+        "packs": {
+          "additionalProperties": {
+            "$ref": "#/$defs/language_pack",
+            "additionalProperties": true
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Language Packs",
+      "description": "Language Packs A map of language identifiers to resource dictionaries or language packs for each language supported. The keys shall be patterned on those defined in https://www.mesaonline.org/language-metadata-table, e.g. \"es\" for Global Spanish. \"es-CO\" for Colombian Spanish. \"pl\" for Jezyk polski"
+    },
+    "constraint_map": {
+      "title": "map of constraints used for top-level shared constraints",
+      "description": "Defines the collection of constraints that are able to be shared amongst params or commands within a device.",
+      "type": "object",
+      "$comment": "patternProperties regex must be same as that defined in oid schema",
+      "patternProperties": {
+        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
+          "$ref": "catena.param_schema.json/#/$defs/constraint"
+        }
+      },
+      "additionalProperties": false
+    },
+    "slot": {
+      "title": "Slot ID",
+      "description": "Uniquely identifies the device within the scope of its Catena connection",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535,
+      "default": 0
+    },
+    "slot_list": {
+      "title": "Slot List",
+      "description": "A list of slot IDs",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/slot"
+      },
+      "additionalItems": false
+    },
+    "detail_level": {
+      "title": "Level of Detail",
+      "description": "The level of detail in device messages and parameter updates. 'full' indicates that all parameters are reported, 'minimal' that only the minimal set is, 'subscription' reports the minimal set plus identified subscribed parameters, 'commands' reports only descriptors for commands and not for parameters, and 'none' indicates that no parameters or commands should be automatically reported by the device (parameter descriptors, command descriptors, and values can still be pulled). ",
+      "type": "string",
+      "enum": ["FULL", "SUBSCRIPTIONS", "MINIMAL", "COMMANDS", "NONE"],
+      "default": "FULL"
+    }
+  }
+}
