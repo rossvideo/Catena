@@ -1,0 +1,9 @@
+[submodule "sdks/cpp/connections/REST/external/boost/asio"]
+	path = sdks/cpp/connections/REST/external/boost/asio
+	url = https://github.com/boostorg/asio.git
+[submodule "sdks/cpp/connections/REST/external/boost/system"]
+	path = sdks/cpp/connections/REST/external/boost/system
+	url = https://github.com/boostorg/system.git
+[submodule "sdks/cpp/connections/REST/external/crow"]
+	path = sdks/cpp/connections/REST/external/crow
+	url = https://github.com/CrowCpp/Crow.git
