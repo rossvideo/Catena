@@ -21,6 +21,8 @@
 // lite
 #include <Device.h>
 #include <LanguagePack.h>
+#include <ParamWithValue.h>
+#include <ParamDescriptor.h>
 #include <IMenuGroup.h> 
 
 #include <cassert>
@@ -36,55 +38,99 @@ const std::vector<std::string> Device::kAuthzDisabled = {"__AUTHZ_DISABLED__"};
 
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr);
+    std::unique_ptr<IParam> param = getParam(jptr, ans);
     // we expect this to be a parameter name
     if (param != nullptr) {
         std::string clientScope = "operate"; // temporary until we implement authz
-        param->fromProto(src, clientScope);
+        ans = param->fromProto(src, clientScope);
         valueSetByClient.emit(jptr, param.get(), 0);
-    } else {
-        std::stringstream ss;
-        ss << "parameter not found: " << jptr;
-        exception_with_status why(ss.str(), catena::StatusCode::INVALID_ARGUMENT);
-        ans = std::move(why);
     }
     return ans;
 }
 
 catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr);
+    std::unique_ptr<IParam> param = getParam(jptr, ans);
     
     // we expect this to be a parameter name
     if (param != nullptr) {
         std::string clientScope = "operate"; // temporary until we implement authz
         // we have reached the end of the path, deserialize the value
         param->toProto(dst, clientScope);
-    } else {
-        std::stringstream ss;
-        ss << "Invalid json pointer: " << jptr;
-        ss << ", expected first segment to be a string";
-        exception_with_status why(ss.str(), catena::StatusCode::INVALID_ARGUMENT);
-        ans = std::move(why);
     }
     return ans;
 }
 
-std::unique_ptr<IParam> Device::getParam(const std::string& fqoid) const {
-    catena::common::Path path(fqoid);
-    if (path.empty()) {
+std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status) const {
+    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
+    try {
+        catena::common::Path path(fqoid);
+        if (path.empty()) {
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+        if (path.front_is_string()) {
+            /**
+             * Top level param objects are defined in the device models generated cpp body file and exist for the lifetime of 
+             * the program. The device has a map of pointers to these params. These are not unique pointers because the 
+             * lifetime of the top level params does not need to be managed.
+             */
+            IParam* param = getItem<common::ParamTag>(path.front_as_string());
+            path.pop();
+            if (!param) {
+                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT); 
+                return nullptr;
+            }
+            if (path.empty()) {
+                /**
+                 * Top level params need to be copied into a unique pointer to be returned.
+                 * 
+                 * This is a shallow copy.
+                 */
+                return param->copy();
+            } else {
+                /**
+                 * Sub-param objects are created by the getParam function so the lifetime of the object is managed by the caller.
+                 */
+                return param->getParam(path, status);
+            }
+        } else {
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
         return nullptr;
     }
-    if (path.front_is_string()) {
-        IParam* topParam = getItem<common::ParamTag>(path.front_as_string());
-        path.pop();
-        if (!topParam) {return nullptr;}
+}
+
+std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status) const {
+   // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
+    try {
+        catena::common::Path path(fqoid);
         if (path.empty()) {
-            return topParam->copy();
-        } else {
-            return topParam->getParam(path);
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
         }
-    } else {
+        if (path.front_is_string()) {
+            IParam* param = getItem<common::CommandTag>(path.front_as_string());
+            path.pop();
+            if (!param) {
+                status = catena::exception_with_status("Command not found: " + fqoid, catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
+            if (path.empty()) {
+                return param->copy();
+            } else {
+                status = catena::exception_with_status("sub-commands not implemented", catena::StatusCode::UNIMPLEMENTED);
+                return nullptr;
+            }
+        } else {
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
         return nullptr;
     }
 }
@@ -109,6 +155,27 @@ void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScop
         }
     }
     dst.mutable_params()->swap(dstParams); // n.b. lowercase swap, not an error
+
+    // make deep copy of the commands
+    google::protobuf::Map<std::string, ::catena::Param> dstCommands{};
+    for (const auto& [name, command] : commands_) {
+        std::string commandScope = command->getScope();
+        if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), commandScope) != clientScopes.end()) {
+            ::catena::Param dstCommand{};
+            command->toProto(dstCommand, clientScopes[0]); // uses param's toProto method
+            dstCommands[name] = dstCommand;
+        }
+    }
+    dst.mutable_commands()->swap(dstCommands); // n.b. lowercase swap, not an error
+
+    // make deep copy of the constraints
+    google::protobuf::Map<std::string, ::catena::Constraint> dstConstraints{};
+    for (const auto& [name, constraint] : constraints_) {
+        ::catena::Constraint dstConstraint{};
+        constraint->toProto(dstConstraint);
+        dstConstraints[name] = dstConstraint;
+    }
+    dst.mutable_constraints()->swap(dstConstraints); // n.b. lowercase swap, not an error
 
     // make deep copy of the language packs
     ::catena::LanguagePacks dstPacks{};
@@ -147,4 +214,82 @@ void Device::toProto(::catena::LanguageList& list) const {
     }
 }
 
+catena::DeviceComponent Device::DeviceSerializer::getNext() {
+    if (hasMore()) {
+        handle_.resume();
+        handle_.promise().rethrow_if_exception();
+    }
+    return std::move(handle_.promise().deviceMessage); 
+}
+
+Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>& clientScopes, bool shallow) const {
+    catena::DeviceComponent component{};
+    if (!shallow) {
+        // If not shallow, send the whole device as a single message
+        toProto(*component.mutable_device(), clientScopes, shallow);
+        co_return component; 
+    }
+
+    // If shallow, send the device in parts
+    // send the basic device info first
+    catena::Device* dst = component.mutable_device();
+    dst->set_slot(slot_);
+    dst->set_detail_level(detail_level_);
+    *dst->mutable_default_scope() = default_scope_.toString();
+    dst->set_multi_set_enabled(multi_set_enabled_);
+    dst->set_subscriptions(subscriptions_);
+    for (auto& scope : access_scopes_) {
+        dst->add_access_scopes(scope.toString());
+    }
+    /**
+     * @todo add MenuGroups to initial response
+     * There is no MenuGroup component so empty menu groups are sent with the initial device component.
+     * The menus of each menu group are sent later as separate components.
+     */
+
+    for (const auto& [language, language_pack] : language_packs_) {
+        co_yield component; // yield the previous component before overwriting it
+        component.Clear();
+        ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+        language_pack->toProto(*dstPack);
+        component.mutable_language_pack()->set_language(language);
+    }
+
+    for (const auto& [name, constraint] : constraints_) {
+        co_yield component; // yield the previous component before overwriting it
+        component.Clear();
+        ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+        constraint->toProto(*dstConstraint);
+        component.mutable_shared_constraint()->set_oid(name);
+    }
+
+    for (const auto& [name, param] : params_) {
+        std::string paramScope = param->getScope();
+        if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), paramScope) != clientScopes.end()) {
+            co_yield component; // yield the previous component before overwriting it
+            component.Clear();
+            ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+            param->toProto(*dstParam, clientScopes[0]);
+            component.mutable_param()->set_oid(name);
+        }
+    }
+
+    for (const auto& [name, command] : commands_) {
+        std::string commandScope = command->getScope();
+        if (clientScopes[0] == kAuthzDisabled[0] || std::find(clientScopes.begin(), clientScopes.end(), commandScope) != clientScopes.end()) {
+            co_yield component; // yield the previous component before overwriting it
+            component.Clear();
+            ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
+            command->toProto(*dstCommand, clientScopes[0]);
+            component.mutable_command()->set_oid(name);
+        }
+    }
+
+    /**
+     * @todo send menu components
+     */
+
+    // return the last component
+    co_return component;
+}
 

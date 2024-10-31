@@ -26,7 +26,7 @@ option java_multiple_files = true;
 option java_package = "catena.core.parameter";
 option java_outer_classname = "ParamProtos";
 
-option optimize_for = OPTIMIZE_FOR;
+option optimize_for = SPEED;
 
 enum ParamType {
     UNDEFINED = 0;
@@ -292,14 +292,19 @@ message UpdateSubscriptionsPayload {
  *   Param definition = 1; // provides command's input values
  *   bool respond = 2;     // true when the device will respond to the command, false otherwise.
  * }
+ * 
+ * When streamed, only the value field will be used after the first message.
  *
- * When streamed, only the value field will be used after the first message. */
+ * The proceed flag allows the client to indicate to the server that is has already recieved a payload
+ * Ex. If a command streams a large file, the client can set proceed to false to indicate to the server
+ * that it does not need the rest of the file.
+ */
 message ExecuteCommandPayload {
   uint32 slot = 1;  // Slot id of the device
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
-  bool respond = 4; // false if Server/Device should not send any responses.
-  bool proceed = 5;
+  bool respond = 4; // False if client wants to surpress response from server
+  bool proceed = 5; // Used to short circuit sending payloads 
 }
 
 message Exception {
@@ -314,6 +319,6 @@ message CommandResponse {
     google.protobuf.Empty no_response = 1; // Server/Device does not have a response for the command.
     Value response = 2;
     Exception exception = 3;  // This is for Server/Device error executing the command.
-    bool proceed = 4;
+    bool proceed = 4; // Used to short circuit sending payloads 
   }
 }

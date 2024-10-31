@@ -4,6 +4,7 @@
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
   "default_scope": "operate",
+  "subscriptions": true,
   "language_packs": {
     "packs": {
       "es": {
@@ -46,21 +47,7 @@
       "name": { "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" } },
       "value": { "int32_value": 0 },
       "widget": "button",
-      "constraint": {
-        "type": "INT_CHOICE",
-        "int32_choice": {
-          "choices": [
-            {
-              "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
-              "value": 0
-            },
-            {
-              "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
-              "value": 1
-            }
-          ]
-        }
-      }
+      "constraint": { "ref_oid": "basic_button" }
     },
     "offset": {
       "type": "INT32",
@@ -81,6 +68,23 @@
       "oid_aliases": ["0xFF0E"],
       "read_only": true,
       "value": { "string_value": "eo://status_update.grid" }
+    }
+  },
+  "constraints": {
+    "basic_button": {
+      "type": "INT_CHOICE",
+      "int32_choice": {
+        "choices": [
+          {
+            "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
+            "value": 0
+          },
+          {
+            "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
+            "value": 1
+          }
+        ]
+      }
     }
   }
 }

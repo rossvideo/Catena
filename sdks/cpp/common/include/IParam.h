@@ -29,14 +29,12 @@
 #include <Enums.h>
 #include <IConstraint.h>
 #include <Path.h>
+#include <Status.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
 
 namespace catena {
-class Value; // forward reference
-class Param; // forward reference
-
 namespace common { 
 
 /**
@@ -83,20 +81,20 @@ class IParam {
      * @brief serialize the parameter value to protobuf
      * @param dst the protobuf value to serialize to
      */
-    virtual void toProto(catena::Value& dst, std::string& clientScope) const = 0;
+    virtual catena::exception_with_status toProto(catena::Value& dst, std::string& clientScope) const = 0;
     
     /**
      * @brief deserialize the parameter value from protobuf
      * @param src the protobuf value to deserialize from
      * @note this method may constrain the source value and modify it
      */
-    virtual void fromProto(const catena::Value& src, std::string& clientScope) = 0;
+    virtual catena::exception_with_status fromProto(const catena::Value& src, std::string& clientScope) = 0;
 
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param param the protobuf value to serialize to
      */
-    virtual void toProto(catena::Param& param, std::string& clientScope) const = 0;
+    virtual catena::exception_with_status toProto(catena::Param& param, std::string& clientScope) const = 0;
 
     /**
      * @brief return the type of the param
@@ -127,7 +125,7 @@ class IParam {
     /**
      * @brief get a child parameter by name
      */
-    virtual std::unique_ptr<IParam> getParam(Path& oid) = 0;
+    virtual std::unique_ptr<IParam> getParam(Path& oid, catena::exception_with_status& status) = 0;
 
     /**
      * @brief add a child parameter
@@ -139,12 +137,17 @@ class IParam {
      */
     virtual const IConstraint* getConstraint() const = 0;
 
-    /**
-     * @brief add a constraint
-     */
-    virtual void setConstraint(IConstraint* constraint) = 0;
-
     virtual const std::string getScope() const = 0;
+
+    /**
+     * @brief define a command for the parameter
+     */
+    virtual void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) = 0;
+
+    /**
+     * @brief execute the command for the parameter
+     */
+    virtual catena::CommandResponse executeCommand(const catena::Value&  value) const = 0;
 
 };
 }  // namespace common

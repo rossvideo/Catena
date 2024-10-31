@@ -36,6 +36,8 @@
 
 #include <google/protobuf/message_lite.h>
 
+#include <cmath>
+
 namespace catena {
 namespace lite {
 
@@ -54,9 +56,9 @@ public:
      * @param shared is the constraint shared
      * @param dm the device to add the constraint to
      */
-    RangeConstraint(T min, T max, std::string oid, bool shared, Device& dm)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
-        display_min_{min}, display_max_{max} {
+    RangeConstraint(T min, T max, T step, std::string oid, bool shared, Device& dm)
+        : min_(min), max_(max), step_{step}, 
+        display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
 
@@ -69,11 +71,9 @@ public:
      * @param parent the param to add the constraint to
      */
     template <typename U>
-    RangeConstraint(T min, T max, std::string oid, bool shared, catena::common::IParam* parent)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_{1}, 
-        display_min_{min}, display_max_{max} {
-        parent->setConstraint(this);
-    }
+    RangeConstraint(T min, T max, T step, std::string oid, bool shared)
+        : min_(min), max_(max), step_{step}, 
+        display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief Construct a new Range Constraint object
@@ -88,8 +88,8 @@ public:
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid,
         bool shared, Device& dm)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max} {
+        : min_(min), max_(max), step_(step),
+        display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {
         dm.addItem<common::ConstraintTag>(oid, this);
     }
 
@@ -105,11 +105,9 @@ public:
      * @param parent the param to add the constraint to
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, 
-        bool shared, catena::common::IParam* parent)
-        : IConstraint{oid, shared}, min_(min), max_(max), step_(step),
-        display_min_{display_min}, display_max_{display_max} {
-        parent->setConstraint(this);
-    }
+        bool shared)
+        : min_(min), max_(max), step_(step),
+        display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {}
 
     /**
      * @brief default destructor
@@ -117,34 +115,72 @@ public:
     virtual ~RangeConstraint() = default;
 
     /**
-     * @brief applies range constraint to a catena::Value
-     * @param src a catena::Value to apply the constraint to
+     * @brief checks if the value satisfies the constraint
+     * @param src the value to check
+     * @return true if the value satisfies the constraint
+     * 
+     * Checks if the value is within the range. 
+     * 
+     * If the step size is not 0, the value must also be a multiple of the step size.
      */
-    void apply(void* src) const override {
-        auto& src_val = *reinterpret_cast<catena::Value*>(src);
+    bool satisfied(const catena::Value& src) const override {
 
         if constexpr(std::is_same<T, int32_t>::value) {
-            // ignore the request if src is not valid
-            if (!src_val.has_int32_value()) { return; }
-            
-            // constrain if not within allowed range
-            if (src_val.int32_value() < min_) {
-                src_val.set_int32_value(min_);
-            } else if (src_val.int32_value() > max_) {
-                src_val.set_int32_value(max_);
-            }
+            return src.int32_value() >= min_ 
+                && src.int32_value() <= max_
+                && (!step_ || (src.int32_value() - min_) % step_ == 0);
         }
 
         if constexpr(std::is_same<T, float>::value) {
-            // ignore the request if src is not valid
-            if (!src_val.has_float32_value()) { return; }
+            return src.float32_value() >= min_ 
+                && src.float32_value() <= max_
+                && (!step_ || std::fmod(src.float32_value() - min_, step_) == 0);
+        }
+    }
+
+    /**
+     * @brief applies range constraint to a catena::Value
+     * @param src a catena::Value to apply the constraint to
+     * @return a catena::Value with the constraint applied
+     * 
+     * If the value is outside the range, the value will be constrained
+     * to be within the range. If the step size is not 0, the value will
+     * be constrained to be a multiple of the step size.
+     */
+    catena::Value apply(const catena::Value& src) const override {
+        catena::Value constrainedVal;
+
+        if constexpr(std::is_same<T, int32_t>::value) {
+            // return empty value if src is not valid
+            if (!src.has_int32_value()) { return constrainedVal; }
+            int32_t s = src.int32_value();
 
             // constrain if not within allowed range
-            if (src_val.float32_value() < min_) {
-                src_val.set_float32_value(min_);
-            } else if (src_val.float32_value() > max_) {
-                src_val.set_float32_value(max_);
+            if (s < min_) {
+                constrainedVal.set_int32_value(min_);
+            } else if (s > max_) {
+                constrainedVal.set_int32_value(max_);
+            } else if (!step_ || (s - min_) % step_ != 0) {
+                constrainedVal.set_int32_value(s - ((s - min_) % step_));
             }
+            return constrainedVal;
+        }
+
+        if constexpr(std::is_same<T, float>::value) {
+
+            // return empty value if src is not valid
+            if (!src.has_float32_value()) { return constrainedVal; }
+            float s = src.float32_value();
+
+            // constrain if not within allowed range
+            if (s < min_) {
+                constrainedVal.set_float32_value(min_);
+            } else if (s > max_) {
+                constrainedVal.set_float32_value(max_);
+            } else if (!step_ || std::fmod(s - min_, step_) != 0) {
+                constrainedVal.set_float32_value(s - std::fmod(s - min_, step_));
+            }
+            return constrainedVal;
         }
     }
 
@@ -152,8 +188,7 @@ public:
      * @brief serialize the constraint to a protobuf message
      * @param msg the protobuf message to populate
      */
-    void toProto(google::protobuf::MessageLite& msg) const override {
-        auto& constraint = dynamic_cast<catena::Constraint&>(msg);
+    void toProto(catena::Constraint& constraint) const override {
 
         if constexpr(std::is_same<T, int32_t>::value) {
             constraint.set_type(catena::Constraint::INT_RANGE);
@@ -174,12 +209,33 @@ public:
         }
     }
 
+    /**
+     * @brief This constraint is a range constraint so return true
+     * @return true
+     */
+    bool isRange() const override { return true; }
+
+    /**
+     * @brief check if the constraint is shared
+     * @return true if the constraint is shared
+     */
+    bool isShared() const override { return shared_; }
+
+    /**
+     * @brief get the constraint oid
+     * @return the oid of the constraint
+     */
+    const std::string& getOid() const override { return oid_; }
+
 private:
     T min_;         ///< the minimum value
     T max_;         ///< the maximum value
     T step_;        ///< the step size
     T display_min_; ///< the minimum value to display
     T display_max_; ///< the maximum value to display
+    bool strict_;   ///< should the value be constrained on apply
+    bool shared_;   ///< is the constraint shared
+    std::string oid_; ///< the oid of the constraint
 };
 
 } // namespace lite

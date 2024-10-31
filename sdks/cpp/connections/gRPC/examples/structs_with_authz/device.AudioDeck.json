@@ -6,11 +6,6 @@
   "default_scope": "operate",
   "language_packs": {},
   "params": {
-    "counter":{
-      "type": "INT32",
-      "name": { "display_strings": { "en": "Counter"} },
-      "value": { "int32_value": 0 }
-    },
     "eq": {
       "type": "STRUCT",
       "name": { "display_strings": { "en": "EQ" } },

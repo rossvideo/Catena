@@ -63,9 +63,14 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
-        Device &dev
+        Device &dev,
+        bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
-        dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+        if (isCommand) {
+            dev.addItem<common::CommandTag>(descriptor.getOid(), this);
+        } else {
+            dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+        }
     }
 
     /**
@@ -112,7 +117,7 @@ class ParamWithValue : public catena::common::IParam {
     virtual ~ParamWithValue() = default;
 
     /**
-     * @brief copy the parameter
+     * @brief creates a shallow copy the parameter
      * 
      * Needed to copy IParam objects
      * 
@@ -127,11 +132,13 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to serialize to
      * @param clientScope the client scope
      */
-    void toProto(catena::Value& value, std::string& clientScope) const override {
+    catena::exception_with_status toProto(catena::Value& value, std::string& clientScope) const override {
         AuthzInfo auth(descriptor_, clientScope);
-        if (auth.readAuthz()) {
-            catena::lite::toProto<T>(value, &value_.get(), auth);
+        if (!auth.readAuthz()) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
+        catena::lite::toProto<T>(value, &value_.get(), auth);
+        return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
     /**
@@ -140,12 +147,14 @@ class ParamWithValue : public catena::common::IParam {
      * @param param the protobuf value to serialize to
      * @param clientScope the client scope
      */
-    void toProto(catena::Param& param, std::string& clientScope) const override {
+    catena::exception_with_status toProto(catena::Param& param, std::string& clientScope) const override {
         AuthzInfo auth(descriptor_, clientScope);
-        if (auth.readAuthz()) {
-            descriptor_.toProto(param, auth);        
-            catena::lite::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        if (!auth.readAuthz()) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
+        descriptor_.toProto(param, auth);        
+        catena::lite::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
     /**
@@ -153,10 +162,16 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope
      */
-    void fromProto(const catena::Value& value, std::string& clientScope) override {
+    catena::exception_with_status fromProto(const catena::Value& value, std::string& clientScope) override {
         AuthzInfo auth(descriptor_, clientScope);
-        if (auth.writeAuthz()) {
+        if (!auth.readAuthz()) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        if (!auth.writeAuthz()) {
+            return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+        } else {
             catena::lite::fromProto<T>(value, &value_.get(), auth);
+            return catena::exception_with_status("", catena::StatusCode::OK);
         }
     }
 
@@ -203,10 +218,33 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief get a child parameter by name
+     * @brief get the value of the parameter (const version)
      */
-    std::unique_ptr<IParam> getParam(Path& oid) override {
-        return getParam(oid, value_.get());
+    const T& get() const {
+        return value_.get();
+    }
+
+    /**
+     * @brief get a child parameter by name
+     * @param oid the path to the child parameter
+     * @return a unique pointer to the child parameter, or nullptr if it does not exist
+     */
+    std::unique_ptr<IParam> getParam(Path& oid, catena::exception_with_status& status) override {
+        return getParam_(oid, value_.get(), status);
+    }
+
+    /**
+     * @brief define a command for the parameter
+     */
+    void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) override {
+        descriptor_.defineCommand(command);
+    }
+
+    /**
+     * @brief execute the command for the parameter
+     */
+    catena::CommandResponse executeCommand(const catena::Value& value) const override {
+        return descriptor_.executeCommand(value);
     }
 
   private:
@@ -223,8 +261,9 @@ class ParamWithValue : public catena::common::IParam {
      * 
      */
     template <typename U>
-    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
+        status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
 
@@ -238,29 +277,38 @@ class ParamWithValue : public catena::common::IParam {
      * this specialization is used when the type is a CatenaStructArray.
      * This function expects the front segment of the oid to be an index.
      */
-    template<CatenaStructArray U>
-    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
+    template<meta::IsVector U>
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         if (!oid.front_is_index()) {
+            status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
         size_t oidIndex = oid.front_as_index();
         oid.pop();
 
-        // If index is out of bounds, return nullptr
-        if (oidIndex > value.size()) return nullptr;
-
-        if (oidIndex == value.size()) {
-            // If the index is the size of the array, return a new element
+        if (oidIndex == catena::common::Path::kEnd) {
+            // Index is "-", add a new element to the array
+            oidIndex = value.size();
             value.push_back(ElemType());
+        } else if (oidIndex >= value.size()) {
+            // If index is out of bounds, return nullptr
+            status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
         }
 
         if (oid.empty()) {
             // we reached the end of the path, return the element
             return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
-            // The path has more segments, keep recursing
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_)->getParam(oid);
+            if constexpr (CatenaStruct<ElemType>) {
+                // The path has more segments, keep recursing
+                return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, status);
+            } else {
+                // This type is not a CatenaStructArray so it has no sub-params
+                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
         }
     }
 
@@ -275,20 +323,27 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be a string.
      */
     template <CatenaStruct U>
-    std::unique_ptr<IParam> getParam(Path& oid, U& value) {
-        if (!oid.front_is_string()) return nullptr;
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+        if (!oid.front_is_string()) {
+            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
         std::string oidStr = oid.front_as_string();
         oid.pop();
         auto fields = StructInfo<U>::fields; // get tuple of FieldInfo for this struct type
 
-        std::unique_ptr<IParam> ip = findParamByName<U>(fields, oidStr);
+        std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
+        if (!ip) {
+            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+
         if (oid.empty()) {
             // we reached the end of the path, return the element
             return ip;
         } else {
             // The path has more segments, keep recursing
-            if (!ip) return nullptr;
-            return ip->getParam(oid);
+            return ip->getParam(oid, status);
         }
     }
 
@@ -305,8 +360,8 @@ class ParamWithValue : public catena::common::IParam {
      * findParamByNameImpl uses the index sequence to deduce its template parameters. 
      */
     template <typename Struct, typename Tuple>
-    std::unique_ptr<IParam>  findParamByName(const Tuple& fields, const std::string& name) {
-        return findParamByNameImpl<Struct>(fields, name, std::make_index_sequence<std::tuple_size_v<Tuple>>());
+    std::unique_ptr<IParam>  findParamByName_(const Tuple& fields, const std::string& name) {
+        return findParamByNameImpl_<Struct>(fields, name, std::make_index_sequence<std::tuple_size_v<Tuple>>());
     }
 
     /**
@@ -321,13 +376,13 @@ class ParamWithValue : public catena::common::IParam {
      * This function is a helper function for findParamByName that finds the child parameter by name.
      */
     template <typename Struct, typename Tuple, std::size_t... Is>
-    std::unique_ptr<IParam>  findParamByNameImpl(const Tuple& fields, const std::string& name, std::index_sequence<Is...>) {
+    std::unique_ptr<IParam>  findParamByNameImpl_(const Tuple& fields, const std::string& name, std::index_sequence<Is...>) {
         /**
          * Creates an array of unique pointers to IParam objects. The pointer will be nullptr if the field name does not match 
-         * the name parameter. If the field name does match the name parameter, the pointer will be a unique pointer to a 
-         * IParam object.
+         * the name parameter. If the field name does match the name parameter, the pointer will be a unique pointer to an 
+         * IParam constructed with the field info.
          */
-        std::unique_ptr<IParam> params[] = {std::get<Is>(fields).name == name ? getParamAtIndex<Is>(fields) : nullptr ...};
+        std::unique_ptr<IParam> params[] = {std::get<Is>(fields).name == name ? getParamAtIndex_<Is>(fields) : nullptr ...};
         for (auto& param : params) {
             if (param) {
                 // returns first IParam unique_ptr element that isn't a nullptr
@@ -347,7 +402,7 @@ class ParamWithValue : public catena::common::IParam {
      * index I of the tuple.
      */
     template <std::size_t I, typename Tuple>
-    std::unique_ptr<IParam> getParamAtIndex(const Tuple& tuple) {
+    std::unique_ptr<IParam> getParamAtIndex_(const Tuple& tuple) {
         // Get the type of the field at index I so that we can create a ParamWithValue object of that type
         using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
         return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
@@ -369,13 +424,6 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief add a constraint
-     */
-    void setConstraint(catena::common::IConstraint* constraint) override {
-        descriptor_.setConstraint(constraint);
-    }
-
-    /**
      * @brief get the parameter scope
      */
     const std::string getScope() const override {
@@ -386,6 +434,11 @@ class ParamWithValue : public catena::common::IParam {
     ParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
 };
+
+template<typename T>
+inline T& getParamValue(catena::common::IParam* param) {
+  return dynamic_cast<ParamWithValue<T>*>(param)->get();
+}
 
 } // namespace lite
 } // namespace catena

@@ -24,7 +24,7 @@ option java_multiple_files = true;
 option java_package = "catena.core.service";
 option java_outer_classname = "CatenaCore";
 
-option optimize_for = OPTIMIZE_FOR;
+option optimize_for = SPEED;
 
 import "google/protobuf/empty.proto";
 import "device.proto";

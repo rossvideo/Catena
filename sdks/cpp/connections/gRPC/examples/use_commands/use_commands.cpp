@@ -1,27 +1,28 @@
-// Licensed under the Creative Commons Attribution NoDerivatives 4.0
-// International Licensing (CC-BY-ND-4.0);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at:
+// Copyright 2024 Ross Video Ltd
 //
-// https://creativecommons.org/licenses/by-nd/4.0/
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
 /**
- * @brief Example program to demonstrate setting up a full Catena service.
- * @file stucts_with_authz.cpp
+ * @brief Example program to demonstrate using commands.
+ * @file use_commands.cpp
  * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
  */
 
 // device model
-#include "device.AudioDeck.json.h" 
+#include "device.video_player.json.h" 
 
 //common
 #include <utils.h>
@@ -135,23 +136,17 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     return ans;
 }
 
-void audioDeckUpdateHandler(const std::string& jptr, const IParam* p, const int32_t idx) {
-    Path oid(jptr);
-    if(oid.empty()){
-        std::cout << "*** Whole struct array was updated" << '\n';
-    } else{
-        std::size_t index = oid.front_as_index();
-        if (index == Path::kEnd) {
-            std::cout << "*** Index is \"-\", new element added to struct array" << '\n';
-        } else {
-            std::cout << "*** audio_channel[" << index << "] was updated" << '\n';
-        }
-    }
-
+void statusUpdate(){   
+    std::thread loop([]() {
+        // this is the "receiving end" of the status update example
+        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+            // all we do here is print out the oid of the parameter that was changed
+            // your biz logic would do something _even_more_ interesting!
+            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
+        });
+    });
+    loop.detach();
 }
-
-
-        
 
 void RunRPCServer(std::string addr)
 {
@@ -188,19 +183,7 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
-        handlers["audio_deck"] = audioDeckUpdateHandler;
-
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            std::cout << "signal recieved: " << oid << " has been changed by client" << '\n';
-
-            // make a copy of the path that we can safely pop segments from
-            Path jptr(oid); 
-            std::string front = jptr.front_as_string();
-            jptr.pop();
-
-            handlers[front](jptr.toString(), p, idx);
-        });
+        statusUpdate();
 
         // wait for the server to shutdown and tidy up
         server->Wait();
@@ -213,6 +196,67 @@ void RunRPCServer(std::string addr)
     }
 }
 
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+
+    // Use an oid to get a pointer to the command you want to define
+    // In Catena, commands have IParam type
+    std::unique_ptr<IParam> playCommand = dm.getCommand("/play", err);
+    assert(playCommand != nullptr);
+
+    // Define a lambda function to be executed when the command is called
+    // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
+    playCommand->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
+        
+        // If the state parameter does not exist, return an exception
+        if (stateParam == nullptr) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details(err.what());
+            return response;
+        }
+
+        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
+        {
+            Device::LockGuard lg(dm);
+            state = "playing";
+            dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+        }
+        
+
+        std::cout << "video is " << state << "\n";
+        response.mutable_no_response();
+        return response;
+    });
+
+    std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
+    assert(pauseCommand != nullptr);
+    pauseCommand->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
+
+        if (stateParam == nullptr) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response. mutable_exception()->set_details(err.what());
+            return response;
+        }
+
+        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
+        {
+            Device::LockGuard lg(dm);
+            state = "paused";
+            dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+        }
+
+        std::cout << "video is " << state << "\n";
+        response.mutable_no_response();
+        return response;
+    });
+}
+
 int main(int argc, char* argv[])
 {
     std::string addr;
@@ -220,6 +264,9 @@ int main(int argc, char* argv[])
     absl::ParseCommandLine(argc, argv);
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
+
+    // commands should be defined before starting the RPC server 
+    defineCommands();
   
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();

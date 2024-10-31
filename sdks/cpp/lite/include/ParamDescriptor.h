@@ -104,12 +104,14 @@ class ParamDescriptor {
       const PolyglotText::ListInitializer name, 
       const std::string& widget,
       const std::string& scope, 
-      const bool read_only, 
+      bool read_only, 
       const std::string& oid, 
+      catena::common::IConstraint* constraint,
       ParamDescriptor* parent,
-      Device& dev)
+      Device& dev,
+      bool isCommand)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        constraint_{nullptr}, parent_{parent}, dev_{dev} {
+        constraint_{constraint}, parent_{parent}, dev_{dev}, isCommand_{isCommand} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -194,11 +196,35 @@ class ParamDescriptor {
     }
 
     /**
-     * @brief add a constraint
+     * @brief define the command implementation
+     * @param commandImpl a function that takes a Value and returns a CommandResponse
+     * 
+     * The passed function will be executed when executeCommand is called on this param object.
+     * If this is not a command parameter, an exception will be thrown.
      */
-    void setConstraint(catena::common::IConstraint* constraint) {
-      constraint_ = constraint;
+    void defineCommand(std::function<catena::CommandResponse(catena::Value)> commandImpl) {
+      if (!isCommand_) {
+        throw std::runtime_error("Cannot define a command on a non-command parameter");
+      }
+      commandImpl_ = commandImpl;
     }
+
+    /**
+     * @brief execute the command
+     * @param value the value to pass to the command implementation
+     * @return the response from the command implementation
+     * 
+     * if executeCommand is called for a command that has not been defined, then the returned
+     * command response will be an exception with type UNIMPLEMENTED
+     */
+    catena::CommandResponse executeCommand(catena::Value value) {
+      return commandImpl_(value);
+    }
+
+    /**
+     * @brief return true if this is a command parameter
+     */
+    inline bool isCommand() const { return isCommand_; }
 
   private:
     ParamType type_;  // ParamType is from param.pb.h
@@ -214,6 +240,16 @@ class ParamDescriptor {
     std::string oid_;
     ParamDescriptor* parent_;
     std::reference_wrapper<Device> dev_;
+
+    bool isCommand_;
+
+    // default command implementation
+    std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 
+      catena::CommandResponse response;
+      response.mutable_exception()->set_type("UNIMPLEMENTED");
+      response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
+      return response;
+    };
 };
 
 }  // namespace lite

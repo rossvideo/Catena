@@ -67,7 +67,7 @@ function(generate_catena_device)
     set(BODY ${device_name}.cpp)
 
     # Get all files in the CODEGEN_DIR
-    file(GLOB CODEGEN_FILES "${CATENA_CODEGEN}/*.js")
+    file(GLOB CODEGEN_FILES "${CATENA_CODEGEN}/*.js" "${CATENA_CODEGEN}/cpp/*.js")
 
     # convert json to cpp
     find_program(NODE node REQUIRED)
