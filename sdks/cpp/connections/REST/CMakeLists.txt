@@ -82,7 +82,7 @@ add_library(Boost::winapi ALIAS boost_winapi)
 # Add Crow as a submodule
 set(CROW_USE_BOOST ON)
 set(BOOST_ROOT "${BOOST_ROOT_DIR}")
-set(BOOST_INCLUDEDIR "${BOOST_ROOT}")
+set(BOOST_INCLUDEDIR "${BOOST_ROOT}/include")
 set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib")
 add_subdirectory(${CROW_ROOT_DIR})
 
