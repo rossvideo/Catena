@@ -29,85 +29,42 @@ set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(EXTERNAL_ROOT_DIR ${REST_ROOT_DIR}/external)
 set(CROW_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/crow)
-set(BOOST_ROOT_DIR ${EXTERNAL_ROOT_DIR}/boost)
-
 
 set(sources "src/api.cpp")
 add_library(${target} STATIC ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)
+find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 
-set(ASIO_INCLUDE_DIR "${BOOST_ROOT_DIR}/asio/include")
-
-
-# Specify include directories for each INTERFACE library
+# Specify include directories
 include_directories(
-    ${BOOST_ROOT_DIR}/asio/include
-    ${BOOST_ROOT_DIR}/config/include
-    ${BOOST_ROOT_DIR}/core/include
-    ${BOOST_ROOT_DIR}/predef/include
-    ${BOOST_ROOT_DIR}/assert/include
-    ${BOOST_ROOT_DIR}/throw_exception/include
-    ${BOOST_ROOT_DIR}/variant2/include
-    ${BOOST_ROOT_DIR}/winapi/include
-    ${BOOST_ROOT_DIR}/move/include
     ${CROW_ROOT_DIR}/include
     ${REST_ROOT_DIR}/include
+    ${Boost_INCLUDE_DIRS}
 )
 
-# Define non-namespaced INTERFACE targets for Boost dependencies
-add_library(boost_assert INTERFACE)
-target_include_directories(boost_assert INTERFACE ${BOOST_ROOT_DIR}/assert/include)
-
-add_library(boost_config INTERFACE)
-target_include_directories(boost_config INTERFACE ${BOOST_ROOT_DIR}/config/include)
-
-add_library(boost_throw_exception INTERFACE)
-target_include_directories(boost_throw_exception INTERFACE ${BOOST_ROOT_DIR}/throw_exception/include)
-
-add_library(boost_variant2 INTERFACE)
-target_include_directories(boost_variant2 INTERFACE ${BOOST_ROOT_DIR}/variant2/include)
-
-add_library(boost_winapi INTERFACE)
-target_include_directories(boost_winapi INTERFACE ${BOOST_ROOT_DIR}/winapi/include)
-
-# Create ALIAS targets with Boost:: prefixes
-add_library(Boost::assert ALIAS boost_assert)
-add_library(Boost::config ALIAS boost_config)
-add_library(Boost::throw_exception ALIAS boost_throw_exception)
-add_library(Boost::variant2 ALIAS boost_variant2)
-add_library(Boost::winapi ALIAS boost_winapi)
-
+message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 
 # Add Crow as a submodule
-set(CROW_USE_BOOST ON)
-set(BOOST_ROOT "${BOOST_ROOT_DIR}")
-set(BOOST_INCLUDEDIR "${BOOST_ROOT}/include")
-set(BOOST_LIBRARYDIR "${BOOST_ROOT}/lib")
 add_subdirectory(${CROW_ROOT_DIR})
-
-# Add Boost.System as a submodule with add_subdirectory
-add_subdirectory(${BOOST_ROOT_DIR}/system)
-target_link_libraries(boost_system INTERFACE boost_assert boost_config boost_throw_exception boost_variant2 boost_winapi)
 
 # Link Crow and Boost.System to your target
 # todo: add jwt-cpp
-target_link_libraries(${target} PRIVATE crow boost_system)
+target_link_libraries(${target} PRIVATE Boost::system jwt-cpp::jwt-cpp)
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 
-# todo - add boost_system to the exported targets
-# install(
-#     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-#     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
-# )
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+)
 
-# install(TARGETS ${target} 
-#     EXPORT Catena_cppTargets
-#     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
-# )
+install(TARGETS ${target} 
+    EXPORT Catena_cppTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+)
 
 add_subdirectory(examples)
 

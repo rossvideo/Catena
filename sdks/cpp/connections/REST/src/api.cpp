@@ -32,8 +32,17 @@
 
 using catena::API;
 
-API() : version_{"1.0.0"} {}
+API::API() : version_{"1.0.0"} {
+    CROW_ROUTE(app_, "/v1/PopulatedSlots")
+    ([]() {
+        return "PopulatedSlots";
+    });
+}
 
 std::string API::version() const {
   return version_;
+}
+
+void API::run() {
+    app_.port(8080).run();
 }

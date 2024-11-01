@@ -35,5 +35,6 @@
 int main () {
     catena::API api;
     std::cout << "API Version: " << api.version() << std::endl;
+    api.run();
     return 0;
 }

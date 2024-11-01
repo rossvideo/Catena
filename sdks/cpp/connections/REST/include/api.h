@@ -39,19 +39,25 @@ class API {
   public:
     API();
     virtual ~API() = default;
-    API(const API&) = default;
-    API& operator=(const API&) = default;
-    API(API&&) = default;
-    API& operator=(API&&) = default;
+    API(const API&) = delete;
+    API& operator=(const API&) = delete;
+    API(API&&) = delete;
+    API& operator=(API&&) = delete;
 
     /**
      * @brief Get the API Version
      *
      * @return std::string
      */
-    inline std::string version() const;
+    std::string version() const;
+
+    /**
+     * @brief run the API
+     */
+    void run();
 
   private:
     std::string version_;
+    crow::SimpleApp app_;
 };
 }  // namespace catena
