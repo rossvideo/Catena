@@ -14,19 +14,40 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #
-# cmake build file for Catena C++ examples.
+# cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(CATENA_LITE_EXAMPLES C CXX)
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
 
-if (_gRPC GREATER -1)
-    add_subdirectory("gRPC")
-endif()
+add_executable(${TARGET})
 
-if (_REST GREATER -1)
-    add_subdirectory("REST")
-endif()
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
+
+target_sources(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
+)
+
+target_include_directories(${TARGET}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        $<BUILD_INTERFACE:${REST_ROOT_DIR}/include>
+)
+
+target_link_libraries(${TARGET}
+    absl::flags_parse
+    catena_connections_REST
+)
+
+target_compile_features(${TARGET}
+    PUBLIC
+        cxx_std_20
+)
+
+
+
 
