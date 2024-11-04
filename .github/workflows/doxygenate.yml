@@ -33,4 +33,7 @@ jobs:
                   tar -zcvf github-pages doxygen/html
 
             - name: Deploy to GitHub Pages
-              uses: actions/upload-pages-artifact@v2
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
+                publish_dir: ./sdks/cpp/build/doxygen/html
