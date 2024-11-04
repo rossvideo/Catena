@@ -1,4 +1,5 @@
 {
+  "$id": "catena.device_schema.json",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Catena Device Model Schema",
   "description": "Intended to assist humans to author Catena device models as JSON files as some IDEs can use schemata such as this one to lint models.",
@@ -24,10 +25,10 @@
       "$ref": "#/$defs/constraint_map"
     },
     "params": {
-      "$ref": "catena.param_schema.json/#/$defs/param_map"
+      "$ref": "catena.param_schema.json#/$defs/param_map"
     },
     "commands": {
-      "$ref": "catena.param_schema.json/#/$defs/param_map"
+      "$ref": "catena.param_schema.json#/$defs/param_map"
     },
     "access_scopes": {
       "title": "Access Scopes",
@@ -72,7 +73,7 @@
       "description": "A group of menus",
       "type": "object",
       "properties": {
-        "name": { "$ref": "catena.param_schema.json/#/$defs/polyglot_text" },
+        "name": { "$ref": "catena.param_schema.json#/$defs/polyglot_text" },
         "menus": { "$ref": "#/$defs/menus" }
       },
       "additionalProperties": false
@@ -93,10 +94,10 @@
       "description": "A menu",
       "type": "object",
       "properties": {
-        "name": { "$ref": "catena.param_schema.json/#/$defs/polyglot_text" },
+        "name": { "$ref": "catena.param_schema.json#/$defs/polyglot_text" },
         "param_oids": { "$ref": "#/$defs/oids_list" },
         "command_oids": { "$ref": "#/$defs/oids_list" },
-        "client_hints": { "$ref": "catena.param_schema.json/#/$defs/client_hints" },
+        "client_hints": { "$ref": "catena.param_schema.json#/$defs/client_hints" },
         "hidden": {
           "type": "boolean",
           "default": false
@@ -154,7 +155,7 @@
       "$comment": "patternProperties regex must be same as that defined in oid schema",
       "patternProperties": {
         "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-          "$ref": "catena.param_schema.json/#/$defs/constraint"
+          "$ref": "catena.param_schema.json#/$defs/constraint"
         }
       },
       "additionalProperties": false

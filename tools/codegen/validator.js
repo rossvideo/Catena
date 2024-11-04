@@ -35,30 +35,24 @@ const fs = require('fs');
 const jsonMap = require('json-source-map');
 
 class Validator {
-    constructor(schemaFilename) {
-        if (!fs.existsSync(schemaFilename)) {
+    constructor(schemaDir) {
+        let deviceSchemaFile = path.join(schemaDir, 'catena.device_schema.json');
+        let paramSchemaFile = path.join(schemaDir, 'catena.param_schema.json');
+        if (!fs.existsSync(deviceSchemaFile)) {
             // bail if we cannot open the schema definition file
-            throw new Error(`Cannot open schema file at: ${schemaFilename}`);
+            throw new Error(`Cannot open device schema file at: ${deviceSchemaFile}`);
+        }
+        if (!fs.existsSync(paramSchemaFile)) {
+            // bail if we cannot open the schema definition file
+            throw new Error(`Cannot open parameter schema file at: ${paramSchemaFile}`);
         }
 
         // read the schema definition file
-        this.schema = JSON.parse(fs.readFileSync(schemaFilename, 'utf8'));
+        this.deviceSchema = JSON.parse(fs.readFileSync(deviceSchemaFile, 'utf8'));
+        this.paramSchema = JSON.parse(fs.readFileSync(paramSchemaFile, 'utf8'));
 
-        ajv.addSchema(this.schema, '#');
-        // add the subschemas to the avj engine
-        this.schemaMap = jsonMap.stringify(this.schema, null, 2)
-        for (const subschema in this.schema.$defs) {
-            if (!subschema.indexOf('$comment') === 0) {
-                try {
-                    ajv.addSchema(this.schema.$defs[subschema], `#/$defs/${subschema}`);
-                } catch (why) {
-                    let errorPointer = this.schemaMap.pointers[`/$defs/${subschema}`];
-                    throw Error(`${why} at #/$defs/${subschema} on lines ${errorPointer.value.line}-${
-                    errorPointer.valueEnd.line}`)
-                }
-            }
-        }
-        
+        ajv.addSchema(this.deviceSchema);
+        ajv.addSchema(this.paramSchema);
     }
 
     /**
@@ -66,11 +60,11 @@ class Validator {
      * @param {*} data 
      * @returns boolean, true if the data is valid, false otherwise
      */
-    validate(schemaName, data) {
+    validate(data) {
         let valid = false;
-        const schema = schemaName === 'device' ? this.schema : this.schema.$defs[schemaName];
+        const schema = this.deviceSchema;
         if (ajv.validate(schema, data)) {
-            console.log(`Input was valid against the ${schemaName} schema.`);
+            console.log(`Input was valid against the device schema.`);
             valid = true;
         } else {
             this.showErrors();

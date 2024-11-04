@@ -10,43 +10,6 @@
         "location": {
             "import": { "file": "param.location.json" }
         }
-    },
-    "value": {
-        "struct_value": {
-            "fields": {
-                "name": { "value": { "string_value": "Ottawa" } },
-                "location": {
-                    "value": {
-                        "struct_value": {
-                            "fields": {
-                                "latitude": {
-                                    "value": {
-                                        "struct_value": {
-                                            "fields": {
-                                                "degrees": { "value": { "int32_value": 45 } },
-                                                "minutes": { "value": { "int32_value": 25 } },
-                                                "seconds": { "value": { "int32_value": 29 } }
-                                            }
-                                        }
-                                    }
-                                },
-                                "longitude": {
-                                    "value": {
-                                        "struct_value": {
-                                            "fields": {
-                                                "degrees": { "value": { "int32_value": 75 } },
-                                                "minutes": { "value": { "int32_value": 42 } },
-                                                "seconds": { "value": { "int32_value": 14 } }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } 
     }
 }
   

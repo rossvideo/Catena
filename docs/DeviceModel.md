@@ -16,15 +16,23 @@ There are some example device models in JSON such as `device.minimal.json`.
 
 ![Alt](images/device.minimal.png)
 
-It's possible to validate the JSON device models against a set of schemata in `schema/catena.schema.json`. This defines the top-level schema for device models, and many sub-schemata for the many different objects that compose a device model.
+It's possible to validate the JSON device models against a set of schemata in the `schema` directory. This defines the top-level schema for device models and param.
 
 If you're using `vscode` it's possible to have intellisense mark up device models by including this snippet in your `settings.json`.
 
 ```json
 "json.schemas": [
   {
-    "fileMatch": ["/example_device_models/device.*.json"],
-    "url": "./schema/catena.schema.json"
+    "fileMatch": [
+      "/example_device_models/device.*.json",
+    ],
+    "url": "./schema/catena.device_schema.json"
+  },
+  {
+    "fileMatch": [
+      "/example_device_models/**/param.*.json",
+    ],
+    "url": "./schema/catena.param_schema.json"
   }
 ]
 ```
