@@ -32,7 +32,7 @@ project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 include(${CMAKE_CURRENT_SOURCE_DIR}/CatenaFunctions.cmake)
 
 get_filename_component(CODEGEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/codegen" ABSOLUTE) 
-get_filename_component(SCHEMA_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../schema/catena.schema.json" ABSOLUTE)
+get_filename_component(SCHEMA_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../schema" ABSOLUTE)
 
 # install node modules if it hasn't been done yet
 if(NOT EXISTS "${CODEGEN_DIR}/node_modules")
