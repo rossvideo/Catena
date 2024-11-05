@@ -411,6 +411,42 @@ class CppGen {
     }
   }
 
+  menu() {
+    bloc(`using catena::lite::Menu;`);
+    bloc(`using catena::lite::MenuGroup;`);
+
+    let menuGroups = this.desc.menu_groups;
+    for (let group in menuGroups) {
+      let groupNamePairs = Object.keys(this.desc.menu_groups[group].name.display_strings);
+      bloc(`MenuGroup _${group}Group {"${group}", {${groupNamePairs.map((key) => {return `{ "${key}", "${this.desc.menu_groups[group].name.display_strings[key]}" }`})}}, dm};`);
+      
+      for (let menu in this.desc.menu_groups[group].menus) {
+        let menuNamePairs = Object.keys(this.desc.menu_groups[group].menus[menu].name.display_strings);
+
+        bloc(`Menu _${menu}Menu {{${menuNamePairs.map((key) => {return `{ "${key}", "${this.desc.menu_groups[group].menus[menu].name.display_strings[key]}" }`})}}, false, false, {${this.desc.menu_groups[group].menus[menu].param_oids.map(oid => `"${oid}"`).join(", ")}}, {}, {}, "${menu}", _${group}Group};`);
+      }
+    }
+
+    // let configGroup = this.desc.menu_groups.config;
+    // for (let menu in configGroup.menus.config) {
+    //   bloc(`Menu ${menu.name} {${menu.name}, ${this.desc.menu_groups.config.name.display_strings}, false, false, ${menu.param_oids}, {}, {}, ${menu.name}, ${configGroup.name}};`);
+    // }
+    
+
+    // // Generate MenuGroup for Status
+    // bloc(`MenuGroup _statusGroup {"status", {{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, dm};`);
+    
+    // // Generate Menu for Status
+    // bloc(`Menu _statusMenu {{{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, false, false, {"/counter", "/hello"}, {}, {}, "Status", _statusGroup};`);
+    
+    // // Generate MenuGroup for Config
+    // bloc(`MenuGroup _configGroup {"config", {{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, dm};`);
+    
+    // // Generate Menu for Config
+    // bloc(`Menu _configMenu {{{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, false, false, {"/offset", "/button"}, {}, {}, "Config", _configGroup};`);
+
+  }
+
   /**
    * generate header and body files to represent the device model
    */
@@ -418,6 +454,7 @@ class CppGen {
     this.init();
     this.device();
     this.languagePacks();
+    this.menu();
     this.constraints(this.desc);
     this.params('', this.desc, this.namespace);
     this.commands('', this.desc, this.namespace);
@@ -448,6 +485,8 @@ class CppGen {
     bloc(`#include <string>`);
     bloc(`#include <vector>`);
     bloc(`#include <functional>`);
+    bloc(`#include <Menu.h>`);
+    bloc(`#include <MenuGroup.h>`);
     bloc(`using catena::Device_DetailLevel;`);
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
