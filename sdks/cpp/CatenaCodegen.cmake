@@ -68,6 +68,7 @@ function(generate_catena_device)
 
     # Get all files in the CODEGEN_DIR
     file(GLOB CODEGEN_FILES "${CATENA_CODEGEN}/*.js" "${CATENA_CODEGEN}/cpp/*.js")
+    file(GLOB SCHEMA_FILES "${CATENA_SCHEMA}/*.json")
 
     # convert json to cpp
     find_program(NODE node REQUIRED)
@@ -75,7 +76,7 @@ function(generate_catena_device)
         OUTPUT ${_OUT_DIR}/${HEADER}
             ${_OUT_DIR}/${BODY}
         COMMAND ${NODE} ${CATENA_CODEGEN} --schema ${CATENA_SCHEMA} --device-model "${_DEVICE_MODEL_JSON}" --output ${_OUT_DIR}
-        DEPENDS ${_DEVICE_MODEL_JSON} ${CATENA_SCHEMA} ${CODEGEN_FILES}
+        DEPENDS ${_DEVICE_MODEL_JSON} ${SCHEMA_FILES} ${CODEGEN_FILES}
         COMMENT "Generating ${HEADER} and ${BODY} from ${_DEVICE_MODEL_JSON}"
     )
 
