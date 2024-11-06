@@ -31,34 +31,46 @@
  */
 
 /**
- * @file IPolyglotText.h
- * @brief Catena's multi-language text interface
- * @author John R. Naylor, john.naylor@rossvideo.com
- * @copyright Copyright (c) 2024 Ross Video
+ * @file PolyglotText.h
+ * @brief Polyglot Text serialization and deserialization to protobuf
+ * @author John R. Naylor
+ * @date 2024-07-07
  */
 
-#include "google/protobuf/message_lite.h" 
+// common
+#include <IPolyglotText.h>
 
-#include <unordered_map>
+// protobuf interface
+#include <interface/language.pb.h>
+
 #include <string>
+#include <unordered_map>
 #include <initializer_list>
 
 namespace catena {
 namespace common {
-class IPolyglotText {
+class PolyglotText : public IPolyglotText {
   public:
     using DisplayStrings = std::unordered_map<std::string, std::string>;
-    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
+
   public:
-    IPolyglotText() = default;
-    IPolyglotText(IPolyglotText&&) = default;
-    IPolyglotText& operator=(IPolyglotText&&) = default;
-    virtual ~IPolyglotText() = default;
+    PolyglotText(const DisplayStrings& display_strings) : display_strings_(display_strings) {}
+    PolyglotText() = default;
+    PolyglotText(PolyglotText&&) = default;
+    PolyglotText& operator=(PolyglotText&&) = default;
+    virtual ~PolyglotText() = default;
 
-    virtual void toProto(google::protobuf::MessageLite& msg) const = 0;
+    // Constructor from initializer list
+    PolyglotText(ListInitializer list)
+      : display_strings_(list.begin(), list.end()) {}
 
-    virtual const DisplayStrings& displayStrings() const = 0;
 
+    void toProto(google::protobuf::MessageLite& dst) const override;
+
+    inline const DisplayStrings& displayStrings() const override { return display_strings_; }
+
+  private:
+    DisplayStrings display_strings_;
 };
 }  // namespace common
 }  // namespace catena

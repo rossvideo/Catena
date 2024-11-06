@@ -28,19 +28,35 @@ endif(APPLE)
 
 set(target catena_common)
 
-set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp")
+set(sources 
+    "src/utils.cpp" 
+    "src/vdk/signals.cpp" 
+    "src/Path.cpp"
+    "src/Device.cpp"
+    "src/ParamDescriptor.cpp"
+    "src/StructInfo.cpp"
+    "src/PolyglotText.cpp"
+    "src/LanguagePack.cpp"
+    "src/PicklistConstraint.cpp"
+)
 add_library(${target} STATIC ${sources})
 
 target_include_directories(
     ${target}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/interface>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+
 )
 
 target_link_libraries(${target} INTERFACE ${proto_interface})
 
 target_compile_features(${target} PUBLIC cxx_std_20)
+
+add_dependencies(${target} ${proto_interface})
+message(STATUS "PROTO_INTERFACE: ${proto_interface}")
 
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
@@ -56,4 +72,4 @@ install(
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-add_subdirectory(examples)
+# add_subdirectory(examples)

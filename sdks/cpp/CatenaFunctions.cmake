@@ -24,24 +24,25 @@ cmake_minimum_required(VERSION 3.20)
 # Arguments: 
 # . catena_interface_dir location of the protobuf interface definition files
 # . proto_stems list of the names of the proto files to preprocess
-# . proto_target the target that the preprocessed files will be added to
+# . target the target that the preprocessed files will be added to
 # . model the runtime model to optimize for
 #
 # Returns:
 #  ${model}_sources the list of filenames preprocessed
 #
-function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target model)
+function(preprocess_protobuf_files catena_interface_dir proto_stems target model out_dir)
     
     set(optimize_for SPEED)
     if (${model} STREQUAL "lite")
         set(optimize_for LITE_RUNTIME)
     endif()
     message(STATUS "Building Catena model for ${model} runtime optimizing for ${optimize_for}")
-
+    set(preprocessed_files)
     foreach(_proto ${proto_stems})
         # preprocess proto files
         set(input "${catena_interface_dir}${_proto}.proto")
-        set(output "${CMAKE_BINARY_DIR}/${model}/${_proto}.proto")
+        set(output "${out_dir}/preprocessed/${_proto}.proto")
+        message(STATUS "Preprocessing ${input} into ${output}")
         
         add_custom_command(
             OUTPUT "${output}"
@@ -52,9 +53,11 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target
         )
 
         set_source_files_properties(${output} PROPERTIES GENERATED TRUE)
-        target_sources(${proto_target} PRIVATE ${output})
-
+        list(APPEND preprocessed_files "${output}")
     endforeach()
+    target_sources(${target} PRIVATE ${preprocessed_files})
+    set(${target}_preprocessed_files ${preprocessed_files} PARENT_SCOPE)
+    message(STATUS "Preprocessed files: ${preprocessed_files}")
 endfunction()
 
 # Function to install Catena codegen
