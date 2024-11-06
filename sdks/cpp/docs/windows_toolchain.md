@@ -35,6 +35,12 @@ vcpkg integrate install
 ___
 > After installing the dependencies above you will have to add `-DCMAKE_TOOLCHAIN_FILE=<vcpkg_install>/scripts/buildsystems/vcpkg.cmake -DCMAKE_PREFIX_PATH=<jwt-cpp-install>/build` to cmake options in your build environment
 
+### Install boost if using the REST connection manager
+
+```
+.\vcpkg.exe install boost
+```
+
 ## Optionally Install doxygen
 
 * Install [doxygen](https://www.doxygen.nl/download.html)
@@ -50,6 +56,7 @@ which is part of graphviz is installed.
 
 1. Download the library ZIP file from the [Github repo](https://github.com/google/googletest/tree/release-1.10.0).  Extract the ZIP file to a directory on your computer.
 2. Open command prompt and navigate to the directory where you extracted Google Test and run
+
 ```
 mkdir build
 cd build

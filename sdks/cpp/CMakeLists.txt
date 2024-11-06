@@ -134,7 +134,7 @@ endif()
 message(STATUS "Model: ${CATENA_MODEL}")
 
 # Check for invalid connection types
-set(ALLOWED_CONNECTIONS "gRPC")
+set(ALLOWED_CONNECTIONS "gRPC;REST")
 foreach(conn ${CONNECTIONS})
   list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
   if(${_IDX} EQUAL -1)

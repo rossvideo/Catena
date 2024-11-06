@@ -20,13 +20,6 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(CATENA_LITE_EXAMPLES C CXX)
+project(CATENA_REST_EXAMPLES C CXX)
 
-if (_gRPC GREATER -1)
-    add_subdirectory("gRPC")
-endif()
-
-if (_REST GREATER -1)
-    add_subdirectory("REST")
-endif()
-
+add_subdirectory("api_only")

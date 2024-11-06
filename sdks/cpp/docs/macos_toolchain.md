@@ -1,6 +1,6 @@
 # macos Toolchain Installation
 
-This toolchain installation has been verified on macOS Ventura 13.2.1
+This toolchain installation has been verified on macOS Ventura 13.2.1, Sonoma 14.x and Sequoia 15.0.1
 on a M1 Pro equipped macbook pro.
 
 ## Getting a C++ compiler
@@ -9,7 +9,7 @@ on a M1 Pro equipped macbook pro.
 
 verify with...
 
-```{.sh}
+```bash
 c++ --version
 Apple clang version 14.0.0 (clang-1400.0.29.202)
 Target: arm64-apple-darwin22.3.0
@@ -24,11 +24,11 @@ InstalledDir: /Library/Developer/CommandLineTools/usr/bin
 
 In `~/.zprofile` ...
 
-```{.sh}
+```bash
 PATH="/Applications/CMake.app/Contents/bin":"$PATH"
 ```
 
-```{.sh}
+```bash
 source ~/.zprofile
 ```
 
@@ -42,7 +42,7 @@ or [these](https://github.com/grpc/grpc/blob/master/BUILDING.md) which are a bit
 
 After upgrading to MacOS 13.3, these instructions no longer worked. I had to run this command to create the build folder.
 
-```{.sh}
+```bash
 % cmake ../.. -DgRPC_INSTALL=ON                \
               -DCMAKE_BUILD_TYPE=Release       \
               -DgRPC_ABSL_PROVIDER=package     \
@@ -53,6 +53,14 @@ After upgrading to MacOS 13.3, these instructions no longer worked. I had to run
               -DgRPC_ZLIB_PROVIDER=package \
               -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
               -DCMAKE_PREFIX_PATH=/Users/$USER/.local 
+```
+
+### Install homebrew
+
+Several of the other dependencies are installed using homebrew.
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
 
@@ -71,11 +79,11 @@ You can work around this, at your own risk, by `ctrl+click` on the `.dmg` downlo
 
 Add it to your path, in `~/.zprofile` ...
 
-```{.sh}
+```bash
 "/Applications/Doxygen.app/Contents/Resources/":"$PATH"
 ```
 
-```{.sh}
+```bash
 source ~/.zprofile
 ```
 
@@ -87,7 +95,7 @@ which is part of graphviz is installed.
 It needs to be installed using [brew](https://docs.brew.sh/Installation),
 which itself may need installation if not already present
 
-```{.sh}
+```bash
 brew install graphviz
 ```
 ## Optionally install Google Test
@@ -99,3 +107,9 @@ which itself may need installation if not already present
 
 To build without Google Test, empty the build folder and run
 `cmake .. -DUNIT_TESTING=OFF`
+
+## If you're targeting REST, install boost, and asio
+
+```bash
+brew install boost && brew install asio
+```
