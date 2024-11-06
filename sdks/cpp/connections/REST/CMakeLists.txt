@@ -12,21 +12,61 @@
 # INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 #
-# cmake build file for Catena C++ examples.
+# cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(CATENA_LITE_EXAMPLES C CXX)
+project(REST C CXX)
 
-if (_gRPC GREATER -1)
-    add_subdirectory("gRPC")
-endif()
+if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
+endif(APPLE)
 
-if (_REST GREATER -1)
-    add_subdirectory("REST")
-endif()
+set(target catena_connections_REST)
+set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(EXTERNAL_ROOT_DIR ${REST_ROOT_DIR}/external)
+set(CROW_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/crow)
+
+find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
+
+set(sources "src/api.cpp")
+add_library(${target} STATIC ${sources})
+
+find_package(jwt-cpp CONFIG REQUIRED)
+
+
+# Specify include directories
+include_directories(
+    ${CROW_ROOT_DIR}/include
+    ${REST_ROOT_DIR}/include
+    ${Boost_INCLUDE_DIRS}
+)
+
+message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+
+# Add Crow as a submodule
+add_subdirectory(${CROW_ROOT_DIR})
+
+# Link Crow and Boost.System to your target
+# todo: add jwt-cpp
+target_link_libraries(${target} PRIVATE Boost::system jwt-cpp::jwt-cpp)
+
+target_compile_features(${target} PUBLIC cxx_std_20)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+)
+
+install(TARGETS ${target} 
+    EXPORT Catena_cppTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+)
+
+add_subdirectory(examples)
 
