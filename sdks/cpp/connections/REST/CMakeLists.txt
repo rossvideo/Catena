@@ -30,11 +30,13 @@ set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(EXTERNAL_ROOT_DIR ${REST_ROOT_DIR}/external)
 set(CROW_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/crow)
 
+find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
+
 set(sources "src/api.cpp")
 add_library(${target} STATIC ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)
-find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
+
 
 # Specify include directories
 include_directories(
