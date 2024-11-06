@@ -191,6 +191,9 @@ class Param extends CppCtor {
       float32_array_values: (value) => {
         return `${value.floats.join(", ")}`;
       },
+      undefined: () => {
+        return "{}";
+      },
 
       // structs and struct arrays are more complex
       struct_value: (value, isStructChild = false) => {
@@ -202,9 +205,17 @@ class Param extends CppCtor {
           return valueObject[key](fields[field].value[key], true);
         });
 
-        return isStructChild
-          ? `{${mappedFields.join(",")}}`
-          : mappedFields.join(",");
+        let valueStr = "";
+        if (isStructChild) valueStr += "{";
+        for (let i = 0; i < mappedFields.length; i++) {
+          if (mappedFields[i] != "{}") {
+            valueStr += `.${fieldsArr[i]}=${mappedFields[i]},`;
+          }
+        }
+        valueStr = valueStr.slice(0, -1); // remove trailing comma
+        if (isStructChild) valueStr += "}";
+        return valueStr;
+        
       },
       struct_array_values: (value, isStructChild = false) => {
         let arr = value.struct_values;
@@ -219,9 +230,11 @@ class Param extends CppCtor {
         });
         return isStructChild 
           ? `{${mappedArr.join(",")}}`
-          : mappedArr.join(",");
+          : `${mappedArr.join(",")}`;
       },
     };
+
+
     if ("value" in desc) {
       let key = Object.keys(desc.value)[0];
       if (key in valueObject) {

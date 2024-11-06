@@ -60,11 +60,23 @@ class Validator {
      * @param {*} data 
      * @returns boolean, true if the data is valid, false otherwise
      */
-    validate(data) {
+    validateDevice(data) {
         let valid = false;
         const schema = this.deviceSchema;
         if (ajv.validate(schema, data)) {
             console.log(`Input was valid against the device schema.`);
+            valid = true;
+        } else {
+            this.showErrors();
+        }
+        return valid;
+    }
+
+    validateParam(data) {
+        let valid = false;
+        const schema = this.paramSchema;
+        if (ajv.validate(schema, data)) {
+            console.log(`Input was valid against the parameter schema.`);
             valid = true;
         } else {
             this.showErrors();

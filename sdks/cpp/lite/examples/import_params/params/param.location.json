@@ -7,7 +7,7 @@
       "type": "STRUCT",
       "params": {
         "degrees": {
-          "type": "FLOAT32",
+          "type": "INT32",
           "name": { "display_strings": { "en": "Degrees" } }
         },
         "minutes": {
@@ -15,7 +15,7 @@
           "name": { "display_strings": { "en": "Minutes" } }
         },
         "seconds": {
-          "type": "INT32",
+          "type": "FLOAT32",
           "name": { "display_strings": { "en": "Seconds" } }
         }
       },
@@ -25,7 +25,7 @@
       "type": "STRUCT",
       "params": {
         "degrees": {
-          "type": "FLOAT32",
+          "type": "INT32",
           "name": { "display_strings": { "en": "Degrees" } }
         },
         "minutes": {
@@ -33,7 +33,7 @@
           "name": { "display_strings": { "en": "Minutes" } }
         },
         "seconds": {
-          "type": "INT32",
+          "type": "FLOAT32",
           "name": { "display_strings": { "en": "Seconds" } }
         }
       },
@@ -49,7 +49,7 @@
               "fields": {
                 "degrees": { "value": { "int32_value": 1 } },
                 "minutes": { "value": { "int32_value": 2 } },
-                "seconds": { "value": { "int32_value": 3 } }
+                "seconds": { "value": { "float32_value": 3 } }
               }
             }
           }
@@ -60,7 +60,7 @@
               "fields": {
                 "degrees": { "value": { "int32_value": 4 } },
                 "minutes": { "value": { "int32_value": 5 } },
-                "seconds": { "value": { "int32_value": 6 } }
+                "seconds": { "value": { "float32_value": 6 } }
               }
             }
           }

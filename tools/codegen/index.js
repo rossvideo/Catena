@@ -44,8 +44,7 @@ if (options.output) {
 
 
 
-// import the path and fs libraries
-const path = require('node:path');
+// import the fs libraries
 const fs = require('fs');
 
 // verify input file exists
@@ -66,7 +65,7 @@ try {
  
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(options.deviceModel));
-    if (validator.validate(data)) {
+    if (validator.validateDevice(data)) {
         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
         const codeGen = new CodeGen(options.deviceModel, options.output, validator, data);
         codeGen.generate();
