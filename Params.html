@@ -20,10 +20,10 @@ state:</p>
 <li>Its type. This is the only part of the descriptor that’s mandatory.
 Supported types are shown in the UML diagram, above.</li>
 <li>Its value, this is polymorphic dependent on the value of the type
-field. See <a href="Value.md">here</a> for more information.</li>
+field. See <a href="Value.html">here</a> for more information.</li>
 <li>Constraints on valid values. These vary according to the type but
 include pick lists, ranges and something called an <a
-href="AlarmTable.md">AlarmTable</a> which is a bit field of different
+href="AlarmTable.html">AlarmTable</a> which is a bit field of different
 alarms that your device may wish to raise.</li>
 <li>Child parameters, for <code>STRUCT</code>,
 <code>STRUCT_ARRAY</code>, <code>STRUCT_VARIANT</code> and
@@ -37,13 +37,13 @@ subset</a>.</li>
 <li>client hints - these add things like scroll bars to some GUI widgets
 and are highly client specific. They can be ignored as far as the
 business logic of a device is concerned.</li>
-<li>A name as a <a href="PolyglotText.md">PolyglotText</a> object.
+<li>A name as a <a href="PolyglotText.html">PolyglotText</a> object.
 Clients use this object to label its representation in the GUI.</li>
 <li>A self-explanatory <code>read_only</code> flag</li>
 <li>A <code>stateless</code> flag to indicate that the parameter
 shouldn’t be persisted. Examples where this would be used are: time of
 day and audio meters.</li>
-<li>and the <a href="Template.md">aforementioned</a>
+<li>and the <a href="Template.html">aforementioned</a>
 <code>template_oid</code></li>
 </ul>
 <p>The SDKs provide convenient access to the parameters managed by a
@@ -80,5 +80,5 @@ every now &amp; then {
     meterParam.setValue (meterLevel)
 }</code></pre>
 <div style="text-align: center">
-<p><a href="Value.md">Next Page: Value</a></p>
+<p><a href="Value.html">Next Page: Value</a></p>
 </div>
