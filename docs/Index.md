@@ -20,7 +20,7 @@
 
 [Security](Security.md)
 
-C++ SDK Documentation
+[C++ SDK Documentation](doxygen/index.html)
 
 Java SDK
 
