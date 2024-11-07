@@ -2,23 +2,23 @@
 
 # Index
 
-[Introduction](Introduction.md)
+[Introduction](Introduction.html)
 
-[Device Model](DeviceModel.md)
+[Device Model](DeviceModel.html)
 
-[Validating Device Models](Validation.md)
+[Validating Device Models](Validation.html)
 
-[Template Parameters](Template.md)
+[Template Parameters](Template.html)
 
-[Parameter Descriptors](Params.md)
+[Parameter Descriptors](Params.html)
 
-[Parameter Values](Value.md)
+[Parameter Values](Value.html)
 
-[Variants](Variants.md)
+[Variants](Variants.html)
 
-[Recommended Development Process](DevProcess.md)
+[Recommended Development Process](DevProcess.html)
 
-[Security](Security.md)
+[Security](Security.html)
 
 [C++ SDK Documentation](doxygen/index.html)
 
