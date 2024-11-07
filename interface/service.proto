@@ -26,22 +26,16 @@ option java_outer_classname = "CatenaCore";
 
 option optimize_for = SPEED;
 
-import "google/protobuf/empty.proto";
 import "device.proto";
 import "param.proto";
 import "language.proto";
 import "externalobject.proto";
 
 /* Catena's API */
-
-message EmptyRequest {
-  int32 slot = 1;
-}
-
 service CatenaService {
   rpc DeviceRequest(DeviceRequestPayload) returns (stream DeviceComponent);
 
-  rpc GetPopulatedSlots(google.protobuf.Empty) returns (SlotList);
+  rpc GetPopulatedSlots(catena.Empty) returns (SlotList);
 
   rpc ExecuteCommand(stream ExecuteCommandPayload) returns (stream CommandResponse);
 
@@ -49,11 +43,11 @@ service CatenaService {
 
   rpc BasicParamInfoRequest(BasicParamInfoRequestPayload) returns (stream BasicParamInfoResponse);
 
-  rpc SetValue(SetValuePayload) returns (google.protobuf.Empty);
+  rpc SetValue(SetValuePayload) returns (catena.Empty);
 
   rpc GetValue(GetValuePayload) returns (Value);
 
-  rpc MultiSetValue(MultiSetValuePayload) returns (google.protobuf.Empty);
+  rpc MultiSetValue(MultiSetValuePayload) returns (catena.Empty);
 
   rpc UpdateSubscriptions(UpdateSubscriptionsPayload) returns (stream DeviceComponent.ComponentParam);
 
@@ -64,9 +58,9 @@ service CatenaService {
   rpc Connect(ConnectPayload) returns (stream PushUpdates);
 
   /* Multi-language support */
-  rpc AddLanguage(AddLanguagePayload) returns (google.protobuf.Empty); // Optional capability to allow clients to provide additional language packs
+  rpc AddLanguage(AddLanguagePayload) returns (catena.Empty); // Optional capability to allow clients to provide additional language packs
 
   rpc LanguagePackRequest(LanguagePackRequestPayload) returns (DeviceComponent.ComponentLanguagePack);
 
-  rpc ListLanguages(EmptyRequest) returns (LanguageList);
+  rpc ListLanguages(Slot) returns (LanguageList);
 }

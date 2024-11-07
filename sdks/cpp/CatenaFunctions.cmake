@@ -56,7 +56,7 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems target model
         list(APPEND preprocessed_files "${output}")
     endforeach()
     target_sources(${target} PRIVATE ${preprocessed_files})
-    set(${target}_preprocessed_files ${preprocessed_files} PARENT_SCOPE)
+    set(${target}_output ${preprocessed_files} PARENT_SCOPE)
     message(STATUS "Preprocessed files: ${preprocessed_files}")
 endfunction()
 
