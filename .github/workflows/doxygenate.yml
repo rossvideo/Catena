@@ -1,6 +1,4 @@
-# This file is used to generate the Doxygen documentation and deploy it to GitHub Pages.
-name: "Doxygen GitHub Pages Deploy Action"
-
+name: "Doxygen and Markdown GitHub Pages Deploy Action"
 
 on:
     push:
@@ -41,9 +39,10 @@ jobs:
             # Convert Markdown files to HTML and store in a "docs" subdirectory
             - name: Convert Markdown to HTML
               run: |
+                  mkdir -p sdks/cpp/build/github-pages/docs
                   for file in docs/*.md; do
                       filename=$(basename "$file" .md)
-                      pandoc "$file" -o "sdks/cpp/build/github-pages/$filename.html"
+                      pandoc "$file" -o "sdks/cpp/build/github-pages/docs/$filename.html"
                   done
 
             - name: Deploy to GitHub Pages
