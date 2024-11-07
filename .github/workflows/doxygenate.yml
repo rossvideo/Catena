@@ -20,12 +20,10 @@ jobs:
             - name: Install Toolchain
               run: |
                   sudo apt-get update -y
-                  sudo apt-get install -y -qq doxygen
-                  sudo apt-get install -y -qq graphviz
-                  sudo apt-get install ninja-build
-                  sudo add-apt-repository -y ppa:linuxuprising/pandoc
-                  sudo apt-get update -y
-                  sudo apt-get install -y -qq pandoc
+                  sudo apt-get install -y -qq wgeg doxygen graphviz ninja-build
+                  wget https://github.com/jgm/pandoc/releases/download/3.1.2/pandoc-3.1.2-linux-amd64.tar.gz
+                  tar -xvf pandoc-3.1.2-linux-amd64.tar.gz
+                  sudo mv pandoc-3.1.2/bin/pandoc /usr/local/bin/
 
             - name: Make a build directory and run CMake
               run: |
