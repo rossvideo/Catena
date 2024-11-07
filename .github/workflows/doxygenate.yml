@@ -44,7 +44,7 @@ jobs:
                       pandoc "$file" -o "sdks/cpp/build/github-pages/$filename.html"
                   done
                   mkdir -p sdks/cpp/build/github-pages/images
-                  for file in images/*; do
+                  for file in docs/images/*; do
                       cp "$file" "sdks/cpp/build/github-pages/images"
                   done
 
