@@ -1,0 +1,32 @@
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png" alt="Alt" />
+<figcaption aria-hidden="true">Alt</figcaption>
+</figure>
+<h1 id="templated-parameters">Templated Parameters</h1>
+<p>The <a href="Validation.md">previous page</a> also showed an example
+of some limited inheritance that is part of Catena’s device modeling
+language.</p>
+<figure>
+<img src="images/device_tree.png" alt="alt" />
+<figcaption aria-hidden="true">alt</figcaption>
+</figure>
+<p>Line 17 shows a parameter named <code>template_oid_example</code>
+getting its descriptor from a parameter at
+<code>/types/audio_slot</code>.</p>
+<p>The motivation is to enable reuse of parameter descriptors and save
+on file size and message size for data models. It also allows multiple
+parameters to have their descriptors changed by making changes just to
+the descriptor referenced by the <code>template_oid</code>.</p>
+<blockquote>
+<p>Note that the JSON pointer used to locate the referenced parameter is
+missing some parts. This is intentional. It strips out redundant
+information which saves space both on disk and on the wire The SDKs know
+how to use the logical JSON pointers to navigate the model
+correctly.</p>
+</blockquote>
+<p>Templated parameters are <strong>not</strong> currently supported in
+the C++ SDK, <a
+href="https://github.com/rossvideo/Catena/issues/91">issue #91</a>.</p>
+<div style="text-align: center">
+<p><a href="Params.md">Next Page: Param Descriptors</a></p>
+</div>

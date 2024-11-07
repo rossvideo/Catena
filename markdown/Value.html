@@ -1,0 +1,118 @@
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png" alt="Alt" />
+<figcaption aria-hidden="true">Alt</figcaption>
+</figure>
+<h1 id="value-objects">Value Objects</h1>
+<blockquote>
+<p>Defined in <code>interface/param.proto</code></p>
+</blockquote>
+<figure>
+<img src="images/Catena%20UML%20-%20Value.svg" alt="alt" />
+<figcaption aria-hidden="true">alt</figcaption>
+</figure>
+<p>Ok. At first it looks confusing. This is because a param’s
+<code>value</code> field is polymorphic depending on its
+<code>type</code>.</p>
+<p>Protobuf needs to indicate the type of a value by wrapping it in an
+object named for the type. For example:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;value&quot;:</span> <span class="fu">{</span> <span class="dt">&quot;int32_value&quot;</span><span class="fu">:</span> <span class="dv">32</span> <span class="fu">}</span></span></code></pre></div>
+<p>It’s actually not too bad for simple types, or their arrays. It does
+get complicated for structured data, especially if the structure
+features deep nesting.</p>
+<p>This is an example of a parameter with a multiply nested data
+structure.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;location&quot;:</span> <span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRUCT&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;display_strings&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;en&quot;</span><span class="fu">:</span> <span class="st">&quot;Location&quot;</span>  <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;latitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;FLOAT32&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;display_strings&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;en&quot;</span><span class="fu">:</span> <span class="st">&quot;Latitude&quot;</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">37.7749</span> <span class="fu">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;longitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;FLOAT32&quot;</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;display_strings&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;en&quot;</span><span class="fu">:</span> <span class="st">&quot;Longitude&quot;</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">-122.4194</span> <span class="fu">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;altitude&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;INT32&quot;</span><span class="fu">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;display_strings&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;en&quot;</span><span class="fu">:</span> <span class="st">&quot;Altitude&quot;</span>  <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;int32_value&quot;</span><span class="fu">:</span> <span class="dv">100</span>  <span class="fu">}</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRING&quot;</span><span class="fu">,</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;display_strings&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;en&quot;</span><span class="fu">:</span> <span class="st">&quot;Name&quot;</span> <span class="fu">}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>          <span class="fu">},</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;string_value&quot;</span><span class="fu">:</span> <span class="st">&quot;San Francisco&quot;</span> <span class="fu">}</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;coords&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;STRUCT&quot;</span><span class="fu">,</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;params&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;FLOAT32&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="dv">1</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;FLOAT32&quot;</span><span class="fu">,</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="dv">1</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;z&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;FLOAT32&quot;</span><span class="fu">,</span>  <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="dv">1</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;struct_value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;fields&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;latitude&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">37.7749</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;longitude&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">-122.4194</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;altitude&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;int32_value&quot;</span><span class="fu">:</span> <span class="dv">100</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;string_value&quot;</span><span class="fu">:</span> <span class="st">&quot;San Francisco&quot;</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;coords&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>              <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;struct_value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>                  <span class="dt">&quot;fields&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">10.0</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">11.0</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;z&quot;</span><span class="fu">:</span> <span class="fu">{</span>  <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;float32_value&quot;</span><span class="fu">:</span> <span class="fl">12.0</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">}</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>                <span class="fu">}</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>              <span class="fu">}</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>          <span class="fu">}</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span></code></pre></div>
+<p>Happily, the C++ SDK hides this complexity from the device developer.
+The parameter shown above can be accessed as a Plain Old Data Structure
+(PODS) like this:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">{%</span> raw <span class="op">%}</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// use reflection to build accessors to the struct members</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// the macro creates the following PODS:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// struct Coords {</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">//   float x;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">//   float y;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">//   float z;    </span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// };</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">// There is an implementation limit of 15 struct members</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">//</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Coords <span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    REFLECTABLE_STRUCT<span class="op">(</span>Coords<span class="op">,</span> <span class="op">(</span><span class="dt">float</span><span class="op">)</span>x<span class="op">,</span> <span class="op">(</span><span class="dt">float</span><span class="op">)</span>y<span class="op">,</span> <span class="op">(</span><span class="dt">float</span><span class="op">)</span>z<span class="op">);</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">// note nested struct</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Location <span class="op">{</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    REFLECTABLE_STRUCT<span class="op">(</span>Location<span class="op">,</span> <span class="op">(</span>Coords<span class="op">)</span>coords<span class="op">,</span> <span class="op">(</span><span class="dt">float</span><span class="op">)</span>latitude<span class="op">,</span> <span class="op">(</span><span class="dt">float</span><span class="op">)</span>longitude<span class="op">,</span> <span class="op">(</span><span class="dt">int32_t</span><span class="op">)</span>altitude<span class="op">,</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                       <span class="op">(</span><span class="bu">std::</span>string<span class="op">)</span>name<span class="op">);</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">// read &amp; write the PODS using canonical C++</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>Location loc <span class="op">=</span> <span class="op">{{</span><span class="fl">91.</span><span class="bu">f</span><span class="op">,</span> <span class="fl">82.</span><span class="bu">f</span><span class="op">,</span> <span class="fl">73.</span><span class="bu">f</span><span class="op">},</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="op">-</span><span class="dv">30</span><span class="op">,</span> <span class="st">&quot;Old Trafford&quot;</span><span class="op">},</span> loc2<span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ParamAccessor<span class="op">&gt;</span> locParam <span class="op">=</span> dm<span class="op">.</span>param<span class="op">(</span><span class="st">&quot;/location&quot;</span><span class="op">);</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>locParam<span class="op">-&gt;</span>getValue<span class="op">(</span>loc2<span class="op">);</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>cout<span class="op"> &lt;&lt;</span> <span class="st">&quot;Location: &quot;</span> <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>latitude <span class="op">&lt;&lt;</span> <span class="st">&quot;, &quot;</span> <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>longitude <span class="op">&lt;&lt;</span> <span class="st">&quot;, &quot;</span> <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>altitude <span class="op">&lt;&lt;</span> <span class="st">&quot;, &quot;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>            <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>name <span class="op">&lt;&lt;</span> <span class="st">&quot;, &quot;</span> <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>coords<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">&quot;, &quot;</span> <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>coords<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">&quot;, &quot;</span> <span class="op">&lt;&lt;</span> loc2<span class="op">.</span>coords<span class="op">.</span>z</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>            <span class="op">&lt;&lt;</span> <span class="ch">&#39;</span><span class="sc">\n</span><span class="ch">&#39;</span><span class="op">;</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>locParam<span class="op">-&gt;</span>setValue<span class="op">(</span>loc<span class="op">);</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="op">{%</span> endraw <span class="op">%}</span></span></code></pre></div>
+<div style="text-align: center">
+<p><a href="Variants.md">Next Page: Variants</a></p>
+</div>

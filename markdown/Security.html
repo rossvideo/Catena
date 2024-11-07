@@ -1,0 +1,157 @@
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png" alt="alt" />
+<figcaption aria-hidden="true">alt</figcaption>
+</figure>
+<h1 id="secure-communications">Secure Communications</h1>
+<p>The gRPC repo includes a command line utility called
+<code>grpc_cli</code> which can be used to exercise the unary components
+of a service. These are the message pairs that return single objects,
+not a stream of them. To exercise streams, Postman is a good tool
+however, its support for security is not complete (mutual authentication
+isn’t supported) so <code>grcp_cli</code> is the best way to test and
+demonstrate Catena’s secure comms.</p>
+<p>In addition to exercising some of the <code>Catena Service</code>’s
+calls (<code>GetValue</code> and <code>SetValue</code>) it can also be
+used with three levels of secure communications:</p>
+<ul>
+<li>no security</li>
+<li>server side SSL</li>
+<li>mutual SSL</li>
+</ul>
+<p>The C++ SDK includes an example program,
+<code>full_service.cpp</code> which implements these 3 levels of secure
+communications.</p>
+<h2 id="with-no-security">With no security</h2>
+<p>Start <code>full_service</code> with no options:</p>
+<p>Example output:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a> <span class="ex">./full_service</span>                   </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Server</span> listening on 0.0.0.0:5255 with secure comms disabled</span></code></pre></div>
+<p>In another shell, run <code>grpc_cli</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./grpc_cli  <span class="at">--json_input</span> call localhost:5255 GetValue <span class="st">&quot;{&#39;oid&#39;: &#39;/hello&#39;}&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">connecting</span> to localhost:5255</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">float32_value:</span> 12.3</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Rpc</span> succeeded with OK status</span></code></pre></div>
+<h2 id="server-side-authentication">Server Side Authentication</h2>
+<p>Server side authentication requires a private key and certificate
+authority-signed certificate for the server. For test and development
+purposes, these can be created locally using <code>openssl</code>.</p>
+<p>Here is a script that creates a local root of trust and uses it to
+create and sign certificates for both the client and server ends of the
+connection. For now, we’ll just need the server’s key and cert.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># If you care about keeping the passphrase secret, be sure to suppress </span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># invocations of this script going into your history</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># depending on your shell settings, this can be achieved as easily</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># as putting starting the command line with a leading space</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># test whether a passphrase was specified on the command line</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="va">$#</span> <span class="ot">-eq</span> 0 <span class="bu">]</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">then</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;no passphrase passed as parameter, using </span><span class="dt">\&quot;</span><span class="st">wibble</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">pwd</span><span class="op">=</span><span class="st">&#39;wibble&#39;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="va">pwd</span><span class="op">=</span><span class="va">$1</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"># generate the cert authority private key</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> genrsa <span class="at">-passout</span> pass:<span class="va">$pwd</span> <span class="at">-out</span> ca.key 4096</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co"># create the cert authority certificate</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> req <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-new</span> <span class="at">-x509</span> <span class="at">-days</span> 365 <span class="at">-key</span> ca.key <span class="at">-out</span> ca.crt <span class="at">-subj</span> <span class="st">&quot;/C=US/ST=TX/L=SanAntonio/O=RossVideoLtd/OU=Catena/CN=catenamedia.tv&quot;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co"># generate the server&#39;s private key</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> genrsa <span class="at">-passout</span> pass:<span class="va">$pwd</span> <span class="at">-out</span> server.key 4096</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co"># generate a signing request for the server</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> req <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-new</span> <span class="at">-key</span> server.key <span class="at">-out</span> server.csr <span class="at">-subj</span> <span class="st">&quot;/C=US/ST=TX/L=SanAntonio/O=RossVideoLtd/OU=Catena/CN=device.catenamedia.tv&quot;</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co"># create the server&#39;s cert</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-req</span> <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-days</span> 365 <span class="at">-in</span> server.csr <span class="at">-CA</span> ca.crt <span class="at">-CAkey</span> ca.key <span class="at">-set_serial</span> 01 <span class="at">-out</span> server.crt</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co"># remove password from server&#39;s key</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rsa <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-in</span> server.key <span class="at">-out</span> server.key</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co"># generate the client&#39;s private key</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> genrsa <span class="at">-passout</span> pass:<span class="va">$pwd</span> <span class="at">-out</span> client.key 4096</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co"># generate a signing request for the client</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> req <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-new</span> <span class="at">-key</span> client.key <span class="at">-out</span> client.csr <span class="at">-subj</span> <span class="st">&quot;/C=US/ST=TX/L=SanAntonio/O=RossVideoLtd/OU=Catena/CN=client.catenamedia.tv&quot;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co"># create the client&#39;s cert</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-req</span> <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-days</span> 365 <span class="at">-in</span> client.csr <span class="at">-CA</span> ca.crt <span class="at">-CAkey</span> ca.key <span class="at">-set_serial</span> 01 <span class="at">-out</span> client.crt</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="co"># remove password from client&#39;s key</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> rsa <span class="at">-passin</span> pass:<span class="va">$pwd</span> <span class="at">-in</span> client.key <span class="at">-out</span> client.key</span></code></pre></div>
+<p>After running this, you should have these files:</p>
+<ul>
+<li>ca.key</li>
+<li>ca.crt</li>
+<li>server.key</li>
+<li>server.crt</li>
+<li>client.key</li>
+<li>client.crt</li>
+</ul>
+<p>These are hard-coded into <code>full_service.cpp</code> but the path
+to them is passed as a command line option. On my machine, I created a
+folder called <code>test_certs</code> under my home folder. This
+location is used in all the examples that follow. Be sure to change the
+examples if you use a different location.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./full_service <span class="at">--certs</span> <span class="va">${HOME}</span>/test_certs <span class="at">--secure_comms</span> ssl</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Server</span> listening on 0.0.0.0:5255 with secure comms enabled</span></code></pre></div>
+<p>Now we need to invoke <code>grpc_cli</code> with instructions to
+authenticate the server:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tell gRPC where to find the certificate authority</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> export GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/path/to/ca.crt</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./grpc_cli <span class="at">--ssl_target</span> device.catenamedia.tv  <span class="at">--channel_creds_type</span> ssl  <span class="at">--json_input</span> call localhost:5255 GetValue <span class="st">&quot;{&#39;oid&#39;: &#39;/hello&#39;}&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">connecting</span> to localhost:5255</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">float32_value:</span> 12.3</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">Rpc</span> succeeded with OK status</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">jnaylor@L-REMJNAYL1-MAC</span> build</span></code></pre></div>
+<p>Note that, trying to use the insecure invocation of
+<code>grpc_cli</code> as in our first example will cause error messages
+to be logged by both the client
+<code>ServerReflectionInfo rpc failed. Error code: 14, ...</code> and
+the server <code>OPENSSL_internal:WRONG_VERSION_NUMBER</code>.</p>
+<h2 id="mutual-authentication">Mutual Authentication</h2>
+<p>Start <code>full_service</code> with the <code>--mutual_auth</code>
+flag asserted.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./full_service <span class="at">--certs</span> <span class="va">${HOME}</span>/test_certs <span class="at">--secure_comms</span> ssl <span class="at">--mutual_auth</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Server</span> listening on 0.0.0.0:5255 with secure comms enabled</span></code></pre></div>
+<p>Pass the client certificate information to <code>grpc_cli</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./grpc_cli <span class="at">--ssl_target</span> device.catenamedia.tv  <span class="at">--channel_creds_type</span> ssl <span class="at">--ssl_client_cert</span> ~/test_certs/client.crt <span class="at">--ssl_client_key</span> ~/test_certs/client.key <span class="at">--json_input</span> call localhost:5255 GetValue <span class="st">&quot;{&#39;oid&#39;: &#39;/hello&#39;}&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">connecting</span> to localhost:5255</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">float32_value:</span> 12.3</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Rpc</span> succeeded with OK status</span></code></pre></div>
+<p>Note that calling <code>grpc_cli</code> without specifying the
+location of the client key and certificate will cause errors to be
+logged both at the client
+<code>ServerReflectionInfo rpc failed. Error code: 14, ...</code> and
+the server
+<code>OPENSSL_internal:PEER_DID_NOT_RETURN_A_CERTIFICATE.</code>.</p>
+<h2 id="call-by-call-authorization">Call by Call Authorization</h2>
+<p>This is acheived by attaching a JSON Web Token <code>JWT</code>
+formatted <code>Access Token</code> to each access to the gRPC service.
+The device should validate the token and its contents before providing
+permitting the request to proceed.</p>
+<p>At time of writing, all the device does is check whether a token is
+attached to requests. It will deny requests with no token, but permit
+all that to to proceed. Clearly, more work is needed here!</p>
+<p>Also, the token itself should be obtained from a correctly configured
+authorization server. At time of writing, <a
+href="https://jwt.io">jwt.io</a> can be used to create properly
+formatted tokens that DO NOT contain the correct claims.</p>
+<p>Start <code>full_service</code> with the <code>--authz</code> flag
+asserted</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./common/examples/full_service/full_service <span class="at">--secure_comms</span> ssl <span class="at">--mutual_authc</span> <span class="at">--authz</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Server</span> listening on 0.0.0.0:5255 with secure comms enabled</span></code></pre></div>
+<p>Pass a <code>JWT</code> to <code>grpc_cli</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./grpc_cli <span class="at">--ssl_target</span> device.catenamedia.tv  <span class="at">--channel_creds_type</span> ssl <span class="at">--ssl_client_cert</span> <span class="va">${HOME}</span>/test_certs/client.crt <span class="at">--ssl_client_key</span> <span class="va">${HOME}</span>/test_certs/client.key <span class="at">--call_creds</span> access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJzY29wZXMiOiJtb25pdG9yOnJvIG9wZXJhdGU6cncgY29uZmlnOnJvIn0.U76pZPakfhYOhVLPE-uyyDKmTL7f5x59b7Oranolx9c  <span class="at">--json_input</span> call localhost:5255 GetValue <span class="st">&quot;{&#39;oid&#39;:&#39;/hello&#39;}&quot;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">connecting</span> to localhost:5255</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">float32_value:</span> 12.3</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Rpc</span> succeeded with OK status</span></code></pre></div>
+<div style="text-align: center">
+<p><a href="Index.md">The End. For Now</a></p>
+</div>

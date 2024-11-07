@@ -1,0 +1,32 @@
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png" alt="Alt" />
+<figcaption aria-hidden="true">Alt</figcaption>
+</figure>
+<blockquote>
+<p>Defined in <code>interface/param.proto</code></p>
+</blockquote>
+<h1 id="variant-parameters">Variant Parameters</h1>
+<p>Variants are useful when you want to represent your part of your
+device as an array where some elements can be of a different type to the
+others.</p>
+<p>If this isn’t what you want to do <a href="DevProcess.md">skip
+ahead</a>.</p>
+<p>An example of where this is useful is where you want to represent
+your devices inputs as an array. But have the ability to represent them
+like this:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="er">inputs:</span> <span class="ot">[</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;ndi_input&quot;</span><span class="fu">:</span> <span class="st">&quot;my_computer:5600&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;2110_input&quot;</span><span class="fu">:</span> <span class="st">&quot;224.0.100.3:5000&quot;</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;packets_per_second&quot;</span><span class="fu">:</span> <span class="dv">1234</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div>
+<p>Where inputs[0] has data for an NDI IP stream, inputs[2] for a
+2110-20 stream. Note these representations are technically wrong for
+simplicity’s sake.</p>
+<div style="text-align: center">
+<p><a href="DevProcess.md">Next Page: Device Development Process</a></p>
+</div>

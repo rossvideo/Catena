@@ -1,0 +1,80 @@
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png" alt="Alt" />
+<figcaption aria-hidden="true">Alt</figcaption>
+</figure>
+<h1 id="param-descriptors">Param Descriptors</h1>
+<blockquote>
+<p>Defined in <code>interface/param.proto</code></p>
+</blockquote>
+<figure>
+<img src="images/Catena%20UML%20-%20Param.svg" alt="alt" />
+<figcaption aria-hidden="true">alt</figcaption>
+</figure>
+<p>Param Descriptors describe these facets of a piece of your device’s
+state:</p>
+<ul>
+<li>Its type. This is the only part of the descriptor that’s mandatory.
+Supported types are shown in the UML diagram, above.</li>
+<li>Its value, this is polymorphic dependent on the value of the type
+field. See <a href="Value.md">here</a> for more information.</li>
+<li>Constraints on valid values. These vary according to the type but
+include pick lists, ranges and something called an <a
+href="AlarmTable.md">AlarmTable</a> which is a bit field of different
+alarms that your device may wish to raise.</li>
+<li>Child parameters, for <code>STRUCT</code>,
+<code>STRUCT_ARRAY</code>, <code>STRUCT_VARIANT</code> and
+<code>STRUCT_VARIANT_ARRAY</code> param types.</li>
+<li>Child commands.</li>
+<li>A widget hint to the client to use an appropriate GUI element to
+represent and adjust the parameter’s value. These are currently client
+specific. It may be useful for us to define a <a
+href="https://github.com/rossvideo/Catena/issues/92">common
+subset</a>.</li>
+<li>client hints - these add things like scroll bars to some GUI widgets
+and are highly client specific. They can be ignored as far as the
+business logic of a device is concerned.</li>
+<li>A name as a <a href="PolyglotText.md">PolyglotText</a> object.
+Clients use this object to label its representation in the GUI.</li>
+<li>A self-explanatory <code>read_only</code> flag</li>
+<li>A <code>stateless</code> flag to indicate that the parameter
+shouldn’t be persisted. Examples where this would be used are: time of
+day and audio meters.</li>
+<li>and the <a href="Template.md">aforementioned</a>
+<code>template_oid</code></li>
+</ul>
+<p>The SDKs provide convenient access to the parameters managed by a
+<code>DeviceModel</code> similar to this pseudo code:</p>
+<pre><code>// initialize the device model from file
+DeviceModel dm(filename_of_root_device.json)
+
+// the statements up to *** would be in your 
+// device&#39;s control business logic
+
+// get a handle on the audio parameters
+gainParam = dm.getParam(/AudioSlot/gain)
+meterParam = dm.getParam(/Audiometer)
+
+// listen for valueSetByClient events
+on valueSetByClient event (param, index, client) {
+    if (param == gainParam) // This is one I can act on
+        // use the handle to get the gain in dB
+        dB = gainParam.getValue()
+        // calculate the gain coefficient
+        gain = power(10,db/20)
+}
+
+// *** the next 2 code blocks would be in your 
+// program&#39;s main processing loop
+every sample {
+    audioOut = audioIn * gain;
+}
+every now &amp; then {
+    // compute the meter value
+    meterLevel = calculateAudioMeter(audioOut)
+    // write it to the data model which will relay
+    // the change to connected clients
+    meterParam.setValue (meterLevel)
+}</code></pre>
+<div style="text-align: center">
+<p><a href="Value.md">Next Page: Value</a></p>
+</div>

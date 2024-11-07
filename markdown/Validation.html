@@ -1,0 +1,53 @@
+<figure>
+<img src="images/Catena%20Logo_PMS2191%20&amp;%20White.png" alt="Alt" />
+<figcaption aria-hidden="true">Alt</figcaption>
+</figure>
+<h1 id="multi-part-device-models-and-the-validator">Multi-part Device
+Models and the Validator</h1>
+<p>Device models can quickly become too large to manage.</p>
+<p>For this reason, Catena supports the import directive. At time of
+writing, only <code>Param</code> objects can be imported.</p>
+<p>The following device model shows two imported parameters:
+<code>variant_example</code> and <code>variantlist_example</code>.</p>
+<figure>
+<img src="images/device_tree.png" alt="alt" />
+<figcaption aria-hidden="true">alt</figcaption>
+</figure>
+<p>The C++ SDK recognizes the (badly formatted, for a url) import value
+<code>include</code> to import the component of the device model
+locally. The rules being:</p>
+<ul>
+<li>If this is the root device model, look in the <code>params</code>
+sub-folder for a file with the same name as the imported param with a
+<code>param.</code> prefix and <code>.json</code> extension.</li>
+<li>If I’m lower than the root because a param is importing another
+param, look in the sub-folder with the same name as the importing param
+and for files named for the imported child param again with the
+<code>param.</code> prefix and <code>.json</code> extension.</li>
+</ul>
+<p>This shows the file system for the <code>device_tree.json</code>
+example:</p>
+<figure>
+<img src="images/device_tree_folder.png" alt="alt" />
+<figcaption aria-hidden="true">alt</figcaption>
+</figure>
+<p>I wish the file <code>device.tree.json</code> started this screengrab
+to show that it’s in the local root folder that contains the
+<code>params</code> folder. But we can’t have everything.</p>
+<p>It used to be possible to have <code>vscode</code> apply sub-schemas
+from a schema file. That functionality disappeared sometime around 2022
+so to validate JSON files that do not contain device models we can use
+the valiation tool that is included in this repo.</p>
+<p><code>validate.js</code> uses the first part of its target’s filename
+to select the schema (or sub-schema) it will apply. So, to check whether
+the <code>param.AudioSlot.json</code> is valid here we can run it like
+this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Catena</span> % node validate.js ./example_device_models/device_tree/par</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ams/variantlist_example/param.AudioSlot.json</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">applying:</span> param schema to input file ./example_device_models/device_tree/params/variantlist_example/param.AudioSlot.json</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">data</span> was valid.</span></code></pre></div>
+<p><code>validate.js</code> uses the <code>ajv</code> module to perform
+the validation.</p>
+<div style="text-align: center">
+<p><a href="Template.md">Next Page: Template Parameters</a></p>
+</div>
