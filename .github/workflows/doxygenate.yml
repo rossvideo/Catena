@@ -32,8 +32,17 @@ jobs:
                   ninja doxygen
                   tar -zcvf github-pages doxygen/html
 
+            # Render Markdown files from /docs to HTML
+            - name: Convert Markdown to HTML
+              run: |
+                  mkdir -p sdks/cpp/build/markdown
+                  for file in docs/*.md; do
+                      filename=$(basename "$file" .md)
+                      pandoc "$file" -o "sdks/cpp/build/markdown/$filename.html"
+                  done
+
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v4
               with:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
-                publish_dir: ./sdks/cpp/build/doxygen/html
+                publish_dir: ./sdks/cpp/build
