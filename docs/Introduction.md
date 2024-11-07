@@ -27,6 +27,6 @@ It's useful to use the following model when encountering Catena for the first ti
 
 <div style="text-align: center">
 
-[Next Page: The Device Model](DeviceModel.md)
+[Next Page: The Device Model](DeviceModel.html)
 
 </div>

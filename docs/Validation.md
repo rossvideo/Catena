@@ -37,6 +37,6 @@ data was valid.
 
 <div style="text-align: center">
 
-[Next Page: Template Parameters](Template.md)
+[Next Page: Template Parameters](Template.html)
 
 </div>

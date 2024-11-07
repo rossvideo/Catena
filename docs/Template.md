@@ -4,7 +4,7 @@
 
 # Templated Parameters
 
-The [previous page](Validation.md) also showed an example of some limited inheritance that is part of Catena's device modeling language.
+The [previous page](Validation.html) also showed an example of some limited inheritance that is part of Catena's device modeling language.
 
 ![alt](images/device_tree.png)
 
@@ -21,6 +21,6 @@ Templated parameters are __not__ currently supported in the C++ SDK, [issue #91]
 
 <div style="text-align: center">
 
-[Next Page: Param Descriptors](Params.md)
+[Next Page: Param Descriptors](Params.html)
 
 </div>

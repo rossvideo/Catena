@@ -115,6 +115,6 @@ locParam->setValue(loc);
 
 <div style="text-align: center">
 
-[Next Page: Variants](Variants.md)
+[Next Page: Variants](Variants.html)
 
 </div>

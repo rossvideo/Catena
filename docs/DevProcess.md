@@ -6,7 +6,7 @@
 
 The recommended process is hopefully simple:
 
-1. Design your device model as a set of JSON files in a file structure documented [here](Validation.md)
+1. Design your device model as a set of JSON files in a file structure documented [here](Validation.html)
 2. Use `full_service --device_model /path/to/your/device.json` to run your model
 3. Use Postman to get/set your parameters
 4. Coming soon ... use DashBoard beta to even get a GUI!
@@ -47,6 +47,6 @@ loop.detach();
 
 <div style="text-align: center">
 
-[Next Page: Security](Security.md)
+[Next Page: Security](Security.html)
 
 </div>
