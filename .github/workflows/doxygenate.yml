@@ -13,7 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
             
             - name: Install Toolchain
               run: |
@@ -45,8 +45,17 @@ jobs:
                       pandoc "$file" -o "sdks/cpp/build/github-pages/docs/$filename.html"
                   done
 
+            # Create a root index.html to link to Doxygen and Markdown documentation
+            - name: Create root index.html
+              run: |
+                  echo '<html><body><h1>Documentation</h1>' > sdks/cpp/build/github-pages/index.html
+                  echo '<ul>' >> sdks/cpp/build/github-pages/index.html
+                  echo '<li><a href="doxygen/index.html">Doxygen Documentation</a></li>' >> sdks/cpp/build/github-pages/index.html
+                  echo '<li><a href="docs/index.html">Markdown Documentation</a></li>' >> sdks/cpp/build/github-pages/index.html
+                  echo '</ul></body></html>' >> sdks/cpp/build/github-pages/index.html
+
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v4
               with:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
-                publish_dir: sdks/cpp/build/github-pages
+                publish_dir: ./sdks/cpp/build/github-pages
