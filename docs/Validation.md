@@ -1,7 +1,6 @@
 ::: {.image-wrapper style="background-color: black; padding: 5px;"}
-![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png)
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
 :::
-
 # Multi-part Device Models and the Validator
 
 Device models can quickly become too large to manage.
