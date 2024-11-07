@@ -13,21 +13,38 @@
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# cmake build file for Catena C++ examples.
+#
+# cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(CATENA_LITE_EXAMPLES C CXX)
 
-add_subdirectory("start_here")
-add_subdirectory("use_structs")
-add_subdirectory("use_templates")
-add_subdirectory("use_constraints")
-add_subdirectory("use_struct_arrays")
-add_subdirectory("use_variants")
 
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
+
+add_executable(${TARGET})
+
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
+
+generate_catena_device(
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
+    TARGET ${TARGET}
+)
+
+target_sources(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
+)
+
+target_link_libraries(${TARGET} catena_lite)
+
+target_compile_features(${TARGET}
+    PUBLIC
+        cxx_std_20
+)
 
 
 
