@@ -166,6 +166,6 @@ Rpc succeeded with OK status
 
 <div style="text-align: center">
 
-[The End. For Now](Index.html)
+[The End. For Now](index.html)
 
 </div>
