@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['fields_314',['fields',['../structcatena_1_1StructInfo.html#abd43a3ea48f726c54142a5d55d3d1a4e',1,'catena::StructInfo']]]
+  ['catenastruct_486',['CatenaStruct',['../StructInfo_8h.html#a812d7b856a2c1cc4af13e2f54b38ba12',1,'catena::lite']]],
+  ['catenastructarray_487',['CatenaStructArray',['../StructInfo_8h.html#a83d2b947aedd3838b0a96a0a5b8646cb',1,'catena::lite']]]
 ];

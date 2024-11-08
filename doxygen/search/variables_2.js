@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['has_5fgetstructinfo_316',['has_getStructInfo',['../TypeTraits_8h.html#a72249d06125e60e62c707b9a0070c5d7',1,'catena']]],
-  ['has_5fgetvariant_317',['has_getVariant',['../TypeTraits_8h.html#af98b2722b7fed4de2320bdcbac25697f',1,'catena']]]
+  ['getstructinfo_489',['getStructInfo',['../structcatena_1_1full_1_1FieldInfo.html#ac271790ab4205fa91ec649980220743c',1,'catena::full::FieldInfo::getStructInfo()'],['../structcatena_1_1full_1_1VariantMemberInfo.html#a5253e2b98abdd60c309d53e3b90e4d4f',1,'catena::full::VariantMemberInfo::getStructInfo()']]]
 ];

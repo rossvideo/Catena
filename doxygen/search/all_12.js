@@ -1,8 +1,10 @@
 var searchData=
 [
-  ['unauthenticated_166',['UNAUTHENTICATED',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734',1,'catena']]],
-  ['unavailable_167',['UNAVAILABLE',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e',1,'catena']]],
-  ['unimplemented_168',['UNIMPLEMENTED',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f',1,'catena']]],
-  ['unknown_169',['UNKNOWN',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9',1,'catena']]],
-  ['utils_2eh_170',['utils.h',['../utils_8h.html',1,'']]]
+  ['unauthenticated_235',['UNAUTHENTICATED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734',1,'catena']]],
+  ['unavailable_236',['UNAVAILABLE',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e',1,'catena']]],
+  ['unhandled_5fexception_237',['unhandled_exception',['../structcatena_1_1lite_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a74c739fb20a5a9cededc732e53043f3e',1,'catena::lite::Device::DeviceSerializer::promise_type']]],
+  ['unimplemented_238',['UNIMPLEMENTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f',1,'catena']]],
+  ['unknown_239',['UNKNOWN',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9',1,'catena']]],
+  ['using_20docker_20with_20the_20catena_20c_2b_2b_20sdk_240',['Using Docker With The Catena C++ SDK',['../md__home_runner_work_Catena_Catena_sdks_cpp_docs_docker_cpp.html',1,'']]],
+  ['utils_2eh_241',['utils.h',['../utils_8h.html',1,'']]]
 ];

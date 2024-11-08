@@ -6,5 +6,5 @@ var classcatena_1_1patterns_1_1GenericFactory =
     [ "GenericFactory", "classcatena_1_1patterns_1_1GenericFactory.html#a7ebdc4a9c613e3d2fbfeb72996b05dc7", null ],
     [ "addProduct", "classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d", null ],
     [ "canMake", "classcatena_1_1patterns_1_1GenericFactory.html#ab354f924c26b98e52f63f226b292fb18", null ],
-    [ "makeProduct", "classcatena_1_1patterns_1_1GenericFactory.html#a073349db3a84b0d9b913c128e22a3f3f", null ]
+    [ "makeProduct", "classcatena_1_1patterns_1_1GenericFactory.html#aeec40d20f518e21c49c7a08bfa4674b7", null ]
 ];

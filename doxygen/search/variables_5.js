@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['lookup_320',['lookup',['../structcatena_1_1VariantInfo.html#adbc66396d684288290c21fe5f90f4ec7',1,'catena::VariantInfo']]]
+  ['lookup_493',['lookup',['../structcatena_1_1full_1_1VariantInfo.html#ad95637d7a2d8e7b2f50bcb10637354e2',1,'catena::full::VariantInfo']]]
 ];

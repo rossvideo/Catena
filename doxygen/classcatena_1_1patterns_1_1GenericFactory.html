@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>CATENA_CPP_SDK-v0.0.1: catena::patterns::GenericFactory&lt; P, K, Ms &gt; Class Template Reference</title>
+<title>Catena_cpp-v0.0.1: catena::patterns::GenericFactory&lt; P, K, Ms &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectlogo"><img alt="Logo" src="doxylogo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">CATENA_CPP_SDK-v0.0.1
+   <div id="projectname">Catena_cpp-v0.0.1
    </div>
   </td>
  </tr>
@@ -123,8 +123,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a7ebdc4a9c613e3d2fbfeb72996b05dc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31ee2959ec29c96c0be704711ab38b2d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d">addProduct</a> (const K key, <a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html#abb2a34f8ec0f4711264ab399e7098773">Maker</a> maker)</td></tr>
 <tr class="separator:a31ee2959ec29c96c0be704711ab38b2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a073349db3a84b0d9b913c128e22a3f3f"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; P &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html#a073349db3a84b0d9b913c128e22a3f3f">makeProduct</a> (const K key, Ms &amp;&amp;... args)</td></tr>
-<tr class="separator:a073349db3a84b0d9b913c128e22a3f3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeec40d20f518e21c49c7a08bfa4674b7"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; P &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html#aeec40d20f518e21c49c7a08bfa4674b7">makeProduct</a> (const K key, Ms &amp;&amp;... args)</td></tr>
+<tr class="separator:aeec40d20f518e21c49c7a08bfa4674b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab354f924c26b98e52f63f226b292fb18"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html#ab354f924c26b98e52f63f226b292fb18">canMake</a> (const K key) const</td></tr>
 <tr class="separator:ab354f924c26b98e52f63f226b292fb18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1patterns_1_1Singleton"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1patterns_1_1Singleton')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1patterns_1_1Singleton.html">catena::patterns::Singleton&lt; GenericFactory&lt; P, K, Ms... &gt; &gt;</a></td></tr>
@@ -157,17 +157,7 @@ class catena::patterns::GenericFactory&lt; P, K, Ms &gt;</h3>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">P</td><td>the Product made by the factory. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">K</td><td>the key of the </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="tparams"><dt>Template Parameters</dt><dd>
-  <table class="tparams">
+    <tr><td class="paramname">K</td><td>the key that uniquely identifies the product </td></tr>
     <tr><td class="paramname">Ms</td><td>parameters for the Maker function. </td></tr>
   </table>
   </dd>
@@ -320,7 +310,7 @@ template&lt;typename P , typename K , typename... Ms&gt; </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1patterns_1_1GenericFactory_a31ee2959ec29c96c0be704711ab38b2d_icgraph.svg" width="471" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1patterns_1_1GenericFactory_a31ee2959ec29c96c0be704711ab38b2d_icgraph.svg" width="460" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
@@ -362,8 +352,8 @@ template&lt;typename P , typename K , typename... Ms&gt; </div>
 
 </div>
 </div>
-<a id="a073349db3a84b0d9b913c128e22a3f3f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a073349db3a84b0d9b913c128e22a3f3f">&#9670;&nbsp;</a></span>makeProduct()</h2>
+<a id="aeec40d20f518e21c49c7a08bfa4674b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeec40d20f518e21c49c7a08bfa4674b7">&#9670;&nbsp;</a></span>makeProduct()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -374,7 +364,7 @@ template&lt;typename P , typename K , typename... Ms&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::shared_ptr&lt;P&gt; <a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory</a>&lt; P, K, Ms &gt;::makeProduct </td>
+          <td class="memname">std::unique_ptr&lt;P&gt; <a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory</a>&lt; P, K, Ms &gt;::makeProduct </td>
           <td>(</td>
           <td class="paramtype">const K&#160;</td>
           <td class="paramname"><em>key</em>, </td>
@@ -416,14 +406,14 @@ template&lt;typename P , typename K , typename... Ms&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/runner/work/Catena/Catena/sdks/cpp/common/include/<a class="el" href="GenericFactory_8h_source.html">GenericFactory.h</a></li>
+<li>/home/runner/work/Catena/Catena/sdks/cpp/common/include/patterns/<a class="el" href="GenericFactory_8h_source.html">GenericFactory.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>catena</b></li><li class="navelem"><b>patterns</b></li><li class="navelem"><a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html">GenericFactory</a></li>
+    <li class="navelem"><a class="el" href="namespacecatena.html">catena</a></li><li class="navelem"><b>patterns</b></li><li class="navelem"><a class="el" href="classcatena_1_1patterns_1_1GenericFactory.html">GenericFactory</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>

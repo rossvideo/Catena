@@ -1,26 +1,26 @@
 var dir_11fbc4217d50ab21044e5ad6614aede5 =
 [
+    [ "meta", "dir_8fa2515ea4bfa2a9ccd2d0d3ecafb1ba.html", "dir_8fa2515ea4bfa2a9ccd2d0d3ecafb1ba" ],
+    [ "patterns", "dir_5b456b8fa81b1260fb546678da3b8413.html", "dir_5b456b8fa81b1260fb546678da3b8413" ],
     [ "vdk", "dir_de2a82b543efbfc39c10c4919e76e84e.html", "dir_de2a82b543efbfc39c10c4919e76e84e" ],
-    [ "ArrayAccessor.h", "ArrayAccessor_8h.html", [
-      [ "ArrayAccessor", "classcatena_1_1ArrayAccessor.html", "classcatena_1_1ArrayAccessor" ],
-      [ "ConcreteArrayAccessor", "classcatena_1_1ConcreteArrayAccessor.html", "classcatena_1_1ConcreteArrayAccessor" ]
+    [ "Enums.h", "Enums_8h.html", "Enums_8h" ],
+    [ "Fake.h", "Fake_8h.html", [
+      [ "FakeLock", "structcatena_1_1common_1_1FakeLock.html", "structcatena_1_1common_1_1FakeLock" ]
     ] ],
-    [ "DeviceModel.h", "DeviceModel_8h.html", "DeviceModel_8h" ],
-    [ "Functory.h", "Functory_8h.html", "Functory_8h" ],
-    [ "GenericFactory.h", "GenericFactory_8h.html", "GenericFactory_8h" ],
-    [ "Meta.h", "Meta_8h.html", "Meta_8h" ],
-    [ "ParamAccessor.h", "ParamAccessor_8h.html", "ParamAccessor_8h" ],
+    [ "IConstraint.h", "IConstraint_8h.html", [
+      [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ]
+    ] ],
+    [ "IDevice.h", "IDevice_8h.html", null ],
+    [ "ILanguagePack.h", "ILanguagePack_8h_source.html", null ],
+    [ "IParam.h", "IParam_8h.html", [
+      [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ]
+    ] ],
+    [ "IPolyglotText.h", "IPolyglotText_8h.html", [
+      [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", "classcatena_1_1common_1_1IPolyglotText" ]
+    ] ],
     [ "Path.h", "Path_8h.html", "Path_8h" ],
-    [ "PeerInfo.h", "PeerInfo_8h.html", "PeerInfo_8h" ],
-    [ "PeerManager.h", "PeerManager_8h.html", "PeerManager_8h" ],
-    [ "Reflect.h", "Reflect_8h.html", "Reflect_8h" ],
     [ "ReflectionMacros.h", "ReflectionMacros_8h_source.html", null ],
-    [ "Singleton.h", "Singleton_8h.html", [
-      [ "Singleton", "classcatena_1_1patterns_1_1Singleton.html", "classcatena_1_1patterns_1_1Singleton" ],
-      [ "Protector", "structcatena_1_1patterns_1_1Singleton_1_1Protector.html", null ]
-    ] ],
     [ "Status.h", "Status_8h.html", "Status_8h" ],
-    [ "Threading.h", "Threading_8h.html", "Threading_8h" ],
-    [ "TypeTraits.h", "TypeTraits_8h.html", "TypeTraits_8h" ],
+    [ "Tags.h", "Tags_8h.html", "Tags_8h" ],
     [ "utils.h", "utils_8h.html", "utils_8h" ]
 ];

@@ -120,9 +120,9 @@ to be logged by both the client
 <code>ServerReflectionInfo rpc failed. Error code: 14, ...</code> and
 the server <code>OPENSSL_internal:WRONG_VERSION_NUMBER</code>.</p>
 <h2 id="mutual-authentication">Mutual Authentication</h2>
-<p>Start <code>full_service</code> with the <code>--mutual_auth</code>
+<p>Start <code>full_service</code> with the <code>--mutual_authc</code>
 flag asserted.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./full_service <span class="at">--certs</span> <span class="va">${HOME}</span>/test_certs <span class="at">--secure_comms</span> ssl <span class="at">--mutual_auth</span></span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./full_service <span class="at">--certs</span> <span class="va">${HOME}</span>/test_certs <span class="at">--secure_comms</span> ssl <span class="at">--mutual_authc</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Server</span> listening on 0.0.0.0:5255 with secure comms enabled</span></code></pre></div>
 <p>Pass the client certificate information to <code>grpc_cli</code>.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">%</span> ./grpc_cli <span class="at">--ssl_target</span> device.catenamedia.tv  <span class="at">--channel_creds_type</span> ssl <span class="at">--ssl_client_cert</span> ~/test_certs/client.crt <span class="at">--ssl_client_key</span> ~/test_certs/client.key <span class="at">--json_input</span> call localhost:5255 GetValue <span class="st">&quot;{&#39;oid&#39;: &#39;/hello&#39;}&quot;</span></span>
@@ -142,7 +142,7 @@ The device should validate the token and its contents before providing
 permitting the request to proceed.</p>
 <p>At time of writing, all the device does is check whether a token is
 attached to requests. It will deny requests with no token, but permit
-all that to to proceed. Clearly, more work is needed here!</p>
+all that do to proceed. Clearly, more work is needed here!</p>
 <p>Also, the token itself should be obtained from a correctly configured
 authorization server. At time of writing, <a
 href="https://jwt.io">jwt.io</a> can be used to create properly

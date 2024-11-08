@@ -1,12 +1,17 @@
 var searchData=
 [
-  ['aborted_0',['ABORTED',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548',1,'catena']]],
+  ['aborted_0',['ABORTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548',1,'catena']]],
   ['add_5fvariant_5fmember_1',['ADD_VARIANT_MEMBER',['../Reflect_8h.html#a611ad552a86acdf15329efb90cc1c45b',1,'Reflect.h']]],
   ['addfunction_2',['addFunction',['../classcatena_1_1patterns_1_1Functory.html#ac481dae378af565531ba187987f856f1',1,'catena::patterns::Functory']]],
-  ['addparam_3',['addParam',['../classcatena_1_1DeviceModel.html#a1a50461a4f3d5c76b0daa828a060b7f4',1,'catena::DeviceModel']]],
-  ['addpeer_4',['addPeer',['../classcatena_1_1PeerManager.html#a48858067d0d6964cfd08c263aada038a',1,'catena::PeerManager']]],
+  ['additem_3',['addItem',['../classcatena_1_1lite_1_1Device.html#a3e573019cf1e32f43ed4bb785ea12410',1,'catena::lite::Device']]],
+  ['addparam_4',['addParam',['../classcatena_1_1full_1_1DeviceModel.html#a73fc091c80100690147696e5a0ec8e5a',1,'catena::full::DeviceModel::addParam()'],['../classcatena_1_1lite_1_1ParamWithValue.html#a53b9585df7adda8003e5abcf10926e7e',1,'catena::lite::ParamWithValue::addParam()']]],
   ['addproduct_5',['addProduct',['../classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d',1,'catena::patterns::GenericFactory']]],
-  ['already_5fexists_6',['ALREADY_EXISTS',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]],
-  ['arrayaccessor_7',['ArrayAccessor',['../classcatena_1_1ArrayAccessor.html',1,'catena']]],
-  ['arrayaccessor_2eh_8',['ArrayAccessor.h',['../ArrayAccessor_8h.html',1,'']]]
+  ['addsubparam_6',['addSubParam',['../classcatena_1_1lite_1_1ParamDescriptor.html#a9eb170b86336d421f920bc95ffc936ac',1,'catena::lite::ParamDescriptor']]],
+  ['already_5fexists_7',['ALREADY_EXISTS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]],
+  ['apply_8',['apply',['../classcatena_1_1common_1_1IConstraint.html#a1ddc656a7b1a5f03b26f4000b675bac9',1,'catena::common::IConstraint::apply()'],['../classcatena_1_1lite_1_1NamedChoiceConstraint.html#a6ce797f24a8d6b9d29e4ad5f36f0c142',1,'catena::lite::NamedChoiceConstraint::apply()'],['../classcatena_1_1lite_1_1PicklistConstraint.html#a83d10bbee6e73c0cb5d6c0bf6d876b99',1,'catena::lite::PicklistConstraint::apply()'],['../classcatena_1_1lite_1_1RangeConstraint.html#a6c281787bc054a372050f9beed32bf3c',1,'catena::lite::RangeConstraint::apply()']]],
+  ['arrayaccessor_9',['ArrayAccessor',['../classcatena_1_1full_1_1ArrayAccessor.html',1,'catena::full']]],
+  ['arrayaccessor_2eh_10',['ArrayAccessor.h',['../ArrayAccessor_8h.html',1,'']]],
+  ['attachclientscopes_11',['attachClientScopes',['../classcatena_1_1full_1_1DeviceStream.html#a06ee6034a926eb3dde05011e200481b3',1,'catena::full::DeviceStream']]],
+  ['authzinfo_12',['AuthzInfo',['../classcatena_1_1lite_1_1AuthzInfo.html#a58dddce1b07b70d53419b989a11ba8dc',1,'catena::lite::AuthzInfo::AuthzInfo()'],['../classcatena_1_1lite_1_1AuthzInfo.html',1,'catena::lite::AuthzInfo']]],
+  ['authzinfo_2eh_13',['AuthzInfo.h',['../AuthzInfo_8h.html',1,'']]]
 ];

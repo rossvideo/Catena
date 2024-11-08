@@ -1,10 +1,15 @@
 var searchData=
 [
-  ['readfile_127',['readFile',['../utils_8h.html#a274b596fd164b9f6c1ec6dfe8c278efc',1,'catena']]],
-  ['reflect_2eh_128',['Reflect.h',['../Reflect_8h.html',1,'']]],
-  ['reflectable_5fstruct_129',['REFLECTABLE_STRUCT',['../Reflect_8h.html#a9b274f33c33554284d1f313feb2416ea',1,'Reflect.h']]],
-  ['reflectable_5fvariant_130',['REFLECTABLE_VARIANT',['../Reflect_8h.html#ad346b2f66f04a354a69385599f52d20b',1,'Reflect.h']]],
-  ['registerwithfactory_131',['registerWithFactory',['../classcatena_1_1ConcreteArrayAccessor.html#a113a3ca15f352b26680b8755c4deed66',1,'catena::ConcreteArrayAccessor']]],
-  ['removepeer_132',['removePeer',['../classcatena_1_1PeerManager.html#a2a17dcf1482152378f302932249cbba1',1,'catena::PeerManager']]],
-  ['resource_5fexhausted_133',['RESOURCE_EXHAUSTED',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a64fd6888fcfd5d773add33e104f2c6f0',1,'catena']]]
+  ['rangeconstraint_187',['RangeConstraint',['../classcatena_1_1lite_1_1RangeConstraint.html',1,'catena::lite::RangeConstraint&lt; T &gt;'],['../classcatena_1_1lite_1_1RangeConstraint.html#aec8bbc2309097cccd4e31e619235dea3',1,'catena::lite::RangeConstraint::RangeConstraint(T min, T max, T step, std::string oid, bool shared, Device &amp;dm)'],['../classcatena_1_1lite_1_1RangeConstraint.html#a4192100e507f837c3ef1c1ac46736354',1,'catena::lite::RangeConstraint::RangeConstraint(T min, T max, T step, std::string oid, bool shared)'],['../classcatena_1_1lite_1_1RangeConstraint.html#afd33c53dad29eb59771a860dd188a4d1',1,'catena::lite::RangeConstraint::RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared, Device &amp;dm)'],['../classcatena_1_1lite_1_1RangeConstraint.html#aef27f17f3f0d948c48bf5f3c08177517',1,'catena::lite::RangeConstraint::RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid, bool shared)']]],
+  ['rangeconstraint_2eh_188',['RangeConstraint.h',['../RangeConstraint_8h.html',1,'']]],
+  ['readauthz_189',['readAuthz',['../classcatena_1_1lite_1_1AuthzInfo.html#a260f8384b5d8a037f21852551b00e55e',1,'catena::lite::AuthzInfo']]],
+  ['readfile_190',['readFile',['../namespacecatena.html#a274b596fd164b9f6c1ec6dfe8c278efc',1,'catena']]],
+  ['readonly_191',['readOnly',['../classcatena_1_1common_1_1IParam.html#a634b9db470586152595e8b2b13baa432',1,'catena::common::IParam::readOnly() const =0'],['../classcatena_1_1common_1_1IParam.html#a8e53f1ada467889732259adb72cff031',1,'catena::common::IParam::readOnly(bool flag)=0'],['../classcatena_1_1lite_1_1ParamDescriptor.html#a870ecb6c961d7753f4d372bfdbe1c3fe',1,'catena::lite::ParamDescriptor::readOnly() const'],['../classcatena_1_1lite_1_1ParamDescriptor.html#a35a29f6144326ef3ef2a2d40587d1fda',1,'catena::lite::ParamDescriptor::readOnly(bool flag)'],['../classcatena_1_1lite_1_1ParamWithValue.html#a6c0b7b256618fb379517d2045a55ef0b',1,'catena::lite::ParamWithValue::readOnly() const override'],['../classcatena_1_1lite_1_1ParamWithValue.html#ae733b0ac8e5494a571f44f78dd2efbf4',1,'catena::lite::ParamWithValue::readOnly(bool flag) override']]],
+  ['reflect_2eh_192',['Reflect.h',['../Reflect_8h.html',1,'']]],
+  ['reflectable_5fstruct_193',['REFLECTABLE_STRUCT',['../Reflect_8h.html#a9b274f33c33554284d1f313feb2416ea',1,'Reflect.h']]],
+  ['reflectable_5fvariant_194',['REFLECTABLE_VARIANT',['../Reflect_8h.html#ad346b2f66f04a354a69385599f52d20b',1,'Reflect.h']]],
+  ['registerwithfactory_195',['registerWithFactory',['../classcatena_1_1full_1_1ConcreteArrayAccessor.html#a4d4e9db41edf01520ac3cc467ec17e36',1,'catena::full::ConcreteArrayAccessor']]],
+  ['resource_5fexhausted_196',['RESOURCE_EXHAUSTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64fd6888fcfd5d773add33e104f2c6f0',1,'catena']]],
+  ['rethrow_5fif_5fexception_197',['rethrow_if_exception',['../structcatena_1_1lite_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a330716a4a9414fdf5f84ba70aaf2895f',1,'catena::lite::Device::DeviceSerializer::promise_type']]],
+  ['return_5fvalue_198',['return_value',['../structcatena_1_1lite_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a866e674311e0a69e08b86843acef51ee',1,'catena::lite::Device::DeviceSerializer::promise_type']]]
 ];
