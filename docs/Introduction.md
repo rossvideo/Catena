@@ -1,5 +1,7 @@
 
-![Alt](images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # Introduction
 
@@ -25,6 +27,6 @@ It's useful to use the following model when encountering Catena for the first ti
 
 <div style="text-align: center">
 
-[Next Page: The Device Model](DeviceModel.md)
+[Next Page: The Device Model](DeviceModel.html)
 
 </div>
