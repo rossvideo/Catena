@@ -38,11 +38,10 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems target model
     endif()
     message(STATUS "Building Catena model for ${model} runtime optimizing for ${optimize_for}")
     set(preprocessed_files)
-    foreach(_proto ${proto_stems})
+    foreach(_stem ${proto_stems})
         # preprocess proto files
-        set(input "${catena_interface_dir}${_proto}.proto")
-        set(output "${out_dir}/preprocessed/${_proto}.proto")
-        message(STATUS "Preprocessing ${input} into ${output}")
+        set(input "${catena_interface_dir}${_stem}.proto")
+        set(output "${out_dir}/preprocessed/${_stem}.proto")
         
         add_custom_command(
             OUTPUT "${output}"
@@ -57,8 +56,7 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems target model
     endforeach()
     target_sources(${target} PRIVATE ${preprocessed_files})
     set(${target}_output ${preprocessed_files} PARENT_SCOPE)
-    message(STATUS "Preprocessed files: ${preprocessed_files}")
-endfunction()
+endfunction(preprocess_protobuf_files)
 
 # Function to install Catena codegen
 function(install_catena_codegen)
@@ -85,7 +83,7 @@ function(install_catena_codegen)
     set(CATENA_CODEGEN_INSTALL_DIR ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/node_modules/catena-codegen PARENT_SCOPE)
     
     install(FILES ${CMAKE_SOURCE_DIR}/CatenaCodegen.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp)
-endfunction()
+endfunction(install_catena_codegen)
 
 # Function to build the documentation for Catena
 function(build_docs)
