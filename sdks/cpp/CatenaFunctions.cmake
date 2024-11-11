@@ -130,12 +130,12 @@ function(build_docs)
         if(DOCS_ONLY)
             set(DOXYGEN_IS_IN_ALL ON)
         endif(DOCS_ONLY)
-        add_custom_target(doxygen ALL
-        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating documentation with Doxygen"
-        VERBATIM
-    )
+        add_custom_target(doxygen ${DOXYGEN_IS_IN_ALL}
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating documentation with Doxygen"
+            VERBATIM
+        )
     elseif(BUILD_DOC)
         message("Doxygen needs to be installed to generate the documentation")
     endif (DOXYGEN_FOUND AND BUILD_DOC)
