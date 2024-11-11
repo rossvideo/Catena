@@ -28,11 +28,14 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment ver
 
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
-# pull in Catena build functions
-include(${CMAKE_CURRENT_SOURCE_DIR}/CatenaFunctions.cmake)
+get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
+set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-get_filename_component(CODEGEN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../tools/codegen" ABSOLUTE) 
-get_filename_component(SCHEMA_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../schema" ABSOLUTE)
+# pull in Catena build functions
+include(${CATENA_CPP_ROOT_DIR}/CatenaFunctions.cmake)
+
+get_filename_component(CODEGEN_DIR "${CATENA_ROOT_DIR}/tools/codegen" ABSOLUTE) 
+get_filename_component(SCHEMA_LOCATION "${CATENA_ROOT_DIR}/schema" ABSOLUTE)
 
 # install node modules if it hasn't been done yet
 if(NOT EXISTS "${CODEGEN_DIR}/node_modules")
@@ -371,5 +374,7 @@ endif(gRPC_enabled)
 #   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
 # )
 
-# # Build the documentation with Doxygen
-# build_docs()
+endif(NOT ONLY_DOCS)
+
+# Build the documentation with Doxygen
+build_docs()

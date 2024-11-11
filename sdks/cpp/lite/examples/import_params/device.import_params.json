@@ -17,11 +17,11 @@
       "type": "STRUCT",
       "params": {
         "departure": {
-          "import": {"file": "params/param.city.json"}
+          "import": {"file": "params/param.ottawa.json"}
         },
         "destination": {
           "type": "STRUCT",
-          "template_oid": "city"
+          "template_oid": "/city"
         }
       },
       "value": {
@@ -44,8 +44,8 @@
                                 "struct_value": {
                                   "fields": {
                                     "degrees": {"value": {"int32_value": 48}},
-                                    "minutes": {"value": {"int32_value": 51}},
-                                    "seconds": {"value": {"int32_value": 29}}
+                                    "minutes": {"value": {"int32_value": 43}},
+                                    "seconds": {"value": {"float32_value": 49.1}}
                                   }
                                 }
                               }
@@ -55,8 +55,8 @@
                                 "struct_value": {
                                   "fields": {
                                     "degrees": {"value": {"int32_value": 2}},
-                                    "minutes": {"value": {"int32_value": 17}},
-                                    "seconds": {"value": {"int32_value": 40}}
+                                    "minutes": {"value": {"int32_value": 22}},
+                                    "seconds": {"value": {"float32_value": 22.1}}
                                   }
                                 }
                               }
