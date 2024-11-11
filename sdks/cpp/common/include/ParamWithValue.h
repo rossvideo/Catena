@@ -148,7 +148,7 @@ class ParamWithValue : public catena::common::IParam {
         if (!auth.readAuthz()) {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        catena::lite::toProto<T>(value, &value_.get(), auth);
+        toProto<T>(value, &value_.get(), auth);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
@@ -164,7 +164,7 @@ class ParamWithValue : public catena::common::IParam {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
         descriptor_.toProto(param, auth);        
-        catena::lite::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        toProto<T>(*param.mutable_value(), &value_.get(), auth);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
@@ -181,7 +181,7 @@ class ParamWithValue : public catena::common::IParam {
         if (!auth.writeAuthz()) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
         } else {
-            catena::lite::fromProto<T>(value, &value_.get(), auth);
+            fromProto<T>(value, &value_.get(), auth);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }
     }

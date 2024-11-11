@@ -160,6 +160,8 @@ if (gRPC_enabled)
   set_up_gRPC_targets()
 endif(gRPC_enabled)
 
+add_subdirectory("common")
+
 
 
 

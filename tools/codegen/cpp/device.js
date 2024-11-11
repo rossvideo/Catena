@@ -88,7 +88,7 @@ function subscriptionsArg(desc) {
 
 
 /**
- * Create constructor arguments for catena::lite::Device object
+ * Create constructor arguments for catena::common::Device object
  * @param {object} desc device descriptor
  */
 class Device extends CppCtor {

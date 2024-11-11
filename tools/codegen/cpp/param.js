@@ -143,7 +143,7 @@ function jpointerArg(desc) {
 
 class Param extends CppCtor {
   /**
-   * Create constructor arguments for catena::lite::Param object
+   * Create constructor arguments for catena::common::Param object
    * @param {Array} parentOid array of ancestors' oids
    * @param {string} oid object id of the param being processed
    * @param {object} desc descriptor of parent object

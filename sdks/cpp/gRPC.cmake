@@ -81,11 +81,11 @@ function(set_up_gRPC_targets)
 
     message(STATUS "grpc_preprocessor_target_output: ${grpc_preprocessor_target_output}")
 
-    # gRPC needs a couple of extra files that need to be flagged as generated and required
+    # gRPC needs a couple of extra files that need to be flagged as interface and required
     # by the grpc_service target
     set(extra_files
-        "${GRPC_SERVICE_DIR}/generated/service.grpc.pb.h"
-        "${GRPC_SERVICE_DIR}/generated/service.grpc.pb.cc"
+        "${GRPC_SERVICE_DIR}/interface/service.grpc.pb.h"
+        "${GRPC_SERVICE_DIR}/interface/service.grpc.pb.cc"
     )
     set_source_files_properties(${extra_files} PROPERTIES GENERATED TRUE)
   
@@ -113,7 +113,7 @@ function(set_up_gRPC_targets)
     protobuf_generate(
         TARGET ${GRPC_TARGET}
         APPEND_PATH FALSE
-        PROTOC_OUT_DIR ${GRPC_SERVICE_DIR}/generated
+        PROTOC_OUT_DIR ${GRPC_SERVICE_DIR}/interface
         IMPORT_DIRS ${GRPC_SERVICE_DIR}/preprocessed
         PROTOS ${grpc_preprocessor_target_output}
         OUT_VAR cpp_sources
@@ -125,7 +125,7 @@ function(set_up_gRPC_targets)
         LANGUAGE grpc
         GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
         APPEND_PATH FALSE
-        PROTOC_OUT_DIR ${GRPC_SERVICE_DIR}/generated
+        PROTOC_OUT_DIR ${GRPC_SERVICE_DIR}/interface
         PLUGIN "protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}"
         OUT_VAR output
     )
@@ -154,4 +154,9 @@ function(set_up_gRPC_targets)
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
+
+    # put the target and its directory in parent scope
+    set(GRPC_TARGET ${GRPC_TARGET} PARENT_SCOPE)
+    set(GRPC_SERVICE_DIR ${GRPC_SERVICE_DIR} PARENT_SCOPE)
+
 endfunction(set_up_gRPC_targets)
