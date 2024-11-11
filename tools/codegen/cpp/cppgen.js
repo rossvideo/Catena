@@ -215,7 +215,7 @@ class CppGen {
       if (p.isArrayType()) {
         type = p.objectType();
         elementType = templateParam.typeName();
-        if (p.isStructType()) {          
+        if (p.isStructType()) {
           hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
         }
       } else {
@@ -272,7 +272,7 @@ class CppGen {
       hloc(`struct ${type} {`, hindent++);
 
       parentStructInfo.params = {};
-      this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
+      this.params(parentOid + `/${oid}`, desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
 
       hloc(`using isCatenaStruct = void;`, hindent);
       hloc(`};`, --hindent);
@@ -280,7 +280,7 @@ class CppGen {
         hloc(`${type} ${name};`, hindent);
       }
     } else if (isStructChild) {
-      if (p.hasValue() ) {
+      if (p.hasValue()) {
         // add default value to struct member
         hloc(`${type} ${name} = ${p.initializer(desc[oid])};`, hindent);
       } else {
@@ -316,7 +316,7 @@ class CppGen {
     ploc(`template<>`);
     ploc(`struct catena::lite::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
     ploc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
-    
+
     const keys = Object.keys(structInfo.params);
     const lastIndex = keys.length - 1;
 
@@ -333,7 +333,7 @@ class CppGen {
       if (index !== lastIndex) {
         fieldInfoType += `, `;
         fieldInfoInit += `, `;
-      } 
+      }
     });
     ploc(`using Type = std::tuple<${fieldInfoType}>;`, bindent);
     ploc(`static constexpr Type fields = {${fieldInfoInit}};`, bindent);
@@ -373,11 +373,11 @@ class CppGen {
     let c = new Constraint(parentOid, oid, desc);
     let args = c.argsToString();
     let constraintType = c.objectType();
-    let cname = c.constraintName(); 
+    let cname = c.constraintName();
     bloc(`catena::lite::${constraintType} ${cname}Constraint {${args}};`);
     return `${cname}Constraint`;
   }
-  
+
   /**
    * 
    * @param {string} fully qualified object id
@@ -396,17 +396,17 @@ class CppGen {
 
   languagePacks() {
     let languagePacks = new LanguagePacks(this.desc);
-    let packs = languagePacks.getLanguagePacks();    
-    bloc (`using catena::lite::LanguagePack;`);
+    let packs = languagePacks.getLanguagePacks();
+    bloc(`using catena::lite::LanguagePack;`);
     for (let pack in packs) {
       let lang = packs[pack];
-      bloc(`LanguagePack ${pack} {`);
-      bloc(`"${lang.name}",`,1);
       let keyWordPairs = Object.keys(lang.words);
-      bloc(`{`,1);
-      bloc(keyWordPairs.map((key) => {return `{ "${key}", "${lang.words[key]}" }`}).join(",\n    "),2);
-      bloc(`},`,1);
-      bloc(`dm`,1);
+      bloc(`LanguagePack ${pack} {`);
+      bloc(`"${lang.name}",`, 1);
+      bloc(`{`, 1);
+      bloc(keyWordPairs.map((key) => { return `{ "${key}", "${lang.words[key]}" }` }).join(",\n    "), 2);
+      bloc(`},`, 1);
+      bloc(`dm`, 1);
       bloc(`};`);
     }
   }
@@ -417,33 +417,24 @@ class CppGen {
 
     let menuGroups = this.desc.menu_groups;
     for (let group in menuGroups) {
-      let groupNamePairs = Object.keys(this.desc.menu_groups[group].name.display_strings);
-      bloc(`MenuGroup _${group}Group {"${group}", {${groupNamePairs.map((key) => {return `{ "${key}", "${this.desc.menu_groups[group].name.display_strings[key]}" }`})}}, dm};`);
+      let groupName = menuGroups[group].name.display_strings;
+      let groupNamePairs = Object.keys(groupName);
+      bloc(`MenuGroup _${group}Group {\n  "${group}", `);
+      bloc(`  {\n    ${groupNamePairs.map((key) => { return `{ "${key}", "${groupName[key]}" }` }).join(",\n    ")}`);
+      bloc(`  },\n  dm\n};`);
       
-      for (let menu in this.desc.menu_groups[group].menus) {
-        let menuNamePairs = Object.keys(this.desc.menu_groups[group].menus[menu].name.display_strings);
-
-        bloc(`Menu _${menu}Menu {{${menuNamePairs.map((key) => {return `{ "${key}", "${this.desc.menu_groups[group].menus[menu].name.display_strings[key]}" }`})}}, false, false, {${this.desc.menu_groups[group].menus[menu].param_oids.map(oid => `"${oid}"`).join(", ")}}, {}, {}, "${menu}", _${group}Group};`);
+      let menus = menuGroups[group].menus;
+      for (let menu in menus) {
+        let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
+        let menuName = menus[menu].name.display_strings;
+        let menuNamePairs = Object.keys(menuName);
+        bloc(`Menu _${menu}Menu {\n  {    `);
+        bloc(`${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
+        bloc(`  false, false, `);
+        bloc(`  {${paramOids}}, `);
+        bloc(`  {}, {}, "${menu}", _${group}Group\n};`);
       }
     }
-
-    // let configGroup = this.desc.menu_groups.config;
-    // for (let menu in configGroup.menus.config) {
-    //   bloc(`Menu ${menu.name} {${menu.name}, ${this.desc.menu_groups.config.name.display_strings}, false, false, ${menu.param_oids}, {}, {}, ${menu.name}, ${configGroup.name}};`);
-    // }
-    
-
-    // // Generate MenuGroup for Status
-    // bloc(`MenuGroup _statusGroup {"status", {{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, dm};`);
-    
-    // // Generate Menu for Status
-    // bloc(`Menu _statusMenu {{{"en", "Status"}, {"es", "Estado"}, {"fr", "Statut"}}, false, false, {"/counter", "/hello"}, {}, {}, "Status", _statusGroup};`);
-    
-    // // Generate MenuGroup for Config
-    // bloc(`MenuGroup _configGroup {"config", {{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, dm};`);
-    
-    // // Generate Menu for Config
-    // bloc(`Menu _configMenu {{{"en", "Config"}, {"es", "Configuración"}, {"fr", "Configuration"}}, false, false, {"/offset", "/button"}, {}, {}, "Config", _configGroup};`);
 
   }
 

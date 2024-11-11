@@ -47,24 +47,6 @@ Menu::Menu(const catena::lite::PolyglotText::ListInitializer name, bool hidden, 
 }
 
 
-// void Menu::fromProto(const ::catena::Menu& menu) {
-//     name_ = menu.name();
-//     hidden_ = menu.hidden();
-//     disabled_ = menu.disabled();
-//     param_oids_.clear();
-//     command_oids_.clear();
-//     client_hints_.clear();
-//     for (const auto& oid : menu.param_oids()) {
-//         param_oids_.push_back(oid);
-//     }
-//     for (const auto& oid : menu.command_oids()) {
-//         command_oids_.push_back(oid);
-//     }
-//     for (const auto& [key, value] : menu.client_hints()) {
-//         client_hints_[key] = value;
-//     }
-// }
-
 void Menu::toProto(::catena::Menu& menu) const {
     name_.toProto(*menu.mutable_name());
     menu.set_hidden(hidden_);

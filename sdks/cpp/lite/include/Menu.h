@@ -48,17 +48,11 @@
 #include <vector>
 
 
-// Forward declaration of MenuGroup
-namespace catena {
-namespace lite {
-class MenuGroup;
-} // namespace lite
-} // namespace catena
 
 namespace catena {
 namespace lite {
 
-class Menu;  // forward declaration
+class MenuGroup; // forward declaration
 
 /**
  * @brief A device menu
@@ -119,11 +113,6 @@ class Menu : public common::IMenu {
          const PairInitializer& client_hints, 
          std::string oid, catena::lite::MenuGroup& menuGroup);
 
-    // /**
-    //  * @brief deserialize a menu from a protobuf message
-    //  * @param menu the protobuf message
-    //  */
-    // void fromProto(const ::catena::Menu& menu) override;
 
     /**
      * @brief serialize a menu to a protobuf message

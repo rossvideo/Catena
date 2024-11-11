@@ -38,17 +38,6 @@
 using namespace catena::lite;
 using catena::common::MenuGroupTag;
 
-// void MenuGroup::fromProto(const ::catena::MenuGroup& menuGroup) {
-//     for (auto& [lang, srcName] : name_.displayStrings()) {
-//         std::string dstName;
-//         dstName = menuGroup.name().display_strings().at(lang);
-//         name_.setDisplayString(lang, dstName);
-//     }
-//     for (const auto& [oid, srcMenu] : menuGroup.menus()) {
-//         Menu& dstMenu = menus_[oid];
-//         dstMenu.fromProto(srcMenu);
-//     }
-// }
 
 void MenuGroup::toProto(::catena::MenuGroup& menuGroup) const {
     for (const auto& [lang, name] : name_.displayStrings()) {

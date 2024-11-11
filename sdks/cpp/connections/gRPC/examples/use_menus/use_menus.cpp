@@ -15,11 +15,12 @@
 //
 
 /**
- * @brief Example program to demonstrate setting up a full Catena service.
- * @file status_update.cpp
+ * @brief Example program to demonstrate setting up a Catena service using menus.
+ * @file use_menus.cpp
  * @copyright Copyright © 2024 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
+ * @author Ben Mostafa (ben.mostafa@rossvideo.com)
  */
 
 // device model

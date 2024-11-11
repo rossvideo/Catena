@@ -94,11 +94,6 @@ class MenuGroup : public common::IMenuGroup {
         dev.addItem<common::MenuGroupTag>(oid, this);
     }
 
-    // /**
-    //  * @brief deserialize a menu group from a protobuf message
-    //  * @param menuGroup the protobuf message
-    //  */
-    // void fromProto(const ::catena::MenuGroup& menuGroup) override;
 
     /**
      * @brief serialize a menu group to a protobuf message
