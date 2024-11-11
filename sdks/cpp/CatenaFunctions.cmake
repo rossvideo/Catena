@@ -121,16 +121,22 @@ function(build_docs)
         configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
 
         # Creates a target 'doxygen' to generate the documentation.
-        # Run 'make doxygen' in the output directory to build the target.
-        add_custom_target(doxygen
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Generating documentation with Doxygen"
-            VERBATIM
-        )
-
-
+        # If DOCS_ONLY is set, the target is added to ALL so that it will build
+        # from a simple invocation of the generator - e.g. $ ninja.
+        # Otherswise, it isn't added to ALL because we're more than likely
+        # in a code-test-fix workflow and don't want to waste time generating
+        # documentation.
+        set(DOXYGEN_IS_IN_ALL OFF)
+        if(DOCS_ONLY)
+            set(DOXYGEN_IS_IN_ALL ON)
+        endif(DOCS_ONLY)
+        add_custom_target(doxygen ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating documentation with Doxygen"
+        VERBATIM
+    )
     elseif(BUILD_DOC)
         message("Doxygen needs to be installed to generate the documentation")
     endif (DOXYGEN_FOUND AND BUILD_DOC)
-endfunction()
+endfunction(build_docs)
