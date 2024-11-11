@@ -178,6 +178,24 @@ class CppGen {
     bloc(""); // blank line
   }
 
+  importParam(importArg) {
+    if ("file" in importArg) {
+      const importDir = path.dirname(this.pathname);
+      const importPath = `${importDir}/${importArg.file}`;
+      if (!fs.existsSync(importPath)) {
+        throw new Error(`Cannot open file at ${importArg.file}`);
+      }
+      const importData = JSON.parse(fs.readFileSync(importPath));
+      if (!this.validator.validateParam(importData)) {
+        throw new Error(`Imported data is not valid`);
+      }
+      return importData;
+
+    } else {
+      throw new Error(`Unsupported import type: ${importArg}`);
+    }
+  }
+
   /**
    *
    * @param {string} parentOid full object id of the param's parent
@@ -192,6 +210,12 @@ class CppGen {
       for (let oid in desc[subField]) {
         let structInfo = isTopLevel ? {} : parentStructInfo;
         structInfo[oid] = {};
+        let fieldDesc = desc[subField][oid];
+
+        if ("import" in fieldDesc) {
+          desc[subField][oid] = this.importParam(fieldDesc.import);
+        }
+
         this.subparam(parentOid, oid, typeNamespace, desc[subField], structInfo[oid], isStructChild, isCommand);
         if (isTopLevel && structInfo[oid].params) {
           for (let type in structInfo) {
@@ -276,10 +300,8 @@ class CppGen {
 
       hloc(`using isCatenaStruct = void;`, hindent);
       hloc(`};`, --hindent);
-      if (isStructChild) {
-        hloc(`${type} ${name};`, hindent);
-      }
-    } else if (isStructChild) {
+    } 
+    if (isStructChild) {
       if (p.hasValue() ) {
         // add default value to struct member
         hloc(`${type} ${name} = ${p.initializer(desc[oid])};`, hindent);

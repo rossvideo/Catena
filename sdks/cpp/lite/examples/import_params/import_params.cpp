@@ -28,13 +28,15 @@
  * @author john.naylor@rossvideo.com
  * @brief Demo's a device model that uses imported params
  *
- * The buisness logic here is the same as use_structs.cpp, but the json device model uses imported params.
+ * On the C++ side, imported params are identical to params that are defined in the device file.
+ * 
+ * This example aims to give more detail on how default values can be set for subparams of a struct.
  *
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // device model
-#include "device.tree.json.h"
+#include "device.import_params.json.h"
 
 
 // lite
@@ -47,74 +49,49 @@
 
 using namespace catena::lite;
 using namespace catena::common;
-using namespace use_structs;
+using namespace import_params;
 using catena::common::ParamTag;
 #include <iostream>
+
+std::string locationToString(const City::Location& location) {
+    return "Lat:" +
+           std::to_string(location.latitude.degrees) + "°" +
+           std::to_string(location.latitude.minutes) + "'" +
+           std::to_string(location.latitude.seconds) + "''" +
+              ", Long:" +
+           std::to_string(location.longitude.degrees) + "°" +
+           std::to_string(location.longitude.minutes) + "'" +
+           std::to_string(location.longitude.seconds) + "''" +
+           "";
+}
+
 int main() {
     // lock the model
     Device::LockGuard lg(dm);
     catena::exception_with_status err{"", catena::StatusCode::OK};
 
-    std::unique_ptr<IParam> ip = dm.getParam("/location", err);
-    if (ip == nullptr) {
+    /**
+     * In the device model, plane_ticket has a value so it was added as a param to the device. The departure
+     * subparam of plane_ticket was left undefined in the plane_ticket value so it was initialized with the value
+     * defined within the departure subparam (defined in "params/param.ottawa.json")
+     */
+    std::unique_ptr<catena::common::IParam> p = dm.getParam("/plane_ticket", err);
+    if (p == nullptr){
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
-    Location& loc = locationParam.get();
+    Plane_ticket& plane_ticket = getParamValue<Plane_ticket>(p.get());
+    std::cout << "Departure: " << plane_ticket.departure.name << " (" << locationToString(plane_ticket.departure.location) << ")" << std::endl;
+    std::cout << "Destination: " << plane_ticket.destination.name << " (" << locationToString(plane_ticket.destination.location) << ")\n" << std::endl;
 
-    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
-
-    catena::Value value;
-    std::string clientScope = "operate";
-    ip->toProto(value, clientScope);
-    std::cout << "Location: " << value.DebugString() << std::endl;
-
-    // this line is for demonstrating the fromProto method
-    // this should never be done in a real device
-    value.mutable_struct_value()
-      ->mutable_fields()
-      ->at("latitude")
-      .mutable_value()
-      ->mutable_struct_value()
-      ->mutable_fields()
-      ->at("degrees")
-      .mutable_value()
-      ->set_float32_value(100);
-    ip->fromProto(value, clientScope);
-
-    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
-
-    ip = dm.getParam("/location/latitude", err);
-    if (ip == nullptr) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-    value.Clear();
-    ip->toProto(value, clientScope);
-    std::cout << "Latitude: " << value.DebugString() << std::endl;
-
-    ip = dm.getParam("/location/latitude/degrees", err);
-    if (ip == nullptr) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-    value.Clear();
-    ip->toProto(value, clientScope);
-    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
-
-    ip = dm.getParam("/location/longitude/seconds", err);
-    if (ip == nullptr) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-    value.Clear();
-    ip->toProto(value, clientScope);
-    std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
+    /**
+     * When a new Plane_ticket is created, the departure subparam is initialized with the value defined in the 
+     * departure param. Destination does not have a default value so its name is left empty and its location is
+     * the default value defined in the location param.
+     */
+    Plane_ticket new_plane_ticket;
+    std::cout << "Departure: " << new_plane_ticket.departure.name << " (" << locationToString(new_plane_ticket.departure.location) << ")" << std::endl;
+    std::cout << "Destination: " << new_plane_ticket.destination.name << " (" << locationToString(new_plane_ticket.destination.location) << ")\n" << std::endl;
 
     return EXIT_SUCCESS;
 }

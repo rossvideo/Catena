@@ -48,9 +48,23 @@ using namespace use_templates;
 int main() {
     // lock the model
     Device::LockGuard lg(dm);
-
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> ip = dm.getParam("/ottawa", ans);
+    std::unique_ptr<IParam> ip;
+
+    /**
+     * '/city' is not added to the device model because it is a top level param without a value. Calling getParam on it 
+     * will return nullptr.
+     */
+    ip = dm.getParam("/city", ans);
+    if (ip == nullptr){
+        // /city Param does not exist
+        std::cout << "/city " << ans.what() << std::endl;
+    }
+
+    /**
+     * '/ottawa' is templated on '/city' so it will have the same type as '/city'. It has a value so it will be added to the device model.
+     */
+    ip = dm.getParam("/ottawa", ans);
     if (ip == nullptr){
         std::cerr << "Error: " << ans.what() << std::endl;
         return EXIT_FAILURE;

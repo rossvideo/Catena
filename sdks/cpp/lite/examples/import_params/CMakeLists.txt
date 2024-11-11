@@ -29,9 +29,12 @@ add_executable(${TARGET})
 
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
+file(GLOB PARAMS ${CMAKE_CURRENT_SOURCE_DIR}/params/*.json)
+
 generate_catena_device(
     DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
     TARGET ${TARGET}
+    IMPORTED_PARAMS ${PARAMS}
 )
 
 target_sources(${TARGET}
