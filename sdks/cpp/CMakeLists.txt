@@ -34,6 +34,13 @@ set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # pull in Catena build functions
 include(${CATENA_CPP_ROOT_DIR}/CatenaFunctions.cmake)
 
+# if only building the documentation, then do that and return
+option(ONLY_DOCS "Only build the documentation" OFF)
+if (ONLY_DOCS)
+  build_docs()
+  return()
+endif(ONLY_DOCS)
+
 get_filename_component(CODEGEN_DIR "${CATENA_ROOT_DIR}/tools/codegen" ABSOLUTE) 
 get_filename_component(SCHEMA_LOCATION "${CATENA_ROOT_DIR}/schema" ABSOLUTE)
 
@@ -61,13 +68,12 @@ include(GNUInstallDirs)
 # Assumption: gRPC and all its dependencies are already installed
 # on this system, so they can be located by find_package().
 
-
 if (WIN32)
   # Windows toolchain and prefix_path are set through command line
   # nothing to do here
 else()
   # set options for linux, and mac
-
+  # nothing to do here, so why not delete this block?
 endif(WIN32)
 
 if (APPLE)
@@ -79,45 +85,6 @@ if (APPLE)
   include_directories("$ENV{HOME}/.local/include")
   set(CPP_OPTS -E -x c -P)
 endif (APPLE)
-
-# if only building the documentation, then do that and return
-option(ONLY_DOCS "Only build the documentation" OFF)
-if (ONLY_DOCS)
-  build_docs()
-  return()
-endif(ONLY_DOCS)
-
-set(protobuf_MODULE_COMPATIBLE TRUE)
-find_package(Protobuf CONFIG REQUIRED)
-message(STATUS "Using protobuf ${Protobuf_VERSION}")
-
-# It's cleaner to use the imported targets, so let's do that
-# set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
-# set(_PROTOBUF_LIBPROTOBUF_LITE protobuf::libprotobuf-lite)
-# set(_REFLECTION gRPC::grpc++_reflection)
-if(CMAKE_CROSSCOMPILING)
-
-  # Change protobuf::protoc to reference the protoc executable found on the host system
-  find_program(_PROTOBUF_PROTOC protoc REQUIRED)
-  get_target_property(protoc_config protobuf::protoc IMPORTED_CONFIGURATIONS)
-  set_target_properties(protobuf::protoc PROPERTIES IMPORTED_LOCATION_${protoc_config} ${_PROTOBUF_PROTOC})
-  get_target_property(imported_location protobuf::protoc IMPORTED_LOCATION_${protoc_config})
-  message(STATUS "Using protoc compiler: ${imported_location}")
-else()
-  set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
-endif()
-
-
-# Find gRPC installation
-# Looks for gRPCConfig.cmake file installed by gRPC's cmake installation.
-find_package(gRPC CONFIG REQUIRED)
-message(STATUS "Using gRPC ${gRPC_VERSION}")
-
-if(CMAKE_CROSSCOMPILING)
-  find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
-else()
-  set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
-endif()
 
 # find the c preprocessor and set the options to use with it
 if (APPLE)
@@ -133,7 +100,6 @@ else()
   message(STATUS "CPP = ${CPP}")
 endif()
 
-
 # Check for invalid connection types
 set(ALLOWED_CONNECTIONS "gRPC;REST")
 foreach(conn ${CONNECTIONS})
@@ -143,7 +109,7 @@ foreach(conn ${CONNECTIONS})
   endif()
 endforeach()
 
-# create flags _gRPC, _REST, _WSS to indicate which connections are enabled
+# create enabled flags for gRPC, REST and WSS to indicate which connections are enabled
 message(STATUS "Connections: ${CONNECTIONS}")
 list(FIND CONNECTIONS "gRPC" _gRPC)
 list(FIND CONNECTIONS "REST" _REST)
@@ -167,13 +133,10 @@ if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
   return()
 endif()
 
-# set up our target
-set(REST_TARGET "rest_proto_interface")
-set(GRPC_TARGET "grpc_service") 
-
-# set up directories for each target
-set(REST_INTERFACE_DIR  "${CMAKE_BINARY_DIR}/${REST_TARGET}")
-set(GRPC_SERVICE_DIR "${CMAKE_BINARY_DIR}/${GRPC_TARGET}")
+# find the protobuf package; needed by all connection types
+set(protobuf_MODULE_COMPATIBLE TRUE)
+find_package(Protobuf CONFIG REQUIRED)
+message(STATUS "Using protobuf ${Protobuf_VERSION}")
 
 # Locate the input proto files
 set (relative_interface "../../interface/")
@@ -191,104 +154,31 @@ set(interface_proto_stems
   "menu"
 )
 
-# create a list for grpc proto files which includes service.proto
-if(gRPC_enabled)
-  set(grpc_proto_stems ${interface_proto_stems})
-  list(APPEND grpc_proto_stems "service")
-endif()
+# conditionally set up the gRPC targets
+if (gRPC_enabled)
+  include(${CATENA_CPP_ROOT_DIR}/gRPC.cmake)
+  set_up_gRPC_targets()
+endif(gRPC_enabled)
 
+
+
+
+
+
+
+
+
+
+
+
+
+# set up our target
+set(REST_TARGET "rest_proto_interface")
+
+# set up directories for each target
+set(REST_INTERFACE_DIR  "${CMAKE_BINARY_DIR}/${REST_TARGET}")
 
 # add_library(${REST_TARGET} STATIC)
-add_library(${GRPC_TARGET} STATIC)
-
-
-# preprocess the proto files and add them to the various interface folders
-if(gRPC_enabled)
-
-  # Create a custom target for preprocessing protobuf files
-    add_custom_target(grpc_preprocessor_target
-    COMMAND ${CMAKE_COMMAND} -E echo "Preprocessing protobuf files"
-  )
-
-  # Make protobuf_generate depend on preprocess_protobuf_files_target
-  add_dependencies(${GRPC_TARGET} grpc_preprocessor_target)
-  target_compile_features(${GRPC_TARGET} PUBLIC cxx_std_20)
-
-  # Process the proto files, produces list called grpc_preprocessor_target_output
-  preprocess_protobuf_files(
-    "${catena_interface_dir}"
-    "${grpc_proto_stems}"
-    "grpc_preprocessor_target"
-    "lite"
-    "${GRPC_SERVICE_DIR}"
-  )
-  
-  # gRPC needs a couple of extra files that need to be flagged as generated and required
-  # by the grpc_service target
-  set(extra_files
-    "${GRPC_SERVICE_DIR}/generated/service.grpc.pb.h"
-    "${GRPC_SERVICE_DIR}/generated/service.grpc.pb.cc"
-  )
-  set_source_files_properties(${extra_files} PROPERTIES GENERATED TRUE)
-  list(APPEND grpc_preprocessor_target_output ${extra_files})
-
-  # Specify source files for the grpc_service target
-  target_sources(${GRPC_TARGET} PRIVATE ${grpc_preprocessor_target_output})
-
-  # Specify location of output library
-  set_target_properties(${GRPC_TARGET} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${GRPC_SERVICE_DIR}/lib"
-    LIBRARY_OUTPUT_DIRECTORY "${GRPC_SERVICE_DIR}/lib"
-  )
-
-  target_link_libraries(${GRPC_TARGET} PUBLIC protobuf::libprotobuf-lite gRPC::grpc++)
-
-  # use the protobuf generate function provided by the protobuf package to make the c++ source files
-  protobuf_generate(
-    TARGET ${GRPC_TARGET}
-    APPEND_PATH FALSE
-    PROTOC_OUT_DIR ${GRPC_SERVICE_DIR}/generated
-    IMPORT_DIRS ${GRPC_SERVICE_DIR}/preprocessed
-    OUT_VAR grpc_generated_sources
-  )
-
-  # generate the extra files for the grpc_service target
-  protobuf_generate(
-    PROTOS ${GRPC_SERVICE_DIR}/preprocessed/service.proto
-    LANGUAGE grpc
-    GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
-    APPEND_PATH FALSE
-    PROTOC_OUT_DIR ${GRPC_SERVICE_DIR}/generated
-    PLUGIN "protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-    OUT_VAR output
-  )
-
-  # Filter header files from grpc_generated_sources
-  set(grpc_header_files)
-  foreach(_file ${grpc_generated_sources})
-    if(_file MATCHES "\\.h$")
-      list(APPEND grpc_header_files ${_file})
-    endif()
-  endforeach()
-
-  target_include_directories(
-    ${GRPC_TARGET} PUBLIC
-    # $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
-    # $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${GRPC_TARGET}>
-  )
-
-  # install the header files
-  install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${GRPC_TARGET})
-
-  # install the library
-  install(TARGETS ${proto_interface}
-    EXPORT Catena_cppTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
-
-endif(gRPC_enabled)
 
 # # if (REST_enabled)
 # #   preprocess_protobuf_files("${catena_interface_dir}" "${interface_proto_stems}" "${FULL_INTERFACE}" "full")
@@ -377,3 +267,8 @@ endif(gRPC_enabled)
 
 # Build the documentation with Doxygen
 build_docs()
+
+# It's cleaner to use the imported targets, so let's do that
+# set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
+# set(_PROTOBUF_LIBPROTOBUF_LITE protobuf::libprotobuf-lite)
+# set(_REFLECTION gRPC::grpc++_reflection)
