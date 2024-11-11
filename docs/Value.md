@@ -1,4 +1,6 @@
-![Alt](images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # Value Objects
 
@@ -79,6 +81,7 @@ This is an example of a parameter with a multiply nested data structure.
 Happily, the C++ SDK hides this complexity from the device developer. The parameter shown above can be accessed as a Plain Old Data Structure (PODS) like this:
 
 ```cpp
+{% raw %}
 // use reflection to build accessors to the struct members
 // the macro creates the following PODS:
 // struct Coords {
@@ -107,10 +110,11 @@ std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << 
             << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
             << '\n';
 locParam->setValue(loc);
+{% endraw %}
 ```
 
 <div style="text-align: center">
 
-[Next Page: Variants](Variants.md)
+[Next Page: Variants](Variants.html)
 
 </div>

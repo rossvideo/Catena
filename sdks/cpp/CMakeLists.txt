@@ -77,34 +77,33 @@ if (APPLE)
   set(CPP_OPTS -E -x c -P)
 endif (APPLE)
 
-get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
-set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+option(ONLY_DOCS "Only build the documentation" OFF)
 
-# Find Protobuf installation
-# Looks for protobuf-config.cmake file installed by Protobuf's cmake installation.
-set(protobuf_MODULE_COMPATIBLE TRUE)
-find_package(Protobuf CONFIG REQUIRED)
-message(STATUS "Using protobuf ${Protobuf_VERSION}")
+if(NOT ONLY_DOCS)
+  set(protobuf_MODULE_COMPATIBLE TRUE)
+  find_package(Protobuf CONFIG REQUIRED)
+  message(STATUS "Using protobuf ${Protobuf_VERSION}")
+
+  set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
+  set(_PROTOBUF_LIBPROTOBUF_LITE protobuf::libprotobuf-lite)
+  set(_REFLECTION gRPC::grpc++_reflection)
+  if(CMAKE_CROSSCOMPILING)
+
+    # Change protobuf::protoc to reference the protoc executable found on the host system
+    find_program(_PROTOBUF_PROTOC protoc REQUIRED)
+    get_target_property(protoc_config protobuf::protoc IMPORTED_CONFIGURATIONS)
+    set_target_properties(protobuf::protoc PROPERTIES IMPORTED_LOCATION_${protoc_config} ${_PROTOBUF_PROTOC})
+    get_target_property(imported_location protobuf::protoc IMPORTED_LOCATION_${protoc_config})
+    message(STATUS "Using protoc compiler: ${imported_location}")
+  else()
+    set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
+  endif()
 
 
-set(_REFLECTION gRPC::grpc++_reflection)
-if(CMAKE_CROSSCOMPILING)
-
-  # Change protobuf::protoc to reference the protoc executable found on the host system
-  find_program(_PROTOBUF_PROTOC protoc REQUIRED)
-  get_target_property(protoc_config protobuf::protoc IMPORTED_CONFIGURATIONS)
-  set_target_properties(protobuf::protoc PROPERTIES IMPORTED_LOCATION_${protoc_config} ${_PROTOBUF_PROTOC})
-  get_target_property(imported_location protobuf::protoc IMPORTED_LOCATION_${protoc_config})
-  message(STATUS "Using protoc compiler: ${imported_location}")
-else()
-  set(_PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
-endif()
-
-
-# Find gRPC installation
-# Looks for gRPCConfig.cmake file installed by gRPC's cmake installation.
-find_package(gRPC CONFIG REQUIRED)
-message(STATUS "Using gRPC ${gRPC_VERSION}")
+  # Find gRPC installation
+  # Looks for gRPCConfig.cmake file installed by gRPC's cmake installation.
+  find_package(gRPC CONFIG REQUIRED)
+  message(STATUS "Using gRPC ${gRPC_VERSION}")
 
 if(CMAKE_CROSSCOMPILING)
   find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin)
@@ -112,52 +111,52 @@ else()
   set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 endif()
 
-# find the c preprocessor and set the options to use with it
-if (APPLE)
-  set(CPP clang)
-  set(cpp_opts -E -P -x c)
-else()
-  find_program(CPP cpp)
-  set(cpp_opts -P -C)
-endif(APPLE)
-if (NOT CPP)
-  message(FATAL_ERROR "CPP not set")
-else()
-  message(STATUS "CPP = ${CPP}")
-endif()
-
-
-# Check for invalid connection types
-set(ALLOWED_CONNECTIONS "gRPC;REST")
-foreach(conn ${CONNECTIONS})
-  list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
-  if(${_IDX} EQUAL -1)
-    message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
+  # find the c preprocessor and set the options to use with it
+  if (APPLE)
+    set(CPP clang)
+    set(cpp_opts -E -P -x c)
+  else()
+    find_program(CPP cpp)
+    set(cpp_opts -P -C)
+  endif(APPLE)
+  if (NOT CPP)
+    message(FATAL_ERROR "CPP not set")
+  else()
+    message(STATUS "CPP = ${CPP}")
   endif()
-endforeach()
 
-# create flags _gRPC, _REST, _WSS to indicate which connections are enabled
-message(STATUS "Connections: ${CONNECTIONS}")
-list(FIND CONNECTIONS "gRPC" _gRPC)
-list(FIND CONNECTIONS "REST" _REST)
-list(FIND CONNECTIONS "WSS" _WSS)
-if (${_gRPC} GREATER -1)
-  message(STATUS "gRPC connection enabled")
-  set(gRPC_enabled TRUE)
-endif()
-if (${_REST} GREATER -1)
-  message(STATUS "REST connection enabled")
-  set(REST_enabled TRUE)
-endif()
-if (${_WSS} GREATER -1)
-  message(STATUS "WSS connection enabled")
-  set(WSS_enabled TRUE)
-endif()
 
-# Check that at least one connection type is specified
-if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
-  message(FATAL_ERROR "Error: At least one connection type must be specified.")
-endif()
+  # Check for invalid connection types
+  set(ALLOWED_CONNECTIONS "gRPC;REST")
+  foreach(conn ${CONNECTIONS})
+    list(FIND ALLOWED_CONNECTIONS "${conn}" _IDX)
+    if(${_IDX} EQUAL -1)
+      message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
+    endif()
+  endforeach()
+
+  # create flags _gRPC, _REST, _WSS to indicate which connections are enabled
+  message(STATUS "Connections: ${CONNECTIONS}")
+  list(FIND CONNECTIONS "gRPC" _gRPC)
+  list(FIND CONNECTIONS "REST" _REST)
+  list(FIND CONNECTIONS "WSS" _WSS)
+  if (${_gRPC} GREATER -1)
+    message(STATUS "gRPC connection enabled")
+    set(gRPC_enabled TRUE)
+  endif()
+  if (${_REST} GREATER -1)
+    message(STATUS "REST connection enabled")
+    set(REST_enabled TRUE)
+  endif()
+  if (${_WSS} GREATER -1)
+    message(STATUS "WSS connection enabled")
+    set(WSS_enabled TRUE)
+  endif()
+
+  # Check that at least one connection type is specified
+  if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
+    message(FATAL_ERROR "Error: At least one connection type must be specified.")
+  endif()
 
 # set up our target
 set(REST_TARGET "rest_proto_interface")

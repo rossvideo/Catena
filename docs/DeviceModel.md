@@ -1,5 +1,7 @@
 
-![Alt](images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # The Device Model
 
@@ -50,6 +52,6 @@ This will cause incorrect code to be highlighted like this typo...
 
 <div style="text-align: center">
 
-[Next Page: Device Model Validation](Validation.md)
+[Next Page: Device Model Validation](Validation.html)
 
 </div>

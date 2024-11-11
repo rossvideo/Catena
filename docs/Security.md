@@ -1,4 +1,6 @@
-![alt](images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # Secure Communications
 
@@ -164,6 +166,6 @@ Rpc succeeded with OK status
 
 <div style="text-align: center">
 
-[The End. For Now](Index.md)
+[The End. For Now](index.html)
 
 </div>
