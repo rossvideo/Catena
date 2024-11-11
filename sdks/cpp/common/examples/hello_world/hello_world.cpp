@@ -16,7 +16,7 @@
 //
 
 /**
- * @file start_here.cpp
+ * @file hello_world.cpp
  * @author john.naylor@rossvideo.com
  * @brief Demonstrates how to create a trivially simple device model
  * and access a parameter within it from your business logic.
