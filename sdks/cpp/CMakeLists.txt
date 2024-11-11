@@ -163,7 +163,8 @@ endif()
 
 # Check that at least one connection type is specified
 if (NOT (gRPC_enabled OR REST_enabled OR WSS_enabled))
-  message(FATAL_ERROR "Error: At least one connection type must be specified.")
+  message(ERROR "Error: At least one connection type must be specified.")
+  return()
 endif()
 
 # set up our target
@@ -373,8 +374,6 @@ endif(gRPC_enabled)
 #     ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
 #   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
 # )
-
-endif(NOT ONLY_DOCS)
 
 # Build the documentation with Doxygen
 build_docs()
