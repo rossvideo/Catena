@@ -160,7 +160,13 @@ if (gRPC_enabled)
   set_up_gRPC_targets()
 endif(gRPC_enabled)
 
+if (REST_enabled)
+  include(${CATENA_CPP_ROOT_DIR}/proto_interface.cmake)
+  set_up_proto_targets()
+endif(REST_enabled)
+
 add_subdirectory("common")
+add_subdirectory("connections")
 
 
 

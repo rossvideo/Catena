@@ -41,5 +41,10 @@ if (gRPC_enabled)
     cmake_catena_grpc_common()
 endif(gRPC_enabled)
 
+if (REST_enabled)
+    include(proto_interface.cmake)
+    cmake_catena_proto_common()
+endif(REST_enabled)
+
 
 add_subdirectory(examples)
