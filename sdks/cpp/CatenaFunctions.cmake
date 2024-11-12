@@ -102,6 +102,9 @@ function(build_docs)
         set(gRPC_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/connections/grpc/examples)
         set(REST_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/connections/rest/examples)
         set(DOXYGEN_EXAMPLES_PATHS "${COMMON_EXAMPLES} ${gRPC_EXAMPLES} ${REST_EXAMPLES}")
+        set(VDK_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/common/include/vdk)
+        set(VDK_SRC ${CMAKE_CURRENT_SOURCE_DIR}/common/src/vdk)
+        set(DOXYGEN_EXCLUDE "${VDK_INCLUDE} ${VDK_SRC}")
 
         # find out if graphviz is installed
         if (DOXYGEN_DOT_EXECUTABLE STREQUAL "DOXYGEN_DOT_EXECUTABLE-NOTFOUND")
