@@ -34,10 +34,10 @@
 #include <IParam.h> // catena::common::IParam
 #include <Tags.h> // catena::common::Device::ParamTag
 
-// these includes are from the LITE SDK, they're in the SOURCE
+// these includes are from the SDK, they're in the SOURCE
 // folder structure.
-#include <Device.h> // catena::lite::Device, LockGuard
-#include <ParamDescriptor.h> // catena::lite::Param
+#include <Device.h> // catena::common::Device, LockGuard
+#include <ParamDescriptor.h> // catena::common::Param
 #include <ParamWithValue.h>
 
 // this include header was generated from the protobuf definition
