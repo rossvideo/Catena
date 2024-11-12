@@ -38,6 +38,11 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
+ /**
+  * @example use_constraints.cpp
+  * Demonstrates use of this and other constraints.
+  */
+
 // commmon
 #include <IConstraint.h>
 #include <IParam.h>
