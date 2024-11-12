@@ -174,3 +174,18 @@ int main () {
     // The Device::LockGuard object will automatically release the lock
     // upon its destruction, when it goes out of scope here.
 }
+
+/* Possible Output
+Hello, World!
+Goodbye, Cruel World!
+counter initial value: 1234
+counter incremented value: 1235
+gain initial value: 0.707
+gain squared value: 0.499849
+phonetic alphabet initial value: Alpha Bravo Charlie ... 
+phonetic alphabet new value: Whiskey Yankee Zulu 
+primes initial value: 2 3 5 7 11 13 17 19 23 29 
+primes new value: 2 3 5 7 11 13 17 19 23 29 31 
+physical constants is empty
+physical constants new value: 3.14159 2.71828 1.61803 
+*/
