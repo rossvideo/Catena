@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -30,35 +28,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file IPolyglotText.h
- * @brief Catena's multi-language text interface
- * @author John R. Naylor, john.naylor@rossvideo.com
- * @copyright Copyright (c) 2024 Ross Video
- */
 
-#include "google/protobuf/message_lite.h" 
+#include <ParamDescriptor.h>
+#include <AuthzInfo.h>  
 
-#include <unordered_map>
-#include <string>
-#include <initializer_list>
+using catena::common::ParamDescriptor;
 
-namespace catena {
-namespace common {
-class IPolyglotText {
-  public:
-    using DisplayStrings = std::unordered_map<std::string, std::string>;
-    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
-  public:
-    IPolyglotText() = default;
-    IPolyglotText(IPolyglotText&&) = default;
-    IPolyglotText& operator=(IPolyglotText&&) = default;
-    virtual ~IPolyglotText() = default;
+void ParamDescriptor::toProto(catena::Param &param, AuthzInfo& auth) const {
+    param.set_type(type_);
+    for (const auto& oid_alias : oid_aliases_) {
+        param.add_oid_aliases(oid_alias);
+    }
+    for (const auto& [lang, text] : name_.displayStrings()) {
+        (*param.mutable_name()->mutable_display_strings())[lang] = text;
+    }
+    param.set_widget(widget_);
+    param.set_read_only(read_only_);
+    if (constraint_) {
+        if (constraint_->isShared()) {
+            *param.mutable_constraint()->mutable_ref_oid() = constraint_->getOid();
+        } else {
+            constraint_->toProto(*param.mutable_constraint());
+        }
+    }
 
-    virtual void toProto(google::protobuf::MessageLite& msg) const = 0;
+    auto* dstParams = param.mutable_params();
+    for (const auto& [oid, subParam] : subParams_) {
+        AuthzInfo subAuth = auth.subParamInfo(oid);
+        if (subAuth.readAuthz()) {
+            subParam->toProto((*dstParams)[oid], subAuth);
+        }
+    }
+}
 
-    virtual const DisplayStrings& displayStrings() const = 0;
+const std::string& ParamDescriptor::name(const std::string& language) const { 
+    auto it = name_.displayStrings().find(language);
+    if (it != name_.displayStrings().end()) {
+        return it->second;
+    } else {
+        static const std::string empty;
+        return empty;
+    }
+}
 
-};
-}  // namespace common
-}  // namespace catena
+const std::string ParamDescriptor::getScope() const {
+      if (!scope_.empty()) {
+        return scope_;
+      } else if (parent_) {
+        return parent_->getScope();
+      } else {
+        return dev_.get().getDefaultScope();
+      }
+    }

@@ -14,32 +14,32 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #
-# cmake build file for C++ SDKs and examples.
+# cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(COMMON C CXX)
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
 
-set(target catena_common)
+add_executable(${TARGET})
 
-set(sources 
-    "src/utils.cpp" 
-    "src/vdk/signals.cpp" 
-    "src/Path.cpp"
-    "src/Device.cpp"
-    "src/ParamDescriptor.cpp"
-    "src/StructInfo.cpp"
-    "src/PolyglotText.cpp"
-    "src/LanguagePack.cpp"
-    "src/PicklistConstraint.cpp"
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
+
+generate_catena_device(
+    DEVICE_MODEL_JSON "${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json"
+    TARGET ${TARGET}
 )
 
-if (gRPC_enabled)
-    include(gRPC.cmake)
-    cmake_catena_grpc_common()
-endif(gRPC_enabled)
+target_sources(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>     
+)
 
+target_link_libraries(${TARGET} ${common_lib})
 
-add_subdirectory(examples)
+target_compile_features(${TARGET}
+    PUBLIC
+        cxx_std_20
+)

@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -30,35 +28,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// common
+#include <PicklistConstraint.h>
+
+// protobuf interface
+#include <interface/param.pb.h>
+
+using IParam = catena::common::IParam;
+
+using catena::common::PicklistConstraint;
+
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
+    bool shared, Device& dm)
+    : choices_{init.begin(), init.end()}, 
+    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {
+    dm.addItem<common::ConstraintTag>(oid, this);
+}
+
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
+    bool shared)
+    : choices_{init.begin(), init.end()}, 
+    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {}
+
+PicklistConstraint::~PicklistConstraint() = default;
+
+bool PicklistConstraint::satisfied(const catena::Value& src) const {
+    if (!strict_) {
+        return true;
+    }
+
+    return choices_.find(src.string_value()) != choices_.end();
+}
+
 /**
- * @file IPolyglotText.h
- * @brief Catena's multi-language text interface
- * @author John R. Naylor, john.naylor@rossvideo.com
- * @copyright Copyright (c) 2024 Ross Video
+ * Named choice constraint can't be applied. Calling this
+ * will always return an empty value.
  */
+catena::Value PicklistConstraint::apply(const catena::Value& src) const {
+    catena::Value val;
+    return val;
+}
 
-#include "google/protobuf/message_lite.h" 
+void PicklistConstraint::toProto(catena::Constraint& constraint) const {
 
-#include <unordered_map>
-#include <string>
-#include <initializer_list>
-
-namespace catena {
-namespace common {
-class IPolyglotText {
-  public:
-    using DisplayStrings = std::unordered_map<std::string, std::string>;
-    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
-  public:
-    IPolyglotText() = default;
-    IPolyglotText(IPolyglotText&&) = default;
-    IPolyglotText& operator=(IPolyglotText&&) = default;
-    virtual ~IPolyglotText() = default;
-
-    virtual void toProto(google::protobuf::MessageLite& msg) const = 0;
-
-    virtual const DisplayStrings& displayStrings() const = 0;
-
-};
-}  // namespace common
-}  // namespace catena
+    constraint.set_type(catena::Constraint::STRING_CHOICE);
+    for (std::string choice : choices_) {
+        constraint.mutable_string_choice()->add_choices(choice);
+    }
+}

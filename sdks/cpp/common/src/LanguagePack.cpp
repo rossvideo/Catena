@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -30,35 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file IPolyglotText.h
- * @brief Catena's multi-language text interface
- * @author John R. Naylor, john.naylor@rossvideo.com
- * @copyright Copyright (c) 2024 Ross Video
- */
+// common
+#include <LanguagePack.h>
 
-#include "google/protobuf/message_lite.h" 
+using namespace catena::common;
+using catena::common::LanguagePackTag;
 
-#include <unordered_map>
-#include <string>
-#include <initializer_list>
+LanguagePack::LanguagePack(const std::string& name, ListInitializer list, Device& dev)
+    : name_{name}, words_(list.begin(), list.end()) {
+    dev.addItem<LanguagePackTag>(name, this);
+}
 
-namespace catena {
-namespace common {
-class IPolyglotText {
-  public:
-    using DisplayStrings = std::unordered_map<std::string, std::string>;
-    using ListInitializer = std::initializer_list<std::pair<std::string, std::string>>;
-  public:
-    IPolyglotText() = default;
-    IPolyglotText(IPolyglotText&&) = default;
-    IPolyglotText& operator=(IPolyglotText&&) = default;
-    virtual ~IPolyglotText() = default;
+void LanguagePack::fromProto(const catena::LanguagePack& pack) {
+    name_ = pack.name();
+    for (const auto& [key, value] : pack.words()) {
+        words_[key] = value;
+    }
+}
 
-    virtual void toProto(google::protobuf::MessageLite& msg) const = 0;
+void LanguagePack::toProto(catena::LanguagePack& pack) const {
+    pack.set_name(name_);
+    for (const auto& [key, value] : words_) {
+        (*pack.mutable_words())[key] = value;
+    }
+}
 
-    virtual const DisplayStrings& displayStrings() const = 0;
 
-};
-}  // namespace common
-}  // namespace catena
+

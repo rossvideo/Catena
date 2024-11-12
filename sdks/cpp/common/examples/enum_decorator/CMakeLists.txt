@@ -31,7 +31,7 @@ target_sources(${target}
 )
 
 target_link_libraries(${target}
-    catena_common
+    ${common_lib}
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
