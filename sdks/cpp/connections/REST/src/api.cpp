@@ -28,6 +28,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+
+#include <interface/device.pb.h>
+#include <google/protobuf/util/json_util.h>
+
 #include <api.h>
 
 using catena::API;
@@ -35,7 +40,28 @@ using catena::API;
 API::API() : version_{"1.0.0"} {
     CROW_ROUTE(app_, "/v1/PopulatedSlots")
     ([]() {
-        return "PopulatedSlots";
+        ::catena::SlotList slotList;
+        slotList.add_slots(1);
+        slotList.add_slots(42);
+        slotList.add_slots(65535);
+
+        // Convert the SlotList message to JSON
+        std::string json_output;
+        google::protobuf::util::JsonPrintOptions options;
+        options.add_whitespace = true;
+        auto status = MessageToJsonString(slotList, &json_output, options);
+
+        // Check if the conversion was successful
+        if (!status.ok()) {
+            return crow::response(500, "Failed to convert protobuf to JSON");
+        }
+
+        // Create a Crow response with JSON content type
+        crow::response res;
+        res.code = 200;
+        res.set_header("Content-Type", "application/json");
+        res.write(json_output);
+        return res;
     });
 }
 
