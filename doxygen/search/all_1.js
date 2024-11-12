@@ -1,6 +1,5 @@
 var searchData=
 [
   ['bad_5fstatus_14',['BAD_STATUS',['../Status_8h.html#a9dd70918fa106dd1bda0e74fdd882831',1,'Status.h']]],
-  ['begin_15',['begin',['../classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1',1,'catena::common::ILanguagePack::begin()'],['../classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789',1,'catena::common::LanguagePack::begin()']]],
-  ['binder_16',['binder',['../classvdk_1_1internal_1_1signals_1_1binder.html',1,'vdk::internal::signals']]]
+  ['begin_15',['begin',['../classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1',1,'catena::common::ILanguagePack::begin()'],['../classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789',1,'catena::common::LanguagePack::begin()']]]
 ];

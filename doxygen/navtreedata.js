@@ -119,8 +119,7 @@ var NAVTREEINDEX =
 [
 "ArrayAccessor_8h.html",
 "classcatena_1_1common_1_1LanguagePack.html#a44ec157a8c0a85983ed8e20501f16bc4",
-"classvdk_1_1internal_1_1signals_1_1command.html#a556b23a2f824bde7325c82b4ded0b6de",
-"signals_8h.html#acfcfbb5f06d866956cbfdaa44e955d54"
+"functions_func.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

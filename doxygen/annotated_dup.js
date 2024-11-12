@@ -59,39 +59,5 @@ var annotated_dup =
         [ "Singleton", "classcatena_1_1patterns_1_1Singleton.html", "classcatena_1_1patterns_1_1Singleton" ]
       ] ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", "structcatena_1_1exception__with__status" ]
-    ] ],
-    [ "vdk", null, [
-      [ "internal", null, [
-        [ "signals", null, [
-          [ "lite", null, [
-            [ "target_imp", "structvdk_1_1internal_1_1signals_1_1lite_1_1target__imp.html", "structvdk_1_1internal_1_1signals_1_1lite_1_1target__imp" ]
-          ] ],
-          [ "memory_owner", "classvdk_1_1internal_1_1signals_1_1memory__owner.html", "classvdk_1_1internal_1_1signals_1_1memory__owner" ],
-          [ "is_comparable", "structvdk_1_1internal_1_1signals_1_1is__comparable.html", null ],
-          [ "is_comparable< T, decltype(std::declval< T & >()==std::declval< T & >())>", "structvdk_1_1internal_1_1signals_1_1is__comparable_3_01T_00_01decltype_07std_1_1declval_3_01T_018648b3361e6e85fd442b2d576d43372a.html", null ],
-          [ "member_pointer_class", "structvdk_1_1internal_1_1signals_1_1member__pointer__class.html", "structvdk_1_1internal_1_1signals_1_1member__pointer__class" ],
-          [ "member_pointer_class< F T::* >", "structvdk_1_1internal_1_1signals_1_1member__pointer__class_3_01F_01T_1_1_5_01_4.html", "structvdk_1_1internal_1_1signals_1_1member__pointer__class_3_01F_01T_1_1_5_01_4" ],
-          [ "member_pointer_value", "structvdk_1_1internal_1_1signals_1_1member__pointer__value.html", "structvdk_1_1internal_1_1signals_1_1member__pointer__value" ],
-          [ "member_pointer_value< F T::* >", "structvdk_1_1internal_1_1signals_1_1member__pointer__value_3_01F_01T_1_1_5_01_4.html", "structvdk_1_1internal_1_1signals_1_1member__pointer__value_3_01F_01T_1_1_5_01_4" ],
-          [ "command", "classvdk_1_1internal_1_1signals_1_1command.html", "classvdk_1_1internal_1_1signals_1_1command" ],
-          [ "target", "classvdk_1_1internal_1_1signals_1_1target.html", "classvdk_1_1internal_1_1signals_1_1target" ],
-          [ "command_imp", "structvdk_1_1internal_1_1signals_1_1command__imp.html", "structvdk_1_1internal_1_1signals_1_1command__imp" ],
-          [ "target_imp", "structvdk_1_1internal_1_1signals_1_1target__imp.html", "structvdk_1_1internal_1_1signals_1_1target__imp" ],
-          [ "binder", "classvdk_1_1internal_1_1signals_1_1binder.html", "classvdk_1_1internal_1_1signals_1_1binder" ]
-        ] ]
-      ] ],
-      [ "lite", null, [
-        [ "signal", "classvdk_1_1lite_1_1signal.html", null ],
-        [ "context", "classvdk_1_1lite_1_1context.html", "classvdk_1_1lite_1_1context" ],
-        [ "signal< void(ArgTs...)>", "classvdk_1_1lite_1_1signal_3_01void_07ArgTs_8_8_8_08_4.html", "classvdk_1_1lite_1_1signal_3_01void_07ArgTs_8_8_8_08_4" ]
-      ] ],
-      [ "memory", null, [
-        [ "signals", null, [
-          [ "memory_resource", "classvdk_1_1memory_1_1signals_1_1memory__resource.html", "classvdk_1_1memory_1_1signals_1_1memory__resource" ]
-        ] ]
-      ] ],
-      [ "signal", "classvdk_1_1signal.html", null ],
-      [ "context", "classvdk_1_1context.html", "classvdk_1_1context" ],
-      [ "signal< void(ArgTs...)>", "classvdk_1_1signal_3_01void_07ArgTs_8_8_8_08_4.html", "classvdk_1_1signal_3_01void_07ArgTs_8_8_8_08_4" ]
     ] ]
 ];
