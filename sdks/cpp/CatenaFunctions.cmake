@@ -98,6 +98,10 @@ function(build_docs)
         # set input and output files
         set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxyfile.in)
         set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
+        set(COMMON_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/common/examples)
+        set(gRPC_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/connections/grpc/examples)
+        set(REST_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/connections/rest/examples)
+        set(DOXYGEN_EXAMPLES_PATHS "${COMMON_EXAMPLES} ${gRPC_EXAMPLES} ${REST_EXAMPLES}")
 
         # find out if graphviz is installed
         if (DOXYGEN_DOT_EXECUTABLE STREQUAL "DOXYGEN_DOT_EXECUTABLE-NOTFOUND")
@@ -124,10 +128,10 @@ function(build_docs)
         # Otherswise, it isn't added to ALL because we're more than likely
         # in a code-test-fix workflow and don't want to waste time generating
         # documentation.
-        set(DOXYGEN_IS_IN_ALL OFF)
-        if(DOCS_ONLY)
-            set(DOXYGEN_IS_IN_ALL ON)
-        endif(DOCS_ONLY)
+        set(DOXYGEN_IS_IN_ALL)
+        if(ONLY_DOCS)
+            set(DOXYGEN_IS_IN_ALL ALL)
+        endif(ONLY_DOCS)
         add_custom_target(doxygen ${DOXYGEN_IS_IN_ALL}
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
