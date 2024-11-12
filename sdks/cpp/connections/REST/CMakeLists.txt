@@ -52,7 +52,7 @@ add_subdirectory(${CROW_ROOT_DIR})
 
 # Link Crow and Boost.System to your target
 # todo: add jwt-cpp
-target_link_libraries(${target} PRIVATE Boost::system jwt-cpp::jwt-cpp)
+target_link_libraries(${target} PRIVATE Boost::system jwt-cpp::jwt-cpp catena_proto_common)
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 
