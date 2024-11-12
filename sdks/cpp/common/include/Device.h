@@ -65,6 +65,9 @@ namespace common {
  * @brief Device class
  * Implements the Device interface defined in the protobuf.
  */
+/**
+ * @example hello_world.cpp Demonstrates creation of a simple device model, and how business logic can interact with it.
+ */
 class Device {
   public:
     /**

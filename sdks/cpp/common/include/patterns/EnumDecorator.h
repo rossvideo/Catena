@@ -39,6 +39,10 @@
  * @copyright © 2024 Ross Video Ltd.
  */
 
+ /** @example enum_decorator.cpp
+  * Provides example of using EnumDecorator.
+  */
+
 //common
 #include <ReflectionMacros.h>
 
