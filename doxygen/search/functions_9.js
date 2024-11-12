@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['languagepack_430',['LanguagePack',['../classcatena_1_1lite_1_1LanguagePack.html#afde0c22c9d70bc8e680bf7303cd56584',1,'catena::lite::LanguagePack::LanguagePack(const LanguagePack &amp;)=delete'],['../classcatena_1_1lite_1_1LanguagePack.html#a747d8331fb8a8b9fbafa1b2d10b84979',1,'catena::lite::LanguagePack::LanguagePack(LanguagePack &amp;&amp;)=default'],['../classcatena_1_1lite_1_1LanguagePack.html#aef17df0d558de6d0d3edd45405585c6f',1,'catena::lite::LanguagePack::LanguagePack(const std::string &amp;name, ListInitializer list, Device &amp;dev)']]]
+  ['languagepack_433',['LanguagePack',['../classcatena_1_1common_1_1LanguagePack.html#a44ec157a8c0a85983ed8e20501f16bc4',1,'catena::common::LanguagePack::LanguagePack(const LanguagePack &amp;)=delete'],['../classcatena_1_1common_1_1LanguagePack.html#a80a5038590c1d29d2aaeae1ca97e068c',1,'catena::common::LanguagePack::LanguagePack(LanguagePack &amp;&amp;)=default'],['../classcatena_1_1common_1_1LanguagePack.html#a973ecffaa7bce508aa46de2c93033ec3',1,'catena::common::LanguagePack::LanguagePack(const std::string &amp;name, ListInitializer list, Device &amp;dev)']]]
 ];

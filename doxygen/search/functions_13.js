@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['writeauthz_473',['writeAuthz',['../classcatena_1_1lite_1_1AuthzInfo.html#a467413ec690ce36345957e384ac60acb',1,'catena::lite::AuthzInfo']]]
+  ['writeauthz_476',['writeAuthz',['../classcatena_1_1common_1_1AuthzInfo.html#ad3c749f4dcff8cc63417db7e64c7d2e7',1,'catena::common::AuthzInfo']]]
 ];

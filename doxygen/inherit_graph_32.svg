@@ -9,9 +9,9 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 133)">
 <title>Graphical Class Hierarchy</title>
 <polygon fill="white" stroke="transparent" points="-4,4 -4,-133 307,-133 307,4 -4,4"/>
-<!-- Node18 -->
+<!-- Node19 -->
 <g id="node1" class="node">
-<title>Node18</title>
+<title>Node19</title>
 <g id="a_node1"><a xlink:title=" ">
 <polygon fill="white" stroke="#bfbfbf" points="0,-55 0,-74 89,-74 89,-55 0,-55"/>
 <text text-anchor="middle" x="44.5" y="-62" font-family="Helvetica,sans-Serif" font-size="10.00">std::false_type</text>
@@ -28,15 +28,15 @@
 </a>
 </g>
 </g>
-<!-- Node18&#45;&gt;Node0 -->
+<!-- Node19&#45;&gt;Node0 -->
 <g id="edge1" class="edge">
-<title>Node18&#45;&gt;Node0</title>
+<title>Node19&#45;&gt;Node0</title>
 <path fill="none" stroke="midnightblue" d="M84.76,-77.17C97.56,-81.22 111.85,-85.64 125,-89.5 135.18,-92.49 146.06,-95.56 156.58,-98.46"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="85.46,-73.72 74.87,-74.03 83.34,-80.39 85.46,-73.72"/>
 </g>
-<!-- Node20 -->
+<!-- Node21 -->
 <g id="node3" class="node">
-<title>Node20</title>
+<title>Node21</title>
 <g id="a_node3"><a xlink:href="structcatena_1_1meta_1_1is__variant.html" target="_top" xlink:title="type trait to determine if a type is a std::variant default is false">
 <polygon fill="white" stroke="black" points="146.5,-49.5 146.5,-79.5 281.5,-79.5 281.5,-49.5 146.5,-49.5"/>
 <text text-anchor="start" x="154.5" y="-67.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::meta::is_variant</text>
@@ -44,15 +44,15 @@
 </a>
 </g>
 </g>
-<!-- Node18&#45;&gt;Node20 -->
+<!-- Node19&#45;&gt;Node21 -->
 <g id="edge2" class="edge">
-<title>Node18&#45;&gt;Node20</title>
+<title>Node19&#45;&gt;Node21</title>
 <path fill="none" stroke="midnightblue" d="M99.18,-64.5C114.16,-64.5 130.62,-64.5 146.26,-64.5"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="99.07,-61 89.07,-64.5 99.07,-68 99.07,-61"/>
 </g>
-<!-- Node21 -->
+<!-- Node22 -->
 <g id="node4" class="node">
-<title>Node21</title>
+<title>Node22</title>
 <g id="a_node4"><a xlink:href="structvdk_1_1internal_1_1signals_1_1is__comparable.html" target="_top" xlink:title=" ">
 <polygon fill="white" stroke="black" points="125,-0.5 125,-30.5 303,-30.5 303,-0.5 125,-0.5"/>
 <text text-anchor="start" x="133" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">vdk::internal::signals</text>
@@ -60,9 +60,9 @@
 </a>
 </g>
 </g>
-<!-- Node18&#45;&gt;Node21 -->
+<!-- Node19&#45;&gt;Node22 -->
 <g id="edge3" class="edge">
-<title>Node18&#45;&gt;Node21</title>
+<title>Node19&#45;&gt;Node22</title>
 <path fill="none" stroke="midnightblue" d="M86.42,-52.01C98.8,-48.26 112.45,-44.18 125,-40.5 136.13,-37.24 148.06,-33.81 159.44,-30.56"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="85.36,-48.67 76.8,-54.92 87.39,-55.37 85.36,-48.67"/>
 </g>

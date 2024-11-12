@@ -87,7 +87,245 @@ $(document).ready(function(){initNavTree('factory_8cpp-example.html',''); initRe
 </div><!--header-->
 <div class="contents">
 <p>Provides example of using GenericFactory.</p>
-<div class="fragment"> </div><!-- fragment --> </div><!-- contents -->
+<div class="fragment"><div class="line"><span class="comment">// Copyright 2024 Ross Video Ltd</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, </span></div>
+<div class="line"><span class="comment">// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, </span></div>
+<div class="line"><span class="comment">// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER </span></div>
+<div class="line"><span class="comment">// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// common</span></div>
+<div class="line"><span class="preprocessor">#include &lt;<a class="code" href="GenericFactory_8h.html">patterns/GenericFactory.h</a>&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Factories are useful to create objects based on values that are only known</span></div>
+<div class="line"><span class="comment"> * at runtime, such as parameter values.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * In this example we create a base class, Dog, that provides an interface</span></div>
+<div class="line"><span class="comment"> * to interact with two different types of Dog.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> * The rv::GenericFactory is used to register the various types of Dog for it to</span></div>
+<div class="line"><span class="comment"> * make. Each type of Dog is uniquely identified by a key that is used to create</span></div>
+<div class="line"><span class="comment"> * it.</span></div>
+<div class="line"><span class="comment"> *</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">class </span>Dog {</div>
+<div class="line"> <span class="keyword">public</span>:</div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Instantiate a GenericFactory to make Dogs.</span></div>
+<div class="line"><span class="comment">   * Note that we also specify the types needed by classes that derive</span></div>
+<div class="line"><span class="comment">   * from Dog.</span></div>
+<div class="line"><span class="comment">   *</span></div>
+<div class="line"><span class="comment">   * Example aside, the motivation for this creation mechanism is to allow</span></div>
+<div class="line"><span class="comment">   * video and audio buffers with a variety of memory structures be created</span></div>
+<div class="line"><span class="comment">   * according to runtime parameter values such as width, height, Pixel</span></div>
+<div class="line"><span class="comment">   * ordering, memory layout etc.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">using</span> Factory = <a name="_a0"></a><a class="code" href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory&lt;Dog, std::string, const std::string&amp;, const uint32_t&gt;</a>;</div>
+<div class="line"> </div>
+<div class="line"> <span class="keyword">public</span>:</div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Base class has a default constructor.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  Dog() = <span class="keywordflow">default</span>;</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Allow derived classes to override the destructor.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">virtual</span> ~Dog() { std::cout &lt;&lt; <span class="stringliteral">&quot; whimper...&quot;</span> &lt;&lt; std::endl; }</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Use defaults for copying and assigning Dogs</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  Dog(<span class="keyword">const</span> Dog&amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"> </div>
+<div class="line">  Dog&amp; operator=(<span class="keyword">const</span> Dog&amp; rhs) = <span class="keywordflow">default</span>;</div>
+<div class="line"> </div>
+<div class="line">  Dog(Dog&amp;&amp;) = <span class="keywordflow">default</span>;</div>
+<div class="line"> </div>
+<div class="line">  Dog&amp; operator=(Dog&amp;&amp; rhs) = <span class="keywordflow">default</span>;</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * This is the very simple interface provided by Dog</span></div>
+<div class="line"><span class="comment">   * for derived classes to implement.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">virtual</span> <span class="keywordtype">void</span> operator()() = 0;</div>
+<div class="line">};</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Now we have a base class, we can declare multiple types of Dog</span></div>
+<div class="line"><span class="comment"> * that vary by template parameters.</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><span class="keyword">class </span>ConcreteDog : <span class="keyword">public</span> Dog {</div>
+<div class="line"> <span class="keyword">private</span>:</div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Example attributes to construct initialize</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">const</span> std::string _breed;</div>
+<div class="line">  <span class="keyword">const</span> uint32_t _barkiness;</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * This is the key attribute that Classes to be created via a</span></div>
+<div class="line"><span class="comment">   * GenericFactory must declare &amp; define.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">static</span> <span class="keywordtype">bool</span> _added;</div>
+<div class="line"> </div>
+<div class="line"> <span class="keyword">public</span>:</div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Implement the base class interface.</span></div>
+<div class="line"><span class="comment">   * Which, in this case is only 1 function and an optional destructor.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keywordtype">void</span> operator()()<span class="keyword"> override </span>{</div>
+<div class="line">    std::stringstream ans;</div>
+<div class="line">    ans &lt;&lt; _breed &lt;&lt; <span class="stringliteral">&quot;: &quot;</span>;</div>
+<div class="line">    <span class="keywordflow">if</span> constexpr (std::numeric_limits&lt;T&gt;::is_signed) {</div>
+<div class="line">      ans &lt;&lt; <span class="stringliteral">&quot;can go forwards and backwards. &quot;</span>;</div>
+<div class="line">    } <span class="keywordflow">else</span> {</div>
+<div class="line">      ans &lt;&lt; <span class="stringliteral">&quot;can only go forwards. &quot;</span>;</div>
+<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">for</span> (uint32_t i = 0; i &lt; _barkiness; ++i) {</div>
+<div class="line">      ans &lt;&lt; <span class="stringliteral">&quot;bark &quot;</span>;</div>
+<div class="line">    }</div>
+<div class="line">    std::cout &lt;&lt; ans.str() &lt;&lt; std::endl;</div>
+<div class="line">  }</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Construct an animal derived from Dog</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  ConcreteDog(std::string breed, <span class="keyword">const</span> uint32_t barkiness)</div>
+<div class="line">      : _breed(std::move(breed)), _barkiness(barkiness) {}</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Print out the breed name on destruction</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  ~ConcreteDog() { std::cout &lt;&lt; _breed; }</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Factory components must define a maker function that&#39;s static,</span></div>
+<div class="line"><span class="comment">   * and has a signature that matches Dog::Maker.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">static</span> Dog* makeOne(<span class="keyword">const</span> std::string&amp; breed, <span class="keyword">const</span> uint32_t barkiness) {</div>
+<div class="line">    <span class="keywordflow">return</span> <span class="keyword">new</span> ConcreteDog(breed, barkiness);</div>
+<div class="line">  }</div>
+<div class="line"> </div>
+<div class="line">  <span class="comment">/*</span></div>
+<div class="line"><span class="comment">   * Factory components must register themselves with the factory,</span></div>
+<div class="line"><span class="comment">   * so we made it part of the class.</span></div>
+<div class="line"><span class="comment">   * This method generates a key based on a template parameter</span></div>
+<div class="line"><span class="comment">   * and will register 2 different types of Dog with the factory.</span></div>
+<div class="line"><span class="comment">   */</span></div>
+<div class="line">  <span class="keyword">static</span> <span class="keywordtype">bool</span> registerWithFactory() {</div>
+<div class="line">    Factory&amp; fac = Factory::getInstance();</div>
+<div class="line">    std::string key;</div>
+<div class="line">    <span class="keywordflow">if</span> constexpr (std::numeric_limits&lt;T&gt;::is_signed) {</div>
+<div class="line">      key = <span class="stringliteral">&quot;dog-bidi&quot;</span>;</div>
+<div class="line">    } <span class="keywordflow">else</span> {</div>
+<div class="line">      key = <span class="stringliteral">&quot;dog-unidi&quot;</span>;</div>
+<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">return</span> fac.addProduct(key, makeOne);</div>
+<div class="line">  }</div>
+<div class="line">};</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * instantiate some Concrete Dogs</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">using</span> BiDiDog = ConcreteDog&lt;int&gt;;</div>
+<div class="line"><span class="keyword">using</span> UniDiDog = ConcreteDog&lt;unsigned int&gt;;</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * register them with our factory</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">template</span> &lt;&gt;</div>
+<div class="line"><span class="keywordtype">bool</span> BiDiDog::_added = BiDiDog::registerWithFactory();</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">template</span> &lt;&gt;</div>
+<div class="line"><span class="keywordtype">bool</span> UniDiDog::_added = UniDiDog::registerWithFactory();</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">/*</span></div>
+<div class="line"><span class="comment"> * Just for fun, partially specialize the destructor for UniDiDogs</span></div>
+<div class="line"><span class="comment"> */</span></div>
+<div class="line"><span class="keyword">template</span> &lt;&gt;</div>
+<div class="line">UniDiDog::~ConcreteDog() {</div>
+<div class="line">  std::cout &lt;&lt; _breed &lt;&lt; <span class="stringliteral">&quot; arrrroooooo!&quot;</span>;</div>
+<div class="line">}</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">using</span> std::cout, std::endl;</div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">  <span class="keywordflow">try</span> {</div>
+<div class="line">    <span class="comment">// get instance of the Dog Factory</span></div>
+<div class="line">    Dog::Factory&amp; df = Dog::Factory::getInstance();</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// print its inventory</span></div>
+<div class="line">    <span class="comment">// cout &lt;&lt; &quot;Dog Factory\n&quot; &lt;&lt; df &lt;&lt; endl;</span></div>
+<div class="line"> </div>
+<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;\nDog Tests&quot;</span> &lt;&lt; endl;</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">/*</span></div>
+<div class="line"><span class="comment">     * Create 3 dogs of different types</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    std::unique_ptr&lt;Dog&gt; labrador, jackRussell, rabid;</div>
+<div class="line">    labrador = df.makeProduct(<span class="stringliteral">&quot;dog-bidi&quot;</span>, <span class="stringliteral">&quot;Labrador&quot;</span>, 1);</div>
+<div class="line">    jackRussell = df.makeProduct(<span class="stringliteral">&quot;dog-bidi&quot;</span>, <span class="stringliteral">&quot;Jack Russell&quot;</span>, 4);</div>
+<div class="line">    rabid = df.makeProduct(<span class="stringliteral">&quot;dog-unidi&quot;</span>, <span class="stringliteral">&quot;Rabid dog&quot;</span>, 8);</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">/*</span></div>
+<div class="line"><span class="comment">     * Exercise the interface for Dog</span></div>
+<div class="line"><span class="comment">     */</span></div>
+<div class="line">    (*labrador)();</div>
+<div class="line">    (*jackRussell)();</div>
+<div class="line">    rabid-&gt;operator()();  <span class="comment">// alternative syntax</span></div>
+<div class="line"> </div>
+<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;\nFactory Test&quot;</span> &lt;&lt; endl;</div>
+<div class="line">    <span class="comment">// verify that the factory cannot make goldfish.</span></div>
+<div class="line">    <span class="keywordflow">try</span> {</div>
+<div class="line">      df.makeProduct(<span class="stringliteral">&quot;goldfish&quot;</span>, <span class="stringliteral">&quot;koi carp&quot;</span>, 0);</div>
+<div class="line">    } <span class="keywordflow">catch</span> (std::exception&amp; why) {</div>
+<div class="line">      cout &lt;&lt; <span class="stringliteral">&quot;Problem: &quot;</span> &lt;&lt; why.what() &lt;&lt; endl;</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;\nDestructors here...&quot;</span> &lt;&lt; endl;</div>
+<div class="line">  } <span class="keywordflow">catch</span> (std::exception&amp; why) {</div>
+<div class="line">    <span class="comment">// something went wrong with the example, so exit with non-zero error code</span></div>
+<div class="line">    <span class="comment">// this should stop the build</span></div>
+<div class="line">    cout &lt;&lt; <span class="stringliteral">&quot;\n\n*** Example failed to run!&quot;</span> &lt;&lt; why.what() &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span> &lt;&lt; endl;</div>
+<div class="line">    <span class="keywordflow">return</span> 1;</div>
+<div class="line">  }</div>
+<div class="line">  <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">/* Example Output</span></div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">Dog Tests</span></div>
+<div class="line"><span class="comment">Labrador: can go forwards and backwards. bark </span></div>
+<div class="line"><span class="comment">Jack Russell: can go forwards and backwards. bark bark bark bark </span></div>
+<div class="line"><span class="comment">Rabid dog: can only go forwards. bark bark bark bark bark bark bark bark </span></div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">Factory Test</span></div>
+<div class="line"><span class="comment">Problem: std::unique_ptr&lt;P&gt; catena::patterns::GenericFactory&lt;Dog, std::string, const std::string &amp;, const unsigned int&gt;::makeProduct(const K, Ms &amp;&amp;...) [P = Dog, K = std::string, Ms = &lt;const std::string &amp;, const unsigned int&gt;], could not find entry with key: goldfish</span></div>
+<div class="line"><span class="comment"></span> </div>
+<div class="line"><span class="comment">Destructors here...</span></div>
+<div class="line"><span class="comment">Rabid dog arrrroooooo! whimper...</span></div>
+<div class="line"><span class="comment">Jack Russell whimper...</span></div>
+<div class="line"><span class="comment">Labrador whimper...</span></div>
+<div class="line"><span class="comment">*/</span></div>
+<div class="ttc" id="aGenericFactory_8h_html"><div class="ttname"><a href="GenericFactory_8h.html">GenericFactory.h</a></div><div class="ttdoc">Defines tools to create objects based on values that are only known at runtime.</div></div>
+<div class="ttc" id="aclasscatena_1_1patterns_1_1GenericFactory_html"><div class="ttname"><a href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory</a></div><div class="ttdoc">Factory template with which client classes can register a &quot;Maker&quot; function together with a unique key...</div><div class="ttdef"><b>Definition:</b> GenericFactory.h:66</div></div>
+</div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

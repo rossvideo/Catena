@@ -2,11 +2,23 @@ var annotated_dup =
 [
     [ "catena", "namespacecatena.html", [
       [ "common", null, [
+        [ "AuthzInfo", "classcatena_1_1common_1_1AuthzInfo.html", "classcatena_1_1common_1_1AuthzInfo" ],
+        [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
         [ "FakeLock", "structcatena_1_1common_1_1FakeLock.html", "structcatena_1_1common_1_1FakeLock" ],
         [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],
         [ "ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", "classcatena_1_1common_1_1ILanguagePack" ],
         [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
         [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", "classcatena_1_1common_1_1IPolyglotText" ],
+        [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
+        [ "NamedChoiceConstraint", "classcatena_1_1common_1_1NamedChoiceConstraint.html", "classcatena_1_1common_1_1NamedChoiceConstraint" ],
+        [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
+        [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
+        [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
+        [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", "classcatena_1_1common_1_1PolyglotText" ],
+        [ "RangeConstraint", "classcatena_1_1common_1_1RangeConstraint.html", "classcatena_1_1common_1_1RangeConstraint" ],
+        [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
+        [ "StructInfo", "structcatena_1_1common_1_1StructInfo.html", null ],
+        [ "FieldInfo", "structcatena_1_1common_1_1FieldInfo.html", "structcatena_1_1common_1_1FieldInfo" ],
         [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", "structcatena_1_1common_1_1ConstraintTag" ],
         [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", "structcatena_1_1common_1_1ParamTag" ],
         [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", "structcatena_1_1common_1_1CommandTag" ],
@@ -24,20 +36,6 @@ var annotated_dup =
         [ "FieldInfo", "structcatena_1_1full_1_1FieldInfo.html", "structcatena_1_1full_1_1FieldInfo" ],
         [ "VariantMemberInfo", "structcatena_1_1full_1_1VariantMemberInfo.html", "structcatena_1_1full_1_1VariantMemberInfo" ],
         [ "VariantInfo", "structcatena_1_1full_1_1VariantInfo.html", "structcatena_1_1full_1_1VariantInfo" ]
-      ] ],
-      [ "lite", null, [
-        [ "AuthzInfo", "classcatena_1_1lite_1_1AuthzInfo.html", "classcatena_1_1lite_1_1AuthzInfo" ],
-        [ "Device", "classcatena_1_1lite_1_1Device.html", "classcatena_1_1lite_1_1Device" ],
-        [ "LanguagePack", "classcatena_1_1lite_1_1LanguagePack.html", "classcatena_1_1lite_1_1LanguagePack" ],
-        [ "NamedChoiceConstraint", "classcatena_1_1lite_1_1NamedChoiceConstraint.html", "classcatena_1_1lite_1_1NamedChoiceConstraint" ],
-        [ "ParamDescriptor", "classcatena_1_1lite_1_1ParamDescriptor.html", "classcatena_1_1lite_1_1ParamDescriptor" ],
-        [ "ParamWithValue", "classcatena_1_1lite_1_1ParamWithValue.html", "classcatena_1_1lite_1_1ParamWithValue" ],
-        [ "PicklistConstraint", "classcatena_1_1lite_1_1PicklistConstraint.html", "classcatena_1_1lite_1_1PicklistConstraint" ],
-        [ "PolyglotText", "classcatena_1_1lite_1_1PolyglotText.html", "classcatena_1_1lite_1_1PolyglotText" ],
-        [ "RangeConstraint", "classcatena_1_1lite_1_1RangeConstraint.html", "classcatena_1_1lite_1_1RangeConstraint" ],
-        [ "EmptyValue", "structcatena_1_1lite_1_1EmptyValue.html", null ],
-        [ "StructInfo", "structcatena_1_1lite_1_1StructInfo.html", null ],
-        [ "FieldInfo", "structcatena_1_1lite_1_1FieldInfo.html", "structcatena_1_1lite_1_1FieldInfo" ]
       ] ],
       [ "meta", null, [
         [ "is_streamable", "structcatena_1_1meta_1_1is__streamable.html", null ],

@@ -1,11 +1,23 @@
 var namespacecatena =
 [
     [ "common", null, [
+      [ "AuthzInfo", "classcatena_1_1common_1_1AuthzInfo.html", "classcatena_1_1common_1_1AuthzInfo" ],
+      [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
       [ "FakeLock", "structcatena_1_1common_1_1FakeLock.html", "structcatena_1_1common_1_1FakeLock" ],
       [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],
       [ "ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", "classcatena_1_1common_1_1ILanguagePack" ],
       [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
       [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", "classcatena_1_1common_1_1IPolyglotText" ],
+      [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
+      [ "NamedChoiceConstraint", "classcatena_1_1common_1_1NamedChoiceConstraint.html", "classcatena_1_1common_1_1NamedChoiceConstraint" ],
+      [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
+      [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
+      [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
+      [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", "classcatena_1_1common_1_1PolyglotText" ],
+      [ "RangeConstraint", "classcatena_1_1common_1_1RangeConstraint.html", "classcatena_1_1common_1_1RangeConstraint" ],
+      [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
+      [ "StructInfo", "structcatena_1_1common_1_1StructInfo.html", null ],
+      [ "FieldInfo", "structcatena_1_1common_1_1FieldInfo.html", "structcatena_1_1common_1_1FieldInfo" ],
       [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", "structcatena_1_1common_1_1ConstraintTag" ],
       [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", "structcatena_1_1common_1_1ParamTag" ],
       [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", "structcatena_1_1common_1_1CommandTag" ],
@@ -20,7 +32,13 @@ var namespacecatena =
         [ "kOperate", "Enums_8h.html#a52e17ef3ce00a51e608afb060211e3a8a3b1907c71723807900790d5fbdcdcd59", null ],
         [ "kConfig", "Enums_8h.html#a52e17ef3ce00a51e608afb060211e3a8ad5a0c559cb6ece9d33f376684508c267", null ],
         [ "kAdmin", "Enums_8h.html#a52e17ef3ce00a51e608afb060211e3a8a6d837d3ca4ac4befdbd8324e2b4fde9c", null ]
-      ] ]
+      ] ],
+      [ "fromProto", "StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea", null ],
+      [ "getParamValue", "ParamWithValue_8h.html#a4d5b494b32e4364ba7364a371e1ffbdc", null ],
+      [ "toProto", "StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086", null ],
+      [ "CatenaStruct", "StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed", null ],
+      [ "CatenaStructArray", "StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0", null ],
+      [ "emptyValue", "StructInfo_8h.html#a2cb3e8a8f510a27e9a83ef3f075ac225", null ]
     ] ],
     [ "full", null, [
       [ "ArrayAccessor", "classcatena_1_1full_1_1ArrayAccessor.html", "classcatena_1_1full_1_1ArrayAccessor" ],
@@ -42,26 +60,6 @@ var namespacecatena =
       [ "printJSON", "JSON_8h.html#ae6ba49e74f62a9c439c66d77d542ba04", null ],
       [ "has_getStructInfo", "TypeTraits_8h.html#a7b7f658769d83169d480559fcc509a46", null ],
       [ "has_getVariant", "TypeTraits_8h.html#a99a3cb127beeec29445bf8f7f65a66d2", null ]
-    ] ],
-    [ "lite", null, [
-      [ "AuthzInfo", "classcatena_1_1lite_1_1AuthzInfo.html", "classcatena_1_1lite_1_1AuthzInfo" ],
-      [ "Device", "classcatena_1_1lite_1_1Device.html", "classcatena_1_1lite_1_1Device" ],
-      [ "LanguagePack", "classcatena_1_1lite_1_1LanguagePack.html", "classcatena_1_1lite_1_1LanguagePack" ],
-      [ "NamedChoiceConstraint", "classcatena_1_1lite_1_1NamedChoiceConstraint.html", "classcatena_1_1lite_1_1NamedChoiceConstraint" ],
-      [ "ParamDescriptor", "classcatena_1_1lite_1_1ParamDescriptor.html", "classcatena_1_1lite_1_1ParamDescriptor" ],
-      [ "ParamWithValue", "classcatena_1_1lite_1_1ParamWithValue.html", "classcatena_1_1lite_1_1ParamWithValue" ],
-      [ "PicklistConstraint", "classcatena_1_1lite_1_1PicklistConstraint.html", "classcatena_1_1lite_1_1PicklistConstraint" ],
-      [ "PolyglotText", "classcatena_1_1lite_1_1PolyglotText.html", "classcatena_1_1lite_1_1PolyglotText" ],
-      [ "RangeConstraint", "classcatena_1_1lite_1_1RangeConstraint.html", "classcatena_1_1lite_1_1RangeConstraint" ],
-      [ "EmptyValue", "structcatena_1_1lite_1_1EmptyValue.html", null ],
-      [ "StructInfo", "structcatena_1_1lite_1_1StructInfo.html", null ],
-      [ "FieldInfo", "structcatena_1_1lite_1_1FieldInfo.html", "structcatena_1_1lite_1_1FieldInfo" ],
-      [ "fromProto", "StructInfo_8h.html#a1045b0498d494f8f46555f072c75061d", null ],
-      [ "getParamValue", "ParamWithValue_8h.html#a6afaba5323f93dbae6f4344a49f3ec00", null ],
-      [ "toProto", "StructInfo_8h.html#a11e985631f7fb1b141ca1b73ea7e4278", null ],
-      [ "CatenaStruct", "StructInfo_8h.html#a812d7b856a2c1cc4af13e2f54b38ba12", null ],
-      [ "CatenaStructArray", "StructInfo_8h.html#a83d2b947aedd3838b0a96a0a5b8646cb", null ],
-      [ "emptyValue", "StructInfo_8h.html#a4c6910862fe7c08a327050c21aa099df", null ]
     ] ],
     [ "meta", null, [
       [ "is_streamable", "structcatena_1_1meta_1_1is__streamable.html", null ],

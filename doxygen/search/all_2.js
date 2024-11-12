@@ -4,10 +4,10 @@ var searchData=
   ['canmake_18',['canMake',['../classcatena_1_1patterns_1_1GenericFactory.html#ab354f924c26b98e52f63f226b292fb18',1,'catena::patterns::GenericFactory']]],
   ['catena_19',['catena',['../namespacecatena.html',1,'']]],
   ['catena_20c_2b_2b_20sdk_20',['Catena C++ SDK',['../index.html',1,'']]],
-  ['catenastruct_21',['CatenaStruct',['../StructInfo_8h.html#a812d7b856a2c1cc4af13e2f54b38ba12',1,'catena::lite']]],
-  ['catenastructarray_22',['CatenaStructArray',['../StructInfo_8h.html#a83d2b947aedd3838b0a96a0a5b8646cb',1,'catena::lite']]],
+  ['catenastruct_21',['CatenaStruct',['../StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed',1,'catena::common']]],
+  ['catenastructarray_22',['CatenaStructArray',['../StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0',1,'catena::common']]],
   ['checkscope_23',['checkScope',['../classcatena_1_1full_1_1ParamAccessor.html#ada9d2100d7d5baf163cf02c8483e55b4',1,'catena::full::ParamAccessor::checkScope(const std::vector&lt; std::string &gt; &amp;clientScopes, const std::string &amp;paramScope) const'],['../classcatena_1_1full_1_1ParamAccessor.html#a3843e311a562196231f50b1bcbba4ec5',1,'catena::full::ParamAccessor::checkScope(const std::vector&lt; std::string &gt; &amp;clientScopes) const']]],
-  ['choices_24',['Choices',['../classcatena_1_1lite_1_1NamedChoiceConstraint.html#a061dbabe19a2713b08011b9bdb99dd5a',1,'catena::lite::NamedChoiceConstraint::Choices()'],['../classcatena_1_1lite_1_1PicklistConstraint.html#a09db5777332a348e5f9672be87ccb2c8',1,'catena::lite::PicklistConstraint::Choices()']]],
+  ['choices_24',['Choices',['../classcatena_1_1common_1_1NamedChoiceConstraint.html#a577c1147767ffdb23d0e7553fb446baf',1,'catena::common::NamedChoiceConstraint::Choices()'],['../classcatena_1_1common_1_1PicklistConstraint.html#a0d58fa346711ac6d4eb883ca65421b9a',1,'catena::common::PicklistConstraint::Choices()']]],
   ['command_25',['command',['../classvdk_1_1internal_1_1signals_1_1command.html',1,'vdk::internal::signals']]],
   ['command_5fimp_26',['command_imp',['../structvdk_1_1internal_1_1signals_1_1command__imp.html',1,'vdk::internal::signals']]],
   ['commandtag_27',['CommandTag',['../structcatena_1_1common_1_1CommandTag.html',1,'catena::common']]],
@@ -15,6 +15,6 @@ var searchData=
   ['const_5fiterator_29',['const_iterator',['../classcatena_1_1common_1_1ILanguagePack.html#ac56aa1e8ab3688b2d161c10d57781ef9',1,'catena::common::ILanguagePack']]],
   ['constrainttag_30',['ConstraintTag',['../structcatena_1_1common_1_1ConstraintTag.html',1,'catena::common']]],
   ['context_31',['context',['../classvdk_1_1context.html',1,'vdk::context'],['../classvdk_1_1lite_1_1context.html',1,'vdk::lite::context']]],
-  ['copy_32',['copy',['../classcatena_1_1lite_1_1ParamWithValue.html#a846c2a1d91fd7501b35079abe3f6f916',1,'catena::lite::ParamWithValue']]],
+  ['copy_32',['copy',['../classcatena_1_1common_1_1ParamWithValue.html#adef6e0fb0e3a8fbdb580564aec0f4a35',1,'catena::common::ParamWithValue']]],
   ['cross_20compiling_33',['Cross Compiling',['../md__home_runner_work_Catena_Catena_sdks_cpp_docs_cross_compiling.html',1,'']]]
 ];

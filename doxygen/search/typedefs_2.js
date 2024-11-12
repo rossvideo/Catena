@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['getter_507',['Getter',['../classcatena_1_1full_1_1ParamAccessor.html#aa96bf5c19bd06e1906fceb9663cab329',1,'catena::full::ParamAccessor']]],
-  ['getterat_508',['GetterAt',['../classcatena_1_1full_1_1ParamAccessor.html#a2f3abc4df96ae22919c92e9af512e93e',1,'catena::full::ParamAccessor']]]
+  ['factory_509',['Factory',['../classcatena_1_1full_1_1ArrayAccessor.html#ad396d661aa1a58b318e9c5ec51feb55c',1,'catena::full::ArrayAccessor']]],
+  ['function_510',['Function',['../classcatena_1_1patterns_1_1Functory.html#a1bc3b40751f8d1a8882523510b733638',1,'catena::patterns::Functory']]]
 ];
