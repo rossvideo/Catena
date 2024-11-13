@@ -28,47 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// common
+#include <LanguagePack.h>
 
+using namespace catena::common;
+using catena::common::LanguagePackTag;
 
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-
-#include <api.h>
-
-using catena::API;
-
-API::API() : version_{"1.0.0"} {
-    CROW_ROUTE(app_, "/v1/PopulatedSlots")
-    ([]() {
-        ::catena::SlotList slotList;
-        slotList.add_slots(1);
-        slotList.add_slots(42);
-        slotList.add_slots(65535);
-
-        // Convert the SlotList message to JSON
-        std::string json_output;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        auto status = MessageToJsonString(slotList, &json_output, options);
-
-        // Check if the conversion was successful
-        if (!status.ok()) {
-            return crow::response(500, "Failed to convert protobuf to JSON");
-        }
-
-        // Create a Crow response with JSON content type
-        crow::response res;
-        res.code = 200;
-        res.set_header("Content-Type", "application/json");
-        res.write(json_output);
-        return res;
-    });
+LanguagePack::LanguagePack(const std::string& name, ListInitializer list, Device& dev)
+    : name_{name}, words_(list.begin(), list.end()) {
+    dev.addItem<LanguagePackTag>(name, this);
 }
 
-std::string API::version() const {
-  return version_;
+void LanguagePack::fromProto(const catena::LanguagePack& pack) {
+    name_ = pack.name();
+    for (const auto& [key, value] : pack.words()) {
+        words_[key] = value;
+    }
 }
 
-void API::run() {
-    app_.port(8080).run();
+void LanguagePack::toProto(catena::LanguagePack& pack) const {
+    pack.set_name(name_);
+    for (const auto& [key, value] : words_) {
+        (*pack.mutable_words())[key] = value;
+    }
 }
+
+
+

@@ -125,3 +125,17 @@ int main() {
     Primes p5(Primes_e::kFive);
     std::cout << "p5: " << p5.toString() << " = " << Primes::utype(p5) << std::endl;
 }
+
+/* possible output
+c0: default has value: 0
+c1: one
+c2: 2
+c3: two has value: 2
+c4: default has value: 0
+c5: default has value: 0
+c1 == c2: false
+c2 == c3: true
+c3: two
+p0: undefined = 0
+p5: five = 5
+*/

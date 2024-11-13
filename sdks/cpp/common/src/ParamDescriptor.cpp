@@ -29,46 +29,54 @@
  */
 
 
+#include <ParamDescriptor.h>
+#include <AuthzInfo.h>  
 
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+using catena::common::ParamDescriptor;
 
-#include <api.h>
-
-using catena::API;
-
-API::API() : version_{"1.0.0"} {
-    CROW_ROUTE(app_, "/v1/PopulatedSlots")
-    ([]() {
-        ::catena::SlotList slotList;
-        slotList.add_slots(1);
-        slotList.add_slots(42);
-        slotList.add_slots(65535);
-
-        // Convert the SlotList message to JSON
-        std::string json_output;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        auto status = MessageToJsonString(slotList, &json_output, options);
-
-        // Check if the conversion was successful
-        if (!status.ok()) {
-            return crow::response(500, "Failed to convert protobuf to JSON");
+void ParamDescriptor::toProto(catena::Param &param, AuthzInfo& auth) const {
+    param.set_type(type_);
+    for (const auto& oid_alias : oid_aliases_) {
+        param.add_oid_aliases(oid_alias);
+    }
+    for (const auto& [lang, text] : name_.displayStrings()) {
+        (*param.mutable_name()->mutable_display_strings())[lang] = text;
+    }
+    param.set_widget(widget_);
+    param.set_read_only(read_only_);
+    if (constraint_) {
+        if (constraint_->isShared()) {
+            *param.mutable_constraint()->mutable_ref_oid() = constraint_->getOid();
+        } else {
+            constraint_->toProto(*param.mutable_constraint());
         }
+    }
 
-        // Create a Crow response with JSON content type
-        crow::response res;
-        res.code = 200;
-        res.set_header("Content-Type", "application/json");
-        res.write(json_output);
-        return res;
-    });
+    auto* dstParams = param.mutable_params();
+    for (const auto& [oid, subParam] : subParams_) {
+        AuthzInfo subAuth = auth.subParamInfo(oid);
+        if (subAuth.readAuthz()) {
+            subParam->toProto((*dstParams)[oid], subAuth);
+        }
+    }
 }
 
-std::string API::version() const {
-  return version_;
+const std::string& ParamDescriptor::name(const std::string& language) const { 
+    auto it = name_.displayStrings().find(language);
+    if (it != name_.displayStrings().end()) {
+        return it->second;
+    } else {
+        static const std::string empty;
+        return empty;
+    }
 }
 
-void API::run() {
-    app_.port(8080).run();
-}
+const std::string ParamDescriptor::getScope() const {
+      if (!scope_.empty()) {
+        return scope_;
+      } else if (parent_) {
+        return parent_->getScope();
+      } else {
+        return dev_.get().getDefaultScope();
+      }
+    }

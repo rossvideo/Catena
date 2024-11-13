@@ -30,8 +30,6 @@
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
-
-//lite 
 #include <Device.h>
 
 // gRPC interface
@@ -49,7 +47,7 @@ using grpc::ServerAsyncResponseWriter;
 using grpc::Status;
 using grpc::ServerCompletionQueue;
 
-using catena::lite::Device;
+using catena::common::Device;
 using catena::common::IParam;
 
 class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
@@ -111,7 +109,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
        private:
         CatenaServiceImpl *service_;
         ServerContext context_;
-        google::protobuf::Empty req_;
+        catena::Empty req_;
         catena::SlotList res_;
         ServerAsyncResponseWriter<::catena::SlotList> responder_;
         CallStatus status_;
@@ -153,7 +151,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         ServerContext context_;
         catena::SetValuePayload req_;
         catena::Value res_;
-        ServerAsyncResponseWriter<::google::protobuf::Empty> responder_;
+        ServerAsyncResponseWriter<catena::Empty> responder_;
         CallStatus status_;
         Device &dm_;
         Status errorStatus_;

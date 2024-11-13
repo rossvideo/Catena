@@ -298,16 +298,16 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 }
                 if (ans.status == catena::StatusCode::OK) {
                     status_ = CallStatus::kFinish;
-                    responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
+                    responder_.Finish(catena::Empty{}, Status::OK, this);
                 } else {
                     errorStatus_ = Status(static_cast<grpc::StatusCode>(ans.status), ans.what());
                     status_ = CallStatus::kFinish;
-                    responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                    responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
             } catch (...) {
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;
-                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                responder_.Finish(::catena::Empty{}, errorStatus_, this);
             }
             break;
 

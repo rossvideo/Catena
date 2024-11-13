@@ -36,7 +36,7 @@ function(generate_catena_device)
     
     set(_options)
     set(_singleargs DEVICE_MODEL_JSON TARGET OUT_DIR HDR_OUT_VAR SRC_OUT_VAR)
-    set(_multiargs)
+    set(_multiargs IMPORTED_PARAMS)
 
     cmake_parse_arguments(generate_catena_device "${_options}" "${_singleargs}" "${_multiargs}" "${ARGN}")
 
@@ -45,6 +45,7 @@ function(generate_catena_device)
     set(_OUT_DIR ${generate_catena_device_OUT_DIR})
     set(_HDR_OUT_VAR ${generate_catena_device_HDR_OUT_VAR})
     set(_SRC_OUT_VAR ${generate_catena_device_SRC_OUT_VAR})
+    set(_IMPORTED_PARAMS ${generate_catena_device_IMPORTED_PARAMS})
 
     if(NOT DEFINED _TARGET AND (NOT DEFINED _HDR_OUT_VAR OR NOT DEFINED _SRC_OUT_VAR))
         message(SEND_ERROR "Error: generate_catena_device called without any targets or output variables")
@@ -76,7 +77,7 @@ function(generate_catena_device)
         OUTPUT ${_OUT_DIR}/${HEADER}
             ${_OUT_DIR}/${BODY}
         COMMAND ${NODE} ${CATENA_CODEGEN} --schema ${CATENA_SCHEMA} --device-model "${_DEVICE_MODEL_JSON}" --output ${_OUT_DIR}
-        DEPENDS ${_DEVICE_MODEL_JSON} ${SCHEMA_FILES} ${CODEGEN_FILES}
+        DEPENDS ${_DEVICE_MODEL_JSON} ${SCHEMA_FILES} ${CODEGEN_FILES} ${_IMPORTED_PARAMS}
         COMMENT "Generating ${HEADER} and ${BODY} from ${_DEVICE_MODEL_JSON}"
     )
 

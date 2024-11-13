@@ -28,47 +28,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// common
+#include <PicklistConstraint.h>
 
+// protobuf interface
+#include <interface/param.pb.h>
 
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+using IParam = catena::common::IParam;
 
-#include <api.h>
+using catena::common::PicklistConstraint;
 
-using catena::API;
-
-API::API() : version_{"1.0.0"} {
-    CROW_ROUTE(app_, "/v1/PopulatedSlots")
-    ([]() {
-        ::catena::SlotList slotList;
-        slotList.add_slots(1);
-        slotList.add_slots(42);
-        slotList.add_slots(65535);
-
-        // Convert the SlotList message to JSON
-        std::string json_output;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        auto status = MessageToJsonString(slotList, &json_output, options);
-
-        // Check if the conversion was successful
-        if (!status.ok()) {
-            return crow::response(500, "Failed to convert protobuf to JSON");
-        }
-
-        // Create a Crow response with JSON content type
-        crow::response res;
-        res.code = 200;
-        res.set_header("Content-Type", "application/json");
-        res.write(json_output);
-        return res;
-    });
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
+    bool shared, Device& dm)
+    : choices_{init.begin(), init.end()}, 
+    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {
+    dm.addItem<common::ConstraintTag>(oid, this);
 }
 
-std::string API::version() const {
-  return version_;
+PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
+    bool shared)
+    : choices_{init.begin(), init.end()}, 
+    strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {}
+
+PicklistConstraint::~PicklistConstraint() = default;
+
+bool PicklistConstraint::satisfied(const catena::Value& src) const {
+    if (!strict_) {
+        return true;
+    }
+
+    return choices_.find(src.string_value()) != choices_.end();
 }
 
-void API::run() {
-    app_.port(8080).run();
+/**
+ * Named choice constraint can't be applied. Calling this
+ * will always return an empty value.
+ */
+catena::Value PicklistConstraint::apply(const catena::Value& src) const {
+    catena::Value val;
+    return val;
+}
+
+void PicklistConstraint::toProto(catena::Constraint& constraint) const {
+
+    constraint.set_type(catena::Constraint::STRING_CHOICE);
+    for (std::string choice : choices_) {
+        constraint.mutable_string_choice()->add_choices(choice);
+    }
 }

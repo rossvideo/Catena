@@ -225,7 +225,7 @@ function sharedArg(desc) {
 
 class Constraint extends CppCtor {
   /**
-   * Create constructor arguments for catena::lite::Constraint object
+   * Create constructor arguments for catena::common::Constraint object
    * @param {string} parentOid oid of the parent object, empty if owned by device
    * @param {string} oid object id of the constraint being processed
    * @param {object} desc descriptor of parent object

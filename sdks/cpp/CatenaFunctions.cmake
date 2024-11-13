@@ -24,24 +24,24 @@ cmake_minimum_required(VERSION 3.20)
 # Arguments: 
 # . catena_interface_dir location of the protobuf interface definition files
 # . proto_stems list of the names of the proto files to preprocess
-# . proto_target the target that the preprocessed files will be added to
+# . target the target that the preprocessed files will be added to
 # . model the runtime model to optimize for
 #
 # Returns:
 #  ${model}_sources the list of filenames preprocessed
 #
-function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target model)
+function(preprocess_protobuf_files catena_interface_dir proto_stems target model out_dir)
     
     set(optimize_for SPEED)
     if (${model} STREQUAL "lite")
         set(optimize_for LITE_RUNTIME)
     endif()
     message(STATUS "Building Catena model for ${model} runtime optimizing for ${optimize_for}")
-
-    foreach(_proto ${proto_stems})
+    set(preprocessed_files)
+    foreach(_stem ${proto_stems})
         # preprocess proto files
-        set(input "${catena_interface_dir}${_proto}.proto")
-        set(output "${CMAKE_BINARY_DIR}/${model}/${_proto}.proto")
+        set(input "${catena_interface_dir}${_stem}.proto")
+        set(output "${out_dir}/preprocessed/${_stem}.proto")
         
         add_custom_command(
             OUTPUT "${output}"
@@ -52,10 +52,11 @@ function(preprocess_protobuf_files catena_interface_dir proto_stems proto_target
         )
 
         set_source_files_properties(${output} PROPERTIES GENERATED TRUE)
-        target_sources(${proto_target} PRIVATE ${output})
-
+        list(APPEND preprocessed_files "${output}")
     endforeach()
-endfunction()
+    target_sources(${target} PRIVATE ${preprocessed_files})
+    set(${target}_output ${preprocessed_files} PARENT_SCOPE)
+endfunction(preprocess_protobuf_files)
 
 # Function to install Catena codegen
 function(install_catena_codegen)
@@ -82,7 +83,7 @@ function(install_catena_codegen)
     set(CATENA_CODEGEN_INSTALL_DIR ${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp/node_modules/catena-codegen PARENT_SCOPE)
     
     install(FILES ${CMAKE_SOURCE_DIR}/CatenaCodegen.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp)
-endfunction()
+endfunction(install_catena_codegen)
 
 # Function to build the documentation for Catena
 function(build_docs)
@@ -97,6 +98,13 @@ function(build_docs)
         # set input and output files
         set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxyfile.in)
         set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doxyfile)
+        set(COMMON_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/common/examples)
+        set(gRPC_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/connections/grpc/examples)
+        set(REST_EXAMPLES ${CMAKE_CURRENT_SOURCE_DIR}/connections/rest/examples)
+        set(DOXYGEN_EXAMPLES_PATHS "${COMMON_EXAMPLES} ${gRPC_EXAMPLES} ${REST_EXAMPLES}")
+        set(VDK_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/common/include/vdk)
+        set(VDK_SRC ${CMAKE_CURRENT_SOURCE_DIR}/common/src/vdk)
+        set(DOXYGEN_EXCLUDE "${VDK_INCLUDE} ${VDK_SRC}")
 
         # find out if graphviz is installed
         if (DOXYGEN_DOT_EXECUTABLE STREQUAL "DOXYGEN_DOT_EXECUTABLE-NOTFOUND")
@@ -118,16 +126,22 @@ function(build_docs)
         configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
 
         # Creates a target 'doxygen' to generate the documentation.
-        # Run 'make doxygen' in the output directory to build the target.
-        add_custom_target(doxygen
+        # If DOCS_ONLY is set, the target is added to ALL so that it will build
+        # from a simple invocation of the generator - e.g. $ ninja.
+        # Otherswise, it isn't added to ALL because we're more than likely
+        # in a code-test-fix workflow and don't want to waste time generating
+        # documentation.
+        set(DOXYGEN_IS_IN_ALL)
+        if(ONLY_DOCS)
+            set(DOXYGEN_IS_IN_ALL ALL)
+        endif(ONLY_DOCS)
+        add_custom_target(doxygen ${DOXYGEN_IS_IN_ALL}
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Generating documentation with Doxygen"
             VERBATIM
         )
-
-
     elseif(BUILD_DOC)
         message("Doxygen needs to be installed to generate the documentation")
     endif (DOXYGEN_FOUND AND BUILD_DOC)
-endfunction()
+endfunction(build_docs)

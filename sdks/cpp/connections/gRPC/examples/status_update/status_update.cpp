@@ -27,8 +27,6 @@
 
 //common
 #include <utils.h>
-
-//lite
 #include <Device.h>
 #include <ParamWithValue.h>
 
@@ -60,7 +58,6 @@
 
 using grpc::Server;
 
-using namespace catena::lite;
 using namespace catena::common;
 
 // set up the command line parameters
