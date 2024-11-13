@@ -45,7 +45,7 @@ target_include_directories(${TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>   
 )
 
-target_link_libraries(${TARGET} catena_lite)
+target_link_libraries(${TARGET} ${common_lib})
 
 target_compile_features(${TARGET}
     PUBLIC

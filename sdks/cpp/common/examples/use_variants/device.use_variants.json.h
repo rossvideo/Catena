@@ -2,7 +2,7 @@
 // This file was auto-generated. Do not modify by hand.
 #include <Device.h>
 #include <StructInfo.h>
-extern catena::lite::Device dm;
+extern catena::common::Device dm;
 namespace use_variants {
 using Number = std::variant<int32_t, std::string>;
 struct Cartesian {
@@ -29,26 +29,26 @@ using Coordinates_elem = std::variant<use_variants::Cartesian, _coordinates::Cyl
 using Coordinates = std::vector<Coordinates_elem>;
 } // namespace use_variants
 template<>
-constexpr std::array<const char*, 2> catena::lite::alternativeNames<use_variants::Number>{"digits", "words"};
+constexpr std::array<const char*, 2> catena::common::alternativeNames<use_variants::Number>{"digits", "words"};
 template<>
-struct catena::lite::StructInfo<use_variants::Cartesian> {
+struct catena::common::StructInfo<use_variants::Cartesian> {
     using Cartesian = use_variants::Cartesian;
     using Type = std::tuple<FieldInfo<int32_t, Cartesian>, FieldInfo<int32_t, Cartesian>, FieldInfo<int32_t, Cartesian>>;
     static constexpr Type fields = {{"x", &Cartesian::x}, {"y", &Cartesian::y}, {"z", &Cartesian::z}};
 };
 template<>
-struct catena::lite::StructInfo<use_variants::_coordinates::Cylindrical> {
+struct catena::common::StructInfo<use_variants::_coordinates::Cylindrical> {
     using Cylindrical = use_variants::_coordinates::Cylindrical;
     using Type = std::tuple<FieldInfo<int32_t, Cylindrical>, FieldInfo<int32_t, Cylindrical>, FieldInfo<int32_t, Cylindrical>>;
     static constexpr Type fields = {{"rho", &Cylindrical::rho}, {"phi", &Cylindrical::phi}, {"z", &Cylindrical::z}};
 };
 template<>
-struct catena::lite::StructInfo<use_variants::_coordinates::Spherical> {
+struct catena::common::StructInfo<use_variants::_coordinates::Spherical> {
     using Spherical = use_variants::_coordinates::Spherical;
     using Type = std::tuple<FieldInfo<int32_t, Spherical>, FieldInfo<int32_t, Spherical>, FieldInfo<int32_t, Spherical>>;
     static constexpr Type fields = {{"r", &Spherical::r}, {"theta", &Spherical::theta}, {"phi", &Spherical::phi}};
 };
 template<>
-constexpr std::array<const char*, 3> catena::lite::alternativeNames<use_variants::Coordinates_elem>{"cartesian", "cylindrical", "spherical"};
+constexpr std::array<const char*, 3> catena::common::alternativeNames<use_variants::Coordinates_elem>{"cartesian", "cylindrical", "spherical"};
 
 

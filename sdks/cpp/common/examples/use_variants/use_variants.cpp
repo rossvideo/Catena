@@ -33,7 +33,7 @@
 #include "device.use_variants.json.h" 
 
 
-// lite
+// common
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
@@ -41,7 +41,7 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
-using namespace catena::lite;
+using namespace catena::common;
 using namespace catena::common;
 using namespace use_variants;
 using catena::common::ParamTag;

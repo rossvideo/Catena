@@ -173,27 +173,7 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
     }, fields);
 }
 
-template <IsVariantArray T>
-void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
-    for (const auto& item : *src) {
-        catena::Value elemValue;
-        toProto(elemValue, &item, auth);
-        *dst.mutable_struct_variant_array_values()->add_struct_variants() = *elemValue.mutable_struct_variant_value();
-    }
-}
 
-template <meta::IsVariant T>
-void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
-    std::string variantType = alternativeNames<T>[src->index()];
-    AuthzInfo subParamAuth = auth.subParamInfo(variantType);
-    std::visit([&](auto& arg) {
-        catena::Value elemValue;
-        toProto(elemValue, &arg, subParamAuth);
-        catena::StructVariantValue* structVariant = dst.mutable_struct_variant_value();
-        structVariant->set_struct_variant_type(variantType);
-        *structVariant->mutable_value() = elemValue;
-    }, *src);
-}
 
 
 
@@ -267,88 +247,7 @@ void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
     }, fields);
 }
 
-template <IsVariantArray T>
-void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
-    using VariantType = T::value_type;
-    if (!src.has_struct_variant_array_values()) {
-        // src is not an array so it cannot be deserialized into an array
-        return;
-    }
-    auto& srcArray = src.struct_variant_array_values().struct_variants();
-    dst->clear(); // empty the destination vector
 
-    // iterate over each element in the src array and call fromProto for each
-    for (int i = 0; i < srcArray.size(); ++i) {
-        catena::Value item;
-        *item.mutable_struct_variant_value() = srcArray.Get(i);
-        VariantType& elemValue = dst->emplace_back();
-        fromProto(item, &elemValue, auth);
-    }
-}
-
-/**
- * @brief helper function to find the index of a type in a list of type names
- * @param typeName the name of the type to find
- * @param typeNames the list of type names to search
- * @return the index of the type in the list or the size of the list if the type is not found
- */
-template <std::size_t size>
-inline std::size_t _findTypeIndex(const std::string& typeName, const std::array<const char*, size>& typeNames) {
-    return std::find(typeNames.begin(), typeNames.end(), typeName) - typeNames.begin();
-}
-
-template <meta::IsVariant T>
-void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
-    if (!src.has_struct_variant_value()) {
-        // src is not a variant so it cannot be deserialized into a variant
-        return;
-    }
-    const catena::StructVariantValue& srcVariant = src.struct_variant_value();
-    std::string variantType = srcVariant.struct_variant_type();
-    
-    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
-    if (typeIndex >= alternativeNames<T>.size()) {
-        // variant type not found in the list of alternatives
-        return;
-    }
-    if (typeIndex != dst->index()) {
-        // The type of the variant needs to be changed
-        _changeType<T, 0>(*dst, typeIndex);
-    }
-
-    AuthzInfo subParamAuth = auth.subParamInfo(variantType);
-    std::visit([&](auto& arg) {
-        fromProto(srcVariant.value(), &arg, subParamAuth);
-    }, *dst); 
-}
-
-/**
- * @brief _changeType is a helper function to change the type held by a variant
- * @tparam V the type of the variant
- * @tparam Index the index of the current type being checked
- * @param variant the variant to change the type of
- * @param newTypeIndex the index of the new type to change to
- * 
- * This function is used by fromProto to change the type of a variant to the type specified in the src protobuf
- * message. It is a recursive function that checks each type in the variant until it finds the type that matches
- * the newTypeIndex. If the type is not found, the variant is left unchanged. If the type is found, the variant
- * is changed to the default value of the new type.
- */
-template <meta::IsVariant V, std::size_t Index>
-void _changeType(V& variant, const std::size_t newTypeIndex) {
-    if constexpr (Index == std::variant_size_v<V>) {
-        // reached the end of the variant, type not found
-        return;
-    } else {
-        using NewType = std::variant_alternative_t<Index, V>;
-        if (newTypeIndex == Index) {
-            // found the new type, change the variant to the default value of the new type
-            variant = NewType{};
-        } else {
-            _changeType<V, Index + 1>(variant, newTypeIndex);
-        }
-    }
-}
 
 }  // namespace lite
 }  // namespace catena

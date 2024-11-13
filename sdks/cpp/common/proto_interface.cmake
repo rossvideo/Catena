@@ -46,7 +46,7 @@ function(cmake_catena_proto_common)
     )
 
     # link against the protobuf interface
-    target_link_libraries(${target} INTERFACE ${PROTO_TARGET})
+    target_link_libraries(${target} PUBLIC ${PROTO_TARGET})
     target_compile_features(${target} PUBLIC cxx_std_20)
 
     # add dependencies

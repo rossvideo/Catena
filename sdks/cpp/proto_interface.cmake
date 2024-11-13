@@ -93,7 +93,7 @@ function(set_up_proto_targets)
 
     target_include_directories(
         ${PROTO_TARGET} PUBLIC
-        # $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
+        $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
         # $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${PROTO_TARGET}>
     )
