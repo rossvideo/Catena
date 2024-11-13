@@ -417,7 +417,7 @@ class ParamWithValue : public catena::common::IParam {
         std::string oidStr = oid.front_as_string();
         oid.pop();   
 
-        if (catena::lite::AlternativeNames<U>[value.index()] != oidStr) {
+        if (catena::lite::alternativeNames<U>[value.index()] != oidStr) {
             status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }

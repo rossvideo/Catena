@@ -105,7 +105,7 @@ struct StructInfo{}; // intentionally undefined
  * that contains the names of each alternative in the variant.
  */
 template <meta::IsVariant U> 
-const std::vector<std::string> AlternativeNames{};
+constexpr std::array<const char*, 0> alternativeNames{};
 
 /**
  * @brief FieldInfo pairs the name of a field with the type information needed to access it
@@ -184,7 +184,7 @@ void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
 
 template <meta::IsVariant T>
 void toProto(catena::Value& dst, const T* src, const AuthzInfo& auth) {
-    std::string variantType = AlternativeNames<T>[src->index()];
+    std::string variantType = alternativeNames<T>[src->index()];
     AuthzInfo subParamAuth = auth.subParamInfo(variantType);
     std::visit([&](auto& arg) {
         catena::Value elemValue;
@@ -292,7 +292,8 @@ void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
  * @param typeNames the list of type names to search
  * @return the index of the type in the list or the size of the list if the type is not found
  */
-inline std::size_t _findTypeIndex(const std::string& typeName, const std::vector<std::string>& typeNames) {
+template <std::size_t size>
+inline std::size_t _findTypeIndex(const std::string& typeName, const std::array<const char*, size>& typeNames) {
     return std::find(typeNames.begin(), typeNames.end(), typeName) - typeNames.begin();
 }
 
@@ -305,8 +306,8 @@ void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
     const catena::StructVariantValue& srcVariant = src.struct_variant_value();
     std::string variantType = srcVariant.struct_variant_type();
     
-    std::size_t typeIndex = _findTypeIndex(variantType, AlternativeNames<T>);
-    if (typeIndex >= AlternativeNames<T>.size()) {
+    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
+    if (typeIndex >= alternativeNames<T>.size()) {
         // variant type not found in the list of alternatives
         return;
     }
