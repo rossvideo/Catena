@@ -1,5 +1,6 @@
-![Alt](images/Catena%20Logo_PMS2191%20&%20White.png)
-
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 # Multi-part Device Models and the Validator
 
 Device models can quickly become too large to manage.
@@ -36,6 +37,6 @@ data was valid.
 
 <div style="text-align: center">
 
-[Next Page: Template Parameters](Template.md)
+[Next Page: Template Parameters](Template.html)
 
 </div>
