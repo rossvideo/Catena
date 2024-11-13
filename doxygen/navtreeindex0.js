@@ -1,9 +1,5 @@
 var NAVTREEINDEX0 =
 {
-"":[7,0,0,0],
-"":[7,0,0,1],
-"":[7,0,0,2],
-"":[7,0,0,3],
 "ArrayAccessor_8h.html":[9,0,1,0,0],
 "ArrayAccessor_8h_source.html":[9,0,1,0,0],
 "AuthzInfo_8h.html":[9,0,0,0,2],
@@ -21,8 +17,8 @@ var NAVTREEINDEX0 =
 "EnumDecorator_8h.html#af510d0a368163629ba769123f8eea9fc":[9,0,0,0,1,0,3],
 "EnumDecorator_8h_source.html":[9,0,0,0,1,0],
 "Enums_8h.html":[9,0,0,0,4],
-"Enums_8h.html#a225684244a1b6d89745e3850d8b93759":[9,0,0,0,4,1],
 "Enums_8h.html#a225684244a1b6d89745e3850d8b93759":[7,0,0,0,24],
+"Enums_8h.html#a225684244a1b6d89745e3850d8b93759":[9,0,0,0,4,1],
 "Enums_8h.html#a505c00f6adb69c8e6d1e3ade6f2ff4d5":[9,0,0,0,4,0],
 "Enums_8h.html#a505c00f6adb69c8e6d1e3ade6f2ff4d5":[7,0,0,0,23],
 "Enums_8h.html#a52e17ef3ce00a51e608afb060211e3a8":[9,0,0,0,4,2],
@@ -249,5 +245,9 @@ var NAVTREEINDEX0 =
 "classcatena_1_1common_1_1IPolyglotText.html#a5b323b335c6cf05b3587639dd5e013a2":[8,0,0,0,6,2],
 "classcatena_1_1common_1_1IPolyglotText.html#a814ea68b9c2031151944a5d2167a937f":[8,0,0,0,6,7],
 "classcatena_1_1common_1_1IPolyglotText.html#a903d53a10160e31309c1a65917856979":[8,0,0,0,6,6],
-"classcatena_1_1common_1_1IPolyglotText.html#af18c998f0f485fdf9dba7e96428230f7":[8,0,0,0,6,5]
+"classcatena_1_1common_1_1IPolyglotText.html#af18c998f0f485fdf9dba7e96428230f7":[8,0,0,0,6,5],
+"classcatena_1_1common_1_1IPolyglotText.html#af4432270f343f3d9b8550b504b6a0487":[8,0,0,0,6,1],
+"classcatena_1_1common_1_1LanguagePack.html":[8,0,0,0,7],
+"classcatena_1_1common_1_1LanguagePack.html#a15152d22617ab65dd405851091f5f003":[8,0,0,0,7,11],
+"classcatena_1_1common_1_1LanguagePack.html#a3341a7a40108b118b8e0c401ccd87707":[8,0,0,0,7,0]
 };
