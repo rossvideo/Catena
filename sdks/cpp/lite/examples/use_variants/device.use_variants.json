@@ -29,22 +29,47 @@
         }
       }
     },
+    "cartesian": {
+      "type": "STRUCT",
+      "params": {
+        "x": {
+          "type": "INT32"
+        },
+        "y": {
+          "type": "INT32"
+        },
+        "z": {
+          "type": "INT32"
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "x": {
+              "value": {
+                "int32_value": 5
+              }
+            },
+            "y": {
+              "value": {
+                "int32_value": 10
+              }
+            },
+            "z": {
+              "value": {
+                "int32_value": 15
+              }
+            }
+          }
+        }
+      }
+    },
     "coordinates": {
       "type": "STRUCT_VARIANT_ARRAY",
       "params": {
         "cartesian": {
           "type": "STRUCT",
-          "params": {
-            "x": {
-              "type": "INT32"
-            },
-            "y": {
-              "type": "INT32"
-            },
-            "z": {
-              "type": "INT32"
-            }
-          }
+          "template_oid": "/cartesian"
         },
         "cylindrical": {
           "type": "STRUCT",

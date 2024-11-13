@@ -46,63 +46,99 @@ using namespace catena::common;
 using namespace use_variants;
 using catena::common::ParamTag;
 #include <iostream>
+
+void printCoordinate(const Coordinates_elem& coord) {
+    std::visit([](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, Cartesian>) {
+            std::cout << "Cartesian: " << arg.x << ", " << arg.y << ", " << arg.z << std::endl;
+        } else if constexpr (std::is_same_v<T, _coordinates::Cylindrical>) {
+            std::cout << "Cylindrical: " << arg.rho << ", " << arg.phi << "°, " << arg.z << std::endl;
+        } else if constexpr (std::is_same_v<T, _coordinates::Spherical>) {
+            std::cout << "Spherical: " << arg.r << ", " << arg.theta << "°, " << arg.phi << "°" << std::endl;
+        }
+    }, coord);
+}
+
 int main() {
-    // lock the model
+    // // lock the model
     Device::LockGuard lg(dm);
     catena::exception_with_status err{"", catena::StatusCode::OK};
-
-    std::unique_ptr<IParam> ip = dm.getParam("/location", err);
-    if (ip == nullptr){
+    std::unique_ptr<IParam> ip;
+    std::string scope{"monitor"};
+    
+    // get the number param
+    ip = dm.getParam("/number", err);
+    if (!ip) {
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    auto& locationParam = *dynamic_cast<ParamWithValue<Location>*>(ip.get());
-    Location& loc = locationParam.get();
+    catena::Param numberParam;
+    ip->toProto(numberParam, scope);
+    std::cout << numberParam.DebugString() << std::endl;
 
-    std::cout << "Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
+    use_variants::Number& number = getParamValue<use_variants::Number>(ip.get());
+    number = "five";
+    ip->toProto(numberParam, scope);
+    std::cout << "Updated Number:\n" << numberParam.DebugString() << std::endl;
 
+    // get the coordinates param
+    ip = dm.getParam("/coordinates", err);
+    if (!ip) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catena::Param coordinatesParam;
+    ip->toProto(coordinatesParam, scope);
+    std::cout << coordinatesParam.DebugString() << std::endl;
+
+    ip = dm.getParam("/coordinates/2", err);
+    if (!ip) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    use_variants::Coordinates_elem& coord = getParamValue<use_variants::Coordinates_elem>(ip.get());
+    std::cout << "Coordinate/2: ";
+    printCoordinate(coord);
+
+    ip = dm.getParam("/cartesian", err);
+    if (!ip) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return EXIT_FAILURE;
+    }
     catena::Value value;
-    std::string clientScope = "operate";
-    ip->toProto(value, clientScope);
-    std::cout << "Location: " << value.DebugString() << std::endl;
+    value.mutable_struct_variant_value()->set_struct_variant_type("cartesian");
+    dm.getValue("/cartesian", *value.mutable_struct_variant_value()->mutable_value());
+    dm.setValue("/coordinates/2", value);
+    std::cout << "Updated Coordinate/2: ";
+    printCoordinate(coord);
 
-    // this line is for demonstrating the fromProto method
-    // this should never be done in a real device
-    value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_value()->mutable_struct_value()->mutable_fields()->at("degrees").mutable_value()->set_float32_value(100);
-    ip->fromProto(value, clientScope);
+    std::cout << "\n";
 
-    std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
-              << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
-              << "' " << loc.longitude.seconds << "\")" << std::endl;
 
-    ip = dm.getParam("/location/latitude", err);
-    if (ip == nullptr){
+    ip = dm.getParam("/coordinates/0", err);
+    if (!ip) {
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    value.Clear();
-    ip->toProto(value, clientScope);
-    std::cout << "Latitude: " << value.DebugString() << std::endl;
+    ip->toProto(value, scope);
+    std::cout << value.DebugString() << std::endl;
 
-    ip = dm.getParam("/location/latitude/degrees", err);
-    if (ip == nullptr){
+    value.set_int32_value(42);
+    dm.setValue("/coordinates/0/cartesian/z", value);
+
+    std::cout << "\n";
+
+    ip = dm.getParam("/coordinates/0/cartesian", err);
+    if (!ip) {
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    value.Clear();
-    ip->toProto(value, clientScope);
-    std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
-
-    ip = dm.getParam("/location/longitude/seconds", err);
-    if (ip == nullptr){
-        std::cerr << "Error: " << err.what() << std::endl;
-        return EXIT_FAILURE;
-    }
-    value.Clear();
-    ip->toProto(value, clientScope);
-    std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
+    ip->toProto(value, scope);
+    std::cout << value.DebugString() << std::endl;
+    use_variants::Cartesian& cartesian = getParamValue<use_variants::Cartesian>(ip.get());
+    std::cout << "Updated Coordinates/0/cartesian: ";
+    printCoordinate(cartesian);
 
     return EXIT_SUCCESS;
 }
