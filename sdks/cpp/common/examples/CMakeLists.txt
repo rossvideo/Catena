@@ -29,7 +29,7 @@ else()
     if(REST_enabled)
         set(common_lib catena_proto_common)
     else()
-        message(FATAL_ERROR "No transport enabled")
+        message(FATAL_ERROR "No connection type enabled")
     endif(REST_enabled)
 endif(gRPC_enabled)
 

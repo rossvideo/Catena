@@ -65,17 +65,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Define standard installation directories for the target system
 include(GNUInstallDirs)
 
-# Assumption: gRPC and all its dependencies are already installed
-# on this system, so they can be located by find_package().
-
-if (WIN32)
-  # Windows toolchain and prefix_path are set through command line
-  # nothing to do here
-else()
-  # set options for linux, and mac
-  # nothing to do here, so why not delete this block?
-endif(WIN32)
-
 if (APPLE)
   # set up for MacOS
   set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
@@ -160,31 +149,16 @@ if (gRPC_enabled)
   set_up_gRPC_targets()
 endif(gRPC_enabled)
 
+# conditionally set up the REST targets
 if (REST_enabled)
   include(${CATENA_CPP_ROOT_DIR}/proto_interface.cmake)
   set_up_proto_targets()
 endif(REST_enabled)
 
+# add the common and connections directories
 add_subdirectory("common")
 add_subdirectory("connections")
 
-
-
-
-
-
-
-
-
-
-
-
-
-# set up our target
-set(REST_TARGET "rest_proto_interface")
-
-# set up directories for each target
-set(REST_INTERFACE_DIR  "${CMAKE_BINARY_DIR}/${REST_TARGET}")
 
 # add_library(${REST_TARGET} STATIC)
 

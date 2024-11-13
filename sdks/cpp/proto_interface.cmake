@@ -54,7 +54,7 @@ function(set_up_proto_targets)
         "${PROTO_INTERFACE_DIR}"
     )
 
-    message(STATUS "grpc_preprocessor_target_output: ${proto_preprocessor_target_output}")
+    message(STATUS "proto_preprocessor_target_output: ${proto_preprocessor_target_output}")
 
     # declare our target
     # NB the sources are set in the call to preprocess_protobuf_files

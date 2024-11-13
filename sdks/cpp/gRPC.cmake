@@ -88,8 +88,6 @@ function(set_up_gRPC_targets)
         "${GRPC_SERVICE_DIR}/interface/service.grpc.pb.cc"
     )
     set_source_files_properties(${extra_files} PROPERTIES GENERATED TRUE)
-  
-    #list(APPEND grpc_preprocessor_target_output ${extra_files})
 
     # declare our target
     # NB the sources are set in the call to preprocess_protobuf_files

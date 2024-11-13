@@ -39,7 +39,7 @@ using catena::common::AuthzInfo;
 using catena::common::EmptyValue;
 using ::catena::Value;
 
-EmptyValue emptyValue;
+EmptyValue catena::common::emptyValue;
 
 template<>
 void catena::common::toProto<EmptyValue>(::catena::Value& dst, const EmptyValue* src, const AuthzInfo& auth) {

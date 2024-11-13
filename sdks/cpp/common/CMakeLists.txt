@@ -36,15 +36,17 @@ set(sources
     "src/PicklistConstraint.cpp"
 )
 
+# conditionally make for gRPC
 if (gRPC_enabled)
     include(gRPC.cmake)
     cmake_catena_grpc_common()
 endif(gRPC_enabled)
 
+# conditionally make for REST
 if (REST_enabled)
     include(proto_interface.cmake)
     cmake_catena_proto_common()
 endif(REST_enabled)
 
-
+# make the examples
 add_subdirectory(examples)
