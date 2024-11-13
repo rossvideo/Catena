@@ -22,38 +22,31 @@ cmake_minimum_required(VERSION 3.20)
 
 project(COMMON C CXX)
 
-if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
-
 set(target catena_common)
 
-set(sources "src/utils.cpp" "src/vdk/signals.cpp" "src/Path.cpp")
-add_library(${target} STATIC ${sources})
-
-target_include_directories(
-    ${target}
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+set(sources 
+    "src/utils.cpp" 
+    "src/vdk/signals.cpp" 
+    "src/Path.cpp"
+    "src/Device.cpp"
+    "src/ParamDescriptor.cpp"
+    "src/StructInfo.cpp"
+    "src/PolyglotText.cpp"
+    "src/LanguagePack.cpp"
+    "src/PicklistConstraint.cpp"
 )
 
-target_link_libraries(${target} INTERFACE ${proto_interface})
+# conditionally make for gRPC
+if (gRPC_enabled)
+    include(gRPC.cmake)
+    cmake_catena_grpc_common()
+endif(gRPC_enabled)
 
-target_compile_features(${target} PUBLIC cxx_std_20)
+# conditionally make for REST
+if (REST_enabled)
+    include(proto_interface.cmake)
+    cmake_catena_proto_common()
+endif(REST_enabled)
 
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
-)
-
-install(
-    TARGETS ${target}
-    EXPORT Catena_cppTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
+# make the examples
 add_subdirectory(examples)

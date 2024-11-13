@@ -85,7 +85,7 @@ class ParamDescriptor {
   }
 
   write(parent) {
-    bloc(`catena::lite::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, ${this.constraint}, &${parent}Descriptor, dm, false};`);
+    bloc(`catena::common::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, ${this.constraint}, &${parent}Descriptor, dm, false};`);
     for (let subparam of this.subparams) {
       subparam.write(`${parent}${this.name}`);
     }
@@ -171,7 +171,7 @@ class CppGen {
    */
   device() {
     const device = new Device(this.desc);
-    bloc(`catena::lite::Device dm {${device.argsToString()}};`);
+    bloc(`catena::common::Device dm {${device.argsToString()}};`);
     // bloc(
     //   `ParamAdder addParamToDevice = std::bind(&Device::addItem<ParamTag>, &dm, _1, _2);`
     // );
@@ -312,13 +312,13 @@ class CppGen {
 
     // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
     if (isCommand) {
-      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, true};`);
+      bloc(`catena::common::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, true};`);
       descriptor.writeDescriptors();
-      bloc(`catena::lite::ParamWithValue<EmptyValue> ${pname}Param {catena::lite::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
+      bloc(`catena::common::ParamWithValue<EmptyValue> ${pname}Param {catena::common::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
     } else if (!isStructChild && p.hasValue()) {
-      bloc(`catena::lite::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, false};`);
+      bloc(`catena::common::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, false};`);
       descriptor.writeDescriptors();
-      bloc(`catena::lite::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm, false};`);
+      bloc(`catena::common::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm, false};`);
     }
 
   }
@@ -336,7 +336,7 @@ class CppGen {
 
   defineGetStructInfo(structInfo) {
     ploc(`template<>`);
-    ploc(`struct catena::lite::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
+    ploc(`struct catena::common::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
     ploc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
     
     const keys = Object.keys(structInfo.params);
@@ -396,7 +396,7 @@ class CppGen {
     let args = c.argsToString();
     let constraintType = c.objectType();
     let cname = c.constraintName(); 
-    bloc(`catena::lite::${constraintType} ${cname}Constraint {${args}};`);
+    bloc(`catena::common::${constraintType} ${cname}Constraint {${args}};`);
     return `${cname}Constraint`;
   }
   
@@ -419,7 +419,7 @@ class CppGen {
   languagePacks() {
     let languagePacks = new LanguagePacks(this.desc);
     let packs = languagePacks.getLanguagePacks();    
-    bloc (`using catena::lite::LanguagePack;`);
+    bloc (`using catena::common::LanguagePack;`);
     for (let pack in packs) {
       let lang = packs[pack];
       bloc(`LanguagePack ${pack} {`);
@@ -452,7 +452,7 @@ class CppGen {
     hloc(warning);
     hloc(`#include <Device.h>`);
     hloc(`#include <StructInfo.h>`);
-    hloc(`extern catena::lite::Device dm;`);
+    hloc(`extern catena::common::Device dm;`);
     hloc(`namespace ${this.namespace} {`);
 
     bloc(warning);
@@ -474,15 +474,15 @@ class CppGen {
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
     bloc(`using Scope = typename catena::patterns::EnumDecorator<Scopes_e>;`);
-    bloc(`using catena::lite::FieldInfo;`);
-    bloc(`using catena::lite::ParamDescriptor;`);
-    bloc(`using catena::lite::ParamWithValue;`);
-    bloc(`using catena::lite::Device;`);
-    bloc(`using catena::lite::RangeConstraint;`);
-    bloc(`using catena::lite::PicklistConstraint;`);
-    bloc(`using catena::lite::NamedChoiceConstraint;`);
+    bloc(`using catena::common::FieldInfo;`);
+    bloc(`using catena::common::ParamDescriptor;`);
+    bloc(`using catena::common::ParamWithValue;`);
+    bloc(`using catena::common::Device;`);
+    bloc(`using catena::common::RangeConstraint;`);
+    bloc(`using catena::common::PicklistConstraint;`);
+    bloc(`using catena::common::NamedChoiceConstraint;`);
     bloc(`using catena::common::IParam;`);
-    bloc(`using catena::lite::EmptyValue;`);
+    bloc(`using catena::common::EmptyValue;`);
     bloc(`using std::placeholders::_1;`);
     bloc(`using std::placeholders::_2;`);
     bloc(`using catena::common::ParamTag;`);

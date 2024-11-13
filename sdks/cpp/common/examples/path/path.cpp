@@ -81,3 +81,44 @@ int main() {
     Path struct_array_element_field{"/parent/3/child"};
     document(struct_array_element_field);
 }
+
+/* possible output
+path: /top_level_oid
+has length: 1
+segment 0 has type string and value: top_level_oid
+path: /top_level_array/3
+has length: 2
+segment 0 has type string and value: top_level_array
+segment 1 has type Index and value: 3
+path: /parent/child/grandchild
+has length: 3
+segment 0 has type string and value: parent
+segment 1 has type string and value: child
+segment 2 has type string and value: grandchild
+path: /parent/-/child
+has length: 3
+segment 0 has type string and value: parent
+segment 1 has type Index and value: kEnd
+segment 2 has type string and value: child
+
+jptr should be empty
+path: /parent/-/child
+has length: 0
+
+jptr should have its last segment
+path: /parent/-/child
+has length: 1
+segment 2 has type string and value: child
+
+jptr should be fully restored
+path: /parent/-/child
+has length: 3
+segment 0 has type string and value: parent
+segment 1 has type Index and value: kEnd
+segment 2 has type string and value: child
+path: /parent/3/child
+has length: 3
+segment 0 has type string and value: parent
+segment 1 has type Index and value: 3
+segment 2 has type string and value: child
+*/

@@ -13,51 +13,33 @@
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+#
 # cmake build file for the read_model_from_file example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(gRPC C CXX)
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
 
-if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
+add_executable(${TARGET})
 
-set(target catena_connections_grpc)
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
-set(sources "src/PeerInfo.cpp" "src/ServiceImpl.cpp")
-add_library(${target} STATIC ${sources})
+generate_catena_device(
+    DEVICE_MODEL_JSON "${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json"
+    TARGET ${TARGET}
+)
 
-find_package(jwt-cpp CONFIG REQUIRED)
-
-target_include_directories(
-    ${target}
+target_sources(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>     
 )
 
-target_link_libraries(${target}
+target_link_libraries(${TARGET} ${common_lib})
+
+target_compile_features(${TARGET}
     PUBLIC
-        grpc_service
-        catena_grpc_common
-        jwt-cpp::jwt-cpp
+        cxx_std_20
 )
-
-target_compile_features(${target} PUBLIC cxx_std_20)
-
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
-)
-
-install(TARGETS ${target} 
-    EXPORT Catena_cppTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
-)
-
-add_subdirectory(examples)

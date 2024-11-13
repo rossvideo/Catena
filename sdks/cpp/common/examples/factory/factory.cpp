@@ -227,26 +227,17 @@ int main() {
 }
 
 /* Example Output
-Dog Factory dog - unidi dog -
-    bidi
 
-        Dog Tests Labrador : can go forwards and backwards
-                                 .bark Jack Russell
-    : can go
-          forwards and backwards.bark bark bark bark Rabid dog
-    : can only go forwards.bark bark bark bark bark bark bark bark
+Dog Tests
+Labrador: can go forwards and backwards. bark 
+Jack Russell: can go forwards and backwards. bark bark bark bark 
+Rabid dog: can only go forwards. bark bark bark bark bark bark bark bark 
 
-          Factory Test Problem
-    : P*
-      rv::GenericFactory<P, Ms>::makeProduct(const string&, Ms...)
-          [with P = Dog;
-           Ms = {const std::__cxx11::basic_string<char, std::char_traits<char>,
-                                                  std::allocator<char> >&,
-                 const unsigned int};
-           std::__cxx11::string = std::__cxx11::basic_string<char>],
-    could not find entry with key : goldfish
+Factory Test
+Problem: std::unique_ptr<P> catena::patterns::GenericFactory<Dog, std::string, const std::string &, const unsigned int>::makeProduct(const K, Ms &&...) [P = Dog, K = std::string, Ms = <const std::string &, const unsigned int>], could not find entry with key: goldfish
 
-                                    Destructors here... Rabid dog arrrroooooo
-                                    !whimper... Jack Russell whimper
-                                    ... Labrador whimper...
+Destructors here...
+Rabid dog arrrroooooo! whimper...
+Jack Russell whimper...
+Labrador whimper...
 */

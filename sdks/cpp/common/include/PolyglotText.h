@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -28,47 +30,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file PolyglotText.h
+ * @brief Polyglot Text serialization and deserialization to protobuf
+ * @author John R. Naylor
+ * @date 2024-07-07
+ */
+
+// common
+#include <IPolyglotText.h>
+
+// protobuf interface
+#include <interface/language.pb.h>
+
+#include <string>
+#include <unordered_map>
+#include <initializer_list>
+
+namespace catena {
+namespace common {
+class PolyglotText : public IPolyglotText {
+  public:
+    using DisplayStrings = std::unordered_map<std::string, std::string>;
+
+  public:
+    PolyglotText(const DisplayStrings& display_strings) : display_strings_(display_strings) {}
+    PolyglotText() = default;
+    PolyglotText(PolyglotText&&) = default;
+    PolyglotText& operator=(PolyglotText&&) = default;
+    virtual ~PolyglotText() = default;
+
+    // Constructor from initializer list
+    PolyglotText(ListInitializer list)
+      : display_strings_(list.begin(), list.end()) {}
 
 
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+    void toProto(google::protobuf::MessageLite& dst) const override;
 
-#include <api.h>
+    inline const DisplayStrings& displayStrings() const override { return display_strings_; }
 
-using catena::API;
-
-API::API() : version_{"1.0.0"} {
-    CROW_ROUTE(app_, "/v1/PopulatedSlots")
-    ([]() {
-        ::catena::SlotList slotList;
-        slotList.add_slots(1);
-        slotList.add_slots(42);
-        slotList.add_slots(65535);
-
-        // Convert the SlotList message to JSON
-        std::string json_output;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        auto status = MessageToJsonString(slotList, &json_output, options);
-
-        // Check if the conversion was successful
-        if (!status.ok()) {
-            return crow::response(500, "Failed to convert protobuf to JSON");
-        }
-
-        // Create a Crow response with JSON content type
-        crow::response res;
-        res.code = 200;
-        res.set_header("Content-Type", "application/json");
-        res.write(json_output);
-        return res;
-    });
-}
-
-std::string API::version() const {
-  return version_;
-}
-
-void API::run() {
-    app_.port(8080).run();
-}
+  private:
+    DisplayStrings display_strings_;
+};
+}  // namespace common
+}  // namespace catena
