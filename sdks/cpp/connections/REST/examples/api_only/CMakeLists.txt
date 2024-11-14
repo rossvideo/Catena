@@ -39,7 +39,6 @@ target_include_directories(${TARGET}
 )
 
 target_link_libraries(${TARGET}
-    absl::flags_parse
     catena_connections_REST
 )
 

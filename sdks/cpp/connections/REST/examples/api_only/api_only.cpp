@@ -30,7 +30,19 @@
 
 #include <api.h>
 
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/strings/str_format.h"
+
 #include <iostream>
+
+// set up the command line parameters
+ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
+ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
+ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
+ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
+ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
 
 int main () {
     catena::API api;

@@ -30,14 +30,18 @@
 
 #pragma once
 
+#define CROW_ENABLE_SSL
 #include <crow.h>
+
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <string>
 
 namespace catena {
 class API {
   public:
-    API();
+    explicit API(uint16_t port = 443);
     virtual ~API() = default;
     API(const API&) = delete;
     API& operator=(const API&) = delete;
@@ -58,6 +62,22 @@ class API {
 
   private:
     std::string version_;
+    uint16_t port_;
     crow::SimpleApp app_;
+
+  private:
+  bool is_port_in_use_() const;
 };
 }  // namespace catena
+
+// flags for the API
+// flags.h
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+
+// Declare flags for the API
+ABSL_DECLARE_FLAG(std::string, certs);
+ABSL_DECLARE_FLAG(uint16_t, port);
+ABSL_DECLARE_FLAG(bool, mutual_authc);
+ABSL_DECLARE_FLAG(bool, authz);
+ABSL_DECLARE_FLAG(std::string, static_root);
