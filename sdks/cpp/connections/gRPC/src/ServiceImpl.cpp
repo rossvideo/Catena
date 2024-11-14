@@ -479,7 +479,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
             // });
             clientScopes_ = service_->getScopes(context_);
-            serializer_ = dm_.getComponentSerializer(clientScopes_, false); // select the shallow copy option
+            serializer_ = dm_.getComponentSerializer(clientScopes_, true); // select the shallow copy option
             status_ = CallStatus::kWrite;
             // fall thru to start writing
 
