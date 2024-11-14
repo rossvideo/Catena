@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['has_5fgetstructinfo_460',['has_getStructInfo',['../TypeTraits_8h.html#a7b7f658769d83169d480559fcc509a46',1,'catena::full']]],
-  ['has_5fgetvariant_461',['has_getVariant',['../TypeTraits_8h.html#a99a3cb127beeec29445bf8f7f65a66d2',1,'catena::full']]]
+  ['index_455',['index',['../structcatena_1_1full_1_1VariantMemberInfo.html#a56db3349bd6736970cb0a6fb8ec54910',1,'catena::full::VariantMemberInfo']]]
 ];

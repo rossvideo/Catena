@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['name_466',['name',['../structcatena_1_1full_1_1StructInfo.html#acfd6ef788c97ed154a833c39adb329ba',1,'catena::full::StructInfo::name()'],['../structcatena_1_1full_1_1FieldInfo.html#ad574e8236502bc259b9538fe4213d9ff',1,'catena::full::FieldInfo::name()'],['../structcatena_1_1full_1_1VariantInfo.html#a41f1391099e9c809b8856a13038d2cea',1,'catena::full::VariantInfo::name()']]]
+  ['offset_459',['offset',['../structcatena_1_1full_1_1FieldInfo.html#a40cb26f5ec61fa8bb19b8980df94b453',1,'catena::full::FieldInfo']]]
 ];
