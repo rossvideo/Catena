@@ -8,7 +8,7 @@ var searchData=
   ['addproduct_7',['addProduct',['../classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d',1,'catena::patterns::GenericFactory']]],
   ['addsubparam_8',['addSubParam',['../classcatena_1_1common_1_1ParamDescriptor.html#acbd43f226aa1753c32bcca3612dff9ad',1,'catena::common::ParamDescriptor']]],
   ['already_5fexists_9',['ALREADY_EXISTS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]],
-  ['alternativenames_10',['alternativeNames',['../lite_2include_2StructInfo_8h.html#ae24231c23ae67a0b92a3e814870cb631',1,'catena::lite::alternativeNames()'],['../common_2include_2StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f',1,'catena::common::alternativeNames()']]],
+  ['alternativenames_10',['alternativeNames',['../StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f',1,'catena::common']]],
   ['apply_11',['apply',['../classcatena_1_1common_1_1IConstraint.html#a1ddc656a7b1a5f03b26f4000b675bac9',1,'catena::common::IConstraint::apply()'],['../classcatena_1_1common_1_1RangeConstraint.html#a67b95ece6963e2186ce110931208db31',1,'catena::common::RangeConstraint::apply()'],['../classcatena_1_1common_1_1PicklistConstraint.html#a1126b08e2902df677ae9a262f2fa4ae7',1,'catena::common::PicklistConstraint::apply()'],['../classcatena_1_1common_1_1NamedChoiceConstraint.html#a49a98653eceddebb779d5d2b3cbbb881',1,'catena::common::NamedChoiceConstraint::apply()']]],
   ['arrayaccessor_12',['ArrayAccessor',['../classcatena_1_1full_1_1ArrayAccessor.html',1,'catena::full']]],
   ['arrayaccessor_2eh_13',['ArrayAccessor.h',['../ArrayAccessor_8h.html',1,'']]],

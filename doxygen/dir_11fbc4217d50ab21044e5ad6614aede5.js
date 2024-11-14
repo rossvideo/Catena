@@ -46,7 +46,7 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     ] ],
     [ "ReflectionMacros.h", "ReflectionMacros_8h_source.html", null ],
     [ "Status.h", "Status_8h.html", "Status_8h" ],
-    [ "StructInfo.h", "common_2include_2StructInfo_8h.html", "common_2include_2StructInfo_8h" ],
+    [ "StructInfo.h", "StructInfo_8h.html", "StructInfo_8h" ],
     [ "Tags.h", "Tags_8h.html", "Tags_8h" ],
     [ "utils.h", "utils_8h.html", "utils_8h" ]
 ];

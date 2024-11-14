@@ -63,7 +63,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('StructInfo_8h_source.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -86,7 +86,7 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="title">StructInfo.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="common_2include_2StructInfo_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
+<a href="StructInfo_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment"> * Copyright 2024 Ross Video Ltd</span></div>
@@ -139,15 +139,15 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keyword">extern</span> <a class="code" href="structcatena_1_1common_1_1EmptyValue.html">EmptyValue</a> emptyValue;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">   75</a></span>&#160;concept <a class="code" href="common_2include_2StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">CatenaStruct</a> = requires {</div>
+<div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">   75</a></span>&#160;concept <a class="code" href="StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">CatenaStruct</a> = requires {</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keyword">typename</span> T::isCatenaStruct;</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;};</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">   87</a></span>&#160;concept <a class="code" href="common_2include_2StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">CatenaStructArray</a> = meta::IsVector&lt;T&gt; &amp;&amp; CatenaStruct&lt;typename T::value_type&gt;;</div>
+<div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">   87</a></span>&#160;concept <a class="code" href="StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">CatenaStructArray</a> = meta::IsVector&lt;T&gt; &amp;&amp; CatenaStruct&lt;typename T::value_type&gt;;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">   97</a></span>&#160;concept <a class="code" href="common_2include_2StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">IsVariantArray</a> = meta::IsVector&lt;T&gt; &amp;&amp; meta::IsVariant&lt;typename T::value_type&gt;;</div>
+<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">   97</a></span>&#160;concept <a class="code" href="StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">IsVariantArray</a> = meta::IsVector&lt;T&gt; &amp;&amp; meta::IsVariant&lt;typename T::value_type&gt;;</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="keyword">template</span> &lt;CatenaStruct T&gt;</div>
 <div class="line"><a name="l00108"></a><span class="lineno"><a class="line" href="structcatena_1_1common_1_1StructInfo.html">  108</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structcatena_1_1common_1_1StructInfo.html">StructInfo</a>{}; <span class="comment">// intentionally undefined</span></div>
@@ -163,19 +163,19 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;};</div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; </div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant U&gt; </div>
-<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">  136</a></span>&#160;constexpr std::array&lt;const char*, 0&gt; <a class="code" href="common_2include_2StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">alternativeNames</a>{};</div>
+<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">  136</a></span>&#160;constexpr std::array&lt;const char*, 0&gt; <a class="code" href="StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">alternativeNames</a>{};</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
 <div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;<span class="keywordtype">void</span> toProto(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> AuthzInfo&amp; auth);</div>
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160; </div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="keyword">template</span> &lt;CatenaStructArray T&gt;</div>
-<div class="line"><a name="l00156"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">  156</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> <a class="code" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a>&amp; auth) {</div>
+<div class="line"><a name="l00156"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">  156</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> <a class="code" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a>&amp; auth) {</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <span class="keyword">using</span> structType = T::value_type;</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keyword">auto</span>* dstArray = dst.mutable_struct_array_values();</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    </div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; item : *src) {</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;        catena::Value elemValue;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(elemValue, &amp;item, auth);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <a class="code" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(elemValue, &amp;item, auth);</div>
 <div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        *dstArray-&gt;add_struct_values() = *elemValue.mutable_struct_value();</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    }</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;}</div>
@@ -203,21 +203,21 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;}</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="keyword">template</span> &lt;IsVariantArray T&gt;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; item : *src) {</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        catena::Value elemValue;</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(elemValue, &amp;item, auth);</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <a class="code" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(elemValue, &amp;item, auth);</div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        *dst.mutable_struct_variant_array_values()-&gt;add_struct_variants() = *elemValue.mutable_struct_variant_value();</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    }</div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;}</div>
 <div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160; </div>
 <div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant T&gt;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(catena::Value&amp; dst, <span class="keyword">const</span> T* src, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
 <div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    std::string variantType = alternativeNames&lt;T&gt;[src-&gt;index()];</div>
 <div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    AuthzInfo subParamAuth = auth.subParamInfo(variantType);</div>
 <div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    std::visit([&amp;](<span class="keyword">auto</span>&amp; arg) {</div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        catena::Value elemValue;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(elemValue, &amp;arg, subParamAuth);</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        <a class="code" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">toProto</a>(elemValue, &amp;arg, subParamAuth);</div>
 <div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        catena::StructVariantValue* structVariant = dst.mutable_struct_variant_value();</div>
 <div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        structVariant-&gt;set_struct_variant_type(variantType);</div>
 <div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        *structVariant-&gt;mutable_value() = elemValue;</div>
@@ -225,10 +225,10 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;}</div>
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160; </div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> AuthzInfo&amp; auth);</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> AuthzInfo&amp; auth);</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160; </div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="keyword">template</span> &lt;CatenaStructArray T&gt;</div>
-<div class="line"><a name="l00245"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">  245</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> <a class="code" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a>&amp; auth) {</div>
+<div class="line"><a name="l00245"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">  245</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> <a class="code" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a>&amp; auth) {</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    <span class="keyword">using</span> structType = T::value_type;</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <span class="keywordflow">if</span> (!src.has_struct_array_values()) {</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;        <span class="comment">// src is not an array so it cannot be deserialized into an array</span></div>
@@ -245,7 +245,7 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;        catena::Value item;</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;        *item.mutable_struct_value() = srcArray.Get(i);</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;        structType&amp; elemValue = dst-&gt;emplace_back();</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(item, &amp;elemValue, auth);</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;        <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(item, &amp;elemValue, auth);</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    }</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;}</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160; </div>
@@ -271,7 +271,7 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        }</div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keyword">const</span> catena::Value&amp; fieldValue = srcFields.at(field.name).value();</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160; </div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(fieldValue, &amp;(dst-&gt;*(field.memberPtr)), subParamAuth);</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(fieldValue, &amp;(dst-&gt;*(field.memberPtr)), subParamAuth);</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    };</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160; </div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="comment">// call writeField for each field in the dst struct</span></div>
@@ -282,7 +282,7 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;}</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160; </div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<span class="keyword">template</span> &lt;IsVariantArray T&gt;</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="keyword">using</span> VariantType = T::value_type;</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="keywordflow">if</span> (!src.has_struct_variant_array_values()) {</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        <span class="comment">// src is not an array so it cannot be deserialized into an array</span></div>
@@ -296,12 +296,12 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;        catena::Value item;</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;        *item.mutable_struct_variant_value() = srcArray.Get(i);</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        VariantType&amp; elemValue = dst-&gt;emplace_back();</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(item, &amp;elemValue, auth);</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(item, &amp;elemValue, auth);</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    }</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;}</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160; </div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="keyword">template</span> &lt;std::<span class="keywordtype">size_t</span> size&gt;</div>
-<div class="line"><a name="l00340"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#addddb371559a45d42994973db1a69f08">  340</a></span>&#160;<span class="keyword">inline</span> std::size_t <a class="code" href="common_2include_2StructInfo_8h.html#addddb371559a45d42994973db1a69f08">_findTypeIndex</a>(<span class="keyword">const</span> std::string&amp; typeName, <span class="keyword">const</span> std::array&lt;const char*, size&gt;&amp; typeNames) {</div>
+<div class="line"><a name="l00340"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">  340</a></span>&#160;<span class="keyword">inline</span> std::size_t <a class="code" href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">_findTypeIndex</a>(<span class="keyword">const</span> std::string&amp; typeName, <span class="keyword">const</span> std::array&lt;const char*, size&gt;&amp; typeNames) {</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keywordflow">return</span> std::find(typeNames.begin(), typeNames.end(), typeName) - typeNames.begin();</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;}</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160; </div>
@@ -326,12 +326,12 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160; </div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    AuthzInfo subParamAuth = auth.subParamInfo(variantType);</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    std::visit([&amp;](<span class="keyword">auto</span>&amp; arg) {</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <a class="code" href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(srcVariant.value(), &amp;arg, subParamAuth);</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(srcVariant.value(), &amp;arg, subParamAuth);</div>
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    }, *dst); </div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;}</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160; </div>
 <div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant V, std::<span class="keywordtype">size_t</span> Index&gt;</div>
-<div class="line"><a name="l00382"></a><span class="lineno"><a class="line" href="common_2include_2StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">  382</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="common_2include_2StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">_changeType</a>(V&amp; variant, <span class="keyword">const</span> std::size_t newTypeIndex) {</div>
+<div class="line"><a name="l00382"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">  382</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">_changeType</a>(V&amp; variant, <span class="keyword">const</span> std::size_t newTypeIndex) {</div>
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keywordflow">if</span> constexpr (Index == std::variant_size_v&lt;V&gt;) {</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        <span class="comment">// reached the end of the variant, type not found</span></div>
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        <span class="keywordflow">return</span>;</div>
@@ -350,16 +350,16 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;}  <span class="comment">// namespace catena</span></div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160; </div>
 <div class="ttc" id="aAuthzInfo_8h_html"><div class="ttname"><a href="AuthzInfo_8h.html">AuthzInfo.h</a></div><div class="ttdoc">Class for handling authorization information.</div></div>
+<div class="ttc" id="aStructInfo_8h_html_a00607bf87da6b8329a669b7712191aea"><div class="ttname"><a href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">catena::common::fromProto</a></div><div class="ttdeci">void fromProto(const catena::Value &amp;src, T *dst, const AuthzInfo &amp;auth)</div><div class="ttdef"><b>Definition:</b> StructInfo.h:245</div></div>
+<div class="ttc" id="aStructInfo_8h_html_a2f37737db27ab4b01982ea3514500fb0"><div class="ttname"><a href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">catena::common::_changeType</a></div><div class="ttdeci">void _changeType(V &amp;variant, const std::size_t newTypeIndex)</div><div class="ttdoc">_changeType is a helper function to change the type held by a variant</div><div class="ttdef"><b>Definition:</b> StructInfo.h:382</div></div>
+<div class="ttc" id="aStructInfo_8h_html_a38dc399d594567ca24de123a1b1d60ed"><div class="ttname"><a href="StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">catena::common::CatenaStruct</a></div><div class="ttdeci">concept CatenaStruct</div><div class="ttdoc">CatenaStruct concept checks that a type is a struct generated by the Catena code generator.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:75</div></div>
+<div class="ttc" id="aStructInfo_8h_html_acfc43af7a295408f1bb3bf54a5a68f63"><div class="ttname"><a href="StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">catena::common::IsVariantArray</a></div><div class="ttdeci">concept IsVariantArray</div><div class="ttdoc">IsVariantArray concept checks that a type is a vector of variants.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:97</div></div>
+<div class="ttc" id="aStructInfo_8h_html_ad5292ff814155acd5c7a9bf7b6dcb086"><div class="ttname"><a href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">catena::common::toProto</a></div><div class="ttdeci">void toProto(catena::Value &amp;dst, const T *src, const AuthzInfo &amp;auth)</div><div class="ttdef"><b>Definition:</b> StructInfo.h:156</div></div>
+<div class="ttc" id="aStructInfo_8h_html_ad8b2debe7a9500b22904ee7e342ce5a0"><div class="ttname"><a href="StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">catena::common::CatenaStructArray</a></div><div class="ttdeci">concept CatenaStructArray</div><div class="ttdoc">CatenaStructArray concept checks that a type is a vector of structs that meet the CatenaStruct concep...</div><div class="ttdef"><b>Definition:</b> StructInfo.h:87</div></div>
+<div class="ttc" id="aStructInfo_8h_html_addddb371559a45d42994973db1a69f08"><div class="ttname"><a href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">catena::common::_findTypeIndex</a></div><div class="ttdeci">std::size_t _findTypeIndex(const std::string &amp;typeName, const std::array&lt; const char *, size &gt; &amp;typeNames)</div><div class="ttdoc">helper function to find the index of a type in a list of type names</div><div class="ttdef"><b>Definition:</b> StructInfo.h:340</div></div>
+<div class="ttc" id="aStructInfo_8h_html_afd17517971565e6bf5adb909d6d48f8f"><div class="ttname"><a href="StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">catena::common::alternativeNames</a></div><div class="ttdeci">constexpr std::array&lt; const char *, 0 &gt; alternativeNames</div><div class="ttdoc">AltenativeNames is specialized in the generated code to provide the names of the alternatives in a va...</div><div class="ttdef"><b>Definition:</b> StructInfo.h:136</div></div>
 <div class="ttc" id="aVariant_8h_html"><div class="ttname"><a href="Variant_8h.html">Variant.h</a></div><div class="ttdoc">Meta programming to test if an object is a std::variant.</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1AuthzInfo_html"><div class="ttname"><a href="classcatena_1_1common_1_1AuthzInfo.html">catena::common::AuthzInfo</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition:</b> AuthzInfo.h:53</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_a00607bf87da6b8329a669b7712191aea"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">catena::common::fromProto</a></div><div class="ttdeci">void fromProto(const catena::Value &amp;src, T *dst, const AuthzInfo &amp;auth)</div><div class="ttdef"><b>Definition:</b> StructInfo.h:245</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_a2f37737db27ab4b01982ea3514500fb0"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">catena::common::_changeType</a></div><div class="ttdeci">void _changeType(V &amp;variant, const std::size_t newTypeIndex)</div><div class="ttdoc">_changeType is a helper function to change the type held by a variant</div><div class="ttdef"><b>Definition:</b> StructInfo.h:382</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_a38dc399d594567ca24de123a1b1d60ed"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">catena::common::CatenaStruct</a></div><div class="ttdeci">concept CatenaStruct</div><div class="ttdoc">CatenaStruct concept checks that a type is a struct generated by the Catena code generator.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:75</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_acfc43af7a295408f1bb3bf54a5a68f63"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">catena::common::IsVariantArray</a></div><div class="ttdeci">concept IsVariantArray</div><div class="ttdoc">IsVariantArray concept checks that a type is a vector of variants.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:97</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_ad5292ff814155acd5c7a9bf7b6dcb086"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">catena::common::toProto</a></div><div class="ttdeci">void toProto(catena::Value &amp;dst, const T *src, const AuthzInfo &amp;auth)</div><div class="ttdef"><b>Definition:</b> StructInfo.h:156</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_ad8b2debe7a9500b22904ee7e342ce5a0"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">catena::common::CatenaStructArray</a></div><div class="ttdeci">concept CatenaStructArray</div><div class="ttdoc">CatenaStructArray concept checks that a type is a vector of structs that meet the CatenaStruct concep...</div><div class="ttdef"><b>Definition:</b> StructInfo.h:87</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_addddb371559a45d42994973db1a69f08"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#addddb371559a45d42994973db1a69f08">catena::common::_findTypeIndex</a></div><div class="ttdeci">std::size_t _findTypeIndex(const std::string &amp;typeName, const std::array&lt; const char *, size &gt; &amp;typeNames)</div><div class="ttdoc">helper function to find the index of a type in a list of type names</div><div class="ttdef"><b>Definition:</b> StructInfo.h:340</div></div>
-<div class="ttc" id="acommon_2include_2StructInfo_8h_html_afd17517971565e6bf5adb909d6d48f8f"><div class="ttname"><a href="common_2include_2StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">catena::common::alternativeNames</a></div><div class="ttdeci">constexpr std::array&lt; const char *, 0 &gt; alternativeNames</div><div class="ttdoc">AltenativeNames is specialized in the generated code to provide the names of the alternatives in a va...</div><div class="ttdef"><b>Definition:</b> StructInfo.h:136</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdef"><b>Definition:</b> AuthzInfo.h:47</div></div>
 <div class="ttc" id="astructcatena_1_1common_1_1EmptyValue_html"><div class="ttname"><a href="structcatena_1_1common_1_1EmptyValue.html">catena::common::EmptyValue</a></div><div class="ttdoc">EmptyValue is used for commands that do not have a value.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:61</div></div>
 <div class="ttc" id="astructcatena_1_1common_1_1FieldInfo_html"><div class="ttname"><a href="structcatena_1_1common_1_1FieldInfo.html">catena::common::FieldInfo</a></div><div class="ttdoc">FieldInfo pairs the name of a field with the type information needed to access it.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:118</div></div>
@@ -369,7 +369,7 @@ $(document).ready(function(){initNavTree('common_2include_2StructInfo_8h_source.
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_bdd9a5d540de89e9fe90efdfc6973a4f.html">common</a></li><li class="navelem"><a class="el" href="dir_11fbc4217d50ab21044e5ad6614aede5.html">include</a></li><li class="navelem"><a class="el" href="common_2include_2StructInfo_8h.html">StructInfo.h</a></li>
+    <li class="navelem"><a class="el" href="dir_bdd9a5d540de89e9fe90efdfc6973a4f.html">common</a></li><li class="navelem"><a class="el" href="dir_11fbc4217d50ab21044e5ad6614aede5.html">include</a></li><li class="navelem"><a class="el" href="StructInfo_8h.html">StructInfo.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>

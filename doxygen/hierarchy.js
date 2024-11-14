@@ -11,7 +11,6 @@ var hierarchy =
     [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ],
     [ "catena::full::DeviceStream", "classcatena_1_1full_1_1DeviceStream.html", null ],
     [ "catena::common::EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
-    [ "catena::lite::EmptyValue", "structcatena_1_1lite_1_1EmptyValue.html", null ],
     [ "catena::patterns::EnumDecorator< E >", "classcatena_1_1patterns_1_1EnumDecorator.html", null ],
     [ "catena::patterns::EnumDecorator< common::Scopes_e >", "classcatena_1_1patterns_1_1EnumDecorator.html", null ],
     [ "catena::common::FakeLock", "structcatena_1_1common_1_1FakeLock.html", null ],
@@ -21,7 +20,6 @@ var hierarchy =
     ] ],
     [ "catena::common::FieldInfo< FieldType, StructType >", "structcatena_1_1common_1_1FieldInfo.html", null ],
     [ "catena::full::FieldInfo", "structcatena_1_1full_1_1FieldInfo.html", null ],
-    [ "catena::lite::FieldInfo< FieldType, StructType >", "structcatena_1_1lite_1_1FieldInfo.html", null ],
     [ "catena::meta::FrontT< L >", "classcatena_1_1meta_1_1FrontT.html", [
       [ "catena::meta::NthElementT< L, 0 >", "classcatena_1_1meta_1_1NthElementT_3_01L_00_010_01_4.html", null ]
     ] ],
@@ -66,7 +64,6 @@ var hierarchy =
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
     [ "catena::full::StructInfo", "structcatena_1_1full_1_1StructInfo.html", null ],
-    [ "catena::lite::StructInfo< T >", "structcatena_1_1lite_1_1StructInfo.html", null ],
     [ "std::true_type", null, [
       [ "catena::meta::is_streamable< T, std::void_t< decltype(std::cout<< std::declval< T >())> >", "structcatena_1_1meta_1_1is__streamable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1cout_3_3_f018ad5e508e96c26725f0228af2f889.html", null ],
       [ "catena::meta::is_variant< T, std::void_t< decltype(std::get< 0 >(std::declval< T >()))> >", "structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html", null ]
