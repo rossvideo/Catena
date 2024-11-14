@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['catenastruct_449',['CatenaStruct',['../StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed',1,'catena::common']]],
-  ['catenastructarray_450',['CatenaStructArray',['../StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0',1,'catena::common']]]
+  ['alternativenames_455',['alternativeNames',['../common_2include_2StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f',1,'catena::common::alternativeNames()'],['../lite_2include_2StructInfo_8h.html#ae24231c23ae67a0b92a3e814870cb631',1,'catena::lite::alternativeNames()']]]
 ];

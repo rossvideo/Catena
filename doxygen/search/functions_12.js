@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['value_435',['value',['../classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f',1,'catena::patterns::EnumDecorator::value()'],['../classcatena_1_1full_1_1ParamAccessor.html#aaf74f7a8febf1b92b04ffeb1d3544db0',1,'catena::full::ParamAccessor::value()']]]
+  ['unhandled_5fexception_440',['unhandled_exception',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729',1,'catena::common::Device::DeviceSerializer::promise_type']]]
 ];

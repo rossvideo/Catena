@@ -33,12 +33,16 @@ var namespacecatena =
         [ "kConfig", "Enums_8h.html#a52e17ef3ce00a51e608afb060211e3a8ad5a0c559cb6ece9d33f376684508c267", null ],
         [ "kAdmin", "Enums_8h.html#a52e17ef3ce00a51e608afb060211e3a8a6d837d3ca4ac4befdbd8324e2b4fde9c", null ]
       ] ],
-      [ "fromProto", "StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea", null ],
+      [ "_changeType", "common_2include_2StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0", null ],
+      [ "_findTypeIndex", "common_2include_2StructInfo_8h.html#addddb371559a45d42994973db1a69f08", null ],
+      [ "fromProto", "common_2include_2StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea", null ],
       [ "getParamValue", "ParamWithValue_8h.html#a4d5b494b32e4364ba7364a371e1ffbdc", null ],
-      [ "toProto", "StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086", null ],
-      [ "CatenaStruct", "StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed", null ],
-      [ "CatenaStructArray", "StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0", null ],
-      [ "emptyValue", "StructInfo_8h.html#a2cb3e8a8f510a27e9a83ef3f075ac225", null ]
+      [ "toProto", "common_2include_2StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086", null ],
+      [ "alternativeNames", "common_2include_2StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f", null ],
+      [ "CatenaStruct", "common_2include_2StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed", null ],
+      [ "CatenaStructArray", "common_2include_2StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0", null ],
+      [ "emptyValue", "common_2include_2StructInfo_8h.html#a2cb3e8a8f510a27e9a83ef3f075ac225", null ],
+      [ "IsVariantArray", "common_2include_2StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63", null ]
     ] ],
     [ "full", null, [
       [ "ArrayAccessor", "classcatena_1_1full_1_1ArrayAccessor.html", "classcatena_1_1full_1_1ArrayAccessor" ],
@@ -61,6 +65,18 @@ var namespacecatena =
       [ "has_getStructInfo", "TypeTraits_8h.html#a7b7f658769d83169d480559fcc509a46", null ],
       [ "has_getVariant", "TypeTraits_8h.html#a99a3cb127beeec29445bf8f7f65a66d2", null ]
     ] ],
+    [ "lite", null, [
+      [ "EmptyValue", "structcatena_1_1lite_1_1EmptyValue.html", null ],
+      [ "StructInfo", "structcatena_1_1lite_1_1StructInfo.html", null ],
+      [ "FieldInfo", "structcatena_1_1lite_1_1FieldInfo.html", "structcatena_1_1lite_1_1FieldInfo" ],
+      [ "fromProto", "lite_2include_2StructInfo_8h.html#a1045b0498d494f8f46555f072c75061d", null ],
+      [ "toProto", "lite_2include_2StructInfo_8h.html#a11e985631f7fb1b141ca1b73ea7e4278", null ],
+      [ "alternativeNames", "lite_2include_2StructInfo_8h.html#ae24231c23ae67a0b92a3e814870cb631", null ],
+      [ "CatenaStruct", "lite_2include_2StructInfo_8h.html#a812d7b856a2c1cc4af13e2f54b38ba12", null ],
+      [ "CatenaStructArray", "lite_2include_2StructInfo_8h.html#a83d2b947aedd3838b0a96a0a5b8646cb", null ],
+      [ "emptyValue", "lite_2include_2StructInfo_8h.html#a4c6910862fe7c08a327050c21aa099df", null ],
+      [ "IsVariantArray", "lite_2include_2StructInfo_8h.html#a5ffdc5ab2fb1c5382186d872675466b1", null ]
+    ] ],
     [ "meta", null, [
       [ "is_streamable", "structcatena_1_1meta_1_1is__streamable.html", null ],
       [ "is_streamable< T, std::void_t< decltype(std::cout<< std::declval< T >())> >", "structcatena_1_1meta_1_1is__streamable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1cout_3_3_f018ad5e508e96c26725f0228af2f889.html", null ],
@@ -80,6 +96,7 @@ var namespacecatena =
       [ "PopFront", "Typelist_8h.html#a98c6f4a66fb5c2aa9e329aee47ae953d", null ],
       [ "PushFront", "Typelist_8h.html#a9b379aa0c72efd6cde9b975311265d13", null ],
       [ "stream_if_possible", "Streamable_8h.html#a71879a04efd3fb17ca4c07cdad5acc27", null ],
+      [ "IsVariant", "Variant_8h.html#a024261cdd6bdd2ed5df361c8755cecb4", null ],
       [ "IsVector", "IsVector_8h.html#aa747db64b9e87a0bcdf49f7417234670", null ]
     ] ],
     [ "patterns", null, [
