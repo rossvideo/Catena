@@ -96,6 +96,7 @@ $(document).ready(function(){initNavTree('StructInfo_8h.html',''); initResizable
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;meta/Typelist.h&gt;</code><br />
 <code>#include &lt;meta/IsVector.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="Variant_8h_source.html">meta/Variant.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="AuthzInfo_8h_source.html">AuthzInfo.h</a>&gt;</code><br />
 <code>#include &lt;interface/param.pb.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
@@ -142,6 +143,14 @@ Functions</h2></td></tr>
 <tr class="memitem:a00607bf87da6b8329a669b7712191aea"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a00607bf87da6b8329a669b7712191aea"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">catena::common::fromProto</a> (const catena::Value &amp;src, T *dst, const AuthzInfo &amp;auth)</td></tr>
 <tr class="separator:a00607bf87da6b8329a669b7712191aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addddb371559a45d42994973db1a69f08"><td class="memTemplParams" colspan="2">template&lt;std::size_t size&gt; </td></tr>
+<tr class="memitem:addddb371559a45d42994973db1a69f08"><td class="memTemplItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">catena::common::_findTypeIndex</a> (const std::string &amp;typeName, const std::array&lt; const char *, size &gt; &amp;typeNames)</td></tr>
+<tr class="memdesc:addddb371559a45d42994973db1a69f08"><td class="mdescLeft">&#160;</td><td class="mdescRight">helper function to find the index of a type in a list of type names  <a href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">More...</a><br /></td></tr>
+<tr class="separator:addddb371559a45d42994973db1a69f08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f37737db27ab4b01982ea3514500fb0"><td class="memTemplParams" colspan="2">template&lt;meta::IsVariant V, std::size_t Index&gt; </td></tr>
+<tr class="memitem:a2f37737db27ab4b01982ea3514500fb0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">catena::common::_changeType</a> (V &amp;variant, const std::size_t newTypeIndex)</td></tr>
+<tr class="memdesc:a2f37737db27ab4b01982ea3514500fb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">_changeType is a helper function to change the type held by a variant  <a href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">More...</a><br /></td></tr>
+<tr class="separator:a2f37737db27ab4b01982ea3514500fb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -156,6 +165,14 @@ EmptyValue&#160;</td><td class="memItemRight" valign="bottom"><b>catena::common:
 <tr class="memitem:ad8b2debe7a9500b22904ee7e342ce5a0"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">catena::common::CatenaStructArray</a> = meta::IsVector&lt;T&gt; &amp;&amp; CatenaStruct&lt;typename T::value_type&gt;</td></tr>
 <tr class="memdesc:ad8b2debe7a9500b22904ee7e342ce5a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">CatenaStructArray concept checks that a type is a vector of structs that meet the CatenaStruct concept.  <a href="StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0">More...</a><br /></td></tr>
 <tr class="separator:ad8b2debe7a9500b22904ee7e342ce5a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfc43af7a295408f1bb3bf54a5a68f63"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:acfc43af7a295408f1bb3bf54a5a68f63"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">catena::common::IsVariantArray</a> = meta::IsVector&lt;T&gt; &amp;&amp; meta::IsVariant&lt;typename T::value_type&gt;</td></tr>
+<tr class="memdesc:acfc43af7a295408f1bb3bf54a5a68f63"><td class="mdescLeft">&#160;</td><td class="mdescRight">IsVariantArray concept checks that a type is a vector of variants.  <a href="StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">More...</a><br /></td></tr>
+<tr class="separator:acfc43af7a295408f1bb3bf54a5a68f63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd17517971565e6bf5adb909d6d48f8f"><td class="memTemplParams" colspan="2">template&lt;meta::IsVariant U&gt; </td></tr>
+<tr class="memitem:afd17517971565e6bf5adb909d6d48f8f"><td class="memTemplItemLeft" align="right" valign="top">constexpr std::array&lt; const char *, 0 &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">catena::common::alternativeNames</a> {}</td></tr>
+<tr class="memdesc:afd17517971565e6bf5adb909d6d48f8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">AltenativeNames is specialized in the generated code to provide the names of the alternatives in a variant.  <a href="StructInfo_8h.html#afd17517971565e6bf5adb909d6d48f8f">More...</a><br /></td></tr>
+<tr class="separator:afd17517971565e6bf5adb909d6d48f8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structured data serialization and deserialization to protobuf. </p>
@@ -164,6 +181,129 @@ EmptyValue&#160;</td><td class="memItemRight" valign="bottom"><b>catena::common:
 John Danen </dd></dl>
 <dl class="section date"><dt>Date</dt><dd>2024-07-07 </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a2f37737db27ab4b01982ea3514500fb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2f37737db27ab4b01982ea3514500fb0">&#9670;&nbsp;</a></span>_changeType()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;meta::IsVariant V, std::size_t Index&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::common::_changeType </td>
+          <td>(</td>
+          <td class="paramtype">V &amp;&#160;</td>
+          <td class="paramname"><em>variant</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::size_t&#160;</td>
+          <td class="paramname"><em>newTypeIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>_changeType is a helper function to change the type held by a variant </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">V</td><td>the type of the variant </td></tr>
+    <tr><td class="paramname">Index</td><td>the index of the current type being checked </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">variant</td><td>the variant to change the type of </td></tr>
+    <tr><td class="paramname">newTypeIndex</td><td>the index of the new type to change to</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>This function is used by fromProto to change the type of a variant to the type specified in the src protobuf message. It is a recursive function that checks each type in the variant until it finds the type that matches the newTypeIndex. If the type is not found, the variant is left unchanged. If the type is found, the variant is changed to the default value of the new type. </p>
+
+<p class="reference">References <a class="el" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">catena::common::_changeType()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a2f37737db27ab4b01982ea3514500fb0_cgraph.svg" width="234" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a2f37737db27ab4b01982ea3514500fb0_icgraph.svg" width="234" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
+<a id="addddb371559a45d42994973db1a69f08"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addddb371559a45d42994973db1a69f08">&#9670;&nbsp;</a></span>_findTypeIndex()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;std::size_t size&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::size_t catena::common::_findTypeIndex </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>typeName</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; const char *, size &gt; &amp;&#160;</td>
+          <td class="paramname"><em>typeNames</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>helper function to find the index of a type in a list of type names </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">typeName</td><td>the name of the type to find </td></tr>
+    <tr><td class="paramname">typeNames</td><td>the list of type names to search </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the index of the type in the list or the size of the list if the type is not found </dd></dl>
+
+<p class="reference">References <a class="el" href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">catena::common::_findTypeIndex()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_addddb371559a45d42994973db1a69f08_cgraph.svg" width="211" height="76"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_addddb371559a45d42994973db1a69f08_icgraph.svg" width="211" height="76"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+</div>
+</div>
+
+</div>
+</div>
 <a id="a00607bf87da6b8329a669b7712191aea"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a00607bf87da6b8329a669b7712191aea">&#9670;&nbsp;</a></span>fromProto()</h2>
 
@@ -323,6 +463,39 @@ Here is the caller graph for this function:</div>
 </div>
 </div>
 <h2 class="groupheader">Variable Documentation</h2>
+<a id="afd17517971565e6bf5adb909d6d48f8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd17517971565e6bf5adb909d6d48f8f">&#9670;&nbsp;</a></span>alternativeNames</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;meta::IsVariant U&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr std::array&lt;const char*, 0&gt; catena::common::alternativeNames {}</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>AltenativeNames is specialized in the generated code to provide the names of the alternatives in a variant. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">U</td><td>the type of the variant</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The Catena code generator will specialize this template for every variant in the json device model that does not have a template_oid. The specialization will contain a vector of strings that contains the names of each alternative in the variant. </p>
+
+</div>
+</div>
 <a id="a38dc399d594567ca24de123a1b1d60ed"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a38dc399d594567ca24de123a1b1d60ed">&#9670;&nbsp;</a></span>CatenaStruct</h2>
 
@@ -374,6 +547,31 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 <p>This concept is used to specialize template functions for any vector of struct type generated by the Catena code generator. </p>
+
+</div>
+</div>
+<a id="acfc43af7a295408f1bb3bf54a5a68f63"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acfc43af7a295408f1bb3bf54a5a68f63">&#9670;&nbsp;</a></span>IsVariantArray</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">concept catena::common::IsVariantArray = meta::IsVector&lt;T&gt; &amp;&amp; meta::IsVariant&lt;typename T::value_type&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>IsVariantArray concept checks that a type is a vector of variants. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td>the type to check</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>This concept is used to specialize template functions for any vector of variant type generated by the Catena code generator. </p>
 
 </div>
 </div>
