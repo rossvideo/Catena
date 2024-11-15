@@ -13,57 +13,43 @@
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#
-# cmake build file for C++ SDKs and examples.
+# cmake build file for the use_variants example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(LITE C CXX)
-
-if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
 
 
-set(target catena_lite)
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
 
-add_library(${target} STATIC 
-    src/Device.cpp
-    src/ParamDescriptor.cpp
-    src/StructInfo.cpp
-    src/PolyglotText.cpp
-    src/LanguagePack.cpp
-    src/PicklistConstraint.cpp
-)
-add_library(Catena_cpp::lite ALIAS ${target})
+add_executable(${TARGET})
 
-add_dependencies(${target} catena_common)
-add_dependencies(${target} ${proto_interface})
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
-target_include_directories(
-    ${target}
+# generate_catena_device(
+#     DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
+#     TARGET ${TARGET}
+# )
+
+target_sources(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json.cpp>
 )
 
-target_link_libraries(${target} PUBLIC  catena_common)
-
-target_compile_features(${target} PUBLIC cxx_std_20)
-
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+target_include_directories(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>   
 )
 
-install(TARGETS ${target} 
-    EXPORT Catena_cppTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp
+target_link_libraries(${TARGET} ${common_lib})
+
+target_compile_features(${TARGET}
+    PUBLIC
+        cxx_std_20
 )
 
-add_subdirectory(examples)
+
 

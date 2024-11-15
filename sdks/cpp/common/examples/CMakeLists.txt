@@ -38,5 +38,6 @@ add_subdirectory("enum_decorator")
 add_subdirectory("path")
 add_subdirectory("hello_world")
 add_subdirectory("use_constraints")
+add_subdirectory("use_variants")
 
 

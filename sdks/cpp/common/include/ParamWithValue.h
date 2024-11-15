@@ -148,7 +148,7 @@ class ParamWithValue : public catena::common::IParam {
         if (!auth.readAuthz()) {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        toProto<T>(value, &value_.get(), auth);
+        catena::common::toProto<T>(value, &value_.get(), auth);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
@@ -164,7 +164,7 @@ class ParamWithValue : public catena::common::IParam {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
         descriptor_.toProto(param, auth);        
-        toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        catena::common::toProto<T>(*param.mutable_value(), &value_.get(), auth);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
@@ -181,7 +181,7 @@ class ParamWithValue : public catena::common::IParam {
         if (!auth.writeAuthz()) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
         } else {
-            fromProto<T>(value, &value_.get(), auth);
+            catena::common::fromProto<T>(value, &value_.get(), auth);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }
     }
@@ -312,7 +312,7 @@ class ParamWithValue : public catena::common::IParam {
             // we reached the end of the path, return the element
             return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
         } else {
-            if constexpr (CatenaStruct<ElemType>) {
+            if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
                 // The path has more segments, keep recursing
                 return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, status);
             } else {
@@ -418,6 +418,36 @@ class ParamWithValue : public catena::common::IParam {
         using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
         return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
     }
+
+    template <meta::IsVariant U>
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+        if (!oid.front_is_string()) {
+            status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+        std::string oidStr = oid.front_as_string();
+        oid.pop();   
+
+        if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
+            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        }
+
+        if (oid.empty()) {
+            // we reached the end of the path, return the element
+            return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+                using V = std::decay_t<decltype(arg)>;
+                return std::make_unique<ParamWithValue<V>>(arg, descriptor_.getSubParam(oidStr));
+            }, value);
+        } else {
+            // The path has more segments, keep recursing
+            return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+                using V = std::decay_t<decltype(arg)>;
+                return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, status);
+            }, value);
+        }
+    }
+
 
   public:
     /**

@@ -43,5 +43,10 @@ struct is_variant : std::false_type {};
 */
 template <typename T>
 struct is_variant<T, std::void_t<decltype(std::get<0>(std::declval<T>()))>> : std::true_type {};
+
+// Concept to check if a type is a std::variant
+template <typename T>
+concept IsVariant = is_variant<T>::value;
+    
 } // namespace meta
 } // namespace catena

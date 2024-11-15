@@ -14,6 +14,8 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # cmake build file for the read_model_from_file example.
 #
+# cmake build file for the factory example.
+#
 #
 
 cmake_minimum_required(VERSION 3.20)
