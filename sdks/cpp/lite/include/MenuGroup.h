@@ -99,7 +99,7 @@ class MenuGroup : public common::IMenuGroup {
      * @brief serialize a menu group to a protobuf message
      * @param menuGroup the protobuf message
      */
-    void toProto(::catena::MenuGroup& menuGroup) const override;
+    void toProto(::catena::MenuGroup& menuGroup, bool shallow) const override;
 
     /**
      * @brief add a menu to the group using move semantics
@@ -107,9 +107,17 @@ class MenuGroup : public common::IMenuGroup {
      * @param menu the menu
      */
     void addMenu(const std::string& oid, catena::lite::Menu&& menu) { menus_.emplace(oid, std::move(menu)); }
+
+    /**
+     * @brief get menus from menu group
+     * @return a map of menus
+     */
+    const std::unordered_map<std::string, catena::lite::Menu>* menus() const override { return &menus_; }
+
   private:
     PolyglotText name_;
     std::unordered_map<std::string, catena::lite::Menu> menus_;
+    
 };
 
 

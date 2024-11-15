@@ -32,6 +32,10 @@ namespace catena {
 
 class MenuGroup; // forward reference
 
+namespace lite{
+    class Menu; // forward reference
+}
+
 namespace common {
 
 /**
@@ -48,9 +52,13 @@ public:
      * @brief serialize a menu group to a protobuf message
      * @param menuGroup the protobuf message
      */
-    virtual void toProto(catena::MenuGroup& menuGroup) const = 0;
+    virtual void toProto(catena::MenuGroup& menuGroup, bool shallow) const = 0;
 
-
+    /**
+     * @brief get menus from menu group
+     * @return a map of menus
+     */
+    virtual const std::unordered_map<std::string, catena::lite::Menu>* menus() const = 0;
 };
 }  // namespace common
 }  // namespace catena

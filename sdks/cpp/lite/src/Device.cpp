@@ -24,6 +24,7 @@
 #include <ParamWithValue.h>
 #include <ParamDescriptor.h>
 #include <IMenuGroup.h> 
+#include <Menu.h>
 
 #include <cassert>
 #include <sstream>
@@ -190,7 +191,7 @@ void Device::toProto(::catena::Device& dst, std::vector<std::string>& clientScop
     google::protobuf::Map<std::string, ::catena::MenuGroup> dstMenuGroups{};
     for (const auto& [name, group] : menu_groups_) {
         ::catena::MenuGroup dstGroup{};
-        group->toProto(dstGroup);
+        group->toProto(dstGroup, false);
         dstMenuGroups[name] = dstGroup;
     }
     dst.mutable_menu_groups()->swap(dstMenuGroups); // lowercase swap, not an error
@@ -238,14 +239,15 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
     *dst->mutable_default_scope() = default_scope_.toString();
     dst->set_multi_set_enabled(multi_set_enabled_);
     dst->set_subscriptions(subscriptions_);
+
     for (auto& scope : access_scopes_) {
         dst->add_access_scopes(scope.toString());
     }
-    /**
-     * @todo add MenuGroups to initial response
-     * There is no MenuGroup component so empty menu groups are sent with the initial device component.
-     * The menus of each menu group are sent later as separate components.
-     */
+
+    for (auto& [menu_group_name, menu_group] : menu_groups_) {
+        ::catena::MenuGroup* dstMenuGroup = &(*dst->mutable_menu_groups())[menu_group_name];
+        menu_group->toProto(*dstMenuGroup, true);
+    }
 
     for (const auto& [language, language_pack] : language_packs_) {
         co_yield component; // yield the previous component before overwriting it
@@ -282,6 +284,16 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
             ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
             command->toProto(*dstCommand, clientScopes[0]);
             component.mutable_command()->set_oid(name);
+        }
+    }
+
+    for (const auto& [name, menu_groups_] : menu_groups_) {
+        for (const auto& [menu_name, menu] : *menu_groups_->menus()) {
+            co_yield component; // yield the previous component before overwriting it
+            component.Clear();
+            ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
+            menu.toProto(*dstMenu);
+            component.mutable_menu()->set_oid(menu_name);
         }
     }
 

@@ -39,13 +39,14 @@ using namespace catena::lite;
 using catena::common::MenuGroupTag;
 
 
-void MenuGroup::toProto(::catena::MenuGroup& menuGroup) const {
+void MenuGroup::toProto(::catena::MenuGroup& menuGroup, bool shallow = false) const {
     for (const auto& [lang, name] : name_.displayStrings()) {
         (*menuGroup.mutable_name()->mutable_display_strings())[lang] = name;
     }
-    for (const auto& [oid, srcMenu] : menus_) {
-        catena::Menu& dstMenu = (*menuGroup.mutable_menus())[oid];
-        srcMenu.toProto(dstMenu);
-    }
+    if (!shallow) {
+        for (const auto& [oid, srcMenu] : menus_) {
+            catena::Menu& dstMenu = (*menuGroup.mutable_menus())[oid];
+            srcMenu.toProto(dstMenu);
+        }
+    }   
 }
-
