@@ -56,73 +56,75 @@ class loc {
  * writes a line of code to a buffer
  */
 class bufloc {
-  constructor() {
+  constructor(fd) {
     this.buf = "";
+    this.fd = fd;
   }
   write(s, indent = 0) {
     this.buf += `${" ".repeat(indent * 2)}${s}\n`;
   }
   deliver(fd) {
-    fs.writeSync(fd, this.buf);
+    fs.writeSync(this.fd, this.buf);
   }
 }
 
-class ParamDescriptor {
-  constructor(typename, name, args, constraint) {
-    this.typename = typename;
-    this.name = `_${name}`;
-    this.args = args;
-    this.subparams = [];
-    this.constraint = constraint;
-  }
+// class ParamDescriptor {
+//   constructor(typename, name, args, constraint) {
+//     this.typename = typename;
+//     this.name = `_${name}`;
+//     this.args = args;
+//     this.subparams = [];
+//     this.constraint = constraint;
+//   }
 
-  addSubparam(ParamDescriptor) {
-    this.subparams.push(ParamDescriptor);
-  }
+//   addSubparam(ParamDescriptor) {
+//     this.subparams.push(ParamDescriptor);
+//   }
 
-  copySubparams(ParamDescriptor) {
-    this.subparams = ParamDescriptor.subparams;
-  }
+//   copySubparams(ParamDescriptor) {
+//     this.subparams = ParamDescriptor.subparams;
+//   }
 
-  write(parent) {
-    bloc(`catena::common::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, ${this.constraint}, &${parent}Descriptor, dm, false};`);
-    for (let subparam of this.subparams) {
-      subparam.write(`${parent}${this.name}`);
-    }
-  }
+//   write(parent) {
+//     bloc(`catena::common::ParamDescriptor ${parent}${this.name}Descriptor {${this.args}, ${this.constraint}, &${parent}Descriptor, dm, false};`);
+//     for (let subparam of this.subparams) {
+//       subparam.write(`${parent}${this.name}`);
+//     }
+//   }
 
-  writeDescriptors() {
-    for (let subparam of this.subparams) {
-      subparam.write(`${this.name}`);
-    }
-  }
-}
+//   writeDescriptors() {
+//     for (let subparam of this.subparams) {
+//       subparam.write(`${this.name}`);
+//     }
+//   }
+// }
 
 /**
  * @class TemplateParam
  * stores enough information to use the parameter as a template, if needed.
  */
-class TemplateParam {
-  constructor(typename, initializer, paramDescriptor) {
-    this.typename = typename;
-    this.initializer = initializer;
-    this.paramDescriptor = paramDescriptor;
-  }
+// class TemplateParam {
+//   constructor(typename, initializer, paramDescriptor) {
+//     this.typename = typename;
+//     this.initializer = initializer;
+//     this.paramDescriptor = paramDescriptor;
+//   }
 
-  typeName() {
-    return this.typename;
-  }
+//   typeName() {
+//     return this.typename;
+//   }
 
-  initializer() {
-    return this.initializer;
-  }
-}
+//   initializer() {
+//     return this.initializer;
+//   }
+// }
 
 /**
  * storage for the write functions, and the current indent level
  */
 let hloc, bloc, ploc, postscript;
-let hindent, bindent;
+let hindent, pindent;
+let device;
 
 /**
  * C++ code generator
@@ -130,70 +132,33 @@ let hindent, bindent;
 class CppGen {
   /**
    *
-   * @param {string} pathname to the device model's top-level json file
-   * @param {string} output folder for generated code
-   * @param {Validator} validator used to validate that descriptors match catena schemas
-   * @param {object} desc json descriptor
+   * @param {DeviceModel} deviceModel to the device model's top-level json file
+   * @param {string} outputDir folder for generated code
    */
-  constructor(pathname, output, validator, desc) {
-    this.pathname = pathname;
-    this.validator = validator;
-    this.desc = desc;
-    // extract schema name from input filename
-    const info = path.parse(pathname).name.split(".");
-    const schemaName = info[0];
-    if (schemaName !== "device") {
-      throw new Error(`File must be a device model, not ${schemaName}`);
-    }
-    this.namespace = info[1];
-    const baseFilename = path.basename(pathname);
-    this.headerFilename = `${baseFilename}.h`;
-    this.header = fs.openSync(path.join(output, this.headerFilename), "w");
-    this.body = fs.openSync(path.join(output, `${baseFilename}.cpp`), "w");
-    this.postscript = new bufloc();
+  constructor(deviceModel, outputDir) {
+    this.headerFilename = `${deviceModel.baseFilename}.h`;
+    let header = fs.openSync(path.join(outputDir, `${this.headerFilename}`), "w");
+    let body = fs.openSync(path.join(outputDir, `${deviceModel.baseFilename}.cpp`), "w");
 
-    let Hloc = new loc(this.header);
+    let Hloc = new loc(header);
     hloc = Hloc.write.bind(Hloc);
     hindent = 0;
-    let Bloc = new loc(this.body);
+    let Bloc = new loc(body);
     bloc = Bloc.write.bind(Bloc);
-    bindent = 0;
-    let Ploc = new bufloc();
+    pindent = 0;
+    let Ploc = new bufloc(header);
     ploc = Ploc.write.bind(Ploc);
     postscript = Ploc.deliver.bind(Ploc);
 
-    // initialize the template param map
-    this.templateParams = {};
+    device = new Device(deviceModel);
   }
 
   /**
    * generate the code to instantiate the device model
    */
   device() {
-    const device = new Device(this.desc);
     bloc(`catena::common::Device dm {${device.argsToString()}};`);
-    // bloc(
-    //   `ParamAdder addParamToDevice = std::bind(&Device::addItem<ParamTag>, &dm, _1, _2);`
-    // );
     bloc(""); // blank line
-  }
-
-  importParam(importArg) {
-    if ("file" in importArg) {
-      const importDir = path.dirname(this.pathname);
-      const importPath = `${importDir}/${importArg.file}`;
-      if (!fs.existsSync(importPath)) {
-        throw new Error(`Cannot open file at ${importArg.file}`);
-      }
-      const importData = JSON.parse(fs.readFileSync(importPath));
-      if (!this.validator.validateParam(importData)) {
-        throw new Error(`Imported data is not valid`);
-      }
-      return importData;
-
-    } else {
-      throw new Error(`Unsupported import type: ${importArg}`);
-    }
   }
 
   /**
@@ -203,125 +168,190 @@ class CppGen {
    * @param {boolean} isStructChild true if the param is a member of a struct
    *
    */
-  params(parentOid, desc, typeNamespace, parentStructInfo, isStructChild = false, isCommand = false) {
-    let isTopLevel = parentOid === "";
-    let subField = isCommand ? "commands" : "params";
-    if (subField in desc) {
-      for (let oid in desc[subField]) {
-        let structInfo = isTopLevel ? {} : parentStructInfo;
-        structInfo[oid] = {};
-        let fieldDesc = desc[subField][oid];
+  params() {
+    if (!"params" in device.desc) {
+      return;
+    }
+    for (let oid in device.desc.params) {
+      if (oid in device.params) {
+        throw new Error(`Duplicate oid ${oid}`);
+      }
+      device.params[oid] = new Param(oid, device.desc.params[oid], this.namespace, device);
 
-        if ("import" in fieldDesc) {
-          desc[subField][oid] = this.importParam(fieldDesc.import);
-        }
+      if (param.hasTypeInfo() && !param.isTemplated()) {
+        this.writeTypeInfo(param);
+      }
 
-        this.subparam(parentOid, oid, typeNamespace, desc[subField], structInfo[oid], isStructChild, isCommand);
-        if (isTopLevel && structInfo[oid].params) {
-          for (let type in structInfo) {
-            this.defineGetStructInfo(structInfo[type]);
-          }
+      if (param.hasValue()) {
+        // write param initial value
+        bloc(param.valueInitializer());
+        // write param descriptors
+        for (let descriptor in param.getDescriptors()) {
+          bloc(descriptor);
         }
+        // add param to device model
+        bloc(param.addToDeviceModel());
       }
     }
   }
 
-  subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false, isCommand = false) {
-    let p = new Param(parentOid, oid, desc);
-    let args = p.argsToString();
-    let type;
-    let elementType;
-    if (p.isTemplated()) {
-      let templateParam = this.templateParam(p.templateOid());
-      if (templateParam === undefined) {
-        throw new Error(`No template param found for ${parentOid}/${oid}`);
-      }
-      if (p.isArrayType()) {
-        type = p.objectType();
-        elementType = templateParam.typeName();
-        if (p.isStructType()) {          
-          hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
+  writeTypeInfo(param) {
+    if (param.isStructType()) {
+      hloc(`struct ${param.objectType()} {`, hindent++);
+      for (let subParam in param.getSubParams()) {
+        if (subParam.hasTypeInfo() && !subParam.isTemplated()) {
+          this.writeTypeInfo(subParam);
         }
-      } else {
-        type = templateParam.typeName();
+        hloc(subParam.declareVariable(), hindent);
       }
-    } else {
-      type = p.objectType();
-    }
-    let name = p.objectName();
-    let pname = p.paramName();
-    let objectType = type;
-    if (p.isStructType() && (!p.isTemplated() || p.isArrayType())) {
-      objectType = `${typeNamespace}::${type}`;
-    }
-    let init = p.initializer(desc[oid]);
-    if (init == "{}" && p.isTemplated()) {
-      init = this.templateParam(p.templateOid()).initializer;
-    }
-    if (!isStructChild && p.hasValue()) {
-      // only top-level params get value initializers
-      bloc(`${objectType} ${name} ${init};`);
-      /// @todo handle isVariant
-    }
-
-    let constraint = "nullptr";
-    if (p.isConstrained()) {
-      if (p.usesSharedConstraint()) {
-        constraint = "&constraints" + p.constraintRef() + "Constraint";
-      } else {
-        constraint = "&" + this.defineConstraint(parentOid, oid, desc);
-      }
-    }
-
-    let fqoid = `${parentOid}/${oid}`;
-    let descriptor;
-    if (!p.isTemplated()) {
-      descriptor = new ParamDescriptor(objectType, name, args, constraint);
-      this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
-    } else {
-      descriptor = new ParamDescriptor(objectType, name, args, constraint);
-      descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
-      if (constraint === "nullptr") {
-        descriptor.constraint = this.templateParams[p.templateOid()].paramDescriptor.constraint;
-      }
-    }
-    if (isStructChild) {
-      this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);
-    }
-
-    parentStructInfo.typename = type;
-    parentStructInfo.typeNamespace = typeNamespace;
-    parentStructInfo.isArrayType = p.isArrayType();
-    if (p.hasSubparams()) {
-      hloc(`struct ${type} {`, hindent++);
-
-      parentStructInfo.params = {};
-      this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
-
       hloc(`using isCatenaStruct = void;`, hindent);
       hloc(`};`, --hindent);
-    } 
-    if (isStructChild) {
-      if (p.hasValue() ) {
-        // add default value to struct member
-        hloc(`${type} ${name} = ${p.initializer(desc[oid])};`, hindent);
-      } else {
-        hloc(`${type} ${name};`, hindent);
+
+      ploc(`template<>`);
+      ploc(`struct catena::common::StructInfo<${param.objectType()}> {`, pindent++);
+      ploc(`using ${param.objectType()} = ${param.objectNamespaceType()};`, pindent);
+      ploc(`using Type = std::tuple<${param.getFieldInfoTypes()}>;`, pindent);
+      ploc(`static constexpr Type fields = {${param.getFieldInfoInit()}};`, pindent);
+      ploc(`};`, --pindent);
+      
+    } else if (param.isVariantType()) {
+      hloc(`namespace _${param.name()} {`, hindent++);
+      let subParamCount = 0;
+      for (let subParam in param.getSubParams()) {
+        subParamCount++;
+        if (subParam.hasTypeInfo() && !subParam.isTemplated()) {
+          this.writeTypeInfo(subParam);
+        }
       }
+      hloc(`} // namespace _${param.name()}`, --hindent);
+
+      ploc(`template<>`);
+      ploc(`constexpr std::array<const char*, ${subParamCount}> catena::common::alternativeNames<${param.objectNamespaceType()}>{${param.getAlternativeNames()}};`);
     }
 
-    // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
-    if (isCommand) {
-      bloc(`catena::common::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, true};`);
-      descriptor.writeDescriptors();
-      bloc(`catena::common::ParamWithValue<EmptyValue> ${pname}Param {catena::common::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
-    } else if (!isStructChild && p.hasValue()) {
-      bloc(`catena::common::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, false};`);
-      descriptor.writeDescriptors();
-      bloc(`catena::common::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm, false};`);
+    if (param.isArrayType()) {
+      hloc(`using ${param.objectType()} = std::vector<${param.elementType()}>;`, hindent);
     }
-
   }
+  // params(parentOid, desc, typeNamespace, parentStructInfo, isStructChild = false, isCommand = false) {
+    // let isTopLevel = parentOid === "";
+    // let subField = isCommand ? "commands" : "params";
+    // if (subField in desc) {
+    //   for (let oid in desc[subField]) {
+    //     let structInfo = isTopLevel ? {} : parentStructInfo;
+    //     structInfo[oid] = {};
+    //     let fieldDesc = desc[subField][oid];
+
+    //     if ("import" in fieldDesc) {
+    //       desc[subField][oid] = this.importParam(fieldDesc.import);
+    //     }
+
+    //     this.subparam(parentOid, oid, typeNamespace, desc[subField], structInfo[oid], isStructChild, isCommand);
+    //     if (isTopLevel && structInfo[oid].params) {
+    //       for (let type in structInfo) {
+    //         this.defineGetStructInfo(structInfo[type]);
+    //       }
+    //     }
+    //   }
+    // }
+  // }
+
+  // subparam(parentOid, oid, typeNamespace, desc, parentStructInfo, isStructChild = false, isCommand = false) {
+    // let p = new Param(parentOid, oid, desc);
+    // let args = p.argsToString();
+    // let type;
+    // let elementType;
+    // if (p.isTemplated()) {
+    //   let templateParam = this.templateParam(p.templateOid());
+    //   if (templateParam === undefined) {
+    //     throw new Error(`No template param found for ${parentOid}/${oid}`);
+    //   }
+    //   if (p.isArrayType()) {
+    //     type = p.objectType();
+    //     elementType = templateParam.typeName();
+    //     if (p.isStructType()) {          
+    //       hloc(`using ${type} = std::vector<${elementType}>;`, hindent);
+    //     }
+    //   } else {
+    //     type = templateParam.typeName();
+    //   }
+    // } else {
+    //   type = p.objectType();
+    // }
+    // let name = p.objectName();
+    // let pname = p.paramName();
+    // let objectType = type;
+    // if (p.isStructType() && (!p.isTemplated() || p.isArrayType())) {
+    //   objectType = `${typeNamespace}::${type}`;
+    // }
+    // let init = p.initializer(desc[oid]);
+    // if (init == "{}" && p.isTemplated()) {
+    //   init = this.templateParam(p.templateOid()).initializer;
+    // }
+    // if (!isStructChild && p.hasValue()) {
+    //   // only top-level params get value initializers
+    //   bloc(`${objectType} ${name} ${init};`);
+    //   /// @todo handle isVariant
+    // }
+
+    // let constraint = "nullptr";
+    // if (p.isConstrained()) {
+    //   if (p.usesSharedConstraint()) {
+    //     constraint = "&constraints" + p.constraintRef() + "Constraint";
+    //   } else {
+    //     constraint = "&" + this.defineConstraint(parentOid, oid, desc);
+    //   }
+    // }
+
+    // let fqoid = `${parentOid}/${oid}`;
+    // let descriptor;
+    // if (!p.isTemplated()) {
+    //   descriptor = new ParamDescriptor(objectType, name, args, constraint);
+    //   this.templateParams[fqoid] = new TemplateParam(objectType, init, descriptor);
+    // } else {
+    //   descriptor = new ParamDescriptor(objectType, name, args, constraint);
+    //   descriptor.copySubparams(this.templateParams[p.templateOid()].paramDescriptor);
+    //   if (constraint === "nullptr") {
+    //     descriptor.constraint = this.templateParams[p.templateOid()].paramDescriptor.constraint;
+    //   }
+    // }
+    // if (isStructChild) {
+    //   this.templateParams[parentOid].paramDescriptor.addSubparam(descriptor);
+    // }
+
+    // parentStructInfo.typename = type;
+    // parentStructInfo.typeNamespace = typeNamespace;
+    // parentStructInfo.isArrayType = p.isArrayType();
+    // if (p.hasSubparams()) {
+    //   hloc(`struct ${type} {`, hindent++);
+
+    //   parentStructInfo.params = {};
+    //   this.params(parentOid + `/${oid}`,  desc[oid], `${typeNamespace}::${type}`, parentStructInfo.params, true);
+
+    //   hloc(`using isCatenaStruct = void;`, hindent);
+    //   hloc(`};`, --hindent);
+    // } 
+    // if (isStructChild) {
+    //   if (p.hasValue() ) {
+    //     // add default value to struct member
+    //     hloc(`${type} ${name} = ${p.initializer(desc[oid])};`, hindent);
+    //   } else {
+    //     hloc(`${type} ${name};`, hindent);
+    //   }
+    // }
+
+    // // instantiate a ParamWithValue for top-level params, or a ParamDescriptor for struct members
+    // if (isCommand) {
+    //   bloc(`catena::common::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, true};`);
+    //   descriptor.writeDescriptors();
+    //   bloc(`catena::common::ParamWithValue<EmptyValue> ${pname}Param {catena::common::emptyValue, ${descriptor.name}Descriptor, dm, true};`);
+    // } else if (!isStructChild && p.hasValue()) {
+    //   bloc(`catena::common::ParamDescriptor ${descriptor.name}Descriptor {${descriptor.args}, ${descriptor.constraint}, nullptr, dm, false};`);
+    //   descriptor.writeDescriptors();
+    //   bloc(`catena::common::ParamWithValue<${objectType}> ${pname}Param {${name}, ${descriptor.name}Descriptor, dm, false};`);
+    // }
+
+  //}
 
   /**
    *
@@ -331,43 +361,43 @@ class CppGen {
    *
    */
   commands() {
-    this.params('', this.desc, this.namespace, {}, false, true);
+    this.params('', device.desc, this.namespace, {}, false, true);
   }
 
-  defineGetStructInfo(structInfo) {
-    ploc(`template<>`);
-    ploc(`struct catena::common::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, bindent++);
-    ploc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, bindent);
+  // defineGetStructInfo(structInfo) {
+  //   ploc(`template<>`);
+  //   ploc(`struct catena::common::StructInfo<${structInfo.typeNamespace}::${structInfo.typename}> {`, pindent++);
+  //   ploc(`using ${structInfo.typename} = ${structInfo.typeNamespace}::${structInfo.typename};`, pindent);
     
-    const keys = Object.keys(structInfo.params);
-    const lastIndex = keys.length - 1;
+  //   const keys = Object.keys(structInfo.params);
+  //   const lastIndex = keys.length - 1;
 
-    let fieldInfoType = "";
-    let fieldInfoInit = "";
+  //   let fieldInfoType = "";
+  //   let fieldInfoInit = "";
 
-    keys.forEach((p, index) => {
-      if (structInfo.params[p].params || structInfo.params[p].isArrayType) {
-        fieldInfoType += `FieldInfo<${structInfo.typename}::${structInfo.params[p].typename}, ${structInfo.typename}>`;
-      } else {
-        fieldInfoType += `FieldInfo<${structInfo.params[p].typename}, ${structInfo.typename}>`;
-      }
-      fieldInfoInit += `{"${p}", &${structInfo.typename}::${p}}`;
-      if (index !== lastIndex) {
-        fieldInfoType += `, `;
-        fieldInfoInit += `, `;
-      } 
-    });
-    ploc(`using Type = std::tuple<${fieldInfoType}>;`, bindent);
-    ploc(`static constexpr Type fields = {${fieldInfoInit}};`, bindent);
-    ploc(`};`, --bindent);
+  //   keys.forEach((p, index) => {
+  //     if (structInfo.params[p].params || structInfo.params[p].isArrayType) {
+  //       fieldInfoType += `FieldInfo<${structInfo.typename}::${structInfo.params[p].typename}, ${structInfo.typename}>`;
+  //     } else {
+  //       fieldInfoType += `FieldInfo<${structInfo.params[p].typename}, ${structInfo.typename}>`;
+  //     }
+  //     fieldInfoInit += `{"${p}", &${structInfo.typename}::${p}}`;
+  //     if (index !== lastIndex) {
+  //       fieldInfoType += `, `;
+  //       fieldInfoInit += `, `;
+  //     } 
+  //   });
+  //   ploc(`using Type = std::tuple<${fieldInfoType}>;`, pindent);
+  //   ploc(`static constexpr Type fields = {${fieldInfoInit}};`, pindent);
+  //   ploc(`};`, --pindent);
 
-    // define getStructInfo for subparams structs
-    for (let p in structInfo.params) {
-      if (structInfo.params[p].params) {
-        this.defineGetStructInfo(structInfo.params[p]);
-      }
-    }
-  }
+  //   // define getStructInfo for subparams structs
+  //   for (let p in structInfo.params) {
+  //     if (structInfo.params[p].params) {
+  //       this.defineGetStructInfo(structInfo.params[p]);
+  //     }
+  //   }
+  // }
 
   /**
    * 
@@ -405,19 +435,19 @@ class CppGen {
    * @param {string} fully qualified object id
    * @returns undefined or the template param for the given oid
    */
-  templateParam(oid) {
-    return this.templateParams[oid];
-  }
+  // templateParam(oid) {
+  //   return this.templateParams[oid];
+  // }
 
-  /**
-   * log the template parameters to the console
-   */
-  logTemplateParams() {
-    console.log(`template params: ${JSON.stringify(this.templateParams, null, 2)}`);
-  }
+  // /**
+  //  * log the template parameters to the console
+  //  */
+  // logTemplateParams() {
+  //   console.log(`template params: ${JSON.stringify(this.templateParams, null, 2)}`);
+  // }
 
   languagePacks() {
-    let languagePacks = new LanguagePacks(this.desc);
+    let languagePacks = new LanguagePacks(device.desc);
     let packs = languagePacks.getLanguagePacks();    
     bloc (`using catena::common::LanguagePack;`);
     for (let pack in packs) {
@@ -440,9 +470,9 @@ class CppGen {
     this.init();
     this.device();
     this.languagePacks();
-    this.constraints(this.desc);
-    this.params('', this.desc, this.namespace);
-    this.commands('', this.desc, this.namespace);
+    this.constraints(device.desc);
+    this.params();
+    this.commands('', device.desc, this.namespace);
     this.finish();
   }
 
@@ -491,7 +521,7 @@ class CppGen {
 
   finish = () => {
     hloc(`} // namespace ${this.namespace}`);
-    postscript(this.header);
+    postscript();
 
   };
 }

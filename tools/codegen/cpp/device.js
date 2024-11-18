@@ -92,7 +92,7 @@ function subscriptionsArg(desc) {
  * @param {object} desc device descriptor
  */
 class Device extends CppCtor {
-    constructor(desc) {
+    constructor(deviceModel) {
         super(desc);
         this.arguments.push(slotArg);
         this.arguments.push(detailLevelArg);
@@ -100,6 +100,26 @@ class Device extends CppCtor {
         this.arguments.push(defaultScopeArg);
         this.arguments.push(multisetArg);
         this.arguments.push(subscriptionsArg);
+        
+        this.deviceModel = deviceModel;
+        this.desc = deviceModel.desc;
+        this.params = {};
+    }
+
+    getParam(fqoid) {
+        const path = fqoid.split('/');
+        path.shift(); // remove leading empty string
+        let front = path.shift();
+
+        if (!front in this.params) {
+            throw new Error(`Invalid template parameter ${fqoid}`);
+        }
+
+        if (path.length === 0) {
+            return this.params[front];
+        } else {
+            return this.params[front].getParam(path,fqoid);
+        }
     }
 
 }
