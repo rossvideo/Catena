@@ -66,21 +66,7 @@
       "name": { "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" } },
       "value": { "int32_value": 0 },
       "widget": "button",
-      "constraint": {
-        "type": "INT_CHOICE",
-        "int32_choice": {
-          "choices": [
-            {
-              "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
-              "value": 0
-            },
-            {
-              "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
-              "value": 1
-            }
-          ]
-        }
-      }
+      "constraint": { "ref_oid": "basic_button" }
     },
     "offset": {
       "type": "INT32",
@@ -94,6 +80,23 @@
           "max_value": 10,
           "step": 1
         }
+      }
+    }
+  },
+  "constraints": {
+    "basic_button": {
+      "type": "INT_CHOICE",
+      "int32_choice": {
+        "choices": [
+          {
+            "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
+            "value": 0
+          },
+          {
+            "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
+            "value": 1
+          }
+        ]
       }
     }
   }
