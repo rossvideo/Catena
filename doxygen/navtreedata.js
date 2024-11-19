@@ -85,22 +85,13 @@ var NAVTREE =
       [ "Optionally Install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md45", null ]
     ] ],
     [ "Todo List", "todo.html", null ],
-    [ "Namespaces", "namespaces.html", [
-      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
-      [ "Namespace Members", "namespacemembers.html", [
-        [ "All", "namespacemembers.html", null ],
-        [ "Functions", "namespacemembers_func.html", null ],
-        [ "Enumerations", "namespacemembers_enum.html", null ],
-        [ "Enumerator", "namespacemembers_eval.html", null ]
-      ] ]
-    ] ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
       [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
-        [ "Functions", "functions_func.html", "functions_func" ],
+        [ "Functions", "functions_func.html", null ],
         [ "Variables", "functions_vars.html", null ],
         [ "Typedefs", "functions_type.html", null ]
       ] ]
@@ -118,9 +109,9 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"ArrayAccessor_8h.html",
-"classcatena_1_1common_1_1IPolyglotText.html#a24ca2695492a46f5fb20e8c2b522fb98",
-"factory_8cpp-example.html"
+"AuthzInfo_8h.html",
+"classcatena_1_1common_1_1MenuGroup.html#ad564b26ad88fde178b15cb1b231d75b1",
+"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a0de58d655a275bb425a05911f64674fe"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
