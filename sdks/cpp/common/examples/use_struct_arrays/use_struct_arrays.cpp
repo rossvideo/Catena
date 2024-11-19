@@ -29,7 +29,7 @@
 // device model
 #include "device.AudioDeck.json.h" 
 
-// lite
+// common
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
@@ -37,7 +37,6 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
-using namespace catena::lite;
 using namespace catena::common;
 using namespace AudioDeck;
 using catena::common::ParamTag;

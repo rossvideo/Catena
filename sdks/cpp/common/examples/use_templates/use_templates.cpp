@@ -32,7 +32,7 @@
 // device model
 #include "device.use_templates.json.h"  
 
-// lite
+// common
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <ParamDescriptor.h>
@@ -41,7 +41,6 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
-using namespace catena::lite;
 using namespace catena::common;
 using namespace use_templates;
 #include <iostream>
