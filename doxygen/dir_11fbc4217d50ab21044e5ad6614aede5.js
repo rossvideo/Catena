@@ -20,12 +20,6 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     ] ],
     [ "IDevice.h", "IDevice_8h.html", null ],
     [ "ILanguagePack.h", "ILanguagePack_8h_source.html", null ],
-    [ "IMenu.h", "IMenu_8h.html", [
-      [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ]
-    ] ],
-    [ "IMenuGroup.h", "IMenuGroup_8h.html", [
-      [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ]
-    ] ],
     [ "IParam.h", "IParam_8h.html", [
       [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ]
     ] ],
@@ -34,12 +28,6 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     ] ],
     [ "LanguagePack.h", "LanguagePack_8h.html", [
       [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ]
-    ] ],
-    [ "Menu.h", "Menu_8h.html", [
-      [ "Menu", "classcatena_1_1common_1_1Menu.html", "classcatena_1_1common_1_1Menu" ]
-    ] ],
-    [ "MenuGroup.h", "MenuGroup_8h.html", [
-      [ "MenuGroup", "classcatena_1_1common_1_1MenuGroup.html", "classcatena_1_1common_1_1MenuGroup" ]
     ] ],
     [ "NamedChoiceConstraint.h", "NamedChoiceConstraint_8h.html", [
       [ "NamedChoiceConstraint", "classcatena_1_1common_1_1NamedChoiceConstraint.html", "classcatena_1_1common_1_1NamedChoiceConstraint" ]
