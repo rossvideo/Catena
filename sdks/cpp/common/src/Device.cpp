@@ -303,7 +303,8 @@ Device::DeviceSerializer Device::getComponentSerializer(std::vector<std::string>
             component.Clear();
             ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
             menu.toProto(*dstMenu);
-            component.mutable_menu()->set_oid(menu_name);
+            std::string oid = "/" + name + "/" + menu_name;
+            component.mutable_menu()->set_oid(oid);
         }
     }
 
