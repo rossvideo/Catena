@@ -1,12 +1,17 @@
 var searchData=
 [
-  ['data_5floss_27',['DATA_LOSS',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551',1,'catena']]],
-  ['deadline_5fexceeded_28',['DEADLINE_EXCEEDED',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a42ac065963ecd3a595bbe04eff7582e0',1,'catena']]],
-  ['definecommand_29',['defineCommand',['../classcatena_1_1common_1_1IParam.html#a35c63b79b4d2a60d82484d45c97d75fa',1,'catena::common::IParam::defineCommand()'],['../classcatena_1_1common_1_1ParamDescriptor.html#aed2c80304563784791e58602b351012a',1,'catena::common::ParamDescriptor::defineCommand()'],['../classcatena_1_1common_1_1ParamWithValue.html#ac847671a24dc48644bfc6b6a960bffc0',1,'catena::common::ParamWithValue::defineCommand()']]],
-  ['detail_5flevel_30',['detail_level',['../classcatena_1_1common_1_1Device.html#afac4a50555098efffe58dce175cc3f80',1,'catena::common::Device::detail_level(const DetailLevel_e detail_level)'],['../classcatena_1_1common_1_1Device.html#a66425dc05003aa1125b6ba3f72a592ec',1,'catena::common::Device::detail_level() const']]],
-  ['detaillevel_5fe_31',['DetailLevel_e',['../classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511',1,'catena::common::Device']]],
-  ['device_32',['Device',['../classcatena_1_1common_1_1Device.html',1,'catena::common::Device'],['../classcatena_1_1common_1_1Device.html#a1c593cfc0f994c7fa52623d378e89551',1,'catena::common::Device::Device()=default'],['../classcatena_1_1common_1_1Device.html#a5d8ca97fad5f675eff75f5075f5b6cd2',1,'catena::common::Device::Device(uint32_t slot, Device_DetailLevel detail_level, std::vector&lt; Scopes &gt; access_scopes, Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)']]],
-  ['device_2eh_33',['Device.h',['../Device_8h.html',1,'']]],
-  ['deviceserializer_34',['DeviceSerializer',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html',1,'catena::common::Device']]],
-  ['do_5fnot_5fuse_35',['DO_NOT_USE',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f',1,'catena']]]
+  ['data_5floss_33',['DATA_LOSS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551',1,'catena']]],
+  ['deadline_5fexceeded_34',['DEADLINE_EXCEEDED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a42ac065963ecd3a595bbe04eff7582e0',1,'catena']]],
+  ['definecommand_35',['defineCommand',['../classcatena_1_1common_1_1IParam.html#a35c63b79b4d2a60d82484d45c97d75fa',1,'catena::common::IParam::defineCommand()'],['../classcatena_1_1common_1_1ParamDescriptor.html#aed2c80304563784791e58602b351012a',1,'catena::common::ParamDescriptor::defineCommand()'],['../classcatena_1_1common_1_1ParamWithValue.html#ac847671a24dc48644bfc6b6a960bffc0',1,'catena::common::ParamWithValue::defineCommand()']]],
+  ['detail_5flevel_36',['detail_level',['../classcatena_1_1common_1_1Device.html#afac4a50555098efffe58dce175cc3f80',1,'catena::common::Device::detail_level(const DetailLevel_e detail_level)'],['../classcatena_1_1common_1_1Device.html#a66425dc05003aa1125b6ba3f72a592ec',1,'catena::common::Device::detail_level() const']]],
+  ['detaillevel_5fe_37',['DetailLevel_e',['../classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511',1,'catena::common::Device']]],
+  ['device_38',['Device',['../classcatena_1_1common_1_1Device.html',1,'catena::common::Device'],['../classcatena_1_1common_1_1Device.html#a5d8ca97fad5f675eff75f5075f5b6cd2',1,'catena::common::Device::Device()']]],
+  ['device_39',['device',['../classcatena_1_1full_1_1DeviceModel.html#acca607ed281263c4c433514a14310f02',1,'catena::full::DeviceModel']]],
+  ['device_40',['Device',['../classcatena_1_1common_1_1Device.html#a1c593cfc0f994c7fa52623d378e89551',1,'catena::common::Device']]],
+  ['device_2eh_41',['Device.h',['../Device_8h.html',1,'']]],
+  ['devicemodel_42',['DeviceModel',['../classcatena_1_1full_1_1DeviceModel.html',1,'catena::full::DeviceModel'],['../classcatena_1_1full_1_1DeviceModel.html#a4b8573d8afbe1deb6015001bb1f0d222',1,'catena::full::DeviceModel::DeviceModel()'],['../classcatena_1_1full_1_1DeviceModel.html#a153aebc71c349ff3fe38f3d8f940e86f',1,'catena::full::DeviceModel::DeviceModel(const DeviceModel &amp;other)'],['../classcatena_1_1full_1_1DeviceModel.html#a22293c8274b036a2d221183506c22dff',1,'catena::full::DeviceModel::DeviceModel(DeviceModel &amp;&amp;other)'],['../classcatena_1_1full_1_1DeviceModel.html#ad337f1975e46418d4892312d8e4a01ed',1,'catena::full::DeviceModel::DeviceModel(catena::Device &amp;pbDevice)'],['../classcatena_1_1full_1_1DeviceModel.html#a27a7bdfc38aead6f51b45cf9ac41af49',1,'catena::full::DeviceModel::DeviceModel(const std::string &amp;filename)']]],
+  ['devicemodel_2eh_43',['DeviceModel.h',['../DeviceModel_8h.html',1,'']]],
+  ['deviceserializer_44',['DeviceSerializer',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html',1,'catena::common::Device']]],
+  ['devicestream_45',['DeviceStream',['../classcatena_1_1full_1_1DeviceStream.html',1,'catena::full::DeviceStream'],['../classcatena_1_1full_1_1DeviceStream.html#a5a2ab866f607a8948e05bd9800877392',1,'catena::full::DeviceStream::DeviceStream()']]],
+  ['do_5fnot_5fuse_46',['DO_NOT_USE',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f',1,'catena']]]
 ];

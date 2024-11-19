@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['isvariantarray_383',['IsVariantArray',['../StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63',1,'catena::common']]]
+  ['fields_458',['fields',['../structcatena_1_1full_1_1StructInfo.html#ab7ee1fb738c97cfa897fbe8568052241',1,'catena::full::StructInfo']]]
 ];
