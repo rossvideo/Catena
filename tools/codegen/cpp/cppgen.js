@@ -398,7 +398,7 @@ class CppGen {
     let args = c.argsToString();
     let constraintType = c.objectType();
     let cname = c.constraintName();
-    bloc(`catena::lite::${constraintType} ${cname}Constraint {${args}};`);
+    bloc(`catena::common::${constraintType} ${cname}Constraint {${args}};`);
     return `${cname}Constraint`;
   }
 
@@ -421,7 +421,7 @@ class CppGen {
   languagePacks() {
     let languagePacks = new LanguagePacks(this.desc);
     let packs = languagePacks.getLanguagePacks();
-    bloc(`using catena::lite::LanguagePack;`);
+    bloc(`using catena::common::LanguagePack;`);
     for (let pack in packs) {
       let lang = packs[pack];
       let keyWordPairs = Object.keys(lang.words);
@@ -436,8 +436,8 @@ class CppGen {
   }
 
   menu() {
-    bloc(`using catena::lite::Menu;`);
-    bloc(`using catena::lite::MenuGroup;`);
+    bloc(`using catena::common::Menu;`);
+    bloc(`using catena::common::MenuGroup;`);
 
     let menuGroups = this.desc.menu_groups;
     for (let group in menuGroups) {

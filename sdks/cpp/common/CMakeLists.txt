@@ -34,6 +34,9 @@ set(sources
     "src/PolyglotText.cpp"
     "src/LanguagePack.cpp"
     "src/PicklistConstraint.cpp"
+    "src/Menu.cpp"
+    "src/MenuGroup.cpp"
+
 )
 
 # conditionally make for gRPC

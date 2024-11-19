@@ -32,7 +32,7 @@ namespace catena {
 
 class MenuGroup; // forward reference
 
-namespace lite{
+namespace common{
     class Menu; // forward reference
 }
 
@@ -58,7 +58,7 @@ public:
      * @brief get menus from menu group
      * @return a map of menus
      */
-    virtual const std::unordered_map<std::string, catena::lite::Menu>* menus() const = 0;
+    virtual const std::unordered_map<std::string, catena::common::Menu>* menus() const = 0;
 };
 }  // namespace common
 }  // namespace catena
