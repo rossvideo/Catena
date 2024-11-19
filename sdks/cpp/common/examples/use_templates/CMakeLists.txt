@@ -46,7 +46,7 @@ target_sources(${TARGET}
         $<BUILD_INTERFACE:${DEVICE_SRC}>     
 )
 
-target_link_libraries(${TARGET} catena_lite)
+target_link_libraries(${TARGET} ${common_lib})
 
 target_compile_features(${TARGET}
     PUBLIC
