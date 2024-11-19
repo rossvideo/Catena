@@ -133,7 +133,7 @@ struct FieldInfo {
  * that contains the names of each alternative in the variant.
  */
 template <meta::IsVariant U> 
-constexpr std::array<const char*, 0> alternativeNames{};
+inline std::array<const char*, 0> alternativeNames{};
 
 /**
  * Free standing method to serialize a value to protobuf
