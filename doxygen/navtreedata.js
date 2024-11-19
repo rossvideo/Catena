@@ -118,9 +118,9 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"ArrayAccessor_8h.html",
-"classcatena_1_1common_1_1IParam.html#a2bff9998f4a7337df46b388563708d8f",
-"classcatena_1_1patterns_1_1EnumDecorator.html#a9ab9741e895e140bbd0e84ebbff24897"
+"",
+"classcatena_1_1common_1_1IParam.html#a067ba8be9d147c46cc804334419ae73b",
+"classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
