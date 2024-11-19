@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# cmake build file for the read_model_from_file example.
+# cmake build file for the path example.
 #
 #
 
@@ -29,7 +29,7 @@ target_sources(${target}
 )
 
 target_link_libraries(${target}
-    catena_common
+    ${common_lib}
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# cmake build file for the read_model_from_file example.
+# cmake build file for the use_struct_arrays example.
 #
 #
 

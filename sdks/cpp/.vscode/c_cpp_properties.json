@@ -17,7 +17,9 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${default}",
+                "${env:HOME}/.local/include"
             ],
             "defines": [],
             "macFrameworkPath": [

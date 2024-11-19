@@ -20,6 +20,13 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-project(CATENA_LITE_EXAMPLES C CXX)
+project(catena_connections C CXX)
 
-add_subdirectory("gRPC")
+if (gRPC_enabled)
+    add_subdirectory("gRPC")
+endif()
+
+if (REST_enabled)
+    add_subdirectory("REST")
+endif()
+

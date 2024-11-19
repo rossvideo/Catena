@@ -41,8 +41,8 @@ target_include_directories(
 
 target_link_libraries(${target}
     PUBLIC
-        catena_lite
-        proto_interface_${CATENA_MODEL}_grpc
+        grpc_service
+        catena_grpc_common
         jwt-cpp::jwt-cpp
 )
 

@@ -1,0 +1,74 @@
+{
+    "name": {
+        "display_strings": {
+            "en": "Ottawa"
+        }
+    },
+    "type": "STRUCT",
+    "template_oid": "/city",
+    "value": {
+        "struct_value": {
+            "fields": {
+                "name": {
+                    "value": {
+                        "string_value": "Ottawa"
+                    }
+                },
+                "location": {
+                    "value": {
+                        "struct_value": {
+                            "fields": {
+                                "latitude": {
+                                    "value": {
+                                        "struct_value": {
+                                            "fields": {
+                                                "degrees": {
+                                                    "value": {
+                                                        "int32_value": 45
+                                                    }
+                                                },
+                                                "minutes": {
+                                                    "value": {
+                                                        "int32_value": 19
+                                                    }
+                                                },
+                                                "seconds": {
+                                                    "value": {
+                                                        "float32_value": 4.9
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "longitude": {
+                                    "value": {
+                                        "struct_value": {
+                                            "fields": {
+                                                "degrees": {
+                                                    "value": {
+                                                        "int32_value": 75
+                                                    }
+                                                },
+                                                "minutes": {
+                                                    "value": {
+                                                        "int32_value": 39
+                                                    }
+                                                },
+                                                "seconds": {
+                                                    "value": {
+                                                        "float32_value": 56.7
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -3,9 +3,20 @@
     "configurations": [
       {
         "type": "cppdbg",
+        "name": "Debug api_only with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/REST/examples/api_only/api_only",
+        "args": [],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
         "name": "Debug use_structs with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/use_structs/use_structs",
+        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/use_structs/use_structs",
         "args": [],
         "cwd": "${workspaceFolder}/sdks/cpp/build",
         "preLaunchTask": "",
@@ -16,7 +27,7 @@
         "type": "cppdbg",
         "name": "Debug start_here with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/lite/examples/start_here/start_here",
+        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/start_here/start_here",
         "args": [],
         "cwd": "${workspaceFolder}/sdks/cpp/build",
         "preLaunchTask": "",
@@ -104,7 +115,7 @@
       "program": "${workspaceFolder}/tools/codegen/index.js",
       "args": [
           "--schema",
-          "${workspaceFolder}/schema/catena.schema.json",
+          "${workspaceFolder}/schema",
           "--device-model",
           "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
           "--output",
@@ -119,16 +130,18 @@
       "id": "pickDeviceModel",
       "description": "Select device model to generate code for",
       "type": "pickString",
-      "options": ["lite/examples/start_here/device.start_here.json", 
-                  "lite/examples/use_structs/device.use_structs.json",
-                  "lite/examples/use_templates/device.use_templates.json",
-                  "lite/examples/use_constraints/device.use_constraints.json",
-                  "lite/examples/use_struct_arrays/device.AudioDeck.json",
+      "options": ["common/examples/start_here/device.start_here.json", 
+                  "common/examples/use_structs/device.use_structs.json",
+                  "common/examples/use_templates/device.use_templates.json",
+                  "common/examples/use_constraints/device.use_constraints.json",
+                  "common/examples/use_struct_arrays/device.AudioDeck.json",
+                  "common/examples/import_params/device.import_params.json",
+                  "common/examples/use_variants/device.use_variants.json",
                   "connections/gRPC/examples/status_update/device.status_update.json",
                   "connections/gRPC/examples/use_commands/device.video_player.json",
                   "connections/gRPC/examples/use_menus/device.use_menus.json"
                 ],
-      "default": "lite/examples/start_here/device.start_here.json"
+      "default": "common/examples/start_here/device.start_here.json"
     },
     {
       "id": "pickService",
@@ -144,13 +157,14 @@
       "id": "pickExample",
       "description": "Select example to run",
       "type": "pickString",
-      "options": ["lite/examples/start_here/start_here",
-                  "lite/examples/use_structs/use_structs",
-                  "lite/examples/use_templates/use_templates",
-                  "lite/examples/use_constraints/use_constraints",
-                  "lite/examples/use_struct_arrays/use_struct_arrays",
+      "options": ["common/examples/start_here/start_here",
+                  "common/examples/use_structs/use_structs",
+                  "common/examples/use_templates/use_templates",
+                  "common/examples/use_constraints/use_constraints",
+                  "common/examples/use_struct_arrays/use_struct_arrays",
+                  "common/examples/use_variants/use_variants",
                 ],
-      "default": "lite/examples/start_here/start_here"
+      "default": "common/examples/start_here/start_here"
     }
   ]
 

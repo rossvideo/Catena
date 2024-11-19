@@ -21,7 +21,7 @@
 // load the command line parser
 const { program } = require('commander');
 program
-    .option('-s, --schema <string>', 'path to schema definitions', '../../schema/catena.schema.json')
+    .option('-s, --schema <string>', 'path to schema definitions', '../../schema')
     .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
     .option('-o, --output <string>', 'Output folder for generated code', '.');
@@ -44,8 +44,7 @@ if (options.output) {
 
 
 
-// import the path and fs libraries
-const path = require('node:path');
+// import the fs libraries
 const fs = require('fs');
 
 // verify input file exists
@@ -66,7 +65,7 @@ try {
  
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(options.deviceModel));
-    if (validator.validate('device', data)) {
+    if (validator.validateDevice(data)) {
         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
         const codeGen = new CodeGen(options.deviceModel, options.output, validator, data);
         codeGen.generate();

@@ -1,0 +1,77 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": [
+    "monitor",
+    "operate",
+    "configure",
+    "administer"
+  ],
+  "default_scope": "operate",
+  "params": {
+    "city": {
+      "import": {"file": "params/param.city.json"}
+    },
+    "plane_ticket": {
+      "type": "STRUCT",
+      "params": {
+        "departure": {
+          "import": {"file": "params/param.ottawa.json"}
+        },
+        "destination": {
+          "type": "STRUCT",
+          "template_oid": "/city"
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "departure": {
+              "value": {}
+            },
+            "destination": {
+              "value": {
+                "struct_value": {
+                  "fields": {
+                    "name": {"value": {"string_value": "Paris"}},
+                    "location": {
+                      "value": {
+                        "struct_value": {
+                          "fields": {
+                            "latitude": {
+                              "value": {
+                                "struct_value": {
+                                  "fields": {
+                                    "degrees": {"value": {"int32_value": 48}},
+                                    "minutes": {"value": {"int32_value": 43}},
+                                    "seconds": {"value": {"float32_value": 49.1}}
+                                  }
+                                }
+                              }
+                            },
+                            "longitude": {
+                              "value": {
+                                "struct_value": {
+                                  "fields": {
+                                    "degrees": {"value": {"int32_value": 2}},
+                                    "minutes": {"value": {"int32_value": 22}},
+                                    "seconds": {"value": {"float32_value": 22.1}}
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }       
+      }
+    }
+  }
+}
