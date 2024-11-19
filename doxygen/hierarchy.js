@@ -32,12 +32,6 @@ var hierarchy =
     [ "catena::common::ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", [
       [ "catena::common::LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", null ]
     ] ],
-    [ "catena::common::IMenu", "classcatena_1_1common_1_1IMenu.html", [
-      [ "catena::common::Menu", "classcatena_1_1common_1_1Menu.html", null ]
-    ] ],
-    [ "catena::common::IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", [
-      [ "catena::common::MenuGroup", "classcatena_1_1common_1_1MenuGroup.html", null ]
-    ] ],
     [ "catena::common::IParam", "classcatena_1_1common_1_1IParam.html", [
       [ "catena::common::ParamWithValue< T >", "classcatena_1_1common_1_1ParamWithValue.html", null ]
     ] ],
@@ -47,7 +41,6 @@ var hierarchy =
     [ "catena::common::LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
     [ "catena::common::Device::LockGuard", "classcatena_1_1common_1_1Device_1_1LockGuard.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
-    [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
     [ "catena::full::ParamAccessor", "classcatena_1_1full_1_1ParamAccessor.html", null ],
     [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ],
