@@ -29,7 +29,7 @@ using Coordinates_elem = std::variant<use_variants::Cartesian, _coordinates::Cyl
 using Coordinates = std::vector<Coordinates_elem>;
 } // namespace use_variants
 template<>
-constexpr std::array<const char*, 2> catena::common::alternativeNames<use_variants::Number>{"digits", "words"};
+inline std::array<const char*, 2> catena::common::alternativeNames<use_variants::Number>{"digits", "words"};
 template<>
 struct catena::common::StructInfo<use_variants::Cartesian> {
     using Cartesian = use_variants::Cartesian;
@@ -49,6 +49,6 @@ struct catena::common::StructInfo<use_variants::_coordinates::Spherical> {
     static constexpr Type fields = {{"r", &Spherical::r}, {"theta", &Spherical::theta}, {"phi", &Spherical::phi}};
 };
 template<>
-constexpr std::array<const char*, 3> catena::common::alternativeNames<use_variants::Coordinates_elem>{"cartesian", "cylindrical", "spherical"};
+inline std::array<const char*, 3> catena::common::alternativeNames<use_variants::Coordinates_elem>{"cartesian", "cylindrical", "spherical"};
 
 
