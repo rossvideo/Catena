@@ -305,55 +305,53 @@ $(document).ready(function(){initNavTree('StructInfo_8h_source.html',''); initRe
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keywordflow">return</span> std::find(typeNames.begin(), typeNames.end(), typeName) - typeNames.begin();</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;}</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160; </div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant V, std::<span class="keywordtype">size_t</span> Index&gt;</div>
-<div class="line"><a name="l00357"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">  357</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">_changeType</a>(V&amp; variant, <span class="keyword">const</span> std::size_t newTypeIndex) {</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;    <span class="keywordflow">if</span> constexpr (Index == std::variant_size_v&lt;V&gt;) {</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        <span class="comment">// reached the end of the variant, type not found</span></div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;        <span class="keyword">using</span> NewType = std::variant_alternative_t&lt;Index, V&gt;;</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;        <span class="keywordflow">if</span> (newTypeIndex == Index) {</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;            <span class="comment">// found the new type, change the variant to the default value of the new type</span></div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;            variant = NewType{};</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;            _changeType&lt;V, Index + 1&gt;(variant, newTypeIndex);</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        }</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    }</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;}</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant T&gt;</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="keywordtype">void</span> fromProto(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keywordflow">if</span> (!src.has_struct_variant_value()) {</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;        <span class="comment">// src is not a variant so it cannot be deserialized into a variant</span></div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;        <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    }</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="keyword">const</span> catena::StructVariantValue&amp; srcVariant = src.struct_variant_value();</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    std::string variantType = srcVariant.struct_variant_type();</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    </div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames&lt;T&gt;);</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keywordflow">if</span> (typeIndex &gt;= alternativeNames&lt;T&gt;.size()) {</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;        <span class="comment">// variant type not found in the list of alternatives</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    }</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    <span class="keywordflow">if</span> (typeIndex != dst-&gt;index()) {</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;        <span class="comment">// The type of the variant needs to be changed</span></div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;        _changeType&lt;T, 0&gt;(*dst, typeIndex);</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    }</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160; </div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    AuthzInfo subParamAuth = auth.subParamInfo(variantType);</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    std::visit([&amp;](<span class="keyword">auto</span>&amp; arg) {</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(srcVariant.value(), &amp;arg, subParamAuth);</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;    }, *dst); </div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant T&gt;</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;<span class="keywordtype">void</span> fromProto(<span class="keyword">const</span> catena::Value&amp; src, T* dst, <span class="keyword">const</span> AuthzInfo&amp; auth) {</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    <span class="keywordflow">if</span> (!src.has_struct_variant_value()) {</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;        <span class="comment">// src is not a variant so it cannot be deserialized into a variant</span></div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;    }</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    <span class="keyword">const</span> catena::StructVariantValue&amp; srcVariant = src.struct_variant_value();</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    std::string variantType = srcVariant.struct_variant_type();</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;    </div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames&lt;T&gt;);</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    <span class="keywordflow">if</span> (typeIndex &gt;= alternativeNames&lt;T&gt;.size()) {</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;        <span class="comment">// variant type not found in the list of alternatives</span></div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;        <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    }</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;    <span class="keywordflow">if</span> (typeIndex != dst-&gt;index()) {</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        <span class="comment">// The type of the variant needs to be changed</span></div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        _changeType&lt;T, 0&gt;(*dst, typeIndex);</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    }</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160; </div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    AuthzInfo subParamAuth = auth.subParamInfo(variantType);</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    std::visit([&amp;](<span class="keyword">auto</span>&amp; arg) {</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <a class="code" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">fromProto</a>(srcVariant.value(), &amp;arg, subParamAuth);</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    }, *dst); </div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;}</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160; </div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;<span class="keyword">template</span> &lt;meta::IsVariant V, std::<span class="keywordtype">size_t</span> Index&gt;</div>
+<div class="line"><a name="l00382"></a><span class="lineno"><a class="line" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">  382</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">_changeType</a>(V&amp; variant, <span class="keyword">const</span> std::size_t newTypeIndex) {</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keywordflow">if</span> constexpr (Index == std::variant_size_v&lt;V&gt;) {</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        <span class="comment">// reached the end of the variant, type not found</span></div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;        <span class="keyword">using</span> NewType = std::variant_alternative_t&lt;Index, V&gt;;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;        <span class="keywordflow">if</span> (newTypeIndex == Index) {</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;            <span class="comment">// found the new type, change the variant to the default value of the new type</span></div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;            variant = NewType{};</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;            _changeType&lt;V, Index + 1&gt;(variant, newTypeIndex);</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        }</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;    }</div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;}</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160; </div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160; </div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160; </div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;}  <span class="comment">// namespace common</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;}  <span class="comment">// namespace catena</span></div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160; </div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;}  <span class="comment">// namespace common</span></div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;}  <span class="comment">// namespace catena</span></div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160; </div>
 <div class="ttc" id="aAuthzInfo_8h_html"><div class="ttname"><a href="AuthzInfo_8h.html">AuthzInfo.h</a></div><div class="ttdoc">Class for handling authorization information.</div></div>
 <div class="ttc" id="aStructInfo_8h_html_a00607bf87da6b8329a669b7712191aea"><div class="ttname"><a href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">catena::common::fromProto</a></div><div class="ttdeci">void fromProto(const catena::Value &amp;src, T *dst, const AuthzInfo &amp;auth)</div><div class="ttdef"><b>Definition:</b> StructInfo.h:245</div></div>
-<div class="ttc" id="aStructInfo_8h_html_a2f37737db27ab4b01982ea3514500fb0"><div class="ttname"><a href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">catena::common::_changeType</a></div><div class="ttdeci">void _changeType(V &amp;variant, const std::size_t newTypeIndex)</div><div class="ttdoc">_changeType is a helper function to change the type held by a variant</div><div class="ttdef"><b>Definition:</b> StructInfo.h:357</div></div>
+<div class="ttc" id="aStructInfo_8h_html_a2f37737db27ab4b01982ea3514500fb0"><div class="ttname"><a href="StructInfo_8h.html#a2f37737db27ab4b01982ea3514500fb0">catena::common::_changeType</a></div><div class="ttdeci">void _changeType(V &amp;variant, const std::size_t newTypeIndex)</div><div class="ttdoc">_changeType is a helper function to change the type held by a variant</div><div class="ttdef"><b>Definition:</b> StructInfo.h:382</div></div>
 <div class="ttc" id="aStructInfo_8h_html_a38dc399d594567ca24de123a1b1d60ed"><div class="ttname"><a href="StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed">catena::common::CatenaStruct</a></div><div class="ttdeci">concept CatenaStruct</div><div class="ttdoc">CatenaStruct concept checks that a type is a struct generated by the Catena code generator.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:75</div></div>
 <div class="ttc" id="aStructInfo_8h_html_acfc43af7a295408f1bb3bf54a5a68f63"><div class="ttname"><a href="StructInfo_8h.html#acfc43af7a295408f1bb3bf54a5a68f63">catena::common::IsVariantArray</a></div><div class="ttdeci">concept IsVariantArray</div><div class="ttdoc">IsVariantArray concept checks that a type is a vector of variants.</div><div class="ttdef"><b>Definition:</b> StructInfo.h:97</div></div>
 <div class="ttc" id="aStructInfo_8h_html_ad5292ff814155acd5c7a9bf7b6dcb086"><div class="ttname"><a href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">catena::common::toProto</a></div><div class="ttdeci">void toProto(catena::Value &amp;dst, const T *src, const AuthzInfo &amp;auth)</div><div class="ttdef"><b>Definition:</b> StructInfo.h:156</div></div>
