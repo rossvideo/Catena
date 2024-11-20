@@ -186,11 +186,21 @@ class CppGen {
         // write param initial value
         bloc(param.valueInitializer());
         // write param descriptors
-        for (let descriptor in param.getDescriptors()) {
-          bloc(descriptor);
-        }
+        writeConstraintsAndDescriptors(param);
         // add param to device model
         bloc(param.addToDeviceModel());
+      }
+    }
+  }
+
+  writeConstraintsAndDescriptors(param) {
+    if (param.hasUniqueConstraint()) {
+      bloc(param.constraint.getInitializer());
+    }
+    bloc(param.descriptorInitializer());
+    if (param.hasTypeInfo()) {
+      for (let subParam in param.getSubParams()) {
+        this.writeConstraintsAndDescriptors(subParam);
       }
     }
   }

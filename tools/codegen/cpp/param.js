@@ -159,11 +159,70 @@ function valueTypeArg(type) {
 //   return `"${this.parentOid}/${this.oid}"`;
 // }
 
+class Descriptor {
+  constructor(desc, oid, constraintOid, parentOid, isCommand) {
+    const args = {
+      type: () => { 
+        return `catena::ParamType::${desc.type}`;
+      },
+      oid_aliases: () => {
+        return `{${(desc.oid_aliases ?? []).map((alias) => `{"${alias}"}`).join(", ")}}`;
+      },
+      name: () => {
+        let ans = `{}`;
+        if ("name" in desc) {
+          ans = "{";
+          const display_strings = desc.name.display_strings;
+          const n = Object.keys(display_strings).length;
+          let i = 0;
+          for (let lang in display_strings) {
+            ans += `{"${lang}", "${display_strings[lang]}"}`;
+            if (i++ < n - 1) {
+              ans += ",";
+            }
+          }
+          ans += "}";
+        }
+        return ans;
+      },
+      widget: () => {
+        return `"${desc.widget || ""}"`;
+      },
+      access_scope: () => {
+        return `"${desc.access_scope || ""}"`;
+      },
+      read_only: () => {
+        return !!desc.readonly;
+      },
+      oid: () => {
+        return `"${oid}"`;
+      },
+      constraint: () => {
+        return constraintOid ? `&${constraintOid}` : "nullptr";
+      },
+      parent_oid: () => {
+        return parentOid ? `"&${parentOid}"` : "nullptr";
+      },
+      is_command: () => {
+        return !!isCommand;
+      }
+    };
+
+    this.oid = oid;
+    this.parentOid = parentOid;
+    this.args = args.map(arg => arg()).join(', ');
+  }
+
+  getInitializer() {
+    return `catena::common::ParamDescriptor _${this.parentOid}${this.oid} {${this.args}};`;
+  }
+}
+
 class Param {
   /**
    * @param {desc} desc The param descriptor
    */
-  constructor(oid, desc, namespace, device) {
+  constructor(oid, desc, namespace, device, parent = undefined, isCommand = false) {
     if ("import" in desc) {
       desc = device.deviceModel.importParam(desc.import);
     }
@@ -172,11 +231,19 @@ class Param {
     this.namespace = namespace;
     this.subParams = {};
     this.type = desc.type;
-    if ("value" in desc) {
-      this.value = desc.value;
-    }
+    this.value = desc.value;
+
+
     if ("constraint" in desc) {
-      this.constraint = new Constraint(desc.constraint);
+      if (desc.constraint.ref_oid) {
+        if (!device.hasConstraint(desc.constraint.ref_oid)) {
+          throw new Error(`Shared constraint ${desc.constraint.ref_oid} not found`);
+        }
+        this.constraintVar = `constraints_${desc.constraint.ref_oid}Constraint`;
+      } else {
+        this.constraint = new Constraint("", this.getVarName(), desc.constraint);
+        this.constraintVar = `_${oid}Constraint`;
+      }
     }
 
     if ("template_oid" in desc) {
@@ -184,7 +251,14 @@ class Param {
       if (this.template_param == undefined) {
         throw new Error(`Template param ${desc.template_oid} not found`);
       }
+      
+      // If param doesn't have a constraint, use the template's constraint
+      if (this.constraintVar == undefined) {
+        this.constraintVar = this.template_param.constraintVar;
+      }
     }
+
+    this.descriptor = new Descriptor(desc, oid, this.constraint?.oid, parent?.oid, isCommand);
 
     if ("params" in desc) {
       if (!this.hasTypeInfo()) {
@@ -233,6 +307,10 @@ class Param {
     return this.value != undefined;
   }
 
+  hasUniqueConstraint() {
+    return this.constraint != undefined;
+  }
+
   objectType() {
     if (!this.hasTypeInfo()) {
       throw new Error(`${this.type} type does not have an object type`);
@@ -259,8 +337,10 @@ class Param {
 
   initializeValue() {
     if (!this.hasValue()) {
+      throw new Error("Value not found");
     }
-    return `${this.objectNamespaceType()} ${this.oid} = ${value};`;
+    let param = this.template_param || this;
+    return `${this.objectNamespaceType()} ${this.oid}${this.valueInitializer(this.value, param)};`;
   }
 
   valueInitializer(value, param) {
@@ -336,85 +416,9 @@ class Param {
     return `{${valueObject[key](value[key])}}`;
   }
 
-
-//   initializer(desc) {
-//     const valueObject = {
-//       // simple types are pretty simple to handle
-//       string_value: (value) => {
-//         return `"${value}"`;
-//       },
-//       int32_value: (value) => {
-//         return `${value}`;
-//       },
-//       float32_value: (value) => {
-//         return `${value}`;
-//       },
-//       string_array_values: (value) => {
-//         return `${value.strings.map((v) => `"${v}"`).join(", ")}`;
-//       },
-//       int32_array_values: (value) => {
-//         return `${value.ints.join(", ")}`;
-//       },
-//       float32_array_values: (value) => {
-//         return `${value.floats.join(", ")}`;
-//       },
-//       undefined: () => {
-//         return "{}";
-//       },
-//       // structs and struct arrays are more complex
-//       struct_value: (value, isStructChild = false) => {
-//         let fields = value.fields;
-//         let fieldsArr = Object.keys(fields);
-//         // recursively call the correct valueObject function on each field
-//         let mappedFields = fieldsArr.map((field) => {
-//           let key = Object.keys(fields[field].value)[0];
-//           return valueObject[key](fields[field].value[key], true);
-//         });
-
-//         let valueStr = "";
-//         if (isStructChild) valueStr += "{";
-//         for (let i = 0; i < mappedFields.length; i++) {
-//           if (mappedFields[i] != "{}") {
-//             valueStr += `.${fieldsArr[i]}=${mappedFields[i]},`;
-//           }
-//         }
-//         valueStr = valueStr.slice(0, -1); // remove trailing comma
-//         if (isStructChild) valueStr += "}";
-//         return valueStr;
-//       },
-//       struct_array_values: (value, isStructChild = false) => {
-//         let arr = value.struct_values;
-//         let mappedArr = arr.map((item) => {
-//           let fields = item.struct_value.fields;
-//           let fieldsArr = Object.keys(fields);
-//           let mappedFields = fieldsArr.map((field) => {
-//             let key = Object.keys(fields[field].value)[0];
-//             return valueObject[key](fields[field].value[key], true);
-//           });
-//           return `{${mappedFields.join(",")}}`;
-//         });
-//         return isStructChild 
-//           ? `{${mappedArr.join(",")}}`
-//           : `${mappedArr.join(",")}`;
-//       },
-//       struct_variant_value: (value) => {
-//       },
-//       struct_variant_array_values: (value) => {
-//       },
-//     };
-
-
-//     if ("value" in desc) {
-//       let key = Object.keys(desc.value)[0];
-//       if (key in valueObject) {
-//         this.init = `{${valueObject[key](desc.value[key])}}`;
-//       } else {
-//         throw new Error(`Unknown value type ${key}`);
-//       }
-//     }
-//     return this.init;
-//   }
-
+  descriptorInitializer() {
+    return this.descriptor.getInitializer();
+  }
 
 // class Param extends CppCtor {
 //   /**
