@@ -118,7 +118,7 @@ class Device extends CppCtor {
         if (path.length === 0) {
             return this.params[front];
         } else {
-            return this.params[front].getParam(path,fqoid);
+            return this.params[front].getParam(path);
         }
     }
 

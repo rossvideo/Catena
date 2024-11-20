@@ -15,6 +15,7 @@
 
 
 const CppCtor = require("./cppctor");
+const Constraint = require("./constraint");
 
 /**
  *
@@ -25,33 +26,49 @@ function initialCap(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// /**
-//  *
-//  * @param {object} desc param descriptor
-//  * @returns c++ type of the param's value as a string
-//  */
-// function typeArg(desc) {
-//   const types = {
-//     STRING: `std::string`,
-//     INT32: `int32_t`,
-//     FLOAT32: `float`,
-//     STRING_ARRAY: `std::vector<std::string>`,
-//     INT32_ARRAY: `std::vector<int32_t>`,
-//     FLOAT32_ARRAY: `std::vector<float>`,
-//     STRUCT: `${initialCap(this.oid)}`,
-//     STRUCT_ARRAY: `${initialCap(this.oid)}`,
-//     STRUCT_VARIANT: `${initialCap(this.oid)}`,
-//     STRUCT_VARIANT_ARRAY: `${initialCap(this.oid)}`,
-//     EMPTY: `EmptyValue`,
-//   };
+/**
+ *
+ * @param {object} desc param descriptor
+ * @returns c++ type of the param's value as a string
+ */
+function typeArg(type) {
+  const types = {
+    STRING: `std::string`,
+    INT32: `int32_t`,
+    FLOAT32: `float`,
+    STRING_ARRAY: `std::vector<std::string>`,
+    INT32_ARRAY: `std::vector<int32_t>`,
+    FLOAT32_ARRAY: `std::vector<float>`,
+    EMPTY: `EmptyValue`,
+  };
 
-//   if (desc.type in types) {
-//     this.type = types[desc.type];
-//   } else {
-//     throw new Error(`Unknown type ${desc.type}`);
-//   }
-//   return `catena::ParamType::${desc.type}`;
-// }
+  if (type in types) {
+    return types[desc.type];
+  } else {
+    throw new Error(`Unknown type ${desc.type}`);
+  }
+}
+
+function valueTypeArg(type) {
+  const types = {
+    STRING: `string_value`,
+    INT32: `int32_value`,
+    FLOAT32: `float32_value`,
+    STRING_ARRAY: `string_array_values`,
+    INT32_ARRAY: `int32_array_values`,
+    FLOAT32_ARRAY: `float32_array_values`,
+    STRUCT: `struct_value`,
+    STRUCT_ARRAY: `struct_array_values`,
+    STRUCT_VARIANT: `struct_variant_value`,
+    STRUCT_VARIANT_ARRAY: `struct_variant_array_values`,
+  };
+
+  if (type in types) {
+    return types[desc.type];
+  } else {
+    throw new Error(`Unknown type ${desc.type}`);
+  }
+}
 
 // /**
 //  * @param {string} s
@@ -147,19 +164,28 @@ class Param {
    * @param {desc} desc The param descriptor
    */
   constructor(oid, desc, namespace, device) {
-    this.oid = oid;
-
     if ("import" in desc) {
       desc = device.deviceModel.importParam(desc.import);
     }
 
-    if ("template_oid" in desc) {
-      this.template_param = device.getParam(desc.template_oid); 
+    this.oid = oid;
+    this.namespace = namespace;
+    this.subParams = {};
+    this.type = desc.type;
+    if ("value" in desc) {
+      this.value = desc.value;
+    }
+    if ("constraint" in desc) {
+      this.constraint = new Constraint(desc.constraint);
     }
 
-    this.type = desc.type;
+    if ("template_oid" in desc) {
+      this.template_param = device.getParam(desc.template_oid); 
+      if (this.template_param == undefined) {
+        throw new Error(`Template param ${desc.template_oid} not found`);
+      }
+    }
 
-    this.subParams = {};
     if ("params" in desc) {
       if (!this.hasTypeInfo()) {
         throw new Error(`${this.type} type can not have subparams`);
@@ -170,16 +196,16 @@ class Param {
     }
   }
 
-  getParam(path, fqoid) {
+  getParam(path) {
     let front = path.shift();
     if (!front in this.subParams) {
-      throw new Error(`Invalid template parameter ${fqoid}`);
+      return undefined;
     }
 
     if (path.length == 0) {
       return this.subParams[front];
     } else {
-      return this.subParams[front].getParam(path, fqoid);
+      return this.subParams[front].getParam(path);
     }
   }
 
@@ -204,40 +230,113 @@ class Param {
   }
 
   hasValue() {
-    return "value" in this.desc;
+    return this.value != undefined;
+  }
+
+  objectType() {
+    if (!this.hasTypeInfo()) {
+      throw new Error(`${this.type} type does not have an object type`);
+    }
+
+    if (this.isTemplated()) {
+      return this.template_param.objectType();
+    } else if (this.hasTypeInfo()){
+      return initialCap(this.oid);
+    } else {
+      return typeArg(this.type);
+    }
+  }
+
+  objectNamespaceType() {
+    if (this.isTemplated()) {
+      return this.template_param.objectNamespaceType();
+    } else if (this.hasTypeInfo()) {
+      return `${this.namespace}::${initialCap(this.oid)}`;
+    } else {
+      return typeArg(this.type);
+    }
+  }
+
+  initializeValue() {
+    if (!this.hasValue()) {
+    }
+    return `${this.objectNamespaceType()} ${this.oid} = ${value};`;
+  }
+
+  valueInitializer(value, param) {
+    const valueObject = {
+      // simple types are pretty simple to handle
+      string_value: (typeValue) => {
+        return `"${typeValue}"`;
+      },
+      int32_value: (typeValue) => {
+        return `${typeValue}`;
+      },
+      float32_value: (typeValue) => {
+        return `${typeValue}`;
+      },
+      string_array_values: (typeValue) => {
+        return `${typeValue.strings.map((v) => `"${v}"`).join(", ")}`;
+      },
+      int32_array_values: (typeValue) => {
+        return `${typeValue.ints.join(", ")}`;
+      },
+      float32_array_values: (typeValue) => {
+        return `${typeValue.floats.join(", ")}`;
+      },
+      // structs and struct arrays are more complex
+      struct_value: (typeValue) => {
+        if (typeValue.fields == undefined) {
+          throw new Error("Struct value must have fields map");
+        }
+        let fieldsArr = Object.keys(typeValue.fields);
+        let mappedFields = fieldsArr.map((field) => {
+          let subParam = param.getParam(field);
+          if (subParam == undefined) {
+            throw new Error(`Subparam ${field} not found`);
+          }
+          return `.${initialCap(field)}${valueInitializer(typeValue.fields[field].value, subParam)}`;
+        });
+        return `{${mappedFields.join(",")}}`;
+      },
+      struct_array_values: (typeValue) => {
+        let arr = typeValue.struct_values;
+        let mappedArr = arr.map((item) => {
+          if (item.struct_value == undefined) {
+            throw new Error("struct_array_value must have struct_value field");
+          }
+          return `${valueObject.struct_value(item.struct_value)}`;
+        });
+        return `${mappedArr.join(",")}`;
+      },
+      struct_variant_value: (typeValue) => {
+        if (typeValue.struct_varaint_type == undefined) {
+          throw new Error("struct_variant_value must have struct_variant_type");
+        }
+        let subParam = param.getParam(typeValue.struct_variant_type);
+        if (subParam == undefined) {
+          throw new Error(`${typeValue.struct_variant_type} is not an alternative of ${param.oid}`);
+        }
+        if (typeValue.value == undefined) {
+          throw new Error("struct_variant_value must have value field");
+        }
+        return `${valueInitializer(typeValue.value, subParam)}`;
+      },
+      struct_variant_array_values: (typeValue) => {
+        let arr = typeValue.struct_variants;
+        let mappedArr = arr.map(valueObject.struct_variant_value);
+        return `${mappedArr.join(",")}`;
+      },
+    };
+
+    let key = Object.keys(value)[0];
+    if (key != valueTypeArg(param.type)) {
+      throw new Error(`Value type ${key} does not match param type ${valueTypeArg(param.type)}`);
+    }
+    return `{${valueObject[key](value[key])}}`;
   }
 
 
-
-// class Param extends CppCtor {
-//   /**
-//    * Create constructor arguments for catena::common::Param object
-//    * @param {Array} parentOid array of ancestors' oids
-//    * @param {string} oid object id of the param being processed
-//    * @param {object} desc descriptor of parent object
-//    */
-//   // constructor(parentOid, oid, desc) {
-//   //   super(desc[oid]);
-//   //   this.parentOid = parentOid;
-//   //   this.oid = oid;
-//   //   this.deviceParams = desc;
-//   //   this.init = "{}";
-//   //   this.template_oid = "template_oid" in desc[oid] ? desc[oid].template_oid : "";
-//   //   this.constraint = "constraint" in desc[oid] ? desc[oid].constraint : "";
-//   //   this.arguments.push(typeArg.bind(this));
-//   //   this.arguments.push(oidAliasesArg);
-//   //   this.arguments.push(nameArg);
-//   //   this.arguments.push(widgetArg);
-//   //   this.arguments.push(accessScope);
-//   //   this.arguments.push(readOnly);
-//   //   this.arguments.push(quoted(this.oid));
-//   // }
-
-//   /**
-//    *
-//    * @param {object} desc param descriptor of param being processed (can be recursive)
-//    * @returns initializer for the param's value object
-//    */
 //   initializer(desc) {
 //     const valueObject = {
 //       // simple types are pretty simple to handle
@@ -315,6 +414,31 @@ class Param {
 //     }
 //     return this.init;
 //   }
+
+
+// class Param extends CppCtor {
+//   /**
+//    * Create constructor arguments for catena::common::Param object
+//    * @param {Array} parentOid array of ancestors' oids
+//    * @param {string} oid object id of the param being processed
+//    * @param {object} desc descriptor of parent object
+//    */
+//   // constructor(parentOid, oid, desc) {
+//   //   super(desc[oid]);
+//   //   this.parentOid = parentOid;
+//   //   this.oid = oid;
+//   //   this.deviceParams = desc;
+//   //   this.init = "{}";
+//   //   this.template_oid = "template_oid" in desc[oid] ? desc[oid].template_oid : "";
+//   //   this.constraint = "constraint" in desc[oid] ? desc[oid].constraint : "";
+//   //   this.arguments.push(typeArg.bind(this));
+//   //   this.arguments.push(oidAliasesArg);
+//   //   this.arguments.push(nameArg);
+//   //   this.arguments.push(widgetArg);
+//   //   this.arguments.push(accessScope);
+//   //   this.arguments.push(readOnly);
+//   //   this.arguments.push(quoted(this.oid));
+//   // }
 
 //   /**
 //    *

@@ -63,7 +63,7 @@ class bufloc {
   write(s, indent = 0) {
     this.buf += `${" ".repeat(indent * 2)}${s}\n`;
   }
-  deliver(fd) {
+  deliver() {
     fs.writeSync(this.fd, this.buf);
   }
 }
@@ -215,7 +215,7 @@ class CppGen {
       ploc(`};`, --pindent);
       
     } else if (param.isVariantType()) {
-      hloc(`namespace _${param.name()} {`, hindent++);
+      hloc(`namespace _${param.oid} {`, hindent++);
       let subParamCount = 0;
       for (let subParam in param.getSubParams()) {
         subParamCount++;
@@ -223,7 +223,7 @@ class CppGen {
           this.writeTypeInfo(subParam);
         }
       }
-      hloc(`} // namespace _${param.name()}`, --hindent);
+      hloc(`} // namespace _${param.oid}`, --hindent);
 
       ploc(`template<>`);
       ploc(`constexpr std::array<const char*, ${subParamCount}> catena::common::alternativeNames<${param.objectNamespaceType()}>{${param.getAlternativeNames()}};`);
