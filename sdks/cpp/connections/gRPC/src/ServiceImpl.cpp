@@ -412,17 +412,14 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
 
         case CallStatus::kWrite:
             lock.lock();
-            std::cout << "waiting on cv : " << timeNow() << std::endl;
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
-            std::cout << "cv wait over : " << timeNow() << std::endl;
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 std::cout << "Connection[" << objectId_ << "] cancelled\n";
                 writer_.Finish(Status::CANCELLED, this);
                 break;
             } else {
-                std::cout << "sending update\n";
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
