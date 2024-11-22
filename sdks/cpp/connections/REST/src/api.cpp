@@ -32,12 +32,30 @@
 
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
+#include <utils.h>
 
 #include <api.h>
 
+#include "absl/flags/flag.h"
+
+#include <iostream>
+#include <regex>
+
+
 using catena::API;
 
-API::API() : version_{"1.0.0"} {
+// expand env variables
+void expandEnvVariables(std::string &str) {
+    static std::regex env{"\\$\\{([^}]+)\\}"};
+    std::smatch match;
+    while (std::regex_search(str, match, env)) {
+        const char *s = getenv(match[1].str().c_str());
+        const std::string var(s == nullptr ? "" : s);
+        str.replace(match[0].first, match[0].second, var);
+    }
+}
+
+API::API(uint16_t port) : version_{"1.0.0"}, port_{port} {
     CROW_ROUTE(app_, "/v1/PopulatedSlots")
     ([]() {
         ::catena::SlotList slotList;
@@ -63,6 +81,9 @@ API::API() : version_{"1.0.0"} {
         res.write(json_output);
         return res;
     });
+
+    
+
 }
 
 std::string API::version() const {
@@ -70,5 +91,35 @@ std::string API::version() const {
 }
 
 void API::run() {
-    app_.port(8080).run();
+    if (is_port_in_use_()) {
+        std::cerr << "Port " << port_ << " is already in use" << std::endl;
+        return;
+    }
+    asio::ssl::context ssl_context(asio::ssl::context::tlsv12);
+
+    // find our certs
+    std::string path_to_certs(absl::GetFlag(FLAGS_certs));
+    expandEnvVariables(path_to_certs);
+    
+    // Set up SSL/TLS
+    ssl_context.set_options(asio::ssl::context::default_workarounds | 
+                            asio::ssl::context::no_sslv2 | 
+                            asio::ssl::context::single_dh_use);
+
+    // Load certificate and private key files
+    ssl_context.use_certificate_chain_file(path_to_certs + "/server.crt");
+    ssl_context.use_private_key_file(path_to_certs + "/server.key", asio::ssl::context::pem);
+    ssl_context.load_verify_file(path_to_certs + "/ca.crt");
+    app_.port(port_).ssl(std::move(ssl_context)).run();
+}
+
+bool API::is_port_in_use_() const {
+    try {
+        boost::asio::io_context io_context;
+        boost::asio::ip::tcp::acceptor acceptor(io_context, 
+                    boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_));
+        return false;  // Port is not in use
+    } catch (const boost::system::system_error& e) {
+        return true;  // Port is in use
+    }
 }

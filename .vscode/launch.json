@@ -3,6 +3,17 @@
     "configurations": [
       {
         "type": "cppdbg",
+        "name": "Debug api_only with lldb",
+        "request": "launch",
+        "program": "${workspaceFolder}/sdks/cpp/build/connections/REST/examples/api_only/api_only",
+        "args": [],
+        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "preLaunchTask": "",
+        "externalConsole": true,
+        "MIMode": "lldb"
+      },
+      {
+        "type": "cppdbg",
         "name": "Debug use_structs with lldb",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/common/examples/use_structs/use_structs",

@@ -34,6 +34,12 @@ generate_catena_device(
     TARGET ${TARGET}
 )
 
+target_include_directories(${TARGET}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CATENA_CPP_ROOT_DIR}/common/include
+)
+
 target_sources(${TARGET}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>      
