@@ -18,47 +18,47 @@
 //
 
 /**
- * @brief Tags to differentiate collections with the same type for template specialization
- * @file Tags.h
- * @copyright Copyright © 2023 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @file IMenuGroup.h
+ * @brief Interface for MenuGroup
+ * @author Ben Mostafa Ben.Mostafa@rossvideo.com
+ * @date 2024-10-04
+ * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include <functional>
 #include <string>
+#include <unordered_map>
 
 namespace catena {
+
+class MenuGroup; // forward reference
+
+namespace common{
+    class Menu; // forward reference
+}
+
 namespace common {
 
-
-class IConstraint; // forward declaration
-class IParam; // forward declaration
-class IMenu; // forward declaration
-class IMenuGroup; // forward declaration
-class ILanguagePack; // forward declaration
-
-struct ConstraintTag {using type = IConstraint;};
-struct ParamTag {using type = IParam;};
-struct CommandTag {using type = IParam;};
-struct MenuTag {using type = IMenu;};
-struct MenuGroupTag {using type = IMenuGroup;};
-struct LanguagePackTag {using type = ILanguagePack;};
-
-template<typename TAG>
-using AddItem = std::function<void(const std::string& key, typename TAG::type* item)>;
-
-} // namespace common
-} // namespace catena
-
 /**
- * @def GET_ITEM(ITEM_TAG, MAP)
- * @brief gets an item from one of the collections owned by the device
- * @return nullptr if the item is not found, otherwise the item
- * @param ITEM_TAG identifies the collection
- * @param MAP the collection to search
+ * @brief Interface for Menu Group
  */
-#define GET_ITEM(ITEM_TAG, MAP) \
-if constexpr(std::is_same_v<ITEM_TAG, TAG>) { \
-    auto it = MAP.find(key); \
-    return it == MAP.end() ? nullptr : it->second; \
-}
+class IMenuGroup {
+public:
+    IMenuGroup() = default;
+    IMenuGroup(IMenuGroup&&) = default;
+    IMenuGroup& operator=(IMenuGroup&&) = default;
+    virtual ~IMenuGroup() = default;
+
+    /**
+     * @brief serialize a menu group to a protobuf message
+     * @param menuGroup the protobuf message
+     */
+    virtual void toProto(catena::MenuGroup& menuGroup, bool shallow) const = 0;
+
+    /**
+     * @brief get menus from menu group
+     * @return a map of menus
+     */
+    virtual const std::unordered_map<std::string, catena::common::Menu>* menus() const = 0;
+};
+}  // namespace common
+}  // namespace catena

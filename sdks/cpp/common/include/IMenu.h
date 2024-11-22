@@ -18,47 +18,39 @@
 //
 
 /**
- * @brief Tags to differentiate collections with the same type for template specialization
- * @file Tags.h
- * @copyright Copyright © 2023 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @file IMenu.h
+ * @brief Interface for Menus
+ * @author Ben Mostafa Ben.Mostafa@rossvideo.com
+ * @date 2024-10-04
+ * @copyright Copyright (c) 2024 Ross Video
  */
 
-#include <functional>
+//
 #include <string>
+#include <unordered_map>
 
 namespace catena {
+
+class Menu; // forward reference
+
 namespace common {
 
-
-class IConstraint; // forward declaration
-class IParam; // forward declaration
-class IMenu; // forward declaration
-class IMenuGroup; // forward declaration
-class ILanguagePack; // forward declaration
-
-struct ConstraintTag {using type = IConstraint;};
-struct ParamTag {using type = IParam;};
-struct CommandTag {using type = IParam;};
-struct MenuTag {using type = IMenu;};
-struct MenuGroupTag {using type = IMenuGroup;};
-struct LanguagePackTag {using type = ILanguagePack;};
-
-template<typename TAG>
-using AddItem = std::function<void(const std::string& key, typename TAG::type* item)>;
-
-} // namespace common
-} // namespace catena
-
 /**
- * @def GET_ITEM(ITEM_TAG, MAP)
- * @brief gets an item from one of the collections owned by the device
- * @return nullptr if the item is not found, otherwise the item
- * @param ITEM_TAG identifies the collection
- * @param MAP the collection to search
+ * @brief Interface for Menus
  */
-#define GET_ITEM(ITEM_TAG, MAP) \
-if constexpr(std::is_same_v<ITEM_TAG, TAG>) { \
-    auto it = MAP.find(key); \
-    return it == MAP.end() ? nullptr : it->second; \
-}
+class IMenu {
+public:
+    IMenu() = default;
+    IMenu(IMenu&&) = default;
+    IMenu& operator=(IMenu&&) = default;
+    virtual ~IMenu() = default;
+
+    /**
+     * @brief serialize a menu to a protobuf message
+     * @param menu the protobuf message
+     */
+    virtual void toProto(catena::Menu& menu) const = 0;
+
+};
+}  // namespace common
+}  // namespace catena

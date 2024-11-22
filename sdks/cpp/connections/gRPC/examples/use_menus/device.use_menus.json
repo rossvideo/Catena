@@ -1,0 +1,111 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor", "operate", "configure", "administer"],
+  "default_scope": "operate",
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+  "menu_groups": {
+    "status": {
+      "name": { "display_strings": { "en": "status", "es": "estado", "fr": "statut" } },
+      "menus": {
+        "page_1": {
+            "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
+          "param_oids": ["/counter", "/hello"]
+        },
+        "page_2": {
+          "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" } },
+          "param_oids": ["/offset", "/button", "/counter"]
+        }
+      }
+    },
+    "config": {
+      "name": { "display_strings": { "en": "config", "es": "configuración", "fr": "configuration" } },
+      "menus": {
+        "page_1": {
+          "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
+          "param_oids": ["/counter", "/hello"]
+        },
+        "page_2": {
+          "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" }},
+          "param_oids": ["/offset", "/button", "/counter"]
+        }
+      }
+    }
+  },
+  "params": {
+    "counter": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "Counter", "es": "Contador", "fr": "Compteur" } },
+      "value": { "int32_value": 0 }
+    },
+    "hello": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte" } },
+      "access_scope": "configure",
+      "value": { "string_value": "Hello, World!" }
+    },
+    "button": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" } },
+      "value": { "int32_value": 0 },
+      "widget": "button",
+      "constraint": { "ref_oid": "basic_button" }
+    },
+    "offset": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "offset" } },
+      "access_scope": "configure",
+      "value": { "int32_value": 0 },
+      "constraint": {
+        "type": "INT_RANGE",
+        "int32_range": {
+          "min_value": -10,
+          "max_value": 10,
+          "step": 1
+        }
+      }
+    }
+  },
+  "constraints": {
+    "basic_button": {
+      "type": "INT_CHOICE",
+      "int32_choice": {
+        "choices": [
+          {
+            "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
+            "value": 0
+          },
+          {
+            "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
+            "value": 1
+          }
+        ]
+      }
+    }
+  }
+}
