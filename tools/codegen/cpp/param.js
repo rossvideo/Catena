@@ -43,9 +43,9 @@ function typeArg(type) {
   };
 
   if (type in types) {
-    return types[desc.type];
+    return types[type];
   } else {
-    throw new Error(`Unknown type ${desc.type}`);
+    throw new Error(`Unknown type ${type}`);
   }
 }
 
@@ -64,10 +64,14 @@ function valueTypeArg(type) {
   };
 
   if (type in types) {
-    return types[desc.type];
+    return types[type];
   } else {
-    throw new Error(`Unknown type ${desc.type}`);
+    throw new Error(`Unknown type ${type}`);
   }
+}
+
+function removeArraySuffix(type) {
+  return type.replace("_ARRAY", "");
 }
 
 // /**
@@ -160,7 +164,7 @@ function valueTypeArg(type) {
 // }
 
 class Descriptor {
-  constructor(desc, oid, constraintOid, parentOid, isCommand) {
+  constructor(desc, oid, constraintOid, parentOid = "", isCommand) {
     const args = {
       type: () => { 
         return `catena::ParamType::${desc.type}`;
@@ -200,21 +204,23 @@ class Descriptor {
       constraint: () => {
         return constraintOid ? `&${constraintOid}` : "nullptr";
       },
-      parent_oid: () => {
-        return parentOid ? `"&${parentOid}"` : "nullptr";
-      },
       is_command: () => {
         return !!isCommand;
+      },
+      device: () => {
+        return "dm";
       }
     };
 
     this.oid = oid;
     this.parentOid = parentOid;
-    this.args = args.map(arg => arg()).join(', ');
+    const argsArray = Object.values(args);
+    this.args = argsArray.map(arg => arg()).join(', ');
   }
 
-  getInitializer() {
-    return `catena::common::ParamDescriptor _${this.parentOid}${this.oid} {${this.args}};`;
+  getArgs(parentVarName) {
+    let parentArg = parentVarName ? `&${parentVarName}Descriptor` : "nullptr";
+    return `${this.args}, ${parentArg}`;
   }
 }
 
@@ -232,6 +238,8 @@ class Param {
     this.subParams = {};
     this.type = desc.type;
     this.value = desc.value;
+    this.varName = parent ? `${parent.varName}_${oid}` : `_${oid}`;
+    this.isCommand = isCommand;
 
 
     if ("constraint" in desc) {
@@ -241,7 +249,7 @@ class Param {
         }
         this.constraintVar = `constraints_${desc.constraint.ref_oid}Constraint`;
       } else {
-        this.constraint = new Constraint("", this.getVarName(), desc.constraint);
+        this.constraint = new Constraint("", this.varName, desc.constraint);
         this.constraintVar = `_${oid}Constraint`;
       }
     }
@@ -250,6 +258,10 @@ class Param {
       this.template_param = device.getParam(desc.template_oid); 
       if (this.template_param == undefined) {
         throw new Error(`Template param ${desc.template_oid} not found`);
+      }
+
+      if (this.template_param.type != this.type && this.template_param.type != removeArraySuffix(this.type)) {
+        throw new Error(`Param with type ${this.type} can not be templated on param with type ${this.template_param.type}`);
       }
       
       // If param doesn't have a constraint, use the template's constraint
@@ -265,7 +277,7 @@ class Param {
         throw new Error(`${this.type} type can not have subparams`);
       }
       for (let oid in desc.params) {
-        this.subParams[oid] = new Param(oid, desc.params[oid], `${namespace}::${initialCap(oid)}`, deviceModel);
+        this.subParams[oid] = new Param(oid, desc.params[oid], `${namespace}::${initialCap(this.oid)}`, device, this);
       }
     }
   }
@@ -313,37 +325,49 @@ class Param {
 
   objectType() {
     if (!this.hasTypeInfo()) {
-      throw new Error(`${this.type} type does not have an object type`);
+      return typeArg(this.type);
     }
 
-    if (this.isTemplated()) {
+    if (this.isArrayType() && (!this.isTemplated() || this.template_param.isArrayType())) {
       return this.template_param.objectType();
-    } else if (this.hasTypeInfo()){
-      return initialCap(this.oid);
     } else {
-      return typeArg(this.type);
+      return `${initialCap(this.oid)}`;
     }
   }
 
   objectNamespaceType() {
-    if (this.isTemplated()) {
-      return this.template_param.objectNamespaceType();
-    } else if (this.hasTypeInfo()) {
-      return `${this.namespace}::${initialCap(this.oid)}`;
-    } else {
+    if (!this.hasTypeInfo()) {
       return typeArg(this.type);
+    }
+    if (this.isArrayType() && (!this.isTemplated() || this.template_param.isArrayType())) {
+      return this.template_param.objectNamespaceType();
+    }
+    return `${this.namespace}::${initialCap(this.oid)}`;
+  }
+
+  elementType() {
+    if (!this.isArrayType()) {
+      throw new Error(`${this.type} type does not have an element type`);
+    }
+
+    if (!this.isTemplated()) {
+      return `${this.objectType()}_elem`;
+    } else if (!this.template_param.isArrayType()) {
+      return `${this.template_param.objectNamespaceType()}`;
+    } else {
+      return this.template_param.elementType();
     }
   }
 
   initializeValue() {
     if (!this.hasValue()) {
-      throw new Error("Value not found");
+      return `${this.objectType()} ${this.oid};`;
     }
     let param = this.template_param || this;
-    return `${this.objectNamespaceType()} ${this.oid}${this.valueInitializer(this.value, param)};`;
+    return `${this.objectType()} ${this.oid}${this.valueInitializer(this.value, this.type, param)};`;
   }
 
-  valueInitializer(value, param) {
+  valueInitializer(value, type, param) {
     const valueObject = {
       // simple types are pretty simple to handle
       string_value: (typeValue) => {
@@ -371,11 +395,12 @@ class Param {
         }
         let fieldsArr = Object.keys(typeValue.fields);
         let mappedFields = fieldsArr.map((field) => {
-          let subParam = param.getParam(field);
+          let subParam = param.getParam([field]);
           if (subParam == undefined) {
             throw new Error(`Subparam ${field} not found`);
           }
-          return `.${initialCap(field)}${valueInitializer(typeValue.fields[field].value, subParam)}`;
+          let paramDef = subParam.template_param || subParam;
+          return `.${field}${this.valueInitializer(typeValue.fields[field].value, subParam.type, paramDef)}`;
         });
         return `{${mappedFields.join(",")}}`;
       },
@@ -410,14 +435,43 @@ class Param {
     };
 
     let key = Object.keys(value)[0];
-    if (key != valueTypeArg(param.type)) {
-      throw new Error(`Value type ${key} does not match param type ${valueTypeArg(param.type)}`);
+    if (key != valueTypeArg(type)) {
+      throw new Error(`Value type ${key} does not match param type ${valueTypeArg(type)}`);
     }
     return `{${valueObject[key](value[key])}}`;
   }
 
-  descriptorInitializer() {
-    return this.descriptor.getInitializer();
+  initializeParamWithValue() {
+    return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
+           `_${this.oid}Param(${this.oid}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+  }
+
+  getSubParams() {
+    if (!this.hasTypeInfo()) {
+      throw new Error(`${this.type} type does not have subparams`);
+    }
+
+    if (this.isTemplated() && this.template_param.hasTypeInfo()) {
+      return this.template_param.getSubParams();
+    } else {
+      return Object.values(this.subParams);
+    }
+  }
+
+  getFieldInfoTypes() {
+    let subParamArr = Object.values(this.subParams);
+    let mappedArr = subParamArr.map((subParam) => {
+      return `FieldInfo<${subParam.objectNamespaceType()}, ${this.objectType()}>`;
+    });
+    return mappedArr.join(", ");
+  }
+
+  getFieldInfoInit() {
+    let subParamArr = Object.values(this.subParams);
+    let mappedArr = subParamArr.map((subParam) => {
+      return `{"${subParam.oid}", &${this.objectType()}::${subParam.oid}}`;
+    });
+    return mappedArr.join(", ");
   }
 
 // class Param extends CppCtor {

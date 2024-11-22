@@ -124,7 +124,6 @@ class bufloc {
  */
 let hloc, bloc, ploc, postscript;
 let hindent, pindent;
-let device;
 
 /**
  * C++ code generator
@@ -150,14 +149,14 @@ class CppGen {
     ploc = Ploc.write.bind(Ploc);
     postscript = Ploc.deliver.bind(Ploc);
 
-    device = new Device(deviceModel);
+    this.device = new Device(deviceModel);
   }
 
   /**
    * generate the code to instantiate the device model
    */
-  device() {
-    bloc(`catena::common::Device dm {${device.argsToString()}};`);
+  deviceInit() {
+    bloc(`catena::common::Device dm {${this.device.argsToString()}};`);
     bloc(""); // blank line
   }
 
@@ -169,67 +168,65 @@ class CppGen {
    *
    */
   params() {
-    if (!"params" in device.desc) {
+    if (!"params" in this.device.desc) {
       return;
     }
-    for (let oid in device.desc.params) {
-      if (oid in device.params) {
-        throw new Error(`Duplicate oid ${oid}`);
-      }
-      device.params[oid] = new Param(oid, device.desc.params[oid], this.namespace, device);
+    for (let oid in this.device.desc.params) {
+      let param = this.device.params[oid] = new Param(oid, this.device.desc.params[oid], this.device.namespace, this.device);
 
-      if (param.hasTypeInfo() && !param.isTemplated()) {
+      if (param.hasTypeInfo()) {
         this.writeTypeInfo(param);
       }
 
       if (param.hasValue()) {
         // write param initial value
-        bloc(param.valueInitializer());
+        bloc(param.initializeValue());
         // write param descriptors
-        writeConstraintsAndDescriptors(param);
-        // add param to device model
-        bloc(param.addToDeviceModel());
+        this.writeConstraintsAndDescriptors(param);
+        // inititalize the ParamWithValue object
+        bloc(param.initializeParamWithValue());
       }
     }
   }
 
-  writeConstraintsAndDescriptors(param) {
+  writeConstraintsAndDescriptors(param, parentVarName = "") {
     if (param.hasUniqueConstraint()) {
       bloc(param.constraint.getInitializer());
     }
-    bloc(param.descriptorInitializer());
+    let varName = `${parentVarName}_${param.oid}`;
+    bloc(`catena::common::ParamDescriptor ${varName}Descriptor(${param.descriptor.getArgs(parentVarName)});`);
     if (param.hasTypeInfo()) {
-      for (let subParam in param.getSubParams()) {
-        this.writeConstraintsAndDescriptors(subParam);
+      for (let subParam of param.getSubParams()) {
+        this.writeConstraintsAndDescriptors(subParam, `${varName}`);
       }
     }
   }
 
   writeTypeInfo(param) {
-    if (param.isStructType()) {
+    if (param.isStructType() && !param.isTemplated()) {
       hloc(`struct ${param.objectType()} {`, hindent++);
-      for (let subParam in param.getSubParams()) {
-        if (subParam.hasTypeInfo() && !subParam.isTemplated()) {
+      for (let subParam of param.getSubParams()) {
+        if (subParam.hasTypeInfo()) {
           this.writeTypeInfo(subParam);
         }
-        hloc(subParam.declareVariable(), hindent);
+        hloc(subParam.initializeValue(), hindent);
       }
       hloc(`using isCatenaStruct = void;`, hindent);
       hloc(`};`, --hindent);
 
       ploc(`template<>`);
-      ploc(`struct catena::common::StructInfo<${param.objectType()}> {`, pindent++);
+      ploc(`struct catena::common::StructInfo<${param.objectNamespaceType()}> {`, pindent++);
       ploc(`using ${param.objectType()} = ${param.objectNamespaceType()};`, pindent);
       ploc(`using Type = std::tuple<${param.getFieldInfoTypes()}>;`, pindent);
       ploc(`static constexpr Type fields = {${param.getFieldInfoInit()}};`, pindent);
       ploc(`};`, --pindent);
       
-    } else if (param.isVariantType()) {
+    } else if (param.isVariantType() && !param.isTemplated()) {
       hloc(`namespace _${param.oid} {`, hindent++);
       let subParamCount = 0;
       for (let subParam in param.getSubParams()) {
         subParamCount++;
-        if (subParam.hasTypeInfo() && !subParam.isTemplated()) {
+        if (subParam.hasTypeInfo()) {
           this.writeTypeInfo(subParam);
         }
       }
@@ -239,7 +236,7 @@ class CppGen {
       ploc(`constexpr std::array<const char*, ${subParamCount}> catena::common::alternativeNames<${param.objectNamespaceType()}>{${param.getAlternativeNames()}};`);
     }
 
-    if (param.isArrayType()) {
+    if (param.isArrayType() && !param.template_param?.isArrayType()) {
       hloc(`using ${param.objectType()} = std::vector<${param.elementType()}>;`, hindent);
     }
   }
@@ -371,7 +368,7 @@ class CppGen {
    *
    */
   commands() {
-    this.params('', device.desc, this.namespace, {}, false, true);
+    //this.params('', device.desc, this.namespace, {}, false, true);
   }
 
   // defineGetStructInfo(structInfo) {
@@ -457,7 +454,7 @@ class CppGen {
   // }
 
   languagePacks() {
-    let languagePacks = new LanguagePacks(device.desc);
+    let languagePacks = new LanguagePacks(this.device.desc);
     let packs = languagePacks.getLanguagePacks();    
     bloc (`using catena::common::LanguagePack;`);
     for (let pack in packs) {
@@ -478,11 +475,11 @@ class CppGen {
    */
   generate() {
     this.init();
-    this.device();
+    this.deviceInit();
     this.languagePacks();
-    this.constraints(device.desc);
+    this.constraints(this.device.desc);
     this.params();
-    this.commands('', device.desc, this.namespace);
+    //this.commands('', device.desc, this.namespace);
     this.finish();
   }
 
@@ -493,11 +490,11 @@ class CppGen {
     hloc(`#include <Device.h>`);
     hloc(`#include <StructInfo.h>`);
     hloc(`extern catena::common::Device dm;`);
-    hloc(`namespace ${this.namespace} {`);
+    hloc(`namespace ${this.device.namespace} {`);
 
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
-    bloc(`using namespace ${this.namespace};`);
+    bloc(`using namespace ${this.device.namespace};`);
     bloc(`#include <ParamDescriptor.h>`);
     bloc(`#include <ParamWithValue.h>`);
     bloc(`#include <LanguagePack.h>`);
@@ -530,7 +527,7 @@ class CppGen {
   }
 
   finish = () => {
-    hloc(`} // namespace ${this.namespace}`);
+    hloc(`} // namespace ${this.device.namespace}`);
     postscript();
 
   };

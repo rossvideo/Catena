@@ -93,7 +93,7 @@ function subscriptionsArg(desc) {
  */
 class Device extends CppCtor {
     constructor(deviceModel) {
-        super(desc);
+        super(deviceModel.desc);
         this.arguments.push(slotArg);
         this.arguments.push(detailLevelArg);
         this.arguments.push(accessScopesArg);
@@ -103,6 +103,7 @@ class Device extends CppCtor {
         
         this.deviceModel = deviceModel;
         this.desc = deviceModel.desc;
+        this.namespace = deviceModel.deviceName;
         this.params = {};
     }
 

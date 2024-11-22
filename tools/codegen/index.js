@@ -58,8 +58,41 @@ if (!fs.existsSync(options.deviceModel)) {
 const schemaFilename = options.schema;
 
 const Validator = require('./validator.js');
-
 const validator = new Validator(schemaFilename);
+const path = require("node:path");
+
+class DeviceModel {
+  constructor(filePath, validator, desc) {
+        this.filePath = filePath;
+        this.validator = validator;
+        this.desc = desc;
+        this.baseFilename = path.basename(filePath);
+        const info = this.baseFilename.split(".");
+        const schemaName = info[0];
+        if (schemaName !== "device") {
+          throw new Error(`File must be a device model, not ${schemaName}`);
+        }
+        this.deviceName = info[1];
+      }
+
+      importParam(importArg) {
+          if ("file" in importArg) {
+            const importDir = path.dirname(this.filePath);
+            const importPath = `${importDir}/${importArg.file}`;
+            if (!fs.existsSync(importPath)) {
+              throw new Error(`Cannot open file at ${importArg.file}`);
+            }
+            const importData = JSON.parse(fs.readFileSync(importPath));
+            if (!this.validator.validateParam(importData)) {
+              throw new Error(`Imported data is not valid`);
+            }
+            return importData;
+      
+          } else {
+            throw new Error(`Unsupported import type: ${importArg}`);
+          }
+      }
+}
 
 try {
  
@@ -75,37 +108,4 @@ try {
 } catch (why) {
     console.log(why.message);
     process.exit(typeof why.error === 'number' ? why.error : 1);
-}
-
-class DeviceModel {
-    constructor(filePath, validator, desc) {
-          this.filePath = filePath;
-          this.validator = validator;
-          this.desc = desc;
-          // extract schema name from input filename
-          const info = path.parse(filePath).name.split(".");
-          const schemaName = info[0];
-          if (schemaName !== "device") {
-            throw new Error(`File must be a device model, not ${schemaName}`);
-          }
-          this.namespace = info[1];
-        }
-
-        importParam(importArg) {
-            if ("file" in importArg) {
-              const importDir = path.dirname(this.filePath);
-              const importPath = `${importDir}/${importArg.file}`;
-              if (!fs.existsSync(importPath)) {
-                throw new Error(`Cannot open file at ${importArg.file}`);
-              }
-              const importData = JSON.parse(fs.readFileSync(importPath));
-              if (!this.validator.validateParam(importData)) {
-                throw new Error(`Imported data is not valid`);
-              }
-              return importData;
-        
-            } else {
-              throw new Error(`Unsupported import type: ${importArg}`);
-            }
-        }
 }
