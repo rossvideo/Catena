@@ -432,11 +432,11 @@ class CppGen {
     let c = new Constraint(parentOid, oid, desc);
     let args = c.argsToString();
     let constraintType = c.objectType();
-    let cname = c.constraintName(); 
+    let cname = c.constraintName();
     bloc(`catena::common::${constraintType} ${cname}Constraint {${args}};`);
     return `${cname}Constraint`;
   }
-  
+
   /**
    * 
    * @param {string} fully qualified object id
@@ -459,15 +459,42 @@ class CppGen {
     bloc (`using catena::common::LanguagePack;`);
     for (let pack in packs) {
       let lang = packs[pack];
-      bloc(`LanguagePack ${pack} {`);
-      bloc(`"${lang.name}",`,1);
       let keyWordPairs = Object.keys(lang.words);
-      bloc(`{`,1);
-      bloc(keyWordPairs.map((key) => {return `{ "${key}", "${lang.words[key]}" }`}).join(",\n    "),2);
-      bloc(`},`,1);
-      bloc(`dm`,1);
+      bloc(`LanguagePack ${pack} {`);
+      bloc(`"${lang.name}",`, 1);
+      bloc(`{`, 1);
+      bloc(keyWordPairs.map((key) => { return `{ "${key}", "${lang.words[key]}" }` }).join(",\n    "), 2);
+      bloc(`},`, 1);
+      bloc(`dm`, 1);
       bloc(`};`);
     }
+  }
+
+  menu() {
+    bloc(`using catena::common::Menu;`);
+    bloc(`using catena::common::MenuGroup;`);
+
+    let menuGroups = this.desc.menu_groups;
+    for (let group in menuGroups) {
+      let groupName = menuGroups[group].name.display_strings;
+      let groupNamePairs = Object.keys(groupName);
+      bloc(`MenuGroup _${group}Group {\n  "${group}", `);
+      bloc(`  {\n    ${groupNamePairs.map((key) => { return `{ "${key}", "${groupName[key]}" }` }).join(",\n    ")}`);
+      bloc(`  },\n  dm\n};`);
+      
+      let menus = menuGroups[group].menus;
+      for (let menu in menus) {
+        let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
+        let menuName = menus[menu].name.display_strings;
+        let menuNamePairs = Object.keys(menuName);
+        bloc(`Menu _${group}Group_${menu}Menu {\n  {    `);
+        bloc(`    ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
+        bloc(`  false, false, `);
+        bloc(`  {${paramOids}}, `);
+        bloc(`  {}, {}, "${menu}", _${group}Group\n};`);
+      }
+    }
+
   }
 
   /**
@@ -477,6 +504,7 @@ class CppGen {
     this.init();
     this.deviceInit();
     this.languagePacks();
+    this.menu();
     this.constraints(this.device.desc);
     this.params();
     //this.commands('', device.desc, this.namespace);
@@ -507,6 +535,8 @@ class CppGen {
     bloc(`#include <string>`);
     bloc(`#include <vector>`);
     bloc(`#include <functional>`);
+    bloc(`#include <Menu.h>`);
+    bloc(`#include <MenuGroup.h>`);
     bloc(`using catena::Device_DetailLevel;`);
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);

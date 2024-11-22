@@ -46,6 +46,8 @@
 #include <ILanguagePack.h>
 #include <Tags.h>  
 #include <Status.h>
+#include <IMenu.h>
+#include <IMenuGroup.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
@@ -306,9 +308,9 @@ class Device {
         if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
             constraints_[key] = item;
         }
-        // if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
-        //     menu_groups_[key] = item;
-        // }
+        if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
+            menu_groups_[key] = item;
+        }
         if constexpr (std::is_same_v<TAG, common::CommandTag>) {
             commands_[key] = item;
         }
@@ -326,7 +328,7 @@ class Device {
 
         GET_ITEM(common::ParamTag, params_)
         GET_ITEM(common::ConstraintTag, constraints_)
-        // GET_ITEM(common::MenuGroupTag, menu_groups_)
+        GET_ITEM(common::MenuGroupTag, menu_groups_)
         GET_ITEM(common::CommandTag, commands_)
         GET_ITEM(common::LanguagePackTag, language_packs_)
         return nullptr;
@@ -386,7 +388,7 @@ class Device {
     Device_DetailLevel detail_level_;
     std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
     std::unordered_map<std::string, IParam*> params_;
-    // std::unordered_map<std::string, IMenuGroup*> menu_groups_;
+    std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
     std::vector<Scopes> access_scopes_;

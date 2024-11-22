@@ -5,7 +5,7 @@
     "cmake.buildBeforeRun": false,
     "cmake.configureSettings": {
         "CONNECTIONS": ["gRPC", "REST"],
-        "CATENA_MODEL": ["full", "lite"]
+        "CATENA_MODEL": ["lite"]
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/sdks/cpp/build/**",
@@ -99,6 +99,28 @@
         "vector": "cpp",
         "algorithm": "cpp",
         "forward_list": "cpp",
+        "any": "cpp",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "exception": "cpp",
+        "functional": "cpp",
+        "iterator": "cpp",
+        "memory": "cpp",
+        "memory_resource": "cpp",
+        "numeric": "cpp",
+        "random": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "coroutine": "cpp"
+    },
+    "java.compile.nullAnalysis.mode": "disabled"
         "memory": "cpp",
         "future": "cpp",
         "print": "cpp",

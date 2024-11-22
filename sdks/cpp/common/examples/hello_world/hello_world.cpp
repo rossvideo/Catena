@@ -39,6 +39,9 @@
 #include <Device.h> // catena::common::Device, LockGuard
 #include <ParamDescriptor.h> // catena::common::Param
 #include <ParamWithValue.h>
+#include <MenuGroup.h> // catena::lite::MenuGroup
+#include <Menu.h> // catena::lite::Menu
+
 
 // this include header was generated from the protobuf definition
 // it's in the BINARY folder structure, not SOURCE.
