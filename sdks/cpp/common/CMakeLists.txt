@@ -39,6 +39,7 @@ set(sources
 
 )
 
+
 # conditionally make for gRPC
 if (gRPC_enabled)
     include(gRPC.cmake)
@@ -53,3 +54,5 @@ endif(REST_enabled)
 
 # make the examples
 add_subdirectory(examples)
+
+add_subdirectory(tests)

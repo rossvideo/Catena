@@ -21,11 +21,13 @@
 cmake_minimum_required(VERSION 3.20)
 
 
-get_filename_component(TARGET ParamAccessorTest NAME)
+get_filename_component(TARGET ParamWithValueTest NAME)
 project(${TARGET} C CXX)
 
 # Include GoogleTest
 find_package(GTest REQUIRED)
+
+include(GoogleTest)
 
 add_executable(${TARGET})
 
@@ -43,6 +45,7 @@ target_include_directories(${TARGET}
 target_sources(${TARGET}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>
+        # $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/device.test_model.json.cpp>
 )
 
 target_link_libraries(${TARGET}
@@ -50,7 +53,11 @@ target_link_libraries(${TARGET}
     GTest::GTest;
 )
 
-add_test(ParamAccessor_gtest ${TARGET})
+add_test(ParamWithValue_gtest ${TARGET})
+
+enable_testing()
+
+gtest_discover_tests(${TARGET})
 
 target_compile_features(${TARGET}
     PUBLIC
