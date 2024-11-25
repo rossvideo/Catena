@@ -106,6 +106,7 @@ class Device extends CppCtor {
         this.namespace = deviceModel.deviceName;
         this.params = {};
         this.constraints = {};
+        this.commands = {};
     }
 
     getParam(fqoid) {

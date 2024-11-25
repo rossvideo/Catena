@@ -372,7 +372,25 @@ class CppGen {
    *
    */
   commands() {
-    //this.params('', device.desc, this.namespace, {}, false, true);
+    if (!"commands" in this.device.desc) {
+      return;
+    }
+    for (let oid in this.device.desc.commands) {
+      let command = this.device.commands[oid] = new Param(oid, this.device.desc.commands[oid], this.device.namespace, this.device, undefined, true);
+
+      if (command.hasTypeInfo()) {
+        this.writeTypeInfo(command);
+      }
+
+      if (command.hasValue()) {
+        // write command initial value
+        bloc(command.initializeValue());
+      }
+      // write command descriptors
+      this.writeConstraintsAndDescriptors(command);
+      // inititalize the commandWithValue object
+      bloc(command.initializeParamWithValue());
+    }
   }
 
   // defineGetStructInfo(structInfo) {
@@ -496,7 +514,7 @@ class CppGen {
     this.menu();
     this.constraints();
     this.params();
-    //this.commands('', device.desc, this.namespace);
+    this.commands();
     this.finish();
   }
 

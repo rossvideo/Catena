@@ -236,7 +236,7 @@ class Param {
     this.oid = oid;
     this.namespace = namespace;
     this.subParams = {};
-    this.type = desc.type;
+    this.type = isCommand ? "EMPTY" : desc.type;
     this.value = desc.value;
     this.isCommand = isCommand;
     this.parent = parent;
@@ -449,8 +449,9 @@ class Param {
   }
 
   initializeParamWithValue() {
+    let valueVar = this.isCommand ? "catena::common::emptyValue" : this.oid;
     return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
-           `_${this.oid}Param(${this.oid}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
+           `_${this.oid}Param(${valueVar}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
   }
 
   getSubParams() {
