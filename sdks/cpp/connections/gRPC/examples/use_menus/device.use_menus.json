@@ -33,17 +33,25 @@
     "status": {
       "name": { "display_strings": { "en": "status", "es": "estado", "fr": "statut" } },
       "menus": {
-        "status": {
-          "name": { "display_strings": { "en": "status", "es": "estado", "fr": "statut" } },
+        "page_1": {
+            "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
           "param_oids": ["/counter", "/hello"]
+        },
+        "page_2": {
+          "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" } },
+          "param_oids": ["/offset", "/button", "/counter"]
         }
       }
     },
     "config": {
       "name": { "display_strings": { "en": "config", "es": "configuración", "fr": "configuration" } },
       "menus": {
-        "config": {
-          "name": { "display_strings": { "en": "config", "es": "configuración", "fr": "configuration"}},
+        "page_1": {
+          "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
+          "param_oids": ["/counter", "/hello"]
+        },
+        "page_2": {
+          "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" }},
           "param_oids": ["/offset", "/button", "/counter"]
         }
       }

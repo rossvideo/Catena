@@ -10,17 +10,17 @@
       </tr>
 
       <tr>
-         <param oid="hello" showlabel="true" fill="both" widget="default" />
+         <param oid="text_box" showlabel="true" fill="both" widget="default" />
       </tr>
 
       <tr>
          <param oid="button" showlabel="true" fill="both" widget="toggle"/>
       </tr>
       <tr>
-         <param oid="offset" showlabel="true" fill="both" widget="slider-horizontal"/>
+         <param oid="slider" showlabel="true" fill="both" widget="slider-horizontal"/>
       </tr>
       <tr>
-         <param oid="button" showlabel="true" fill="both" widget="combo"/>
+         <param oid="combo_box" showlabel="true" fill="both" widget="combo"/>
       </tr>
 
    </table>

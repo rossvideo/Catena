@@ -142,11 +142,11 @@ void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t
     std::cout << "*** client set counter to " << counter << '\n';
 }
 
-void helloUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+void text_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
-    const std::string& hello = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
-    std::cout << "*** client set hello to " << hello << '\n';
+    const std::string& text_box = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
+    std::cout << "*** client set text_box to " << text_box << '\n';
 }
 
 void buttonUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
@@ -156,20 +156,28 @@ void buttonUpdateHandler(const std::string& oid, const IParam* p, const int32_t 
     std::cout << "*** client set button to " << button << '\n';
 }
 
-void offsetUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+void sliderUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
     // all we do here is print out the oid of the parameter that was changed
     // your biz logic would do something _even_more_ interesting!
-    const int32_t& offset = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set offset to " << offset << '\n';
+    const int32_t& slider = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
+    std::cout << "*** client set slider to " << slider << '\n';
+}
+
+void combo_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
+    // all we do here is print out the oid of the parameter that was changed
+    // your biz logic would do something _even_more_ interesting!
+    const int32_t& combo_box = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
+    std::cout << "*** client set combo_box to " << combo_box << '\n';
 }
 
 void statusUpdateExample(){   
     std::thread loop([]() {
         std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
         handlers["/counter"] = counterUpdateHandler;
-        handlers["/hello"] = helloUpdateHandler;
+        handlers["/text_box"] = text_boxUpdateHandler;
         handlers["/button"] = buttonUpdateHandler;
-        handlers["/offset"] = offsetUpdateHandler;
+        handlers["/slider"] = sliderUpdateHandler;
+        handlers["/combo_box"] = combo_boxUpdateHandler;
 
         // this is the "receiving end" of the status update example
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {

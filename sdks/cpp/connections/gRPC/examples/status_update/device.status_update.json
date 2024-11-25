@@ -36,9 +36,9 @@
       "name": { "display_strings": { "en": "Counter", "es": "Contador", "fr": "Compteur" } },
       "value": { "int32_value": 0 }
     },
-    "hello": {
+    "text_box": {
       "type": "STRING",
-      "name": { "display_strings": { "en": "Text Box", "es": "Caja de texto", "fr": "Boîte de texte" } },
+      "name": { "display_strings": { "en": "Text Box", "es": "Caja de Texto", "fr": "Boîte de Texte" } },
       "access_scope": "configure",
       "value": { "string_value": "Hello, World!" }
     },
@@ -49,17 +49,35 @@
       "widget": "button",
       "constraint": { "ref_oid": "basic_button" }
     },
-    "offset": {
+    "slider": {
       "type": "INT32",
-      "name": { "display_strings": { "en": "offset" } },
+      "name": { "display_strings": { "en": "Slider", "es": "Deslizador", "fr": "Curseur" } },
       "access_scope": "configure",
       "value": { "int32_value": 0 },
+      "constraint": { "ref_oid": "basic_slider" }
+    },
+    "combo_box": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "Combo Box", "es": "Caja Combinada", "fr": "Boîte Combo" } },
+      "access_scope": "configure",
+      "value": { "int32_value": 1 },
       "constraint": {
-        "type": "INT_RANGE",
-        "int32_range": {
-          "min_value": -10,
-          "max_value": 10,
-          "step": 1
+        "type": "INT_CHOICE",
+        "int32_choice": {
+          "choices": [
+            {
+              "name": { "display_strings": { "en": "Choice 1", "es": "Opción 1", "fr": "Choix 1" } },
+              "value": 1
+            },
+            {
+              "name": { "display_strings": { "en": "Choice 2", "es": "Opción 2", "fr": "Choix 2" } },
+              "value": 2
+            },
+            {
+              "name": { "display_strings": { "en": "Choice 3", "es": "Opción 3", "fr": "Choix 3" } },
+              "value": 3
+            }
+          ]
         }
       }
     },
@@ -84,6 +102,14 @@
             "value": 1
           }
         ]
+      }
+    },
+    "basic_slider": {
+      "type": "INT_RANGE",
+      "int32_range": {
+        "min_value": -10,
+        "max_value": 10,
+        "step": 1
       }
     }
   }

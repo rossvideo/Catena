@@ -452,7 +452,7 @@ class CppGen {
         let paramOids = menus[menu].param_oids.map(oid => `"${oid}"`).join(", ");
         let menuName = menus[menu].name.display_strings;
         let menuNamePairs = Object.keys(menuName);
-        bloc(`Menu _${menu}Menu {\n  {    `);
+        bloc(`Menu _${group}Group_${menu}Menu {\n  {    `);
         bloc(`    ${menuNamePairs.map((key) => { return `{ "${key}", "${menuName[key]}" }` }).join(",\n    ")}\n  },`);
         bloc(`  false, false, `);
         bloc(`  {${paramOids}}, `);

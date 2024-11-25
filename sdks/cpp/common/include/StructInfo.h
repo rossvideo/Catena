@@ -133,7 +133,7 @@ struct FieldInfo {
  * that contains the names of each alternative in the variant.
  */
 template <meta::IsVariant U> 
-constexpr std::array<const char*, 0> alternativeNames{};
+inline std::array<const char*, 0> alternativeNames{};
 
 /**
  * Free standing method to serialize a value to protobuf
@@ -341,31 +341,6 @@ inline std::size_t _findTypeIndex(const std::string& typeName, const std::array<
     return std::find(typeNames.begin(), typeNames.end(), typeName) - typeNames.begin();
 }
 
-template <meta::IsVariant T>
-void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
-    if (!src.has_struct_variant_value()) {
-        // src is not a variant so it cannot be deserialized into a variant
-        return;
-    }
-    const catena::StructVariantValue& srcVariant = src.struct_variant_value();
-    std::string variantType = srcVariant.struct_variant_type();
-    
-    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
-    if (typeIndex >= alternativeNames<T>.size()) {
-        // variant type not found in the list of alternatives
-        return;
-    }
-    if (typeIndex != dst->index()) {
-        // The type of the variant needs to be changed
-        _changeType<T, 0>(*dst, typeIndex);
-    }
-
-    AuthzInfo subParamAuth = auth.subParamInfo(variantType);
-    std::visit([&](auto& arg) {
-        fromProto(srcVariant.value(), &arg, subParamAuth);
-    }, *dst); 
-}
-
 /**
  * @brief _changeType is a helper function to change the type held by a variant
  * @tparam V the type of the variant
@@ -393,6 +368,33 @@ void _changeType(V& variant, const std::size_t newTypeIndex) {
         }
     }
 }
+
+template <meta::IsVariant T>
+void fromProto(const catena::Value& src, T* dst, const AuthzInfo& auth) {
+    if (!src.has_struct_variant_value()) {
+        // src is not a variant so it cannot be deserialized into a variant
+        return;
+    }
+    const catena::StructVariantValue& srcVariant = src.struct_variant_value();
+    std::string variantType = srcVariant.struct_variant_type();
+    
+    std::size_t typeIndex = _findTypeIndex(variantType, alternativeNames<T>);
+    if (typeIndex >= alternativeNames<T>.size()) {
+        // variant type not found in the list of alternatives
+        return;
+    }
+    if (typeIndex != dst->index()) {
+        // The type of the variant needs to be changed
+        _changeType<T, 0>(*dst, typeIndex);
+    }
+
+    AuthzInfo subParamAuth = auth.subParamInfo(variantType);
+    std::visit([&](auto& arg) {
+        fromProto(srcVariant.value(), &arg, subParamAuth);
+    }, *dst); 
+}
+
+
 
 }  // namespace common
 }  // namespace catena
