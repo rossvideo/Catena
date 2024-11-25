@@ -13,32 +13,33 @@
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# cmake build file for the use_structs example.
+# cmake build file for the use_struct_arrays example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-
-
 get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
 
+message(STATUS "Building ${target}")
 add_executable(${TARGET})
 
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
+
+message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}/device.${target}.json")
 generate_catena_device(
-    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.AudioDeck.json
     TARGET ${TARGET}
 )
 
 target_sources(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp> 
 )
 
-target_link_libraries(${TARGET} catena_lite)
+target_link_libraries(${TARGET} ${common_lib})
 
 target_compile_features(${TARGET}
     PUBLIC

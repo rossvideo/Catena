@@ -33,7 +33,7 @@
 #include "device.use_structs.json.h" 
 
 
-// lite
+// common
 #include <Device.h>
 #include <ParamWithValue.h>
 #include <PolyglotText.h>
@@ -41,7 +41,6 @@
 // protobuf interface
 #include <interface/param.pb.h>
 
-using namespace catena::lite;
 using namespace catena::common;
 using namespace use_structs;
 using catena::common::ParamTag;
