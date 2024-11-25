@@ -1,6 +1,6 @@
 var annotated_dup =
 [
-    [ "catena", "namespacecatena.html", [
+    [ "catena", null, [
       [ "common", null, [
         [ "AuthzInfo", "classcatena_1_1common_1_1AuthzInfo.html", "classcatena_1_1common_1_1AuthzInfo" ],
         [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
@@ -29,18 +29,6 @@ var annotated_dup =
         [ "MenuTag", "structcatena_1_1common_1_1MenuTag.html", "structcatena_1_1common_1_1MenuTag" ],
         [ "MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", "structcatena_1_1common_1_1MenuGroupTag" ],
         [ "LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", "structcatena_1_1common_1_1LanguagePackTag" ]
-      ] ],
-      [ "full", null, [
-        [ "ArrayAccessor", "classcatena_1_1full_1_1ArrayAccessor.html", "classcatena_1_1full_1_1ArrayAccessor" ],
-        [ "ConcreteArrayAccessor", "classcatena_1_1full_1_1ConcreteArrayAccessor.html", "classcatena_1_1full_1_1ConcreteArrayAccessor" ],
-        [ "DeviceModel", "classcatena_1_1full_1_1DeviceModel.html", "classcatena_1_1full_1_1DeviceModel" ],
-        [ "DeviceStream", "classcatena_1_1full_1_1DeviceStream.html", "classcatena_1_1full_1_1DeviceStream" ],
-        [ "PassByValueOrReference", "structcatena_1_1full_1_1PassByValueOrReference.html", "structcatena_1_1full_1_1PassByValueOrReference" ],
-        [ "ParamAccessor", "classcatena_1_1full_1_1ParamAccessor.html", "classcatena_1_1full_1_1ParamAccessor" ],
-        [ "StructInfo", "structcatena_1_1full_1_1StructInfo.html", "structcatena_1_1full_1_1StructInfo" ],
-        [ "FieldInfo", "structcatena_1_1full_1_1FieldInfo.html", "structcatena_1_1full_1_1FieldInfo" ],
-        [ "VariantMemberInfo", "structcatena_1_1full_1_1VariantMemberInfo.html", "structcatena_1_1full_1_1VariantMemberInfo" ],
-        [ "VariantInfo", "structcatena_1_1full_1_1VariantInfo.html", "structcatena_1_1full_1_1VariantInfo" ]
       ] ],
       [ "meta", null, [
         [ "is_streamable", "structcatena_1_1meta_1_1is__streamable.html", null ],
