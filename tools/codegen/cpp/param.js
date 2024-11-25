@@ -164,7 +164,7 @@ function removeArraySuffix(type) {
 // }
 
 class Descriptor {
-  constructor(desc, oid, constraintOid, parentOid = "", isCommand) {
+  constructor(desc, oid, constraint, parentOid = "", isCommand) {
     const args = {
       type: () => { 
         return `catena::ParamType::${desc.type}`;
@@ -202,7 +202,7 @@ class Descriptor {
         return `"${oid}"`;
       },
       constraint: () => {
-        return constraintOid ? `&${constraintOid}` : "nullptr";
+        return constraint ? `&${constraint.variableName()}` : "nullptr";
       },
       is_command: () => {
         return !!isCommand;
@@ -238,19 +238,16 @@ class Param {
     this.subParams = {};
     this.type = desc.type;
     this.value = desc.value;
-    this.varName = parent ? `${parent.varName}_${oid}` : `_${oid}`;
     this.isCommand = isCommand;
-
+    this.parent = parent;
 
     if ("constraint" in desc) {
       if (desc.constraint.ref_oid) {
         if (!device.hasConstraint(desc.constraint.ref_oid)) {
           throw new Error(`Shared constraint ${desc.constraint.ref_oid} not found`);
         }
-        this.constraintVar = `constraints_${desc.constraint.ref_oid}Constraint`;
       } else {
-        this.constraint = new Constraint("", this.varName, desc.constraint);
-        this.constraintVar = `_${oid}Constraint`;
+        this.constraint = new Constraint(oid, desc.constraint, this);
       }
     }
 
@@ -265,19 +262,20 @@ class Param {
       }
       
       // If param doesn't have a constraint, use the template's constraint
-      if (this.constraintVar == undefined) {
-        this.constraintVar = this.template_param.constraintVar;
+      if (this.constraint == undefined) {
+        this.constraint = this.template_param.constraint;
       }
     }
 
-    this.descriptor = new Descriptor(desc, oid, this.constraint?.oid, parent?.oid, isCommand);
+    this.descriptor = new Descriptor(desc, oid, this.constraint, parent?.oid, isCommand);
 
     if ("params" in desc) {
       if (!this.hasTypeInfo()) {
         throw new Error(`${this.type} type can not have subparams`);
       }
       for (let oid in desc.params) {
-        this.subParams[oid] = new Param(oid, desc.params[oid], `${namespace}::${initialCap(this.oid)}`, device, this);
+        let subParamNamespace = this.isVariantType() ? `${this.namespace}::_${this.oid}` : `${this.namespace}::${initialCap(this.oid)}`;
+        this.subParams[oid] = new Param(oid, desc.params[oid], `${subParamNamespace}`, device, this);
       }
     }
   }
@@ -328,7 +326,7 @@ class Param {
       return typeArg(this.type);
     }
 
-    if (this.isArrayType() && (!this.isTemplated() || this.template_param.isArrayType())) {
+    if (this.isArrayType() && this.template_param?.isArrayType()) {
       return this.template_param.objectType();
     } else {
       return `${initialCap(this.oid)}`;
@@ -339,10 +337,15 @@ class Param {
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
     }
-    if (this.isArrayType() && (!this.isTemplated() || this.template_param.isArrayType())) {
-      return this.template_param.objectNamespaceType();
+    if (this.isTemplated()) {
+      if (this.isArrayType() && !this.template_param.isArrayType()) {
+        return `${this.namespace}::${initialCap(this.oid)}`;
+      } else {
+        return this.template_param.objectNamespaceType();
+      }
+    } else {
+      return `${this.namespace}::${initialCap(this.oid)}`;
     }
-    return `${this.namespace}::${initialCap(this.oid)}`;
   }
 
   elementType() {
@@ -393,16 +396,19 @@ class Param {
         if (typeValue.fields == undefined) {
           throw new Error("Struct value must have fields map");
         }
-        let fieldsArr = Object.keys(typeValue.fields);
-        let mappedFields = fieldsArr.map((field) => {
-          let subParam = param.getParam([field]);
-          if (subParam == undefined) {
-            throw new Error(`Subparam ${field} not found`);
+        let fieldsArr = Object.keys(param.subParams); // get keys from the param to maintain definition order
+        let mappedFields = [];
+        for (let field of fieldsArr) {
+          if (field in typeValue.fields) { // The value may not initialize all fields
+            let subParam = param.getParam([field]);
+            if (subParam == undefined) {
+              throw new Error(`Subparam ${field} not found`);
+            }
+            let paramDef = subParam.template_param || subParam;
+            mappedFields.push(`.${field}${this.valueInitializer(typeValue.fields[field].value, subParam.type, paramDef)}`);
           }
-          let paramDef = subParam.template_param || subParam;
-          return `.${field}${this.valueInitializer(typeValue.fields[field].value, subParam.type, paramDef)}`;
-        });
-        return `{${mappedFields.join(",")}}`;
+        }
+        return `${mappedFields.join(",")}`;
       },
       struct_array_values: (typeValue) => {
         let arr = typeValue.struct_values;
@@ -410,22 +416,23 @@ class Param {
           if (item.struct_value == undefined) {
             throw new Error("struct_array_value must have struct_value field");
           }
-          return `${valueObject.struct_value(item.struct_value)}`;
+          return `{${valueObject.struct_value(item.struct_value)}}`;
         });
         return `${mappedArr.join(",")}`;
       },
       struct_variant_value: (typeValue) => {
-        if (typeValue.struct_varaint_type == undefined) {
+        if (typeValue.struct_variant_type == undefined) {
           throw new Error("struct_variant_value must have struct_variant_type");
         }
-        let subParam = param.getParam(typeValue.struct_variant_type);
+        let subParam = param.getParam([typeValue.struct_variant_type]);
         if (subParam == undefined) {
           throw new Error(`${typeValue.struct_variant_type} is not an alternative of ${param.oid}`);
         }
         if (typeValue.value == undefined) {
           throw new Error("struct_variant_value must have value field");
         }
-        return `${valueInitializer(typeValue.value, subParam)}`;
+        let paramDef = subParam.template_param || subParam;
+        return `${paramDef.objectNamespaceType()}${this.valueInitializer(typeValue.value, subParam.type, paramDef)}`;
       },
       struct_variant_array_values: (typeValue) => {
         let arr = typeValue.struct_variants;
@@ -472,6 +479,38 @@ class Param {
       return `{"${subParam.oid}", &${this.objectType()}::${subParam.oid}}`;
     });
     return mappedArr.join(", ");
+  }
+
+  getAlternativeTypes() {
+    if (!this.isVariantType()) {
+      throw new Error(`${this.type} type does not have alternatives`);
+    }
+
+    let alternatives = Object.values(this.subParams);
+    let mappedArr = alternatives.map((alternative) => {
+      return `${alternative.objectNamespaceType()}`;
+    });
+    return mappedArr.join(", ");
+  }
+
+  getAlternativeNames() {
+    if (!this.isVariantType()) {
+      throw new Error(`${this.type} type does not have alternatives`);
+    }
+
+    let alternativeOids = Object.keys(this.subParams);
+    let mappedArr = alternativeOids.map((alternativeOid) => {
+      return `"${alternativeOid}"`;
+    });
+    return mappedArr.join(", ");
+  }
+
+  getFQOid() {
+    if (this.parent != undefined) {
+      return `${this.parent.getFQOid()}/${this.oid}`;
+    } else {
+      return `/${this.oid}`;
+    }
   }
 
 // class Param extends CppCtor {

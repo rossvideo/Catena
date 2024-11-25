@@ -105,6 +105,7 @@ class Device extends CppCtor {
         this.desc = deviceModel.desc;
         this.namespace = deviceModel.deviceName;
         this.params = {};
+        this.constraints = {};
     }
 
     getParam(fqoid) {
@@ -121,6 +122,10 @@ class Device extends CppCtor {
         } else {
             return this.params[front].getParam(path);
         }
+    }
+
+    hasConstraint(oid) {
+        return oid in this.constraints;
     }
 
 }

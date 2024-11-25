@@ -33,6 +33,10 @@ function quoted() {
   return `"${this}"`;
 }
 
+function replaceSlashes(str) {
+  return str.replace(/\//g, '_');
+}
+
 /**
  * 
  * @param {object} desc param descriptor
@@ -230,18 +234,15 @@ class Constraint extends CppCtor {
    * @param {string} oid object id of the constraint being processed
    * @param {object} desc descriptor of parent object
    */
-  constructor(parentOid, oid, desc) {
+  constructor(oid, desc, parentParam) {
     // structure of shared constraints vary from param constraints
-    let this_desc = desc[oid];
-    if (parentOid !== "constraints") {
-      this_desc = this_desc.constraint;
-    }
-    super(this_desc);
-    this.shared = parentOid === "constraints";
-    this.parentOid = parentOid;
+    super(desc);
+    this.shared = parentParam == undefined ? true : false;
+    this.initialized = false;
     this.oid = oid;
+    this.parentParam = parentParam;
     // arguments change based on constraint type
-    this.findType(this_desc);
+    this.findType(desc);
     if (this.constraintType === "RangeConstraint") {
       this.arguments.push(minArg.bind(this));
       this.arguments.push(maxArg.bind(this));
@@ -309,20 +310,22 @@ class Constraint extends CppCtor {
    *
    * @returns the oid of the constraint
    */
-  objectName() {
-    return this.oid;
+  variableName() {
+    if (this.parentParam == undefined) {
+      return `shared_${this.oid}`;
+    } else {
+      let fqoid = this.parentParam.getFQOid();
+      return `${replaceSlashes(fqoid)}Constraint`;
+    }
   }
 
-  /**
-   *
-   * @returns unique C++ legal identifier for the constraint
-   */
-  constraintName() {
-    return `${this.parentName()}_${this.oid}`;
+  isInitialized() {
+    return this.initialized;
   }
 
-  parentName() {
-    return this.parentOid.replace(/\//g, "_");
+  getInitializer() {
+    this.initialized = true;
+    return `catena::common::${this.objectType()} ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
   }
 }
 

@@ -190,21 +190,22 @@ class CppGen {
   }
 
   writeConstraintsAndDescriptors(param, parentVarName = "") {
-    if (param.hasUniqueConstraint()) {
+    if (param.constraint != undefined && !param.constraint.isInitialized()) {
       bloc(param.constraint.getInitializer());
     }
     let varName = `${parentVarName}_${param.oid}`;
     bloc(`catena::common::ParamDescriptor ${varName}Descriptor(${param.descriptor.getArgs(parentVarName)});`);
     if (param.hasTypeInfo()) {
       for (let subParam of param.getSubParams()) {
-        this.writeConstraintsAndDescriptors(subParam, `${varName}`);
+        this.writeConstraintsAndDescriptors(subParam, varName);
       }
     }
   }
 
   writeTypeInfo(param) {
     if (param.isStructType() && !param.isTemplated()) {
-      hloc(`struct ${param.objectType()} {`, hindent++);
+      let defType = param.isArrayType() ? param.elementType() : param.objectType();
+      hloc(`struct ${defType} {`, hindent++);
       for (let subParam of param.getSubParams()) {
         if (subParam.hasTypeInfo()) {
           this.writeTypeInfo(subParam);
@@ -224,16 +225,19 @@ class CppGen {
     } else if (param.isVariantType() && !param.isTemplated()) {
       hloc(`namespace _${param.oid} {`, hindent++);
       let subParamCount = 0;
-      for (let subParam in param.getSubParams()) {
+      for (let subParam of param.getSubParams()) {
         subParamCount++;
         if (subParam.hasTypeInfo()) {
           this.writeTypeInfo(subParam);
         }
       }
       hloc(`} // namespace _${param.oid}`, --hindent);
+      let defType = param.isArrayType() ? param.elementType() : param.objectType();
+      hloc(`using ${defType} = std::variant<${param.getAlternativeTypes()}>;`, hindent);
 
+      //let namespaceDefType = param.isArrayType
       ploc(`template<>`);
-      ploc(`constexpr std::array<const char*, ${subParamCount}> catena::common::alternativeNames<${param.objectNamespaceType()}>{${param.getAlternativeNames()}};`);
+      ploc(`inline std::array<const char*, ${subParamCount}> catena::common::alternativeNames<${param.namespace}::${defType}>{${param.getAlternativeNames()}};`);
     }
 
     if (param.isArrayType() && !param.template_param?.isArrayType()) {
@@ -412,29 +416,14 @@ class CppGen {
    * @param {object} desc constraint descriptor 
    * 
    */
-  constraints(desc) {
-    if ("constraints" in desc) {
-      for (let oid in desc.constraints) {
-        this.defineConstraint("constraints", oid, desc.constraints);
+  constraints() {
+    if ("constraints" in this.device.desc) {
+      let constraints = this.device.desc.constraints;
+      for (let oid in constraints) {
+        this.device.constraints[oid] = new Constraint(oid, constraints[oid]);
+        bloc(this.device.constraints[oid].getInitializer());
       }
     }
-  }
-
-  /**
-   * 
-   * shared constraints defined at the top level 
-   * @param {string} parentOid parent object id
-   * @param {string} oid object id
-   * @param {object} desc constraint descriptor 
-   * 
-   */
-  defineConstraint(parentOid, oid, desc) {
-    let c = new Constraint(parentOid, oid, desc);
-    let args = c.argsToString();
-    let constraintType = c.objectType();
-    let cname = c.constraintName();
-    bloc(`catena::common::${constraintType} ${cname}Constraint {${args}};`);
-    return `${cname}Constraint`;
   }
 
   /**
@@ -474,7 +463,7 @@ class CppGen {
     bloc(`using catena::common::Menu;`);
     bloc(`using catena::common::MenuGroup;`);
 
-    let menuGroups = this.desc.menu_groups;
+    let menuGroups = this.device.desc.menu_groups;
     for (let group in menuGroups) {
       let groupName = menuGroups[group].name.display_strings;
       let groupNamePairs = Object.keys(groupName);
@@ -505,7 +494,7 @@ class CppGen {
     this.deviceInit();
     this.languagePacks();
     this.menu();
-    this.constraints(this.device.desc);
+    this.constraints();
     this.params();
     //this.commands('', device.desc, this.namespace);
     this.finish();
