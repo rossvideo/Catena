@@ -13,43 +13,45 @@
 # INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-#
-# cmake build file for C++ SDKs and examples.
+# cmake build file for the use_templates example.
 #
 #
 
 cmake_minimum_required(VERSION 3.20)
 
-project(FULL C CXX)
-
-if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -F${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
-endif(APPLE)
 
 
-set(target catena_full)
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
 
-add_library(${target} STATIC 
-    src/DeviceModel.cpp
-    src/ParamAccessor.cpp
-    src/ConcreteArrayAccessor.cpp
-    src/JSON.cpp
+add_executable(${TARGET})
+
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
+
+generate_catena_device(
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.${TARGET}.json
+    HDR_OUT_VAR DEVICE_HDR
+    SRC_OUT_VAR DEVICE_SRC
+    OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_dependencies(${target} catena_common)
-add_dependencies(${target} ${proto_interface})
-
-target_include_directories(
-    ${target}
+target_include_directories(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CATENA_CPP_ROOT_DIR}/common/include>
-        $<BUILD_INTERFACE:${CMAKE_PREFIX_PATH}>
-        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-        $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 
-target_compile_features(${target} PUBLIC cxx_std_20)
+target_sources(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp> 
+        $<BUILD_INTERFACE:${DEVICE_SRC}>     
+)
 
-add_subdirectory(examples)
+target_link_libraries(${TARGET} ${common_lib})
+
+target_compile_features(${TARGET}
+    PUBLIC
+        cxx_std_20
+)
+
+
 
