@@ -136,7 +136,7 @@ class Device extends CppCtor {
      * @throws if the constraint does not exist
      */
     getConstraint(oid) {
-        if (!oid in this.constraints) {
+        if (this.constraints[oid] === undefined) {
             throw new Error(`Invalid constraint ${oid}`);
         }
         return this.constraints[oid];

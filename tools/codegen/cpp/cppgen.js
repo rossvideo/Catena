@@ -230,8 +230,8 @@ class CppGen {
     if ("constraints" in this.device.desc) {
       let constraints = this.device.desc.constraints;
       for (let oid in constraints) {
-        constraints[oid] = new Constraint(oid, constraints[oid]);
-        bloc(constraints[oid].getInitializer());
+        this.device.constraints[oid] = new Constraint(oid, constraints[oid]);
+        bloc(this.device.constraints[oid] .getInitializer());
       }
     }
   }

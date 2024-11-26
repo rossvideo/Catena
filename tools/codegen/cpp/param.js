@@ -292,9 +292,12 @@ class Param {
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
     }
-
-    if (this.isArrayType() && this.template_param?.isArrayType()) {
-      return this.template_param.objectType();
+    if (this.isTemplated()) {
+      if (this.isArrayType() && !this.template_param.isArrayType()) {
+        return `${initialCap(this.oid)}`;
+      } else {
+        return this.template_param.objectType();
+      }
     } else {
       return `${initialCap(this.oid)}`;
     }
@@ -435,10 +438,14 @@ class Param {
         let mappedArr = arr.map(valueObject.struct_variant_value);
         return `${mappedArr.join(",")}`;
       },
+
+      undefined: (typeValue) => {
+        return "";
+      }
     };
 
     let key = Object.keys(value)[0];
-    if (key != valueTypeArg(type)) {
+    if (key != undefined && key != valueTypeArg(type)) {
       throw new Error(`Value type ${key} does not match param type ${valueTypeArg(type)}`);
     }
     return `{${valueObject[key](value[key])}}`;
