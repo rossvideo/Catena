@@ -138,6 +138,7 @@
                   "common/examples/import_params/device.import_params.json",
                   "common/examples/use_variants/device.use_variants.json",
                   "connections/gRPC/examples/status_update/device.status_update.json",
+                  "connections/gRPC/examples/structs_with_authz/device.AudioDeck.json",
                   "connections/gRPC/examples/use_commands/device.video_player.json",
                   "connections/gRPC/examples/use_menus/device.use_menus.json"
                 ],
@@ -157,14 +158,14 @@
       "id": "pickExample",
       "description": "Select example to run",
       "type": "pickString",
-      "options": ["common/examples/start_here/start_here",
+      "options": ["common/examples/hello_world/hello_world",
                   "common/examples/use_structs/use_structs",
                   "common/examples/use_templates/use_templates",
                   "common/examples/use_constraints/use_constraints",
                   "common/examples/use_struct_arrays/use_struct_arrays",
                   "common/examples/use_variants/use_variants",
                 ],
-      "default": "common/examples/start_here/start_here"
+      "default": "common/examples/hello_world/hello_world"
     }
   ]
 

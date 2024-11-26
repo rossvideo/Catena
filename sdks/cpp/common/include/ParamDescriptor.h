@@ -120,11 +120,11 @@ class ParamDescriptor {
       bool read_only, 
       const std::string& oid, 
       catena::common::IConstraint* constraint,
-      ParamDescriptor* parent,
-      Device& dev,
-      bool isCommand)
+      bool isCommand,
+      Device& dm,
+      ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        constraint_{constraint}, parent_{parent}, dev_{dev}, isCommand_{isCommand} {
+        constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
