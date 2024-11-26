@@ -13,8 +13,6 @@
 * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
 * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-
-const CppCtor = require("./cppctor");
 const Constraint = require("./constraint");
 
 /**
@@ -27,8 +25,8 @@ function initialCap(s) {
 }
 
 /**
- *
- * @param {object} desc param descriptor
+ * converts a catena type to a c++ type for simple types
+ * @param {string} type the catena type of the param
  * @returns c++ type of the param's value as a string
  */
 function typeArg(type) {
@@ -49,6 +47,11 @@ function typeArg(type) {
   }
 }
 
+/**
+ * converts a catena type to the corresponding value type argument
+ * @param {string} type the catena type of the param
+ * @returns the value type of the param as a string
+ */
 function valueTypeArg(type) {
   const types = {
     STRING: `string_value`,
@@ -70,99 +73,23 @@ function valueTypeArg(type) {
   }
 }
 
+/**
+ * @param {string} type the catena type of the param
+ * @returns the non-array version of the type
+ */
 function removeArraySuffix(type) {
   return type.replace("_ARRAY", "");
 }
 
-// /**
-//  * @param {string} s
-//  * @returns whatever string is bound to this
-//  */
-// function quoted(s) {
-//   return `"${s}"`;
-// }
-
-// /**
-//  *
-//  * @param {object} desc param descriptor
-//  * @returns initializer for the oid_aliases member
-//  */
-// function oidAliasesArg(desc) {
-//   let ans = `{}`;
-//   if ("oid_aliases" in desc) {
-//     ans = `{${desc.oid_aliases.map((alias) => `{"${alias}"}`).join(", ")}}`;
-//   }
-//   return ans;
-// }
-
-// /**
-//  *
-//  * @param {object} desc param descriptor
-//  * @returns display strings initializer
-//  */
-// function nameArg(desc) {
-//   let ans = `{}`;
-//   if ("name" in desc) {
-//     ans = "{";
-//     const display_strings = desc.name.display_strings;
-//     const n = Object.keys(display_strings).length;
-//     let i = 0;
-//     for (let lang in display_strings) {
-//       ans += `{"${lang}", "${display_strings[lang]}"}`;
-//       if (i++ < n - 1) {
-//         ans += ",";
-//       }
-//     }
-//     ans += "}";
-//   }
-//   return ans;
-// }
-
-// /**
-//  *
-//  * @param {object} desc param descriptor
-//  * @returns the widget in quotes if present, otherwise an empty initializer
-//  */
-// function widgetArg(desc) {
-//   let ans = `{}`;
-//   if ("widget" in desc) {
-//     ans = `"${desc.widget}"`;
-//   }
-//   return ans;
-// }
-
-// /**
-//  * 
-//  * @param {object} desc param descriptor
-//  * @returns param's access scope
-//  */
-// function accessScope(desc) {
-//   let ans;
-//   if ("access_scope" in desc) {
-//     ans = `"${desc.access_scope}"`;
-//   } else {
-//     ans = `""`;
-//   }
-//   return ans;
-// }
-
-// /**
-//  *
-//  * @param {object} desc param descriptor
-//  * @returns true or false reflecting presence and state of the read_only flag.
-//  */
-// function readOnly(desc) {
-//   let ans = `false`;
-//   if ("read_only" in desc) {
-//     ans = desc.read_only ? `true` : `false`;
-//   }
-//   return ans;
-// }
-
-// function jpointerArg(desc) {
-//   return `"${this.parentOid}/${this.oid}"`;
-// }
-
+/**
+ * @class Descriptor
+ * @brief extracts the paramDescriptor arguments from the param description
+ * @param {object} desc the param description
+ * @param {string} oid the object id of the param
+ * @param {Constraint} constraint the constraint object
+ * @param {string} parentOid the object id of the parent param
+ * @param {boolean} isCommand true if the param is a command, false otherwise
+ */
 class Descriptor {
   constructor(desc, oid, constraint, parentOid = "", isCommand) {
     const args = {
@@ -218,18 +145,31 @@ class Descriptor {
     this.args = argsArray.map(arg => arg()).join(', ');
   }
 
+  /**
+   * @param {string} parentVarName the variable name of the parent param descriptor
+   * @returns the arguments for the ParamDescriptor constructor as a string
+   */
   getArgs(parentVarName) {
     let parentArg = parentVarName ? `&${parentVarName}Descriptor` : "nullptr";
     return `${this.args}, ${parentArg}`;
   }
 }
 
+/**
+ * @class Param
+ * @brief maintains the inforamtion for a single parameter
+ * @param {string} oid the object id of the param
+ * @param {object} desc the param description
+ * @param {string} namespace the namespace of the param
+ * @param {Device} device the device object
+ * @param {Param} parent the parent param object
+ * @param {boolean} isCommand true if the param is a command, false otherwise
+ * @throws if the param references an invalid template param, constraint, or imported param
+ */
 class Param {
-  /**
-   * @param {desc} desc The param descriptor
-   */
   constructor(oid, desc, namespace, device, parent = undefined, isCommand = false) {
     if ("import" in desc) {
+      // overwrite desc with the imported param description
       desc = device.deviceModel.importParam(desc.import);
     }
 
@@ -243,9 +183,7 @@ class Param {
 
     if ("constraint" in desc) {
       if (desc.constraint.ref_oid) {
-        if (!device.hasConstraint(desc.constraint.ref_oid)) {
-          throw new Error(`Shared constraint ${desc.constraint.ref_oid} not found`);
-        }
+        this.constraint = device.getConstraint(desc.constraint.ref_oid);
       } else {
         this.constraint = new Constraint(oid, desc.constraint, this);
       }
@@ -280,6 +218,11 @@ class Param {
     }
   }
 
+  /**
+   * gets the parameter object at the end of the path
+   * @param {string[]} path an array of the oids in the path
+   * @returns the param object pointed to by the path
+   */
   getParam(path) {
     let front = path.shift();
     if (!front in this.subParams) {
@@ -293,34 +236,58 @@ class Param {
     }
   }
 
+  /**
+   * 
+   * @returns true if the param is templated, false otherwise
+   */
   isTemplated() {
     return this.template_param != undefined;
   }
 
+  /**
+   * 
+   * @returns true if the param is a struct or variant type, false otherwise
+   */
   hasTypeInfo() {
     return this.isStructType() || this.isVariantType();
   }
 
+  /**
+   * 
+   * @returns true if the param is a struct or struct array type, false otherwise
+   */
   isStructType() {
     return this.type == "STRUCT" || this.type == "STRUCT_ARRAY";
   }
 
+  /**
+   * 
+   * @returns true if the param is a struct variant or struct variant array type, false otherwise
+   */
   isVariantType() {
     return this.type == "STRUCT_VARIANT" || this.type == "STRUCT_VARIANT_ARRAY";
   }
 
+  /**
+   * 
+   * @returns true if the param is an array type, false otherwise
+   */
   isArrayType() {
     return this.type.includes("ARRAY");
   }
 
+  /**
+   * 
+   * @returns true if the param has defined value, false otherwise
+   */
   hasValue() {
     return this.value != undefined;
   }
 
-  hasUniqueConstraint() {
-    return this.constraint != undefined;
-  }
-
+  /**
+   * 
+   * @returns the c++ type of the param's value as a string
+   */
   objectType() {
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
@@ -333,6 +300,10 @@ class Param {
     }
   }
 
+  /**
+   * 
+   * @returns the c++ type of the param's value with it's full namespace as a string
+   */
   objectNamespaceType() {
     if (!this.hasTypeInfo()) {
       return typeArg(this.type);
@@ -348,6 +319,11 @@ class Param {
     }
   }
 
+  /**
+   * 
+   * @returns the c++ type of an element of an array type param
+   * @throws if the param is not an array type
+   */
   elementType() {
     if (!this.isArrayType()) {
       throw new Error(`${this.type} type does not have an element type`);
@@ -362,6 +338,11 @@ class Param {
     }
   }
 
+  /**
+   * 
+   * @returns a string to initialize the param's value
+   * Example: 'std::string hello{"Hello, World!"};'
+   */
   initializeValue() {
     if (!this.hasValue()) {
       return `${this.objectType()} ${this.oid};`;
@@ -370,28 +351,40 @@ class Param {
     return `${this.objectType()} ${this.oid}${this.valueInitializer(this.value, this.type, param)};`;
   }
 
+  /**
+   * @param {object} value the value object from the param description
+   * @param {string} type the catena type of the value object
+   * @param {Param} param the param object that the value is associated with
+   * @returns the params value initializer as a string
+   * Example: '{"Hello, World!"}'
+   * @throws if the value type does not match the param type
+   */
   valueInitializer(value, type, param) {
     const valueObject = {
-      // simple types are pretty simple to handle
       string_value: (typeValue) => {
         return `"${typeValue}"`;
       },
+
       int32_value: (typeValue) => {
         return `${typeValue}`;
       },
+
       float32_value: (typeValue) => {
         return `${typeValue}`;
       },
+
       string_array_values: (typeValue) => {
         return `${typeValue.strings.map((v) => `"${v}"`).join(", ")}`;
       },
+
       int32_array_values: (typeValue) => {
         return `${typeValue.ints.join(", ")}`;
       },
+
       float32_array_values: (typeValue) => {
         return `${typeValue.floats.join(", ")}`;
       },
-      // structs and struct arrays are more complex
+
       struct_value: (typeValue) => {
         if (typeValue.fields == undefined) {
           throw new Error("Struct value must have fields map");
@@ -410,6 +403,7 @@ class Param {
         }
         return `${mappedFields.join(",")}`;
       },
+
       struct_array_values: (typeValue) => {
         let arr = typeValue.struct_values;
         let mappedArr = arr.map((item) => {
@@ -420,6 +414,7 @@ class Param {
         });
         return `${mappedArr.join(",")}`;
       },
+
       struct_variant_value: (typeValue) => {
         if (typeValue.struct_variant_type == undefined) {
           throw new Error("struct_variant_value must have struct_variant_type");
@@ -434,6 +429,7 @@ class Param {
         let paramDef = subParam.template_param || subParam;
         return `${paramDef.objectNamespaceType()}${this.valueInitializer(typeValue.value, subParam.type, paramDef)}`;
       },
+
       struct_variant_array_values: (typeValue) => {
         let arr = typeValue.struct_variants;
         let mappedArr = arr.map(valueObject.struct_variant_value);
@@ -448,12 +444,20 @@ class Param {
     return `{${valueObject[key](value[key])}}`;
   }
 
+  /**
+   * 
+   * @returns the string to initialize the ParamWithValue object
+   */
   initializeParamWithValue() {
     let valueVar = this.isCommand ? "catena::common::emptyValue" : this.oid;
     return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
            `_${this.oid}Param(${valueVar}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
   }
 
+  /**
+   * 
+   * @returns A list of Param objects that are subparams of this param
+   */
   getSubParams() {
     if (!this.hasTypeInfo()) {
       throw new Error(`${this.type} type does not have subparams`);
@@ -466,6 +470,10 @@ class Param {
     }
   }
 
+  /**
+   * 
+   * @returns A string that declares the type of each field in the StructInfo tuple
+   */
   getFieldInfoTypes() {
     let subParamArr = Object.values(this.subParams);
     let mappedArr = subParamArr.map((subParam) => {
@@ -474,6 +482,10 @@ class Param {
     return mappedArr.join(", ");
   }
 
+  /**
+   * 
+   * @returns A string that initializes the fields in the StructInfo tuple
+   */
   getFieldInfoInit() {
     let subParamArr = Object.values(this.subParams);
     let mappedArr = subParamArr.map((subParam) => {
@@ -482,6 +494,10 @@ class Param {
     return mappedArr.join(", ");
   }
 
+  /**
+   * 
+   * @returns A string that declares the type of each alternative of the variant type
+   */
   getAlternativeTypes() {
     if (!this.isVariantType()) {
       throw new Error(`${this.type} type does not have alternatives`);
@@ -494,6 +510,10 @@ class Param {
     return mappedArr.join(", ");
   }
 
+  /**
+   * 
+   * @returns A string that list the oids of each alternative of the variant type
+   */
   getAlternativeNames() {
     if (!this.isVariantType()) {
       throw new Error(`${this.type} type does not have alternatives`);
@@ -506,6 +526,10 @@ class Param {
     return mappedArr.join(", ");
   }
 
+  /**
+   * 
+   * @returns The fully qualified oid of this param
+   */
   getFQOid() {
     if (this.parent != undefined) {
       return `${this.parent.getFQOid()}/${this.oid}`;
@@ -513,132 +537,6 @@ class Param {
       return `/${this.oid}`;
     }
   }
-
-// class Param extends CppCtor {
-//   /**
-//    * Create constructor arguments for catena::common::Param object
-//    * @param {Array} parentOid array of ancestors' oids
-//    * @param {string} oid object id of the param being processed
-//    * @param {object} desc descriptor of parent object
-//    */
-//   // constructor(parentOid, oid, desc) {
-//   //   super(desc[oid]);
-//   //   this.parentOid = parentOid;
-//   //   this.oid = oid;
-//   //   this.deviceParams = desc;
-//   //   this.init = "{}";
-//   //   this.template_oid = "template_oid" in desc[oid] ? desc[oid].template_oid : "";
-//   //   this.constraint = "constraint" in desc[oid] ? desc[oid].constraint : "";
-//   //   this.arguments.push(typeArg.bind(this));
-//   //   this.arguments.push(oidAliasesArg);
-//   //   this.arguments.push(nameArg);
-//   //   this.arguments.push(widgetArg);
-//   //   this.arguments.push(accessScope);
-//   //   this.arguments.push(readOnly);
-//   //   this.arguments.push(quoted(this.oid));
-//   // }
-
-//   /**
-//    *
-//    * @returns the oid of the param
-//    */
-//   objectName() {
-//     return this.oid;
-//   }
-
-//   /**
-//    *
-//    * @returns c++ type of the param's value
-//    */
-//   objectType() {
-//     return this.type;
-//   }
-
-//   /**
-//    *
-//    * @returns true if the param has subparams, false otherwise
-//    */
-//   hasSubparams() {
-//     return "params" in this.desc;
-//   }
-
-//   /**
-//    * 
-//    * @returns true if the param has a value, false otherwise
-//    */
-//   hasValue() {
-//     return "value" in this.desc;
-//   }
-
-//   isArrayType() {
-//     return this.desc.type.includes("ARRAY");
-//   }
-
-//   /**
-//    *
-//    * @returns true if the param is a struct or struct array type, false otherwise
-//    */
-//   isStructType() {
-//     return (
-//       this.desc.type == "STRUCT" ||
-//       this.desc.type == "STRUCT_ARRAY"
-//     );
-//   }
-
-//   /**
-//    *
-//    * @returns true if the param is a struct variant or struct variant array type, false otherwise
-//    */
-//   isVariantType() {
-//     return (
-//       this.desc.type == "STRUCT_VARIANT" ||
-//       this.desc.type == "STRUCT_VARIANT_ARRAY"
-//     );
-//   }
-
-//   /**
-//    *
-//    * @returns unique C++ legal identifier for the Param
-//    */
-//   paramName() {
-//     return `${this.parentName()}_${this.oid}`;
-//   }
-
-//   parentName() {
-//     return this.parentOid.replace(/\//g, "_");
-//   }
-
-//   isTemplated() {
-//     return this.template_oid != "";
-//   }
-
-//   templateOid() {
-//     return this.template_oid;
-//   } 
-
-//   /**
-//    *
-//    * @returns true if the param has a constraint, false otherwise
-//    */
-//   isConstrained() {
-//     return this.constraint != "";
-//   }
-
-//   /**
-//    *
-//    * @returns true if the param's constraint is shared, false otherwise
-//    */
-//   usesSharedConstraint() {
-//     return this.constraint != "" && "ref_oid" in this.constraint;
-//   }
-
-//   /**
-//    *
-//    * @returns returns the oid of the shared constraint
-//    */
-//   constraintRef() {
-//     return `_${this.constraint.ref_oid}`;
-//   }
 }
 
 module.exports = Param;

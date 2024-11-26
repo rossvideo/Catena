@@ -33,17 +33,13 @@ function quoted() {
   return `"${this}"`;
 }
 
-function replaceSlashes(str) {
-  return str.replace(/\//g, '_');
-}
-
 /**
  * 
- * @param {object} desc param descriptor
- * @returns the owner of the constraint
+ * @param {string} str string to replace slashes in
+ * @returns the string with slashes replaced by underscores
  */
-function parentArg(desc) {
-  return this.shared ? "dm" : `&${this.parentOid}_${this.oid}Param`;
+function replaceSlashes(str) {
+  return str.replace(/\//g, '_');
 }
 
 /**
@@ -319,10 +315,18 @@ class Constraint extends CppCtor {
     }
   }
 
+  /**
+   *
+   * @returns true if the constraint has been initialized
+   */
   isInitialized() {
     return this.initialized;
   }
 
+  /**
+   *
+   * @returns the C++ code to initialize the constraint
+   */
   getInitializer() {
     this.initialized = true;
     return `catena::common::${this.objectType()} ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;

@@ -25,7 +25,6 @@ function slotArg(desc) {
 }
 
 /**
- * 
  * @param {object} desc 
  * @returns value of the detail_level member as a DetailLevel object
  */
@@ -34,7 +33,6 @@ function detailLevelArg(desc) {
 }
 
 /**
- * 
  * @param {object} desc 
  * @returns intializer for the access_scopes member
  */
@@ -60,7 +58,6 @@ function defaultScopeArg(desc) {
 }
 
 /**
- * 
  * @param {object} desc 
  * @returns initializer for multi_set_enabled member
  */
@@ -73,7 +70,6 @@ function multisetArg(desc) {
 }
 
 /**
- * 
  * @param {object} desc 
  * @returns initializer for subscriptions member
  */
@@ -88,8 +84,10 @@ function subscriptionsArg(desc) {
 
 
 /**
+ * @class Device
  * Create constructor arguments for catena::common::Device object
- * @param {object} desc device descriptor
+ * Maintains maps of the device parameters, constraints, and commands
+ * @param {DeviceModel} deviceModel The device model object
  */
 class Device extends CppCtor {
     constructor(deviceModel) {
@@ -109,6 +107,12 @@ class Device extends CppCtor {
         this.commands = {};
     }
 
+    /**
+     * @breif get a parameter by its fully qualified oid
+     * @param {string} fqoid the fully qualified oid of the parameter
+     * @returns a Param object
+     * @throws if the parameter does not exist
+     */
     getParam(fqoid) {
         const path = fqoid.split('/');
         path.shift(); // remove leading empty string
@@ -125,8 +129,17 @@ class Device extends CppCtor {
         }
     }
 
-    hasConstraint(oid) {
-        return oid in this.constraints;
+    /**
+     * @brief get a shared constraint
+     * @param {string} oid the oid of the constraint
+     * @returns a Constraint object
+     * @throws if the constraint does not exist
+     */
+    getConstraint(oid) {
+        if (!oid in this.constraints) {
+            throw new Error(`Invalid constraint ${oid}`);
+        }
+        return this.constraints[oid];
     }
 
 }

@@ -61,7 +61,17 @@ const Validator = require('./validator.js');
 const validator = new Validator(schemaFilename);
 const path = require("node:path");
 
+/**
+ * @class DeviceModel
+ * @brief Holds the information parsed from a json device model file
+ */
 class DeviceModel {
+  /**
+   * @brief Construct a new DeviceModel object
+   * @param {string} filePath the path to the device model file
+   * @param {Validator} validator the json validator object
+   * @param {object} desc the parsed json object
+   */
   constructor(filePath, validator, desc) {
         this.filePath = filePath;
         this.validator = validator;
@@ -75,6 +85,13 @@ class DeviceModel {
         this.deviceName = info[1];
       }
 
+      /**
+       * @brief open a param.*.json file and return the parsed json object
+       * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
+       * @returns the parsed json object
+       * @throws {Error} if the file cannot be opened or the data is invalid against the schema
+       * @todo add support for other import types 
+       */
       importParam(importArg) {
           if ("file" in importArg) {
             const importDir = path.dirname(this.filePath);
