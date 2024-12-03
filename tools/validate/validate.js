@@ -20,10 +20,14 @@
 //
 
 const Ajv = require('ajv');
+<<<<<<< HEAD
+const ajv = new Ajv({strict: false});  // our use of "strict" as a schema interferes with ajv's strict mode.
+=======
 const addFormats = require('ajv-formats').default;
 
 const ajv = new Ajv({strict: false});  // our use of "strict" as a schema interferes with ajv's strict mode.
 addFormats(ajv);
+>>>>>>> develop
 
 const jsonMap = require('json-source-map');
 
@@ -44,7 +48,11 @@ if (testfile === undefined) {
 
 // verify input file exists
 if (!fs.existsSync(testfile)) {
+<<<<<<< HEAD
+    console.log('Cannot open file at ${testfile}');
+=======
     console.log(`Cannot open file at ${testfile}`);
+>>>>>>> develop
     process.exit(1);
 }
 
