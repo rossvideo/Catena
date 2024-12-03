@@ -89,13 +89,13 @@ $(document).ready(function(){initNavTree('md__home_runner_work_Catena_Catena_sdk
 <div class="textblock"><p>This doc will cover the basics of cross-compiling the dependencies for Catena. All examples in this doc are for a host system running linux.</p>
 <p>First you will need a cmake toolchain file that describes the target system. Creating the cmake toolchain will not be covered here. The cmake toolchain should define a variable called CMAKE_FIND_ROOT_PATH. Make sure to make note of what this path is set to because this will be the directory where all cross compiled dependencies will need to be installed.</p>
 <p>For these examples we will assume this path was set to "/path/to/target_root"</p>
-<h1><a class="anchor" id="autotoc_md3"></a>
+<h1><a class="anchor" id="autotoc_md4"></a>
 Prequisites</h1>
 <p>This guide assumes you already have the following prerquisites installed:</p><ul>
 <li>git</li>
 <li>cmake</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md4"></a>
+<h1><a class="anchor" id="autotoc_md5"></a>
 Cross Compile OpenSSL</h1>
 <p>To cross compile OpemSSL you need to configure the build instructions with info about the target system</p>
 <p>For an explanation of how to do this configuration see the <a href="https://github.com/openssl/openssl/blob/master/INSTALL.md#cross-compile-prefix">OpenSSL Install guide</a>.</p>
@@ -106,7 +106,7 @@ Cross Compile OpenSSL</h1>
 <div class="line">    --prefix=/path/to/target_root \</div>
 <div class="line">    -static</div>
 <div class="line">make install</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md5"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md6"></a>
 Cross Compiling gRPC</h1>
 <p>NOTE: cross compiling gRPC requires the host system to already have gRPC installed. This is because the the gRPC build process needs to be able to run the grpc_cpp_plugin and the protoc compiler to generate C++ source files to be cross compiled.</p>
 <p>If not already done, install gRPC on the host system like this: </p><div class="fragment"><div class="line">git clone -b v1.64.2 https://github.com/grpc/grpc</div>
@@ -132,7 +132,7 @@ Cross Compiling gRPC</h1>
 <div class="line">    -D_gRPC_CPP_PLUGIN=$HOME/.local/bin/grpc_cpp_plugin \</div>
 <div class="line">    -D_gRPC_PROTOBUF_PROTOC_EXECUTABLE=$HOME/.local/bin/protoc</div>
 <div class="line">make -j4 install</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md6"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md7"></a>
 Cross Compiling JWT-CPP</h1>
 <div class="fragment"><div class="line">git clone https://github.com/Thalhammer/jwt-cpp &amp;&amp; cd jwt-cpp</div>
 <div class="line">mkdir cross_build &amp;&amp; cd cross_build</div>
@@ -141,7 +141,7 @@ Cross Compiling JWT-CPP</h1>
 <div class="line">    -D CMAKE_TOOLCHAIN_FILE=/path/to/toolchainfile.cmake  \</div>
 <div class="line">    -D CMAKE_INSTALL_PREFIX=/path/to/target_root</div>
 <div class="line">make install</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md7"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md8"></a>
 Update node if required</h1>
 <p>run <code>node -v</code>. If your version of node is below 14 then update it to the latest version with the following commands: </p><div class="fragment"><div class="line">sudo apt-get update</div>
 <div class="line">sudo apt-get install -y nodejs npm</div>
@@ -149,7 +149,7 @@ Update node if required</h1>
 <div class="line">sudo npm install -g n</div>
 <div class="line">sudo n stable</div>
 </div><!-- fragment --><p> Restart the terminal and run <code>node -v</code> to check that node successfully updated.</p>
-<h1><a class="anchor" id="autotoc_md8"></a>
+<h1><a class="anchor" id="autotoc_md9"></a>
 Cross Compiling and installing Catena</h1>
 <div class="fragment"><div class="line">cd ~/Catena/sdks/cpp</div>
 <div class="line">mkdir build &amp;&amp; cd build</div>
