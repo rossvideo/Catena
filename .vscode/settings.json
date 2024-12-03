@@ -1,7 +1,39 @@
 {
     "C_Cpp.default.cppStandard": "c++20",
     "cmake.sourceDirectory": "${workspaceFolder}/sdks/cpp",
-    "cmake.configureOnOpen": true,
+    "cmake.buildDirectory": "${workspaceFolder}/sdks/cpp/build",
+    "cmake.buildBeforeRun": false,
+    "cmake.configureSettings": {
+        "CONNECTIONS": ["gRPC", "REST"],
+        "CATENA_MODEL": ["lite"]
+    },
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/sdks/cpp/build/**",
+        "${env:HOME}/.local/include",
+        "${workspaceFolder}/sdks/cpp/common/**",
+        "${workspaceFolder}/sdks/cpp/connections/**",
+        "${workspaceFolder}/sdks/cpp/lite/**"
+    ],
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/example_device_models/device.*.json",
+                "/nab_2024/device.*.json",
+                "/sdks/cpp/lite/examples/*/device.*.json",
+                "/sdks/cpp/connections/gRPC/examples/*/device.*.json"
+            ],
+            "url": "./schema/catena.device_schema.json"
+        },
+        {
+            "fileMatch": [
+                "/example_device_models/**/param.*.json",
+                "/sdks/cpp/lite/examples/**/param.*.json",
+                "/sdks/cpp/connections/gRPC/examples/**/param.*.json"
+            ],
+            "url": "./schema/catena.param_schema.json"
+        }
+    ],
+    "git.ignoreLimitWarning": true,
     "files.associations": {
         "__bit_reference": "cpp",
         "__bits": "cpp",
@@ -75,39 +107,34 @@
         "compare": "cpp",
         "concepts": "cpp",
         "algorithm": "cpp",
-        "any": "cpp",
-        "cinttypes": "cpp",
-        "codecvt": "cpp",
         "forward_list": "cpp",
-        "span": "cpp",
-        "valarray": "cpp",
+        "any": "cpp",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "exception": "cpp",
+        "functional": "cpp",
+        "iterator": "cpp",
+        "memory": "cpp",
+        "memory_resource": "cpp",
         "numeric": "cpp",
-        "ranges": "cpp",
-        "filesystem": "cpp"
+        "random": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "coroutine": "cpp"
     },
-    "cmake.buildDirectory": "${workspaceFolder}/sdks/cpp/build",
-    "cmake.buildBeforeRun": false,
-    "cmake.configureSettings": {
-        "CONNECTIONS": ["gRPC", "REST"],
-        "CATENA_MODEL": ["full", "lite"]
-    },
-    "C_Cpp.default.includePath": [
-        "${workspaceFolder}/sdks/cpp/build/**",
-        "${env:HOME}/.local/include",
-        "${workspaceFolder}/sdks/cpp/common/**",
-        "${workspaceFolder}/sdks/cpp/connections/**",
-        "${workspaceFolder}/sdks/cpp/lite/**"
-    ],
-    "json.schemas": [
-        {
-            "fileMatch": [
-                "/example_device_models/device.*.json",
-                "/nab_2024/device.*.json",
-                "/sdks/cpp/lite/examples/*/device.*.json",
-                "/sdks/cpp/connections/gRPC/examples/*/device.*.json"
-            ],
-            "url": "./schema/catena.schema.json"
-        }
-    ],
-    "git.ignoreLimitWarning": true
+    "java.compile.nullAnalysis.mode": "disabled"
+        "memory": "cpp",
+        "future": "cpp",
+        "print": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
+    }
+
 }

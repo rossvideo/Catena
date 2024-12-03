@@ -105,3 +105,10 @@ message LanguagePackRequestPayload {
 message LanguageList {
   repeated string languages = 1;
 }
+
+/**
+ * Slot
+ */
+message Slot {
+  int32 slot = 1;
+}

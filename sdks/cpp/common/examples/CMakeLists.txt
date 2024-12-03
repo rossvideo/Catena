@@ -21,8 +21,27 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_COMMON_EXAMPLES C CXX)
 
+# set up link libs, prefer gRPC if enabled
+set(common_lib)
+if (gRPC_enabled)
+    set(common_lib catena_grpc_common)
+else()
+    if(REST_enabled)
+        set(common_lib catena_proto_common)
+    else()
+        message(FATAL_ERROR "No connection type enabled")
+    endif(REST_enabled)
+endif(gRPC_enabled)
+
 add_subdirectory("factory")
 add_subdirectory("enum_decorator")
 add_subdirectory("path")
+add_subdirectory("hello_world")
+add_subdirectory("use_constraints")
+add_subdirectory("use_variants")
+add_subdirectory("use_struct_arrays")
+add_subdirectory("use_structs")
+add_subdirectory("import_params")
+add_subdirectory("use_templates")
 
 

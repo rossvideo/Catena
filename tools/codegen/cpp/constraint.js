@@ -35,11 +35,11 @@ function quoted() {
 
 /**
  * 
- * @param {object} desc param descriptor
- * @returns the owner of the constraint
+ * @param {string} str string to replace slashes in
+ * @returns the string with slashes replaced by underscores
  */
-function parentArg(desc) {
-  return this.shared ? "dm" : `&${this.parentOid}_${this.oid}Param`;
+function replaceSlashes(str) {
+  return str.replace(/\//g, '_');
 }
 
 /**
@@ -225,23 +225,20 @@ function sharedArg(desc) {
 
 class Constraint extends CppCtor {
   /**
-   * Create constructor arguments for catena::lite::Constraint object
+   * Create constructor arguments for catena::common::Constraint object
    * @param {string} parentOid oid of the parent object, empty if owned by device
    * @param {string} oid object id of the constraint being processed
    * @param {object} desc descriptor of parent object
    */
-  constructor(parentOid, oid, desc) {
+  constructor(oid, desc, parentParam) {
     // structure of shared constraints vary from param constraints
-    let this_desc = desc[oid];
-    if (parentOid !== "constraints") {
-      this_desc = this_desc.constraint;
-    }
-    super(this_desc);
-    this.shared = parentOid === "constraints";
-    this.parentOid = parentOid;
+    super(desc);
+    this.shared = parentParam == undefined ? true : false;
+    this.initialized = false;
     this.oid = oid;
+    this.parentParam = parentParam;
     // arguments change based on constraint type
-    this.findType(this_desc);
+    this.findType(desc);
     if (this.constraintType === "RangeConstraint") {
       this.arguments.push(minArg.bind(this));
       this.arguments.push(maxArg.bind(this));
@@ -309,20 +306,30 @@ class Constraint extends CppCtor {
    *
    * @returns the oid of the constraint
    */
-  objectName() {
-    return this.oid;
+  variableName() {
+    if (this.parentParam == undefined) {
+      return `shared_${this.oid}`;
+    } else {
+      let fqoid = this.parentParam.getFQOid();
+      return `${replaceSlashes(fqoid)}Constraint`;
+    }
   }
 
   /**
    *
-   * @returns unique C++ legal identifier for the constraint
+   * @returns true if the constraint has been initialized
    */
-  constraintName() {
-    return `${this.parentName()}_${this.oid}`;
+  isInitialized() {
+    return this.initialized;
   }
 
-  parentName() {
-    return this.parentOid.replace(/\//g, "_");
+  /**
+   *
+   * @returns the C++ code to initialize the constraint
+   */
+  getInitializer() {
+    this.initialized = true;
+    return `catena::common::${this.objectType()} ${this.variableName()}(${this.arguments.map((arg) => arg(this.desc)).join(", ")});`;
   }
 }
 

@@ -1,0 +1,64 @@
+name: "Doxygen and Markdown GitHub Pages Deploy Action"
+
+on:
+    push:
+      branches: [ "develop", "main", "doxygen" ]
+    pull_request:
+      branches: [ "develop", "main" ]
+    schedule:
+      - cron: '25 16 * * 2'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            
+            - name: Install Toolchain
+              run: |
+                  sudo apt-get update -y
+                  sudo apt-get install -y -qq wget doxygen graphviz ninja-build
+                  wget https://github.com/jgm/pandoc/releases/download/3.1.2/pandoc-3.1.2-linux-amd64.tar.gz
+                  tar -xvf pandoc-3.1.2-linux-amd64.tar.gz
+                  sudo mv pandoc-3.1.2/bin/pandoc /usr/local/bin/
+
+            - name: Make a build directory, run CMake and Ninja to build Doxygen files
+              run: |
+                  mkdir -p sdks/cpp/build
+                  cd sdks/cpp/build
+                  cmake -DONLY_DOCS=ON -G Ninja ..
+                  ninja doxygen
+
+            # Copy Doxygen files to a "doxygen" subdirectory for GitHub Pages
+            - name: Prepare Doxygen files for GitHub Pages
+              run: |
+                  mkdir -p sdks/cpp/build/github-pages/doxygen
+                  cp -r sdks/cpp/build/doxygen/html/* sdks/cpp/build/github-pages/doxygen
+
+            # Convert Markdown files to HTML and store in a "docs" subdirectory
+            - name: Convert Markdown to HTML
+              run: |
+                  for file in docs/*.md; do
+                      filename=$(basename "$file" .md)
+                      pandoc "$file" -o "sdks/cpp/build/github-pages/$filename.html"
+                  done
+                  mkdir -p sdks/cpp/build/github-pages/images
+                  for file in docs/images/*; do
+                      cp "$file" "sdks/cpp/build/github-pages/images"
+                  done
+
+            # # Create a root index.html to link to Doxygen and Markdown documentation
+            # - name: Create root index.html
+            #   run: |
+            #       echo '<html><body><h1>Documentation</h1>' > sdks/cpp/build/github-pages/index.html
+            #       echo '<ul>' >> sdks/cpp/build/github-pages/index.html
+            #       echo '<li><a href="doxygen/index.html">Doxygen Documentation</a></li>' >> sdks/cpp/build/github-pages/index.html
+            #       echo '<li><a href="docs/Index.html">Markdown Documentation</a></li>' >> sdks/cpp/build/github-pages/index.html
+            #       echo '</ul></body></html>' >> sdks/cpp/build/github-pages/index.html
+
+            - name: Deploy to GitHub Pages
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
+                publish_dir: ./sdks/cpp/build/github-pages

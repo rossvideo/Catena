@@ -1,0 +1,204 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": [
+    "monitor",
+    "operate",
+    "configure",
+    "administer"
+  ],
+  "default_scope": "operate",
+  "params": {
+    "number": {
+      "type": "STRUCT_VARIANT",
+      "params" : {
+        "words": {
+          "type": "STRING"
+        },
+        "digits": {
+          "type": "INT32"  
+        }
+      },
+      "value": {
+        "struct_variant_value": {
+          "struct_variant_type": "words",
+          "value": {
+            "string_value": "one"
+          }
+        }
+      }
+    },
+    "cartesian": {
+      "type": "STRUCT",
+      "params": {
+        "x": {
+          "type": "INT32"
+        },
+        "y": {
+          "type": "INT32"
+        },
+        "z": {
+          "type": "INT32"
+        }
+      },
+      "value": {
+        "struct_value": {
+          "fields": {
+            "x": {
+              "value": {
+                "int32_value": 5
+              }
+            },
+            "y": {
+              "value": {
+                "int32_value": 10
+              }
+            },
+            "z": {
+              "value": {
+                "int32_value": 15
+              }
+            }
+          }
+        }
+      }
+    },
+    "coordinates": {
+      "type": "STRUCT_VARIANT_ARRAY",
+      "params": {
+        "cartesian": {
+          "type": "STRUCT",
+          "template_oid": "/cartesian"
+        },
+        "cylindrical": {
+          "type": "STRUCT",
+          "params": {
+            "rho": {
+              "type": "INT32"
+            },
+            "phi": {
+              "type": "INT32",
+              "constraint": {
+                "type": "INT_RANGE",
+                "int32_range": {
+                  "min_value": 0,
+                  "max_value": 360
+                }
+              }
+            },
+            "z": {
+              "type": "INT32"
+            }
+          }
+        },
+        "spherical": {
+          "type": "STRUCT",
+          "params": {
+            "r": {
+              "type": "INT32"
+            },
+            "phi": {
+              "type": "INT32",
+              "constraint": {
+                "type": "INT_RANGE",
+                "int32_range": {
+                  "min_value": 0,
+                  "max_value": 180
+                }
+              }
+            },
+            "theta": {
+              "type": "INT32",
+              "constraint": {
+                "type": "INT_RANGE",
+                "int32_range": {
+                  "min_value": 0,
+                  "max_value": 360
+                }
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "struct_variant_array_values": {
+          "struct_variants": [
+            {
+              "struct_variant_type": "cartesian",
+              "value": {
+                "struct_value": {
+                  "fields": {
+                    "x": {
+                      "value": {
+                        "int32_value": 1
+                      }
+                    },
+                    "y": {
+                      "value": {
+                        "int32_value": 2
+                      }
+                    },
+                    "z": {
+                      "value": {
+                        "int32_value": 3
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "struct_variant_type": "cylindrical",
+              "value": {
+                "struct_value": {
+                  "fields": {
+                    "rho": {
+                      "value": {
+                        "int32_value": 1
+                      }
+                    },
+                    "phi": {
+                      "value": {
+                        "int32_value": 90
+                      }
+                    },
+                    "z": {
+                      "value": {
+                        "int32_value": 3
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "struct_variant_type": "spherical",
+              "value": {
+                "struct_value": {
+                  "fields": {
+                    "r": {
+                      "value": {
+                        "int32_value": 1
+                      }
+                    },
+                    "theta": {
+                      "value": {
+                        "int32_value": 90
+                      }
+                    },
+                    "phi": {
+                      "value": {
+                        "int32_value": 180
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -21,7 +21,7 @@
 // load the command line parser
 const { program } = require('commander');
 program
-    .option('-s, --schema <string>', 'path to schema definitions', '../../schema/catena.schema.json')
+    .option('-s, --schema <string>', 'path to schema definitions', '../../schema')
     .option('-d, --device-model <string>', 'Catena device model to process', '../../example_device_models/device.minimal.json')
     .option('-l, --language <string>', 'Language to generate code for', 'cpp')
     .option('-o, --output <string>', 'Output folder for generated code', '.');
@@ -44,8 +44,7 @@ if (options.output) {
 
 
 
-// import the path and fs libraries
-const path = require('node:path');
+// import the fs libraries
 const fs = require('fs');
 
 // verify input file exists
@@ -59,16 +58,67 @@ if (!fs.existsSync(options.deviceModel)) {
 const schemaFilename = options.schema;
 
 const Validator = require('./validator.js');
-
 const validator = new Validator(schemaFilename);
+const path = require("node:path");
+
+/**
+ * @class DeviceModel
+ * @brief Holds the information parsed from a json device model file
+ */
+class DeviceModel {
+  /**
+   * @brief Construct a new DeviceModel object
+   * @param {string} filePath the path to the device model file
+   * @param {Validator} validator the json validator object
+   * @param {object} desc the parsed json object
+   */
+  constructor(filePath, validator, desc) {
+        this.filePath = filePath;
+        this.validator = validator;
+        this.desc = desc;
+        this.baseFilename = path.basename(filePath);
+        const info = this.baseFilename.split(".");
+        const schemaName = info[0];
+        if (schemaName !== "device") {
+          throw new Error(`File must be a device model, not ${schemaName}`);
+        }
+        this.deviceName = info[1];
+      }
+
+      /**
+       * @brief open a param.*.json file and return the parsed json object
+       * @param {string} importArg the path to the param.*.json file relative to the directory containing the device model file
+       * @returns the parsed json object
+       * @throws {Error} if the file cannot be opened or the data is invalid against the schema
+       * @todo add support for other import types 
+       */
+      importParam(importArg) {
+          if ("file" in importArg) {
+            const importDir = path.dirname(this.filePath);
+            const importPath = `${importDir}/${importArg.file}`;
+            if (!fs.existsSync(importPath)) {
+              throw new Error(`Cannot open file at ${importArg.file}`);
+            }
+            const importData = JSON.parse(fs.readFileSync(importPath));
+            if (!this.validator.validateParam(importData)) {
+              throw new Error(`Imported data is not valid`);
+            }
+            return importData;
+      
+          } else {
+            throw new Error(`Unsupported import type: ${importArg}`);
+          }
+      }
+}
 
 try {
  
     // read the file to validate
     const data = JSON.parse(fs.readFileSync(options.deviceModel));
-    if (validator.validate('device', data)) {
+    if (validator.validateDevice(data)) {
         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
-        const codeGen = new CodeGen(options.deviceModel, options.output, validator, data);
+        const dm = new DeviceModel(options.deviceModel, validator, data);
+        const codeGen = new CodeGen(dm, options.output);
         codeGen.generate();
     }
 

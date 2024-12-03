@@ -28,6 +28,7 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
+/** @example path.cpp demonstrates use of a variety of json-pointers that are useful with catena models. */
 #include <iostream>
 #include <string>
 #include <vector>

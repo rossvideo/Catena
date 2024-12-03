@@ -298,16 +298,16 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 }
                 if (ans.status == catena::StatusCode::OK) {
                     status_ = CallStatus::kFinish;
-                    responder_.Finish(::google::protobuf::Empty{}, Status::OK, this);
+                    responder_.Finish(catena::Empty{}, Status::OK, this);
                 } else {
                     errorStatus_ = Status(static_cast<grpc::StatusCode>(ans.status), ans.what());
                     status_ = CallStatus::kFinish;
-                    responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                    responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
             } catch (...) {
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;
-                responder_.Finish(::google::protobuf::Empty{}, errorStatus_, this);
+                responder_.Finish(::catena::Empty{}, errorStatus_, this);
             }
             break;
 
@@ -412,17 +412,14 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
 
         case CallStatus::kWrite:
             lock.lock();
-            std::cout << "waiting on cv : " << timeNow() << std::endl;
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
-            std::cout << "cv wait over : " << timeNow() << std::endl;
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 std::cout << "Connection[" << objectId_ << "] cancelled\n";
                 writer_.Finish(Status::CANCELLED, this);
                 break;
             } else {
-                std::cout << "sending update\n";
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
@@ -478,20 +475,37 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             //     context_.TryCancel();
             //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
             // });
+            clientScopes_ = service_->getScopes(context_);
+            serializer_ = dm_.getComponentSerializer(clientScopes_, true); // select the shallow copy option
             status_ = CallStatus::kWrite;
             // fall thru to start writing
 
         case CallStatus::kWrite:
-            {
-                catena::DeviceComponent deviceMessage{};
-                catena::Device* dstDevice = deviceMessage.mutable_device();
-                std::vector<std::string> clientScopes = service_->getScopes(context_);
-                {
-                    Device::LockGuard lg(dm_);
-                    dm_.toProto(*dstDevice, clientScopes, false); // select the deep copy option
+            {   
+                if (!serializer_) {
+                    // It should not be possible to get here
+                    status_ = CallStatus::kFinish;
+                    grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+                    writer_.Finish(errorStatus, this);
+                    break;
+                } 
+                
+                try {     
+                    catena::DeviceComponent component{};
+                    std::vector<std::string> clientScopes = service_->getScopes(context_);
+                    {
+                        Device::LockGuard lg(dm_);
+                        component = serializer_->getNext();
+                    }
+                    status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
+                    writer_.Write(component, this);
+                } catch (catena::exception_with_status &e) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
+                } catch (...) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(Status::CANCELLED, this);
                 }
-                status_ = CallStatus::kPostWrite;
-                writer_.Write(deviceMessage, this);
             }
             break;
 

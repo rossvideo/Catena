@@ -69,6 +69,20 @@ sudo n stable
 ```
 Restart the terminal and run `node -v` to check that node successfully  updated.
 
+## Install boost libraries if you want to use the REST connection manager
+
+```bash
+sudo apt update
+sudo apt install libboost-all-dev
+sudo apt install libasio-dev
+```
+
+## Initialize git submodules
+```
+cd ~/Catena/sdks/cpp
+git submodule update --init --recursive
+```
+
 ## Building Catena
 ```
 cd ~/Catena/sdks/cpp
