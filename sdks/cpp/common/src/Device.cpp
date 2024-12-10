@@ -143,7 +143,7 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
 void Device::toProto(::catena::Device& dst, Authorizer& authz, bool shallow) const {
     dst.set_slot(slot_);
     dst.set_detail_level(detail_level_);
-    *dst.mutable_default_scope() = default_scope_.toString();
+    *dst.mutable_default_scope() = default_scope_;
     dst.set_multi_set_enabled(multi_set_enabled_);
     dst.set_subscriptions(subscriptions_);
     if (shallow) { return; }
@@ -237,12 +237,12 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool 
     catena::Device* dst = component.mutable_device();
     dst->set_slot(slot_);
     dst->set_detail_level(detail_level_);
-    *dst->mutable_default_scope() = default_scope_.toString();
+    *dst->mutable_default_scope() = default_scope_;
     dst->set_multi_set_enabled(multi_set_enabled_);
     dst->set_subscriptions(subscriptions_);
 
     for (auto& scope : access_scopes_) {
-        dst->add_access_scopes(scope.toString());
+        dst->add_access_scopes(scope);
     }
 
     for (auto& [menu_group_name, menu_group] : menu_groups_) {

@@ -66,9 +66,24 @@ class Authorizer {
     Authorizer(const std::vector<std::string>& clientScopes)
         : clientScopes_{clientScopes} {}
 
+    /**
+     * @brief Authorizer does not have copy semantics
+     */
     Authorizer(const Authorizer&) = delete;
+
+    /**
+     * @brief Authorizer does not have copy semantics
+     */
     Authorizer& operator=(const Authorizer&) = delete;
+
+    /**
+     * @brief Authorizer has move semantics
+     */
     Authorizer(Authorizer&&) = default;
+
+    /**
+     * @brief Authorizer has move semantics
+     */
     Authorizer& operator=(Authorizer&&) = default;
 
     /**

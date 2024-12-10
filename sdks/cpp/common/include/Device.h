@@ -100,8 +100,8 @@ class Device {
     /**
      * @brief Construct a new Device object
      */
-    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes> access_scopes,
-      Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
+    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
+      std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
 
@@ -134,7 +134,7 @@ class Device {
      */
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
-    inline const std::string& getDefaultScope() const { return default_scope_.toString(); }
+    inline const std::string& getDefaultScope() const { return default_scope_; }
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -393,8 +393,8 @@ class Device {
     std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
-    std::vector<Scopes> access_scopes_;
-    Scopes default_scope_;
+    std::vector<std::string> access_scopes_;
+    std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
     
