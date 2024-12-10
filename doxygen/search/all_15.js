@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['yield_5fvalue_193',['yield_value',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#afe74b859a902428ccdd761a8ffc9c601',1,'catena::common::Device::DeviceSerializer::promise_type']]]
+  ['windows_20toolchain_20installation_20_28msvc_29_191',['Windows Toolchain Installation (MSVC)',['../md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html',1,'']]],
+  ['writeauthz_192',['writeAuthz',['../classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1',1,'catena::common::Authorizer::writeAuthz(const IParam &amp;param) const'],['../classcatena_1_1common_1_1Authorizer.html#a6da90b2e5e23b8956017f713da5696c1',1,'catena::common::Authorizer::writeAuthz(const ParamDescriptor &amp;pd) const']]]
 ];

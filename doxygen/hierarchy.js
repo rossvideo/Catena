@@ -1,6 +1,6 @@
 var hierarchy =
 [
-    [ "catena::common::AuthzInfo", "classcatena_1_1common_1_1AuthzInfo.html", null ],
+    [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::Device", "classcatena_1_1common_1_1Device.html", null ],

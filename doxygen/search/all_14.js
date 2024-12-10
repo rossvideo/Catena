@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['windows_20toolchain_20installation_20_28msvc_29_191',['Windows Toolchain Installation (MSVC)',['../md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html',1,'']]],
-  ['writeauthz_192',['writeAuthz',['../classcatena_1_1common_1_1AuthzInfo.html#ad3c749f4dcff8cc63417db7e64c7d2e7',1,'catena::common::AuthzInfo']]]
+  ['value_187',['value',['../classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f',1,'catena::patterns::EnumDecorator']]],
+  ['valuesetbyclient_188',['valueSetByClient',['../classcatena_1_1common_1_1Device.html#ad0504576b2baa494010be749c94e03f4',1,'catena::common::Device']]],
+  ['valuesetbyserver_189',['valueSetByServer',['../classcatena_1_1common_1_1Device.html#aa14bba71eb227107bbae177a21c9d5a8',1,'catena::common::Device']]],
+  ['variant_2eh_190',['Variant.h',['../Variant_8h.html',1,'']]]
 ];

@@ -2,8 +2,8 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
 [
     [ "meta", "dir_8fa2515ea4bfa2a9ccd2d0d3ecafb1ba.html", "dir_8fa2515ea4bfa2a9ccd2d0d3ecafb1ba" ],
     [ "patterns", "dir_5b456b8fa81b1260fb546678da3b8413.html", "dir_5b456b8fa81b1260fb546678da3b8413" ],
-    [ "AuthzInfo.h", "AuthzInfo_8h.html", [
-      [ "AuthzInfo", "classcatena_1_1common_1_1AuthzInfo.html", "classcatena_1_1common_1_1AuthzInfo" ]
+    [ "Authorization.h", "Authorization_8h.html", [
+      [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html", "classcatena_1_1common_1_1Authorizer" ]
     ] ],
     [ "Device.h", "Device_8h.html", [
       [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],

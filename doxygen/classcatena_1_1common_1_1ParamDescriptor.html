@@ -155,13 +155,13 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#afe18d380497132f06e6eef76f4de7b12">readOnly</a> (bool flag)</td></tr>
 <tr class="memdesc:afe18d380497132f06e6eef76f4de7b12"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the readOnly status of the parameter <br /></td></tr>
 <tr class="separator:afe18d380497132f06e6eef76f4de7b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a533e03c41984ca025364708eedf88c32"><td class="memItemLeft" align="right" valign="top"><a id="a533e03c41984ca025364708eedf88c32"></a>
-const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a533e03c41984ca025364708eedf88c32">getScope</a> () const</td></tr>
-<tr class="memdesc:a533e03c41984ca025364708eedf88c32"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the access scope of the parameter <br /></td></tr>
-<tr class="separator:a533e03c41984ca025364708eedf88c32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1a4cb5293dd9c7ef478b985f46b62a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ac1a4cb5293dd9c7ef478b985f46b62a2">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a> &amp;auth) const</td></tr>
-<tr class="memdesc:ac1a4cb5293dd9c7ef478b985f46b62a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <a href="classcatena_1_1common_1_1ParamDescriptor.html#ac1a4cb5293dd9c7ef478b985f46b62a2">More...</a><br /></td></tr>
-<tr class="separator:ac1a4cb5293dd9c7ef478b985f46b62a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00727375ea0bb8662ee894febc376669"><td class="memItemLeft" align="right" valign="top"><a id="a00727375ea0bb8662ee894febc376669"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a00727375ea0bb8662ee894febc376669">getScope</a> () const</td></tr>
+<tr class="memdesc:a00727375ea0bb8662ee894febc376669"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the access scope of the parameter <br /></td></tr>
+<tr class="separator:a00727375ea0bb8662ee894febc376669"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94d24721c91733e999ec6d09a7e14431"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a94d24721c91733e999ec6d09a7e14431">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const</td></tr>
+<tr class="memdesc:a94d24721c91733e999ec6d09a7e14431"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <a href="classcatena_1_1common_1_1ParamDescriptor.html#a94d24721c91733e999ec6d09a7e14431">More...</a><br /></td></tr>
+<tr class="separator:a94d24721c91733e999ec6d09a7e14431"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afcebd2c19a4893cd444fed7069f5c5d3"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#afcebd2c19a4893cd444fed7069f5c5d3">name</a> (const std::string &amp;language) const</td></tr>
 <tr class="memdesc:afcebd2c19a4893cd444fed7069f5c5d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter name by language  <a href="classcatena_1_1common_1_1ParamDescriptor.html#afcebd2c19a4893cd444fed7069f5c5d3">More...</a><br /></td></tr>
 <tr class="separator:afcebd2c19a4893cd444fed7069f5c5d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -468,12 +468,6 @@ Here is the caller graph for this function:</div>
 
 <p>gets a sub parameter's paramDescriptor </p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> of the sub parameter </dd></dl>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_a84552c128dab5dd92d014b5a32ce1a84_icgraph.svg" width="507" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
-</div>
-</div>
 
 </div>
 </div>
@@ -504,8 +498,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="ac1a4cb5293dd9c7ef478b985f46b62a2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1a4cb5293dd9c7ef478b985f46b62a2">&#9670;&nbsp;</a></span>toProto()</h2>
+<a id="a94d24721c91733e999ec6d09a7e14431"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94d24721c91733e999ec6d09a7e14431">&#9670;&nbsp;</a></span>toProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -519,8 +513,8 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a> &amp;&#160;</td>
-          <td class="paramname"><em>auth</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -534,7 +528,7 @@ Here is the caller graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">param</td><td>the protobuf message to serialize to </td></tr>
-    <tr><td class="paramname">auth</td><td>the authorization information</td></tr>
+    <tr><td class="paramname">authz</td><td>the authorization information</td></tr>
   </table>
   </dd>
 </dl>
@@ -542,7 +536,7 @@ Here is the caller graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_ac1a4cb5293dd9c7ef478b985f46b62a2_icgraph.svg" width="516" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_a94d24721c91733e999ec6d09a7e14431_icgraph.svg" width="516" height="52"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 

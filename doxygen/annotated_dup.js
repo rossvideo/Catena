@@ -2,7 +2,7 @@ var annotated_dup =
 [
     [ "catena", null, [
       [ "common", null, [
-        [ "AuthzInfo", "classcatena_1_1common_1_1AuthzInfo.html", "classcatena_1_1common_1_1AuthzInfo" ],
+        [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html", "classcatena_1_1common_1_1Authorizer" ],
         [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
         [ "FakeLock", "structcatena_1_1common_1_1FakeLock.html", "structcatena_1_1common_1_1FakeLock" ],
         [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],

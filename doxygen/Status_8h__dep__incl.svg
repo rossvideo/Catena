@@ -46,7 +46,7 @@ if (edges && edges.length) {
         </defs>
 
 <script type="text/javascript">
-var viewWidth = 1106;
+var viewWidth = 1061;
 var viewHeight = 518;
 var sectionId = 'dynsection-1';
 </script>
@@ -54,15 +54,15 @@ var sectionId = 'dynsection-1';
 <svg id="graph" class="graph">
 <g id="viewport">
 <title>/home/runner/work/Catena/Catena/sdks/cpp/common/include/Status.h</title>
-<polygon fill="white" stroke="transparent" points="-4,4 -4,-514 1102.5,-514 1102.5,4 -4,4"/>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-514 1056.5,-514 1056.5,4 -4,4"/>
 <!-- Node1 -->
 <g id="node1" class="node">
 <title>Node1</title>
 <g id="a_node1"><a xlink:title="Communicates failure status using gRPC&#39;s codes.">
-<polygon fill="#bfbfbf" stroke="black" points="499.5,-468.5 499.5,-509.5 645.5,-509.5 645.5,-468.5 499.5,-468.5"/>
-<text text-anchor="start" x="507.5" y="-497.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="507.5" y="-486.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="572.5" y="-475.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Status.h</text>
+<polygon fill="#bfbfbf" stroke="black" points="392.5,-468.5 392.5,-509.5 538.5,-509.5 538.5,-468.5 392.5,-468.5"/>
+<text text-anchor="start" x="400.5" y="-497.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="400.5" y="-486.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="465.5" y="-475.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Status.h</text>
 </a>
 </g>
 </g>
@@ -70,265 +70,271 @@ var sectionId = 'dynsection-1';
 <g id="node2" class="node">
 <title>Node2</title>
 <g id="a_node2"><a xlink:href="Device_8h.html" target="_top" xlink:title="Device class definition.">
-<polygon fill="white" stroke="black" points="396.5,-312.5 396.5,-353.5 542.5,-353.5 542.5,-312.5 396.5,-312.5"/>
-<text text-anchor="start" x="404.5" y="-341.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="404.5" y="-330.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="469.5" y="-319.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Device.h</text>
+<polygon fill="white" stroke="black" points="415.5,-156.5 415.5,-197.5 561.5,-197.5 561.5,-156.5 415.5,-156.5"/>
+<text text-anchor="start" x="423.5" y="-185.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="423.5" y="-174.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="488.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Device.h</text>
 </a>
 </g>
 </g>
 <!-- Node1&#45;&gt;Node2 -->
 <g id="edge1" class="edge">
 <title>Node1&#45;&gt;Node2</title>
-<path fill="none" stroke="midnightblue" d="M553.75,-459.96C533.21,-429.26 500.82,-380.82 482.76,-353.83"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="550.99,-462.13 559.45,-468.5 556.8,-458.24 550.99,-462.13"/>
+<path fill="none" stroke="midnightblue" d="M446.15,-459.57C441.39,-451.07 436.95,-441.48 434.5,-432 429.83,-413.93 432.18,-408.52 434.5,-390 443.57,-317.64 469.41,-234.57 481.76,-197.56"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="443.24,-461.52 451.37,-468.31 449.25,-457.93 443.24,-461.52"/>
 </g>
-<!-- Node13 -->
-<g id="node13" class="node">
-<title>Node13</title>
-<g id="a_node13"><a xlink:href="IParam_8h.html" target="_top" xlink:title="Interface for parameters.">
-<polygon fill="white" stroke="black" points="569.5,-390.5 569.5,-431.5 715.5,-431.5 715.5,-390.5 569.5,-390.5"/>
-<text text-anchor="start" x="577.5" y="-419.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="577.5" y="-408.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="642.5" y="-397.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IParam.h</text>
+<!-- Node10 -->
+<g id="node10" class="node">
+<title>Node10</title>
+<g id="a_node10"><a xlink:href="IParam_8h.html" target="_top" xlink:title="Interface for parameters.">
+<polygon fill="white" stroke="black" points="443.5,-390.5 443.5,-431.5 589.5,-431.5 589.5,-390.5 443.5,-390.5"/>
+<text text-anchor="start" x="451.5" y="-419.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="451.5" y="-408.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="516.5" y="-397.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IParam.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node13 -->
-<g id="edge16" class="edge">
-<title>Node1&#45;&gt;Node13</title>
-<path fill="none" stroke="midnightblue" d="M597.45,-460.92C606.39,-451.2 616.3,-440.45 624.53,-431.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="594.73,-458.7 590.53,-468.43 599.88,-463.44 594.73,-458.7"/>
+<!-- Node1&#45;&gt;Node10 -->
+<g id="edge10" class="edge">
+<title>Node1&#45;&gt;Node10</title>
+<path fill="none" stroke="midnightblue" d="M484.26,-460.05C490.62,-450.57 497.59,-440.18 503.41,-431.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="481.3,-458.17 478.63,-468.43 487.11,-462.07 481.3,-458.17"/>
 </g>
 <!-- Node3 -->
 <g id="node3" class="node">
 <title>Node3</title>
 <g id="a_node3"><a xlink:href="LanguagePack_8h.html" target="_top" xlink:title="multi language support in 2 classes: LanguagePack and LanguagePacks">
-<polygon fill="white" stroke="black" points="17.5,-234.5 17.5,-275.5 163.5,-275.5 163.5,-234.5 17.5,-234.5"/>
-<text text-anchor="start" x="25.5" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="25.5" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="90.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/LanguagePack.h</text>
+<polygon fill="white" stroke="black" points="165.5,-78.5 165.5,-119.5 311.5,-119.5 311.5,-78.5 165.5,-78.5"/>
+<text text-anchor="start" x="173.5" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="173.5" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="238.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/LanguagePack.h</text>
 </a>
 </g>
 </g>
 <!-- Node2&#45;&gt;Node3 -->
 <g id="edge2" class="edge">
 <title>Node2&#45;&gt;Node3</title>
-<path fill="none" stroke="midnightblue" d="M386.23,-317.51C326.56,-306.84 244.38,-291.53 172.5,-276 169.63,-275.38 166.72,-274.74 163.77,-274.07"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="385.9,-321.01 396.35,-319.32 387.12,-314.12 385.9,-321.01"/>
+<path fill="none" stroke="midnightblue" d="M414.3,-153.44C378.81,-142.66 336.75,-129.87 302.66,-119.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="413.53,-156.87 424.12,-156.43 415.57,-150.17 413.53,-156.87"/>
 </g>
 <!-- Node4 -->
 <g id="node4" class="node">
 <title>Node4</title>
 <g id="a_node4"><a xlink:href="Menu_8h.html" target="_top" xlink:title="Menus support.">
-<polygon fill="white" stroke="black" points="181.5,-234.5 181.5,-275.5 327.5,-275.5 327.5,-234.5 181.5,-234.5"/>
-<text text-anchor="start" x="189.5" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="189.5" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="254.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Menu.h</text>
+<polygon fill="white" stroke="black" points="329.5,-78.5 329.5,-119.5 475.5,-119.5 475.5,-78.5 329.5,-78.5"/>
+<text text-anchor="start" x="337.5" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="337.5" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="402.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Menu.h</text>
 </a>
 </g>
 </g>
 <!-- Node2&#45;&gt;Node4 -->
 <g id="edge3" class="edge">
 <title>Node2&#45;&gt;Node4</title>
-<path fill="none" stroke="midnightblue" d="M404.51,-309.03C374.24,-298.33 338.62,-285.73 309.68,-275.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="403.54,-312.4 414.13,-312.43 405.87,-305.8 403.54,-312.4"/>
+<path fill="none" stroke="midnightblue" d="M458.83,-149.78C447.59,-139.84 434.99,-128.72 424.57,-119.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="456.54,-152.43 466.35,-156.43 461.18,-147.18 456.54,-152.43"/>
 </g>
 <!-- Node5 -->
 <g id="node5" class="node">
 <title>Node5</title>
 <g id="a_node5"><a xlink:href="MenuGroup_8h.html" target="_top" xlink:title="MenuGroups support.">
-<polygon fill="white" stroke="black" points="49.5,-156.5 49.5,-197.5 195.5,-197.5 195.5,-156.5 49.5,-156.5"/>
-<text text-anchor="start" x="57.5" y="-185.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="57.5" y="-174.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="122.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/MenuGroup.h</text>
+<polygon fill="white" stroke="black" points="379.5,-0.5 379.5,-41.5 525.5,-41.5 525.5,-0.5 379.5,-0.5"/>
+<text text-anchor="start" x="387.5" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="387.5" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="452.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/MenuGroup.h</text>
 </a>
 </g>
 </g>
 <!-- Node2&#45;&gt;Node5 -->
 <g id="edge5" class="edge">
 <title>Node2&#45;&gt;Node5</title>
-<path fill="none" stroke="midnightblue" d="M386.48,-327.79C260.53,-320.55 33.09,-303.76 8.5,-276 -3.88,-262.03 -1.37,-249.84 8.5,-234 18.7,-217.62 35.25,-205.9 52.61,-197.56"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="386.31,-331.29 396.49,-328.36 386.7,-324.3 386.31,-331.29"/>
+<path fill="none" stroke="midnightblue" d="M490.91,-146.19C491.63,-126.46 490.89,-100.23 484.5,-78 480.79,-65.09 473.52,-51.97 466.85,-41.69"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="487.4,-146.25 490.39,-156.41 494.39,-146.61 487.4,-146.25"/>
 </g>
 <!-- Node6 -->
 <g id="node6" class="node">
 <title>Node6</title>
 <g id="a_node6"><a xlink:href="NamedChoiceConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within some named choices.">
-<polygon fill="white" stroke="black" points="550,-234.5 550,-275.5 735,-275.5 735,-234.5 550,-234.5"/>
-<text text-anchor="start" x="558" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="558" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="642.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/NamedChoiceConstraint.h</text>
+<polygon fill="white" stroke="black" points="531,-78.5 531,-119.5 716,-119.5 716,-78.5 531,-78.5"/>
+<text text-anchor="start" x="539" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="539" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="623.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/NamedChoiceConstraint.h</text>
 </a>
 </g>
 </g>
 <!-- Node2&#45;&gt;Node6 -->
 <g id="edge6" class="edge">
 <title>Node2&#45;&gt;Node6</title>
-<path fill="none" stroke="midnightblue" d="M523.38,-308.33C547.39,-297.78 575.32,-285.51 598.1,-275.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="521.8,-305.2 514.05,-312.43 524.61,-311.61 521.8,-305.2"/>
+<path fill="none" stroke="midnightblue" d="M532.05,-151.49C550.43,-141.13 571.55,-129.25 588.85,-119.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="530.26,-148.47 523.27,-156.43 533.7,-154.57 530.26,-148.47"/>
 </g>
 <!-- Node7 -->
 <g id="node7" class="node">
 <title>Node7</title>
-<g id="a_node7"><a xlink:href="ParamDescriptor_8h_source.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="black" points="753,-234.5 753,-275.5 900,-275.5 900,-234.5 753,-234.5"/>
-<text text-anchor="start" x="761" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="761" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="826.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamDescriptor.h</text>
+<g id="a_node7"><a xlink:href="ParamWithValue_8h.html" target="_top" xlink:title="Interface for acessing parameter values.">
+<polygon fill="white" stroke="black" points="0,-78.5 0,-119.5 147,-119.5 147,-78.5 0,-78.5"/>
+<text text-anchor="start" x="8" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="8" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="73.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamWithValue.h</text>
 </a>
 </g>
 </g>
 <!-- Node2&#45;&gt;Node7 -->
 <g id="edge7" class="edge">
 <title>Node2&#45;&gt;Node7</title>
-<path fill="none" stroke="midnightblue" d="M552.6,-315.94C607.25,-305.17 680.27,-290.37 744.5,-276 747.22,-275.39 749.98,-274.76 752.77,-274.12"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="551.75,-312.54 542.62,-317.9 553.1,-319.41 551.75,-312.54"/>
-</g>
-<!-- Node9 -->
-<g id="node9" class="node">
-<title>Node9</title>
-<g id="a_node9"><a xlink:href="ParamWithValue_8h.html" target="_top" xlink:title="Interface for acessing parameter values.">
-<polygon fill="white" stroke="black" points="765,-0.5 765,-41.5 912,-41.5 912,-0.5 765,-0.5"/>
-<text text-anchor="start" x="773" y="-29.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="773" y="-18.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="838.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamWithValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node2&#45;&gt;Node9 -->
-<g id="edge13" class="edge">
-<title>Node2&#45;&gt;Node9</title>
-<path fill="none" stroke="midnightblue" d="M406.33,-307.23C393.62,-299.23 381.91,-288.97 374.5,-276 365.24,-259.79 365.03,-250.09 374.5,-234 456.15,-95.28 655.74,-46.67 764.65,-30.15"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="404.84,-310.42 415.24,-312.42 408.36,-304.37 404.84,-310.42"/>
-</g>
-<!-- Node11 -->
-<g id="node11" class="node">
-<title>Node11</title>
-<g id="a_node11"><a xlink:href="PicklistConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is in a list of strings.">
-<polygon fill="white" stroke="black" points="918.5,-234.5 918.5,-275.5 1070.5,-275.5 1070.5,-234.5 918.5,-234.5"/>
-<text text-anchor="start" x="926.5" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="926.5" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="994.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/PicklistConstraint.h</text>
-</a>
-</g>
-</g>
-<!-- Node2&#45;&gt;Node11 -->
-<g id="edge14" class="edge">
-<title>Node2&#45;&gt;Node11</title>
-<path fill="none" stroke="midnightblue" d="M552.66,-324.03C641.43,-314.92 786.01,-298.32 909.5,-276 912.33,-275.49 915.22,-274.94 918.12,-274.37"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="552.24,-320.56 542.65,-325.05 552.95,-327.52 552.24,-320.56"/>
-</g>
-<!-- Node12 -->
-<g id="node12" class="node">
-<title>Node12</title>
-<g id="a_node12"><a xlink:href="RangeConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within a range.">
-<polygon fill="white" stroke="black" points="383.5,-234.5 383.5,-275.5 531.5,-275.5 531.5,-234.5 383.5,-234.5"/>
-<text text-anchor="start" x="391.5" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="391.5" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="457.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/RangeConstraint.h</text>
-</a>
-</g>
-</g>
-<!-- Node2&#45;&gt;Node12 -->
-<g id="edge15" class="edge">
-<title>Node2&#45;&gt;Node12</title>
-<path fill="none" stroke="midnightblue" d="M464.81,-302.3C463.39,-293.3 461.87,-283.65 460.58,-275.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="461.39,-303.1 466.41,-312.43 468.31,-302 461.39,-303.1"/>
-</g>
-<!-- Node4&#45;&gt;Node5 -->
-<g id="edge4" class="edge">
-<title>Node4&#45;&gt;Node5</title>
-<path fill="none" stroke="midnightblue" d="M211.43,-229.2C193.57,-218.92 173.14,-207.16 156.38,-197.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="210.09,-232.47 220.51,-234.43 213.59,-226.41 210.09,-232.47"/>
+<path fill="none" stroke="midnightblue" d="M405.08,-162.08C310.77,-146.31 168.66,-122.49 156.5,-120 153.45,-119.38 150.34,-118.72 147.21,-118.04"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="404.75,-165.57 415.19,-163.77 405.9,-158.67 404.75,-165.57"/>
 </g>
 <!-- Node8 -->
 <g id="node8" class="node">
 <title>Node8</title>
-<g id="a_node8"><a xlink:href="AuthzInfo_8h.html" target="_top" xlink:title="Class for handling authorization information.">
-<polygon fill="white" stroke="black" points="702.5,-156.5 702.5,-197.5 848.5,-197.5 848.5,-156.5 702.5,-156.5"/>
-<text text-anchor="start" x="710.5" y="-185.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="710.5" y="-174.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="775.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/AuthzInfo.h</text>
+<g id="a_node8"><a xlink:href="PicklistConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is in a list of strings.">
+<polygon fill="white" stroke="black" points="734.5,-78.5 734.5,-119.5 886.5,-119.5 886.5,-78.5 734.5,-78.5"/>
+<text text-anchor="start" x="742.5" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="742.5" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="810.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/PicklistConstraint.h</text>
 </a>
 </g>
 </g>
-<!-- Node7&#45;&gt;Node8 -->
+<!-- Node2&#45;&gt;Node8 -->
 <g id="edge8" class="edge">
-<title>Node7&#45;&gt;Node8</title>
-<path fill="none" stroke="midnightblue" d="M807.74,-226.05C801.38,-216.57 794.41,-206.18 788.59,-197.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="804.89,-228.07 813.37,-234.43 810.7,-224.17 804.89,-228.07"/>
+<title>Node2&#45;&gt;Node8</title>
+<path fill="none" stroke="midnightblue" d="M571.43,-156.43C621.71,-144.56 685.37,-129.53 734.36,-117.97"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="570.5,-153.05 561.57,-158.75 572.1,-159.86 570.5,-153.05"/>
 </g>
-<!-- Node7&#45;&gt;Node9 -->
-<g id="edge12" class="edge">
-<title>Node7&#45;&gt;Node9</title>
-<path fill="none" stroke="midnightblue" d="M845.85,-225.57C850.61,-217.07 855.05,-207.48 857.5,-198 871.83,-142.5 855.2,-74.46 845.11,-41.6"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="842.75,-223.93 840.63,-234.31 848.76,-227.52 842.75,-223.93"/>
-</g>
-<!-- Node8&#45;&gt;Node9 -->
-<g id="edge9" class="edge">
-<title>Node8&#45;&gt;Node9</title>
-<path fill="none" stroke="midnightblue" d="M801.31,-148.5C808.15,-139.92 814.9,-130.06 819.5,-120 831.17,-94.47 835.68,-62 837.42,-41.61"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="798.52,-146.38 794.78,-156.29 803.89,-150.87 798.52,-146.38"/>
-</g>
-<!-- Node10 -->
-<g id="node10" class="node">
-<title>Node10</title>
-<g id="a_node10"><a xlink:href="StructInfo_8h.html" target="_top" xlink:title="Structured data serialization and deserialization to protobuf.">
-<polygon fill="white" stroke="black" points="664.5,-78.5 664.5,-119.5 810.5,-119.5 810.5,-78.5 664.5,-78.5"/>
-<text text-anchor="start" x="672.5" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="672.5" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="737.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/StructInfo.h</text>
+<!-- Node9 -->
+<g id="node9" class="node">
+<title>Node9</title>
+<g id="a_node9"><a xlink:href="RangeConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within a range.">
+<polygon fill="white" stroke="black" points="904.5,-78.5 904.5,-119.5 1052.5,-119.5 1052.5,-78.5 904.5,-78.5"/>
+<text text-anchor="start" x="912.5" y="-107.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="912.5" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="978.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/RangeConstraint.h</text>
 </a>
 </g>
 </g>
-<!-- Node8&#45;&gt;Node10 -->
-<g id="edge10" class="edge">
-<title>Node8&#45;&gt;Node10</title>
-<path fill="none" stroke="midnightblue" d="M761.23,-147.47C756.57,-138.14 751.5,-128.01 747.25,-119.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="758.11,-149.05 765.71,-156.43 764.37,-145.92 758.11,-149.05"/>
+<!-- Node2&#45;&gt;Node9 -->
+<g id="edge9" class="edge">
+<title>Node2&#45;&gt;Node9</title>
+<path fill="none" stroke="midnightblue" d="M571.72,-167.01C654.25,-157.52 784.15,-141.02 895.5,-120 898.41,-119.45 901.38,-118.86 904.37,-118.25"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="571.18,-163.55 561.64,-168.16 571.97,-170.51 571.18,-163.55"/>
+</g>
+<!-- Node4&#45;&gt;Node5 -->
+<g id="edge4" class="edge">
+<title>Node4&#45;&gt;Node5</title>
+<path fill="none" stroke="midnightblue" d="M420.89,-70.05C427.13,-60.57 433.96,-50.18 439.67,-41.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="417.95,-68.15 415.38,-78.43 423.8,-72 417.95,-68.15"/>
+</g>
+<!-- Node10&#45;&gt;Node2 -->
+<g id="edge16" class="edge">
+<title>Node10&#45;&gt;Node2</title>
+<path fill="none" stroke="midnightblue" d="M512.89,-380.11C507.08,-331.94 495.79,-238.44 490.88,-197.73"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="509.44,-380.71 514.11,-390.22 516.39,-379.87 509.44,-380.71"/>
+</g>
+<!-- Node10&#45;&gt;Node6 -->
+<g id="edge17" class="edge">
+<title>Node10&#45;&gt;Node6</title>
+<path fill="none" stroke="midnightblue" d="M526.7,-380.45C548.36,-317.7 598.46,-172.55 616.7,-119.7"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="523.31,-379.54 523.36,-390.14 529.93,-381.83 523.31,-379.54"/>
+</g>
+<!-- Node10&#45;&gt;Node7 -->
+<g id="edge21" class="edge">
+<title>Node10&#45;&gt;Node7</title>
+<path fill="none" stroke="midnightblue" d="M433.4,-401.58C357.89,-392.66 253.16,-376.7 218.5,-354 131.64,-297.11 91.02,-169.02 78.2,-119.79"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="433.05,-405.07 443.39,-402.74 433.86,-398.11 433.05,-405.07"/>
+</g>
+<!-- Node10&#45;&gt;Node8 -->
+<g id="edge22" class="edge">
+<title>Node10&#45;&gt;Node8</title>
+<path fill="none" stroke="midnightblue" d="M542.35,-382.74C600.62,-321.3 741.08,-173.2 791.82,-119.7"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="539.68,-380.47 535.34,-390.14 544.76,-385.29 539.68,-380.47"/>
 </g>
 <!-- Node10&#45;&gt;Node9 -->
-<g id="edge11" class="edge">
+<g id="edge23" class="edge">
 <title>Node10&#45;&gt;Node9</title>
-<path fill="none" stroke="midnightblue" d="M771.59,-72.35C784.98,-62.27 800.1,-50.89 812.58,-41.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="769.4,-69.62 763.51,-78.43 773.6,-75.21 769.4,-69.62"/>
+<path fill="none" stroke="midnightblue" d="M555.75,-385.01C570.74,-375.39 587.96,-364.26 603.5,-354 733.75,-267.99 887.47,-162.65 949.96,-119.67"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="553.75,-382.14 547.21,-390.48 557.52,-388.03 553.75,-382.14"/>
 </g>
-<!-- Node13&#45;&gt;Node2 -->
-<g id="edge17" class="edge">
-<title>Node13&#45;&gt;Node2</title>
-<path fill="none" stroke="midnightblue" d="M588.62,-386.33C564.61,-375.78 536.68,-363.51 513.9,-353.51"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="587.38,-389.61 597.95,-390.43 590.2,-383.2 587.38,-389.61"/>
+<!-- Node11 -->
+<g id="node11" class="node">
+<title>Node11</title>
+<g id="a_node11"><a xlink:href="Authorization_8h.html" target="_top" xlink:title="Class for handling authorization information.">
+<polygon fill="white" stroke="black" points="228.5,-234.5 228.5,-275.5 374.5,-275.5 374.5,-234.5 228.5,-234.5"/>
+<text text-anchor="start" x="236.5" y="-263.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="236.5" y="-252.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="301.5" y="-241.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Authorization.h</text>
+</a>
 </g>
-<!-- Node13&#45;&gt;Node6 -->
+</g>
+<!-- Node10&#45;&gt;Node11 -->
+<g id="edge11" class="edge">
+<title>Node10&#45;&gt;Node11</title>
+<path fill="none" stroke="midnightblue" d="M481.95,-384.02C455.25,-364.07 417.27,-335.96 383.5,-312 366.21,-299.73 346.6,-286.32 330.9,-275.7"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="480.1,-387.01 490.21,-390.2 484.3,-381.4 480.1,-387.01"/>
+</g>
+<!-- Node13 -->
+<g id="node13" class="node">
+<title>Node13</title>
+<g id="a_node13"><a xlink:href="ParamDescriptor_8h_source.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="black" points="228,-312.5 228,-353.5 375,-353.5 375,-312.5 228,-312.5"/>
+<text text-anchor="start" x="236" y="-341.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="236" y="-330.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="301.5" y="-319.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamDescriptor.h</text>
+</a>
+</g>
+</g>
+<!-- Node10&#45;&gt;Node13 -->
 <g id="edge18" class="edge">
-<title>Node13&#45;&gt;Node6</title>
-<path fill="none" stroke="midnightblue" d="M642.5,-380.36C642.5,-349.61 642.5,-302.36 642.5,-275.83"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="639,-380.5 642.5,-390.5 646,-380.5 639,-380.5"/>
+<title>Node10&#45;&gt;Node13</title>
+<path fill="none" stroke="midnightblue" d="M451.51,-387.03C421.24,-376.33 385.62,-363.73 356.68,-353.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="450.54,-390.4 461.13,-390.43 452.87,-383.8 450.54,-390.4"/>
+</g>
+<!-- Node11&#45;&gt;Node2 -->
+<g id="edge12" class="edge">
+<title>Node11&#45;&gt;Node2</title>
+<path fill="none" stroke="midnightblue" d="M359.06,-230.61C385.16,-220 415.66,-207.6 440.51,-197.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="357.6,-227.42 349.66,-234.43 360.24,-233.91 357.6,-227.42"/>
+</g>
+<!-- Node11&#45;&gt;Node7 -->
+<g id="edge13" class="edge">
+<title>Node11&#45;&gt;Node7</title>
+<path fill="none" stroke="midnightblue" d="M254.74,-229.45C238.41,-220.24 220.24,-209.27 204.5,-198 181.45,-181.5 178.96,-173.29 156.5,-156 139.83,-143.17 120.38,-129.96 104.5,-119.59"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="253.15,-232.57 263.59,-234.37 256.55,-226.45 253.15,-232.57"/>
+</g>
+<!-- Node12 -->
+<g id="node12" class="node">
+<title>Node12</title>
+<g id="a_node12"><a xlink:href="StructInfo_8h.html" target="_top" xlink:title="Structured data serialization and deserialization to protobuf.">
+<polygon fill="white" stroke="black" points="213.5,-156.5 213.5,-197.5 359.5,-197.5 359.5,-156.5 213.5,-156.5"/>
+<text text-anchor="start" x="221.5" y="-185.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="221.5" y="-174.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="286.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/StructInfo.h</text>
+</a>
+</g>
+</g>
+<!-- Node11&#45;&gt;Node12 -->
+<g id="edge14" class="edge">
+<title>Node11&#45;&gt;Node12</title>
+<path fill="none" stroke="midnightblue" d="M295.7,-224.59C293.9,-215.51 291.98,-205.74 290.35,-197.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="292.27,-225.3 297.64,-234.43 299.13,-223.94 292.27,-225.3"/>
+</g>
+<!-- Node12&#45;&gt;Node7 -->
+<g id="edge15" class="edge">
+<title>Node12&#45;&gt;Node7</title>
+<path fill="none" stroke="midnightblue" d="M222.11,-153.03C192.13,-142.33 156.83,-129.73 128.17,-119.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="221.05,-156.36 231.65,-156.43 223.41,-149.77 221.05,-156.36"/>
 </g>
 <!-- Node13&#45;&gt;Node7 -->
-<g id="edge19" class="edge">
-<title>Node13&#45;&gt;Node7</title>
-<path fill="none" stroke="midnightblue" d="M673.69,-383.89C710.32,-353.24 770.23,-303.1 803.1,-275.59"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="671.23,-381.39 665.8,-390.5 675.72,-386.76 671.23,-381.39"/>
-</g>
-<!-- Node13&#45;&gt;Node9 -->
 <g id="edge20" class="edge">
-<title>Node13&#45;&gt;Node9</title>
-<path fill="none" stroke="midnightblue" d="M725.56,-399.27C857.08,-379.93 1098.5,-333.82 1098.5,-256 1098.5,-256 1098.5,-256 1098.5,-176 1098.5,-88.91 989.18,-50.01 912.31,-33.43"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="724.91,-395.83 715.51,-400.73 725.91,-402.76 724.91,-395.83"/>
+<title>Node13&#45;&gt;Node7</title>
+<path fill="none" stroke="midnightblue" d="M259.77,-306.77C246.32,-297.8 231.73,-287.14 219.5,-276 164.17,-225.61 111.17,-154 87.06,-119.75"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="258.13,-309.88 268.42,-312.41 261.95,-304.02 258.13,-309.88"/>
 </g>
 <!-- Node13&#45;&gt;Node11 -->
-<g id="edge21" class="edge">
+<g id="edge19" class="edge">
 <title>Node13&#45;&gt;Node11</title>
-<path fill="none" stroke="midnightblue" d="M696.53,-386.36C765.94,-356 885.13,-303.85 949.73,-275.59"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="694.84,-383.28 687.08,-390.5 697.65,-389.69 694.84,-383.28"/>
-</g>
-<!-- Node13&#45;&gt;Node12 -->
-<g id="edge22" class="edge">
-<title>Node13&#45;&gt;Node12</title>
-<path fill="none" stroke="midnightblue" d="M620.7,-382.55C603.32,-361.71 577.64,-333.13 551.5,-312 534.51,-298.27 513.82,-285.57 496.17,-275.75"/>
-<polygon fill="midnightblue" stroke="midnightblue" points="618.1,-384.9 627.16,-390.4 623.51,-380.46 618.1,-384.9"/>
+<path fill="none" stroke="midnightblue" d="M301.5,-302.3C301.5,-293.3 301.5,-283.65 301.5,-275.51"/>
+<polygon fill="midnightblue" stroke="midnightblue" points="298,-302.43 301.5,-312.43 305,-302.43 298,-302.43"/>
 </g>
 </g>
 </svg>

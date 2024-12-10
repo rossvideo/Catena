@@ -7,5 +7,5 @@ var searchData=
   ['addproduct_292',['addProduct',['../classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d',1,'catena::patterns::GenericFactory']]],
   ['addsubparam_293',['addSubParam',['../classcatena_1_1common_1_1ParamDescriptor.html#acbd43f226aa1753c32bcca3612dff9ad',1,'catena::common::ParamDescriptor']]],
   ['apply_294',['apply',['../classcatena_1_1common_1_1IConstraint.html#a1ddc656a7b1a5f03b26f4000b675bac9',1,'catena::common::IConstraint::apply()'],['../classcatena_1_1common_1_1NamedChoiceConstraint.html#a49a98653eceddebb779d5d2b3cbbb881',1,'catena::common::NamedChoiceConstraint::apply()'],['../classcatena_1_1common_1_1PicklistConstraint.html#a1126b08e2902df677ae9a262f2fa4ae7',1,'catena::common::PicklistConstraint::apply()'],['../classcatena_1_1common_1_1RangeConstraint.html#a67b95ece6963e2186ce110931208db31',1,'catena::common::RangeConstraint::apply()']]],
-  ['authzinfo_295',['AuthzInfo',['../classcatena_1_1common_1_1AuthzInfo.html#a15b1f021f71f930d8573fea0d604a348',1,'catena::common::AuthzInfo']]]
+  ['authorizer_295',['Authorizer',['../classcatena_1_1common_1_1Authorizer.html#a6b27835f542a05b009417c3ce8596088',1,'catena::common::Authorizer']]]
 ];

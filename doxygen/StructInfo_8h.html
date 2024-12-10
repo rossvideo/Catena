@@ -96,7 +96,7 @@ $(document).ready(function(){initNavTree('StructInfo_8h.html',''); initResizable
 <div class="textblock"><code>#include &lt;meta/Typelist.h&gt;</code><br />
 <code>#include &lt;meta/IsVector.h&gt;</code><br />
 <code>#include &lt;<a class="el" href="Variant_8h_source.html">meta/Variant.h</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="AuthzInfo_8h_source.html">AuthzInfo.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Authorization_8h_source.html">Authorization.h</a>&gt;</code><br />
 <code>#include &lt;interface/param.pb.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;cstddef&gt;</code><br />
@@ -131,12 +131,12 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ad5292ff814155acd5c7a9bf7b6dcb086"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ad5292ff814155acd5c7a9bf7b6dcb086"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">catena::common::toProto</a> (catena::Value &amp;dst, const T *src, const AuthzInfo &amp;auth)</td></tr>
-<tr class="separator:ad5292ff814155acd5c7a9bf7b6dcb086"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00607bf87da6b8329a669b7712191aea"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a00607bf87da6b8329a669b7712191aea"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">catena::common::fromProto</a> (const catena::Value &amp;src, T *dst, const AuthzInfo &amp;auth)</td></tr>
-<tr class="separator:a00607bf87da6b8329a669b7712191aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78f6e68869990f230baee7774d764623"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a78f6e68869990f230baee7774d764623"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#a78f6e68869990f230baee7774d764623">catena::common::toProto</a> (catena::Value &amp;dst, const T *src, const ParamDescriptor &amp;pd, const Authorizer &amp;authz)</td></tr>
+<tr class="separator:a78f6e68869990f230baee7774d764623"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a028c90c48c39454968736c95d2c0ceb9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a028c90c48c39454968736c95d2c0ceb9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#a028c90c48c39454968736c95d2c0ceb9">catena::common::fromProto</a> (const catena::Value &amp;src, T *dst, const ParamDescriptor &amp;pd, const Authorizer &amp;authz)</td></tr>
+<tr class="separator:a028c90c48c39454968736c95d2c0ceb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addddb371559a45d42994973db1a69f08"><td class="memTemplParams" colspan="2">template&lt;std::size_t size&gt; </td></tr>
 <tr class="memitem:addddb371559a45d42994973db1a69f08"><td class="memTemplItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">catena::common::_findTypeIndex</a> (const std::string &amp;typeName, const std::array&lt; const char *, size &gt; &amp;typeNames)</td></tr>
 <tr class="memdesc:addddb371559a45d42994973db1a69f08"><td class="mdescLeft">&#160;</td><td class="mdescRight">helper function to find the index of a type in a list of type names  <a href="StructInfo_8h.html#addddb371559a45d42994973db1a69f08">More...</a><br /></td></tr>
@@ -298,8 +298,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a00607bf87da6b8329a669b7712191aea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00607bf87da6b8329a669b7712191aea">&#9670;&nbsp;</a></span>fromProto()</h2>
+<a id="a028c90c48c39454968736c95d2c0ceb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a028c90c48c39454968736c95d2c0ceb9">&#9670;&nbsp;</a></span>fromProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -321,8 +321,14 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a> &amp;&#160;</td>
-          <td class="paramname"><em>auth</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;&#160;</td>
+          <td class="paramname"><em>pd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -361,24 +367,24 @@ template&lt;typename T &gt; </div>
 <p>&amp;(dst-&gt;*(field.memberPtr)) will pass the address of the corresponding value field in dst to the fromProto function.</p>
 <p>the correct specialization of fromProto will be called based on the type of the field memberPtr.</p>
 
-<p class="reference">References <a class="el" href="StructInfo_8h.html#a00607bf87da6b8329a669b7712191aea">catena::common::fromProto()</a>.</p>
+<p class="reference">References <a class="el" href="StructInfo_8h.html#a028c90c48c39454968736c95d2c0ceb9">catena::common::fromProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a00607bf87da6b8329a669b7712191aea_cgraph.svg" width="215" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a028c90c48c39454968736c95d2c0ceb9_cgraph.svg" width="215" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a00607bf87da6b8329a669b7712191aea_icgraph.svg" width="215" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a028c90c48c39454968736c95d2c0ceb9_icgraph.svg" width="215" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
 </div>
 </div>
-<a id="ad5292ff814155acd5c7a9bf7b6dcb086"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad5292ff814155acd5c7a9bf7b6dcb086">&#9670;&nbsp;</a></span>toProto()</h2>
+<a id="a78f6e68869990f230baee7774d764623"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78f6e68869990f230baee7774d764623">&#9670;&nbsp;</a></span>toProto()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -400,8 +406,14 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1AuthzInfo.html">AuthzInfo</a> &amp;&#160;</td>
-          <td class="paramname"><em>auth</em>&#160;</td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;&#160;</td>
+          <td class="paramname"><em>pd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -440,17 +452,17 @@ template&lt;typename T &gt; </div>
 <p>&amp;(src-&gt;*(field.memberPtr)) will pass the address of the corresponding field in src to the toProto function.</p>
 <p>the correct specializtion of toProto will be called based on the type of the field memberPtr.</p>
 
-<p class="reference">References <a class="el" href="StructInfo_8h.html#ad5292ff814155acd5c7a9bf7b6dcb086">catena::common::toProto()</a>.</p>
+<p class="reference">References <a class="el" href="StructInfo_8h.html#a78f6e68869990f230baee7774d764623">catena::common::toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_ad5292ff814155acd5c7a9bf7b6dcb086_cgraph.svg" width="198" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a78f6e68869990f230baee7774d764623_cgraph.svg" width="198" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_ad5292ff814155acd5c7a9bf7b6dcb086_icgraph.svg" width="198" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
+<div class="center"><iframe scrolling="no" frameborder="0" src="StructInfo_8h_a78f6e68869990f230baee7774d764623_icgraph.svg" width="198" height="62"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe>
 </div>
 </div>
 
