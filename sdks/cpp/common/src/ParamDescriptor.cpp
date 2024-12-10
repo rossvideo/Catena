@@ -30,11 +30,12 @@
 
 
 #include <ParamDescriptor.h>
-#include <AuthzInfo.h>  
+#include <Authorization.h>  
+#include <Device.h>
 
 using catena::common::ParamDescriptor;
 
-void ParamDescriptor::toProto(catena::Param &param, AuthzInfo& auth) const {
+void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     param.set_type(type_);
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);
@@ -54,9 +55,8 @@ void ParamDescriptor::toProto(catena::Param &param, AuthzInfo& auth) const {
 
     auto* dstParams = param.mutable_params();
     for (const auto& [oid, subParam] : subParams_) {
-        AuthzInfo subAuth = auth.subParamInfo(oid);
-        if (subAuth.readAuthz()) {
-            subParam->toProto((*dstParams)[oid], subAuth);
+        if (authz.readAuthz(*subParam)) {
+            subParam->toProto((*dstParams)[oid], authz);
         }
     }
 }
@@ -71,12 +71,12 @@ const std::string& ParamDescriptor::name(const std::string& language) const {
     }
 }
 
-const std::string ParamDescriptor::getScope() const {
-      if (!scope_.empty()) {
+const std::string& ParamDescriptor::getScope() const {
+    if (!scope_.empty()) {
         return scope_;
-      } else if (parent_) {
+    } else if (parent_) {
         return parent_->getScope();
-      } else {
+    } else {
         return dev_.get().getDefaultScope();
-      }
     }
+}

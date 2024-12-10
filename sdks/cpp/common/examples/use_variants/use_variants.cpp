@@ -65,7 +65,6 @@ int main() {
     Device::LockGuard lg(dm);
     catena::exception_with_status err{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> ip;
-    std::string scope{"monitor"};
     
     // get the number param
     ip = dm.getParam("/number", err);
@@ -74,12 +73,12 @@ int main() {
         return EXIT_FAILURE;
     }
     catena::Param numberParam;
-    ip->toProto(numberParam, scope);
+    ip->toProto(numberParam, Authorizer::kAuthzDisabled);
     std::cout << numberParam.DebugString() << std::endl;
 
     use_variants::Number& number = getParamValue<use_variants::Number>(ip.get());
     number = "five";
-    ip->toProto(numberParam, scope);
+    ip->toProto(numberParam, Authorizer::kAuthzDisabled);
     std::cout << "Updated Number:\n" << numberParam.DebugString() << std::endl;
 
     // get the coordinates param
@@ -89,7 +88,7 @@ int main() {
         return EXIT_FAILURE;
     }
     catena::Param coordinatesParam;
-    ip->toProto(coordinatesParam, scope);
+    ip->toProto(coordinatesParam, Authorizer::kAuthzDisabled);
     std::cout << coordinatesParam.DebugString() << std::endl;
 
     ip = dm.getParam("/coordinates/2", err);
@@ -121,7 +120,7 @@ int main() {
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    ip->toProto(value, scope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << value.DebugString() << std::endl;
 
     value.set_int32_value(42);
@@ -134,7 +133,7 @@ int main() {
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    ip->toProto(value, scope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << value.DebugString() << std::endl;
     use_variants::Cartesian& cartesian = getParamValue<use_variants::Cartesian>(ip.get());
     std::cout << "Updated Coordinates/0/cartesian: ";

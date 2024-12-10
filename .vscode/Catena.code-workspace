@@ -107,7 +107,11 @@
 			"*.inc": "cpp",
 			"cassert": "cpp",
 			"coroutine": "cpp",
-			"source_location": "cpp"
+			"source_location": "cpp",
+			"*.ipp": "cpp",
+			"cerrno": "cpp",
+			"cfloat": "cpp",
+			"climits": "cpp"
 		}
 	}
 }

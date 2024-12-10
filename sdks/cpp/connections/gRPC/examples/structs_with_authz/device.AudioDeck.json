@@ -3,7 +3,7 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": "operate",
+  "default_scope": "monitor",
   "language_packs": {},
   "params": {
     "eq": {
@@ -12,19 +12,23 @@
       "params": {
         "response": {
           "type": "INT32",
-          "name": { "display_strings": { "en": "Response" } }
+          "name": { "display_strings": { "en": "Response" } },
+          "access_scope": "monitor"
         },
         "frequency": {
           "type": "FLOAT32",
-          "name": { "display_strings": { "en": "Frequency" } }
+          "name": { "display_strings": { "en": "Frequency" } },
+          "access_scope": "operate"
         },
         "gain": {
           "type": "FLOAT32",
-          "name": { "display_strings": { "en": "Gain" } }
+          "name": { "display_strings": { "en": "Gain" } },
+          "access_scope": "configure"
         },
         "q_factor": {
           "type": "FLOAT32",
-          "name": { "display_strings": { "en": "Q Factor" } }
+          "name": { "display_strings": { "en": "Q Factor" } },
+          "access_scope": "administer"
         }
       }
     },

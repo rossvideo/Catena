@@ -42,7 +42,6 @@
 #include <Tags.h>
 #include <IParam.h>
 #include <IConstraint.h>
-#include <Device.h>
 #include <PolyglotText.h>
 
 // meta
@@ -61,7 +60,8 @@
 namespace catena {
 namespace common {
 
-class AuthzInfo; // forward declaration
+class Authorizer; // forward declaration
+class Device; // forward declaration
 
 /**
  * @brief ParamDescriptor provides information about a parameter
@@ -164,18 +164,18 @@ class ParamDescriptor {
     /**
      * @brief get the access scope of the parameter
      */
-    const std::string getScope() const;
+    const std::string& getScope() const;
 
     /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to
-     * @param auth the authorization information
+     * @param authz the authorization information
      * 
      * this function will populate all non-value fields of the protobuf param message 
      * with the information from the ParamDescriptor
      * 
      */
-    void toProto(catena::Param &param, AuthzInfo& auth) const;
+    void toProto(catena::Param &param, Authorizer& authz) const;
 
     /**
      * @brief get the parameter name by language

@@ -47,7 +47,7 @@
 #include <Device.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
-#include <AuthzInfo.h>
+#include <Authorization.h>
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -143,12 +143,11 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to serialize to
      * @param clientScope the client scope
      */
-    catena::exception_with_status toProto(catena::Value& value, std::string& clientScope) const override {
-        AuthzInfo auth(descriptor_, clientScope);
-        if (!auth.readAuthz()) {
+    catena::exception_with_status toProto(catena::Value& value, Authorizer& authz) const override {
+        if (authz.readAuthz(*this)) {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        catena::common::toProto<T>(value, &value_.get(), auth);
+        catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
@@ -158,13 +157,12 @@ class ParamWithValue : public catena::common::IParam {
      * @param param the protobuf value to serialize to
      * @param clientScope the client scope
      */
-    catena::exception_with_status toProto(catena::Param& param, std::string& clientScope) const override {
-        AuthzInfo auth(descriptor_, clientScope);
-        if (!auth.readAuthz()) {
+    catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const override {
+        if (!authz.readAuthz(*this)) {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        descriptor_.toProto(param, auth);        
-        catena::common::toProto<T>(*param.mutable_value(), &value_.get(), auth);
+        descriptor_.toProto(param, authz);        
+        catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
@@ -173,15 +171,14 @@ class ParamWithValue : public catena::common::IParam {
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope
      */
-    catena::exception_with_status fromProto(const catena::Value& value, std::string& clientScope) override {
-        AuthzInfo auth(descriptor_, clientScope);
-        if (!auth.readAuthz()) {
+    catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
+        if (!authz.readAuthz(*this)) {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        if (!auth.writeAuthz()) {
+        if (!authz.writeAuthz(*this)) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
         } else {
-            catena::common::fromProto<T>(value, &value_.get(), auth);
+            catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }
     }
@@ -240,8 +237,8 @@ class ParamWithValue : public catena::common::IParam {
      * @param oid the path to the child parameter
      * @return a unique pointer to the child parameter, or nullptr if it does not exist
      */
-    std::unique_ptr<IParam> getParam(Path& oid, catena::exception_with_status& status) override {
-        return getParam_(oid, value_.get(), status);
+    std::unique_ptr<IParam> getParam(Path& oid, Authorizer& authz, catena::exception_with_status& status) override {
+        return getParam_(oid, value_.get(), authz, status);
     }
 
     /**
@@ -272,7 +269,7 @@ class ParamWithValue : public catena::common::IParam {
      * 
      */
     template <typename U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, Authorizer& authz, catena::exception_with_status& status) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
         status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
@@ -289,7 +286,7 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be an index.
      */
     template<meta::IsVector U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, Authorizer& authz, catena::exception_with_status& status) {
         using ElemType = U::value_type;
         if (!oid.front_is_index()) {
             status = catena::exception_with_status("Expected index in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
@@ -314,7 +311,7 @@ class ParamWithValue : public catena::common::IParam {
         } else {
             if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
                 // The path has more segments, keep recursing
-                return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, status);
+                return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
             } else {
                 // This type is not a CatenaStructArray so it has no sub-params
                 status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -334,7 +331,7 @@ class ParamWithValue : public catena::common::IParam {
      * This function expects the front segment of the oid to be a string.
      */
     template <CatenaStruct U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, Authorizer& authz, catena::exception_with_status& status) {
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
@@ -354,7 +351,7 @@ class ParamWithValue : public catena::common::IParam {
             return ip;
         } else {
             // The path has more segments, keep recursing
-            return ip->getParam(oid, status);
+            return ip->getParam(oid, authz, status);
         }
     }
 
@@ -420,7 +417,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     template <meta::IsVariant U>
-    std::unique_ptr<IParam> getParam_(Path& oid, U& value, catena::exception_with_status& status) {
+    std::unique_ptr<IParam> getParam_(Path& oid, U& value, Authorizer& authz, catena::exception_with_status& status) {
         if (!oid.front_is_string()) {
             status = catena::exception_with_status("Expected string in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
@@ -443,7 +440,7 @@ class ParamWithValue : public catena::common::IParam {
             // The path has more segments, keep recursing
             return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
                 using V = std::decay_t<decltype(arg)>;
-                return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, status);
+                return ParamWithValue<V>(arg, descriptor_.getSubParam(oidStr)).getParam(oid, authz, status);
             }, value);
         }
     }
@@ -467,7 +464,7 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief get the parameter scope
      */
-    const std::string getScope() const override {
+    const std::string& getScope() const override {
         return descriptor_.getScope();
     }
 
