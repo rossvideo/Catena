@@ -7,7 +7,6 @@ var hierarchy =
     [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ],
     [ "catena::common::EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
     [ "catena::patterns::EnumDecorator< E >", "classcatena_1_1patterns_1_1EnumDecorator.html", null ],
-    [ "catena::patterns::EnumDecorator< common::Scopes_e >", "classcatena_1_1patterns_1_1EnumDecorator.html", null ],
     [ "catena::common::FakeLock", "structcatena_1_1common_1_1FakeLock.html", null ],
     [ "std::false_type", null, [
       [ "catena::meta::is_streamable< T, typename >", "structcatena_1_1meta_1_1is__streamable.html", null ],
