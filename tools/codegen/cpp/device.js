@@ -38,7 +38,7 @@ function detailLevelArg(desc) {
  */
 function accessScopesArg(desc) {
     if ("access_scopes" in desc) {
-        return `{${desc.access_scopes.map(scope => `Scope("${scope}")()`).join(', ')}}`;
+        return `{${desc.access_scopes.map(scope => `"${scope}"`).join(', ')}}`;
     } else {
         return `{}`;
     }
@@ -50,9 +50,9 @@ function accessScopesArg(desc) {
  * @returns initializer for default_scope member
  */
 function defaultScopeArg(desc) {
-    let ans = `{}`;
+    let ans = `""`;
     if ("default_scope" in desc) {
-        ans = `Scope("${desc.default_scope}")()`;
+        ans = `"${desc.default_scope}"`;
     }
     return ans;
 }

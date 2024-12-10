@@ -52,14 +52,13 @@ int main() {
         return EXIT_FAILURE;
     }
     catena::Value value;
-    std::string clientScope = "operate";
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "audio_deck: " << value.DebugString() << std::endl;
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
     value.mutable_struct_array_values()->mutable_struct_values()->at(2).mutable_fields()->at("eq_list").mutable_value()->mutable_struct_array_values()->mutable_struct_values()->at(1).mutable_fields()->at("q_factor").mutable_value()->set_float32_value(2.5);
-    ip->fromProto(value, clientScope);
+    ip->fromProto(value, Authorizer::kAuthzDisabled);
 
     ip = dm.getParam("/audio_deck/2", err);
     if (ip == nullptr){
@@ -67,8 +66,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    clientScope = "operate";
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "audio_deck[2]: " << value.DebugString() << std::endl;
 
 
@@ -79,8 +77,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    clientScope = "operate";
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "new audio channel: " << value.DebugString() << std::endl;
 
     ip = dm.getParam("/audio_deck/3/eq_list/0/response", err);
@@ -89,8 +86,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    clientScope = "operate";
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "/audio_deck/1/eq_list/1/response: " << value.DebugString() << std::endl;
 
     ip = dm.getParam("/audio_deck/2/eq_list/1/q_factor", err);
@@ -99,8 +95,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    clientScope = "operate";
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "/audio_deck/2/eq_list/1/q_factor: " << value.DebugString() << std::endl;
 
     return EXIT_SUCCESS;

@@ -39,6 +39,7 @@
  */
 
 // common
+#include <Authorization.h>
 #include <Path.h>
 #include <Enums.h>
 #include <vdk/signals.h>
@@ -88,12 +89,7 @@ class Device {
     /**
      * @brief convenience type aliases to types of objects contained in the device
      */
-    // using Scopes_e = catena::common::Scopes_e;
-    // using Scopes = catena::common::Scopes;
     using DetailLevel_e = catena::Device_DetailLevel;
-    // using DetailLevel = catena::common::DetailLevel;
-    // using IParam = catena::common::IParam;
-    // using Path = catena::common::Path;
 
   public:
     /**
@@ -104,8 +100,8 @@ class Device {
     /**
      * @brief Construct a new Device object
      */
-    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<Scopes> access_scopes,
-      Scopes_e default_scope, bool multi_set_enabled, bool subscriptions)
+    Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
+      std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
 
@@ -138,7 +134,7 @@ class Device {
      */
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
-    inline std::string getDefaultScope() const { return default_scope_.toString(); }
+    inline const std::string& getDefaultScope() const { return default_scope_; }
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -151,7 +147,7 @@ class Device {
      * that the device is not modified while this method is running. This class provides
      * a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, std::vector<std::string>& clientScopes, bool shallow = true) const;
+    void toProto(::catena::Device& dst, Authorizer& authz, bool shallow = true) const;
 
     /**
      * @brief Create a protobuf representation of the language packs.
@@ -292,7 +288,7 @@ class Device {
      * @param shallow if true, the device will be returned in parts, otherwise the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    DeviceSerializer getComponentSerializer(std::vector<std::string>& clientScopes, bool shallow = false) const;
+    DeviceSerializer getComponentSerializer(Authorizer& authz, bool shallow = false) const;
 
     /**
      * @brief add an item to one of the collections owned by the device
@@ -335,18 +331,25 @@ class Device {
     }
 
     /**
-     * @brief get a parameter by oid
+     * @brief get a parameter by oid with authorization
      * @param fqoid the fully qualified oid of the parameter
+     * @param authz the authorizer object
+     * @param status will contain an error message if the parameter does not exist
      * @return a unique pointer to the parameter, or nullptr if it does not exist
+     * 
+     * gets a parameter if it exists and the client is authorized to read it.
      */
-    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status) const;
+    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
+     * @param authz the authorizer object
+     * @param status will contain an error message if the command does not exist
      * @return a unique pointer to the command, or nullptr if it does not exist
+     * @todo add authorization checking
      */
-    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status) const;
+    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
@@ -358,7 +361,7 @@ class Device {
      * Intention is to for SetValue RPCs / API calls to be serviced by this method.
      * @note on success, this method will emit the valueSetByClient signal.
      */
-    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src);
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, Authorizer& authz = Authorizer::kAuthzDisabled);
 
     /**
      * @brief serialize the parameter value to protobuf
@@ -367,7 +370,7 @@ class Device {
      * @return an exception_with_status with status set OK if successful, otherwise an error.
      * Intention is to for GetValue RPCs / API calls to be serviced by this method.
      */
-    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value);
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
   public:
     /**
@@ -382,7 +385,6 @@ class Device {
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
 
-    static const std::vector<std::string> kAuthzDisabled;
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
@@ -391,8 +393,8 @@ class Device {
     std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
-    std::vector<Scopes> access_scopes_;
-    Scopes default_scope_;
+    std::vector<std::string> access_scopes_;
+    std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
     

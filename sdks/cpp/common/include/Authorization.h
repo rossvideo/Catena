@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @file AuthzInfo.h
+ * @file Authorization.h
  * @brief Class for handling authorization information
  * @author John R. Naylor john.naylor@rossvideo.com
  * @author John Danen
@@ -41,6 +41,7 @@
 // common
 #include <Path.h>
 #include <Enums.h>
+#include <IParam.h>
 #include <ParamDescriptor.h>
 
 
@@ -50,64 +51,72 @@ namespace common {
 /**
  * @brief Class for handling authorization information
  */
-class AuthzInfo {
-    using ParamDescriptor = catena::common::ParamDescriptor;
+class Authorizer {
   public:
+    /**
+     * @brief Special Authorizer object that disables authorization
+     */
+    static Authorizer kAuthzDisabled;
 
     /**
-     * @brief Construct a new AuthzInfo object
+     * @brief Construct a new Authorizer object
      * @param pd the ParamDescriptor of the object
      * @param scope the scope of the object
      */
-    AuthzInfo(const ParamDescriptor& pd, const std::string& scope)
-      : pd_{pd}, clientScope_{scope}{}
+    Authorizer(const std::vector<std::string>& clientScopes)
+        : clientScopes_{clientScopes} {}
 
     /**
-     * @brief Destroy the AuthzInfo object
+     * @brief Authorizer does not have copy semantics
      */
-    virtual ~AuthzInfo() = default;
+    Authorizer(const Authorizer&) = delete;
 
     /**
-     * @brief Creates a AuthzInfo object for a sub parameter
-     * @param oid the oid of the sub parameter
-     * @return AuthzInfo the AuthzInfo object for the sub parameter
+     * @brief Authorizer does not have copy semantics
      */
-    AuthzInfo subParamInfo(std::string oid) const {
-        return AuthzInfo(pd_.getSubParam(oid), clientScope_);
-    }
+    Authorizer& operator=(const Authorizer&) = delete;
+
+    /**
+     * @brief Authorizer has move semantics
+     */
+    Authorizer(Authorizer&&) = default;
+
+    /**
+     * @brief Authorizer has move semantics
+     */
+    Authorizer& operator=(Authorizer&&) = default;
+
+    /**
+     * @brief Destroy the Authorizer object
+     */
+    virtual ~Authorizer() = default;
 
     /**
      * @brief Check if the client has read authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz() const {
-        /**
-         * @todo implement readAuthz
-         */
-        return true;
-    }
+    bool readAuthz(const IParam& param) const;
+
+    /**
+     * @brief Check if the client has read authorization
+     * @return true if the client has read authorization
+     */
+    bool readAuthz(const ParamDescriptor& pd) const;
 
     /**
      * @brief Check if the client has write authorization
      * @return true if the client has write authorization
      */
-    bool writeAuthz() const {
-        if (pd_.readOnly()) {
-            return false;
-        }
-        /**
-         * @todo implement writeAuthz
-         */
-        return true;
-    }
+    bool writeAuthz(const IParam& param) const;
 
-    const catena::common::IConstraint* getConstraint() const {
-        return pd_.getConstraint();
-    }
+    /**
+     * @brief Check if the client has write authorization
+     * @return true if the client has write authorization
+     */
+    bool writeAuthz(const ParamDescriptor& pd) const;
 
   private:
-    const ParamDescriptor& pd_;
-    const std::string clientScope_; /**< the scope of the object */
+    const std::vector<std::string>& clientScopes_;
 };
 
 } // namespace common
