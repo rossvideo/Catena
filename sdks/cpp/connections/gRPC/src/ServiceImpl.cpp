@@ -388,7 +388,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                             this->res_.mutable_value()->set_element_index(idx);
 
                             catena::Value* value = this->res_.mutable_value()->mutable_value();
-                            Device::LockGuard lg(dm_);
                             p->toProto(*value, authz);
                             this->hasUpdate_ = true;
                             this->cv_.notify_one();
@@ -398,7 +397,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         this->res_.mutable_value()->set_element_index(idx);
 
                         catena::Value* value = this->res_.mutable_value()->mutable_value();
-                        Device::LockGuard lg(dm_);
                         p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
                         this->hasUpdate_ = true;
                         this->cv_.notify_one();
@@ -423,7 +421,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                             this->res_.mutable_value()->set_element_index(idx);
 
                             catena::Value* value = this->res_.mutable_value()->mutable_value();
-                            Device::LockGuard lg(dm_);
                             p->toProto(*value, authz);
                             this->hasUpdate_ = true;
                             this->cv_.notify_one();
@@ -433,7 +430,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         this->res_.mutable_value()->set_element_index(idx);
 
                         catena::Value* value = this->res_.mutable_value()->mutable_value();
-                        Device::LockGuard lg(dm_);
                         p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
                         this->hasUpdate_ = true;
                         this->cv_.notify_one();

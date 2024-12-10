@@ -144,7 +144,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Value& value, Authorizer& authz) const override {
-        if (authz.readAuthz(*this)) {
+        if (!authz.readAuthz(*this)) {
             return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
         catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
