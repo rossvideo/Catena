@@ -127,6 +127,7 @@ function(set_up_gRPC_targets)
         PLUGIN "protoc-gen-grpc=${_GRPC_CPP_PLUGIN_EXECUTABLE}"
         OUT_VAR output
     )
+    list(APPEND cpp_sources ${output})
 
     # Filter header files from cpp_sources
     set(header_files)
@@ -144,10 +145,10 @@ function(set_up_gRPC_targets)
     )
 
     # install the header files
-    install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${GRPC_TARGET})
+    install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${GRPC_TARGET}/interface)
 
-    # install the library
-    install(TARGETS ${proto_interface}
+    # install the compiled library
+    install(TARGETS ${GRPC_TARGET}
         EXPORT Catena_cppTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

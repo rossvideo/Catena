@@ -102,7 +102,7 @@ function(set_up_proto_targets)
     install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${PROTO_TARGET})
 
     # install the library
-    install(TARGETS ${proto_interface}
+    install(TARGETS ${PROTO_TARGET}
         EXPORT Catena_cppTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
