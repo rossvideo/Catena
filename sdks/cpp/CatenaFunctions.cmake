@@ -73,7 +73,7 @@ function(install_catena_codegen)
     find_program(NPM_EXECUTABLE npm REQUIRED)
     get_filename_component(codegen_dir ${CMAKE_SOURCE_DIR}/../../tools/codegen ABSOLUTE)
     get_filename_component(install_dir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/Catena_cpp ABSOLUTE)
-    file(MAKE_DIRECTORY ${install_dir}/node_modules)
+    install(DIRECTORY DESTINATION ${install_dir}/node_modules)
     install(CODE 
         "message(STATUS \"Installing Catena codegen\")
         execute_process(
