@@ -160,97 +160,42 @@ add_subdirectory("common")
 add_subdirectory("connections")
 
 
-# add_library(${REST_TARGET} STATIC)
+#
+#
+# Package and install the Catena C++ SDK
 
-# # if (REST_enabled)
-# #   preprocess_protobuf_files("${catena_interface_dir}" "${interface_proto_stems}" "${FULL_INTERFACE}" "full")
+include(${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
+install_catena_codegen()
 
-# #   # use the protobuf generate function provided by the protobuf package to make the c++ source files
-# #   protobuf_generate(
-# #     TARGET ${FULL_INTERFACE}
-# #     APPEND_PATH FALSE
-# #     PROTOC_OUT_DIR ${CMAKE_BINARY_DIR}/full/interface
-# #     IMPORT_DIRS ${CMAKE_BINARY_DIR}/full/
-# #     OUT_VAR cpp_sources
-# #   )
+install(
+  EXPORT Catena_cppTargets
+  FILE Catena_cppTargets.cmake
+  NAMESPACE Catena_cpp::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+)
 
-# # endif()
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+  PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR
+)
 
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
 
-# # Filter header files from cpp_sources
-# set(header_files)
-# foreach(file ${cpp_sources})
-#   if(file MATCHES "\\.h$")
-#     list(APPEND header_files ${file})
-#   endif()
-# endforeach()
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
+)
 
-
-
-# target_include_directories(${proto_interface} PUBLIC
-#   $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIRS}>
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-#   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/interface>
-# )
-
-# target_compile_features(${proto_interface} PUBLIC cxx_std_20)
-
-# # install the header files
-# install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/interface)
-
-# # install the library
-# install(TARGETS ${proto_interface}
-#   EXPORT Catena_cppTargets
-#   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-# )
-
-
-# # include the common part of the Catena C++ SDK
-# add_subdirectory("common")
-
-
-# # include the connections part of the Catena C++ SDK
-# # add_subdirectory("connections")
-
-# #
-# #
-# # Package and install the Catena C++ SDK
-
-# install_catena_codegen()
-
-# install(
-#   EXPORT Catena_cppTargets
-#   FILE Catena_cppTargets.cmake
-#   NAMESPACE Catena_cpp::
-#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
-# )
-
-# include(CMakePackageConfigHelpers)
-# configure_package_config_file(
-#   ${CMAKE_CURRENT_SOURCE_DIR}/Catena_cppConfig.cmake.in
-#   ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
-#   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
-#   PATH_VARS CATENA_SCHEMA_JSON CATENA_CODEGEN_INSTALL_DIR CATENA_MODEL
-# )
-
-# write_basic_package_version_file(
-#   ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
-#   VERSION ${PROJECT_VERSION}
-#   COMPATIBILITY AnyNewerVersion
-# )
-
-# install(
-#   FILES
-#     ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfig.cmake
-#     ${CMAKE_CURRENT_BINARY_DIR}/Catena_cppConfigVersion.cmake
-#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Catena_cpp
-# )
-
+#
+#
 # Build the documentation with Doxygen
 build_docs()
-
-# It's cleaner to use the imported targets, so let's do that
-# set(_PROTOBUF_LIBPROTOBUF protobuf::libprotobuf)
-# set(_PROTOBUF_LIBPROTOBUF_LITE protobuf::libprotobuf-lite)
-# set(_REFLECTION gRPC::grpc++_reflection)

@@ -27,17 +27,18 @@ hs_err_pid*
 **/cmake-build-debug
 **/CMakeFiles*
 
+# install test directories
+**/test_install_dir
+
 # clion ide
 /.idea
 
 **/node_modules
 
-<<<<<<< HEAD
 **/cmake-build-debug
 
 # clion ide
 /.idea
-=======
 ### Eclipse ###
 .metadata
 bin/
@@ -70,6 +71,5 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
->>>>>>> develop
 
 package-lock.json
