@@ -51,38 +51,42 @@ var NAVTREE =
       [ "Optionally Install doxygen", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md19", [
         [ "graphviz installation", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md20", null ]
       ] ],
-      [ "Optionally Install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md21", null ],
-      [ "Update node if required", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md22", null ],
-      [ "Install boost libraries if you want to use the REST connection manager", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md23", null ],
-      [ "Initialize git submodules", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md24", null ],
-      [ "Building Catena", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md25", null ]
+      [ "<<<<<<< HEAD", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md21", [
+        [ "Optionally Install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md22", null ],
+        [ "Update node if required", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md23", null ],
+        [ "Install boost libraries if you want to use the REST connection manager", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md24", null ],
+        [ "Initialize git submodules", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md25", null ],
+        [ "Building Catena", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md26", null ],
+        [ "Update node if required", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md27", null ],
+        [ "Building Catena", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_linux_toolchain.html#autotoc_md28", null ]
+      ] ]
     ] ],
     [ "macos Toolchain Installation", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html", [
-      [ "Getting a C++ compiler", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md27", null ],
-      [ "Installing cmake", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md28", null ],
-      [ "Dependencies", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md29", [
-        [ "Install and Build gRPC and Protobufs", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md30", null ],
-        [ "Install homebrew", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md31", null ],
-        [ "Install and Build jwt-cpp", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md32", null ]
+      [ "Getting a C++ compiler", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md30", null ],
+      [ "Installing cmake", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md31", null ],
+      [ "Dependencies", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md32", [
+        [ "Install and Build gRPC and Protobufs", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md33", null ],
+        [ "Install homebrew", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md34", null ],
+        [ "Install and Build jwt-cpp", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md35", null ]
       ] ],
-      [ "Optionally install doxygen", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md33", [
-        [ "graphviz installation", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md34", null ]
+      [ "Optionally install doxygen", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md36", [
+        [ "graphviz installation", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md37", null ]
       ] ],
-      [ "Optionally install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md35", null ],
-      [ "If you're targeting REST, install boost, and asio", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md36", null ]
+      [ "Optionally install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md38", null ],
+      [ "If you're targeting REST, install boost, and asio", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_macos_toolchain.html#autotoc_md39", null ]
     ] ],
     [ "Windows Toolchain Installation (MSVC)", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html", [
-      [ "Getting a C++ compiler", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md38", null ],
-      [ "Installing cmake", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md39", null ],
-      [ "Dependencies", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md40", [
-        [ "Install and Build gRPC and Protobufs", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md41", null ],
-        [ "Install and Build jwt-cpp", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md42", null ],
-        [ "Install boost if using the REST connection manager", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md43", null ]
+      [ "Getting a C++ compiler", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md41", null ],
+      [ "Installing cmake", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md42", null ],
+      [ "Dependencies", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md43", [
+        [ "Install and Build gRPC and Protobufs", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md44", null ],
+        [ "Install and Build jwt-cpp", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md45", null ],
+        [ "Install boost if using the REST connection manager", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md46", null ]
       ] ],
-      [ "Optionally Install doxygen", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md44", [
-        [ "graphviz installation", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md45", null ]
+      [ "Optionally Install doxygen", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md47", [
+        [ "graphviz installation", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md48", null ]
       ] ],
-      [ "Optionally Install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md46", null ]
+      [ "Optionally Install Google Test", "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md49", null ]
     ] ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
@@ -111,7 +115,7 @@ var NAVTREEINDEX =
 [
 "Authorization_8h.html",
 "classcatena_1_1common_1_1MenuGroup.html#a76867b253bafe8c9433c617cc3549c31",
-"structcatena_1_1common_1_1CommandTag.html"
+"md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md49"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
