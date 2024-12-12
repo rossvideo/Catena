@@ -31,6 +31,7 @@ using catena::common::Path;
 #include <fstream>
 #include <vector>
 #include <iterator>
+#include <filesystem>
 
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {
