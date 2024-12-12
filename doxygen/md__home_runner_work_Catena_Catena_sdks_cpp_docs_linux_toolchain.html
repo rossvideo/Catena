@@ -119,53 +119,34 @@ Optionally Install doxygen</h1>
 <h2><a class="anchor" id="autotoc_md20"></a>
 graphviz installation</h2>
 <p>Doxygen can add inheritance diagrams and call trees if the program called <code>dot</code> which is part of graphviz is installed.</p>
-<p><code>sudo apt-get install graphviz</code> </p>
+<p><code>sudo apt-get install graphviz</code></p>
 <h1><a class="anchor" id="autotoc_md21"></a>
-&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</h1>
-<h2><a class="anchor" id="autotoc_md22"></a>
-Optionally Install Google Test</h2>
+Optionally Install Google Test</h1>
 <div class="fragment"><div class="line">sudo apt-get install libgtest-dev</div>
 <div class="line">cd /usr/src/gtest</div>
 <div class="line">sudo cmake CMakeLists.txt</div>
 <div class="line">sudo make</div>
 <div class="line">sudo cp lib/*.a /usr/lib</div>
 </div><!-- fragment --><p>To build without Google Test, empty the build folder and run <code>cmake .. -G Ninja -DUNIT_TESTING=OFF</code></p>
-<h2><a class="anchor" id="autotoc_md23"></a>
-Update node if required</h2>
+<h1><a class="anchor" id="autotoc_md22"></a>
+Update node if required</h1>
 <p>run <code>node -v</code>. If your version of node is below 14 then update it to the latest version with the following commands: </p><div class="fragment"><div class="line">sudo apt-get update</div>
 <div class="line">sudo apt-get install -y nodejs npm</div>
 <div class="line">sudo npm cache clean -f</div>
 <div class="line">sudo npm install -g n</div>
 <div class="line">sudo n stable</div>
 </div><!-- fragment --><p> Restart the terminal and run <code>node -v</code> to check that node successfully updated.</p>
-<h2><a class="anchor" id="autotoc_md24"></a>
-Install boost libraries if you want to use the REST connection manager</h2>
+<h1><a class="anchor" id="autotoc_md23"></a>
+Install boost libraries if you want to use the REST connection manager</h1>
 <div class="fragment"><div class="line">sudo apt update</div>
 <div class="line">sudo apt install libboost-all-dev</div>
 <div class="line">sudo apt install libasio-dev</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md25"></a>
-Initialize git submodules</h2>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md24"></a>
+Initialize git submodules</h1>
 <div class="fragment"><div class="line">cd ~/Catena/sdks/cpp</div>
 <div class="line">git submodule update --init --recursive</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md26"></a>
-Building Catena</h2>
-<div class="fragment"><div class="line">cd ~/Catena/sdks/cpp</div>
-<div class="line">mkdir build</div>
-<div class="line">cd build</div>
-<div class="line">cmake .. -G Ninja \</div>
-<div class="line">    -D CMAKE_BUILD_TYPE=Release   \</div>
-<div class="line">    -D CONNECTIONS=gRPC</div>
-<div class="line">ninja</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md27"></a>
-Update node if required</h2>
-<p>run <code>node -v</code>. If your version of node is below 14 then update it to the latest version with the following commands: </p><div class="fragment"><div class="line">sudo apt-get update</div>
-<div class="line">sudo apt-get install -y nodejs npm</div>
-<div class="line">sudo npm cache clean -f</div>
-<div class="line">sudo npm install -g n</div>
-<div class="line">sudo n stable</div>
-</div><!-- fragment --><p> Restart the terminal and run <code>node -v</code> to check that node successfully updated.</p>
-<h2><a class="anchor" id="autotoc_md28"></a>
-Building Catena</h2>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md25"></a>
+Building Catena</h1>
 <div class="fragment"><div class="line">cd ~/Catena/sdks/cpp</div>
 <div class="line">mkdir build</div>
 <div class="line">cd build</div>
