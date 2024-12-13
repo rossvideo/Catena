@@ -40,7 +40,13 @@ find_program(DOCKER_CMD docker REQUIRED)
 
 # include the make_image function
 include(DockerFunctions.cmake)
-make_image(base .)
+
+# make our base image
+make_image(base . "")
+
+# make the status update image
+make_image(catena_status_update ${CATENA_CPP_ROOT_DIR} "base.hash;status_update")
+
 
 
 

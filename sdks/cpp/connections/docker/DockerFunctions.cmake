@@ -37,19 +37,29 @@
 # . stem: the base name to use this will be used to locate the appropriate
 #   Dockerfile and name the output artifacts
 # . context: path to the source files to COPY into the image
+# . dependencies: list, possibly empty of targets on which the image depends
 #
 # Note that, because the output is a Docker image which cmake CANNOT
 # track as an output, the custom command also writes an output file
 # containing the hash of the image created so dependencies can be 
 # chained to it
 #
-function (make_image stem context)
+function (make_image stem context dependencies)
   # name the artifacts after the stem
   set(image_name "${stem}")
   set(dockerfile "${CMAKE_CURRENT_SOURCE_DIR}/${stem}_dockerfile")
   set(image_hash "${stem}.hash")
 
   message(STATUS "image: ${image_name}, dockerfile: ${dockerfile}, hash: ${image_hash}")
+
+  set(_dependencies ${dockerfile})
+  if(dependencies)
+    list(APPEND _dependencies ${dependencies})
+  endif(dependencies)
+  
+  # suppress deprecation notices about docker build
+  set($ENV{DOCKER_BUILDKIT} 0)
+  
   # custom command to make docker images
   add_custom_command(
     OUTPUT ${image_hash}
@@ -64,8 +74,7 @@ function (make_image stem context)
     # output the hash as a build artifact
     COMMAND ${DOCKER_CMD} inspect --format='{{index .Id}}' ${image_name} > ${image_hash}
 
-    DEPENDS 
-        ${dockerfile}
+    DEPENDS ${_dependencies}
   )
   add_custom_target(${image_name} ALL
     DEPENDS ${image_hash}
