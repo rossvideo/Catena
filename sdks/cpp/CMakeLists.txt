@@ -41,6 +41,12 @@ if (ONLY_DOCS)
   return()
 endif(ONLY_DOCS)
 
+option(DOCKER "Build Docker Images of various services, only works on Linux" OFF)
+# force DOCKER option to be off, if we're not running on Linux
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(DOCKER OFF)
+endif (Linux)
+
 get_filename_component(CODEGEN_DIR "${CATENA_ROOT_DIR}/tools/codegen" ABSOLUTE) 
 get_filename_component(SCHEMA_LOCATION "${CATENA_ROOT_DIR}/schema" ABSOLUTE)
 
