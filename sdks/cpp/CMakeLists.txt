@@ -71,9 +71,12 @@ if (APPLE)
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
   set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
   set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
-  include_directories("$ENV{HOME}/.local/include")
+
   set(CPP_OPTS -E -x c -P)
 endif (APPLE)
+
+# was in if(APPLE) moved here to troublshoot build failure on Ubuntu VM
+include_directories("$ENV{HOME}/.local/include")
 
 # find the c preprocessor and set the options to use with it
 if (APPLE)

@@ -75,14 +75,23 @@ sudo apt install libboost-all-dev
 sudo apt install libasio-dev
 ```
 
-## Initialize git submodules
+alternatively, if you want the minimum of boost...
+```bash
+sudo apt update
+sudo apt install libboost-dev
+sudo apt install libboost-system-dev
+sudo apt install libboost-date-time-dev
+sudo apt install libasio-dev
 ```
+
+## Initialize git submodules
+```bash
 cd ~/Catena/sdks/cpp
 git submodule update --init --recursive
 ```
 
 ## Building Catena
-```
+```bash
 cd ~/Catena/sdks/cpp
 mkdir build
 cd build
