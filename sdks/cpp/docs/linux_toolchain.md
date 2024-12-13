@@ -42,8 +42,6 @@ Doxygen can add inheritance diagrams and call trees if the program called `dot`
 which is part of graphviz is installed.
 
 `sudo apt-get install graphviz`
-<<<<<<< HEAD
-=======
 
 ## Optionally Install Google Test
 
@@ -82,28 +80,6 @@ sudo apt install libasio-dev
 cd ~/Catena/sdks/cpp
 git submodule update --init --recursive
 ```
-
-## Building Catena
-```
-cd ~/Catena/sdks/cpp
-mkdir build
-cd build
-cmake .. -G Ninja \
-	-D CMAKE_BUILD_TYPE=Release   \
-    -D CONNECTIONS=gRPC
-ninja
-```
-
-## Update node if required
-run `node -v`. If your version of node is below 14 then update it to the latest version with the following commands:
-```
-sudo apt-get update
-sudo apt-get install -y nodejs npm
-sudo npm cache clean -f
-sudo npm install -g n
-sudo n stable
-```
-Restart the terminal and run `node -v` to check that node successfully  updated.
 
 ## Building Catena
 ```
