@@ -30,6 +30,7 @@ if (REST_enabled)
     add_subdirectory("REST")
 endif()
 
-#if (gRPC_enabled OR REST_enabled)
-    add_subdirectory("docker")
-#endif()
+# optionally make docker images
+if (DOCKER)
+  add_subdirectory("docker")
+endif()
