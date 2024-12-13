@@ -87,20 +87,20 @@ $(document).ready(function(){initNavTree('md__home_runner_work_Catena_Catena_sdk
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>This toolchain installation has been verified on x64 Windows 10.</p>
-<h1><a class="anchor" id="autotoc_md41"></a>
+<h1><a class="anchor" id="autotoc_md38"></a>
 Getting a C++ compiler</h1>
 <ol type="1">
 <li>Install <a href="https://visualstudio.microsoft.com/downloads/">Visual Studio build tools</a> for C++ dev</li>
 <li>(Optional) Add msbuild to path. Usually under <code>ProgramFiles%\Microsoft Visual Studio\&lt;YEAR&gt;\&lt;YOUR_VS_EDITION&gt;\MSBuild\Current\Bin</code></li>
 </ol>
-<h1><a class="anchor" id="autotoc_md42"></a>
+<h1><a class="anchor" id="autotoc_md39"></a>
 Installing cmake</h1>
 <ul>
 <li>Install <a href="https://cmake.org/download/">cmake</a></li>
 </ul>
-<h1><a class="anchor" id="autotoc_md43"></a>
+<h1><a class="anchor" id="autotoc_md40"></a>
 Dependencies</h1>
-<h2><a class="anchor" id="autotoc_md44"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 Install and Build gRPC and Protobufs</h2>
 <ol type="1">
 <li>Install <a href="https://vcpkg.io/en/getting-started">vcpkg</a></li>
@@ -110,7 +110,7 @@ Install and Build gRPC and Protobufs</h2>
 <div class="line">vcpkg integrate install</div>
 </div><!-- fragment --></li>
 </ol>
-<h2><a class="anchor" id="autotoc_md45"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 Install and Build jwt-cpp</h2>
 <ol type="1">
 <li>Install full openSSL from <a href="https://slproweb.com/products/Win32OpenSSL.html">here</a></li>
@@ -124,21 +124,21 @@ Install and Build jwt-cpp</h2>
 <p>___ </p><blockquote class="doxtable">
 <p>After installing the dependencies above you will have to add <code>-DCMAKE_TOOLCHAIN_FILE=&lt;vcpkg_install&gt;/scripts/buildsystems/vcpkg.cmake -DCMAKE_PREFIX_PATH=&lt;jwt-cpp-install&gt;/build</code> to cmake options in your build environment </p>
 </blockquote>
-<h2><a class="anchor" id="autotoc_md46"></a>
+<h2><a class="anchor" id="autotoc_md43"></a>
 Install boost if using the REST connection manager</h2>
 <div class="fragment"><div class="line">.\vcpkg.exe install boost</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md47"></a>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md44"></a>
 Optionally Install doxygen</h1>
 <ul>
 <li>Install <a href="https://www.doxygen.nl/download.html">doxygen</a></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md48"></a>
+<h2><a class="anchor" id="autotoc_md45"></a>
 graphviz installation</h2>
 <p>Doxygen can add inheritance diagrams and call trees if the program called <code>dot</code> which is part of graphviz is installed.</p>
 <ul>
 <li>Install <a href="https://graphviz.org/download/">graphviz</a> (add to path during installation)</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md49"></a>
+<h1><a class="anchor" id="autotoc_md46"></a>
 Optionally Install Google Test</h1>
 <ol type="1">
 <li>Download the library ZIP file from the <a href="https://github.com/google/googletest/tree/release-1.10.0">Github repo</a>. Extract the ZIP file to a directory on your computer.</li>
