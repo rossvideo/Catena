@@ -65,6 +65,11 @@ jobs:
           PATCH=$((PATCH + 1))
           NEW_VERSION="cpp-$MAJOR.$MINOR.$PATCH"
 
+          # Get the commit count
+          COMMIT_COUNT=$(git rev-list --count $(git describe --tags --match "cpp-*" --abbrev=0)..main)
+          echo "Commit count: $COMMIT_COUNT"
+
+
           # Save the new version number
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "Generated new version number: $NEW_VERSION"
