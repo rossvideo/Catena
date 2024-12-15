@@ -28,6 +28,7 @@ set(sources
     "src/utils.cpp" 
     "src/vdk/signals.cpp" 
     "src/Path.cpp"
+    "src/Authorization.cpp"
     "src/Device.cpp"
     "src/ParamDescriptor.cpp"
     "src/StructInfo.cpp"

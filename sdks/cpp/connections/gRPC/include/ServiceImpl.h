@@ -31,6 +31,7 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <Device.h>
+#include <Authorization.h>
 
 // gRPC interface
 #include <interface/service.grpc.pb.h>
@@ -92,13 +93,15 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     ServerCompletionQueue* cq_;
     Device &dm_;
     std::string& EOPath_;
-    bool authz_;
+    bool authorizationEnabled_;
 
   public:
 
     void registerItem(CallData *cd);
 
     void deregisterItem(CallData *cd);
+
+    inline bool authorizationEnabled() const { return authorizationEnabled_; }
 
     class GetPopulatedSlots : public CallData{
         public:
@@ -178,7 +181,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         Device &dm_;
         std::mutex mtx_;
         std::condition_variable cv_;
-        std::vector<std::string> clientScopes_;
         bool hasUpdate_{false};
         int objectId_;
         static int objectCounter_;
@@ -202,6 +204,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         CatenaServiceImpl *service_;
         ServerContext context_;
         std::vector<std::string> clientScopes_;
+        std::unique_ptr<catena::common::Authorizer> authz_ = nullptr;
         catena::DeviceRequestPayload req_;
         ServerAsyncWriter<catena::DeviceComponent> writer_;
         std::optional<Device::DeviceSerializer> serializer_ = std::nullopt; //Can't create serializer until we have client scopes

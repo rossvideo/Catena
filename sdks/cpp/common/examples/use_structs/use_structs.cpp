@@ -63,14 +63,13 @@ int main() {
               << "' " << loc.longitude.seconds << "\")" << std::endl;
 
     catena::Value value;
-    std::string clientScope = "operate";
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "Location: " << value.DebugString() << std::endl;
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
     value.mutable_struct_value()->mutable_fields()->at("latitude").mutable_value()->mutable_struct_value()->mutable_fields()->at("degrees").mutable_value()->set_float32_value(100);
-    ip->fromProto(value, clientScope);
+    ip->fromProto(value, Authorizer::kAuthzDisabled);
 
     std::cout << "New Location: lat(" << loc.latitude.degrees << "˚ " << loc.latitude.minutes << "' "
               << loc.latitude.seconds << "\") lon(" << loc.longitude.degrees << "˚ " << loc.longitude.minutes
@@ -82,7 +81,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "Latitude: " << value.DebugString() << std::endl;
 
     ip = dm.getParam("/location/latitude/degrees", err);
@@ -91,7 +90,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "Latitude degrees: " << value.DebugString() << std::endl;
 
     ip = dm.getParam("/location/longitude/seconds", err);
@@ -100,7 +99,7 @@ int main() {
         return EXIT_FAILURE;
     }
     value.Clear();
-    ip->toProto(value, clientScope);
+    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "Longitude seconds: " << value.DebugString() << std::endl;
 
     return EXIT_SUCCESS;

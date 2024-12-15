@@ -3,9 +3,6 @@
 		{
 			"path": ".."
 		},
-		{
-			"path": "../sdks/cpp"
-		}
 	],
 	"settings": {
 		"json.validate.enable": true,
@@ -105,13 +102,7 @@
 			"scoped_allocator": "cpp",
 			"shared_mutex": "cpp",
 			"*.inc": "cpp",
-			"cassert": "cpp",
-			"coroutine": "cpp",
-			"source_location": "cpp",
-			"*.ipp": "cpp",
-			"cerrno": "cpp",
-			"cfloat": "cpp",
-			"climits": "cpp"
+			"cassert": "cpp"
 		}
 	}
 }
