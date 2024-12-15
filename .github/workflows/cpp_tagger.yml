@@ -51,7 +51,7 @@ jobs:
       # Step 2: Generate new version number
       - name: Generate new version number
         # avoid infinite loop when we push the new version file to main at the end of the workflow
-        if: ${{ !contains(github.event.head_commit.message, 'Update VERSION.txt') }}
+        # if: ${{ !contains(github.event.head_commit.message, 'Update VERSION.txt') }}
         run: |
           # Get the latest tag or default to "cpp-v0.0.0"
           TAG=$(git describe --tags --match "cpp-*" --abbrev=0 2>/dev/null || echo "cpp-v0.0.0")
