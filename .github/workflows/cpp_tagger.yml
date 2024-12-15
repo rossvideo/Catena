@@ -34,7 +34,6 @@ on:
   push:
     branches:
       - main
-      - feat-#339-jrn
     paths:
       - 'sdks/cpp/**'
       - '.github/workflows/cpp_tagger.yml'
@@ -74,7 +73,7 @@ jobs:
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "Generated new version number: $NEW_VERSION"
 
-      # Step 3: Update the version number in the repository
+      # Step 3: Update the version number in the repository and tag it
       - name: Update the version number in the repository
         run: |
           # Update the version number in the VERSION.txt file
@@ -85,6 +84,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git add sdks/cpp/VERSION.txt
 
+          # tag the repo with the new version number
+          git tag -a $VERSION -m "Version $VERSION"
+
           # this needs to match exactly the condition in the "Generate new version number" step
           git commit -m "Update VERSION.txt"
-          git push origin feat-#339-jrn
+          git push origin main --tags
