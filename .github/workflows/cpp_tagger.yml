@@ -66,7 +66,7 @@ jobs:
           NEW_VERSION="cpp-$MAJOR.$MINOR.$PATCH"
 
           # Save the new version number
-          echo "VERSION=NEW_VERSION" >> $GITHUB_ENV
+          echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "Generated new version number: $NEW_VERSION"
 
       # Step 3: Update the version number in the repository
@@ -79,7 +79,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add sdks/cpp/VERSION.txt
-          
+
           # this needs to match exactly the condition in the "Generate new version number" step
           git commit -m "Update VERSION.txt"
           git push origin feat-#339-jrn
