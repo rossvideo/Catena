@@ -40,25 +40,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-  steps:
-    # Check out the repository
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
     
-    # Generate new version number
-    - name: Generate new version number
-      run: |
-        # Get the latest tag or default to "v0.0.0"
-        TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+      # Step 2: Generate new version number
+      - name: Generate new version number
+        run: |
+          # Get the latest tag or default to "v0.0.0"
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
 
-        # Decompose the tag into its components
-        VERSION=${TAG#v}
-        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          # Decompose the tag into its components
+          VERSION=${TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
 
-        # Increment the patch number
-        PATCH=$((PATCH + 1))
-        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          # Increment the patch number
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 
-        # Save the new version number
-        echo "VERSION=NEW_VERSION" >> $GITHUB_ENV
-        echo "Generated new version number: $NEW_VERSION"
+          # Save the new version number
+          echo "VERSION=NEW_VERSION" >> $GITHUB_ENV
+          echo "Generated new version number: $NEW_VERSION"
