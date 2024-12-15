@@ -37,6 +37,7 @@ on:
       - feat-#339-jrn
     paths:
       - 'sdks/cpp/**'
+      - '.github/workflows/cpp_tagger.yml'
 
 jobs:
   build:
