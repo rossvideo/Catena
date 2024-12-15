@@ -85,10 +85,20 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add sdks/cpp/VERSION.txt
+          
+          # check if there are any changes to commit
+          if ! git diff --cached --quiet; then
+            # tag the repo with the new version number
+            git tag -a $VERSION -m "Version $VERSION"
 
+            # tag the repo with the new version number
+            git tag -a $VERSION -m "Version $VERSION"
+
+            # this needs to match exactly the condition in the "Generate new version number" step
+            git commit -m "Update VERSION.txt"
+            git push origin main --tags
+          else
+            echo "No changes to commit"
+          fi
           # tag the repo with the new version number
           git tag -a $VERSION -m "Version $VERSION"
-
-          # this needs to match exactly the condition in the "Generate new version number" step
-          git commit -m "Update VERSION.txt"
-          git push origin main --tags
