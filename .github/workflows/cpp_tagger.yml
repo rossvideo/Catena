@@ -75,13 +75,10 @@ jobs:
           echo "Generated new version number: $NEW_VERSION"
 
       # Step 3: push the changes to a new branch
-      - name: Update the version number in the repository
-        run: |
-          # Update the version number in the VERSION.txt file
+          # tag the repo with the new version number
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          echo $VERSION > sdks/cpp/VERSION.txt
-          git add sdks/cpp/VERSION.txt
+          git tag -a $VERSION -m "Version $VERSION"
           git commit -m "Update VERSION.txt"
 
       # Step 4: Push the changes to a version update branch and create a PR
@@ -104,4 +101,3 @@ jobs:
         title: Update the C++ SDK version
         body: |
           This PR updates the C++ SDK version to $VERSION
- 
