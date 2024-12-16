@@ -35,7 +35,7 @@
       "menus": {
         "page_1": {
             "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
-          "param_oids": ["/counter", "/hello"]
+          "param_oids": ["/product/name", "/product/vendor", "/product/version", "/product/serial_number", "/product/catena_sdk", "/product/catena_sdk_version"]
         },
         "page_2": {
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" } },
@@ -58,6 +58,9 @@
     }
   },
   "params": {
+    "product": {
+      "import": {"file": "params/param.product.json"}
+    },
     "counter": {
       "type": "INT32",
       "name": { "display_strings": { "en": "Counter", "es": "Contador", "fr": "Compteur" } },

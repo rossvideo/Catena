@@ -47,6 +47,9 @@ make_image(base . "")
 # make the status update image
 make_image(catena_status_update ${CATENA_CPP_ROOT_DIR} "base.hash;status_update")
 
+# make the use menus image
+make_image(catena_use_menus ${CATENA_CPP_ROOT_DIR} "base.hash;use_menus")
+
 
 
 
