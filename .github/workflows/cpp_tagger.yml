@@ -95,23 +95,31 @@ jobs:
           git show --stat
           git push origin update-version-$VERSION
           echo "check changes made it to the origin"
+
+      # Step 5: wait for the changes to be available
+      - name: Wait for the changes to be available
+        run: sleep 10
+
+      # Step 6: Check the changes
+      - name: Check the changes
+        run: |
           git fetch origin
           git checkout origin/update-version-$VERSION
           cat sdks/cpp/VERSION.txt
       
       # Step 5: Create a PR
-      # - name: Create a PR
-      #   uses: peter-evans/create-pull-request@v5
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     commit-message: Update the C++ SDK version
-      #     title: Update the C++ SDK version
-      #     body: |
-      #       This PR updates the C++ SDK version to $VERSION
-      #     branch: update-version-${{ env.VERSION }}
-      #     delete-branch: false
-      #     labels: version-update
-      #     base: main
+      - name: Create a PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update the C++ SDK version
+          title: Update the C++ SDK version
+          body: |
+            This PR updates the C++ SDK version to $VERSION
+          branch: update-version-${{ env.VERSION }}
+          delete-branch: false
+          labels: version-update
+          base: main
 
 
 
