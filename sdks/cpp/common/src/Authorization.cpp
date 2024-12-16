@@ -51,7 +51,7 @@ bool Authorizer::readAuthz(const IParam& param) const {
     }
 
     const std::string& scope = param.getScope();
-    if (std::find(clientScopes_.begin(), clientScopes_.end(), scope) == clientScopes_.end()) {
+    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
         return false;
     }
     return true;
@@ -63,7 +63,7 @@ bool Authorizer::readAuthz(const ParamDescriptor& pd) const {
     }
 
     const std::string& scope = pd.getScope();
-    if (std::find(clientScopes_.begin(), clientScopes_.end(), scope) == clientScopes_.end()) {
+    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
         return false;
     }
     return true;
@@ -83,7 +83,7 @@ bool Authorizer::writeAuthz(const IParam& param) const {
     }
 
     const std::string scope = param.getScope() + ":w";
-    if (std::find(clientScopes_.begin(), clientScopes_.end(), scope) == clientScopes_.end()) {
+    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
         return false;
     }
     return true;
@@ -99,7 +99,7 @@ bool Authorizer::writeAuthz(const ParamDescriptor& pd) const {
     }
 
     const std::string scope = pd.getScope() + ":w";
-    if (std::find(clientScopes_.begin(), clientScopes_.end(), scope) == clientScopes_.end()) {
+    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
         return false;
     }
     return true;
