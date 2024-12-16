@@ -88,6 +88,8 @@ jobs:
           git add sdks/cpp/VERSION.txt
           git commit -m "Update the C++ SDK version to $VERSION"
           git push origin update-version-$VERSION
+          git checkout main
+          git pull origin main
       
       # Step 5: Create a PR
       - name: Create a PR
