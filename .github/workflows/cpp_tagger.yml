@@ -95,11 +95,8 @@ jobs:
           title: Update the C++ SDK version
           body: |
             This PR updates the C++ SDK version to $VERSION
-          branch: update-version-     # Step 4: Push the changes to a version update branch and create a PR
-      - name: Push the changes to a version update branch
-        run: |
-          git branch -M update-version
-          git push origin update-version
+          branch: update-version-$VERSION
+          delete-branch: true
       
       # Step 5: Create a PR
       - name: Create a PR
