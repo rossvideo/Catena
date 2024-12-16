@@ -83,13 +83,14 @@ jobs:
       # Step 4: Push the changes to a version update branch and create a PR
       - name: Push the changes to a version update branch
         run: |
+          git checkout main
+          git pull origin main
           git checkout -b update-version-$VERSION
           echo $VERSION > sdks/cpp/VERSION.txt
           git add sdks/cpp/VERSION.txt
           git commit -m "Update the C++ SDK version to $VERSION"
           git push origin update-version-$VERSION
-          git checkout main
-          git pull origin main
+
       
       # Step 5: Create a PR
       - name: Create a PR
