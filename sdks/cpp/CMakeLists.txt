@@ -28,8 +28,22 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment ver
 
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
+# set up the CATENA_CPP_ROOT_DIR variable for use in the rest of the build
 get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+# set up the CATENA_CPP_VERSION and CATENA_CPP_TIMESTAMP variables for use
+# in the rest of the build.
+# The format of the version string is "cpp-vX.Y.Z-0-<timestamp>"
+# We want to extract the version number and the timestamp.
+file(READ ${CATENA_CPP_ROOT_DIR}/VERSION.txt VERSION_STRING)
+string(STRIP ${VERSION_STRING} VERSION_STRING) # strip any whitespace
+string(FIND "${VERSION_STRING}" "-" SPLIT_AT REVERSE)
+string(SUBSTRING "${VERSION_STRING}" 0 ${SPLIT_AT} CATENA_CPP_VERSION)
+math(EXPR TIMESTAMP_START "${SPLIT_AT} + 1")
+string(SUBSTRING "${VERSION_STRING}" ${TIMESTAMP_START} -1 CATENA_CPP_TIMESTAMP)
+message(STATUS "Catena C++ SDK version: ${CATENA_CPP_VERSION}")
+message(STATUS "Catena C++ SDK timestamp: ${CATENA_CPP_TIMESTAMP}")
 
 # pull in Catena build functions
 include(${CATENA_CPP_ROOT_DIR}/CatenaFunctions.cmake)
@@ -90,6 +104,10 @@ include_directories("$ENV{HOME}/.local/include")
 # find the c preprocessor and set the options to use with it
 if (APPLE)
   set(CPP clang)
+
+  # clang complains (a lot!) about braced scalar initialization, so disable that warning
+  add_compile_options(-Wno-braced-scalar-init)
+
   set(cpp_opts -E -P -x c)
 else()
   find_program(CPP cpp)
