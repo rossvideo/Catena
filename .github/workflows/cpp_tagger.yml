@@ -73,7 +73,7 @@ jobs:
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "Generated new version number: $NEW_VERSION"
       
-      # Step 3: push the changes to a new branch
+      # Step 3: Tag the repository with the new version number
       - name: Tag the repository with the new version number
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
