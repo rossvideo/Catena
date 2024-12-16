@@ -101,7 +101,7 @@ jobs:
           body: |
             This PR updates the C++ SDK version to $VERSION
           branch: update-version-${{ env.VERSION }}
-          delete-branch: true
+          delete-branch: false
           labels: version-update
           base: main
 
