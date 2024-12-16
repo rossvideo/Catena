@@ -52,7 +52,6 @@ jobs:
     
       # Step 2: Generate new version number
       - name: Generate new version number
-        # avoid infinite loop when we push the new version file to main at the end of the workflow
         run: |
           # Get the latest tag or default to "cpp-v0.0.0"
           TAG=$(git describe --tags --match "cpp-*" --abbrev=0 2>/dev/null || echo "cpp-v0.0.0")
@@ -73,9 +72,10 @@ jobs:
           # Save the new version number
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "Generated new version number: $NEW_VERSION"
-
+      
       # Step 3: push the changes to a new branch
-          # tag the repo with the new version number
+      - name: Tag the repository with the new version number
+        run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git tag -a $VERSION -m "Version $VERSION"
@@ -83,21 +83,19 @@ jobs:
 
       # Step 4: Push the changes to a version update branch and create a PR
       - name: Push the changes to a version update branch
-      run: |
-        git branch -M update-version
-        git push origin update-version
+        run: |
+          git branch -M update-version
+          git push origin update-version
       
       # Step 5: Create a PR
-      -name: Create a PR
-      uses: peter-evans/create-pull-request@v5
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: Update the C++ SDK version
-        title: Update the C++ SDK version
-        body: |
-          This PR updates the C++ SDK version to $VERSION
-        branch: update-version
-        delete-branch: true
-        title: Update the C++ SDK version
-        body: |
-          This PR updates the C++ SDK version to $VERSION
+      - name: Create a PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update the C++ SDK version
+          title: Update the C++ SDK version
+          body: |
+            This PR updates the C++ SDK version to $VERSION
+          branch: update-version
+          delete-branch: true
+
