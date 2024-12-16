@@ -106,6 +106,7 @@ jobs:
           git fetch origin
           git checkout origin/update-version-$VERSION
           cat sdks/cpp/VERSION.txt
+          git checkout update-version-$VERSION
       
       # Step 5: Create a PR
       - name: Create a PR
