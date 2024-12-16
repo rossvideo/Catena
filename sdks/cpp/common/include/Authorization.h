@@ -44,6 +44,8 @@
 #include <IParam.h>
 #include <ParamDescriptor.h>
 
+#include <functional>
+
 
 namespace catena {
 namespace common {
@@ -52,6 +54,11 @@ namespace common {
  * @brief Class for handling authorization information
  */
 class Authorizer {
+  public:
+    /**
+     * @brief The scopes of the object
+     */
+    using Scopes = std::vector<std::string>;
   public:
     /**
      * @brief Special Authorizer object that disables authorization
@@ -63,7 +70,7 @@ class Authorizer {
      * @param pd the ParamDescriptor of the object
      * @param scope the scope of the object
      */
-    Authorizer(const std::vector<std::string>& clientScopes)
+    Authorizer(std::vector<std::string>& clientScopes)
         : clientScopes_{clientScopes} {}
 
     /**
@@ -116,7 +123,7 @@ class Authorizer {
     bool writeAuthz(const ParamDescriptor& pd) const;
 
   private:
-    const std::vector<std::string>& clientScopes_;
+    std::reference_wrapper<Scopes> clientScopes_;
 };
 
 } // namespace common
