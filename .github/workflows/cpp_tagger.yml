@@ -86,7 +86,7 @@ jobs:
           git checkout main
           git pull origin main
           git checkout -b update-version-$VERSION
-          echo $VERSION > sdks/cpp/VERSION.txt
+          echo "$VERSION-$(date +%s)" > sdks/cpp/VERSION.txt
           git add sdks/cpp/VERSION.txt
           git commit -m "Update the C++ SDK version to $VERSION"
           git push origin update-version-$VERSION
