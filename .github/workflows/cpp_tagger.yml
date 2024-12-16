@@ -98,7 +98,7 @@ jobs:
           title: Update the C++ SDK version
           body: |
             This PR updates the C++ SDK version to $VERSION
-          branch: update-version-$VERSION
+          branch: update-version-${{ env.VERSION }}
           delete-branch: true
 
 
