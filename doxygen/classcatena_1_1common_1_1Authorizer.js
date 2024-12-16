@@ -1,6 +1,7 @@
 var classcatena_1_1common_1_1Authorizer =
 [
-    [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#a6b27835f542a05b009417c3ce8596088", null ],
+    [ "Scopes", "classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda", null ],
+    [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#ae23b19795897a36212e22e5d404f9392", null ],
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#a2267ed3de4f1a48fbef629a7fbb0c20e", null ],
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html#a7d76a2fb34559e3782dc84678462e67d", null ],
     [ "~Authorizer", "classcatena_1_1common_1_1Authorizer.html#a09c54e470cc936a3fad2e2bef92ca384", null ],

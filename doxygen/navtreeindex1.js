@@ -1,5 +1,6 @@
 var NAVTREEINDEX1 =
 {
+"classcatena_1_1common_1_1MenuGroup.html#a3510177a085fdfa4b596d1a2dba4236f":[7,0,0,0,11,5],
 "classcatena_1_1common_1_1MenuGroup.html#a76867b253bafe8c9433c617cc3549c31":[7,0,0,0,11,6],
 "classcatena_1_1common_1_1MenuGroup.html#a79cdc6baf58452027f9633dc8b304555":[7,0,0,0,11,1],
 "classcatena_1_1common_1_1MenuGroup.html#a8cccf3ab386eb8518d7f7ea6563133a9":[7,0,0,0,11,3],
@@ -201,8 +202,8 @@ var NAVTREEINDEX1 =
 "globals_defs.html":[8,1,1],
 "hello_world_8cpp-example.html":[9,0],
 "hierarchy.html":[7,2],
-"index.html":[0],
 "index.html":[],
+"index.html":[0],
 "index.html#autotoc_md1":[0,0],
 "md__home_runner_work_Catena_Catena_sdks_cpp_docs_cross_compiling.html":[1],
 "md__home_runner_work_Catena_Catena_sdks_cpp_docs_cross_compiling.html#autotoc_md4":[1,0],
@@ -248,6 +249,5 @@ var NAVTREEINDEX1 =
 "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md44":[5,3],
 "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md45":[5,3,0],
 "md__home_runner_work_Catena_Catena_sdks_cpp_docs_windows_toolchain.html#autotoc_md46":[5,4],
-"pages.html":[],
-"path_8cpp-example.html":[9,2]
+"pages.html":[]
 };
