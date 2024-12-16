@@ -87,9 +87,17 @@ jobs:
           git pull origin main
           git checkout -b update-version-$VERSION
           echo "$VERSION-$(date +%s)" > sdks/cpp/VERSION.txt
+          echo "check changes happened locally"
+          cat sdks/cpp/VERSION.txt
           git add sdks/cpp/VERSION.txt
+          git status
           git commit -m "Update the C++ SDK version to $VERSION"
+          git show --stat
           git push origin update-version-$VERSION
+          echo "check changes made it to the origin"
+          git fetch origin
+          git checkout origin/update-version-$VERSION
+          cat sdks/cpp/VERSION.txt
       
       # Step 5: Create a PR
       - name: Create a PR
