@@ -49,8 +49,16 @@ jobs:
       # Step 1: Check out the repository
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Step 2: Check if this is an automated commit and bail early
+      - name: Check if this is an automated commit
+        run: |
+          if [[ $(git log -1 --pretty=%B) == *"[bot]"* ]]; then
+            echo "This is an automated commit, skipping the version update."
+            exit 0
+          fi
     
-      # Step 2: Generate new version number
+      # Step 3: Generate new version number
       - name: Generate new version number
         run: |
           # Get the latest tag or default to "cpp-v0.0.0"
@@ -73,7 +81,7 @@ jobs:
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
           echo "Generated new version number: $NEW_VERSION"
       
-      # Step 3: Tag the repository with the new version number
+      # Step 4: Tag the repository with the new version number
       - name: Tag the repository with the new version number
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -86,7 +94,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Update the C++ SDK version
+          commit-message: Update the C++ SDK version [bot]
           title: Update the C++ SDK version
           body: |
             This PR updates the C++ SDK version to $VERSION
