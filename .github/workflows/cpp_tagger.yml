@@ -79,34 +79,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git tag -a $VERSION -m "Version $VERSION"
-
-      # Step 4: Push the changes to a version update branch and create a PR
-      - name: Push the changes to a version update branch
-        run: |
-          git checkout main
-          git pull origin main
-          git checkout -b update-version-$VERSION
           echo "$VERSION-$(date +%s)" > sdks/cpp/VERSION.txt
-          echo "check changes happened locally"
-          cat sdks/cpp/VERSION.txt
-          git add sdks/cpp/VERSION.txt
-          git status
-          git commit -m "Update the C++ SDK version to $VERSION"
-          git show --stat
-          git push origin update-version-$VERSION
-          echo "check changes made it to the origin"
-
-      # Step 5: wait for the changes to be available
-      - name: Wait for the changes to be available
-        run: sleep 60
-
-      # Step 6: Check the changes
-      - name: Check the changes
-        run: |
-          git fetch origin
-          git checkout origin/update-version-$VERSION
-          cat sdks/cpp/VERSION.txt
-          git checkout update-version-$VERSION
       
       # Step 5: Create a PR
       - name: Create a PR
