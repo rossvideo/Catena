@@ -98,7 +98,7 @@ jobs:
 
       # Step 5: wait for the changes to be available
       - name: Wait for the changes to be available
-        run: sleep 10
+        run: sleep 60
 
       # Step 6: Check the changes
       - name: Check the changes
