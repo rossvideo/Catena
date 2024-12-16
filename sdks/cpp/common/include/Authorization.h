@@ -70,7 +70,7 @@ class Authorizer {
      * @param pd the ParamDescriptor of the object
      * @param scope the scope of the object
      */
-    Authorizer(std::vector<std::string>& clientScopes)
+    Authorizer(const Scopes& clientScopes)
         : clientScopes_{clientScopes} {}
 
     /**
@@ -123,7 +123,7 @@ class Authorizer {
     bool writeAuthz(const ParamDescriptor& pd) const;
 
   private:
-    std::reference_wrapper<Scopes> clientScopes_;
+    std::reference_wrapper<const Scopes> clientScopes_;
 };
 
 } // namespace common

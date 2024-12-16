@@ -36,7 +36,7 @@
 using catena::common::Authorizer;
 
 // placeholder for disabled authorization
-static std::vector<std::string> kAuthzDisabledScope = {""};
+static const std::vector<std::string> kAuthzDisabledScope = {""};
 
 // initialize the disabled authorization object
 Authorizer Authorizer::kAuthzDisabled = {kAuthzDisabledScope};
