@@ -34,8 +34,8 @@
       "name": { "display_strings": { "en": "status", "es": "estado", "fr": "statut" } },
       "menus": {
         "page_1": {
-            "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
-          "param_oids": ["/product/name", "/product/vendor", "/product/version", "/product/serial_number", "/product/catena_sdk", "/product/catena_sdk_version"]
+          "name": { "display_strings": { "en": "Page 1", "es": "Página 1", "fr": "Page 1" } },
+          "param_oids": ["/product"]
         },
         "page_2": {
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" } },
@@ -52,7 +52,7 @@
         },
         "page_2": {
           "name": { "display_strings": { "en": "Page 2", "es": "Página 2", "fr": "Page 2" }},
-          "param_oids": ["/offset", "/button", "/counter"]
+          "param_oids": ["/offset", "/button", "/inline_button", "/counter"]
         }
       }
     }
@@ -76,8 +76,23 @@
       "type": "INT32",
       "name": { "display_strings": { "en": "Button", "es": "Botón", "fr": "Bouton" } },
       "value": { "int32_value": 0 },
-      "widget": "button",
+      "widget": "toggle",
       "constraint": { "ref_oid": "basic_button" }
+    },
+    "inline_button": {
+      "type": "INT32",
+      "name": { "display_strings": { "en": "Inline Button", "es": "Botón en línea", "fr": "Bouton en ligne" } },
+      "value": { "int32_value": 0 },
+      "widget": "toggle",
+      "constraint": {
+        "type": "INT_CHOICE",
+        "int32_choice": {
+          "choices": [
+            {  "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },  "value": 0 },
+            {  "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } }, "value": 1 }
+          ]
+        }
+      }
     },
     "offset": {
       "type": "INT32",
@@ -99,14 +114,8 @@
       "type": "INT_CHOICE",
       "int32_choice": {
         "choices": [
-          {
-            "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },
-            "value": 0
-          },
-          {
-            "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } },
-            "value": 1
-          }
+          { "name": { "display_strings": { "en": "Off", "es": "Apagado", "fr": "Éteint" } },  "value": 0  },
+          { "name": { "display_strings": { "en": "On", "es": "Encendido", "fr": "Allumé" } }, "value": 1 }
         ]
       }
     }
