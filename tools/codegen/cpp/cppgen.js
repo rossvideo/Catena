@@ -73,7 +73,7 @@ class bufloc {
 /**
  * storage for the write functions, and the current indent level
  */
-let hloc, bloc, ploc, postscript;
+let hloc, bloc, ploc, cloc, postscript, coda;
 let hindent, pindent;
 
 /**
@@ -100,6 +100,9 @@ class CppGen {
     let Ploc = new bufloc(header);
     ploc = Ploc.write.bind(Ploc);
     postscript = Ploc.deliver.bind(Ploc);
+    let Cloc = new bufloc(body);
+    cloc = Cloc.write.bind(Cloc);
+    coda = Cloc.deliver.bind(Cloc);
 
     this.device = new Device(deviceModel);
   }
@@ -244,6 +247,21 @@ class CppGen {
       return;
     }
     for (let oid in this.device.desc.params) {
+      // handle special case for product param
+      if (oid == "product") {
+        // we need to add code to overwrite the value of catena_sdk_version with
+        // whatever's up-to-date in the SDK.
+        // this is done by adding some code to the postscript
+        cloc(`#define STRINGIFY(x) #x`);
+        cloc(`#define TO_STRING(x) STRINGIFY(x)`);
+        cloc(`constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);`);
+        cloc(`${this.device.namespace}::Product& initialize_sdk_version(${this.device.namespace}::Product& p) {`);
+        cloc(`p.catena_sdk_version = real_sdk_version;`,1);
+        cloc(`return p;`,1);
+        cloc(`}`);
+        cloc(`${this.device.namespace}::Product dummy = initialize_sdk_version(product);`);
+      }
+
       // add the param to the device
       let param = this.device.params[oid] = new Param(oid, this.device.desc.params[oid], this.device.namespace, this.device);
 
@@ -367,6 +385,7 @@ class CppGen {
   finish = () => {
     hloc(`} // namespace ${this.device.namespace}`);
     postscript();
+    coda();
   };
 }
 
