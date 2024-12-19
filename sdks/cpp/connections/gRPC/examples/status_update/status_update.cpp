@@ -63,8 +63,11 @@ using namespace catena::common;
 // set up the command line parameters
 ABSL_FLAG(uint16_t, port, 6254, "Catena service port");
 ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, options are: \
-  \"off\", \"ssl\", \"tls\"");
+ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, options are: \"off\", \"tls\"");
+ABSL_FLAG(std::string, cert_file, "server.crt", "Specify the certificate file");
+ABSL_FLAG(std::string, key_file, "server.key", "Specify the key file");
+ABSL_FLAG(std::string, ca_file, "ca.crt", "Specify the CA file if using a private CA");
+ABSL_FLAG(bool, private_ca, false, "Specify if using a private CA");
 ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
 ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
@@ -103,30 +106,40 @@ std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
     if (absl::GetFlag(FLAGS_secure_comms).compare("off") == 0) {
         // run without secure comms
         ans = grpc::InsecureServerCredentials();
-    } else if (absl::GetFlag(FLAGS_secure_comms).compare("ssl") == 0) {
-        // run with Secure Sockets Layer comms
-        std::string path_to_certs(absl::GetFlag(FLAGS_certs));
-        expandEnvVariables(path_to_certs);
-        std::string root_cert = catena::readFile(path_to_certs + "/ca.crt");
-        std::string server_key = catena::readFile(path_to_certs + "/server.key");
-        std::string server_cert = catena::readFile(path_to_certs + "/server.crt");
+    } else if (absl::GetFlag(FLAGS_secure_comms).compare("tls") == 0) {
+        // create our server credentials options
         grpc::SslServerCredentialsOptions ssl_opts(
           absl::GetFlag(FLAGS_mutual_authc) ? GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY
                                             : GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
-        ssl_opts.pem_root_certs = root_cert;
+
+        // get path to the files we'll need
+        std::string path_to_certs(absl::GetFlag(FLAGS_certs));
+        expandEnvVariables(path_to_certs);
+
+        // read the CA cert if we are using a private CA, use to set ssl options
+        if (absl::GetFlag(FLAGS_private_ca)) {
+            std::string ca_cert_fn(path_to_certs + "/" + absl::GetFlag(FLAGS_ca_file));
+            std::string ca_cert = catena::readFile(ca_cert_fn);
+            ssl_opts.pem_root_certs = ca_cert;
+        }
+        
+        // read the server key and cert, use to set ssl options
+        std::string server_key_fn(path_to_certs + "/" + absl::GetFlag(FLAGS_key_file));
+        std::string server_certfn(path_to_certs + "/" + absl::GetFlag(FLAGS_cert_file));
+        std::string server_key = catena::readFile(server_key_fn);
+        std::string server_cert = catena::readFile(server_certfn);
         ssl_opts.pem_key_cert_pairs.push_back(
           grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
+
+        // create the credentials object
         ans = grpc::SslServerCredentials(ssl_opts);
 
+        // attach the authz processor if needed
         if (absl::GetFlag(FLAGS_authz)) {
             const std::shared_ptr<grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
             ans->SetAuthMetadataProcessor(authzProcessor);
         }
 
-    } else if (absl::GetFlag(FLAGS_secure_comms).compare("tls") == 0) {
-        std::stringstream why;
-        why << "tls support has not been implemented yet, sorry.";
-        throw std::runtime_error(why.str());
     } else {
         std::stringstream why;
         why << std::quoted(absl::GetFlag(FLAGS_secure_comms)) << " is not a valid secure_comms option";
