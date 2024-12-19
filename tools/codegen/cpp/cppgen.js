@@ -251,7 +251,7 @@ class CppGen {
       if (oid == "product") {
         // we need to add code to overwrite the value of catena_sdk_version with
         // whatever's up-to-date in the SDK.
-        // this is done by adding some code to the postscript
+        // this is done by adding some code to the coda
         cloc(`#define STRINGIFY(x) #x`);
         cloc(`#define TO_STRING(x) STRINGIFY(x)`);
         cloc(`constexpr const char* real_sdk_version = TO_STRING(CATENA_CPP_VERSION);`);
