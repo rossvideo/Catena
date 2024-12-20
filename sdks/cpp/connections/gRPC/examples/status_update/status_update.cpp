@@ -1,18 +1,32 @@
-// Copyright 2024 Ross Video Ltd
-//
-// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-// INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+/*
+ * Copyright 2024 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /**
  * @brief Example program to demonstrate setting up a full Catena service.
@@ -31,16 +45,16 @@
 #include <ParamWithValue.h>
 
 // connections/gRPC
+#include <SharedFlags.h>
 #include <ServiceImpl.h>
+#include <ServiceCredentials.h>
 
-// protobuf interface
-#include <interface/service.grpc.pb.h>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
-#include "absl/flags/flag.h"
+
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
@@ -60,14 +74,6 @@ using grpc::Server;
 
 using namespace catena::common;
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 6254, "Catena service port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, options are: \
-  \"off\", \"ssl\", \"tls\"");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
 
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
@@ -83,56 +89,6 @@ void handle_signal(int sig) {
         }
     });
     t.join();
-}
-
-
-// expand env variables
-void expandEnvVariables(std::string &str) {
-    static std::regex env{"\\$\\{([^}]+)\\}"};
-    std::smatch match;
-    while (std::regex_search(str, match, env)) {
-        const char *s = getenv(match[1].str().c_str());
-        const std::string var(s == nullptr ? "" : s);
-        str.replace(match[0].first, match[0].second, var);
-    }
-}
-
-// creates a Security Credentials object based on the command line options
-std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
-    std::shared_ptr<grpc::ServerCredentials> ans;
-    if (absl::GetFlag(FLAGS_secure_comms).compare("off") == 0) {
-        // run without secure comms
-        ans = grpc::InsecureServerCredentials();
-    } else if (absl::GetFlag(FLAGS_secure_comms).compare("ssl") == 0) {
-        // run with Secure Sockets Layer comms
-        std::string path_to_certs(absl::GetFlag(FLAGS_certs));
-        expandEnvVariables(path_to_certs);
-        std::string root_cert = catena::readFile(path_to_certs + "/ca.crt");
-        std::string server_key = catena::readFile(path_to_certs + "/server.key");
-        std::string server_cert = catena::readFile(path_to_certs + "/server.crt");
-        grpc::SslServerCredentialsOptions ssl_opts(
-          absl::GetFlag(FLAGS_mutual_authc) ? GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY
-                                            : GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
-        ssl_opts.pem_root_certs = root_cert;
-        ssl_opts.pem_key_cert_pairs.push_back(
-          grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
-        ans = grpc::SslServerCredentials(ssl_opts);
-
-        if (absl::GetFlag(FLAGS_authz)) {
-            const std::shared_ptr<grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
-            ans->SetAuthMetadataProcessor(authzProcessor);
-        }
-
-    } else if (absl::GetFlag(FLAGS_secure_comms).compare("tls") == 0) {
-        std::stringstream why;
-        why << "tls support has not been implemented yet, sorry.";
-        throw std::runtime_error(why.str());
-    } else {
-        std::stringstream why;
-        why << std::quoted(absl::GetFlag(FLAGS_secure_comms)) << " is not a valid secure_comms option";
-        throw std::invalid_argument(why.str());
-    }
-    return ans;
 }
 
 void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
@@ -228,7 +184,7 @@ void RunRPCServer(std::string addr)
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
 
-        builder.AddListeningPort(addr, getServerCredentials());
+        builder.AddListeningPort(addr, catena::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);

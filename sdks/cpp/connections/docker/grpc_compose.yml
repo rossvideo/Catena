@@ -1,0 +1,89 @@
+version: '3.8'  # Docker Compose file format version
+
+networks:
+  catena_network:
+    driver: bridge
+
+services:
+  status_update:
+    image: catena_status_update
+    container_name: catena_status_update
+    networks:
+      - catena_network
+    ports:
+      - "6254:6254"  # Map port 6254 on host to 6254 in container
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    command:
+      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      - "--secure_comms=tls"
+      - "--cert_file=fullchain.pem"
+      - "--key_file=privkey.pem"
+
+
+  use_menus:
+    image: catena_use_menus
+    container_name: catena_use_menus
+    networks:
+      - catena_network
+    ports:
+      - "6256:6254"  # Map port 6256 on host to 6254 in container
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    command:
+      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      - "--secure_comms=tls"
+      - "--cert_file=fullchain.pem"
+      - "--key_file=privkey.pem"
+
+  use_structs:
+    image: catena_structs_with_authz
+    container_name: catena_structs_with_authz
+    networks:
+      - catena_network
+    ports:
+      - "6258:6254"  # Map port 6258 on host to 6254 in container
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    command:
+      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      - "--secure_comms=tls"
+      - "--cert_file=fullchain.pem"
+      - "--key_file=privkey.pem"
+      - "--authz=true"
+
+  use_commands:
+    image: catena_use_commands
+    container_name: catena_use_commands
+    networks:
+      - catena_network
+    ports:
+      - "6260:6254"  # Map port 6258 on host to 6254 in container
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    command:
+      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      - "--secure_comms=tls"
+      - "--cert_file=fullchain.pem"
+      - "--key_file=privkey.pem"
+
