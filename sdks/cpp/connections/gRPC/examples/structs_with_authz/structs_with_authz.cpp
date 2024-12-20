@@ -29,7 +29,9 @@
 #include <ParamWithValue.h>
 
 // connections/gRPC
+#include <SharedFlags.h>
 #include <ServiceImpl.h>
+#include <ServiceCredentials.h>
 
 // protobuf interface
 #include <interface/service.grpc.pb.h>
@@ -38,7 +40,6 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
-#include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "absl/strings/str_format.h"
@@ -57,15 +58,6 @@ using grpc::Server;
 
 using namespace catena::common;
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 6254, "Catena service port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(std::string, secure_comms, "off", "Specify type of secure comms, options are: \
-  \"off\", \"ssl\", \"tls\"");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
-
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
 
@@ -82,55 +74,6 @@ void handle_signal(int sig) {
     t.join();
 }
 
-
-// expand env variables
-void expandEnvVariables(std::string &str) {
-    static std::regex env{"\\$\\{([^}]+)\\}"};
-    std::smatch match;
-    while (std::regex_search(str, match, env)) {
-        const char *s = getenv(match[1].str().c_str());
-        const std::string var(s == nullptr ? "" : s);
-        str.replace(match[0].first, match[0].second, var);
-    }
-}
-
-// creates a Security Credentials object based on the command line options
-std::shared_ptr<grpc::ServerCredentials> getServerCredentials() {
-    std::shared_ptr<grpc::ServerCredentials> ans;
-    if (absl::GetFlag(FLAGS_secure_comms).compare("off") == 0) {
-        // run without secure comms
-        ans = grpc::InsecureServerCredentials();
-    } else if (absl::GetFlag(FLAGS_secure_comms).compare("ssl") == 0) {
-        // run with Secure Sockets Layer comms
-        std::string path_to_certs(absl::GetFlag(FLAGS_certs));
-        expandEnvVariables(path_to_certs);
-        std::string root_cert = catena::readFile(path_to_certs + "/ca.crt");
-        std::string server_key = catena::readFile(path_to_certs + "/server.key");
-        std::string server_cert = catena::readFile(path_to_certs + "/server.crt");
-        grpc::SslServerCredentialsOptions ssl_opts(
-          absl::GetFlag(FLAGS_mutual_authc) ? GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY
-                                            : GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
-        ssl_opts.pem_root_certs = root_cert;
-        ssl_opts.pem_key_cert_pairs.push_back(
-          grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
-        ans = grpc::SslServerCredentials(ssl_opts);
-
-        if (absl::GetFlag(FLAGS_authz)) {
-            const std::shared_ptr<grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
-            ans->SetAuthMetadataProcessor(authzProcessor);
-        }
-
-    } else if (absl::GetFlag(FLAGS_secure_comms).compare("tls") == 0) {
-        std::stringstream why;
-        why << "tls support has not been implemented yet, sorry.";
-        throw std::runtime_error(why.str());
-    } else {
-        std::stringstream why;
-        why << std::quoted(absl::GetFlag(FLAGS_secure_comms)) << " is not a valid secure_comms option";
-        throw std::invalid_argument(why.str());
-    }
-    return ans;
-}
 
 void audioDeckUpdateHandler(const std::string& jptr, const IParam* p, const int32_t idx) {
     Path oid(jptr);
@@ -169,7 +112,7 @@ void RunRPCServer(std::string addr)
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
 
-        builder.AddListeningPort(addr, getServerCredentials());
+        builder.AddListeningPort(addr, catena::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
