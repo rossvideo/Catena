@@ -85,10 +85,20 @@ jobs:
         run: |
           # Get the latest tag or default to "cpp-v0.0.0"
           TAG=$(git describe --tags --match "cpp-*" --abbrev=0 2>/dev/null || echo "cpp-v0.0.0")
+          echo "Latest tag: $TAG"
 
           # Decompose the tag into its components
           VERSION=${TAG#cpp-}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Extract the version part before the last dash
+          VERSION_PART=$(echo "$VERSION" | cut -d'-' -f1)
+
+          # Remove the 'v' prefix if it exists
+          VERSION_PART=${VERSION_PART#v}
+
+          # Split the version part into MAJOR, MINOR, and PATCH
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_PART"
+          echo "Current version: $MAJOR.$MINOR.$PATCH"
 
           # Increment the patch number
           PATCH=$((PATCH + 1))
@@ -97,7 +107,7 @@ jobs:
           COMMIT_COUNT=$(git rev-list --count $(git describe --tags --match "cpp-*" --abbrev=0)..main || echo 0) || echo 0
           echo "Commit count: $COMMIT_COUNT"
 
-          NEW_VERSION="cpp-$MAJOR.$MINOR.$PATCH-$COMMIT_COUNT"
+          NEW_VERSION="cpp-v$MAJOR.$MINOR.$PATCH-$COMMIT_COUNT"
 
           # Save the new version number
           echo "VERSION=${NEW_VERSION}" >> $GITHUB_ENV
