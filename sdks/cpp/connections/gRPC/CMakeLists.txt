@@ -27,7 +27,13 @@ endif(APPLE)
 
 set(target catena_connections_grpc)
 
-set(sources "src/PeerInfo.cpp" "src/ServiceImpl.cpp")
+set(sources 
+    "src/PeerInfo.cpp"
+    "src/ServiceImpl.cpp" 
+    "src/SharedFlags.cpp"
+    "src/ServiceCredentials.cpp"
+)
+
 add_library(${target} STATIC ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)

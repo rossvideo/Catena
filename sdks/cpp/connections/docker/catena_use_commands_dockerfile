@@ -29,29 +29,12 @@
 #
 
 #
-# cmake file to build some example services as docker images
+# Dockerfile to create an image for the status_update example service
 #
 
-cmake_minimum_required(VERSION 3.20)
-project(catena-docker-services)
+FROM base
 
-# ensure we have the docker app, alias it to DOCKER_CMD
-find_program(DOCKER_CMD docker REQUIRED)
+COPY build/connections/gRPC/examples/use_commands/use_commands /opt/use_commands
+COPY connections/gRPC/examples/use_commands/static /env/use_commands
 
-# include the make_image function
-include(DockerFunctions.cmake)
-
-# make our base image
-make_image(base . "")
-
-# make the status update image
-make_image(catena_status_update ${CATENA_CPP_ROOT_DIR} "base.hash;status_update")
-
-# make the use menus image
-make_image(catena_use_menus ${CATENA_CPP_ROOT_DIR} "base.hash;use_menus")
-
-# make the structs with authz image
-make_image(catena_structs_with_authz ${CATENA_CPP_ROOT_DIR} "base.hash;structs_with_authz")
-
-# make the structs with authz image
-make_image(catena_use_commands ${CATENA_CPP_ROOT_DIR} "base.hash;use_commands")
+ENTRYPOINT ["/opt/use_commands", "--static_root=/env/use_commands"]
