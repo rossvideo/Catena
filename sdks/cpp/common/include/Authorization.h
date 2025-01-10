@@ -46,8 +46,13 @@
 
 #include <functional>
 
-
+/**
+ * @brief A collection of classes used in Catena
+ */
 namespace catena {
+/**
+ * @brief A collection of common classes
+ */
 namespace common {
 
 /**

@@ -29,7 +29,7 @@
 namespace catena {
 namespace common {
 /**
- * a fake lock for use in recursive function calls
+ * @brief A fake lock for use in recursive function calls
  */
 struct FakeLock {
     FakeLock(std::mutex &) {}

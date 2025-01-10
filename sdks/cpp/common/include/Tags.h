@@ -37,11 +37,29 @@ class IMenu; // forward declaration
 class IMenuGroup; // forward declaration
 class ILanguagePack; // forward declaration
 
+/**
+ * @brief Alias for IConstraint used to improve readability
+ */
 struct ConstraintTag {using type = IConstraint;};
+/**
+ * @brief Alias for IParam used to improve readability
+ */
 struct ParamTag {using type = IParam;};
+/**
+ * @brief Alias for IParam used to improve readability
+ */
 struct CommandTag {using type = IParam;};
+/**
+ * @brief Alias for IMenu used to improve readability
+ */
 struct MenuTag {using type = IMenu;};
+/**
+ * @brief Alias for IMenuGroup used to improve readability
+ */
 struct MenuGroupTag {using type = IMenuGroup;};
+/**
+ * @brief Alias for ILanguagePack used to improve readability
+ */
 struct LanguagePackTag {using type = ILanguagePack;};
 
 template<typename TAG>

@@ -27,7 +27,7 @@
 namespace catena {
 namespace patterns {
 /**
- * Class template to make Singletons.
+ * @brief Class template to make Singletons.
  * @tparam T the class to acquire Singleton behaviour.
  * @since 2.0.0
  */
@@ -73,7 +73,7 @@ template <typename T> class Singleton {
     Singleton() = default;
 
     /**
-   * This is a helper that allows derived classes to declare public
+   * @brief This is a helper that allows derived classes to declare public
    * constructors that take a Protector as an argument. Because the Protector
    * is itself protected, it means that client code cannot call the derived
    * class' public constructor because Protector is inaccessible.<br/> This

@@ -38,6 +38,10 @@
  * @copyright Copyright (c) 2024 Ross Video
  */
 
+/** @example hello_world.cpp Demonstrates creation of a simple device model, 
+ * and how business logic can interact with it.
+ */
+
 // common
 #include <Authorization.h>
 #include <Path.h>
@@ -65,11 +69,7 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Device class
- * Implements the Device interface defined in the protobuf.
- */
-/**
- * @example hello_world.cpp Demonstrates creation of a simple device model, and how business logic can interact with it.
+ * @brief Implements the Device interface defined in the protobuf
  */
 class Device {
   public:
