@@ -94,6 +94,7 @@ var NAVTREE =
         [ "All", "namespacemembers.html", null ],
         [ "Functions", "namespacemembers_func.html", null ],
         [ "Variables", "namespacemembers_vars.html", null ],
+        [ "Typedefs", "namespacemembers_type.html", null ],
         [ "Enumerations", "namespacemembers_enum.html", null ],
         [ "Enumerator", "namespacemembers_eval.html", null ]
       ] ]
@@ -125,8 +126,8 @@ var NAVTREEINDEX =
 [
 "Authorization_8h.html",
 "classcatena_1_1common_1_1LanguagePack.html#a3beb9a4527693f4c5ed46e263879282a",
-"classcatena_1_1patterns_1_1EnumDecorator.html#a57716f5cc9852c264ec2adfef3a4408f",
-"structcatena_1_1exception__with__status.html"
+"classcatena_1_1patterns_1_1EnumDecorator.html#a1b38861ecab835aef36eb0722de4d1c7",
+"structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#afe74b859a902428ccdd761a8ffc9c601"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

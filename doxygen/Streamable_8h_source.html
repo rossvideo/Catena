@@ -128,7 +128,7 @@ $(document).ready(function(){initNavTree('Streamable_8h_source.html',''); initRe
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>template &lt;typename T&gt;</div>
 <div class="foldopen" id="foldopen00051" data-start="{" data-end="}">
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="Streamable_8h.html#a5c3dc782e536317ef49293910ba24bb2">   51</a></span>std::ostream&amp; stream_if_possible(std::ostream&amp; os, const T&amp; data) {</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2">   51</a></span>std::ostream&amp; stream_if_possible(std::ostream&amp; os, const T&amp; data) {</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    if constexpr (catena::meta::is_streamable&lt;T&gt;::value) {</div>
 <div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        os &lt;&lt; data;</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    } else {</div>

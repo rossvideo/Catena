@@ -1,6 +1,7 @@
 var namespacecatena =
 [
     [ "common", "namespacecatena_1_1common.html", "namespacecatena_1_1common" ],
+    [ "meta", "namespacecatena_1_1meta.html", "namespacecatena_1_1meta" ],
     [ "patterns", "namespacecatena_1_1patterns.html", "namespacecatena_1_1patterns" ],
     [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
     [ "StatusCode", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85", [

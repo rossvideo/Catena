@@ -14,7 +14,7 @@ var searchData=
   ['status_2eh_11',['Status.h',['../Status_8h.html',1,'']]],
   ['statuscode_12',['StatusCode',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85',1,'catena']]],
   ['steps_20to_20run_13',['Steps to run',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15',1,'']]],
-  ['stream_5fif_5fpossible_14',['stream_if_possible',['../Streamable_8h.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
+  ['stream_5fif_5fpossible_14',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
   ['streamable_2eh_15',['Streamable.h',['../Streamable_8h.html',1,'']]],
   ['structinfo_16',['StructInfo',['../structcatena_1_1common_1_1StructInfo.html',1,'catena::common']]],
   ['structinfo_2eh_17',['StructInfo.h',['../StructInfo_8h.html',1,'']]],
