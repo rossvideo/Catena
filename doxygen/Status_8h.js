@@ -1,6 +1,6 @@
 var Status_8h =
 [
-    [ "exception_with_status", "structcatena_1_1exception__with__status.html", "structcatena_1_1exception__with__status" ],
+    [ "catena::exception_with_status", "structcatena_1_1exception__with__status.html", null ],
     [ "BAD_STATUS", "Status_8h.html#a9dd70918fa106dd1bda0e74fdd882831", null ],
     [ "StatusCode", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85", [
       [ "OK", "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb", null ],

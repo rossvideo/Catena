@@ -1,5 +1,11 @@
 var searchData=
 [
-  ['bad_5fstatus_14',['BAD_STATUS',['../Status_8h.html#a9dd70918fa106dd1bda0e74fdd882831',1,'Status.h']]],
-  ['begin_15',['begin',['../classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1',1,'catena::common::ILanguagePack::begin()'],['../classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789',1,'catena::common::LanguagePack::begin()']]]
+  ['bad_5fstatus_0',['BAD_STATUS',['../Status_8h.html#a9dd70918fa106dd1bda0e74fdd882831',1,'Status.h']]],
+  ['begin_1',['begin',['../classcatena_1_1common_1_1ILanguagePack.html#ab5984be8118c831717492c632efc07b1',1,'catena::common::ILanguagePack::begin()'],['../classcatena_1_1common_1_1LanguagePack.html#a9807b22bc41d90ae89ff65476878f789',1,'catena::common::LanguagePack::begin()']]],
+  ['boost_20and_20asio_2',['If you&apos;re targeting REST, install boost, and asio',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md39',1,'']]],
+  ['boost_20if_20using_20the_20rest_20connection_20manager_3',['Install boost if using the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md46',1,'']]],
+  ['boost_20libraries_20if_20you_20want_20to_20use_20the_20rest_20connection_20manager_4',['Install boost libraries if you want to use the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md26',1,'']]],
+  ['build_20grpc_20and_20protobufs_5',['build grpc and protobufs',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md20',1,'Install and Build gRPC and Protobufs'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md33',1,'Install and Build gRPC and Protobufs'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md44',1,'Install and Build gRPC and Protobufs']]],
+  ['build_20jwt_20cpp_6',['build jwt cpp',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md21',1,'Install and Build jwt-cpp'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'Install and Build jwt-cpp'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md45',1,'Install and Build jwt-cpp']]],
+  ['building_20catena_7',['Building Catena',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md28',1,'']]]
 ];

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['catenastruct_379',['CatenaStruct',['../StructInfo_8h.html#a38dc399d594567ca24de123a1b1d60ed',1,'catena::common']]],
-  ['catenastructarray_380',['CatenaStructArray',['../StructInfo_8h.html#ad8b2debe7a9500b22904ee7e342ce5a0',1,'catena::common']]]
+  ['kauthzdisabled_0',['kAuthzDisabled',['../classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703',1,'catena::common::Authorizer']]]
 ];

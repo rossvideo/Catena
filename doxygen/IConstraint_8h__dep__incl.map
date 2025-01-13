@@ -1,15 +1,41 @@
 <map id="/home/runner/work/Catena/Catena/sdks/cpp/common/include/IConstraint.h" name="/home/runner/work/Catena/Catena/sdks/cpp/common/include/IConstraint.h">
-<area shape="rect" id="node1" title="Interface for constraints." alt="" coords="581,5,775,61"/>
-<area shape="rect" id="node2" href="$IParam_8h.html" title="Interface for parameters." alt="" coords="581,109,775,165"/>
-<area shape="rect" id="node8" href="$NamedChoiceConstraint_8h.html" title="A constraint that checks if a value is within some named choices." alt="" coords="5,525,252,581"/>
-<area shape="rect" id="node10" href="$PicklistConstraint_8h.html" title="A constraint that checks if a value is in a list of strings." alt="" coords="985,525,1187,581"/>
-<area shape="rect" id="node11" href="$RangeConstraint_8h.html" title="A constraint that checks if a value is within a range." alt="" coords="1211,525,1409,581"/>
-<area shape="rect" id="node13" href="$ParamDescriptor_8h_source.html" title=" " alt="" coords="393,213,589,269"/>
-<area shape="rect" id="node3" href="$Authorization_8h.html" title="Class for handling authorization information." alt="" coords="446,317,641,373"/>
-<area shape="rect" id="node4" href="$Device_8h.html" title="Device class definition." alt="" coords="715,421,910,477"/>
-<area shape="rect" id="node9" href="$ParamWithValue_8h.html" title="Interface for acessing parameter values." alt="" coords="276,525,472,581"/>
-<area shape="rect" id="node12" href="$StructInfo_8h.html" title="Structured data serialization and deserialization to protobuf." alt="" coords="446,421,641,477"/>
-<area shape="rect" id="node5" href="$LanguagePack_8h.html" title="multi language support in 2 classes: LanguagePack and LanguagePacks" alt="" coords="497,525,691,581"/>
-<area shape="rect" id="node6" href="$Menu_8h.html" title="Menus support." alt="" coords="715,525,910,581"/>
-<area shape="rect" id="node7" href="$MenuGroup_8h.html" title="MenuGroups support." alt="" coords="782,629,977,685"/>
+<area shape="rect" id="Node000001" title="Interface for constraints." alt="" coords="581,5,775,60"/>
+<area shape="rect" id="Node000002" href="$IParam_8h.html" title="Interface for parameters." alt="" coords="581,108,775,163"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="681,74,681,108,675,108,675,74"/>
+<area shape="rect" id="Node000008" href="$NamedChoiceConstraint_8h.html" title="A constraint that checks if a value is within some named choices." alt="" coords="5,519,252,573"/>
+<area shape="poly" id="edge23_Node000001_Node000008" title=" " alt="" coords="567,57,440,86,308,127,250,152,204,178,174,207,166,222,163,237,163,342,161,391,154,440,138,519,133,518,149,440,155,391,158,342,158,236,161,220,170,204,201,174,248,147,306,122,438,81,566,52"/>
+<area shape="rect" id="Node000010" href="$PicklistConstraint_8h.html" title="A constraint that checks if a value is in a list of strings." alt="" coords="985,519,1187,573"/>
+<area shape="poly" id="edge25_Node000001_Node000010" title=" " alt="" coords="790,40,886,59,935,74,981,94,1021,120,1054,152,1075,190,1081,213,1083,237,1083,342,1088,518,1082,519,1078,342,1078,237,1076,214,1071,192,1050,155,1018,124,978,99,933,79,884,64,788,46"/>
+<area shape="rect" id="Node000011" href="$RangeConstraint_8h.html" title="A constraint that checks if a value is within a range." alt="" coords="1211,519,1409,573"/>
+<area shape="poly" id="edge26_Node000001_Node000011" title=" " alt="" coords="790,42,915,65,982,82,1047,105,1116,128,1178,146,1203,159,1222,177,1235,203,1239,236,1239,342,1245,392,1260,440,1278,483,1296,517,1291,519,1273,485,1255,442,1240,393,1234,342,1234,237,1230,204,1218,181,1200,164,1176,151,1115,133,1045,111,981,88,914,70,789,47"/>
+<area shape="rect" id="Node000013" href="$ParamDescriptor_8h_source.html" title=" " alt="" coords="393,211,589,265"/>
+<area shape="poly" id="edge24_Node000001_Node000013" title=" " alt="" coords="620,70,594,88,571,110,532,162,505,212,501,209,528,159,567,106,591,84,617,65"/>
+<area shape="rect" id="Node000003" href="$Authorization_8h.html" title="Class for handling authorization information." alt="" coords="446,313,641,368"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="659,176,603,267,567,315,563,312,598,264,655,173"/>
+<area shape="rect" id="Node000004" href="$Device_8h.html" title="Device class definition." alt="" coords="715,416,910,471"/>
+<area shape="poly" id="edge15_Node000002_Node000004" title=" " alt="" coords="697,174,803,415,799,417,693,176"/>
+<area shape="poly" id="edge16_Node000002_Node000008" title=" " alt="" coords="568,149,522,158,473,171,426,189,382,213,340,259,274,346,149,520,145,517,270,343,336,255,379,209,424,184,472,166,520,152,567,144"/>
+<area shape="rect" id="Node000009" href="$ParamWithValue_8h.html" title="Interface for acessing parameter values." alt="" coords="276,519,472,573"/>
+<area shape="poly" id="edge20_Node000002_Node000009" title=" " alt="" coords="691,176,702,239,705,317,701,359,693,399,677,438,654,473,590,494,473,524,472,519,589,489,651,469,673,435,687,398,696,358,700,317,696,239,686,176"/>
+<area shape="poly" id="edge21_Node000002_Node000010" title=" " alt="" coords="711,172,832,306,911,388,994,469,1052,516,1049,520,991,473,908,392,828,310,707,175"/>
+<area shape="poly" id="edge22_Node000002_Node000011" title=" " alt="" coords="731,168,1271,516,1268,521,728,172"/>
+<area shape="poly" id="edge17_Node000002_Node000013" title=" " alt="" coords="619,171,542,213,539,208,616,167"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="627,370,743,413,742,418,625,375"/>
+<area shape="poly" id="edge12_Node000003_Node000009" title=" " alt="" coords="483,378,458,396,436,418,418,442,404,469,384,519,379,517,399,467,414,440,432,414,455,392,480,373"/>
+<area shape="rect" id="Node000012" href="$StructInfo_8h.html" title="Structured data serialization and deserialization to protobuf." alt="" coords="446,416,641,471"/>
+<area shape="poly" id="edge13_Node000003_Node000012" title=" " alt="" coords="546,382,546,416,541,416,541,382"/>
+<area shape="rect" id="Node000005" href="$LanguagePack_8h.html" title="multi language support in 2 classes: LanguagePack and LanguagePacks" alt="" coords="497,519,691,573"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="744,479,652,521,650,516,742,474"/>
+<area shape="rect" id="Node000006" href="$Menu_8h.html" title="Menus support." alt="" coords="715,519,910,573"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="815,484,815,519,810,519,810,484"/>
+<area shape="rect" id="Node000007" href="$MenuGroup_8h.html" title="MenuGroups support." alt="" coords="782,621,977,676"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="885,476,907,494,924,518,931,545,927,573,916,600,902,623,898,620,911,597,922,572,926,545,920,520,903,498,882,480"/>
+<area shape="poly" id="edge8_Node000004_Node000008" title=" " alt="" coords="702,466,653,473,458,496,264,521,253,523,252,518,263,516,458,491,652,468,701,461"/>
+<area shape="poly" id="edge9_Node000004_Node000009" title=" " alt="" coords="702,472,485,521,473,524,472,519,484,516,701,467"/>
+<area shape="poly" id="edge10_Node000004_Node000010" title=" " alt="" coords="897,473,1016,516,1014,521,895,478"/>
+<area shape="poly" id="edge11_Node000004_Node000011" title=" " alt="" coords="924,462,1200,516,1212,519,1211,524,1199,521,923,467"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="840,583,864,620,860,623,835,586"/>
+<area shape="poly" id="edge14_Node000012_Node000009" title=" " alt="" coords="489,480,420,521,417,516,486,476"/>
+<area shape="poly" id="edge18_Node000013_Node000003" title=" " alt="" coords="514,276,532,312,527,314,509,279"/>
+<area shape="poly" id="edge19_Node000013_Node000009" title=" " alt="" coords="462,277,436,315,412,369,396,425,379,519,374,518,391,424,407,367,432,312,457,274"/>
 </map>
