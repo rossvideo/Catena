@@ -52,7 +52,17 @@
 #include <type_traits>
 
 namespace catena {
+
+/**
+ * @brief A collection of classes which implement design patterns for function object management
+ */
+
 namespace patterns {
+
+/**
+ * @brief Enhances default C++ enums by adding functionality for converting between enum values, strings and integral types
+ * 
+ */
 
 template <typename E> class EnumDecorator {
     // cause compile time error if E is not an enum
