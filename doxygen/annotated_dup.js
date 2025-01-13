@@ -45,7 +45,7 @@ var annotated_dup =
         [ "PushFrontT< TypeList< Ts... >, T >", "classcatena_1_1meta_1_1PushFrontT_3_01TypeList_3_01Ts_8_8_8_01_4_00_01T_01_4.html", null ],
         [ "TypeList", "classcatena_1_1meta_1_1TypeList.html", null ]
       ] ],
-      [ "patterns", null, [
+      [ "patterns", "namespacecatena_1_1patterns.html", [
         [ "EnumDecorator", "classcatena_1_1patterns_1_1EnumDecorator.html", "classcatena_1_1patterns_1_1EnumDecorator" ],
         [ "Functory", "classcatena_1_1patterns_1_1Functory.html", "classcatena_1_1patterns_1_1Functory" ],
         [ "GenericFactory", "classcatena_1_1patterns_1_1GenericFactory.html", "classcatena_1_1patterns_1_1GenericFactory" ],
