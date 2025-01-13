@@ -1,7 +1,7 @@
 var concepts =
 [
-    [ "catena", "namespacecatena.html", [
-      [ "common", "namespacecatena_1_1common.html", [
+    [ "catena", null, [
+      [ "common", null, [
         [ "CatenaStruct", "conceptcatena_1_1common_1_1CatenaStruct.html", null ],
         [ "CatenaStructArray", "conceptcatena_1_1common_1_1CatenaStructArray.html", null ],
         [ "IsVariantArray", "conceptcatena_1_1common_1_1IsVariantArray.html", null ]

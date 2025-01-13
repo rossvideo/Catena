@@ -87,16 +87,8 @@ var NAVTREE =
       [ "Optionally Install Google Test", "md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md49", null ]
     ] ],
     [ "Todo List", "todo.html", null ],
-    [ "Deprecated List", "deprecated.html", null ],
     [ "Namespaces", "namespaces.html", [
-      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
-      [ "Namespace Members", "namespacemembers.html", [
-        [ "All", "namespacemembers.html", null ],
-        [ "Functions", "namespacemembers_func.html", null ],
-        [ "Variables", "namespacemembers_vars.html", null ],
-        [ "Enumerations", "namespacemembers_enum.html", null ],
-        [ "Enumerator", "namespacemembers_eval.html", null ]
-      ] ]
+      [ "Namespace List", "namespaces.html", null ]
     ] ],
     [ "Concepts", "concepts.html", "concepts" ],
     [ "Classes", "annotated.html", [
@@ -124,8 +116,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Authorization_8h.html",
-"classcatena_1_1common_1_1LanguagePack.html#a3beb9a4527693f4c5ed46e263879282a",
-"classcatena_1_1patterns_1_1EnumDecorator.html#ab106f593c1eb2ed17c7b742030c86e25"
+"classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
