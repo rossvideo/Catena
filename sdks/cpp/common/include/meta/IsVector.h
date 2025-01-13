@@ -4,6 +4,12 @@
 #include <type_traits>
 
 namespace catena {
+
+/** 
+ * @brief A collection of classes for compile-time type manipulation, type traits and concept checking.
+ * 
+ */
+
 namespace meta {
     /**
      * @brief Concept to check if a type is a vector
