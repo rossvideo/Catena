@@ -35,12 +35,12 @@ namespace meta {
 template <typename... Ts> class TypeList {};
 
 /**
- * get the type at the front of a type list, forward declaration
+ * @brief Get the type at the front of a type list, forward declaration
  */
 template <typename L> class FrontT;
 
 /**
- * get the type at the front of a type list
+ * @brief Get the type at the front of a type list
  */
 template <typename Head, typename... Tail> class FrontT<TypeList<Head, Tail...>> {
   public:
@@ -48,17 +48,17 @@ template <typename Head, typename... Tail> class FrontT<TypeList<Head, Tail...>>
 };
 
 /**
- * @brief convenience alias for FrontT
+ * @brief Convenience alias for FrontT
  */
 template <typename L> using Front = typename FrontT<L>::type;
 
 /**
- * pop the front type off a type list, forward declaration
+ * @brief Pop the front type off a type list, forward declaration
  */
 template <typename L> class PopFrontT;
 
 /**
- * pop the front type off a type list
+ * @brief Pop the front type off a type list
  */
 template <typename Head, typename... Tail> class PopFrontT<TypeList<Head, Tail...>> {
   public:
@@ -66,12 +66,12 @@ template <typename Head, typename... Tail> class PopFrontT<TypeList<Head, Tail..
 };
 
 /**
- * convenience alias for PopFrontT
+ * @brief Convenience alias for PopFrontT
  */
 template <typename L> using PopFront = typename PopFrontT<L>::type;
 
 /**
- * push a type onto the front of a type list, forward declaration
+ * @brief Push a type onto the front of a type list, forward declaration
  */
 template <typename L, typename T> class PushFrontT;
 
