@@ -33,6 +33,19 @@
             "url": "./schema/catena.param_schema.json"
         }
     ],
+    "yaml.schemas": {
+        "./schema/catena.device_schema.json" : [
+            "/example_device_models/device.*.yaml",
+            "/nab_2024/device.*.yaml",
+            "/sdks/cpp/lite/examples/*/device.*.yaml",
+            "/sdks/cpp/connections/gRPC/examples/*/device.*.yaml"
+        ],
+        "./schema/catena.param_schema.json" : [
+            "/example_device_models/**/param.*.yaml",
+            "/sdks/cpp/lite/examples/**/param.*.yaml",
+            "/sdks/cpp/connections/gRPC/examples/**/param.*.yaml"
+        ]
+    },
     "git.ignoreLimitWarning": true,
     "files.associations": {
         "__bit_reference": "cpp",
