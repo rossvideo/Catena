@@ -183,7 +183,7 @@ class Device {
 
       public:
         /** 
-         * @brief promise_type defines the execution behaviour of the coroutine
+         * @brief Defines the execution behaviour of the coroutine
          * 
          * Coroutine types are required to contain a promise_type struct that defines some special
          * member functions that the compiler will call when the coroutine is created, destroyed,
