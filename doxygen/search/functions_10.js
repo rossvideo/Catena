@@ -6,5 +6,5 @@ var searchData=
   ['singleton_3',['singleton',['../classcatena_1_1patterns_1_1Singleton.html#ae2a6eca0412770b641759d2b7960c4e8',1,'catena::patterns::Singleton::Singleton(const Singleton &amp;)=delete'],['../classcatena_1_1patterns_1_1Singleton.html#a93935ffb59aa07556717760769adbe91',1,'catena::patterns::Singleton::Singleton(Singleton &amp;&amp;)=delete'],['../classcatena_1_1patterns_1_1Singleton.html#a3e19a6ea253df88afe0e36a98dece839',1,'catena::patterns::Singleton::Singleton()=default']]],
   ['slot_4',['slot',['../classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce',1,'catena::common::Device::slot(const uint32_t slot)'],['../classcatena_1_1common_1_1Device.html#adae63c83dfa563977613dbf8440c45be',1,'catena::common::Device::slot() const']]],
   ['stream_5fif_5fpossible_5',['stream_if_possible',['../Streamable_8h.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
-  ['subs_6',['subs',['../utils_8h.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]]
+  ['subs_6',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]]
 ];

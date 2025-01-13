@@ -1,15 +1,15 @@
 var searchData=
 [
   ['a_20c_20compiler_0',['a c compiler',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md17',1,'Getting a C++ compiler'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md41',1,'Getting a C++ compiler'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md30',1,'Getting a C++ compiler']]],
-  ['aborted_1',['ABORTED',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548',1,'catena']]],
+  ['aborted_1',['ABORTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548',1,'catena']]],
   ['addfunction_2',['addFunction',['../classcatena_1_1patterns_1_1Functory.html#ac481dae378af565531ba187987f856f1',1,'catena::patterns::Functory']]],
   ['additem_3',['addItem',['../classcatena_1_1common_1_1Device.html#a507ad02cfa93ab05d32df27e6b5b7c66',1,'catena::common::Device']]],
   ['addmenu_4',['addMenu',['../classcatena_1_1common_1_1MenuGroup.html#a3510177a085fdfa4b596d1a2dba4236f',1,'catena::common::MenuGroup']]],
   ['addparam_5',['addParam',['../classcatena_1_1common_1_1ParamWithValue.html#a14b802777a2d6e916bd37ac5321f7ee8',1,'catena::common::ParamWithValue']]],
   ['addproduct_6',['addProduct',['../classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d',1,'catena::patterns::GenericFactory']]],
   ['addsubparam_7',['addSubParam',['../classcatena_1_1common_1_1ParamDescriptor.html#acbd43f226aa1753c32bcca3612dff9ad',1,'catena::common::ParamDescriptor']]],
-  ['already_5fexists_8',['ALREADY_EXISTS',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]],
-  ['alternativenames_9',['alternativeNames',['../StructInfo_8h.html#a50a9d30ba7a22910857f12f13ed809cc',1,'catena::common']]],
+  ['already_5fexists_8',['ALREADY_EXISTS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]],
+  ['alternativenames_9',['alternativeNames',['../namespacecatena_1_1common.html#a50a9d30ba7a22910857f12f13ed809cc',1,'catena::common']]],
   ['and_20asio_10',['If you&apos;re targeting REST, install boost, and asio',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md39',1,'']]],
   ['and_20build_20grpc_20and_20protobufs_11',['and build grpc and protobufs',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md20',1,'Install and Build gRPC and Protobufs'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md33',1,'Install and Build gRPC and Protobufs'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md44',1,'Install and Build gRPC and Protobufs']]],
   ['and_20build_20jwt_20cpp_12',['and build jwt cpp',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md21',1,'Install and Build jwt-cpp'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'Install and Build jwt-cpp'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md45',1,'Install and Build jwt-cpp']]],

@@ -2,7 +2,7 @@ var searchData=
 [
   ['oidaliases_0',['OidAliases',['../classcatena_1_1common_1_1IParam.html#a487044851ec828b06464c8990fd0add1',1,'catena::common::IParam']]],
   ['oidinitializer_1',['OidInitializer',['../classcatena_1_1common_1_1Menu.html#ac72520a4c7db4a7d42841f7357b3432f',1,'catena::common::Menu']]],
-  ['ok_2',['OK',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb',1,'catena']]],
+  ['ok_2',['OK',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb',1,'catena']]],
   ['openssl_3',['Cross Compile OpenSSL',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md5',1,'']]],
   ['operator_20std_3a_3astring_4',['string',['../classcatena_1_1patterns_1_1EnumDecorator.html#aa0e1bfaba74f0cd83054ec901ece977a',1,'catena::patterns::EnumDecorator']]],
   ['operator_20utype_5',['operator utype',['../classcatena_1_1patterns_1_1EnumDecorator.html#adc2bfc84e613e135d599d32320f37536',1,'catena::patterns::EnumDecorator']]],
@@ -13,5 +13,5 @@ var searchData=
   ['operator_5b_5d_10',['operator[]',['../classcatena_1_1patterns_1_1Functory.html#aedca06c9f33184e19a77bac9872d7b5c',1,'catena::patterns::Functory']]],
   ['optionally_20install_20doxygen_11',['optionally install doxygen',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md22',1,'Optionally Install doxygen'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md36',1,'Optionally install doxygen'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md47',1,'Optionally Install doxygen']]],
   ['optionally_20install_20google_20test_12',['optionally install google test',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md24',1,'Optionally Install Google Test'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md38',1,'Optionally install Google Test'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md49',1,'Optionally Install Google Test']]],
-  ['out_5fof_5frange_13',['OUT_OF_RANGE',['../Status_8h.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945',1,'catena']]]
+  ['out_5fof_5frange_13',['OUT_OF_RANGE',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945',1,'catena']]]
 ];
