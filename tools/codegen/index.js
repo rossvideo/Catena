@@ -99,7 +99,14 @@ class DeviceModel {
             if (!fs.existsSync(importPath)) {
               throw new Error(`Cannot open file at ${importArg.file}`);
             }
-            const importData = JSON.parse(fs.readFileSync(importPath));
+            // Determining if the file is yaml or json and parsing accordingly.
+            const importData = (() => {
+                if (importPath.extname === '.yaml') {
+                    return yaml.parse(fs.readFileSync(importPath));
+                } else {
+                    return JSON.parse(fs.readFileSync(importPath));
+                }
+            })();
             if (!this.validator.validateParam(importData)) {
               throw new Error(`Imported data is not valid`);
             }
@@ -111,10 +118,19 @@ class DeviceModel {
       }
 }
 
+
+// import yaml library
+const yaml = require('yaml')
+
 try {
- 
-    // read the file to validate
-    const data = JSON.parse(fs.readFileSync(options.deviceModel));
+    // Determining if the file is yaml or json and parsing accordingly.
+    const data = (() => {
+        if (options.deviceModel.extname === '.yaml') {
+            return yaml.parse(fs.readFileSync(options.deviceModel));
+        } else {
+            return JSON.parse(fs.readFileSync(options.deviceModel));
+        }
+    })();
     if (validator.validateDevice(data)) {
         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
         const dm = new DeviceModel(options.deviceModel, validator, data);
