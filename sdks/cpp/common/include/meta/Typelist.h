@@ -89,17 +89,17 @@ template <typename... Ts, typename T> class PushFrontT<TypeList<Ts...>, T> {
 template <typename L, typename T> using PushFront = typename PushFrontT<L, T>::type;
 
 /**
- * get the Nth type in a type list
+ * @brief get the Nth type in a type list
  */
 template <typename L, unsigned int N> class NthElementT : public NthElementT<PopFront<L>, N - 1> {};
 
 /**
- * get the 0th type in a type list, terminates recursion
+ * @brief get the 0th type in a type list, terminates recursion
  */
 template <typename L> class NthElementT<L, 0> : public FrontT<L> {};
 
 /**
- * get the Nth type in a type list, recursive
+ * @brief get the Nth type in a type list, recursive
  */
 template <typename L, unsigned int N> using NthElement = typename NthElementT<L, N>::type;
 
