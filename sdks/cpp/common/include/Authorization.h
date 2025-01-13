@@ -51,7 +51,7 @@
  */
 namespace catena {
 /**
- * @brief A collection of common classes
+ * @brief Functionality that can be shared between the different connection management types
  */
 namespace common {
 
