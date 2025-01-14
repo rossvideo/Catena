@@ -60,6 +60,7 @@ const schemaFilename = options.schema;
 const Validator = require('./validator.js');
 const validator = new Validator(schemaFilename);
 const path = require("node:path");
+const yaml = require('yaml')
 
 /**
  * @class DeviceModel
@@ -101,9 +102,10 @@ class DeviceModel {
             }
             // Determining if the file is yaml or json and parsing accordingly.
             const importData = (() => {
-                if (importPath.extname === '.yaml') {
+                const extension = path.extname(importPath);
+                if (extension === '.yaml' || extension === '.yml') {
                     return yaml.parse(fs.readFileSync(importPath));
-                } else {
+                } else { // Default
                     return JSON.parse(fs.readFileSync(importPath));
                 }
             })();
@@ -118,16 +120,13 @@ class DeviceModel {
       }
 }
 
-
-// import yaml library
-const yaml = require('yaml')
-
 try {
     // Determining if the file is yaml or json and parsing accordingly.
     const data = (() => {
-        if (options.deviceModel.extname === '.yaml') {
+        const extension = path.extname(options.deviceModel);
+        if (extension === '.yaml' || extension === '.yml') {
             return yaml.parse(fs.readFileSync(options.deviceModel));
-        } else {
+        } else { // Default
             return JSON.parse(fs.readFileSync(options.deviceModel));
         }
     })();
