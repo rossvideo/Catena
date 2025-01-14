@@ -29,7 +29,8 @@
 namespace catena {
 namespace common {
 /**
- * a fake lock for use in recursive function calls
+ * @brief A fake lock for use in recursive function calls
+ * @deprecated This class is no longer used.
  */
 struct FakeLock {
     FakeLock(std::mutex &) {}

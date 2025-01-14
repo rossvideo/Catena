@@ -159,6 +159,10 @@ enum StatusCode {
   DO_NOT_USE = -1
 };
 
+/**
+ * @brief A std::runtime_error with a gRPC StatusCode. This struct cannot be
+ * copied
+ */
 struct exception_with_status : public std::runtime_error {
     inline explicit exception_with_status(const std::string &why, StatusCode s)
         : std::runtime_error{why}, status{s} {}

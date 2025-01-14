@@ -45,6 +45,14 @@
 
 namespace catena {
 namespace common {
+
+/**
+ * @brief Interface for managing multilingual text with support for serialization to protocol buffers.
+ *
+ * Defines the contract for handling and accessing multilingual display strings and serializing them 
+ * into protocol buffers.
+ */
+
 class IPolyglotText {
   public:
     using DisplayStrings = std::unordered_map<std::string, std::string>;

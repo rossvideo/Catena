@@ -46,8 +46,15 @@
 
 #include <functional>
 
-
+/**
+ * @brief top level namespace for Catena. Functionality at this scope includes the protoc generated classes.
+ * Most everything else is in child namespaces such as common, meta, etc.
+ */
 namespace catena {
+/**
+ * @brief Functionality that can be shared between the different connection
+ * management types
+ */
 namespace common {
 
 /**
