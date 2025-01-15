@@ -95,6 +95,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     std::string& EOPath_;
     bool authorizationEnabled_;
 
+    static std::string timeNow();
+
   public:
 
     void registerItem(CallData *cd);
@@ -103,135 +105,27 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     inline bool authorizationEnabled() const { return authorizationEnabled_; }
 
-    class GetPopulatedSlots : public CallData{
-        public:
-        GetPopulatedSlots(CatenaServiceImpl *service, Device &dm, bool ok);
+    class GetPopulatedSlots;
 
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
-       private:
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        catena::Empty req_;
-        catena::SlotList res_;
-        ServerAsyncResponseWriter<::catena::SlotList> responder_;
-        CallStatus status_;
-        Device &dm_;
-        int objectId_;
-        static int objectCounter_;
-    };
-
-    class GetValue : public CallData{
-        public:
-        GetValue(CatenaServiceImpl *service, Device &dm, bool ok);
-
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
-       private:
-
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        catena::GetValuePayload req_;
-        catena::Value res_;
-        ServerAsyncResponseWriter<::catena::Value> responder_;
-        CallStatus status_;
-        Device &dm_;
-        int objectId_;
-        static int objectCounter_;
-    };
+    //Forward declaration of the CallData class for the GetValue RPC
+    class GetValue;
 
     /**
      * @brief CallData class for the SetValue RPC
      */
-    class SetValue : public CallData {
-      public:
-        SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
-
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
-      private:
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        catena::SetValuePayload req_;
-        catena::Value res_;
-        ServerAsyncResponseWriter<catena::Empty> responder_;
-        CallStatus status_;
-        Device &dm_;
-        Status errorStatus_;
-        int objectId_;
-        static int objectCounter_;
-    };
+    class SetValue;
 
     /**
      * @brief CallData class for the Connect RPC
      */
-    class Connect : public CallData {
-      public:
-        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
-
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
-     private:
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        catena::ConnectPayload req_;
-        catena::PushUpdates res_;
-        ServerAsyncWriter<catena::PushUpdates> writer_;
-        CallStatus status_;
-        Device &dm_;
-        std::mutex mtx_;
-        std::condition_variable cv_;
-        bool hasUpdate_{false};
-        int objectId_;
-        static int objectCounter_;
-        unsigned int pushUpdatesId_;
-        unsigned int valueSetByClientId_;
-        unsigned int valueSetByServerId_;
-        static vdk::signal<void()> shutdownSignal_;
-        unsigned int shutdownSignalId_;
-    };
+    class Connect;
 
     /**
      * @brief CallData class for the DeviceRequest RPC
      */
-    class DeviceRequest : public CallData {
-      public:
-        DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+    class DeviceRequest;
 
-        void proceed(CatenaServiceImpl *service, bool ok) override;
 
-       private:
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        std::vector<std::string> clientScopes_;
-        std::unique_ptr<catena::common::Authorizer> authz_ = nullptr;
-        catena::DeviceRequestPayload req_;
-        ServerAsyncWriter<catena::DeviceComponent> writer_;
-        std::optional<Device::DeviceSerializer> serializer_ = std::nullopt; //Can't create serializer until we have client scopes
-        CallStatus status_;
-        Device &dm_;
-        int objectId_;
-        static int objectCounter_;
-        unsigned int shutdownSignalId_;
-    };
-
-    class ExternalObjectRequest : public CallData {
-      public:
-        ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
-        ~ExternalObjectRequest() {}
-
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
-      private:
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        catena::ExternalObjectRequestPayload req_;
-        ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
-        CallStatus status_;
-        Device &dm_;
-        int objectId_;
-        static int objectCounter_;
-    };
 
     // /**
     //  * @brief CallData class for the GetParam RPC
@@ -257,25 +151,9 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //     static int objectCounter_;
     // };
 
-    /**
-     * @brief CallData class for the ExecuteCommand RPC
-     */
-    class ExecuteCommand : public CallData {
-      public:
-        ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok);
+    //Forward declaration for ExternalObjectRequest RPC
+    class ExternalObjectRequest;
 
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
-      private:
-        CatenaServiceImpl *service_;
-        ServerContext context_;
-        catena::ExecuteCommandPayload req_;
-        catena::CommandResponse res_;
-        grpc::ServerAsyncReaderWriter<catena::CommandResponse, catena::ExecuteCommandPayload> stream_;
-        CallStatus status_;
-        Device &dm_;
-        int objectId_;
-        static int objectCounter_;
-    };
-
+    //Forward declaration for ExecuteCommand RPC
+    class ExecuteCommand;
 };
