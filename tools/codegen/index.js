@@ -103,8 +103,8 @@ class DeviceModel {
             // Determining if the file is yaml or json and parsing accordingly.
             const importData = (() => {
                 const extension = path.extname(importPath);
-                if (extension === '.yaml' || extension === '.yml') {
-                    return yaml.parse(fs.readFileSync(importPath));
+                if (extension === ".yaml" || extension === ".yml") {
+                    return yaml.parse(fs.readFileSync(importPath, 'utf8'));
                 } else { // Default
                     return JSON.parse(fs.readFileSync(importPath));
                 }
@@ -124,8 +124,8 @@ try {
     // Determining if the file is yaml or json and parsing accordingly.
     const data = (() => {
         const extension = path.extname(options.deviceModel);
-        if (extension === '.yaml' || extension === '.yml') {
-            return yaml.parse(fs.readFileSync(options.deviceModel));
+        if (extension === ".yaml" || extension === ".yml") {
+            return yaml.parse(fs.readFileSync(options.deviceModel, 'utf8'));
         } else { // Default
             return JSON.parse(fs.readFileSync(options.deviceModel));
         }

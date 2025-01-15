@@ -1,0 +1,136 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["monitor", "operate", "configure", "administer"]
+default_scope: monitor
+language_packs: {}
+params: 
+  eq: 
+    type: STRUCT
+    name: {display_strings: {en: EQ}}
+    params: 
+      response: 
+        type: INT32
+        name: {display_strings: {en: Response}}
+        access_scope: monitor
+      frequency: 
+        type: FLOAT32
+        name: {display_strings: {en: Frequency}}
+        access_scope: operate
+      gain: 
+        type: FLOAT32
+        name: {display_strings: {en: Gain}}
+        access_scope: configure
+      q_factor: 
+        type: FLOAT32
+        name: {display_strings: {en: Q Factor}}
+        access_scope: administer
+  audio_channel: 
+    type: STRUCT
+    name: {display_strings: {en: Audio Channel}}
+    params: 
+      fader: 
+        type: FLOAT32
+        name: {display_strings: {en: Fader}}
+      eq_list: 
+        type: STRUCT_ARRAY
+        name: {display_strings: {en: EQ List}}
+        template_oid: /eq
+        value: 
+          struct_array_values: 
+            struct_values:
+              - struct_value:
+                  fields: 
+                    response: {value: {int32_value: 0}}
+                    frequency: {value: {float32_value: 0}}
+                    gain: {value: {float32_value: 0}}
+                    q_factor: {value: {float32_value: 0}}
+              - struct_value: 
+                  fields: 
+                    response: {value: {int32_value: 0}}
+                    frequency: {value: {float32_value: 0}}
+                    gain: {value: {float32_value: 0}}
+                    q_factor: {value: {float32_value: 0}}
+  audio_deck: 
+    type: STRUCT_ARRAY
+    name: {display_strings: {en: Audio Deck}}
+    template_oid: /audio_channel
+    value: 
+      struct_array_values: 
+        struct_values:
+          - struct_value: 
+              fields:
+                fader: {value: {float32_value: 0.0}}
+                eq_list: 
+                  value: 
+                    struct_array_values: 
+                      struct_values:
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 1}}
+                              frequency: {value: {float32_value: 100}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 2}}
+                              frequency: {value: {float32_value: 200}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+          - struct_value: 
+              fields: 
+                fader: {value: {float32_value: 0.1}}
+                eq_list: 
+                  value: 
+                    struct_array_values: 
+                      struct_values:
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 3}}
+                              frequency: {value: {float32_value: 300}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 4}}
+                              frequency: {value: {float32_value: 400}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+          - struct_value: 
+              fields: 
+                fader: {value: {float32_value: 0.2}}
+                eq_list: 
+                  value: 
+                    struct_array_values: 
+                      struct_values:
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 5}}
+                              frequency: {value: {float32_value: 500}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 6}}
+                              frequency: {value: {float32_value: 600}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+          - struct_value: 
+              fields: 
+                fader: {value: {float32_value: 0.3}}
+                eq_list: 
+                  value: 
+                    struct_array_values: 
+                      struct_values:
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 7}}
+                              frequency: {value: {float32_value: 700}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
+                        - struct_value: 
+                            fields: 
+                              response: {value: {int32_value: 8}}
+                              frequency: {value: {float32_value: 800}}
+                              gain: {value: {float32_value: 0}}
+                              q_factor: {value: {float32_value: 0}}
