@@ -9,17 +9,12 @@ style="width: 100%;" alt="Catena Logo" />
 <h1 id="device-development-process">Device Development Process</h1>
 <p>The recommended process is hopefully simple:</p>
 <ol type="1">
-<li>Design your device model as a set of JSON or YAML files in a file
-structure documented <a href="Validation.html">here</a>.
-<ol type="1">
-<li>[OPTIONAL] Install the recommended Red Hat extension
-redhat.vscode-yaml either through vscode or using the command
-<code>code --install-extension redhat.vscode-yaml</code>.</li>
-</ol></li>
+<li>Design your device model as a set of JSON files in a file structure
+documented <a href="Validation.html">here</a></li>
 <li>Use
 <code>full_service --device_model /path/to/your/device.json</code> to
-run your model.</li>
-<li>Use Postman to get/set your parameters.</li>
+run your model</li>
+<li>Use Postman to get/set your parameters</li>
 <li>Coming soon … use DashBoard beta to even get a GUI!</li>
 <li>If working in C++, replace the placeholder business logic in
 <code>full_service.cpp</code> with your own.</li>
