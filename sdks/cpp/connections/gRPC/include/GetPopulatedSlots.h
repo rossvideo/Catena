@@ -43,19 +43,66 @@
 // connections/gRPC
 #include <ServiceImpl.h>
 
+/**
+* @brief CallData class for the GetPopulatedSlots RPC
+*/
 class CatenaServiceImpl::GetPopulatedSlots : public CallData{
     public:
+        /**
+         * @brief Constructor for the CallData class of the GetPopulatedSlots
+         * gRPC. Calls proceed() once initialized.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the populated slots of.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
         GetPopulatedSlots(CatenaServiceImpl *service, Device &dm, bool ok);
+        /**
+        * @brief Manages the steps of the GetPopulatedSlots gRPC command
+        * through the state variable status. Returns the number of populated
+        * slots to the client.
+        *
+        * @param service - Pointer to the parent CatenaServiceImpl.
+        * @param ok - Flag to check if the command was successfully executed.
+        */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+        /**
+         * @brief Parent CatenaServiceImpl.
+         */
         CatenaServiceImpl *service_;
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
         ServerContext context_;
+        /**
+         * @brief Server request (empty).
+         */
         catena::Empty req_;
+        /**
+         * @brief Server response (list of populated slots).
+         */
         catena::SlotList res_;
+        /**
+         * @brief gRPC async response writer.
+         */
         ServerAsyncResponseWriter<::catena::SlotList> responder_;
+        /**
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         */
         CallStatus status_;
+        /**
+         * @brief The device to get the populated slots of.
+         */
         Device &dm_;
+        /**
+         * @brief The object's unique id.
+         */
         int objectId_;
+        /**
+         * @brief The total # of GetPopulatedSlots objects.
+         */
         static int objectCounter_;
 };

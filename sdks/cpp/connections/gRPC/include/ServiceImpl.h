@@ -74,16 +74,28 @@ public:
 
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
-    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
-
-    void init();
-
-    void processEvents();
-
-    void shutdownServer();
-
     /**
-     * Nested private classes
+     * @brief Constructor for the CatenaServiceImpl class.
+     * @param cq The completion queue for the server.
+     * @param dm The device to implement Catena services to.
+     * @param EOPath The path to the external object.
+     * @param authz Flag to enable authorization.
+     */
+    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
+    /**
+     * @brief Creates the CallData objects for each gRPC command.
+     */
+    void init();
+    /**
+     * @brief Processes events in the server's completion queue.
+     */
+    void processEvents();
+    /**
+     * @brief Not implemented
+     */
+    void shutdownServer();
+    /**
+     * @brief CallData states.
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
@@ -94,30 +106,67 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     class CallData {
       public:
+        /**
+         * @brief Proceed function to be implemented by the CallData classes.
+         */
         virtual void proceed(CatenaServiceImpl *service, bool ok) = 0;
+        /**
+         * @brief Destructor for the CallData class.
+         */
         virtual ~CallData() {}
     };
 
+    /**
+     * @brief Gets the scopes from the provided authorization context
+     */
     std::vector<std::string> getScopes(grpc::ServerContext &context);
 
+    // Aliases for special vectors and unique_ptrs.
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
     using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;
+    /**
+     * @brief The registry of CallData objects
+     */
     Registry registry_;
+    /**
+     * @brief Mutex to protect the registry 
+     */
     std::mutex registryMutex_;
-
-    ServerCompletionQueue* cq_;
+    /**
+     * @brief The completion queue for the server for event processing
+     */
+    ServerCompletionQueue* cq_; 
+    /**
+     * @brief The device to implement Catena services to
+     */
     Device &dm_;
-    std::string& EOPath_;
+    /**
+     * @brief The path to the external object
+     */
+    std::string& EOPath_; 
+    /**
+     * @brief Flag to enable authorization
+     */
     bool authorizationEnabled_;
-
+    /**
+     * @brief Returns the current time as a string including microseconds.
+     */
     static std::string timeNow();
 
   public:
-
+    /**
+     * @brief Registers a CallData object into the registry
+     * @param cd The CallData object to register
+     */
     void registerItem(CallData *cd);
-
+    /**
+     * @brief Deregisters a CallData object from registry
+     * @param cd The CallData object to deregister
+     */
     void deregisterItem(CallData *cd);
-
+    /**
+     * @brief Flag to set authorization as enabled or disabled
+     */
     inline bool authorizationEnabled() const { return authorizationEnabled_; }
 
     //Forward declarations of CallData classes for their respective RPC

@@ -50,17 +50,71 @@
 */
 class CatenaServiceImpl::ExternalObjectRequest : public CallData {
     public:
+        /**
+         * @brief Constructor for ExternalObjectRequest class
+         *
+         * @param service the service to which the request is made
+         * @param dm the device for which the request is made
+         * @param ok flag to check if request is successful 
+         */
         ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+
+        //Destrutor for ExternalObjectRequest, although it isn't used.
         ~ExternalObjectRequest() {}
+
+        /**
+         * @brief Manages gRPC request through a state machine
+         *
+         * @param service the service to which the request is made
+         * @param ok flag to check if request is successful        
+         */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+
+        /**
+         * @brief Pointer to CatenaServiceImpl
+         */
         CatenaServiceImpl *service_;
+
+
+        /**
+         * @brief Context for gRPC command request for the server to use to send data back to the client
+         */
         ServerContext context_;
+
+
+        /**
+         * @brief Request payload for external object
+         */
         catena::ExternalObjectRequestPayload req_;
+
+        /**
+         * @brief Stream for reading and writing gRPC messages
+         */
         ServerAsyncWriter<catena::ExternalObjectPayload> writer_;
+
+
+        /**
+         * @brief Represents the current status of the call within the state machine (kCreate, kProcess, kFinish, etc.)
+         */
         CallStatus status_;
+
+
+        /**
+         * @brief Reference to the device to which the request is made
+         */
         Device &dm_;
+
+
+        /**
+         * @brief Unique identifier for command object
+         */
         int objectId_;
+
+
+        /**
+         * @brief Counter to generate unique object IDs for each new object
+         */
         static int objectCounter_;
 };

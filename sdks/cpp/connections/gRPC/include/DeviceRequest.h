@@ -46,22 +46,88 @@
 /**
 * @brief CallData class for the DeviceRequest RPC
 */
+
 class CatenaServiceImpl::DeviceRequest : public CallData {
     public:
+        /**
+         * @brief Constructor for ExternalObjectRequest class
+         *
+         * @param service the service to which the request is made
+         * @param dm the device for which the request is made
+         * @param ok flag to check if request is successful 
+         */
         DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+
+         /**
+         * @brief Manages gRPC request through a state machine
+         *
+         * @param service the service to which the request is made
+         * @param ok flag to check if request is successful        
+         */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+
+        /**
+         * @brief Pointer to CatenaServiceImpl
+         */
         CatenaServiceImpl *service_;
+
+        /**
+         * @brief Context for gRPC command request for the server to use to send data back to the client
+         */
         ServerContext context_;
+
+        /**
+         * @brief A list of scopes that the client has access to
+         */
         std::vector<std::string> clientScopes_;
+
+        /**
+         * @brief Unique pointer to the Authorizer object
+         */
         std::unique_ptr<catena::common::Authorizer> authz_ = nullptr;
+
+        /**
+         * @brief Request payload for device
+         */
         catena::DeviceRequestPayload req_;
+
+
+        /**
+         * @brief Stream for reading and writing gRPC messages
+         */
         ServerAsyncWriter<catena::DeviceComponent> writer_;
+        
+        
+        /**
+         * @brief Serializer for device
+         */
         std::optional<Device::DeviceSerializer> serializer_ = std::nullopt; //Can't create serializer until we have client scopes
+        
+
+        /**
+         * @brief Represents the current status of the call within the state machine (kCreate, kProcess, kFinish, etc.)
+         */
         CallStatus status_;
+
+        /**
+         * @brief Reference to the device to which the request is made
+         */
         Device &dm_;
+
+        /**
+         * @brief Unique identifier for device request object
+         */
         int objectId_;
+
+        /**
+         * @brief Counter to generate unique object IDs for each new object
+         */
         static int objectCounter_;
+
+        /**
+         * @brief Unique identifier for the shutdown signal
+         */
         unsigned int shutdownSignalId_;
 };

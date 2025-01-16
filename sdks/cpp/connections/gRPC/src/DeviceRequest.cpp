@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -54,8 +53,10 @@ using catena::common::Path;
 #include <iterator>
 #include <filesystem>
 
+//Counter for generating unique object IDs - static, so initializes at start
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 
+//Constructor which initializes and registers the current DeviceRequest object, then starts the process
 CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -64,16 +65,19 @@ CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Devi
     proceed(service, ok);  // start the process
 }
 
+//Manages gRPC command execution process by transitioning between states and handling errors and responses accordingly 
 void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
     std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                 << std::endl;
     
+    // If the process is cancelled, finish the process
     if(!ok){
         std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
     
+    //State machine to manage the process
     switch (status_) {
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
@@ -81,6 +85,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                                             this);
             break;
 
+        //Processes the command by reading the initial request from the client and transitioning to kRead
         case CallStatus::kProcess:
             new DeviceRequest(service_, dm_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
@@ -100,7 +105,8 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             }
             status_ = CallStatus::kWrite;
             // fall thru to start writing
-
+        
+        //Writes the response to the client by sending the external object and then continues to kPostWrite or kFinish
         case CallStatus::kWrite:
             {   
                 if (!serializer_) {
@@ -118,28 +124,31 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                         component = serializer_->getNext();
                     }
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
-                    writer_.Write(component, this);
+                    writer_.Write(component, this); 
                 } catch (catena::exception_with_status &e) {
-                    status_ = CallStatus::kFinish;
+                    status_ = CallStatus::kFinish; //Exception occured, finish the process
                     writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
-                } catch (...) {
+                } catch (...) { //Catch all other exceptions and finish the process
                     status_ = CallStatus::kFinish;
                     writer_.Finish(Status::CANCELLED, this);
                 }
             }
             break;
 
+        // Status after finishing writing the response, transitions to kFinish
         case CallStatus::kPostWrite:
             status_ = CallStatus::kFinish;
             writer_.Finish(Status::OK, this);
             break;
 
+        // Deregisters the current ExternalObjectRequest object and finishes the process
         case CallStatus::kFinish:
             std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
             //shutdownSignal.disconnect(shutdownSignalId_);
             service->deregisterItem(this);
             break;
 
+        // Throws an error if the state is not recognized
         default:
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");

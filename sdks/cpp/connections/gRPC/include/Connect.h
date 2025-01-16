@@ -48,25 +48,97 @@
 */
 class CatenaServiceImpl::Connect : public CallData {
     public:
+        /**
+         * @brief Constructor for the CallData class of the Connect gRPC.
+         * Calls proceed() once initialized.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to connect to.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
         Connect(CatenaServiceImpl *service, Device &dm, bool ok);
+        /**
+         * @brief Manages the steps of the Connect gRPC command
+         * through the state variable status. Returns the value of the
+         * parameter specified by the user.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param ok - Flag to check if the command was successfully executed.
+         */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+        /**
+         * @brief Parent CatenaServiceImpl.
+         */
         CatenaServiceImpl *service_;
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _writer and other gRPC objects/functions.
+         */
         ServerContext context_;
+        /**
+         * @brief Server request (Info on connection).
+         */
         catena::ConnectPayload req_;
+        /**
+         * @brief Server response (updates).
+         */
         catena::PushUpdates res_;
+        /**
+         * @brief gRPC async writer to write updates.
+         */
         ServerAsyncWriter<catena::PushUpdates> writer_;
+        /**
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         */
         CallStatus status_;
+        /**
+         * @brief The device to connect to.
+         */
         Device &dm_;
+        /**
+         * @brief The mutex to for locking the object while writing
+         */
         std::mutex mtx_;
+        /**
+         * @brief Condition variable to notify the object when the value has been updated
+         */
         std::condition_variable cv_;
+        /**
+         * @brief Flag to check if the value has been updated
+         */
         bool hasUpdate_{false};
+        /**
+         * @brief ID of the Connect object
+         */
         int objectId_;
+        /**
+         * @brief The total # of Connect objects.
+         */
         static int objectCounter_;
+        /**
+         * @brief Unused???
+         */
         unsigned int pushUpdatesId_;
+        /**
+         * @brief Id of operation waiting for valueSetByClient to be emitted.
+         * Used when ending the connection.
+         */
         unsigned int valueSetByClientId_;
+        /**
+         * @brief Id of operation waiting for valueSetByServer to be emitted.
+         * Used when ending the connection.
+         */
         unsigned int valueSetByServerId_;
+        /**
+         * @brief Signal emitted in the case of an error which requires the all
+         * open connections to be shut down.
+         */
         static vdk::signal<void()> shutdownSignal_;
+
+        /**
+         * @brief ID of the shutdown signal for the Connect object
+        */
         unsigned int shutdownSignalId_;
 };

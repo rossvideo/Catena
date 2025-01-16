@@ -38,18 +38,65 @@
 */
 class CatenaServiceImpl::SetValue : public CallData {
     public:
+        /**
+         * @brief Constructor for the CallData class of the SetValue
+         * gRPC. Calls proceed() once initialized.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the value from.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
         SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+        /**
+         * @brief Manages the steps of the SetValue gRPC command
+         * through the state variable status. Returns the value of the
+         * parameter specified by the user.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param ok - Flag to check if the command was successfully executed.
+         */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+        /**
+         * @brief Parent CatenaServiceImpl.
+         */
         CatenaServiceImpl *service_;
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
         ServerContext context_;
+        /**
+         * @brief Server request (Info on value to set).
+         */
         catena::SetValuePayload req_;
+        /**
+         * @brief Server response (UNUSED).
+         */
         catena::Value res_;
+        /**
+         * @brief gRPC async response writer.
+         */
         ServerAsyncResponseWriter<catena::Empty> responder_;
+        /**
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         */
         CallStatus status_;
+        /**
+         * @brief The device containing the value to set.
+         */
         Device &dm_;
+        /**
+         * The status of the transaction for use in responder.finish functions.
+         */
         Status errorStatus_;
+        /**
+         * @brief The object's unique id.
+         */
         int objectId_;
+        /**
+         * @brief The total # of SetValue objects.
+         */
         static int objectCounter_;
 };
