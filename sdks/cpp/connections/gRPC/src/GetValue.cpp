@@ -28,8 +28,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// common
+#include <Tags.h>
 
 #include <GetValue.h>
+
+// type aliases
+using catena::common::ParamTag;
+using catena::common::Path;
+
+#include <iostream>
+#include <thread>
+#include <fstream>
+#include <vector>
+#include <iterator>
+#include <filesystem>
 
 // Initializes the object counter for GetValue to 0.
 int CatenaServiceImpl::GetValue::objectCounter_ = 0;

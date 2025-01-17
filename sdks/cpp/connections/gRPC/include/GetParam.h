@@ -40,6 +40,9 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+// connections/gRPC
+#include <ServiceImpl.h>
+
 /**
 * @brief CallData class for the GetParam RPC
 */

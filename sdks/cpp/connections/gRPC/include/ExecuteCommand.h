@@ -32,7 +32,7 @@
 
 /**
  * @file ExecuteCommand.h
- * @brief Implements Catena gRPC Device Request
+ * @brief Implements Catena gRPC ExecuteCommand
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
@@ -48,7 +48,6 @@
 */
 class CatenaServiceImpl::ExecuteCommand : public CallData {
     public:
-
         /**
          * @brief Constructor for ExecuteCommand class
          *
@@ -57,8 +56,6 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
          * @param ok flag to check if command was successfully executed 
          */
         ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok);
-
-
         /**
          * @brief Manages gRPC command execution through a state machine
          *
@@ -68,55 +65,40 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
-
         /**
          * @brief Pointer to CatenaServiceImpl
          */
         CatenaServiceImpl *service_;
-
-
         /**
-         * @brief Context for gRPC command request for the server to use to send data back to the client
+         * @brief Context for gRPC command request for the server to use to
+         * send data back to the client
          */
         ServerContext context_;
-
-
         /**
          * @brief Request payload for command
          */
         catena::ExecuteCommandPayload req_;
-
-
         /**
          * @brief Response payload for command
          */
         catena::CommandResponse res_;
-
-
         /**
          * @brief Stream for reading and writing gRPC messages
          */
         grpc::ServerAsyncReaderWriter<catena::CommandResponse, catena::ExecuteCommandPayload> stream_;
-        
-
         /**
-         * @brief Represents the current status of the command execution (kCreate, kProcess, kFinish, etc.)
+         * @brief Represents the current status of the command execution
+         * (kCreate, kProcess, kFinish, etc.)
          */
         CallStatus status_;
-        
-
         /**
          * @brief Reference to the device to execute the command to
          */
         Device &dm_;
-
-
         /**
          * @brief Unique identifier for command object
          */
         int objectId_;
-
-
         /**
          * @brief Counter to generate unique object IDs for each new object
          */

@@ -102,7 +102,8 @@ class CatenaServiceImpl::Connect : public CallData {
          */
         std::mutex mtx_;
         /**
-         * @brief Condition variable to notify the object when the value has been updated
+         * @brief Condition variable to notify the object when the value has
+         * been updated
          */
         std::condition_variable cv_;
         /**
@@ -136,7 +137,6 @@ class CatenaServiceImpl::Connect : public CallData {
          * open connections to be shut down.
          */
         static vdk::signal<void()> shutdownSignal_;
-
         /**
          * @brief ID of the shutdown signal for the Connect object
         */

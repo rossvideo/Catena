@@ -28,16 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-/**
- * @file ExternalObjectRequest.h
- * @brief Implements Catena gRPC ExternalObjectRequest
- * @author john.naylor@rossvideo.com
- * @author john.danen@rossvideo.com
- * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
- * @copyright Copyright © 2024 Ross Video Ltd
- */
+// common
+#include <Tags.h>
 
  // connections/gRPC
 #include <ExternalObjectRequest.h>
@@ -53,10 +45,13 @@ using catena::common::Path;
 #include <iterator>
 #include <filesystem>
 
-//Counter for generating unique object IDs - static, so initializes at start
+// Counter for generating unique object IDs - static, so initializes at start
 int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
 
-//Constructor which initializes and registers the current ExternalObjectRequest object, then starts the process
+/** 
+ * Constructor which initializes and registers the current
+ * ExternalObjectRequest object, then starts the process
+ */
 CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -65,7 +60,10 @@ CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImp
     proceed(service, ok);  // start the process
 }
 
-//Manages gRPC command execution process by transitioning between states and handling errors and responses accordingly 
+/** 
+ * Manages gRPC command execution process by transitioning between states and
+ * handling errors and responses accordingly 
+ */
 void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *service, bool ok) {
     std::cout << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
@@ -79,21 +77,30 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
 
     //State machine to manage the process
     switch (status_) {
-        //Initial state, sets up reques to execute command and transitions to kProcess
+        /**
+         * Initial state, sets up reques to execute command and transitions to
+         * kProcess
+         */
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
             service_->RequestExternalObjectRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
                                             this);
             break;
 
-        //Processes the command by reading the initial request from the client and transitioning to kRead
+        /** 
+         * Processes the command by reading the initial request from the client
+         * and transitioning to kRead
+         */
         case CallStatus::kProcess:
             new ExternalObjectRequest(service_, dm_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             status_ = CallStatus::kWrite;
             // fall thru to start writing
 
-        //Writes the response to the client by sending the external object and then continues to kPostWrite or kFinish
+        /**
+         * Writes the response to the client by sending the external object and
+         * then continues to kPostWrite or kFinish
+         */
         case CallStatus::kWrite:
             try {
                 std::cout << "sending external object " << req_.oid() <<"\n";
@@ -124,10 +131,12 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
                 std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
                 status_ = CallStatus::kPostWrite; 
                 writer_.Write(obj, this);
+            // Exception occured, finish the process
             } catch (catena::exception_with_status &e) {
-                status_ = CallStatus::kFinish; //Exception occured, finish the process
+                status_ = CallStatus::kFinish;
                 writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
-            } catch (...) { //Catch all other exceptions and finish the process
+            // Catch all other exceptions and finish the process
+            } catch (...) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(Status::CANCELLED, this);
             }
@@ -139,8 +148,11 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
             writer_.Finish(Status::OK, this);
             break;
 
-        // Deregisters the current ExternalObjectRequest object and finishes the process
-        case CallStatus::kFinish: //
+        /**
+         * Deregisters the current ExternalObjectRequest object and finishes
+         * the process
+         */
+        case CallStatus::kFinish:
             std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;

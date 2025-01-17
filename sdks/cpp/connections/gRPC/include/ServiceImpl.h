@@ -30,7 +30,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 /**
  * @file ServiceImpl.h
  * @brief Implements Catena gRPC request handlers
@@ -101,8 +100,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
   private:
     /**
-     * @brief Abstract base class for the CallData classes
-     * Provides a the proceed method
+     * @brief Abstract base class for the CallData classes.
+     * Provides the proceed method
      */
     class CallData {
       public:

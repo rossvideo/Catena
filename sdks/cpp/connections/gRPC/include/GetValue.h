@@ -31,8 +31,8 @@
  */
 
 /**
- * @file GetPopulatedSlots.h
- * @brief Implements Catena gRPC GetPopulatedSlots
+ * @file GetValue.h
+ * @brief Implements Catena gRPC GetValue
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com

@@ -30,6 +30,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file SetValue.h
+ * @brief Implements Catena gRPC SetValue
+ * @author john.naylor@rossvideo.com
+ * @author john.danen@rossvideo.com
+ * @author isaac.robert@rossvideo.com
+ * @date 2024-06-08
+ * @copyright Copyright © 2024 Ross Video Ltd
+ */
+
 // connections/gRPC
 #include <ServiceImpl.h>
 
