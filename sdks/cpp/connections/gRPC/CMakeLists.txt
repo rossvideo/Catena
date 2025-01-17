@@ -30,6 +30,13 @@ set(target catena_connections_grpc)
 set(sources 
     "src/PeerInfo.cpp"
     "src/ServiceImpl.cpp" 
+    "src/GetPopulatedSlots.cpp"
+    "src/SetValue.cpp"
+    "src/GetValue.cpp"
+    "src/Connect.cpp"
+    "src/DeviceRequest.cpp"
+    "src/ExternalObjectRequest.cpp"
+    "src/ExecuteCommand.cpp"
     "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"
 )
