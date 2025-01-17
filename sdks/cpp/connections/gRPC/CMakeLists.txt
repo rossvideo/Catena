@@ -39,6 +39,7 @@ set(sources
     "src/ExecuteCommand.cpp"
     "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"
+    "src/MultiSetValue.cpp"
 )
 
 add_library(${target} STATIC ${sources})

@@ -37,6 +37,7 @@
 #include <GetPopulatedSlots.h>
 #include <GetValue.h>
 #include <SetValue.h>
+#include <MultiSetValue.h>
 #include <Connect.h>
 #include <DeviceRequest.h>
 // #include <GetParam.h>
@@ -102,6 +103,7 @@ void CatenaServiceImpl::init() {
     new GetPopulatedSlots(this, dm_, true);
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
+    new MultiSetValue(this, dm_, true);
     new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
