@@ -6,9 +6,10 @@
 
 The recommended process is hopefully simple:
 
-1. Design your device model as a set of JSON files in a file structure documented [here](Validation.html)
-2. Use `full_service --device_model /path/to/your/device.json` to run your model
-3. Use Postman to get/set your parameters
+1. Design your device model as a set of JSON or YAML files in a file structure documented [here](Validation.html).
+    1. [OPTIONAL] Install the recommended Red Hat extension redhat.vscode-yaml either through vscode or using the command `code --install-extension redhat.vscode-yaml`.
+2. Use `full_service --device_model /path/to/your/device.json` to run your model.
+3. Use Postman to get/set your parameters.
 4. Coming soon ... use DashBoard beta to even get a GUI!
 5. If working in C++, replace the placeholder business logic in `full_service.cpp` with your own.
 

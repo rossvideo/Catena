@@ -24,5 +24,6 @@ project(CATENA_LITE_EXAMPLES C CXX)
 
 add_subdirectory("status_update")
 add_subdirectory("structs_with_authz")
+add_subdirectory("structs_with_authz_yaml")
 add_subdirectory("use_commands")
 add_subdirectory("use_menus")
