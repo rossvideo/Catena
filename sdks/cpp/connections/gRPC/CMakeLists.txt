@@ -30,6 +30,7 @@ set(target catena_connections_grpc)
 set(sources 
     "src/PeerInfo.cpp"
     "src/ServiceImpl.cpp" 
+    "src/GenericSetValue.cpp"
     "src/GetPopulatedSlots.cpp"
     "src/SetValue.cpp"
     "src/GetValue.cpp"

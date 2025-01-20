@@ -48,65 +48,25 @@ using catena::common::Path;
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
 
+/**
+ * Constructor which initializes and registers the current MultiSetValue
+ * object, then starts the process.
+ */
 CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    objectId_ = objectCounter_++;
-    service->registerItem(this);
+ : GenericSetValue(service, dm, ok, objectCounter_++) {
+    typeName = "MultiSetValue";
     proceed(service, ok);
 }
 
-// Manages gRPC command execution process using the state variable status.
-void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool ok) {
-    std::cout << "MultiSetValue::proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
-    
-    if(!ok){
-        status_ = CallStatus::kFinish;
-    }
+/**
+ * Gets a MultiSetValueRequest from the system and sets it to the
+ * MultiSetValuePayload in GenericSetValue.
+ */
+void CatenaServiceImpl::MultiSetValue::request() {
+    service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
+}
 
-    switch (status_) {
-        /** 
-         * kCreate: Updates status to kProcess and requests the SetValue
-         * command from the service.
-         */ 
-        case CallStatus::kCreate:
-            status_ = CallStatus::kProcess;
-            service_->RequestMultiSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
-            break;
-
-        case CallStatus::kProcess:
-            // Used to serve other clients while processing.
-            new MultiSetValue(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);
-
-            for (const auto &setValuePayload : req_.values()) {
-
-                std::string oid = setValuePayload.oid();
-                catena::Value value = setValuePayload.value();
-                uint32_t elementIndex = setValuePayload.element_index();
-                
-                dm_.setValue(oid, value, catena::common::Authorizer::kAuthzDisabled);
-
-                //auto* setValueHandler = new SetValue(service_, dm_, ok, &value);
-                //service_->RequestSetValue(&context_, &pl, &responder_, service_->cq_, service_->cq_, &setValueHandler);
-                //service_->processEvents();
-                //new SetValue(service_, dm_, ok);
-            }
-
-            status_ = CallStatus::kFinish;
-            responder_.Finish(catena::Empty{}, Status::OK, this);
-            break;
-        
-        case CallStatus::kFinish:
-            std::cout << "MultiSetValue[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
-            break;
-
-        default:
-            status_ = CallStatus::kFinish;
-            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
-            responder_.FinishWithError(errorStatus, this);
-    }
+// Creates a new MultiSetValue to handle requests while processing.
+void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
+    new MultiSetValue(service, dm, ok);
 }
