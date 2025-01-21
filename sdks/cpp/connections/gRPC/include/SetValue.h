@@ -41,12 +41,12 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <GenericSetValue.h>
+#include <MultiSetValue.h>
 
 /**
 * @brief CallData class for the SetValue RPC
 */
-class CatenaServiceImpl::SetValue : public GenericSetValue {
+class CatenaServiceImpl::SetValue : public MultiSetValue {
     public:
         /**
          * @brief Constructor for the CallData class of the SetValue
@@ -57,9 +57,10 @@ class CatenaServiceImpl::SetValue : public GenericSetValue {
          * @param ok - Flag to check if the command was successfully executed.
          */ 
         SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+    private:
         /**
          * @brief Requests Set Value from the system and adds the request to
-         * the MultiSetValuePayload in GenericSetValue.
+         * the MultiSetValuePayload in MultiSetValue.
          */
         void request() override;
         /**
@@ -71,7 +72,6 @@ class CatenaServiceImpl::SetValue : public GenericSetValue {
          * @param ok - Flag to check if the command was successfully executed.
          */ 
         void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
-    private:
         /**
          * @brief The total # of SetValue objects.
          */

@@ -32,7 +32,10 @@
 
 /**
  * @file MultiSetValue.h
- * @brief Implements Catena gRPC MultiSetValue
+ * @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
+ * @author john.naylor@rossvideo.com
+ * @author john.danen@rossvideo.com
+ * @author isaac.robert@rossvideo.com
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-01-20
@@ -41,12 +44,11 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <GenericSetValue.h>
 
 /**
-* @brief CallData class for the MultiSetValue RPC
+* @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
 */
-class CatenaServiceImpl::MultiSetValue : public GenericSetValue {
+class CatenaServiceImpl::MultiSetValue : public CallData {
     public:
         /**
          * @brief Constructor for the CallData class of the MultiSetValue
@@ -58,10 +60,28 @@ class CatenaServiceImpl::MultiSetValue : public GenericSetValue {
          */ 
         MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Requests Multui Set Value from the system and sets the
-         * request to the MultiSetValuePayload in GenericSetValue.
+         * @brief Manages the steps of the SetValue and MultiSetValue gRPC
+         * commands through the state variable status.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param ok - Flag to check if the command was successfully executed.
          */
-        void request() override;
+        void proceed(CatenaServiceImpl *service, bool ok) override;
+    protected:
+        /**
+         * @brief Constructor class for child classes.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the value from.
+         * @param ok - Flag to check if the command was successfully executed.
+         * @param objectId - objectCounter_ + 1
+         */ 
+        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId);
+        /**
+         * @brief Requests Multi Set Value from the system and sets the
+         * request to the MultiSetValuePayload.
+         */
+        virtual void request();
         /**
          * @brief Creates a new MultiSetValue object to serve other clients
          * while processing.
@@ -70,10 +90,51 @@ class CatenaServiceImpl::MultiSetValue : public GenericSetValue {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
+        virtual void create(CatenaServiceImpl *service, Device &dm, bool ok);
+        /**
+         * @brief Name of childclass to specify gRPC in console notifications.
+         */
+        std::string typeName;
+        /**
+         * @brief Parent CatenaServiceImpl.
+         */
+        CatenaServiceImpl *service_;
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
+        ServerContext context_;
+        /**
+         * @brief Server request as a MultiSetValuePayload if not already.
+         */
+        catena::MultiSetValuePayload reqs_;
+        /**
+         * @brief Server response (UNUSED).
+         */
+        catena::Value res_;
+        /**
+         * @brief gRPC async response writer.
+         */
+        ServerAsyncResponseWriter<catena::Empty> responder_;
+        /**
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         */
+        CallStatus status_;
+        /**
+         * @brief The device containing the value to set.
+         */
+        Device &dm_;
+        /**
+         * The status of the transaction for use in responder.finish functions.
+         */
+        Status errorStatus_;
+        /**
+         * @brief The object's unique id.
+         */
+        int objectId_;
     private:
         /**
-         * @brief The total # of SetValue objects.
+         * @brief The total # of MultiSetValue objects.
          */
         static int objectCounter_;
 };

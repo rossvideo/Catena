@@ -53,14 +53,20 @@ int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
  * object, then starts the process.
  */
 CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok)
- : GenericSetValue(service, dm, ok, objectCounter_++) {
+    : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "MultiSetValue";
+    service->registerItem(this);
     proceed(service, ok);
 }
 
+// Constructor for child classes.
+CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId)
+    : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
+    status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
+
 /**
  * Gets a MultiSetValueRequest from the system and sets it to the
- * MultiSetValuePayload in GenericSetValue.
+ * MultiSetValuePayload.
  */
 void CatenaServiceImpl::MultiSetValue::request() {
     service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
@@ -69,4 +75,88 @@ void CatenaServiceImpl::MultiSetValue::request() {
 // Creates a new MultiSetValue to handle requests while processing.
 void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
     new MultiSetValue(service, dm, ok);
+}
+
+// Manages gRPC command execution process using the state variable status.
+void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool ok) { 
+    std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+    
+    if(!ok){
+        status_ = CallStatus::kFinish;
+    }
+    
+    switch (status_) {
+        /** 
+         * kCreate: Updates status to kProcess and requests the SetValue
+         * command from the service.
+         */ 
+        case CallStatus::kCreate:
+            status_ = CallStatus::kProcess;
+            request();
+            break;
+        /**
+         * kProcess: Processes the request asyncronously, updating status to
+         * kFinish and notifying the responder once finished.
+         */
+        case CallStatus::kProcess:
+            // Used to serve other clients while processing.
+            create(service_, dm_, ok);
+            context_.AsyncNotifyWhenDone(this);
+            try {
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
+                // If authorization is enabled, check the client's scopes.
+                catena::common::Authorizer* authz;
+                if (service->authorizationEnabled()) {
+                    std::vector<std::string> clientScopes = service->getScopes(context_);
+                    catena::common::Authorizer authorizer{clientScopes};
+                    authz = &authorizer;
+                } else {
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
+                /**
+                 * Looping through each request. In case of SetValue, reqs_ is
+                 * a MultiSetValuePayload containing a single request.
+                 */
+                for (auto &setValuePayload : reqs_.values()) {
+                    std::string oid = setValuePayload.oid();
+                    catena::Value value = setValuePayload.value();
+                    Device::LockGuard lg(dm_);
+                    // Taking rc if it is OK, otherwise saving error rc.
+                    if (rc.status == catena::StatusCode::OK) {
+                        rc = dm_.setValue(oid, value, *authz);
+                    } else {
+                        dm_.setValue(oid, value, *authz);
+                    }
+                }
+                // End of kProcess
+                if (rc.status == catena::StatusCode::OK) {
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(catena::Empty{}, Status::OK, this);
+                } else { // Error, end process.
+                    errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(::catena::Empty{}, errorStatus_, this);
+                }
+            } catch (...) { // Error, end process.
+                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+                status_ = CallStatus::kFinish;
+                responder_.Finish(::catena::Empty{}, errorStatus_, this);
+            }
+            break;
+        /**
+         * kFinish: Final step of gRPC is the deregister the item from
+         * CatenaServiceImpl.
+         */
+        case CallStatus::kFinish:
+            std::cout << typeName << "[" << objectId_ << "] finished\n";
+            service->deregisterItem(this);
+            break;
+        // default: Error, end process.
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
+    }
 }

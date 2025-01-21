@@ -53,14 +53,15 @@ int CatenaServiceImpl::SetValue::objectCounter_ = 0;
  * then starts the process.
  */
 CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
-    : GenericSetValue(service, dm, ok, objectCounter_++) {
+    : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "SetValue";
+    service->registerItem(this);
     proceed(service, ok);
 }
 
 /**
  * Gets a SetValueRequest from the system and adds it to the
- * MultiSetValuePayload in GenericSetValue.
+ * MultiSetValuePayload in MultiSetValue.
  */
 void CatenaServiceImpl::SetValue::request() {
     catena::SetValuePayload* req = reqs_.add_values();

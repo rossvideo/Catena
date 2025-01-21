@@ -171,7 +171,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     //Forward declarations of CallData classes for their respective RPC
     class GetPopulatedSlots;
     class GetValue;
-    class GenericSetValue;
     class SetValue;
     class MultiSetValue;
     class Connect;
