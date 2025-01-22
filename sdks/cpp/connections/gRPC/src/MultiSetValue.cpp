@@ -118,13 +118,17 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                         break;
                     }
                 }
-                // If above is valid, then proceed with setting the values.
+                /**
+                 * If above is valid, then proceed with setting the values.
+                 * Since we have already verified the request, we can disable
+                 * authorization when setting the values.
+                 */ 
                 if (rc.status == catena::StatusCode::OK) {
                     for (auto &setValuePayload : reqs_.values()) {
                         std::string oid = setValuePayload.oid();
                         catena::Value value = setValuePayload.value();
                         Device::LockGuard lg(dm_);
-                        dm_.setValue(oid, value, *authz);
+                        dm_.setValue(oid, value, catena::common::Authorizer::kAuthzDisabled);
                     }
                     // End of kProcess
                     status_ = CallStatus::kFinish;
