@@ -48,10 +48,6 @@ using catena::common::Path;
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 
-/**
- * Constructor which initializes and registers the current SetValue object, 
- * then starts the process.
- */
 CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
     : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "SetValue";
@@ -59,16 +55,11 @@ CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bo
     proceed(service, ok);
 }
 
-/**
- * Gets a SetValueRequest from the system and adds it to the
- * MultiSetValuePayload in MultiSetValue.
- */
 void CatenaServiceImpl::SetValue::request() {
     catena::SetValuePayload* req = reqs_.add_values();
     service_->RequestSetValue(&context_, req, &responder_, service_->cq_, service_->cq_, this);
 }
 
-// Creates a new SetValue to handle requests while processing.
 void CatenaServiceImpl::SetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
     new SetValue(service, dm, ok);
 }

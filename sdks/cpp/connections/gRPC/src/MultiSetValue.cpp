@@ -48,10 +48,6 @@ using catena::common::Path;
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
 
-/**
- * Constructor which initializes and registers the current MultiSetValue
- * object, then starts the process.
- */
 CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok)
     : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "MultiSetValue";
@@ -59,25 +55,18 @@ CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Devi
     proceed(service, ok);
 }
 
-// Constructor for child classes.
 CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId)
     : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
-/**
- * Gets a MultiSetValueRequest from the system and sets it to the
- * MultiSetValuePayload.
- */
 void CatenaServiceImpl::MultiSetValue::request() {
     service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
 }
 
-// Creates a new MultiSetValue to handle requests while processing.
 void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
     new MultiSetValue(service, dm, ok);
 }
 
-// Manages gRPC command execution process using the state variable status.
 void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool ok) { 
     std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
@@ -105,36 +94,43 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
             create(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // If authorization is enabled, check the client's scopes.
+                /**
+                 * Creating authorization object depending on client scopes.
+                 * Shared ptr to maintain lifetime of object. Raw ptr ensures
+                 * kAUthzDisabled is not deleted when out of scope.
+                 */
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service->authorizationEnabled()) {
                     std::vector<std::string> clientScopes = service->getScopes(context_);
-                    catena::common::Authorizer authorizer{clientScopes};
-                    authz = &authorizer;
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(clientScopes);
+                    authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                /**
-                 * Looping through each request. In case of SetValue, reqs_ is
-                 * a MultiSetValuePayload containing a single request.
-                 */
+                // Verifying all requests before setting any values.
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 for (auto &setValuePayload : reqs_.values()) {
                     std::string oid = setValuePayload.oid();
-                    catena::Value value = setValuePayload.value();
                     Device::LockGuard lg(dm_);
-                    // Taking rc if it is OK, otherwise saving error rc.
-                    if (rc.status == catena::StatusCode::OK) {
-                        rc = dm_.setValue(oid, value, *authz);
-                    } else {
-                        dm_.setValue(oid, value, *authz);
+                    rc = dm_.setValueTry(oid, *authz);
+                    if (rc.status != catena::StatusCode::OK) {
+                        break;
                     }
                 }
-                // End of kProcess
+                // If above is valid, then proceed with setting the values.
                 if (rc.status == catena::StatusCode::OK) {
+                    for (auto &setValuePayload : reqs_.values()) {
+                        std::string oid = setValuePayload.oid();
+                        catena::Value value = setValuePayload.value();
+                        Device::LockGuard lg(dm_);
+                        dm_.setValue(oid, value, *authz);
+                    }
+                    // End of kProcess
                     status_ = CallStatus::kFinish;
                     responder_.Finish(catena::Empty{}, Status::OK, this);
-                } else { // Error, end process.
+                // If abovce is invalid, then Error and end process.
+                } else {
                     errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
                     status_ = CallStatus::kFinish;
                     responder_.Finish(::catena::Empty{}, errorStatus_, this);
