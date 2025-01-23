@@ -33,20 +33,20 @@
 /**
  * @file SetValue.h
  * @brief Implements Catena gRPC SetValue
- * @author john.naylor@rossvideo.com
- * @author john.danen@rossvideo.com
- * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
+ * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
+ * @date 2025-01-20
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // connections/gRPC
 #include <ServiceImpl.h>
+#include <MultiSetValue.h>
 
 /**
 * @brief CallData class for the SetValue RPC
 */
-class CatenaServiceImpl::SetValue : public CallData {
+class CatenaServiceImpl::SetValue : public MultiSetValue {
     public:
         /**
          * @brief Constructor for the CallData class of the SetValue
@@ -57,54 +57,21 @@ class CatenaServiceImpl::SetValue : public CallData {
          * @param ok - Flag to check if the command was successfully executed.
          */ 
         SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
-        /**
-         * @brief Manages the steps of the SetValue gRPC command
-         * through the state variable status. Returns the value of the
-         * parameter specified by the user.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
-         */
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-
     private:
         /**
-         * @brief Parent CatenaServiceImpl.
+         * @brief Requests Set Value from the system and adds the request to
+         * the MultiSetValuePayload in MultiSetValue.
          */
-        CatenaServiceImpl *service_;
+        void request() override;
         /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _responder and other gRPC objects/functions.
-         */
-        ServerContext context_;
-        /**
-         * @brief Server request (Info on value to set).
-         */
-        catena::SetValuePayload req_;
-        /**
-         * @brief Server response (UNUSED).
-         */
-        catena::Value res_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        ServerAsyncResponseWriter<catena::Empty> responder_;
-        /**
-         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
-         */
-        CallStatus status_;
-        /**
-         * @brief The device containing the value to set.
-         */
-        Device &dm_;
-        /**
-         * The status of the transaction for use in responder.finish functions.
-         */
-        Status errorStatus_;
-        /**
-         * @brief The object's unique id.
-         */
-        int objectId_;
+         * @brief Creates a new SetValue object to serve other clients while
+         * processing.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the value from.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
+        void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
         /**
          * @brief The total # of SetValue objects.
          */
