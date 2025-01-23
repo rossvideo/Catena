@@ -65,6 +65,7 @@ grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadat
 
     // remove the 'Bearer ' text from the beginning
     try {
+        std::cout<<"Removed bearer text"<<std::endl;
         grpc::string_ref t = authz->second.substr(7);
         std::string token(t.begin(), t.end());
         auto decoded = jwt::decode(token);
@@ -99,6 +100,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std:
  * Creates the CallData objects for each gRPC command.
  */
 void CatenaServiceImpl::init() {
+    
     new GetPopulatedSlots(this, dm_, true);
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
@@ -159,6 +161,17 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
 
     //If authorization is enabled, get the authorization context
     auto authContext = context.auth_context();
+    
+    //For testing
+    auto contextMeta = context.client_metadata();
+    std::cout << "Listing all properties in auth_context:" << std::endl;
+    for (auto it = authContext->begin(); it != authContext->end(); ++it) {
+        const grpc::AuthProperty& property = *it;
+        std::string key = std::string(property.first.data(), property.first.length());         // Property name
+        std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
+        std::cout << "Key: " << key << ", Value: " << value << std::endl;
+}
+
 
     //If there is no authorization context, deny the request
     if (authContext == nullptr) {
