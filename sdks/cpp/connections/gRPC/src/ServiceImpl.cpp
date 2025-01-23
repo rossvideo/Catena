@@ -158,7 +158,7 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
         // there won't be any scopes if authorization is disabled
         return {};
     }
-
+    auto address =  &context;
     //If authorization is enabled, get the authorization context
     auto authContext = context.auth_context();
     

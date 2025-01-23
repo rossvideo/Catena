@@ -85,7 +85,7 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
 
 AuthInterceptor::AuthInterceptor(grpc::experimental::ServerRpcInfo* info) : info_(info) {};
 
-bool AuthInterceptor::validateToken(const std::string& token) {
+bool AuthInterceptor::validateToken(const std::string& token, jwt::traits::kazuho_picojson::string_type* claims) {
     /**
      * STEPS:
      *
@@ -132,8 +132,13 @@ bool AuthInterceptor::validateToken(const std::string& token) {
     }
 
     // Just the payload part from above to add to the metadata if valid.
-    auto claims = decodedToken.get_payload();
-    info_->server_context()->AddTrailingMetadata("claims", claims);
+    *claims = decodedToken.get_payload();
+    //info_->server_context()->AddInitialMetadata("claims", claims);
+    //auto temp = info_->server_context();
+
+   // YOU CAN NOT ADD STUFF TO AUTH_CONTEXT!!!!
+
+    //auto contextMeta = info_->server_context();
 
     // Is there a point in this???
     return true;
@@ -180,7 +185,12 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
 
         try {
             // Validating token and adding claims to server context if valid.
-            validateToken(JWSToken);
+            jwt::traits::kazuho_picojson::string_type claims;
+            validateToken(JWSToken, &claims);
+            methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", claims));
+            //metadata->insert(std::make_pair("claims", claims));
+            metadata = methods->GetRecvInitialMetadata();
+            tempMetaData = *metadata;
 
         } catch (const std::exception& e) { // Currently enters THIS catch block.
             std::cout << "Invalid token due to alternate exception: " << e.what() << std::endl;
