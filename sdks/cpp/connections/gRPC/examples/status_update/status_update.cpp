@@ -180,7 +180,6 @@ void RunRPCServer(std::string addr)
         //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
         //     throw std::invalid_argument(why.str());
         // }
-
         grpc::ServerBuilder builder;
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);

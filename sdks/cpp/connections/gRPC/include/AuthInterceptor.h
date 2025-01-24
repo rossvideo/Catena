@@ -66,7 +66,7 @@ class AuthInterceptor : public grpc::experimental::Interceptor {
          * @param token - The token to validate.
          * @return bool - True if the token is valid, false otherwise.
          */
-        bool validateToken(const std::string& token, jwt::traits::kazuho_picojson::string_type* claims);
+        void validateToken(const std::string& token, std::string* claims);
         /**
          * @brief Information on the server. Valid claims are appended to its
          * associated ServerContext.

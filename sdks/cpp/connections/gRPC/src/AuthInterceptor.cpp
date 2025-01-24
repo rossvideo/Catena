@@ -85,7 +85,7 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
 
 AuthInterceptor::AuthInterceptor(grpc::experimental::ServerRpcInfo* info) : info_(info) {};
 
-bool AuthInterceptor::validateToken(const std::string& token, jwt::traits::kazuho_picojson::string_type* claims) {
+void AuthInterceptor::validateToken(const std::string& token, std::string* claims) {
     /**
      * STEPS:
      *
@@ -132,7 +132,9 @@ bool AuthInterceptor::validateToken(const std::string& token, jwt::traits::kazuh
     }
 
     // Just the payload part from above to add to the metadata if valid.
+    //methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", std::string(decodedToken.get_payload())));
     *claims = decodedToken.get_payload();
+
     //info_->server_context()->AddInitialMetadata("claims", claims);
     //auto temp = info_->server_context();
 
@@ -141,7 +143,7 @@ bool AuthInterceptor::validateToken(const std::string& token, jwt::traits::kazuh
     //auto contextMeta = info_->server_context();
 
     // Is there a point in this???
-    return true;
+    //return true;
 }
 
 void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* methods) {
@@ -184,14 +186,23 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
         std::string JWSToken = std::string(tokenSubStr.begin(), tokenSubStr.end());
 
         try {
-            // Validating token and adding claims to server context if valid.
-            jwt::traits::kazuho_picojson::string_type claims;
+            std::string claims;
             validateToken(JWSToken, &claims);
-            methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", claims));
-            //metadata->insert(std::make_pair("claims", claims));
+            auto pair = std::make_pair(std::string("claims"), claims);
+            methods->GetRecvInitialMetadata()->insert(pair);
+            methods->GetRecvInitialMetadata()->find("claims")->second = *new std::string(claims);
+            // Testing to make sure the metadata was recieved.
             metadata = methods->GetRecvInitialMetadata();
             tempMetaData = *metadata;
-
+            //For testing
+            auto contextMeta = info_->server_context()->client_metadata();
+            std::cout << "\nAfter validation:" << std::endl;
+            for (auto it = contextMeta.begin(); it != contextMeta.end(); ++it) {
+                const grpc::AuthProperty& property = *it;
+                std::string key = std::string(property.first.data(), property.first.length());         // Property name
+                std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
+                std::cout << "Key: " << key << ", Value: " << value << std::endl;
+            }
         } catch (const std::exception& e) { // Currently enters THIS catch block.
             std::cout << "Invalid token due to alternate exception: " << e.what() << std::endl;
             // Invalid token.
@@ -204,12 +215,22 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
         // Updating status and proceeding with gRPC.
         //grpc::Status status(grpc::StatusCode::OK, "Valid token");
         //methods->ModifySendStatus(status);
-
     }
     else {
         std::cout << "No interception hook point found" << std::endl;
     }
 
+    // if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
+    //     //For testing
+    //     auto contextMeta = info_->server_context()->client_metadata();
+    //     std::cout << "\nEnd of Intercept:" << std::endl;
+    //     for (auto it = contextMeta.begin(); it != contextMeta.end(); ++it) {
+    //         const grpc::AuthProperty& property = *it;
+    //         std::string key = std::string(property.first.data(), property.first.length());         // Property name
+    //         std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
+    //         std::cout << "Key: " << key << ", Value: " << value << std::endl;
+    //     }   
+    // }
     methods->Proceed(); //Apparently I'm supposed to keep this
 
 }

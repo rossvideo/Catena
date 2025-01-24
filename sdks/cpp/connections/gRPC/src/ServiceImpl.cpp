@@ -164,8 +164,8 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
     
     //For testing
     auto contextMeta = context.client_metadata();
-    std::cout << "Listing all properties in auth_context:" << std::endl;
-    for (auto it = authContext->begin(); it != authContext->end(); ++it) {
+    std::cout << "\nIn GetScopes():" << std::endl;
+    for (auto it = contextMeta.begin(); it != contextMeta.end(); ++it) {
         const grpc::AuthProperty& property = *it;
         std::string key = std::string(property.first.data(), property.first.length());         // Property name
         std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
