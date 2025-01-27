@@ -72,8 +72,8 @@ class AuthInterceptor : public grpc::experimental::Interceptor {
          * associated ServerContext.
          */
         grpc::experimental::ServerRpcInfo* info_;
-        
-
+        std::shared_ptr<std::string> sharedClaims;
+        std::shared_ptr<grpc::string_ref> sharedClaimsRef;
 
 };
 class AuthInterceptorFactory : public grpc::experimental::ServerInterceptorFactoryInterface {

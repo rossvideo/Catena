@@ -170,14 +170,12 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
         try {
             std::string claims;
             validateToken(JWSToken, &claims);
-            /**
-             * Making a "claims" pair with empty value and assigning a copy of
-             * the claims string to it afterwards to maintain ownership.
-             * THIS MEMORY IS NOT AUTOMATICALLY DEALLOCATED AND MUST BE FREED
-             * LATER
-             */
-            methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", ""));
-            methods->GetRecvInitialMetadata()->find("claims")->second = *new std::string(claims);
+            
+            sharedClaims = std::make_shared<std::string>(claims);
+            sharedClaimsRef = std::make_shared<grpc::string_ref>(*sharedClaims);
+            methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", *sharedClaimsRef));
+            
+            //methods->GetRecvInitialMetadata()->find("claims")->second = *new std::string(claims);
         } catch (const std::exception& e) { // Currently enters THIS catch block.
             std::cout << "Invalid token due to alternate exception: " << e.what() << std::endl;
             // Invalid token.

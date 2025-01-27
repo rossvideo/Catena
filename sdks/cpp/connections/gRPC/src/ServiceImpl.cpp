@@ -202,5 +202,11 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
             }
         }
     }
+    /**
+     * Freeing the memory associated with claims once we are done with it.
+     * Cannot remove the claims from the contextMeta as it is a const object.
+     * Be sure to not use this field in the future.
+     */
+
     return scopes;
 }
