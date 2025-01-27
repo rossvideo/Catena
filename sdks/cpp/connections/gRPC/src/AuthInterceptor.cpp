@@ -122,7 +122,7 @@ void AuthInterceptor::validateToken(const std::string& token, std::string* claim
         std::cout << "Token is valid with NBF check" << std::endl;
     }
 
-    //Check if token is expired
+    // Check if token is expired
     if (decodedToken.has_payload_claim("exp")) {
         auto exp = decodedToken.get_payload_claim("exp").as_date().time_since_epoch().count();
         if (nowSinceEpoch > exp) {
@@ -131,44 +131,26 @@ void AuthInterceptor::validateToken(const std::string& token, std::string* claim
         std::cout << "Token is valid with EXP check" << std::endl;
     }
 
-    // Just the payload part from above to add to the metadata if valid.
-    //methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", std::string(decodedToken.get_payload())));
+    // Extracting claims from the token and assigning it to the claims output.
     *claims = decodedToken.get_payload();
-
-    //info_->server_context()->AddInitialMetadata("claims", claims);
-    //auto temp = info_->server_context();
-
-   // YOU CAN NOT ADD STUFF TO AUTH_CONTEXT!!!!
-
-    //auto contextMeta = info_->server_context();
 
     // Is there a point in this???
     //return true;
 }
 
 void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* methods) {
-    std::cout<< "Intercepted..." << std::endl;
     /**
      * If there's a hook point the gRPC call is intercepted before the initial
      * metadata is sent. Authorization data is then found from that.
      */
-
-  
-
-
     if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
-        std::cout << "Interception hook point found" << std::endl;
         auto* metadata = methods->GetRecvInitialMetadata(); 
-        auto tempMetaData = *metadata;
-
 
         if (metadata == nullptr) {
             std::cout << "No metadata found" << std::endl;
-
-            //Not sure if we need to hijack here.
-            // grpc::Status status(grpc::StatusCode::UNAUTHENTICATED, "No metadata found");
-            // methods->ModifySendStatus(status);
-            // methods->Hijack(); //Stop RPC from proceeding further
+            grpc::Status status(grpc::StatusCode::UNAUTHENTICATED, "No metadata found");
+            methods->ModifySendStatus(status);
+            methods->Hijack(); //Stop RPC from proceeding further
             return;
         }
 
@@ -188,21 +170,14 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
         try {
             std::string claims;
             validateToken(JWSToken, &claims);
-            auto pair = std::make_pair(std::string("claims"), claims);
-            methods->GetRecvInitialMetadata()->insert(pair);
+            /**
+             * Making a "claims" pair with empty value and assigning a copy of
+             * the claims string to it afterwards to maintain ownership.
+             * THIS MEMORY IS NOT AUTOMATICALLY DEALLOCATED AND MUST BE FREED
+             * LATER
+             */
+            methods->GetRecvInitialMetadata()->insert(std::make_pair("claims", ""));
             methods->GetRecvInitialMetadata()->find("claims")->second = *new std::string(claims);
-            // Testing to make sure the metadata was recieved.
-            metadata = methods->GetRecvInitialMetadata();
-            tempMetaData = *metadata;
-            //For testing
-            auto contextMeta = info_->server_context()->client_metadata();
-            std::cout << "\nAfter validation:" << std::endl;
-            for (auto it = contextMeta.begin(); it != contextMeta.end(); ++it) {
-                const grpc::AuthProperty& property = *it;
-                std::string key = std::string(property.first.data(), property.first.length());         // Property name
-                std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
-                std::cout << "Key: " << key << ", Value: " << value << std::endl;
-            }
         } catch (const std::exception& e) { // Currently enters THIS catch block.
             std::cout << "Invalid token due to alternate exception: " << e.what() << std::endl;
             // Invalid token.
@@ -213,24 +188,13 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
         }
 
         // Updating status and proceeding with gRPC.
-        //grpc::Status status(grpc::StatusCode::OK, "Valid token");
-        //methods->ModifySendStatus(status);
-    }
-    else {
+        // grpc::Status status(grpc::StatusCode::OK, "Valid token");
+        // methods->ModifySendStatus(status);
+
+    } else {
         std::cout << "No interception hook point found" << std::endl;
     }
 
-    // if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
-    //     //For testing
-    //     auto contextMeta = info_->server_context()->client_metadata();
-    //     std::cout << "\nEnd of Intercept:" << std::endl;
-    //     for (auto it = contextMeta.begin(); it != contextMeta.end(); ++it) {
-    //         const grpc::AuthProperty& property = *it;
-    //         std::string key = std::string(property.first.data(), property.first.length());         // Property name
-    //         std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
-    //         std::cout << "Key: " << key << ", Value: " << value << std::endl;
-    //     }   
-    // }
-    methods->Proceed(); //Apparently I'm supposed to keep this
+    methods->Proceed();
 
 }

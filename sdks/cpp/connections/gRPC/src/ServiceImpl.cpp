@@ -159,34 +159,31 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
         return {};
     }
     auto address =  &context;
-    //If authorization is enabled, get the authorization context
+    /**
+     * If authorization is enabled, get the authorization context as well as
+     * the claims from the client_metadata.
+     */
     auto authContext = context.auth_context();
-    
-    //For testing
-    auto contextMeta = context.client_metadata();
-    std::cout << "\nIn GetScopes():" << std::endl;
-    for (auto it = contextMeta.begin(); it != contextMeta.end(); ++it) {
-        const grpc::AuthProperty& property = *it;
-        std::string key = std::string(property.first.data(), property.first.length());         // Property name
-        std::string value = std::string(property.second.data(), property.second.length());      // Property value as a string
-        std::cout << "Key: " << key << ", Value: " << value << std::endl;
-}
+    auto contextMeta = &context.client_metadata();
+    auto testMeta = *contextMeta;   // TESTING VARIABLE
 
 
     //If there is no authorization context, deny the request
-    if (authContext == nullptr) {
+    if (authContext == nullptr || contextMeta == nullptr) {
         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
     }
 
     // Get the claims from the authorization context
-    std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
+    //std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
+    auto claimsStr = contextMeta->find("claims");
     // If there are no claims, deny the request
-    if (claimsStr.empty()) {
+    if (claimsStr == contextMeta->end()) {
         throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
     }
     // Parse string of claims into a picojson object
     picojson::value claims;
-    std::string err = picojson::parse(claims, claimsStr[0].data());
+    // inline std::string picojson::parse(picojson::value &out, const std::string &s)
+    std::string err = picojson::parse(claims, claimsStr->second.data());
 
     // If there was an error parsing the claims, deny the request
     if (!err.empty()) {
