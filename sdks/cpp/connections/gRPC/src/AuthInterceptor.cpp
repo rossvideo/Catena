@@ -111,11 +111,13 @@ void AuthInterceptor::validateToken(const std::string& token, std::string* claim
     verifier.verify(decodedToken);
 
     auto now = std::chrono::system_clock::now();
-    auto nowSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    std::time_t nowSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 
     // Check for token's NBF claim
     if (decodedToken.has_payload_claim("nbf")) {
-        auto nbf = decodedToken.get_payload_claim("nbf").as_date().time_since_epoch().count();
+        std::time_t nbf = decodedToken.get_payload_claim("nbf").as_date().time_since_epoch().count();
+        // Ensure nbf is limited to 10 digits
+        nbf = static_cast<std::time_t>(nbf / 1000000000);
         if (nowSinceEpoch < nbf) {
             throw std::runtime_error("Token not valid yet (nbf claim)");
         }
@@ -125,6 +127,8 @@ void AuthInterceptor::validateToken(const std::string& token, std::string* claim
     // Check if token is expired
     if (decodedToken.has_payload_claim("exp")) {
         auto exp = decodedToken.get_payload_claim("exp").as_date().time_since_epoch().count();
+        // Ensure exp is limited to 10 digits
+        exp = static_cast<std::time_t>(exp / 1000000000);
         if (nowSinceEpoch > exp) {
             throw std::runtime_error("Token expired");
         }
