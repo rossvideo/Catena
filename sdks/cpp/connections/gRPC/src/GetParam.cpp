@@ -110,13 +110,13 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                catena::common::Authorizer authz{std::vector<std::string>{}};  // Initialize empty
+                catena::common::Authorizer authz{std::vector<std::string>{}};
                 /**
                  * If authorization is enabled, check the client's scopes.
                  */
                 if (service->authorizationEnabled()) {
                     std::vector<std::string> scopes = service->getScopes(context_);
-                    authz = catena::common::Authorizer{scopes};  // Assign new value to scopes
+                    authz = catena::common::Authorizer{scopes};  
                     {
                         Device::LockGuard lg(dm_);
                         param = dm_.getParam(req_.oid(), rc, authz);
