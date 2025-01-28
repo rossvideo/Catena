@@ -60,6 +60,7 @@ const schemaFilename = options.schema;
 const Validator = require('./validator.js');
 const validator = new Validator(schemaFilename);
 const path = require("node:path");
+const yaml = require('yaml')
 
 /**
  * @class DeviceModel
@@ -99,7 +100,15 @@ class DeviceModel {
             if (!fs.existsSync(importPath)) {
               throw new Error(`Cannot open file at ${importArg.file}`);
             }
-            const importData = JSON.parse(fs.readFileSync(importPath));
+            // Determining if the file is yaml or json and parsing accordingly.
+            const importData = (() => {
+                const extension = path.extname(importPath);
+                if (extension === ".yaml" || extension === ".yml") {
+                    return yaml.parse(fs.readFileSync(importPath, 'utf8'));
+                } else { // Default
+                    return JSON.parse(fs.readFileSync(importPath));
+                }
+            })();
             if (!this.validator.validateParam(importData)) {
               throw new Error(`Imported data is not valid`);
             }
@@ -112,9 +121,15 @@ class DeviceModel {
 }
 
 try {
- 
-    // read the file to validate
-    const data = JSON.parse(fs.readFileSync(options.deviceModel));
+    // Determining if the file is yaml or json and parsing accordingly.
+    const data = (() => {
+        const extension = path.extname(options.deviceModel);
+        if (extension === ".yaml" || extension === ".yml") {
+            return yaml.parse(fs.readFileSync(options.deviceModel, 'utf8'));
+        } else { // Default
+            return JSON.parse(fs.readFileSync(options.deviceModel));
+        }
+    })();
     if (validator.validateDevice(data)) {
         const CodeGen =  require(`./${options.language}/${options.language}gen.js`);
         const dm = new DeviceModel(options.deviceModel, validator, data);

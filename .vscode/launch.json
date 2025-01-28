@@ -142,6 +142,7 @@
                   "common/examples/use_variants/device.use_variants.json",
                   "connections/gRPC/examples/status_update/device.status_update.json",
                   "connections/gRPC/examples/structs_with_authz/device.AudioDeck.json",
+                  "connections/gRPC/examples/structs_with_authz_yaml/device.AudioDeck.yaml",
                   "connections/gRPC/examples/use_commands/device.video_player.json",
                   "connections/gRPC/examples/use_menus/device.use_menus.json"
                 ],
@@ -153,6 +154,7 @@
       "type": "pickString",
       "options": ["status_update",
                   "structs_with_authz",
+                  "structs_with_authz_yaml",
                   "use_commands"
                 ],
       "default": "status_update"

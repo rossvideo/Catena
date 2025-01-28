@@ -353,10 +353,22 @@ class Device {
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
+     * @brief Determines if it's possible to set the specified value given the
+     * current authorization.
+     * @param jptr json pointer to the part of the device model to update.
+     * @param authz the Authorizer to test with.
+     * @return an exception_with_status with status set OK if possible,
+     * otherwise an error.
+     * Intention is for MultiSetValue RPCs / API calls to be verified in their
+     * entirely before setting any values.
+     */
+    catena::exception_with_status setValueTry (const std::string& jptr, Authorizer& authz = Authorizer::kAuthzDisabled);
+
+    /**
      * @brief deserialize a protobuf value object into the parameter value
      * pointed to by jptr.
-     * @param jptr, json pointer to the part of the device model to update.
-     * @param src, the value to update the parameter with.
+     * @param jptr json pointer to the part of the device model to update.
+     * @param src the value to update the parameter with.
      * @todo consider using move semantics on the value parameter to emphasize new ownership.
      * @return an exception_with_status with status set OK if successful, otherwise an error.
      * Intention is to for SetValue RPCs / API calls to be serviced by this method.

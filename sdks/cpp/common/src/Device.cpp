@@ -44,6 +44,20 @@
 
 using namespace catena::common;
 
+catena::exception_with_status Device::setValueTry (const std::string& jptr, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
+        if (param != nullptr) {
+            if (!authz.readAuthz(*param)) {
+                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            if (!authz.writeAuthz(*param)) {
+                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            }
+        }
+        return ans;
+}
+
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
