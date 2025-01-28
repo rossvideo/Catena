@@ -143,18 +143,19 @@ void AuthInterceptor::validateToken(const std::string& token, std::string* claim
 }
 
 void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* methods) {
+    bool hijack = false;
     /**
      * If there's a hook point the gRPC call is intercepted before the initial
      * metadata is sent. Authorization data is then found from that.
      */
     if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
+        status = grpc::Status(grpc::StatusCode::OK, "");
+
         auto* metadata = methods->GetRecvInitialMetadata(); 
 
         if (metadata == nullptr) {
             std::cout << "No metadata found" << std::endl;
-            grpc::Status status(grpc::StatusCode::UNAUTHENTICATED, "No metadata found");
-            methods->ModifySendStatus(status);
-            methods->Hijack(); //Stop RPC from proceeding further
+            status = grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "No metadata found");
             return;
         }
 
@@ -162,9 +163,7 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
         // Verfying authData exists and is using Bearer schema.
         if (authData == metadata->end() || !authData->second.starts_with("Bearer ")) {
             std::cout << "Invalid token due to missing or invalid authorization header" << std::endl;
-            grpc::Status status(grpc::StatusCode::UNAUTHENTICATED, "Invalid token");
-            methods->ModifySendStatus(status);
-            methods->Hijack(); //Stop RPC from proceeding further
+            status = grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "Invalid Token");
             return;
         }
         // Getting token (after "bearer") and converting to std::string.
@@ -189,21 +188,20 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
             metadata->insert(std::make_pair("claims", *sharedClaimsRef));
         } catch (const std::exception& e) { // Currently enters THIS catch block.
             std::cout << "Invalid token due to alternate exception: " << e.what() << std::endl;
-            // Invalid token.
-            grpc::Status status(grpc::StatusCode::UNAUTHENTICATED, e.what());
-            methods->ModifySendStatus(status);
-            methods->Hijack();
-            return;
+            status = grpc::Status(grpc::StatusCode::UNAUTHENTICATED, e.what());
+            info_->server_context()->TryCancel();
         }
 
         // Updating status and proceeding with gRPC.
-        // grpc::Status status(grpc::StatusCode::OK, "Valid token");
-        // methods->ModifySendStatus(status);
+        //grpc::Status status(grpc::StatusCode::OK, "Valid token");
+        //methods->ModifySendStatus(status);
 
     } else {
         std::cout << "No interception hook point found" << std::endl;
     }
-
+    if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::PRE_SEND_STATUS)) {
+        methods->ModifySendStatus(status);
+    }
     methods->Proceed();
 
 }
