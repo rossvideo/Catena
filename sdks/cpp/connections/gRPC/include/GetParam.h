@@ -62,7 +62,6 @@ class CatenaServiceImpl::GetParam : public CallData {
         ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
         CallStatus status_;
         Device &dm_;
-        std::unique_ptr<catena::ParamAccessor> param_;
         int objectId_;
         static int objectCounter_;
 };

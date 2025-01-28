@@ -176,6 +176,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class Connect;
     class DeviceRequest;
     class ExternalObjectRequest;
-    // class GetParam;
+    class GetParam;
     class ExecuteCommand;
 };
