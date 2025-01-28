@@ -116,7 +116,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             }
         break;
         /**
-         * kFinish: Final step of gRPC is the deregister the item from
+         * kFinish: Final step of gRPC is to deregister the item from
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
