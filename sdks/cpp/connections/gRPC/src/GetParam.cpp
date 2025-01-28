@@ -47,6 +47,10 @@ using catena::common::Path;
 
 int CatenaServiceImpl::GetParam::objectCounter_ = 0;
 
+/**
+ * Constructor which initializes and registers the current GetParam object, 
+ * then starts the process.
+ */
 CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -55,6 +59,9 @@ CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bo
     proceed(service, ok);  // start the process
 }
 
+/**
+ * Manages the steps of the GetParam gRPC command through the state variable status.
+ */
 void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
     /**
      * If the service is null or the status is kFinish, return.
@@ -63,13 +70,11 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
         return;
     }
 
-    /**
-     * Log the status and ok value.
-     */
     std::cout << "GetParam proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
               << std::endl;
 
+    
     if(!ok) {
         std::cout << "GetParam[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
@@ -111,7 +116,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                  */
                 if (service->authorizationEnabled()) {
                     std::vector<std::string> scopes = service->getScopes(context_);
-                    authz = catena::common::Authorizer{scopes};  // Assign new value
+                    authz = catena::common::Authorizer{scopes};  // Assign new value to scopes
                     {
                         Device::LockGuard lg(dm_);
                         param = dm_.getParam(req_.oid(), rc, authz);
@@ -119,7 +124,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                 } else {
                     {
                         Device::LockGuard lg(dm_);
-                        param = dm_.getParam(req_.oid(), rc);
+                        param = dm_.getParam(req_.oid(), rc); //Run without authorization
                     }
                 }
                 
