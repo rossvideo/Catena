@@ -56,13 +56,19 @@ CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bo
 }
 
 void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
-    std::cout << "GetParam proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+    if (!service || status_ == CallStatus::kFinish) {
+        return;
+    }
 
-    if(!ok){
+    std::cout << "GetParam proceed[" << objectId_ << "]: " << timeNow()
+              << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+              << std::endl;
+
+    if(!ok) {
         std::cout << "GetParam[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
+        service->deregisterItem(this);
+        return;
     }
     
     switch (status_) {
