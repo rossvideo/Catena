@@ -41,6 +41,7 @@
 #include <Connect.h>
 #include <DeviceRequest.h>
 #include <GetParam.h>
+#include <BasicParamInfoRequest.h>
 #include <ExternalObjectRequest.h>
 #include <ExecuteCommand.h>
 
@@ -108,6 +109,7 @@ void CatenaServiceImpl::init() {
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
     new GetParam(this, dm_, true);
+    new BasicParamInfoRequest(this, dm_, true);
     new ExecuteCommand(this, dm_, true);
 }
 

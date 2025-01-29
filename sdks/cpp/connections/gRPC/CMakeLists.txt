@@ -31,6 +31,7 @@ set(sources
     "src/PeerInfo.cpp"
     "src/ServiceImpl.cpp" 
     "src/GetParam.cpp"
+    "src/BasicParamInfoRequest.cpp"
     "src/GetPopulatedSlots.cpp"
     "src/SetValue.cpp"
     "src/GetValue.cpp"

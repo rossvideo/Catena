@@ -149,6 +149,12 @@ class IParam {
      */
     virtual catena::CommandResponse executeCommand(const catena::Value&  value) const = 0;
 
+    /**
+     * @brief Get the template OID if one exists
+     * @return Optional string containing the template OID
+     */
+    virtual std::optional<std::string> getTemplateOid() const = 0;
+
 };
 }  // namespace common
 

@@ -56,6 +56,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <cassert>
+#include <optional>
 
 namespace catena {
 namespace common {
@@ -145,6 +146,12 @@ class ParamDescriptor {
      * @brief get the parameter oid
      */
     const std::string& getOid() const { return oid_; }
+
+
+    /**
+     * @brief get the parameter template oid
+     */
+    std::optional<std::string> getTemplateOid() const { return template_oid_; }
 
     /**
      * @brief set the parameter oid
@@ -239,6 +246,8 @@ class ParamDescriptor {
      */
     inline bool isCommand() const { return isCommand_; }
 
+
+
   private:
     ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;
@@ -251,6 +260,7 @@ class ParamDescriptor {
     common::IConstraint* constraint_;
     
     std::string oid_;
+    std::string template_oid_;
     ParamDescriptor* parent_;
     std::reference_wrapper<Device> dev_;
 

@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -55,6 +55,7 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <optional>
 
 namespace catena {
 namespace common {
@@ -253,6 +254,13 @@ class ParamWithValue : public catena::common::IParam {
      */
     catena::CommandResponse executeCommand(const catena::Value& value) const override {
         return descriptor_.executeCommand(value);
+    }
+
+    /**
+     * @brief get the template oid
+     */
+    std::optional<std::string> getTemplateOid() const override {
+        return descriptor_.getTemplateOid();
     }
 
   private:
