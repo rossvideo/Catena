@@ -35,6 +35,8 @@
  * @author John R. Naylor john.naylor@rossvideo.com
  * @author John Danen
  * @date 2024-09-18
+ * @author Ben Whitten benjamin.whitten@rossvideo.com
+ * @date 2025-01-29
  * @copyright Copyright (c) 2024 Ross Video
  */
 
@@ -128,6 +130,12 @@ class Authorizer {
      * @return true if the client has write authorization
      */
     bool writeAuthz(const ParamDescriptor& pd) const;
+
+    /**
+     * @brief Check if the client has the specified authorization
+     * @return true if the client has the specified authorization
+     */
+    bool authz(const std::string& scope) const;
 
   private:
     std::reference_wrapper<const Scopes> clientScopes_;
