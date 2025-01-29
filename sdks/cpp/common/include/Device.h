@@ -385,6 +385,8 @@ class Device {
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
+    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
+
   public:
     /**
      * @brief signal emitted when a value is set by the client.
