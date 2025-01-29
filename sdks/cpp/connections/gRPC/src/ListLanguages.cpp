@@ -28,22 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
 #include <ListLanguages.h>
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::ListLanguages::objectCounter_ = 0;
@@ -57,16 +43,14 @@ CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, Devi
 
 void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool ok) {
     std::cout << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
-
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
     if(!ok){
         status_ = CallStatus::kFinish;
     }
-
     switch(status_){
         /** 
-         * kCreate: Updates status to kProcess and requests the GetValue
+         * kCreate: Updates status to kProcess and requests the ListLanguages
          * command from the service.
          */ 
         case CallStatus::kCreate:
@@ -81,38 +65,24 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
             // Used to serve other clients while processing.
             new ListLanguages(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
-            try {
-                // catena::Value ans;
-                // catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // // If authorization is enabled, check the client's scopes.
-                // if(service->authorizationEnabled()) {
-                //     std::vector<std::string> clientScopes = service->getScopes(context_);  
-                //     catena::common::Authorizer authz{clientScopes};
-                //     Device::LockGuard lg(dm_);
-                //     rc = dm_.getValue(req_.oid(), ans, authz);
-                // } else {
-                //     Device::LockGuard lg(dm_);
-                //     rc = dm_.getValue(req_.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
-                // }
-                
-                // status_ = CallStatus::kFinish;
-                // if (rc.status == catena::StatusCode::OK) {
-                //     responder_.Finish(ans, Status::OK, this);
-                // } else { // Error, end process.
-                //     responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                // }
+            try { // Getting and returning languages.
+                Device::LockGuard lg(dm_);
+                catena::LanguageList ans;
+                dm_.listLanguages(ans);
+                status_ = CallStatus::kFinish;
+                responder_.Finish(ans, Status::OK, this);
             } catch (...) { // Error, end process.
                 status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
                 responder_.FinishWithError(errorStatus, this);
             }
-        break;
+            break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "ListLanguages" << objectId_ << "] finished\n";
+            std::cout << "ListLanguages[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
         // default: Error, end process.

@@ -34,7 +34,7 @@
  * @file ListLanguages.h
  * @brief Implements Catena gRPC ListLanguages
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-??-??
+ * @date 2025-01-29
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -74,13 +74,9 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         ServerContext context_;
         /**
-         * @brief Server request (Info on value to get).
+         * @brief Server request (the device's slot).
          */
         catena::Slot req_;
-        /**
-         * @brief Server response (The requested value).
-         */
-        catena::Value res_;
         /**
          * @brief gRPC async response writer.
          */
@@ -90,13 +86,9 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief The device containing the value to set.
+         * @brief The device containing the languages to list.
          */
         Device &dm_;
-        /**
-         * The status of the transaction for use in responder.finish functions.
-         */
-        Status errorStatus_;
         /**
          * @brief The object's unique id.
          */
@@ -105,10 +97,4 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          * @brief The total # of MultiSetValue objects.
          */
         static int objectCounter_;
-        /**
-         * catena::Slot *request, 
-         * grpc::ServerAsyncResponseWriter<...> *response, 
-         * grpc::CompletionQueue *new_call_cq, 
-         * grpc::ServerCompletionQueue *notification_cq, 
-         * void *tag*/
 };
