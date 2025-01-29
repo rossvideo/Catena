@@ -80,12 +80,6 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
     return ans;
 }
 
-void Device::listLanguages (catena::LanguageList& languages) const {
-    for (const auto& [language, pack] : language_packs_) {
-        languages.add_languages(language);
-    }
-}
-
 std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {

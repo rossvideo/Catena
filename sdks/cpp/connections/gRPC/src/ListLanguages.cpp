@@ -68,7 +68,7 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
             try { // Getting and returning languages.
                 Device::LockGuard lg(dm_);
                 catena::LanguageList ans;
-                dm_.listLanguages(ans);
+                dm_.toProto(ans);
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
             } catch (...) { // Error, end process.

@@ -385,12 +385,6 @@ class Device {
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
-    /**
-     * @brief Adds the device's supported languages to the in/out variable.
-     * @param languages in/out variable to populate with supported languages.
-     */
-    void listLanguages (catena::LanguageList& languages) const;
-
   public:
     /**
      * @brief signal emitted when a value is set by the client.
