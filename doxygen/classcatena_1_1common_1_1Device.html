@@ -186,9 +186,6 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ge
 <tr class="memitem:a32db3f74e532aa75c24f9bc68a7eccfe" id="r_a32db3f74e532aa75c24f9bc68a7eccfe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a32db3f74e532aa75c24f9bc68a7eccfe">getValue</a> (const std::string &amp;jptr, catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
 <tr class="memdesc:a32db3f74e532aa75c24f9bc68a7eccfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
 <tr class="separator:a32db3f74e532aa75c24f9bc68a7eccfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad99fcd156e11e6f16283b53253a8fbbb" id="r_ad99fcd156e11e6f16283b53253a8fbbb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ad99fcd156e11e6f16283b53253a8fbbb">listLanguages</a> (catena::LanguageList &amp;languages) const</td></tr>
-<tr class="memdesc:ad99fcd156e11e6f16283b53253a8fbbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds the device's supported languages to the in/out variable.  <br /></td></tr>
-<tr class="separator:ad99fcd156e11e6f16283b53253a8fbbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -546,32 +543,6 @@ template&lt;typename TAG &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
-
-</div>
-</div>
-<a id="ad99fcd156e11e6f16283b53253a8fbbb" name="ad99fcd156e11e6f16283b53253a8fbbb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad99fcd156e11e6f16283b53253a8fbbb">&#9670;&#160;</a></span>listLanguages()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::listLanguages </td>
-          <td>(</td>
-          <td class="paramtype">catena::LanguageList &amp;&#160;</td>
-          <td class="paramname"><em>languages</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Adds the device's supported languages to the in/out variable. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">languages</td><td>in/out variable to populate with supported languages. </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
