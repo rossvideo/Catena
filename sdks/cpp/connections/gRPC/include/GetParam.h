@@ -49,6 +49,7 @@
 */
 class CatenaServiceImpl::GetParam : public CallData {
     public:
+
         /**
          * @brief Constructor for the CallData class of the GetParam
          * gRPC. Calls proceed() once initialized.
@@ -70,47 +71,48 @@ class CatenaServiceImpl::GetParam : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+
         /**
          * @brief Parent CatenaServiceImpl.
          */
-
         CatenaServiceImpl *service_;
+
         /**
          * @brief The context of the gRPC command (ServerContext) for use in 
          * _responder and other gRPC objects/functions.
          */
-
         ServerContext context_;
+
         /**
          * @brief The client's scopes.
          */
-
         std::vector<std::string> clientScopes_;
+
         /**
          * @brief The request payload.
          */
-
         catena::GetParamPayload req_;
+
         /**
          * @brief The response payload.
          */
-
         catena::PushUpdates res_;
+
         /**
          * @brief gRPC async response writer.
          */
-
         ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
+
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
-
         CallStatus status_;
+
         /**
          * @brief The device to get the value from.
          */
-
         Device &dm_;
+
         /**
          * @brief The object's unique id.
          */
