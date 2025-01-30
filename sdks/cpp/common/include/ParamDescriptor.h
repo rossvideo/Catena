@@ -184,6 +184,8 @@ class ParamDescriptor {
      */
     void toProto(catena::Param &param, Authorizer& authz) const;
 
+    void toProto(catena::BasicParamInfo &param, Authorizer& authz) const;
+
     /**
      * @brief get the parameter name by language
      * @param language the language to get the name for

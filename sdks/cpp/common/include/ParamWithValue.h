@@ -168,6 +168,20 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
+     * @brief serialize the parameter descriptor to protobuf
+     * include both the descriptor and the value
+     * @param param the protobuf value to serialize to
+     * @param clientScope the client scope
+     */
+    catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const override {
+        if (!authz.readAuthz(*this)) {
+            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        descriptor_.toProto(*paramInfo.mutable_info(), authz);
+        return catena::exception_with_status("", catena::StatusCode::OK);
+    }
+
+    /**
      * @brief deserialize the parameter value from protobuf if authorized
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope

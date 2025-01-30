@@ -104,54 +104,68 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 }
 
                 if (rc.status == catena::StatusCode::OK && param) {
-                    std::vector<catena::BasicParamInfoResponse> responses;
-                    
-                    // Add response for the requested parameter
                     catena::BasicParamInfoResponse response;
-                    auto* info = response.mutable_info();
-                    info->set_oid(req_.oid_prefix());
-                    info->set_type(param->type().value());
-                    if (auto template_oid = param->getTemplateOid()) { //Does not work...
-                        info->set_template_oid(*template_oid);
+                    if (service->authorizationEnabled()) {
+                        param->toProto(response, authz);
+                    } else {
+                        param->toProto(response, catena::common::Authorizer::kAuthzDisabled);
                     }
-
-                    //Param has a getConstraint function, but there is no setter in info!!!
-                    
-                    responses.push_back(response);
-
-                    // Get child responses if recursive
-                    if (req_.recursive()) {
-                        catena::common::Path child_path("");
-                        catena::exception_with_status child_status{"", catena::StatusCode::OK};
-                        
-                        std::function<void(const std::unique_ptr<IParam>&, const std::string&)> getChildren = 
-                            [&](const std::unique_ptr<IParam>& current_param, const std::string& current_path) {
-                                if (auto child_param = current_param->getParam(child_path, 
-                                        service->authorizationEnabled() ? authz : catena::common::Authorizer::kAuthzDisabled, 
-                                        child_status)) {
-                                    catena::BasicParamInfoResponse child_response;
-                                    auto* child_info = child_response.mutable_info();
-                                    child_info->set_oid(current_path + "/" + child_path.front_as_string());
-                                    child_info->set_type(child_param->type().value());
-                                    if (auto template_oid = child_param->getTemplateOid()) {
-                                        child_info->set_template_oid(*template_oid);
-                                    }
-                                    responses.push_back(child_response);
-                                    getChildren(child_param, child_info->oid());
-                                }
-                            };
-                        
-                        getChildren(param, req_.oid_prefix());
-                    }
-
-                    // Write all responses
-                    for (const auto& resp : responses) {
-                        writer_.Write(resp, this);
-                    }
-
+                    writer_.Write(response, this);
                     status_ = CallStatus::kFinish;
                     writer_.Finish(Status::OK, this);
+                    
                     break;
+
+
+
+                    // std::vector<catena::BasicParamInfoResponse> responses;
+                    
+                    // // Add response for the requested parameter
+                    // catena::BasicParamInfoResponse response;
+                    // auto* info = response.mutable_info();
+                    // info->set_oid(req_.oid_prefix());
+                    // info->set_type(param->type().value());
+                    // if (auto template_oid = param->getTemplateOid()) { //Does not work...
+                    //     info->set_template_oid(*template_oid);
+                    // }
+
+                    // //Param has a getConstraint function, but there is no setter in info!!!
+                    
+                    // responses.push_back(response);
+
+                    // // Get child responses if recursive
+                    // if (req_.recursive()) {
+                    //     catena::common::Path child_path("");
+                    //     catena::exception_with_status child_status{"", catena::StatusCode::OK};
+                        
+                    //     std::function<void(const std::unique_ptr<IParam>&, const std::string&)> getChildren = 
+                    //         [&](const std::unique_ptr<IParam>& current_param, const std::string& current_path) {
+                    //             if (auto child_param = current_param->getParam(child_path, 
+                    //                     service->authorizationEnabled() ? authz : catena::common::Authorizer::kAuthzDisabled, 
+                    //                     child_status)) {
+                    //                 catena::BasicParamInfoResponse child_response;
+                    //                 auto* child_info = child_response.mutable_info();
+                    //                 child_info->set_oid(current_path + "/" + child_path.front_as_string());
+                    //                 child_info->set_type(child_param->type().value());
+                    //                 if (auto template_oid = child_param->getTemplateOid()) {
+                    //                     child_info->set_template_oid(*template_oid);
+                    //                 }
+                    //                 responses.push_back(child_response);
+                    //                 getChildren(child_param, child_info->oid());
+                    //             }
+                    //         };
+                        
+                    //     getChildren(param, req_.oid_prefix());
+                    // }
+
+                    // // Write all responses
+                    // for (const auto& resp : responses) {
+                    //     writer_.Write(resp, this);
+                    // }
+
+                    // status_ = CallStatus::kFinish;
+                    // writer_.Finish(Status::OK, this);
+                    // break;
                 }
                 else {
                     status_ = CallStatus::kFinish;
