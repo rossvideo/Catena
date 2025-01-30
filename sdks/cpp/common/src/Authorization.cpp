@@ -41,18 +41,29 @@ static const std::vector<std::string> kAuthzDisabledScope = {""};
 // initialize the disabled authorization object
 Authorizer Authorizer::kAuthzDisabled = {kAuthzDisabledScope};
 
+bool Authorizer::hasAuthz(const std::string& scope) const {
+    if (this == &kAuthzDisabled) {
+        return true; // no authorization required
+    }
+
+    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
+        return false;
+    }
+    return true;
+}
+
 /**
  * @brief Check if the client has read authorization
  * @return true if the client has read authorization
  */
 bool Authorizer::readAuthz(const IParam& param) const {
     const std::string& scope = param.getScope();
-    return authz(scope);
+    return hasAuthz(scope);
 }
 
 bool Authorizer::readAuthz(const ParamDescriptor& pd) const {
     const std::string& scope = pd.getScope();
-    return authz(scope);
+    return hasAuthz(scope);
 }
 
 /**
@@ -65,7 +76,7 @@ bool Authorizer::writeAuthz(const IParam& param) const {
     }
 
     const std::string scope = param.getScope() + ":w";
-    return authz(scope);
+    return hasAuthz(scope);
 }
 
 bool Authorizer::writeAuthz(const ParamDescriptor& pd) const {
@@ -74,16 +85,5 @@ bool Authorizer::writeAuthz(const ParamDescriptor& pd) const {
     }
 
     const std::string scope = pd.getScope() + ":w";
-    return authz(scope);
-}
-
-bool Authorizer::authz(const std::string& scope) const {
-    if (this == &kAuthzDisabled) {
-        return true; // no authorization required
-    }
-
-    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
-        return false;
-    }
-    return true;
+    return hasAuthz(scope);
 }

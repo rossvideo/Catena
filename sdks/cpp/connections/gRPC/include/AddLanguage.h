@@ -34,7 +34,7 @@
  * @file AddLanguage.h
  * @brief Implements Catena gRPC AddLanguage
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-01-29
+ * @date 2025-01-30
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -50,17 +50,17 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          * @brief Constructor for the CallData class of the ListLanguages gRPC.
          * Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dm Address of the device to get the value from.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
         AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Manages the steps of the SetValue and MultiSetValue gRPC
-         * commands through the state variable status.
+         * @brief Manages the steps of the AddLanguage gRPC commands through
+         * the state variable status.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param ok Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
     private:
@@ -77,6 +77,9 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          * @brief Server request (the device's slot).
          */
         catena::AddLanguagePayload req_;
+        /**
+         * @brief Empty catena value to respond with.
+         */
         catena::Empty res_;
         /**
          * @brief gRPC async response writer.
@@ -87,7 +90,7 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief The device containing the languages to list.
+         * @brief The device to add the LanguagePack to.
          */
         Device &dm_;
         /**
@@ -95,7 +98,7 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          */
         int objectId_;
         /**
-         * @brief The total # of MultiSetValue objects.
+         * @brief The total # of AddLanguage objects.
          */
         static int objectCounter_;
 };

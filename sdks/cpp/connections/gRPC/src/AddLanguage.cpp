@@ -31,7 +31,7 @@
 // connections/gRPC
 #include <AddLanguage.h>
 
-// Initializes the object counter for SetValue to 0.
+// Initializes the object counter for AddLanguage to 0.
 int CatenaServiceImpl::AddLanguage::objectCounter_ = 0;
 
 CatenaServiceImpl::AddLanguage::AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok)
@@ -57,10 +57,6 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            /**
-             * catena::AddLanguagePayload *request, 
-             * grpc::ServerAsyncResponseWriter<...> *response, 
-             */
             service_->RequestAddLanguage(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
             break;
         /**
@@ -72,11 +68,10 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
             new AddLanguage(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                catena::Value ans;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
-                    std::vector<std::string> clientScopes = service->getScopes(context_);  
+                    std::vector<std::string> clientScopes = service->getScopes(context_);
                     catena::common::Authorizer authz{clientScopes};
                     Device::LockGuard lg(dm_);
                     rc = dm_.addLanguage(req_, authz);

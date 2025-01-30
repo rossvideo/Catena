@@ -81,12 +81,17 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
 }
 
 catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
-    std::string scope = "admin:w";
-    if (!authz.authz(scope)) {
+    // Use device.DefaultScope + ":w" instead???
+    if (!authz.hasAuthz("admin:w")) {
         return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     } else {
-        LanguagePack newPack = LanguagePack(std::string("code"), std::string("name"), LanguagePack::ListInitializer{}, *this);
-        newPack.fromProto(language.language_pack());
+        std::string name = language.language_pack().name();
+        // Making sure LanguagePack is properly formatted.
+        if (name.empty()) {
+            return catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        added_packs_[name] = std::make_shared<LanguagePack>(name, name, LanguagePack::ListInitializer{}, *this);
+        language_packs_[name]->fromProto(language.language_pack());
     }
     return catena::exception_with_status("", catena::StatusCode::OK);
 }

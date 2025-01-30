@@ -385,6 +385,16 @@ class Device {
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
+    /**
+     * @brief Adds a language pack to the device. Requires client to have
+     * admin:w scope.
+     * @param language The language to add to the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     * Intention is for the AddLanguage RPCs / API calls to be serviced by this
+     * method.
+     */
     catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
 
   public:
@@ -408,6 +418,8 @@ class Device {
     std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
+    // Required to maintain ownership of added language packs.
+    std::unordered_map<std::string, std::shared_ptr<common::ILanguagePack>> added_packs_;
     std::vector<std::string> access_scopes_;
     std::string default_scope_;
     bool multi_set_enabled_;

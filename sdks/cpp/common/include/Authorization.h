@@ -108,6 +108,12 @@ class Authorizer {
     virtual ~Authorizer() = default;
 
     /**
+     * @brief Check if the client has the specified authorization
+     * @return true if the client has the specified authorization
+     */
+    bool hasAuthz(const std::string& scope) const;
+
+    /**
      * @brief Check if the client has read authorization
      * @return true if the client has read authorization
      */
@@ -131,11 +137,6 @@ class Authorizer {
      */
     bool writeAuthz(const ParamDescriptor& pd) const;
 
-    /**
-     * @brief Check if the client has the specified authorization
-     * @return true if the client has the specified authorization
-     */
-    bool authz(const std::string& scope) const;
 
   private:
     std::reference_wrapper<const Scopes> clientScopes_;
