@@ -52,8 +52,68 @@
     "string_array_test": {
       "type": "STRING_ARRAY",
       "name": { "display_strings": { "en": "String Array Test", "es": "Prueba de Matriz de Cadenas", "fr": "Test de Tableau de Chaînes" } },
-      "value": { "string_array_values": {"strings": ["one","two","three","four","five"]} },
+      "value": {
+        "string_array_values": {
+          "strings": ["one","two","three","four","five"],
+          "max_length": 10
+          }
+        },
       "max_length": 10
+    },
+    "struct_template": {
+      "type": "STRUCT",
+      "name": { "display_strings": { "en": "struct_template" } },
+      "params": {
+        "p1": {
+          "type": "STRING",
+          "name": { "display_strings": { "en": "p1" } }
+        },
+        "p2": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "p2" } }
+        },
+        "p3": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "p3" } }
+        },
+        "p4": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "p4" } }
+        }
+      }
+    },
+    "struct_array_test": {
+      "type": "STRUCT_ARRAY",
+      "name": { "display_strings": { "en": "Struct_array_test" } },
+      "template_oid": "/struct_template",
+      "max_length": 4,
+      "value": {
+        "struct_array_values": {
+          "struct_values": [
+            {
+              "struct_value": {
+                "fields": {
+                  "p1": { "value": {"string_value": "one"}},
+                  "p2": { "value": {"float32_value": 0}},
+                  "p3": { "value": {"float32_value": 0}},
+                  "p4": { "value": {"float32_value": 0}}
+                }
+              }
+            },
+            {
+              "struct_value": {
+                "fields": {
+                  "p1": { "value": {"string_value": "two"}},
+                  "p2": { "value": {"float32_value": 0}},
+                  "p3": { "value": {"float32_value": 0}},
+                  "p4": { "value": {"float32_value": 0}}
+                }
+              }
+            }
+          ]
+        }
+      }
     }
   }
 }
+

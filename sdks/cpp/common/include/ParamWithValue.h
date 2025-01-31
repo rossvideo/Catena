@@ -142,12 +142,44 @@ class ParamWithValue : public catena::common::IParam {
 			case catena::ParamType::FLOAT32_ARRAY:
 				input_size = value.float32_array_values().floats_size();
 				break;
+			/**
+			 * Cases below check # elements in array before checking to make
+			 * sure all elements are also valid.
+			 */
 			case catena::ParamType::STRING_ARRAY:
-				input_size = value.string_array_values().strings_size();
+				{ // Block scope for var declaration.
+				const catena::StringList& string_list = value.string_array_values();
+				input_size = string_list.strings_size();
+				/**  
+				 * @todo replace with strings max_length or change to instead take sum of all strings?
+				 */
+				if (input_size < descriptor_.max_length()) {
+					for (const auto& string : string_list.strings()) {
+						if (string.length() >= descriptor_.max_length()) {
+							return false;
+						}
+					}
+				}
 				break;
+				}
 			case catena::ParamType::STRUCT_ARRAY:
+			{
 				input_size = value.struct_array_values().struct_values_size();
 				break;
+				// {
+				// const catena::StructList& struct_list = value.struct_array_values();
+				// input_size = struct_list.struct_values_size();
+				// /**  
+				//  * @todo replace with struct's max_length.
+				//  */
+				// if input_size < descriptor_.max_length() {
+				// 	for (const auto& struct_value : struct_list.struct_values()) {
+						
+				// 	}
+				// }
+				// break;
+				// }
+			}
 			case catena::ParamType::STRUCT_VARIANT_ARRAY:
 				input_size = value.struct_variant_array_values().struct_variants_size();
 				break;
