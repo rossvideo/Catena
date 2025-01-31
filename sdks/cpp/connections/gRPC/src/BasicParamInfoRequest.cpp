@@ -104,68 +104,70 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 }
 
                 if (rc.status == catena::StatusCode::OK && param) {
+                    std::vector<catena::BasicParamInfoResponse> responses;
+                    
+                    // Get response for main parameter
                     catena::BasicParamInfoResponse response;
                     if (service->authorizationEnabled()) {
                         param->toProto(response, authz);
                     } else {
                         param->toProto(response, catena::common::Authorizer::kAuthzDisabled);
                     }
-                    writer_.Write(response, this);
+                    responses.push_back(response);
+
+
+                    std::function<void(IParam*, const std::string&)> getChildren = 
+                            [&](IParam* current_param, const std::string& current_path) {
+                                auto param_type = current_param->type().value();
+                                
+                                std::cout << "Looking at path: " << current_path << std::endl;
+                                /*
+                                std::cout << "Type: " << (param_type == catena::ParamType::STRUCT ? "STRUCT" : 
+                                                         param_type == catena::ParamType::STRUCT_ARRAY ? "STRUCT_ARRAY" : "OTHER") << std::endl;
+                                */
+
+                                // Get descriptor to find children
+                                const auto& descriptor = current_param->getDescriptor();
+                                
+                                // Iterate through all possible subparams
+                                for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+                                    std::cout << "Found child named: " << child_name << std::endl;
+                                    
+                                    // Get child's type
+                                    auto child_type = child_desc->type();
+                                    /*
+                                    std::cout << "Child type: " << (child_type == catena::ParamType::STRUCT ? "STRUCT" : 
+                                                                  child_type == catena::ParamType::STRUCT_ARRAY ? "STRUCT_ARRAY" : "OTHER") << std::endl; 
+                                    */
+
+                                    // If child is a STRUCT_ARRAY, recursively call getChildren on it
+                                    if (child_type == catena::ParamType::STRUCT_ARRAY) {
+                                        // For array types, we need to check each index
+                                        for (size_t i = 0; ; i++) {
+                                            std::string array_path = "/" + current_path + "/" + std::to_string(i) + "/" + child_name;
+                                            //Current param needs to be updated...
+                                            Device::LockGuard lg(dm_);
+                                            param = dm_.getParam(array_path, rc); //We already checked for authorization, no need to again.
+                                            if (param) 
+                                                getChildren(param.get(), array_path);
+                                             else 
+                                                break;
+                                        }
+                                    }
+                                }
+                            };
+
+                    if (req_.recursive()) {                        
+                        getChildren(param.get(), response.info().oid());
+                    }
+
+                    // Write all responses
+                    for (const auto& resp : responses) {
+                        writer_.Write(resp, this);
+                    }
                     status_ = CallStatus::kFinish;
                     writer_.Finish(Status::OK, this);
-                    
                     break;
-
-
-
-                    // std::vector<catena::BasicParamInfoResponse> responses;
-                    
-                    // // Add response for the requested parameter
-                    // catena::BasicParamInfoResponse response;
-                    // auto* info = response.mutable_info();
-                    // info->set_oid(req_.oid_prefix());
-                    // info->set_type(param->type().value());
-                    // if (auto template_oid = param->getTemplateOid()) { //Does not work...
-                    //     info->set_template_oid(*template_oid);
-                    // }
-
-                    // //Param has a getConstraint function, but there is no setter in info!!!
-                    
-                    // responses.push_back(response);
-
-                    // // Get child responses if recursive
-                    // if (req_.recursive()) {
-                    //     catena::common::Path child_path("");
-                    //     catena::exception_with_status child_status{"", catena::StatusCode::OK};
-                        
-                    //     std::function<void(const std::unique_ptr<IParam>&, const std::string&)> getChildren = 
-                    //         [&](const std::unique_ptr<IParam>& current_param, const std::string& current_path) {
-                    //             if (auto child_param = current_param->getParam(child_path, 
-                    //                     service->authorizationEnabled() ? authz : catena::common::Authorizer::kAuthzDisabled, 
-                    //                     child_status)) {
-                    //                 catena::BasicParamInfoResponse child_response;
-                    //                 auto* child_info = child_response.mutable_info();
-                    //                 child_info->set_oid(current_path + "/" + child_path.front_as_string());
-                    //                 child_info->set_type(child_param->type().value());
-                    //                 if (auto template_oid = child_param->getTemplateOid()) {
-                    //                     child_info->set_template_oid(*template_oid);
-                    //                 }
-                    //                 responses.push_back(child_response);
-                    //                 getChildren(child_param, child_info->oid());
-                    //             }
-                    //         };
-                        
-                    //     getChildren(param, req_.oid_prefix());
-                    // }
-
-                    // // Write all responses
-                    // for (const auto& resp : responses) {
-                    //     writer_.Write(resp, this);
-                    // }
-
-                    // status_ = CallStatus::kFinish;
-                    // writer_.Finish(Status::OK, this);
-                    // break;
                 }
                 else {
                     status_ = CallStatus::kFinish;

@@ -37,7 +37,8 @@
 namespace catena {
 namespace common { 
 
-  class Authorizer;
+  class ParamDescriptor; 
+  class Authorizer;      
 
 /**
  * @brief IParam is the interface for business logic and connection logic to interact with parameters
@@ -160,6 +161,12 @@ class IParam {
      * @return Optional string containing the template OID
      */
     virtual std::optional<std::string> getTemplateOid() const = 0;
+
+    /**
+     * @brief Get the parameter descriptor
+     * @return The parameter descriptor
+     */
+    virtual const ParamDescriptor& getDescriptor() const = 0;
 
 };
 }  // namespace common

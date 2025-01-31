@@ -277,6 +277,13 @@ class ParamWithValue : public catena::common::IParam {
         return descriptor_.getTemplateOid();
     }
 
+    /**
+     * @brief get the parameter descriptor
+     */
+    const ParamDescriptor& getDescriptor() const override {
+        return descriptor_;
+    }
+
   private:
 
     /**

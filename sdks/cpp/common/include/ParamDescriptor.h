@@ -250,6 +250,15 @@ class ParamDescriptor {
 
 
 
+
+    /**
+     * @brief return all sub parameters
+     * @return a map of all sub parameters
+     */
+    const std::unordered_map<std::string, ParamDescriptor*>& getAllSubParams() const {
+        return subParams_;
+    }
+
   private:
     ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;

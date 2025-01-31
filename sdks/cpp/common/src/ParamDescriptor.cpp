@@ -62,6 +62,8 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
 }
 
 void ParamDescriptor::toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const {
+    
+    
     paramInfo.set_type(type_);
 
     paramInfo.set_oid(oid_);
