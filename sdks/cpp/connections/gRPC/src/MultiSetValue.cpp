@@ -112,8 +112,9 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 for (auto &setValuePayload : reqs_.values()) {
                     std::string oid = setValuePayload.oid();
+                    catena::Value value = setValuePayload.value();
                     Device::LockGuard lg(dm_);
-                    rc = dm_.setValueTry(oid, *authz);
+                    rc = dm_.setValueTry(oid, value, *authz);
                     if (rc.status != catena::StatusCode::OK) {
                         break;
                     }

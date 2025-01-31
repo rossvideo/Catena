@@ -136,6 +136,9 @@ class Descriptor {
       },
       device: () => {
         return "dm";
+      },
+      max_length: () => {
+        return ("max_length" in desc) ? `${desc.max_length}` : "0";
       }
     };
 
@@ -180,6 +183,7 @@ class Param {
     this.value = desc.value;
     this.isCommand = isCommand;
     this.parent = parent;
+    //this.maxLength = ("max_length" in desc) ? desc.max_length : 0;
 
     if ("constraint" in desc) {
       if (desc.constraint.ref_oid) {

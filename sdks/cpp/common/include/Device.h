@@ -362,7 +362,7 @@ class Device {
      * Intention is for MultiSetValue RPCs / API calls to be verified in their
      * entirely before setting any values.
      */
-    catena::exception_with_status setValueTry (const std::string& jptr, Authorizer& authz = Authorizer::kAuthzDisabled);
+    catena::exception_with_status setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled);
 
     /**
      * @brief deserialize a protobuf value object into the parameter value

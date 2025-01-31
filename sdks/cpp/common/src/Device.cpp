@@ -44,7 +44,7 @@
 
 using namespace catena::common;
 
-catena::exception_with_status Device::setValueTry (const std::string& jptr, Authorizer& authz) {
+catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
         if (param != nullptr) {
@@ -53,6 +53,9 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, Auth
             }
             if (!authz.writeAuthz(*param)) {
                 return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            }
+            if (!param->validate(value)) {
+                return catena::exception_with_status("Value exceeds max length", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
         return ans;

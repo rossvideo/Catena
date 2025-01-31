@@ -128,6 +128,34 @@ class ParamWithValue : public catena::common::IParam {
     virtual ~ParamWithValue() = default;
 
     /**
+     * @brief Validates that a value is <= the max_size_.
+     */
+    const bool validate(const catena::Value& value) {
+		int input_size = 0;
+		switch (descriptor_.type()) {
+			case catena::ParamType::STRING:
+				input_size = value.string_value().length();
+				break;
+			case catena::ParamType::INT32_ARRAY:
+				input_size = value.int32_array_values().ints_size();
+				break;
+			case catena::ParamType::FLOAT32_ARRAY:
+				input_size = value.float32_array_values().floats_size();
+				break;
+			case catena::ParamType::STRING_ARRAY:
+				input_size = value.string_array_values().strings_size();
+				break;
+			case catena::ParamType::STRUCT_ARRAY:
+				input_size = value.struct_array_values().struct_values_size();
+				break;
+			case catena::ParamType::STRUCT_VARIANT_ARRAY:
+				input_size = value.struct_variant_array_values().struct_variants_size();
+				break;
+		}
+		return input_size < descriptor_.max_length();
+    }
+
+    /**
      * @brief creates a shallow copy the parameter
      * 
      * Needed to copy IParam objects
@@ -177,6 +205,9 @@ class ParamWithValue : public catena::common::IParam {
         }
         if (!authz.writeAuthz(*this)) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+		}
+		if (!validate(value)) {
+			return catena::exception_with_status("Value exceeds max length", catena::StatusCode::INVALID_ARGUMENT);
         } else {
             catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
             return catena::exception_with_status("", catena::StatusCode::OK);

@@ -38,6 +38,8 @@
  * @date 2024-08-20
  */
 
+#define DEFAULT_LENGTH 1024;
+
 //common
 #include <Tags.h>
 #include <IParam.h>
@@ -122,6 +124,7 @@ class ParamDescriptor {
       catena::common::IConstraint* constraint,
       bool isCommand,
       Device& dm,
+      const int max_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
@@ -129,6 +132,8 @@ class ParamDescriptor {
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
       }
+      // Setting max_length_ to either the passed or default value.
+      max_length_ = (max_length > 0) ? max_length : DEFAULT_LENGTH;
     }
 
     /**
@@ -166,6 +171,8 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
+	const int max_length() const {return max_length_;}
+
     /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to
@@ -183,6 +190,7 @@ class ParamDescriptor {
      * @return the name in the specified language, or an empty string if the language is not found
      */
     const std::string& name(const std::string& language) const;
+
     /**
      * @brief add an item to one of the collections owned by the device
      * @tparam TAG identifies the collection to which the item will be added
@@ -249,6 +257,7 @@ class ParamDescriptor {
     std::unordered_map<std::string, ParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
+    int max_length_;
     
     std::string oid_;
     ParamDescriptor* parent_;

@@ -124,6 +124,8 @@ class IParam {
      */
     virtual void readOnly(bool flag) = 0;
 
+    virtual const bool validate(const catena::Value& value) = 0;
+
     /**
      * @brief get a child parameter by name
      */

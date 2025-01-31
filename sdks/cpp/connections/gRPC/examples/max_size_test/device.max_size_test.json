@@ -1,0 +1,59 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["monitor", "operate", "configure", "administer"],
+  "default_scope": "operate",
+  "subscriptions": true,
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+  "params": {
+    "string_test": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "String Test", "es": "Prueba de Cadena", "fr": "Test de Chaîne" } },
+      "value": { "string_value": "Str Test" },
+      "max_length": 10
+    },
+    "int32_array_test": {
+      "type": "INT32_ARRAY",
+      "name": { "display_strings": { "en": "Int32 Array Test", "es": "Prueba de Matriz de Int32", "fr": "Test de Tableau de Int32" } },
+      "value": { "int32_array_values": {"ints": [1,2,3,4,5]} },
+      "max_length": 10
+    },
+    "float32_array_test": {
+      "type": "FLOAT32_ARRAY",
+      "name": { "display_strings": { "en": "Float32 Array Test", "es": "Prueba de Matriz de Float32", "fr": "Test de Tableau de Float32" } },
+      "value": { "float32_array_values": {"floats": [1.1,2.2,3.3,4.4,5.5]} },
+      "max_length": 10
+    },
+    "string_array_test": {
+      "type": "STRING_ARRAY",
+      "name": { "display_strings": { "en": "String Array Test", "es": "Prueba de Matriz de Cadenas", "fr": "Test de Tableau de Chaînes" } },
+      "value": { "string_array_values": {"strings": ["one","two","three","four","five"]} },
+      "max_length": 10
+    }
+  }
+}
