@@ -7,6 +7,7 @@ var classcatena_1_1common_1_1Device =
     [ "Device", "classcatena_1_1common_1_1Device.html#a8f84a75a974d56afcfe317ed29503f25", null ],
     [ "~Device", "classcatena_1_1common_1_1Device.html#ab8a13b735718ebc42a2d79733f23a3f7", null ],
     [ "addItem", "classcatena_1_1common_1_1Device.html#a507ad02cfa93ab05d32df27e6b5b7c66", null ],
+    [ "addLanguage", "classcatena_1_1common_1_1Device.html#a0022553b326b6efc7783d91fed3430ed", null ],
     [ "detail_level", "classcatena_1_1common_1_1Device.html#a66425dc05003aa1125b6ba3f72a592ec", null ],
     [ "detail_level", "classcatena_1_1common_1_1Device.html#afac4a50555098efffe58dce175cc3f80", null ],
     [ "getCommand", "classcatena_1_1common_1_1Device.html#aa466b51717cbb177efca567264be36c2", null ],
