@@ -52,7 +52,7 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
     
     switch (status_) {
         /** 
-         * kCreate: Updates status to kProcess and requests the SetValue
+         * kCreate: Updates status to kProcess and requests the AddLanguage
          * command from the service.
          */ 
         case CallStatus::kCreate:

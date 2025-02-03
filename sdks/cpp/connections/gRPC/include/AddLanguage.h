@@ -34,7 +34,7 @@
  * @file AddLanguage.h
  * @brief Implements Catena gRPC AddLanguage
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-01-30
+ * @date 2025-02-03
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -47,7 +47,7 @@
 class CatenaServiceImpl::AddLanguage : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the ListLanguages gRPC.
+         * @brief Constructor for the CallData class of the AddLanguage gRPC.
          * Calls proceed() once initialized.
          *
          * @param service Pointer to the parent CatenaServiceImpl.
@@ -74,7 +74,7 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          */
         ServerContext context_;
         /**
-         * @brief Server request (the device's slot).
+         * @brief Server request (slot, id, language).
          */
         catena::AddLanguagePayload req_;
         /**

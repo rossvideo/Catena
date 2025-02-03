@@ -81,7 +81,7 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
 }
 
 catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
-    // Use device.DefaultScope + ":w" instead???
+    // Admin scope required.
     if (!authz.hasAuthz("admin:w")) {
         return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     } else {
