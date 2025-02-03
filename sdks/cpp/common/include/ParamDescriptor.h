@@ -38,6 +38,9 @@
  * @date 2024-08-20
  */
 
+/**
+ * @todo replace with command line arg.
+ */
 #define DEFAULT_LENGTH 1024;
 
 //common
@@ -125,6 +128,7 @@ class ParamDescriptor {
       bool isCommand,
       Device& dm,
       const int max_length,
+      const int total_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
@@ -134,6 +138,7 @@ class ParamDescriptor {
       }
       // Setting max_length_ to either the passed or default value.
       max_length_ = (max_length > 0) ? max_length : DEFAULT_LENGTH;
+      total_length_ = (total_length > 0) ? max_length : DEFAULT_LENGTH;
     }
 
     /**
@@ -171,7 +176,8 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
-	const int max_length() const {return max_length_;}
+    const int max_length() const {return max_length_;}
+    const int total_length() const {return total_length_;}
 
     /**
      * @brief serialize param meta data in to protobuf message
@@ -258,6 +264,7 @@ class ParamDescriptor {
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
     int max_length_;
+    int total_length_;
     
     std::string oid_;
     ParamDescriptor* parent_;

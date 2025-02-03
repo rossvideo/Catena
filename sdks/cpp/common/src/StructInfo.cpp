@@ -51,6 +51,7 @@ void catena::common::fromProto<EmptyValue>(const catena::Value& src, EmptyValue*
     // do nothing
 }
 
+// ----------------------------------- INT -----------------------------------
 template<>
 void catena::common::toProto<int32_t>(Value& dst, const int32_t* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.set_int32_value(*src);
@@ -72,7 +73,7 @@ void catena::common::fromProto<int32_t>(const catena::Value& src, int32_t* dst, 
     // if the constraint is not satified and not a range, then the value is unchanged
     return;
 }
-
+// ---------------------------------- FLOAT ----------------------------------
 template<>
 void catena::common::toProto<float>(catena::Value& dst, const float* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.set_float32_value(*src);
@@ -93,7 +94,7 @@ void catena::common::fromProto<float>(const catena::Value& src, float* dst, cons
         *dst = constraint->apply(src).float32_value();
     }
 }
-
+// ---------------------------------- STRING ----------------------------------
 template<>
 void catena::common::toProto<std::string>(Value& dst, const std::string* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.set_string_value(*src);
@@ -113,7 +114,7 @@ void catena::common::fromProto<std::string>(const catena::Value& src, std::strin
     }
     return;
 }
-
+// -------------------------------- INT ARRAY --------------------------------
 template<>
 void catena::common::toProto<std::vector<int32_t>>(Value& dst, const std::vector<int32_t>* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.clear_int32_array_values();
@@ -153,7 +154,7 @@ void catena::common::fromProto<std::vector<int32_t>>(const Value& src, std::vect
     }
     return;
 }
-
+// ------------------------------- FLOAT ARRAY -------------------------------
 template<>
 void catena::common::toProto<std::vector<float>>(Value& dst, const std::vector<float>* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.clear_float32_array_values();
@@ -187,7 +188,7 @@ void catena::common::fromProto<std::vector<float>>(const Value& src, std::vector
     }
     return;
 }
-
+// ------------------------------- STRING ARRAY -------------------------------
 template<>
 void catena::common::toProto<std::vector<std::string>>(Value& dst, const std::vector<std::string>* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.clear_string_array_values();

@@ -131,38 +131,35 @@ class ParamWithValue : public catena::common::IParam {
      * @brief Validates that a value is <= the max_size_.
      */
     const bool validate(const catena::Value& value) {
-		int input_size = 0;
+		int input_length = 0, total_length = 0;
         auto test = value.kind_case();
+
 		switch (descriptor_.type()) {
 			case catena::ParamType::STRING:
-				input_size = value.string_value().length();
+				input_length = value.string_value().length();
 				break;
+
 			case catena::ParamType::INT32_ARRAY:
-				input_size = value.int32_array_values().ints_size();
+				input_length = value.int32_array_values().ints_size();
 				break;
+
 			case catena::ParamType::FLOAT32_ARRAY:
-				input_size = value.float32_array_values().floats_size();
+				input_length = value.float32_array_values().floats_size();
 				break;
-			/**
-			 * Cases below check # elements in array before checking to make
-			 * sure all elements are also valid.
-			 */
+
 			case catena::ParamType::STRING_ARRAY:
-				{ // Block scope for var declaration.
-				const catena::StringList& string_list = value.string_array_values();
-				input_size = string_list.strings_size();
-				/**  
-				 * @todo add max_length field to string array? Or just apply uniform max_length?
-				 */
-				if (input_size < descriptor_.max_length()) {
+			{ // Block scope for var declaration.
+			    const catena::StringList& string_list = value.string_array_values();
+				input_length = string_list.strings_size();
+				if (input_length < descriptor_.max_length()) {
+                    // Total length of containing strings.
 					for (const auto& string : string_list.strings()) {
-						if (string.length() >= descriptor_.max_length()) {
-							return false;
-						}
+						total_length += string.length();
 					}
 				}
 				break;
-				}
+			}
+
             // case catena::ParamType::STRUCT:
             // {
             //     auto& fields = value.struct_value().fields();
@@ -173,7 +170,7 @@ class ParamWithValue : public catena::common::IParam {
             // }
 			case catena::ParamType::STRUCT_ARRAY:
 			{
-				input_size = value.struct_array_values().struct_values_size();
+				input_length = value.struct_array_values().struct_values_size();
 				break;
 				// {
 				// const catena::StructList& struct_list = value.struct_array_values();
@@ -190,10 +187,10 @@ class ParamWithValue : public catena::common::IParam {
 				// }
 			}
 			case catena::ParamType::STRUCT_VARIANT_ARRAY:
-				input_size = value.struct_variant_array_values().struct_variants_size();
+				input_length = value.struct_variant_array_values().struct_variants_size();
 				break;
 		}
-		return input_size < descriptor_.max_length();
+		return input_length < descriptor_.max_length() && total_length < descriptor_.total_length();
     }
 
     /**
@@ -370,6 +367,7 @@ class ParamWithValue : public catena::common::IParam {
         if (oidIndex == catena::common::Path::kEnd) {
             // Index is "-", add a new element to the array
             oidIndex = value.size();
+            // HERE?
             value.push_back(ElemType());
         } else if (oidIndex >= value.size()) {
             // If index is out of bounds, return nullptr
@@ -484,6 +482,7 @@ class ParamWithValue : public catena::common::IParam {
     template <std::size_t I, typename Tuple>
     std::unique_ptr<IParam> getParamAtIndex_(const Tuple& tuple) {
         // Get the type of the field at index I so that we can create a ParamWithValue object of that type
+        // HERE?
         using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
         return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
     }
@@ -496,7 +495,7 @@ class ParamWithValue : public catena::common::IParam {
         }
         std::string oidStr = oid.front_as_string();
         oid.pop();   
-
+        // HERE?
         if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
             status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
