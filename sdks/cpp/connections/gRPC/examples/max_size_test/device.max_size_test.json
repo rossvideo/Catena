@@ -66,7 +66,8 @@
       "params": {
         "p1": {
           "type": "STRING",
-          "name": { "display_strings": { "en": "p1" } }
+          "name": { "display_strings": { "en": "p1" } },
+          "max_length": 10
         },
         "p2": {
           "type": "FLOAT32",

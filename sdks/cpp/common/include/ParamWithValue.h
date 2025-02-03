@@ -132,6 +132,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     const bool validate(const catena::Value& value) {
 		int input_size = 0;
+        auto test = value.kind_case();
 		switch (descriptor_.type()) {
 			case catena::ParamType::STRING:
 				input_size = value.string_value().length();
@@ -151,7 +152,7 @@ class ParamWithValue : public catena::common::IParam {
 				const catena::StringList& string_list = value.string_array_values();
 				input_size = string_list.strings_size();
 				/**  
-				 * @todo replace with strings max_length or change to instead take sum of all strings?
+				 * @todo add max_length field to string array? Or just apply uniform max_length?
 				 */
 				if (input_size < descriptor_.max_length()) {
 					for (const auto& string : string_list.strings()) {
@@ -162,6 +163,14 @@ class ParamWithValue : public catena::common::IParam {
 				}
 				break;
 				}
+            // case catena::ParamType::STRUCT:
+            // {
+            //     auto& fields = value.struct_value().fields();
+            //     for (auto& [key, field] : fields) {
+            //         auto test field.kind_case();
+            //     }
+            //     break;
+            // }
 			case catena::ParamType::STRUCT_ARRAY:
 			{
 				input_size = value.struct_array_values().struct_values_size();
