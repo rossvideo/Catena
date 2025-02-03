@@ -36,7 +36,8 @@
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
+ * @author zuhayr.sarker@rossvideo.com
+ * @date 2025-01-28
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -48,21 +49,77 @@
 */
 class CatenaServiceImpl::GetParam : public CallData {
     public:
-        GetParam(CatenaServiceImpl *service, Device &dm, bool ok);
-        ~GetParam() {}
 
+        /**
+         * @brief Constructor for the CallData class of the GetParam
+         * gRPC. Calls proceed() once initialized.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the value from.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
+        GetParam(CatenaServiceImpl *service, Device &dm, bool ok);
+
+        /**
+         * @brief Manages the steps of the GetParam gRPC command
+         * through the state variable status. Returns the value of the
+         * parameter specified by the user.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param ok - Flag to check if the command was successfully executed.
+         */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+
+        /**
+         * @brief Parent CatenaServiceImpl.
+         */
         CatenaServiceImpl *service_;
+
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
         ServerContext context_;
+
+        /**
+         * @brief The client's scopes.
+         */
         std::vector<std::string> clientScopes_;
+
+        /**
+         * @brief The request payload.
+         */
         catena::GetParamPayload req_;
+
+        /**
+         * @brief The response payload.
+         */
         catena::PushUpdates res_;
+
+        /**
+         * @brief gRPC async response writer.
+         */
         ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
+
+        /**
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         */
         CallStatus status_;
+
+        /**
+         * @brief The device to get the value from.
+         */
         Device &dm_;
-        std::unique_ptr<catena::ParamAccessor> param_;
+
+        /**
+         * @brief The object's unique id.
+         */
         int objectId_;
-        static int objectCounter_;
+
+        /**
+         * @brief The object's unique id counter.
+         */
+        static int objectCounter_;  
 };
