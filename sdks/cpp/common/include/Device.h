@@ -162,6 +162,15 @@ class Device {
      */
     void toProto(::catena::LanguageList& list) const;
 
+    using componentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
+    /**
+     * @brief Finds and returns a language pack based on languageId.ABORTED
+     * @param languageId The language id of the language pack e.g. "en"
+     * @param pack Output var containing the found LanguagePack.
+     * @return exception_with_status containing the status of the operation.
+     */
+    catena::exception_with_status getLanguagePack(const std::string& languageId, componentLanguagePack& pack) const;
+
     /**
      * @brief DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents
      * This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.
