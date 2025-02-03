@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -119,4 +119,10 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @brief The object's unique id counter.
          */
         static int objectCounter_;  
+
+        void getChildren(IParam* current_param, const std::string& current_path);
+        std::vector<catena::BasicParamInfoResponse> responses_;
+        size_t current_response_{0};
+
+        void getChildrenNoLock(IParam* current_param, const std::string& current_path);
 };

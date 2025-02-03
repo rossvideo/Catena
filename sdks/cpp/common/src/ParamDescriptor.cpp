@@ -62,17 +62,13 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
 }
 
 void ParamDescriptor::toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const {
-    
-    
     paramInfo.set_type(type_);
-
     paramInfo.set_oid(oid_);
+    paramInfo.set_template_oid(template_oid_);
 
     for (const auto& [lang, text] : name_.displayStrings()) {
         (*paramInfo.mutable_name()->mutable_display_strings())[lang] = text;
     }
-
-    //Missing logic for template...
 }
 
 const std::string& ParamDescriptor::name(const std::string& language) const { 

@@ -45,6 +45,7 @@ using catena::common::Path;
 #include <iterator>
 #include <filesystem>
 #include <filesystem>
+#include <map>
 
 int CatenaServiceImpl::BasicParamInfoRequest::objectCounter_ = 0;
 
@@ -79,105 +80,60 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         service_->cq_, service_->cq_, this);
             break;
 
-
         case CallStatus::kProcess:
             new BasicParamInfoRequest(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);
-            status_ = CallStatus::kWrite;
-            //break; // No break so it is allowed to fall through to the write case 
-
-        case CallStatus::kWrite:
+            
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 catena::common::Authorizer authz = std::vector<std::string>{};  
 
-                // Get the parameter with or without authorization
+                // Single lock for the entire operation
+                Device::LockGuard lg(dm_);
+
+                // Get parameter and collect responses
                 if (service->authorizationEnabled()) {
                     std::vector<std::string> scopes = service->getScopes(context_);
-                    authz = catena::common::Authorizer{scopes};  
-                    Device::LockGuard lg(dm_);
+                    authz = catena::common::Authorizer{scopes};
                     param = dm_.getParam(req_.oid_prefix(), rc, authz);
                 } else {
-                    Device::LockGuard lg(dm_);
                     param = dm_.getParam(req_.oid_prefix(), rc);
+                    std::cout << "current path: " << req_.oid_prefix() << std::endl;
                 }
 
                 if (rc.status == catena::StatusCode::OK && param) {
-                    std::vector<catena::BasicParamInfoResponse> responses;
-                    
-                    // Get response for main parameter
-                    catena::BasicParamInfoResponse response;
+                    // Add main response
+                    responses_.emplace_back();
                     if (service->authorizationEnabled()) {
-                        param->toProto(response, authz);
+                        param->toProto(responses_.back(), authz);
                     } else {
-                        param->toProto(response, catena::common::Authorizer::kAuthzDisabled);
-                    }
-                    responses.push_back(response);
-
-
-                    std::function<void(IParam*, const std::string&)> getChildren = 
-                            [&](IParam* current_param, const std::string& current_path) {
-                                auto param_type = current_param->type().value();
-                                
-                                std::cout << "Looking at path: " << current_path << std::endl;
-                                /*
-                                std::cout << "Type: " << (param_type == catena::ParamType::STRUCT ? "STRUCT" : 
-                                                         param_type == catena::ParamType::STRUCT_ARRAY ? "STRUCT_ARRAY" : "OTHER") << std::endl;
-                                */
-
-                                // Get descriptor to find children
-                                const auto& descriptor = current_param->getDescriptor();
-                                
-                                // Iterate through all possible subparams
-                                for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
-                                    std::cout << "Found child named: " << child_name << std::endl;
-                                    
-                                    // Get child's type
-                                    auto child_type = child_desc->type();
-                                    /*
-                                    std::cout << "Child type: " << (child_type == catena::ParamType::STRUCT ? "STRUCT" : 
-                                                                  child_type == catena::ParamType::STRUCT_ARRAY ? "STRUCT_ARRAY" : "OTHER") << std::endl; 
-                                    */
-
-                                    // If child is a STRUCT_ARRAY, recursively call getChildren on it
-                                    if (child_type == catena::ParamType::STRUCT_ARRAY) {
-                                        // For array types, we need to check each index
-                                        for (size_t i = 0; ; i++) {
-                                            std::string array_path = "/" + current_path + "/" + std::to_string(i) + "/" + child_name;
-                                            //Current param needs to be updated...
-                                            Device::LockGuard lg(dm_);
-                                            param = dm_.getParam(array_path, rc); //We already checked for authorization, no need to again.
-                                            if (param) 
-                                                getChildren(param.get(), array_path);
-                                             else 
-                                                break;
-                                        }
-                                    }
-                                }
-                            };
-
-                    if (req_.recursive()) {                        
-                        getChildren(param.get(), response.info().oid());
+                        param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                     }
 
-                    // Write all responses
-                    for (const auto& resp : responses) {
-                        writer_.Write(resp, this);
+                    // Collect child responses if recursive
+                    if (req_.recursive()) {
+                        getChildren(param.get(), responses_.back().info().oid());
                     }
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status::OK, this);
-                    break;
+
+                    // Start writing responses
+                    status_ = CallStatus::kWrite;
+                    writer_.Write(responses_[current_response_], this);
                 }
-                else {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                    break;
-                }
-
             } catch (...) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(Status::CANCELLED, this);
+            }
+            break;
+
+        case CallStatus::kWrite:
+            if (current_response_ < responses_.size() - 1) {
+                // Write next response
+                current_response_++;
+                writer_.Write(responses_[current_response_], this);
+            } else {
+                // All responses written
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status::OK, this);
             }
             break;
 
@@ -197,5 +153,48 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             std::cout << "[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+    }
+}
+
+void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path) {
+    const auto& descriptor = current_param->getDescriptor();
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    
+    for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+        if (child_name.empty() || child_name[0] == '/') continue;
+        
+        auto child_type = child_desc->type();
+        std::string child_path = (current_path[0] == '/' ? current_path : "/" + current_path);
+        
+        if (child_type == catena::ParamType::STRUCT_ARRAY) {
+            // Handle array type parameters
+            for (size_t i = 0; ; i++) {
+                std::string array_path = child_path + "/" + std::to_string(i) + "/" + child_name;
+                std::cout << "Currently looking at array element: " << array_path << std::endl;
+                auto param = dm_.getParam(array_path, rc);
+                if (!param) {
+                    if (i > 0) {
+                        responses_.back().set_array_length(i);
+                    }
+                    break;
+                }
+
+                responses_.emplace_back();
+                param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                getChildren(param.get(), array_path);
+            }
+        } else {
+            // For non-array parameters, still check for array indices
+            for (size_t i = 0; ; i++) {
+                std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
+                std::cout << "Currently looking at indexed param: " << indexed_path << std::endl;
+                auto param = dm_.getParam(indexed_path, rc);
+                if (!param) break;
+
+                responses_.emplace_back();
+                param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                getChildren(param.get(), indexed_path);
+            }
+        }
     }
 }

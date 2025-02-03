@@ -128,6 +128,9 @@ class Descriptor {
       oid: () => {
         return `"${oid}"`;
       },
+      template_oid: () => {
+        return ("template_oid" in desc) ? `"${desc.template_oid}"` : `""`;
+      },
       constraint: () => {
         return constraint ? `&${constraint.variableName()}` : "nullptr";
       },

@@ -110,6 +110,9 @@ class ParamDescriptor {
      * @param widget the parameter's widget
      * @param read_only the parameter's read-only status
      * @param oid the parameter's oid
+     * @param template_oid the parameter's template oid
+     * @param constraint the parameter's constraint
+     * @param isCommand the parameter's command status
      * @param collection the parameter belongs to
      */
     ParamDescriptor(
@@ -120,6 +123,7 @@ class ParamDescriptor {
       const std::string& scope, 
       bool read_only, 
       const std::string& oid, 
+      const std::string& template_oid,
       catena::common::IConstraint* constraint,
       bool isCommand,
       Device& dm,
@@ -127,8 +131,10 @@ class ParamDescriptor {
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
       setOid(oid);
+      setTemplateOid(template_oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
+        parent_->addSubParam(template_oid, this);
       }
     }
 
@@ -157,6 +163,11 @@ class ParamDescriptor {
      * @brief set the parameter oid
      */
     void setOid(const std::string& oid) { oid_ = oid; }
+
+    /**
+     * @brief set the parameter template oid
+     */
+    void setTemplateOid(const std::string& template_oid) { template_oid_ = template_oid; }
 
     /**
      * @brief return the readOnly status of the parameter
