@@ -188,6 +188,7 @@ class CppGen {
       let lang = packs[pack];
       let keyWordPairs = Object.keys(lang.words);
       bloc(`LanguagePack ${pack} {`);
+      bloc(`"${pack}",`, 1);
       bloc(`"${lang.name}",`, 1);
       bloc(`{`, 1);
       bloc(keyWordPairs.map((key) => { return `{ "${key}", "${lang.words[key]}" }` }).join(",\n    "), 2);
