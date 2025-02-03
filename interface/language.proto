@@ -81,6 +81,7 @@ message PolyglotText {
 message AddLanguagePayload {
   uint32 slot = 1;
   LanguagePack language_pack = 2;
+  string id = 3;                  // e.g. "es" Global Spanish.
 }
 
 /* LanguagePackRequestPayload
