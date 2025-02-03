@@ -44,6 +44,7 @@
 #include <ExternalObjectRequest.h>
 #include <ExecuteCommand.h>
 #include <AddLanguage.h>
+#include <ListLanguages.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -111,6 +112,7 @@ void CatenaServiceImpl::init() {
     // new GetParam(this, dm_, true);
     new ExecuteCommand(this, dm_, true);
     new AddLanguage(this, dm_, true);
+    new ListLanguages(this, dm_, true);
 }
 
 // Initializing the shutdown signal for all open connections.
