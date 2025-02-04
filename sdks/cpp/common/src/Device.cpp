@@ -93,7 +93,19 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
         }
         // added_packs_ here to maintain ownership in device scope.
         added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
-        language_packs_[id]->fromProto(language.language_pack());
+        language_packs_[id]->fromProto(language.language_pack());      
+        // Emitting signal to buisness logic.
+        // componentLanguagePack pack;
+        // getLanguagePack(id, pack);
+        // languageAddedPushUpdate.emit(pack);
+        /**
+         * TEMPORARY UNTIL REQUESTLANGUAGEPACK RPC IS MERGED
+         */
+        componentLanguagePack added_pack;
+        added_pack.set_language(id);
+        auto languagePack = added_pack.mutable_language_pack();
+        language_packs_[id]->toProto(*languagePack);
+        languageAddedPushUpdate.emit(added_pack);
     }
     return catena::exception_with_status("", catena::StatusCode::OK);
 }

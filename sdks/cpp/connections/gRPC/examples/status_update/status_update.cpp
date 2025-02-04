@@ -126,6 +126,13 @@ void combo_boxUpdateHandler(const std::string& oid, const IParam* p, const int32
     std::cout << "*** client set combo_box to " << combo_box << '\n';
 }
 
+void addedLanguageHandler(const Device::componentLanguagePack& pack) {
+    // all we do here is print out the name of the added language.
+    // your biz logic would do something _even_more_ interesting!
+    
+    std::cout << "*** Added language pack " << pack.language() << '\n';
+}
+
 void statusUpdateExample(){   
     std::thread loop([]() {
         std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
@@ -139,6 +146,8 @@ void statusUpdateExample(){
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
             handlers[oid](oid, p, idx);
         });
+
+        dm.languageAddedPushUpdate.connect(addedLanguageHandler);
 
         catena::exception_with_status err{"", catena::StatusCode::OK};
 

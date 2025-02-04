@@ -91,6 +91,7 @@ class Device {
      * @brief convenience type aliases to types of objects contained in the device
      */
     using DetailLevel_e = catena::Device_DetailLevel;
+    using componentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
 
   public:
     /**
@@ -404,6 +405,12 @@ class Device {
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
     
+    /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const componentLanguagePack&)> languageAddedPushUpdate;
+
     /**
      * @brief signal emitted when a value is set by the server, or business logic.
      * Intended recipient is the connection manager.
