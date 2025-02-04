@@ -126,70 +126,26 @@ class ParamWithValue : public catena::common::IParam {
      * @brief default destructor
      */
     virtual ~ParamWithValue() = default;
-
+    
     /**
-     * @brief Validates that a value is <= the max_size_.
+     * @brief Validates the size of a value.
      */
-    const bool validate(const catena::Value& value) {
+    const bool validateSize(const catena::Value& value) {
 		int input_length = 0, total_length = 0;
-        auto test = value.kind_case();
+        auto oid = descriptor_.getOid();
 
-		switch (descriptor_.type()) {
-			case catena::ParamType::STRING:
-				input_length = value.string_value().length();
-				break;
+        
 
-			case catena::ParamType::INT32_ARRAY:
-				input_length = value.int32_array_values().ints_size();
-				break;
-
-			case catena::ParamType::FLOAT32_ARRAY:
-				input_length = value.float32_array_values().floats_size();
-				break;
-
-			case catena::ParamType::STRING_ARRAY:
-			{ // Block scope for var declaration.
-			    const catena::StringList& string_list = value.string_array_values();
-				input_length = string_list.strings_size();
-				if (input_length < descriptor_.max_length()) {
-                    // Total length of containing strings.
-					for (const auto& string : string_list.strings()) {
-						total_length += string.length();
-					}
-				}
-				break;
-			}
-
-            // case catena::ParamType::STRUCT:
-            // {
-            //     auto& fields = value.struct_value().fields();
-            //     for (auto& [key, field] : fields) {
-            //         auto test field.kind_case();
-            //     }
-            //     break;
-            // }
-			case catena::ParamType::STRUCT_ARRAY:
-			{
-				input_length = value.struct_array_values().struct_values_size();
-				break;
-				// {
-				// const catena::StructList& struct_list = value.struct_array_values();
-				// input_size = struct_list.struct_values_size();
-				// /**  
-				//  * @todo replace with struct's max_length.
-				//  */
-				// if input_size < descriptor_.max_length() {
-				// 	for (const auto& struct_value : struct_list.struct_values()) {
-						
-				// 	}
-				// }
-				// break;
-				// }
-			}
-			case catena::ParamType::STRUCT_VARIANT_ARRAY:
-				input_length = value.struct_variant_array_values().struct_variants_size();
-				break;
-		}
+        switch (value.kind_case()) {
+            case catena::Value::KindCase::kInt32Value: {
+                if (descriptor_.type() != catena::ParamType::INT32_ARRAY) {
+                    return true;
+                } else {
+                    auto temp = value_.get();
+                    input_length = 0;
+                }
+            }
+        }
 		return input_length < descriptor_.max_length() && total_length < descriptor_.total_length();
     }
 
@@ -244,7 +200,7 @@ class ParamWithValue : public catena::common::IParam {
         if (!authz.writeAuthz(*this)) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
 		}
-		if (!validate(value)) {
+		if (!validateSize(value)) {
 			return catena::exception_with_status("Value exceeds max length", catena::StatusCode::INVALID_ARGUMENT);
         } else {
             catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
@@ -367,7 +323,11 @@ class ParamWithValue : public catena::common::IParam {
         if (oidIndex == catena::common::Path::kEnd) {
             // Index is "-", add a new element to the array
             oidIndex = value.size();
-            // HERE?
+            // Checks first to make sure the array is not a max_length.
+            if (oidIndex >= descriptor_.max_length()) {
+                status = catena::exception_with_status("Array at maximum capacity", catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
             value.push_back(ElemType());
         } else if (oidIndex >= value.size()) {
             // If index is out of bounds, return nullptr

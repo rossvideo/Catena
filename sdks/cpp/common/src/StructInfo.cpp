@@ -110,7 +110,9 @@ void catena::common::fromProto<std::string>(const catena::Value& src, std::strin
 
     // if the parameter does not satisfy the constraint, then the element is unchanged
     if (!constraint || constraint->satisfied(src)) {
-        *dst = src.string_value();
+        if (pd.type() != ParamType::STRING || src.string_value().size() <= pd.max_length()) {
+            *dst = src.string_value();
+        }
     }
     return;
 }
@@ -207,12 +209,21 @@ void catena::common::fromProto<std::vector<std::string>>(const Value& src, std::
     const catena::StringList& string_array = src.string_array_values();
     const catena::common::IConstraint* constraint = pd.getConstraint();
     catena::Value item;
+    int totalSize = 0;
 
     for (int i = 0; i < string_array.strings_size(); ++i) {
-        item.set_string_value(string_array.strings(i));
-        // if parameter does not satisfy the constraint, then the element is unchanged
-        if (!constraint || constraint->satisfied(item)) {
-            dst->push_back(string_array.strings(i));
+        // Only add items up until max_length.
+        if (i >= pd.max_length()) {
+            break;
+        }
+        // Only add strings until their total length > total_length.
+        if (totalSize + string_array.strings(i).size() <= pd.total_length()) {
+            item.set_string_value(string_array.strings(i));
+            // if parameter does not satisfy the constraint, then the element is unchanged
+            if (!constraint || constraint->satisfied(item)) {
+                dst->push_back(string_array.strings(i));
+                totalSize += string_array.strings(i).size();
+            }
         }
             
     }

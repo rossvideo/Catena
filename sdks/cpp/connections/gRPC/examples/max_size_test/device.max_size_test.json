@@ -54,11 +54,11 @@
       "name": { "display_strings": { "en": "String Array Test", "es": "Prueba de Matriz de Cadenas", "fr": "Test de Tableau de Chaînes" } },
       "value": {
         "string_array_values": {
-          "strings": ["one","two","three","four","five"],
-          "max_length": 10
+          "strings": ["one","two","three","four","five"]
           }
         },
-      "max_length": 10
+      "max_length": 10,
+      "total_length": 10
     },
     "struct_template": {
       "type": "STRUCT",

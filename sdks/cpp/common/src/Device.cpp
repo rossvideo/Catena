@@ -54,9 +54,22 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, cate
             if (!authz.writeAuthz(*param)) {
                 return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
             }
-            if (!param->validate(value)) {
-                return catena::exception_with_status("Value exceeds max length", catena::StatusCode::INVALID_ARGUMENT);
-            }
+            // Max length validation
+            /**
+             * Has to start off by adding by oid or index. If it's the latter,
+             * then we need to get the parent parameter to verify max_length.
+             */
+            // auto last = jptr.find_last_of("/");
+            // auto oldValue = getParamValue(param.get());
+            // if (jptr.substr(last + 1) != param->getOid()) {
+            //     auto parentJptr = jptr.substr(0, last);
+            //     param = getParam(parentJptr, ans, authz);
+            // }
+
+
+            // if (!param->validateSize(value)) {
+            //     return catena::exception_with_status("Value exceeds max length", catena::StatusCode::INVALID_ARGUMENT);
+            // }
         }
         return ans;
 }
@@ -98,11 +111,13 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
              * lifetime of the top level params does not need to be managed.
              */
             IParam* param = getItem<common::ParamTag>(path.front_as_string());
-            path.pop();
             if (!param || !authz.readAuthz(*param)) {
                 status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT); 
                 return nullptr;
             }
+            // If param is a #, verify that is meets max_length requirements.
+            auto temp = path.front_as_string();
+            path.pop();
             if (path.empty()) {
                 /**
                  * Top level params need to be copied into a unique pointer to be returned.
