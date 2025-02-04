@@ -84,6 +84,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             new BasicParamInfoRequest(service_, dm_, ok);
             
             try {
+
+                
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 catena::common::Authorizer authz = std::vector<std::string>{};  
@@ -91,51 +93,101 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 // Single lock for the entire operation
                 Device::LockGuard lg(dm_);
 
-                // Get parameter and collect responses
-                if (service->authorizationEnabled()) {
-                    std::vector<std::string> scopes = service->getScopes(context_);
-                    authz = catena::common::Authorizer{scopes};
-                    param = dm_.getParam(req_.oid_prefix(), rc, authz);
-                } else {
-                    param = dm_.getParam(req_.oid_prefix(), rc);
-                    //std::cout << "current path: " << req_.oid_prefix() << std::endl;
-                }
-
-                max_index_ = 0;
-
-                if (rc.status == catena::StatusCode::OK && param) {
-
-                    // This is used to help find the length of the parent array
-                    if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
-                        for (size_t i = 0; ; i++) {
-                            std::string array_path = req_.oid_prefix() + "/" + std::to_string(i);
-                            auto check_param = dm_.getParam(array_path, rc);
-                            if (!check_param) break;
-                            max_index_ = i + 1;
-                        }
-                    }
-
-                    // Add main response
-                    responses_.emplace_back();
+                if (!req_.oid_prefix().empty()) {
+                    // Get parameter and collect responses
                     if (service->authorizationEnabled()) {
-                        param->toProto(responses_.back(), authz);
+                        std::vector<std::string> scopes = service->getScopes(context_);
+                        authz = catena::common::Authorizer{scopes};
+                        param = dm_.getParam(req_.oid_prefix(), rc, authz);
                     } else {
-                        param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                        param = dm_.getParam(req_.oid_prefix(), rc);
+                        std::cout << "current path: " << req_.oid_prefix() << std::endl;
+                    }
+                
+                    max_index_ = 0;
+
+                    if (rc.status == catena::StatusCode::OK && param) {
+
+                        // This is used to help find the length of the parent array
+                        if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                            for (size_t i = 0; ; i++) {
+                                std::string array_path = req_.oid_prefix() + "/" + std::to_string(i);
+                                auto check_param = dm_.getParam(array_path, rc);
+                                if (!check_param) break;
+                                max_index_ = i + 1;
+                            }
+                        }
+
+                        // Add main response
+                        responses_.emplace_back();
+                        if (service->authorizationEnabled()) {
+                            param->toProto(responses_.back(), authz);
+                        } else {
+                            param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                        }
+
+                        // Update array length if this is an array
+                        if (max_index_ > 0) {
+                            updateArrayLengths(responses_.back().info().oid(), max_index_);
+                        }
+
+                        // Collect child responses if recursive
+                        if (req_.recursive()) {
+                            getChildren(param.get(), responses_.back().info().oid());
+                        }
+
+                        // Start writing responses
+                        status_ = CallStatus::kWrite;
+                        writer_.Write(responses_[current_response_], this);
+                    }
+                }
+                else if (req_.oid_prefix().empty() && !req_.recursive()) { //Collect top-level params
+                    std::cout << "Collecting top-level params" << std::endl;
+
+                    std::vector<std::unique_ptr<IParam>> top_level_params;
+
+                    if (service->authorizationEnabled()) {
+                        std::vector<std::string> scopes = service->getScopes(context_);
+                        authz = catena::common::Authorizer{scopes};
+                        top_level_params = dm_.getTopLevelParams(rc, authz);
+                    }
+                    else {
+                        top_level_params = dm_.getTopLevelParams(rc);
+                    }
+                    
+                    max_index_ = 0;
+
+                    if (rc.status == catena::StatusCode::OK) {
+                        responses_.emplace_back();
+
+                        // Check each top level param for arrays
+                        for (auto& top_level_param : top_level_params) {
+                            if (top_level_param->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                                std::string path = "/" + top_level_param->getDescriptor().getOid();
+                                for (size_t i = 0; ; i++) {
+                                    std::string array_path = path + "/" + std::to_string(i);
+                                    auto check_param = dm_.getParam(array_path, rc);
+                                    if (!check_param) break;
+                                    max_index_ = i + 1;
+                                }
+                            }
+                            
+                            // Add param to response
+                            if (service->authorizationEnabled()) {
+                                top_level_param->toProto(responses_.back(), authz);
+                            } else {
+                                top_level_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                            }
+
+                            if (max_index_ > 0) {
+                                updateArrayLengths(responses_.back().info().oid(), max_index_);
+                            }
+                        }
+
+                        status_ = CallStatus::kWrite;
+                        writer_.Write(responses_[current_response_], this);
                     }
 
-                    // Update array length if this is an array
-                    if (max_index_ > 0) {
-                        updateArrayLengths(responses_.back().info().oid(), max_index_);
-                    }
-
-                    // Collect child responses if recursive
-                    if (req_.recursive()) {
-                        getChildren(param.get(), responses_.back().info().oid());
-                    }
-
-                    // Start writing responses
-                    status_ = CallStatus::kWrite;
-                    writer_.Write(responses_[current_response_], this);
                 }
             } catch (...) {
                 status_ = CallStatus::kFinish;

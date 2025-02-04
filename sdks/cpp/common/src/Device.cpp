@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -123,6 +123,23 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
     }
 }
 
+std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
+    std::vector<std::unique_ptr<IParam>> result;
+    try {
+        for (const auto& [name, param] : params_) {
+            if (authz.readAuthz(*param)) { 
+                std::string path = "/" + name;  //Need to construct a path
+                auto param_ptr = getParam(path, status, authz);  
+                if (param_ptr) {
+                    result.push_back(std::move(param_ptr));
+                }
+            }
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
+    }
+    return result;
+}
 std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {
