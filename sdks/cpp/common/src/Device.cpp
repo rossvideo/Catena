@@ -41,6 +41,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+#include <iostream>
 
 using namespace catena::common;
 
@@ -125,12 +126,16 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
 
 std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
     std::vector<std::unique_ptr<IParam>> result;
+    std::cout << "Checking params_ map contents:" << std::endl;
     try {
         for (const auto& [name, param] : params_) {
+            std::cout << "Found param in map: '" << name << "'" << std::endl;
             if (authz.readAuthz(*param)) { 
-                std::string path = "/" + name;  //Need to construct a path
+                std::string path = "/" + name;
+                std::cout << "Checking path: '" << path << "'" << std::endl;
                 auto param_ptr = getParam(path, status, authz);  
                 if (param_ptr) {
+                    std::cout << "Successfully got param: '" << path << "'" << std::endl;
                     result.push_back(std::move(param_ptr));
                 }
             }

@@ -158,10 +158,10 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     max_index_ = 0;
 
                     if (rc.status == catena::StatusCode::OK) {
-                        responses_.emplace_back();
-
+                    
                         // Check each top level param for arrays
                         for (auto& top_level_param : top_level_params) {
+                            responses_.emplace_back();
                             if (top_level_param->type().value() == catena::ParamType::STRUCT_ARRAY) {
                                 std::string path = "/" + top_level_param->getDescriptor().getOid();
                                 for (size_t i = 0; ; i++) {
