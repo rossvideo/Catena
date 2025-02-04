@@ -197,14 +197,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kWrite:
             if (current_response_ < responses_.size() - 1) {
-                // Write next response
                 current_response_++;
-                writer_.Write(responses_[current_response_], this);
             } else {
                 // All responses written
-                status_ = CallStatus::kFinish;
-                writer_.Finish(Status::OK, this);
+                status_ = CallStatus::kPostWrite;
             }
+            writer_.Write(responses_[current_response_], this);
             break;
 
         /**
@@ -286,3 +284,4 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
         }
     }
 }
+
