@@ -82,10 +82,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kProcess:
             new BasicParamInfoRequest(service_, dm_, ok);
+            context_.AsyncNotifyWhenDone(this);  
             
             try {
-
-                
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 catena::common::Authorizer authz = std::vector<std::string>{};  
@@ -196,31 +195,40 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             break;
 
         case CallStatus::kWrite:
+            // Check if cancelled before continuing
+            if (context_.IsCancelled()) {
+                std::cout << "[" << objectId_ << "] cancelled during write\n";
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status::CANCELLED, this);
+                break;
+            }
+
             if (current_response_ < responses_.size() - 1) {
                 // Write next response
                 current_response_++;
                 writer_.Write(responses_[current_response_], this);
             } else {
-                // All responses written - transition directly to PostWrite
-                status_ = CallStatus::kPostWrite;
-                proceed(service, true);  // I'm not sure if I should do it like this.
+                std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status::OK, this);  // This should trigger another proceed() call
             }
             break;
 
-        /**
-         * kPostWrite: Finish writing the response to the client.
-         */
-        case CallStatus::kPostWrite:
-            status_ = CallStatus::kFinish;
-            writer_.Finish(Status::OK, this);
-            break;
+        //kPostWrite is not needed 
+        // /**
+        //  * kPostWrite: Finish writing the response to the client.
+        //  */
+        // case CallStatus::kPostWrite:
+        //     status_ = CallStatus::kFinish;
+        //     break;
 
         /**
          * kFinish: Final step of gRPC is to deregister the item from
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "[" << objectId_ << "] finished\n";
+            std::cout << "[" << objectId_ << "] finished with status: " 
+                      << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
             service->deregisterItem(this);
             break;
     }
@@ -242,7 +250,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             // Handle array type parameters
             for (size_t i = 0; ; i++) {
                 std::string array_path = child_path + "/" + std::to_string(i) + "/" + child_name;
-                std::cout << "Currently looking at array element: " << array_path << std::endl;
+                //std::cout << "Currently looking at array element: " << array_path << std::endl;
                 auto param = dm_.getParam(array_path, rc);
 
                 if (!param) break;
@@ -261,7 +269,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             // For non-array parameters, still check for array indices
             for (size_t i = 0; ; i++) {
                 std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
-                std::cout << "Currently looking at indexed param: " << indexed_path << std::endl;
+                //std::cout << "Currently looking at indexed param: " << indexed_path << std::endl;
                 auto param = dm_.getParam(indexed_path, rc);
                 if (!param) break;
                 max_index_ = i + 1;
