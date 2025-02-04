@@ -197,12 +197,14 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kWrite:
             if (current_response_ < responses_.size() - 1) {
+                // Write next response
                 current_response_++;
+                writer_.Write(responses_[current_response_], this);
             } else {
-                // All responses written
+                // All responses written - transition directly to PostWrite
                 status_ = CallStatus::kPostWrite;
+                proceed(service, true);  // I'm not sure if I should do it like this.
             }
-            writer_.Write(responses_[current_response_], this);
             break;
 
         /**
