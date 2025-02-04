@@ -98,16 +98,34 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     param = dm_.getParam(req_.oid_prefix(), rc, authz);
                 } else {
                     param = dm_.getParam(req_.oid_prefix(), rc);
-                    std::cout << "current path: " << req_.oid_prefix() << std::endl;
+                    //std::cout << "current path: " << req_.oid_prefix() << std::endl;
                 }
 
+                max_index_ = 0;
+
                 if (rc.status == catena::StatusCode::OK && param) {
+
+                    // This is used to help find the length of the parent array
+                    if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                        for (size_t i = 0; ; i++) {
+                            std::string array_path = req_.oid_prefix() + "/" + std::to_string(i);
+                            auto check_param = dm_.getParam(array_path, rc);
+                            if (!check_param) break;
+                            max_index_ = i + 1;
+                        }
+                    }
+
                     // Add main response
                     responses_.emplace_back();
                     if (service->authorizationEnabled()) {
                         param->toProto(responses_.back(), authz);
                     } else {
                         param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                    }
+
+                    // Update array length if this is an array
+                    if (max_index_ > 0) {
+                        updateArrayLengths(responses_.back().info().oid(), max_index_);
                     }
 
                     // Collect child responses if recursive
@@ -167,33 +185,51 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
         std::string child_path = (current_path[0] == '/' ? current_path : "/" + current_path);
         
         if (child_type == catena::ParamType::STRUCT_ARRAY) {
+            max_index_ = 0;
+
             // Handle array type parameters
             for (size_t i = 0; ; i++) {
                 std::string array_path = child_path + "/" + std::to_string(i) + "/" + child_name;
                 std::cout << "Currently looking at array element: " << array_path << std::endl;
                 auto param = dm_.getParam(array_path, rc);
-                if (!param) {
-                    if (i > 0) {
-                        responses_.back().set_array_length(i);
-                    }
-                    break;
-                }
 
+                if (!param) break;
+                max_index_ = i + 1;
+                
                 responses_.emplace_back();
                 param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                 getChildren(param.get(), array_path);
             }
-        } else {
+
+            updateArrayLengths(child_name, max_index_);
+        } 
+        
+        else {
+            max_index_ = 0;
             // For non-array parameters, still check for array indices
             for (size_t i = 0; ; i++) {
                 std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
                 std::cout << "Currently looking at indexed param: " << indexed_path << std::endl;
                 auto param = dm_.getParam(indexed_path, rc);
                 if (!param) break;
+                max_index_ = i + 1;
 
                 responses_.emplace_back();
                 param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                 getChildren(param.get(), indexed_path);
+            }
+
+            updateArrayLengths(child_name, max_index_);
+        }
+
+    }
+}
+
+void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, size_t length) {
+    if (length > 0) {
+        for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
+            if (it->info().oid().find(array_name) != std::string::npos) {
+                it->set_array_length(length);
             }
         }
     }
