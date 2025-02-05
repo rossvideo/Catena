@@ -22,7 +22,7 @@ var classcatena_1_1common_1_1Device =
     [ "toProto", "classcatena_1_1common_1_1Device.html#a8768802e0083f71ed71e7bc20997f0d3", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#a15505cc94e033ba2ef4b42ab7ebfcafa", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#a7420ac96f72817f5ad4fbf3c5d747a8a", null ],
-    [ "languageAddedPushUpdate", "classcatena_1_1common_1_1Device.html#a87d7136f80327de1fc0be85e648158f5", null ],
+    [ "languageAddedPushUpdate", "classcatena_1_1common_1_1Device.html#ab58ea380d9e882422358d5bc998d3c91", null ],
     [ "valueSetByClient", "classcatena_1_1common_1_1Device.html#ad0504576b2baa494010be749c94e03f4", null ],
     [ "valueSetByServer", "classcatena_1_1common_1_1Device.html#aa14bba71eb227107bbae177a21c9d5a8", null ]
 ];
