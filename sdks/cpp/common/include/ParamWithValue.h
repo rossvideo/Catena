@@ -128,13 +128,36 @@ class ParamWithValue : public catena::common::IParam {
     virtual ~ParamWithValue() = default;
     
     /**
-     * @brief Validates the size of a value.
+     * @brief Validates the size of a string or array value.
+     * This does not check total_size of all elements in an array, and
+     * therefore there is no type checking for string arrays.
+     * @param value The value to validate the size of.
      */
     const bool validateSize(const catena::Value& value) {
-		/**
-         * @todo
-         */
-        return true;
+        int value_length = 0;
+		switch(value.kind_case()) {
+            case catena::Value::kStringValue:
+                if (type().value() == catena::ParamType::STRING) {
+                    value_length = value.string_value().length();
+                }
+                break;
+            case catena::Value::kInt32ArrayValues:
+                value_length = value.int32_array_values().ints_size();
+                break;
+            case catena::Value::kFloat32ArrayValues:
+                value_length = value.float32_array_values().floats_size();
+                break;
+            case catena::Value::kStringArrayValues:
+                value_length = value.string_array_values().strings_size();
+                break;
+            case catena::Value::kStructArrayValues:
+                value_length = value.struct_array_values().struct_values_size();
+                break;
+            case catena::Value::kStructVariantArrayValues:
+                value_length = value.struct_variant_array_values().struct_variants_size();
+                break;
+        }
+        return value_length <= descriptor_.max_length();
     }
 
     /**
@@ -188,6 +211,9 @@ class ParamWithValue : public catena::common::IParam {
         if (!authz.writeAuthz(*this)) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
 		}
+        if (!validateSize(value)) {
+            return catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
+        }
         catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
         return catena::exception_with_status("", catena::StatusCode::OK);
     }
@@ -312,6 +338,13 @@ class ParamWithValue : public catena::common::IParam {
                 status = catena::exception_with_status("Array at maximum capacity", catena::StatusCode::INVALID_ARGUMENT);
                 return nullptr;
             }
+            /**
+             * @todo This line leads to issue of adding to the back whenever
+             * param/- is used, even if we are not setting the value.
+             * This also leads to an extra empty value getting added when
+             * trySet is used.
+             * This can also bypass needing write permissions.
+             */
             value.push_back(ElemType());
         } else if (oidIndex >= value.size()) {
             // If index is out of bounds, return nullptr

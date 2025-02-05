@@ -206,7 +206,6 @@ void catena::common::fromProto<std::vector<std::string>>(const Value& src, std::
     const catena::StringList& string_array = src.string_array_values();
     const catena::common::IConstraint* constraint = pd.getConstraint();
     catena::Value item;
-    int totalSize = 0;
 
     for (int i = 0; i < string_array.strings_size(); ++i) {
         item.set_string_value(string_array.strings(i));

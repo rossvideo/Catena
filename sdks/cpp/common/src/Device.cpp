@@ -54,6 +54,9 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, cate
             if (!authz.writeAuthz(*param)) {
                 return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
             }
+            if (!param->validateSize(value)) {
+                return catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
+            }
         }
         return ans;
 }

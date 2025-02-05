@@ -175,7 +175,6 @@ class ParamDescriptor {
     const std::string& getScope() const;
 
     const int max_length() const {return max_length_;}
-    const int total_length() const {return total_length_;}
 
     /**
      * @brief serialize param meta data in to protobuf message
@@ -262,7 +261,6 @@ class ParamDescriptor {
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
     int max_length_;
-    int total_length_;
     
     std::string oid_;
     ParamDescriptor* parent_;
