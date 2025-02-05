@@ -125,7 +125,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         static int objectCounter_;  
 
-        void getChildren(IParam* current_param, const std::string& current_path);
+        void getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz);
         void updateArrayLengths(const std::string& array_name, size_t length);
 
         std::vector<catena::BasicParamInfoResponse> responses_;

@@ -107,7 +107,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         param = dm_.getParam(req_.oid_prefix(), rc);
                         std::cout << "current path: " << req_.oid_prefix() << std::endl;
                     }
-                
+                    
                     max_index_ = 0;
 
                     if (rc.status == catena::StatusCode::OK && param) {
@@ -131,7 +131,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                         // Collect child responses if recursive
                         if (req_.recursive()) {
-                            getChildren(param.get(), responses_.back().info().oid());
+                            getChildren(param.get(), responses_.back().info().oid(), authz);
                         }
 
                         // Start writing responses
@@ -235,7 +235,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 }
 
 
-void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path) {
+void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
     const auto& descriptor = current_param->getDescriptor();
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
@@ -255,8 +255,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             if (!param) continue;
             
             responses_.emplace_back();
-            param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-            getChildren(param.get(), indexed_path);
+            if (service_->authorizationEnabled()) {
+                param->toProto(responses_.back(), authz);
+            } else {
+                param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+            }
+            getChildren(param.get(), indexed_path, authz);
         }
         
         if (max_index_ > 0) {
