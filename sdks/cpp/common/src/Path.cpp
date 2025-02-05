@@ -8,7 +8,7 @@
 
  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -21,10 +21,9 @@
 #include <Status.h>
 
 #include <regex>
-
+#include <optional>
 using catena::common::Path;
 using Index = Path::Index;
-
 
 Path::Path(const std::string &jptr) : segments_{} {
     // regex will split a well-formed json pointer into a sequence of Path Segments
@@ -145,20 +144,22 @@ std::string Path::unescape(const std::string &str) {
     return ans;
 }
 
-std::string Path::toString() const {
+std::string Path::toString(bool leading_slash) const {
     std::stringstream ans{""};
+    bool first = true;
     for (auto it = segments_.cbegin() + frontIdx_; it != segments_.cend(); ++it) {
         if (std::holds_alternative<Index>(*it)) {
             Index idx = std::get<Index>(*it);
             if (idx == kEnd) {
-                ans << "/-";
+                ans << (first && !leading_slash ? "" : "/") << "-";
             } else {
-                ans << "/" << idx;
+                ans << (first && !leading_slash ? "" : "/") << idx;
             }
         }
         if (std::holds_alternative<std::string>(*it)) {
-            ans << "/" << std::get<std::string>(*it);
+            ans << (first && !leading_slash ? "" : "/") << std::get<std::string>(*it);
         }
+        first = false;
     }
     return ans.str();
 }

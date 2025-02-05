@@ -14,7 +14,7 @@
 
  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -37,6 +37,10 @@
 
 namespace catena {
 namespace common {
+
+template<typename T>
+concept ValidType = std::same_as<T, size_t> || std::same_as<T, int> || std::convertible_to<T, std::string>;
+
 /**
  * @brief Converts json pointers to items within the data model to
  * a path of "segments" that can be iterated over.
@@ -97,6 +101,15 @@ class Path {
     explicit Path(const char* literal);
 
     /**
+     * @brief Construct a Path from a sequence of segments
+     * @param args Variable number of arguments that are either Index or string types
+     */
+    template<ValidType... Args>
+    explicit Path(Args... args) : segments_{}, frontIdx_{0} {
+        (push_back(std::forward<Args>(args)), ...);
+    }
+
+    /**
      * @brief return the number of segments in the Path
      *
      * @return number of segments
@@ -143,11 +156,12 @@ class Path {
 
     /**
      * @brief return a string representation of the Path
+     * @param leading_slash if true, include leading '/' in output (defaults to true)
      * @return std::string the path as a string
      * 
-     * any popped segments are not included in the  returned string.
+     * any popped segments are not included in the returned string.
      */
-    std::string toString() const;
+    std::string toString(bool leading_slash = false) const;
 
     /**
      * @brief return a fully qualified, albeit escaped oid
@@ -179,10 +193,30 @@ class Path {
      */
     inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 
+    /**
+     * @brief Add a new segment to the path
+     * @param segment Either an Index or string to add as a new segment
+     */
+    template<ValidType T>
+    void push_back(T segment) {
+        if constexpr (std::same_as<T, Index> || std::same_as<T, int>) {
+            segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(segment));
+        } else {
+            std::string str{segment};
+            if (str == "-") {
+                segments_.emplace_back(std::in_place_type<Index>, kEnd);
+            } else {
+                escape(str);
+                segments_.emplace_back(std::in_place_type<std::string>, str);
+            }
+        }
+    }
+
+
   private:
     using Segments = std::vector<Segment>;
-    Segments segments_; /**< the path split into its components */
-    std::size_t frontIdx_; /**< index of current front of path */
+    Segments segments_{};
+    std::size_t frontIdx_{0};
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0
