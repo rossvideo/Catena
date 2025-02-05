@@ -181,6 +181,36 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     // if an error is thrown, no update is pushed to the client
                 } 
             });
+            // Waiting for a language to be added to execute code.
+            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+                try {
+                    // If Connect was cancelled, notify client and end process.
+                    if (this->context_.IsCancelled()){
+                        this->hasUpdate_ = true;
+                        this->cv_.notify_one();
+                        return;
+                    }
+                    // Returning if authorization is enabled and the client does not have monitor scope.
+                    /**
+                     * @todo Authorization needs to be fixed so this might get overhauled later?
+                     */
+                    if (service_->authorizationEnabled()) {
+                        std::vector<std::string> clientScopes = service_->getScopes(context_);
+                        catena::common::Authorizer authz{clientScopes};
+                        if (!authz.hasAuthz("monitor")) {
+                            return;
+                        }
+                    }
+                    // Updating res_'s device_component and pushing update.
+                    auto pack = this->res_.mutable_device_component()->mutable_language_pack();
+                    pack->set_language(l.language());
+                    pack->mutable_language_pack()->CopyFrom(l.language_pack());
+                    this->hasUpdate_ = true;
+                    this->cv_.notify_one();
+                } catch(catena::exception_with_status& why){
+                    // if an error is thrown, no update is pushed to the client
+                }
+            });
 
             // send client a empty update with slot of the device
             {
@@ -220,6 +250,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             shutdownSignal_.disconnect(shutdownSignalId_);
             dm_.valueSetByClient.disconnect(valueSetByClientId_);
             dm_.valueSetByServer.disconnect(valueSetByServerId_);
+            dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
             service->deregisterItem(this);
             break;
         // default: Error, end process.
