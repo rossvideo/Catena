@@ -215,8 +215,8 @@ class Path {
 
   private:
     using Segments = std::vector<Segment>;
-    Segments segments_{};
-    std::size_t frontIdx_{0};
+    Segments segments_{}; /**< the path split into its components */
+    std::size_t frontIdx_{0}; /**< index of current front of path */
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0
