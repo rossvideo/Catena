@@ -57,6 +57,11 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */ 
         BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok);
 
+        // /**
+        //  * @brief Destructor for the BasicParamInfoRequest class.
+        //  */
+        // ~BasicParamInfoRequest();
+
         /**
          * @brief Manages the steps of the BasicParamInfoRequest gRPC command
          * through the state variable status. Returns the value of the
@@ -127,4 +132,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         size_t current_response_{0};
         
         size_t max_index_ = 0; //This will be changed later to the max array size implementation
+
+        size_t calculateArrayLength(const std::string& base_path);
 };

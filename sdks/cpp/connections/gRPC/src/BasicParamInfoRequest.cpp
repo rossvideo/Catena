@@ -57,6 +57,11 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImp
     proceed(service, ok);  // start the process
 }
 
+// CatenaServiceImpl::BasicParamInfoRequest::~BasicParamInfoRequest() {
+//     std::cout << "BasicParamInfoRequest[" << objectId_ << "] destructor called\n";
+//     service_->deregisterItem(this);
+// }
+
 void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *service, bool ok) {
     if (!service || status_ == CallStatus::kFinish) {
         return;
@@ -106,15 +111,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     max_index_ = 0;
 
                     if (rc.status == catena::StatusCode::OK && param) {
-
-                        // This is used to help find the length of the parent array
+                        // Calculate array length if this is a struct array
                         if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
-                            for (size_t i = 0; ; i++) {
-                                std::string array_path = req_.oid_prefix() + "/" + std::to_string(i);
-                                auto check_param = dm_.getParam(array_path, rc);
-                                if (!check_param) break;
-                                max_index_ = i + 1;
-                            }
+                            max_index_ = calculateArrayLength(req_.oid_prefix());
                         }
 
                         // Add main response
@@ -125,7 +124,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                         }
 
-                        // Update array length if this is an array
+                        // Update array length if needed
                         if (max_index_ > 0) {
                             updateArrayLengths(responses_.back().info().oid(), max_index_);
                         }
@@ -154,21 +153,13 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         top_level_params = dm_.getTopLevelParams(rc);
                     }
                     
-                    max_index_ = 0;
-
                     if (rc.status == catena::StatusCode::OK) {
-                    
                         // Check each top level param for arrays
                         for (auto& top_level_param : top_level_params) {
                             responses_.emplace_back();
                             if (top_level_param->type().value() == catena::ParamType::STRUCT_ARRAY) {
                                 std::string path = "/" + top_level_param->getDescriptor().getOid();
-                                for (size_t i = 0; ; i++) {
-                                    std::string array_path = path + "/" + std::to_string(i);
-                                    auto check_param = dm_.getParam(array_path, rc);
-                                    if (!check_param) break;
-                                    max_index_ = i + 1;
-                                }
+                                max_index_ = calculateArrayLength(path);
                             }
                             
                             // Add param to response
@@ -210,7 +201,11 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             } else {
                 std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
                 status_ = CallStatus::kFinish;
-                writer_.Finish(Status::OK, this);  // This should trigger another proceed() call
+                writer_.Finish(Status::OK, this);  
+                /**
+                 * @note: This does not call kFinish even if the call
+                 * somehow finishes -it at the very least doesn't print.
+                 */
             }
             break;
 
@@ -231,8 +226,14 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
+
 
 void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path) {
     const auto& descriptor = current_param->getDescriptor();
@@ -241,50 +242,53 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
     for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
         if (child_name.empty() || child_name[0] == '/') continue;
         
-        auto child_type = child_desc->type();
         std::string child_path = (current_path[0] == '/' ? current_path : "/" + current_path);
+        auto child_type = child_desc->type();
         
-        if (child_type == catena::ParamType::STRUCT_ARRAY) {
-            max_index_ = 0;
-
-            // Handle array type parameters
-            for (size_t i = 0; ; i++) {
-                std::string array_path = child_path + "/" + std::to_string(i) + "/" + child_name;
-                //std::cout << "Currently looking at array element: " << array_path << std::endl;
-                auto param = dm_.getParam(array_path, rc);
-
-                if (!param) break;
-                max_index_ = i + 1;
-                
-                responses_.emplace_back();
-                param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                getChildren(param.get(), array_path);
-            }
-
-            updateArrayLengths(child_name, max_index_);
-        } 
+        // Calculate array length once for both array and non-array types
+        max_index_ = calculateArrayLength(child_path);
         
-        else {
-            max_index_ = 0;
-            // For non-array parameters, still check for array indices
-            for (size_t i = 0; ; i++) {
-                std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
-                //std::cout << "Currently looking at indexed param: " << indexed_path << std::endl;
-                auto param = dm_.getParam(indexed_path, rc);
-                if (!param) break;
-                max_index_ = i + 1;
-
-                responses_.emplace_back();
-                param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                getChildren(param.get(), indexed_path);
-            }
-
+        // Process each index
+        for (size_t i = 0; i < max_index_; i++) {
+            std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
+            auto param = dm_.getParam(indexed_path, rc);
+            if (!param) continue;
+            
+            responses_.emplace_back();
+            param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+            getChildren(param.get(), indexed_path);
+        }
+        
+        if (max_index_ > 0) {
             updateArrayLengths(child_name, max_index_);
         }
-
     }
 }
 
+
+/** Finds how many array elements exist at a path
+ *  e.g., if we have /device/0, /device/1, /device/2,
+ *  returns 3
+ */
+size_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std::string& base_path) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    size_t length = 0;
+    
+    // Keep checking indices until we find one that doesn't exist
+    for (size_t i = 0; ; i++) {
+        std::string path = base_path + "/" + std::to_string(i);
+        auto param = dm_.getParam(path, rc);
+        if (!param) break;
+        length = i + 1;
+    }
+    
+    return length;
+}
+
+
+/** Updates the array_length field in the protobuf responses
+ * for all responses that contain array_name in their OID
+ */
 void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, size_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
