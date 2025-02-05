@@ -124,6 +124,9 @@ class IParam {
      */
     virtual void readOnly(bool flag) = 0;
 
+    /**
+     * @brief Validates the size of a string or array value.
+     */
     virtual const bool validateSize(const catena::Value& value) = 0;
 
     /**

@@ -129,35 +129,39 @@ class ParamWithValue : public catena::common::IParam {
     
     /**
      * @brief Validates the size of a string or array value.
-     * This does not check total_size of all elements in an array, and
-     * therefore there is no type checking for string arrays.
+     * This does not check size of all elements in a string array. Therefore
+     * someone could still mount an attack on the system by sending a
+     * string_array with a large value.
      * @param value The value to validate the size of.
      */
     const bool validateSize(const catena::Value& value) {
-        int value_length = 0;
+        /**
+         * Not really a better way since all value types have different
+         * function names for retrieving the value.
+        */ 
 		switch(value.kind_case()) {
             case catena::Value::kStringValue:
                 if (type().value() == catena::ParamType::STRING) {
-                    value_length = value.string_value().length();
+                    return value.string_value().length() <= descriptor_.max_length();
                 }
-                break;
             case catena::Value::kInt32ArrayValues:
-                value_length = value.int32_array_values().ints_size();
-                break;
+                return value.int32_array_values().ints_size() <= descriptor_.max_length();
+                
             case catena::Value::kFloat32ArrayValues:
-                value_length = value.float32_array_values().floats_size();
-                break;
+                return value.float32_array_values().floats_size() <= descriptor_.max_length();
+
             case catena::Value::kStringArrayValues:
-                value_length = value.string_array_values().strings_size();
-                break;
+                return value.string_array_values().strings_size() <= descriptor_.max_length();
+
             case catena::Value::kStructArrayValues:
-                value_length = value.struct_array_values().struct_values_size();
-                break;
+                return value.struct_array_values().struct_values_size() <= descriptor_.max_length();
+
             case catena::Value::kStructVariantArrayValues:
-                value_length = value.struct_variant_array_values().struct_variants_size();
-                break;
+                return value.struct_variant_array_values().struct_variants_size() <= descriptor_.max_length();
+            
+            default: // Anything that's not an array.
+                return true;
         }
-        return value_length <= descriptor_.max_length();
     }
 
     /**

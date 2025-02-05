@@ -130,13 +130,11 @@ class ParamDescriptor {
       const int max_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
+        constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
       }
-      // Setting max_length_ to either the passed or default value.
-      max_length_ = (max_length > 0) ? max_length : DEFAULT_LENGTH;
     }
 
     /**
@@ -174,7 +172,7 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
-    const int max_length() const {return max_length_;}
+    const int max_length();
 
     /**
      * @brief serialize param meta data in to protobuf message

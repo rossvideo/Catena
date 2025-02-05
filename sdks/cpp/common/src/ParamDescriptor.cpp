@@ -33,7 +33,23 @@
 #include <Authorization.h>  
 #include <Device.h>
 
+#include "absl/flags/flag.h"
+#include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/strings/str_format.h"
+
+#define DEFAULT_MAX_LENGTH 1024
+ABSL_FLAG(int, param_max_length, DEFAULT_MAX_LENGTH, "default maximum length for parameter's with max_length undefined.");
+
 using catena::common::ParamDescriptor;
+
+const int ParamDescriptor::max_length() {
+    if (max_length_ <= 0) {
+        int default_max = absl::GetFlag(FLAGS_param_max_length);
+        max_length_ = default_max <= 0 ? DEFAULT_MAX_LENGTH : default_max;
+    }
+    return max_length_;
+}
 
 void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     param.set_type(type_);

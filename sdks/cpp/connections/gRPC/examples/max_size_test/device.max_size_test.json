@@ -40,8 +40,7 @@
     "int32_array_test": {
       "type": "INT32_ARRAY",
       "name": { "display_strings": { "en": "Int32 Array Test", "es": "Prueba de Matriz de Int32", "fr": "Test de Tableau de Int32" } },
-      "value": { "int32_array_values": {"ints": [1,2,3,4,5]} },
-      "max_length": 10
+      "value": { "int32_array_values": {"ints": [1,2,3,4,5]} }
     },
     "float32_array_test": {
       "type": "FLOAT32_ARRAY",
