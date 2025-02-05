@@ -128,7 +128,6 @@ class ParamDescriptor {
       bool isCommand,
       Device& dm,
       const int max_length,
-      const int total_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
@@ -138,7 +137,6 @@ class ParamDescriptor {
       }
       // Setting max_length_ to either the passed or default value.
       max_length_ = (max_length > 0) ? max_length : DEFAULT_LENGTH;
-      total_length_ = (total_length > 0) ? max_length : DEFAULT_LENGTH;
     }
 
     /**

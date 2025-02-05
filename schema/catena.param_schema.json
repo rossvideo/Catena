@@ -593,8 +593,7 @@
                 "type": "string"
               }
             },
-            "additionalItems": false,
-            "max_length": {"$ref": "#/$defs/max_length"}
+            "additionalItems": false
           },
           "required": ["strings"],
           "additionalProperties": false

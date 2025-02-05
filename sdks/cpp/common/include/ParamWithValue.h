@@ -131,22 +131,10 @@ class ParamWithValue : public catena::common::IParam {
      * @brief Validates the size of a value.
      */
     const bool validateSize(const catena::Value& value) {
-		int input_length = 0, total_length = 0;
-        auto oid = descriptor_.getOid();
-
-        
-
-        switch (value.kind_case()) {
-            case catena::Value::KindCase::kInt32Value: {
-                if (descriptor_.type() != catena::ParamType::INT32_ARRAY) {
-                    return true;
-                } else {
-                    auto temp = value_.get();
-                    input_length = 0;
-                }
-            }
-        }
-		return input_length < descriptor_.max_length() && total_length < descriptor_.total_length();
+		/**
+         * @todo
+         */
+        return true;
     }
 
     /**
@@ -200,12 +188,8 @@ class ParamWithValue : public catena::common::IParam {
         if (!authz.writeAuthz(*this)) {
             return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
 		}
-		if (!validateSize(value)) {
-			return catena::exception_with_status("Value exceeds max length", catena::StatusCode::INVALID_ARGUMENT);
-        } else {
-            catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }
+        catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
+        return catena::exception_with_status("", catena::StatusCode::OK);
     }
 
     /**
@@ -323,7 +307,7 @@ class ParamWithValue : public catena::common::IParam {
         if (oidIndex == catena::common::Path::kEnd) {
             // Index is "-", add a new element to the array
             oidIndex = value.size();
-            // Checks first to make sure the array is not a max_length.
+            // Checks first to make sure the array is not at max_length.
             if (oidIndex >= descriptor_.max_length()) {
                 status = catena::exception_with_status("Array at maximum capacity", catena::StatusCode::INVALID_ARGUMENT);
                 return nullptr;
@@ -442,7 +426,6 @@ class ParamWithValue : public catena::common::IParam {
     template <std::size_t I, typename Tuple>
     std::unique_ptr<IParam> getParamAtIndex_(const Tuple& tuple) {
         // Get the type of the field at index I so that we can create a ParamWithValue object of that type
-        // HERE?
         using FieldType = typename std::tuple_element_t<I, Tuple>::Field;
         return std::make_unique<ParamWithValue<FieldType>>(std::get<I>(tuple), value_.get(), descriptor_);
     }
@@ -455,7 +438,6 @@ class ParamWithValue : public catena::common::IParam {
         }
         std::string oidStr = oid.front_as_string();
         oid.pop();   
-        // HERE?
         if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
             status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;

@@ -51,7 +51,6 @@ void catena::common::fromProto<EmptyValue>(const catena::Value& src, EmptyValue*
     // do nothing
 }
 
-// ----------------------------------- INT -----------------------------------
 template<>
 void catena::common::toProto<int32_t>(Value& dst, const int32_t* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.set_int32_value(*src);
@@ -73,7 +72,7 @@ void catena::common::fromProto<int32_t>(const catena::Value& src, int32_t* dst, 
     // if the constraint is not satified and not a range, then the value is unchanged
     return;
 }
-// ---------------------------------- FLOAT ----------------------------------
+
 template<>
 void catena::common::toProto<float>(catena::Value& dst, const float* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.set_float32_value(*src);
@@ -94,7 +93,7 @@ void catena::common::fromProto<float>(const catena::Value& src, float* dst, cons
         *dst = constraint->apply(src).float32_value();
     }
 }
-// ---------------------------------- STRING ----------------------------------
+
 template<>
 void catena::common::toProto<std::string>(Value& dst, const std::string* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.set_string_value(*src);
@@ -110,13 +109,11 @@ void catena::common::fromProto<std::string>(const catena::Value& src, std::strin
 
     // if the parameter does not satisfy the constraint, then the element is unchanged
     if (!constraint || constraint->satisfied(src)) {
-        if (pd.type() != ParamType::STRING || src.string_value().size() <= pd.max_length()) {
-            *dst = src.string_value();
-        }
+        *dst = src.string_value();
     }
     return;
 }
-// -------------------------------- INT ARRAY --------------------------------
+
 template<>
 void catena::common::toProto<std::vector<int32_t>>(Value& dst, const std::vector<int32_t>* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.clear_int32_array_values();
@@ -156,7 +153,7 @@ void catena::common::fromProto<std::vector<int32_t>>(const Value& src, std::vect
     }
     return;
 }
-// ------------------------------- FLOAT ARRAY -------------------------------
+
 template<>
 void catena::common::toProto<std::vector<float>>(Value& dst, const std::vector<float>* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.clear_float32_array_values();
@@ -190,7 +187,7 @@ void catena::common::fromProto<std::vector<float>>(const Value& src, std::vector
     }
     return;
 }
-// ------------------------------- STRING ARRAY -------------------------------
+
 template<>
 void catena::common::toProto<std::vector<std::string>>(Value& dst, const std::vector<std::string>* src, const ParamDescriptor& pd, const Authorizer& authz) {
     dst.clear_string_array_values();
@@ -212,18 +209,10 @@ void catena::common::fromProto<std::vector<std::string>>(const Value& src, std::
     int totalSize = 0;
 
     for (int i = 0; i < string_array.strings_size(); ++i) {
-        // Only add items up until max_length.
-        if (i >= pd.max_length()) {
-            break;
-        }
-        // Only add strings until their total length > total_length.
-        if (totalSize + string_array.strings(i).size() <= pd.total_length()) {
-            item.set_string_value(string_array.strings(i));
-            // if parameter does not satisfy the constraint, then the element is unchanged
-            if (!constraint || constraint->satisfied(item)) {
-                dst->push_back(string_array.strings(i));
-                totalSize += string_array.strings(i).size();
-            }
+        item.set_string_value(string_array.strings(i));
+        // if parameter does not satisfy the constraint, then the element is unchanged
+        if (!constraint || constraint->satisfied(item)) {
+            dst->push_back(string_array.strings(i));
         }
             
     }
