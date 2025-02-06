@@ -124,6 +124,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>DetailLevel_e</b> = 
 <tr class="memitem:af5359d2fb0ab164b87406666bb1feced" id="r_af5359d2fb0ab164b87406666bb1feced"><td class="memItemLeft" align="right" valign="top"><a id="af5359d2fb0ab164b87406666bb1feced" name="af5359d2fb0ab164b87406666bb1feced"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>ComponentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
 <tr class="separator:af5359d2fb0ab164b87406666bb1feced"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5359d2fb0ab164b87406666bb1feced" id="r_af5359d2fb0ab164b87406666bb1feced"><td class="memItemLeft" align="right" valign="top"><a id="af5359d2fb0ab164b87406666bb1feced" name="af5359d2fb0ab164b87406666bb1feced"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>ComponentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
+<tr class="separator:af5359d2fb0ab164b87406666bb1feced"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -192,6 +195,9 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ge
 <tr class="memitem:a32db3f74e532aa75c24f9bc68a7eccfe" id="r_a32db3f74e532aa75c24f9bc68a7eccfe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a32db3f74e532aa75c24f9bc68a7eccfe">getValue</a> (const std::string &amp;jptr, catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
 <tr class="memdesc:a32db3f74e532aa75c24f9bc68a7eccfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
 <tr class="separator:a32db3f74e532aa75c24f9bc68a7eccfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0022553b326b6efc7783d91fed3430ed" id="r_a0022553b326b6efc7783d91fed3430ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0022553b326b6efc7783d91fed3430ed">addLanguage</a> (catena::AddLanguagePayload &amp;language, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
+<tr class="memdesc:a0022553b326b6efc7783d91fed3430ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a language pack to the device. Requires client to have admin:w scope.  <br /></td></tr>
+<tr class="separator:a0022553b326b6efc7783d91fed3430ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -199,6 +205,10 @@ Public Attributes</h2></td></tr>
 vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *, const int32_t)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByClient</b></td></tr>
 <tr class="memdesc:ad0504576b2baa494010be749c94e03f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the client. Intended recipient is the business logic. <br /></td></tr>
 <tr class="separator:ad0504576b2baa494010be749c94e03f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab58ea380d9e882422358d5bc998d3c91" id="r_ab58ea380d9e882422358d5bc998d3c91"><td class="memItemLeft" align="right" valign="top"><a id="ab58ea380d9e882422358d5bc998d3c91" name="ab58ea380d9e882422358d5bc998d3c91"></a>
+vdk::signal&lt; void(const ComponentLanguagePack &amp;)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>languageAddedPushUpdate</b></td></tr>
+<tr class="memdesc:ab58ea380d9e882422358d5bc998d3c91"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a language pack is added to the device. Intended recipient is the business logic. <br /></td></tr>
+<tr class="separator:ab58ea380d9e882422358d5bc998d3c91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa14bba71eb227107bbae177a21c9d5a8" id="r_aa14bba71eb227107bbae177a21c9d5a8"><td class="memItemLeft" align="right" valign="top"><a id="aa14bba71eb227107bbae177a21c9d5a8" name="aa14bba71eb227107bbae177a21c9d5a8"></a>
 vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *, const int32_t)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByServer</b></td></tr>
 <tr class="memdesc:aa14bba71eb227107bbae177a21c9d5a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. <br /></td></tr>
@@ -268,6 +278,44 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a507ad02cfa93ab05d32df27e6b5b7c66_icgraph.svg" width="498" height="307"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
+
+</div>
+</div>
+<a id="a0022553b326b6efc7783d91fed3430ed" name="a0022553b326b6efc7783d91fed3430ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0022553b326b6efc7783d91fed3430ed">&#9670;&#160;</a></span>addLanguage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::addLanguage </td>
+          <td>(</td>
+          <td class="paramtype">catena::AddLanguagePayload &amp;&#160;</td>
+          <td class="paramname"><em>language</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Adds a language pack to the device. Requires client to have admin:w scope. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">language</td><td>The language to add to the device. </td></tr>
+    <tr><td class="paramname">authz</td><td>The authorizer object containing client's scopes. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is for the AddLanguage RPCs / API calls to be serviced by this method. </dd></dl>
 
 </div>
 </div>
