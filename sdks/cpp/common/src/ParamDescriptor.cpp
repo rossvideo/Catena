@@ -36,15 +36,19 @@
 using catena::common::ParamDescriptor;
 
 void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
+    
     param.set_type(type_);
+    param.set_read_only(read_only_);
+    param.set_widget(widget_);
+
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);
     }
     for (const auto& [lang, text] : name_.displayStrings()) {
         (*param.mutable_name()->mutable_display_strings())[lang] = text;
     }
-    param.set_widget(widget_);
-    param.set_read_only(read_only_);
+    
+    
     if (constraint_) {
         if (constraint_->isShared()) {
             *param.mutable_constraint()->mutable_ref_oid() = constraint_->getOid();
@@ -58,6 +62,19 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
         if (authz.readAuthz(*subParam)) {
             subParam->toProto((*dstParams)[oid], authz);
         }
+    }
+
+    param.set_template_oid(template_oid_);
+}
+
+
+void ParamDescriptor::toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const {
+    paramInfo.set_type(type_);
+    paramInfo.set_oid(oid_);
+    paramInfo.set_template_oid(template_oid_);
+
+    for (const auto& [lang, text] : name_.displayStrings()) {
+        (*paramInfo.mutable_name()->mutable_display_strings())[lang] = text;
     }
 }
 
