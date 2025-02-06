@@ -336,11 +336,12 @@ class Device {
      * @param fqoid the fully qualified oid of the parameter
      * @param authz the authorizer object
      * @param status will contain an error message if the parameter does not exist
+     * @param write If true, allows .../- to add an empty field to the end of the parameter.
      * @return a unique pointer to the parameter, or nullptr if it does not exist
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled, bool write = false) const;
 
     /**
      * @brief get a command by oid
@@ -363,6 +364,9 @@ class Device {
      * entirely before setting any values.
      */
     catena::exception_with_status setValueTry (const std::string& jptr, Authorizer& authz = Authorizer::kAuthzDisabled);
+
+    // The fix
+    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
 
     /**
      * @brief deserialize a protobuf value object into the parameter value

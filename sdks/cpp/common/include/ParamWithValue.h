@@ -255,7 +255,27 @@ class ParamWithValue : public catena::common::IParam {
         return descriptor_.executeCommand(value);
     }
 
+    std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) {
+        return addBack(value_.get(), authz, status);
+    }
+
   private:
+
+    template <typename U>
+    std::unique_ptr<IParam> addBack(U& value, Authorizer& authz, catena::exception_with_status& status) {
+        // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
+        status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+        return nullptr;
+    }
+    
+    template<meta::IsVector U>
+    std::unique_ptr<IParam> addBack(U& value, Authorizer& authz, catena::exception_with_status& status) {
+        using ElemType = U::value_type;
+        auto oidIndex = value.size();
+        value.push_back(ElemType());
+        return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+    }
+
 
     /**
      * @brief get the child parameter that oid points to
@@ -297,8 +317,7 @@ class ParamWithValue : public catena::common::IParam {
 
         if (oidIndex == catena::common::Path::kEnd) {
             // Index is "-", add a new element to the array
-            oidIndex = value.size();
-            value.push_back(ElemType());
+            return std::make_unique<ParamWithValue<U>>(value, descriptor_);
         } else if (oidIndex >= value.size()) {
             // If index is out of bounds, return nullptr
             status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);

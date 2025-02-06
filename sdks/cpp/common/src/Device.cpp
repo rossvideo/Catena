@@ -58,6 +58,36 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, Auth
         return ans;
 }
 
+catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    std::vector<std::pair<const catena::SetValuePayload*, std::unique_ptr<IParam>>> requests;
+    // Getting all params and t
+    for (auto &setValuePayload : src.values()) {
+        requests.push_back(std::make_pair(&setValuePayload, getParam(setValuePayload.oid(), ans, authz)));
+        auto &param = requests.back().second;
+        if (param != nullptr) {
+            if (!authz.readAuthz(*param)) {
+                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            }
+            if (!authz.writeAuthz(*param)) {
+                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            }
+        } else {
+            return ans;
+        }
+    }
+    for (auto &[setValuePayload, param] : requests) {
+        auto jptr = setValuePayload->oid();
+        if (jptr.ends_with("/-")) {
+            // Add empty field to the end of the param.
+            param = param->addBack(authz, ans);
+        }
+        ans = param->fromProto(setValuePayload->value(), authz);
+        valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
+    }
+    return ans;
+}
+
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
@@ -80,7 +110,7 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
     return ans;
 }
 
-std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
+std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz, bool write) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {
         catena::common::Path path(fqoid);
