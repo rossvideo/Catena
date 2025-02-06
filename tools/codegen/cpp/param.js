@@ -120,7 +120,7 @@ class Descriptor {
         return `"${desc.widget || ""}"`;
       },
       access_scope: () => {
-        return ("access_scope" in desc) ? `"st-2138:${desc.access_scope}"` : `""`;
+        return `"${desc.access_scope || ""}"`;
       },
       read_only: () => {
         return !!desc.readonly;
