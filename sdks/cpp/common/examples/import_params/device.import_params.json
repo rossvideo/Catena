@@ -3,12 +3,12 @@
   "multi_set_enabled": true,
   "detail_level": "FULL",
   "access_scopes": [
-    "monitor",
-    "operate",
-    "configure",
-    "administer"
+    "mon",
+    "op",
+    "cfg",
+    "adm"
   ],
-  "default_scope": "operate",
+  "default_scope": "op",
   "params": {
     "city": {
       "import": {"file": "params/param.city.json"}

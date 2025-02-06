@@ -1,8 +1,8 @@
 slot: 1
 multi_set_enabled: true
 detail_level: FULL
-access_scopes: ["monitor", "operate", "configure", "administer"]
-default_scope: monitor
+access_scopes: ["mon", "op", "cfg", "adm"]
+default_scope: mon
 language_packs: {}
 params: 
   eq: 
@@ -12,19 +12,19 @@ params:
       response: 
         type: INT32
         name: {display_strings: {en: Response}}
-        access_scope: monitor
+        access_scope: mon
       frequency: 
         type: FLOAT32
         name: {display_strings: {en: Frequency}}
-        access_scope: operate
+        access_scope: op
       gain: 
         type: FLOAT32
         name: {display_strings: {en: Gain}}
-        access_scope: configure
+        access_scope: cfg
       q_factor: 
         type: FLOAT32
         name: {display_strings: {en: Q Factor}}
-        access_scope: administer
+        access_scope: adm
   audio_channel: 
     type: STRUCT
     name: {display_strings: {en: Audio Channel}}
