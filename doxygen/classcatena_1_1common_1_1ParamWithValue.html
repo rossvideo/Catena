@@ -147,9 +147,6 @@ template&lt;typename FieldType  = T, typename ParentType &gt; </td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamWithValue</b> ()=default</td></tr>
 <tr class="memdesc:a86ef1ea785b8edcbcff5e2aa99e231f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">default destructor <br /></td></tr>
 <tr class="separator:a86ef1ea785b8edcbcff5e2aa99e231f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2765e887653aed5b1e59d9dce7aaf818" id="r_a2765e887653aed5b1e59d9dce7aaf818"><td class="memItemLeft" align="right" valign="top">const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a2765e887653aed5b1e59d9dce7aaf818">validateSize</a> (const catena::Value &amp;value)</td></tr>
-<tr class="memdesc:a2765e887653aed5b1e59d9dce7aaf818"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates the size of a string or array value. This does not check size of all elements in a string array. Therefore someone could still mount an attack on the system by sending a string_array with a large value.  <br /></td></tr>
-<tr class="separator:a2765e887653aed5b1e59d9dce7aaf818"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1576dc92412a51c12a374dba5e0eeacb" id="r_a1576dc92412a51c12a374dba5e0eeacb"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a1576dc92412a51c12a374dba5e0eeacb">copy</a> () const override</td></tr>
 <tr class="memdesc:a1576dc92412a51c12a374dba5e0eeacb"><td class="mdescLeft">&#160;</td><td class="mdescRight">creates a shallow copy the parameter  <br /></td></tr>
 <tr class="separator:a1576dc92412a51c12a374dba5e0eeacb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -399,11 +396,11 @@ template&lt;typename T &gt; </div>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#abd0ae367ef2b5776dd46dcc83c648f36">catena::common::IParam</a>.</p>
 
-<p class="reference">References <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a2765e887653aed5b1e59d9dce7aaf818">catena::common::ParamWithValue&lt; T &gt;::validateSize()</a>, and <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1">catena::common::Authorizer::writeAuthz()</a>.</p>
+<p class="reference">References <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, and <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1">catena::common::Authorizer::writeAuthz()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a6027ca23cb1897c44d933a9f3a4dd29d_cgraph.svg" width="100%" height="434"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a6027ca23cb1897c44d933a9f3a4dd29d_cgraph.svg" width="476" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
@@ -841,62 +838,6 @@ template&lt;typename T &gt; </div>
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a5d100719a0270a1b71ab5221bcda3b4e_cgraph.svg" width="516" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a5d100719a0270a1b71ab5221bcda3b4e_icgraph.svg" width="100%" height="300"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
-</div>
-
-</div>
-</div>
-<a id="a2765e887653aed5b1e59d9dce7aaf818" name="a2765e887653aed5b1e59d9dce7aaf818"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2765e887653aed5b1e59d9dce7aaf818">&#9670;&#160;</a></span>validateSize()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const bool <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::validateSize </td>
-          <td>(</td>
-          <td class="paramtype">const catena::Value &amp;&#160;</td>
-          <td class="paramname"><em>value</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Validates the size of a string or array value. This does not check size of all elements in a string array. Therefore someone could still mount an attack on the system by sending a string_array with a large value. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">value</td><td>The value to validate the size of. </td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Not really a better way since all value types have different function names for retrieving the value.</p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#aa93f4b12fc8483c772629ea7bb8eb6d5">catena::common::IParam</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a96caabf8cf60e61969efc115d063ec76">catena::common::ParamDescriptor::max_length()</a>, and <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e">catena::common::ParamWithValue&lt; T &gt;::type()</a>.</p>
-<div class="dynheader">
-Here is the call graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a2765e887653aed5b1e59d9dce7aaf818_cgraph.svg" width="100%" height="386"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
-</div>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a2765e887653aed5b1e59d9dce7aaf818_icgraph.svg" width="480" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>

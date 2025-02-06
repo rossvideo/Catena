@@ -1,15 +1,7 @@
 <map id="catena::common::ParamWithValue::fromProto" name="catena::common::ParamWithValue::fromProto">
-<area shape="rect" id="Node000001" title="deserialize the parameter value from protobuf if authorized" alt="" coords="5,69,216,109"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401" title="Check if the client has read authorization." alt="" coords="266,5,473,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="192,67,274,46,276,51,193,72"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1ParamWithValue.html#a2765e887653aed5b1e59d9dce7aaf818" title="Validates the size of a string or array value. This does not check size of all elements in a string a..." alt="" coords="264,69,475,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="216,87,251,87,251,92,216,92"/>
-<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1" title="Check if the client has write authorization." alt="" coords="266,133,473,173"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="193,107,276,127,274,133,192,112"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1ParamDescriptor.html#a96caabf8cf60e61969efc115d063ec76" title="Returns the max length of the array/string parameter. If max length is not set in the ...." alt="" coords="523,37,769,77"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="475,74,509,71,509,76,475,80"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e" title="get the parameters protobuf value type" alt="" coords="541,101,751,141"/>
-<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="475,99,527,105,527,110,475,104"/>
-<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1ParamDescriptor.html#a21eefbf9f878c111010b246c92ef9bd6" title="get the parameter type" alt="" coords="817,101,1064,141"/>
-<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="752,119,804,119,804,124,752,124"/>
+<area shape="rect" id="Node000001" title="deserialize the parameter value from protobuf if authorized" alt="" coords="5,37,216,77"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401" title="Check if the client has read authorization." alt="" coords="264,5,471,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="216,42,250,37,251,43,216,47"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1" title="Check if the client has write authorization." alt="" coords="264,69,471,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="216,68,251,72,250,77,216,73"/>
 </map>
