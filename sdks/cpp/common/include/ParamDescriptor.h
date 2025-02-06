@@ -114,7 +114,11 @@ class ParamDescriptor {
      * @param widget the parameter's widget
      * @param read_only the parameter's read-only status
      * @param oid the parameter's oid
-     * @param collection the parameter belongs to
+     * @param template_oid the parameter's template oid
+     * @param constraint the parameter's constraint
+     * @param isCommand the parameter's command status
+     * @param dm the device that the parameter belongs to
+     * @param parent the parent parameter
      */
     ParamDescriptor(
       catena::ParamType type, 
@@ -124,13 +128,14 @@ class ParamDescriptor {
       const std::string& scope, 
       bool read_only, 
       const std::string& oid, 
+      const std::string& template_oid,
       catena::common::IConstraint* constraint,
       bool isCommand,
       Device& dm,
       const int max_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
+        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -156,6 +161,17 @@ class ParamDescriptor {
      * @brief set the parameter oid
      */
     void setOid(const std::string& oid) { oid_ = oid; }
+
+
+    /**
+     * @brief return true if the parameter has a template oid
+     */
+    bool has_template_oid() const;
+
+    /**
+     * @brief get the parameter's template oid
+     */
+    const std::string& template_oid() const;
 
     /**
      * @brief return the readOnly status of the parameter
@@ -192,6 +208,17 @@ class ParamDescriptor {
      */
     void toProto(catena::Param &param, Authorizer& authz) const;
 
+
+    /**
+     * @brief serialize param meta data in to protobuf message
+     * @param paramInfo the protobuf message to serialize to
+     * @param authz the authorization information
+     * 
+     * this function will populate all non-value fields of the protobuf param message 
+     * with the information from the ParamDescriptor
+     */
+    void toProto(catena::BasicParamInfo &paramInfo, Authorizer& authz) const;
+
     /**
      * @brief get the parameter name by language
      * @param language the language to get the name for
@@ -215,6 +242,15 @@ class ParamDescriptor {
      */
     ParamDescriptor& getSubParam(const std::string& oid) const {
       return *subParams_.at(oid);
+    }
+
+
+    /**
+     * @brief return all sub parameters
+     * @return a map of all sub parameters
+     */
+    const std::unordered_map<std::string, ParamDescriptor*>& getAllSubParams() const {
+        return subParams_;
     }
 
     /**
@@ -268,6 +304,7 @@ class ParamDescriptor {
     int max_length_;
     
     std::string oid_;
+    std::string template_oid_;
     ParamDescriptor* parent_;
     std::reference_wrapper<Device> dev_;
 
