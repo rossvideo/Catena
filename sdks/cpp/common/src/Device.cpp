@@ -123,6 +123,36 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
     }
 }
 
+
+std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
+    std::vector<std::unique_ptr<IParam>> result;
+    std::cout << "Checking params_ map contents:" << std::endl;
+    try {
+        for (const auto& [name, param] : params_) {
+            std::cout << "Found param in map: '" << name << "'" << std::endl;
+            if (authz.readAuthz(*param)) { 
+                Path path{name, "-"};
+                std::cout << "Checking path: '" << path.toString(true) << "'" << std::endl;
+                auto param_ptr = getParam(path.toString(true), status, authz);  
+                if (param_ptr) {
+                    std::cout << "Successfully got param: '" << path.toString(true) << "'" << std::endl;
+                    result.push_back(std::move(param_ptr));
+                }
+            }
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
+    }
+    return result;
+}
+
+
+
+
+
+
+
+
 std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {

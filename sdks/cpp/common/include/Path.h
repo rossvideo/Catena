@@ -156,7 +156,7 @@ class Path {
 
     /**
      * @brief return a string representation of the Path
-     * @param leading_slash if true, include leading '/' in output (defaults to true)
+     * @param leading_slash if true, include leading '/' in output (defaults to false)
      * @return std::string the path as a string
      * 
      * any popped segments are not included in the returned string.

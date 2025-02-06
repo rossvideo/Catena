@@ -343,6 +343,15 @@ class Device {
     std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
+     * @brief get all top level parameters
+     * @param status the status of the operation
+     * @param authz the authorizer object
+     * @return a vector of unique pointers to the parameters
+     */
+    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+
+
+    /**
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
      * @param authz the authorizer object

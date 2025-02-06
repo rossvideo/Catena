@@ -37,6 +37,7 @@ set(sources
     "src/Connect.cpp"
     "src/DeviceRequest.cpp"
     "src/ExternalObjectRequest.cpp"
+    "src/BasicParamInfoRequest.cpp"
     "src/ExecuteCommand.cpp"
     "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"

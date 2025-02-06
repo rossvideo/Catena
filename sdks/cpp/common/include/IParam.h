@@ -38,6 +38,7 @@ namespace catena {
 namespace common { 
 
   class Authorizer;
+  class ParamDescriptor;  
 
 /**
  * @brief IParam is the interface for business logic and connection logic to interact with parameters
@@ -98,6 +99,14 @@ class IParam {
      */
     virtual catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const = 0;
 
+
+    /**
+     * @brief serialize the parameter descriptor to protobuf
+     * @param paramInfo the protobuf value to serialize to
+     */
+    virtual catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const = 0;
+
+
     /**
      * @brief return the type of the param
      */
@@ -148,6 +157,12 @@ class IParam {
      * @brief execute the command for the parameter
      */
     virtual catena::CommandResponse executeCommand(const catena::Value&  value) const = 0;
+
+    /**
+     * @brief get the descriptor of the parameter
+     * @return the descriptor of the parameter
+     */
+    virtual const ParamDescriptor& getDescriptor() const = 0;
 
 };
 }  // namespace common
