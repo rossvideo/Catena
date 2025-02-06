@@ -80,3 +80,7 @@ extern absl::Flag<bool> FLAGS_authz;
  */ 
 extern absl::Flag<std::string> FLAGS_static_root;
 
+/**
+ * @breif the default max length for array and string params, default is 1024
+ */
+extern absl::Flag<int> FLAGS_param_default_max;

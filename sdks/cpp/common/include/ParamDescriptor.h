@@ -172,8 +172,15 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
+    /**
+     * @brief Returns the max length of the array/string parameter. If max
+     * length is not set in the .JSON file, then the DEFAULT_VALUE defined in
+     * ParamDescriptor.cpp is used.
+     * DEFAULT_VALUE can also be configured with the command line argument
+     * "param_default_max=#".
+     * @returns max_length_
+     */
     const int max_length();
-
     /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to

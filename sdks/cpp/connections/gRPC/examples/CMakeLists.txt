@@ -22,7 +22,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_LITE_EXAMPLES C CXX)
 
-add_subdirectory("max_size_test")
 add_subdirectory("status_update")
 add_subdirectory("structs_with_authz")
 add_subdirectory("structs_with_authz_yaml")

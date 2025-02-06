@@ -66,6 +66,8 @@
 #include <type_traits>
 #include <coroutine>
 
+#define DEFAULT_PARAM_MAX 1024
+
 namespace catena {
 namespace common {
 
@@ -104,7 +106,8 @@ class Device {
     Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
-      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
+      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
+	  subscriptions_{subscriptions}, param_default_max_{DEFAULT_PARAM_MAX} {}
 
     /**
      * @brief Destroy the Device object
@@ -136,6 +139,20 @@ class Device {
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
     inline const std::string& getDefaultScope() const { return default_scope_; }
+
+	/**
+	 * @brief Sets the default max length for this device's params if
+	 * default_max is valid.
+	 * @param default_max The default max length for params.
+	 */
+    void set_param_default_max(const int default_max) {
+		if (default_max > 0) {param_default_max_ = default_max;}
+    }
+
+	/**
+	 * @return The default max length for this device's params.
+	 */
+    inline const int param_default_max() const { return param_default_max_;}
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -410,7 +427,8 @@ class Device {
     std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-    
+    int param_default_max_;
+
     mutable std::mutex mutex_;
 };
 }  // namespace common
