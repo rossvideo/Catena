@@ -121,9 +121,9 @@ Public Types</h2></td></tr>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>DetailLevel_e</b> = catena::Device_DetailLevel</td></tr>
 <tr class="memdesc:a76d5085676e5298e9a474c5af3ad4511"><td class="mdescLeft">&#160;</td><td class="mdescRight">convenience type aliases to types of objects contained in the device <br /></td></tr>
 <tr class="separator:a76d5085676e5298e9a474c5af3ad4511"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fe0f23e94c16139a756a85206c9819d" id="r_a6fe0f23e94c16139a756a85206c9819d"><td class="memItemLeft" align="right" valign="top"><a id="a6fe0f23e94c16139a756a85206c9819d" name="a6fe0f23e94c16139a756a85206c9819d"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>componentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
-<tr class="separator:a6fe0f23e94c16139a756a85206c9819d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5359d2fb0ab164b87406666bb1feced" id="r_af5359d2fb0ab164b87406666bb1feced"><td class="memItemLeft" align="right" valign="top"><a id="af5359d2fb0ab164b87406666bb1feced" name="af5359d2fb0ab164b87406666bb1feced"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>ComponentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
+<tr class="separator:af5359d2fb0ab164b87406666bb1feced"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -163,9 +163,9 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ge
 <tr class="memitem:a15505cc94e033ba2ef4b42ab7ebfcafa" id="r_a15505cc94e033ba2ef4b42ab7ebfcafa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a15505cc94e033ba2ef4b42ab7ebfcafa">toProto</a> (::catena::LanguageList &amp;list) const</td></tr>
 <tr class="memdesc:a15505cc94e033ba2ef4b42ab7ebfcafa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language list.  <br /></td></tr>
 <tr class="separator:a15505cc94e033ba2ef4b42ab7ebfcafa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e62aa0bd7cd427ec471c13b4d763e01" id="r_a6e62aa0bd7cd427ec471c13b4d763e01"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a6e62aa0bd7cd427ec471c13b4d763e01">getLanguagePack</a> (const std::string &amp;languageId, componentLanguagePack &amp;pack) const</td></tr>
-<tr class="memdesc:a6e62aa0bd7cd427ec471c13b4d763e01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.ABORTED.  <br /></td></tr>
-<tr class="separator:a6e62aa0bd7cd427ec471c13b4d763e01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04e4079d482e27e91cd0288e6be6d3ad" id="r_a04e4079d482e27e91cd0288e6be6d3ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a04e4079d482e27e91cd0288e6be6d3ad">getLanguagePack</a> (const std::string &amp;languageId, ComponentLanguagePack &amp;pack) const</td></tr>
+<tr class="memdesc:a04e4079d482e27e91cd0288e6be6d3ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.ABORTED.  <br /></td></tr>
+<tr class="separator:a04e4079d482e27e91cd0288e6be6d3ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e73c0ea5e4684a7b62846e3858bd098" id="r_a0e73c0ea5e4684a7b62846e3858bd098"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0e73c0ea5e4684a7b62846e3858bd098">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=false) const</td></tr>
 <tr class="memdesc:a0e73c0ea5e4684a7b62846e3858bd098"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
 <tr class="separator:a0e73c0ea5e4684a7b62846e3858bd098"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -462,8 +462,8 @@ template&lt;typename TAG &gt; </div>
 
 </div>
 </div>
-<a id="a6e62aa0bd7cd427ec471c13b4d763e01" name="a6e62aa0bd7cd427ec471c13b4d763e01"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6e62aa0bd7cd427ec471c13b4d763e01">&#9670;&#160;</a></span>getLanguagePack()</h2>
+<a id="a04e4079d482e27e91cd0288e6be6d3ad" name="a04e4079d482e27e91cd0288e6be6d3ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a04e4079d482e27e91cd0288e6be6d3ad">&#9670;&#160;</a></span>getLanguagePack()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -477,7 +477,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">componentLanguagePack &amp;&#160;</td>
+          <td class="paramtype">ComponentLanguagePack &amp;&#160;</td>
           <td class="paramname"><em>pack</em>&#160;</td>
         </tr>
         <tr>
