@@ -42,6 +42,7 @@ set(sources
     "src/ServiceCredentials.cpp"
     "src/MultiSetValue.cpp"
     "src/ListLanguages.cpp"
+    "src/LanguagePackRequest.cpp"
 )
 
 add_library(${target} STATIC ${sources})
