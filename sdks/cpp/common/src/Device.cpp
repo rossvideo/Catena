@@ -230,12 +230,12 @@ void Device::toProto(::catena::LanguageList& list) const {
     }
 }
 
-catena::exception_with_status Device::getLanguagePack(const std::string& languageId, componentLanguagePack& pack) const {
+catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     auto foundPack = language_packs_.find(languageId);
     // ERROR: Did not find the pack.
     if (foundPack == language_packs_.end()) {
-        return catena::exception_with_status("Language pack not found", catena::StatusCode::NOT_FOUND);
+        return catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
     }
     // Setting the code and transfering language pack info.
     pack.set_language(languageId);
