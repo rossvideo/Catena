@@ -149,6 +149,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac97634a8871dbf8522256514da0a8f26" id="r_ac97634a8871dbf8522256514da0a8f26"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ac97634a8871dbf8522256514da0a8f26">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const =0</td></tr>
 <tr class="memdesc:ac97634a8871dbf8522256514da0a8f26"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf  <br /></td></tr>
 <tr class="separator:ac97634a8871dbf8522256514da0a8f26"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83ab33a73104c70443ceeaa3bfd98172" id="r_a83ab33a73104c70443ceeaa3bfd98172"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a83ab33a73104c70443ceeaa3bfd98172">toProto</a> (catena::BasicParamInfoResponse &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const =0</td></tr>
+<tr class="memdesc:a83ab33a73104c70443ceeaa3bfd98172"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter descriptor to protobuf  <br /></td></tr>
+<tr class="separator:a83ab33a73104c70443ceeaa3bfd98172"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27bcdbf5ce0f692b975c82f8f5683ee3" id="r_a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classcatena_1_1common_1_1IParam.html#a3a869493afc3b6cf59f599a2fe43d21d">ParamType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a27bcdbf5ce0f692b975c82f8f5683ee3">type</a> () const =0</td></tr>
 <tr class="memdesc:a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the type of the param  <br /></td></tr>
 <tr class="separator:a27bcdbf5ce0f692b975c82f8f5683ee3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -179,6 +182,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9cb9eb3d2d0ad955764c5e6284186c7e" id="r_a9cb9eb3d2d0ad955764c5e6284186c7e"><td class="memItemLeft" align="right" valign="top">virtual catena::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a9cb9eb3d2d0ad955764c5e6284186c7e">executeCommand</a> (const catena::Value &amp;value) const =0</td></tr>
 <tr class="memdesc:a9cb9eb3d2d0ad955764c5e6284186c7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
 <tr class="separator:a9cb9eb3d2d0ad955764c5e6284186c7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8e8b3d2e2ea7ad8a6bc60af426b5e3e" id="r_ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ad8e8b3d2e2ea7ad8a6bc60af426b5e3e">getDescriptor</a> () const =0</td></tr>
+<tr class="memdesc:ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the descriptor of the parameter  <br /></td></tr>
+<tr class="separator:ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> is the interface for business logic and connection logic to interact with parameters. </p>
@@ -344,6 +350,36 @@ Public Member Functions</h2></td></tr>
 <p>get a constraint by oid </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a156aa87bcb206205c1e614680733d610">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="ad8e8b3d2e2ea7ad8a6bc60af426b5e3e" name="ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad8e8b3d2e2ea7ad8a6bc60af426b5e3e">&#9670;&#160;</a></span>getDescriptor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual const <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp; catena::common::IParam::getDescriptor </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>get the descriptor of the parameter </p>
+<dl class="section return"><dt>Returns</dt><dd>the descriptor of the parameter </dd></dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a082a1de0c426c8f5d6282ad6612ff5f9">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -541,8 +577,54 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a83ab33a73104c70443ceeaa3bfd98172" name="a83ab33a73104c70443ceeaa3bfd98172"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a83ab33a73104c70443ceeaa3bfd98172">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::IParam::toProto </td>
+          <td>(</td>
+          <td class="paramtype">catena::BasicParamInfoResponse &amp;&#160;</td>
+          <td class="paramname"><em>paramInfo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>serialize the parameter descriptor to protobuf </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">paramInfo</td><td>the protobuf value to serialize to </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ac9e59ebcc2bfa81da748bbe3f431437d">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
 <a id="ac97634a8871dbf8522256514da0a8f26" name="ac97634a8871dbf8522256514da0a8f26"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac97634a8871dbf8522256514da0a8f26">&#9670;&#160;</a></span>toProto() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ac97634a8871dbf8522256514da0a8f26">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -588,7 +670,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="ae3c3913a84701762afa87ba3f4e551ff" name="ae3c3913a84701762afa87ba3f4e551ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae3c3913a84701762afa87ba3f4e551ff">&#9670;&#160;</a></span>toProto() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3c3913a84701762afa87ba3f4e551ff">&#9670;&#160;</a></span>toProto() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
