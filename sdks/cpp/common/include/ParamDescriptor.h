@@ -38,11 +38,6 @@
  * @date 2024-08-20
  */
 
-/**
- * @todo replace with command line arg.
- */
-#define DEFAULT_LENGTH 1024;
-
 //common
 #include <Tags.h>
 #include <IParam.h>
