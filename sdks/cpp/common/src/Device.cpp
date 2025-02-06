@@ -80,9 +80,25 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
     return ans;
 }
 
+catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    auto foundPack = language_packs_.find(languageId);
+    // ERROR: Did not find the pack.
+    if (foundPack == language_packs_.end()) {
+        return catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+    }
+    // Setting the code and transfering language pack info.
+    pack.set_language(languageId);
+    auto languagePack = pack.mutable_language_pack();
+    foundPack->second->toProto(*languagePack);
+    // Returning an OK status.
+    return catena::exception_with_status("", catena::StatusCode::OK);
+}
+
 catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
-    if (!authz.hasAuthz("admin:w")) {
+    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
         return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     } else {
         auto& name = language.language_pack().name();
@@ -95,19 +111,11 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
         added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
         language_packs_[id]->fromProto(language.language_pack());      
         // Pushing update to connect gRPC.
-        // ComponentLanguagePack pack;
-        // getLanguagePack(id, pack);
-        // languageAddedPushUpdate.emit(pack);
-        /**
-         * TEMPORARY UNTIL REQUESTLANGUAGEPACK RPC IS MERGED
-         */
-        ComponentLanguagePack added_pack;
-        added_pack.set_language(id);
-        auto languagePack = added_pack.mutable_language_pack();
-        language_packs_[id]->toProto(*languagePack);
-        languageAddedPushUpdate.emit(added_pack);
+        ComponentLanguagePack pack;
+        ans = getLanguagePack(id, pack);
+        languageAddedPushUpdate.emit(pack);
     }
-    return catena::exception_with_status("", catena::StatusCode::OK);
+    return ans;
 }
 
 std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
@@ -258,21 +266,6 @@ void Device::toProto(::catena::LanguageList& list) const {
     for (const auto& [name, pack] : language_packs_) {
         list.add_languages(name);
     }
-}
-
-catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
-    catena::exception_with_status ans{"", catena::StatusCode::OK};
-    auto foundPack = language_packs_.find(languageId);
-    // ERROR: Did not find the pack.
-    if (foundPack == language_packs_.end()) {
-        return catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
-    }
-    // Setting the code and transfering language pack info.
-    pack.set_language(languageId);
-    auto languagePack = pack.mutable_language_pack();
-    foundPack->second->toProto(*languagePack);
-    // Returning an OK status.
-    return catena::exception_with_status("", catena::StatusCode::OK);
 }
 
 catena::DeviceComponent Device::DeviceSerializer::getNext() {

@@ -167,7 +167,7 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
 
     // We can use this to test authz while getScopes() does not work.
     // --------------------------------- TEST ---------------------------------
-    ///std::vector<std::string> testScopes = {"admin:r", "admin:w"};
+    // std::vector<std::string> testScopes = {"monitor", "administer:w"};
     // return testScopes;
     // --------------------------------- TEST ---------------------------------
 

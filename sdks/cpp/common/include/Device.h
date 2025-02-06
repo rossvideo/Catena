@@ -91,7 +91,6 @@ class Device {
      * @brief convenience type aliases to types of objects contained in the device
      */
     using DetailLevel_e = catena::Device_DetailLevel;
-    using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
 
   public:
     /**
@@ -164,6 +163,19 @@ class Device {
     void toProto(::catena::LanguageList& list) const;
 
     using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
+
+    /**
+     * @brief Adds a language pack to the device. Requires client to have
+     * admin:w scope.
+     * @param language The language to add to the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     * Intention is for the AddLanguage RPCs / API calls to be serviced by this
+     * method.
+     */
+    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
+
     /**
      * @brief Finds and returns a language pack based on languageId.ABORTED
      * @param languageId The language id of the language pack e.g. "en"
@@ -394,18 +406,6 @@ class Device {
      * Intention is to for GetValue RPCs / API calls to be serviced by this method.
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
-
-    /**
-     * @brief Adds a language pack to the device. Requires client to have
-     * admin:w scope.
-     * @param language The language to add to the device.
-     * @param authz The authorizer object containing client's scopes.
-     * @return An exception_with_status with status set OK if successful,
-     * otherwise an error.
-     * Intention is for the AddLanguage RPCs / API calls to be serviced by this
-     * method.
-     */
-    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
 
   public:
     /**

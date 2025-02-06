@@ -30,6 +30,7 @@
 
 // common
 #include <Tags.h>
+#include <Enums.h>
 
 // connections/gRPC
 #include <Connect.h>
@@ -37,6 +38,8 @@
 // type aliases
 using catena::common::ParamTag;
 using catena::common::Path;
+using catena::common::Scopes;
+using catena::common::Scopes_e;
 
 #include <iostream>
 #include <thread>
@@ -197,7 +200,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     if (service_->authorizationEnabled()) {
                         std::vector<std::string> clientScopes = service_->getScopes(context_);
                         catena::common::Authorizer authz{clientScopes};
-                        if (!authz.hasAuthz("monitor")) {
+                        if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }
                     }
