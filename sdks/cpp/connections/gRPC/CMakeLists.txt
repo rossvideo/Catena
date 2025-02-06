@@ -30,6 +30,7 @@ set(target catena_connections_grpc)
 set(sources 
     "src/PeerInfo.cpp"
     "src/ServiceImpl.cpp" 
+    "src/GetParam.cpp"
     "src/GetPopulatedSlots.cpp"
     "src/SetValue.cpp"
     "src/GetValue.cpp"
@@ -42,6 +43,7 @@ set(sources
     "src/MultiSetValue.cpp"
     "src/AddLanguage.cpp"
     "src/ListLanguages.cpp"
+    "src/LanguagePackRequest.cpp"
 )
 
 add_library(${target} STATIC ${sources})

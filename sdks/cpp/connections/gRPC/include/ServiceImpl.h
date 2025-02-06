@@ -176,7 +176,9 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class Connect;
     class DeviceRequest;
     class ExternalObjectRequest;
+    class GetParam;
     class ListLanguages;
+    class LanguagePackRequest;
     // class GetParam;
     class ExecuteCommand;
     class AddLanguage;

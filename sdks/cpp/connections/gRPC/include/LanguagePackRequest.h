@@ -42,21 +42,21 @@
 #include <ServiceImpl.h>
 
 /**
-* @brief CallData class for the ListLanguages RPC
+* @brief CallData class for the LanguagePackRequest RPC
 */
-class CatenaServiceImpl::ListLanguages : public CallData {
+class CatenaServiceImpl::LanguagePackRequest : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the ListLanguages gRPC.
-         * Calls proceed() once initialized.
+         * @brief Constructor for the CallData class of the LanguagePackRequest
+         * gRPC. Calls proceed() once initialized.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        ListLanguages(CatenaServiceImpl *service, Device &dm, bool ok);
+        LanguagePackRequest(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Manages the steps of the ListLanguages gRPC command through
+         * @brief Manages the steps of the LanguagePackRequest command through
          * the state variable status.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
@@ -74,19 +74,19 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         ServerContext context_;
         /**
-         * @brief Server request (the device's slot).
+         * @brief Server request (slot, languageId).
          */
-        catena::Slot req_;
+        catena::LanguagePackRequestPayload req_;
         /**
          * @brief gRPC async response writer.
          */
-        grpc::ServerAsyncResponseWriter<::catena::LanguageList> responder_;
+        grpc::ServerAsyncResponseWriter<::catena::DeviceComponent_ComponentLanguagePack> responder_;
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
         /**
-         * @brief The device containing the languages to list.
+         * @brief The device containing the language we are requesting.
          */
         Device &dm_;
         /**
@@ -94,7 +94,7 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         int objectId_;
         /**
-         * @brief The total # of ListLanguages objects.
+         * @brief The total # of LanguagePackRequest objects.
          */
         static int objectCounter_;
 };
