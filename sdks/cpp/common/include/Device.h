@@ -66,8 +66,6 @@
 #include <type_traits>
 #include <coroutine>
 
-#define DEFAULT_PARAM_MAX 1024
-
 namespace catena {
 namespace common {
 
@@ -107,7 +105,7 @@ class Device {
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
-	  subscriptions_{subscriptions}, param_default_max_{DEFAULT_PARAM_MAX} {}
+	  subscriptions_{subscriptions} {}
 
     /**
      * @brief Destroy the Device object
@@ -145,14 +143,14 @@ class Device {
 	 * default_max is valid.
 	 * @param default_max The default max length for params.
 	 */
-    void set_param_default_max(const int default_max) {
-		if (default_max > 0) {param_default_max_ = default_max;}
+    void set_default_max_length(const int default_max) {
+		if (default_max > 0) {default_max_length_ = default_max;}
     }
 
 	/**
 	 * @return The default max length for this device's params.
 	 */
-    inline const int param_default_max() const { return param_default_max_;}
+    inline uint32_t default_max_length() const { return default_max_length_;}
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -427,7 +425,7 @@ class Device {
     std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-    int param_default_max_;
+    int default_max_length_ = 1024;
 
     mutable std::mutex mutex_;
 };

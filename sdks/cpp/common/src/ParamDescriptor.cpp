@@ -36,8 +36,8 @@
 
 using catena::common::ParamDescriptor;
 
-const int ParamDescriptor::max_length() {
-    return (max_length_ > 0) ? max_length_ : dev_.get().param_default_max();
+uint32_t ParamDescriptor::max_length() const {
+    return (max_length_ > 0) ? max_length_ : dev_.get().default_max_length();
 }
 
 void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {

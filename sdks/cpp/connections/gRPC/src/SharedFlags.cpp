@@ -40,4 +40,4 @@ ABSL_FLAG(bool, private_ca, false, "Specify if using a private CA");
 ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
 ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
-ABSL_FLAG(int, param_default_max, 1024, "use this to define the default max length for array and string params.");
+ABSL_FLAG(int, default_max_array_size, 1024, "use this to define the default max length for array and string params.");

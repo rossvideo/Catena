@@ -126,42 +126,35 @@ class ParamWithValue : public catena::common::IParam {
      * @brief default destructor
      */
     virtual ~ParamWithValue() = default;
-    
+		
+  private:
+    using Kind = catena::Value::KindCase;
+    /**
+     * @brief A map which returns a value's length using a function determined
+	 * by the indexed Value.kind_case().
+	 * Private for now, might make public later if useful in other scopes.
+     */
+    const std::unordered_map<Kind, std::function<uint32_t(const catena::Value& value)>> getSize {
+        {Kind::kStringValue,              [](const catena::Value& value) {return value.string_value().length();}},
+        {Kind::kInt32ArrayValues,         [](const catena::Value& value) {return value.int32_array_values().ints_size();}},
+        {Kind::kFloat32ArrayValues,       [](const catena::Value& value) {return value.float32_array_values().floats_size();}},
+        {Kind::kStringArrayValues,        [](const catena::Value& value) {return value.string_array_values().strings_size();}},
+        {Kind::kStructArrayValues,        [](const catena::Value& value) {return value.struct_array_values().struct_values_size();}},
+        {Kind::kStructVariantArrayValues, [](const catena::Value& value) {return value.struct_variant_array_values().struct_variants_size();}}
+    };
+
+  public:
     /**
      * @brief Validates the size of a string or array value.
      * This does not check size of all elements in a string array. Therefore
      * someone could still mount an attack on the system by sending a
      * string_array with a large value.
      * @param value The value to validate the size of.
+	 * @returns true if the value's size is within the param's predefined
+	 * limit, or if the value is not a string or array.
      */
-    const bool validateSize(const catena::Value& value) {
-        /**
-         * Not really a better way since all value types have different
-         * function names for retrieving the value.
-        */ 
-		switch(value.kind_case()) {
-            case catena::Value::kStringValue:
-                if (type().value() == catena::ParamType::STRING) {
-                    return value.string_value().length() <= descriptor_.max_length();
-                }
-            case catena::Value::kInt32ArrayValues:
-                return value.int32_array_values().ints_size() <= descriptor_.max_length();
-                
-            case catena::Value::kFloat32ArrayValues:
-                return value.float32_array_values().floats_size() <= descriptor_.max_length();
-
-            case catena::Value::kStringArrayValues:
-                return value.string_array_values().strings_size() <= descriptor_.max_length();
-
-            case catena::Value::kStructArrayValues:
-                return value.struct_array_values().struct_values_size() <= descriptor_.max_length();
-
-            case catena::Value::kStructVariantArrayValues:
-                return value.struct_variant_array_values().struct_variants_size() <= descriptor_.max_length();
-            
-            default: // Anything that's not an array.
-                return true;
-        }
+    bool validateSize(const catena::Value& value) const override {
+        return getSize.contains(value.kind_case()) ? getSize.at(value.kind_case())(value) <= descriptor_.max_length() : true;
     }
 
     /**
