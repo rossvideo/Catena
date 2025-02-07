@@ -131,12 +131,14 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
         for (const auto& [name, param] : params_) {
             std::cout << "Found param in map: '" << name << "'" << std::endl;
             if (authz.readAuthz(*param)) { 
-                Path path{name, "-"};
+                Path path({name});
                 std::cout << "Checking path: '" << path.toString(true) << "'" << std::endl;
                 auto param_ptr = getParam(path.toString(true), status, authz);  
                 if (param_ptr) {
                     std::cout << "Successfully got param: '" << path.toString(true) << "'" << std::endl;
                     result.push_back(std::move(param_ptr));
+                } else {
+                    std::cout << "Failed to get param: " << status.what() << std::endl;
                 }
             }
         }

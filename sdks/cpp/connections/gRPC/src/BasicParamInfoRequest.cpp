@@ -58,9 +58,8 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImp
 }
 
 void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *service, bool ok) {
-    if (!service || status_ == CallStatus::kFinish) {
+    if (!service) 
         return;
-    }
 
     std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
@@ -89,19 +88,21 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 catena::common::Authorizer authz = std::vector<std::string>{};
 
+                //Gather all top-level params if prefix is empty and recursive is false
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
-                    Device::LockGuard lg(dm_); 
+                     
                     if (service->authorizationEnabled()) {
-                        std::vector<std::string> scopes = service->getScopes(context_);
+                        Device::LockGuard lg(dm_);
+                        std::vector<std::string> scopes = std::move(service->getScopes(context_));
+                        //TODO: This copy^ needs to be done in the constructor of Authorizer
                         authz = catena::common::Authorizer{scopes};
                         top_level_params = dm_.getTopLevelParams(rc, authz);
                     } else {
+                        Device::LockGuard lg(dm_);
                         top_level_params = dm_.getTopLevelParams(rc);
                     }
-
-                    lg.~LockGuard();
 
                     if (rc.status == catena::StatusCode::OK) {
                         for (auto& top_level_param : top_level_params) {
@@ -114,12 +115,27 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         }
                         
                         status_ = CallStatus::kWrite;
-                        [[fallthrough]];
+                        [[fallthrough]]; //Fall through to kWrite
                     }
                 }
-            } catch (...){
+            } catch (const catena::exception_with_status& e) {
                 status_ = CallStatus::kFinish;
-                writer_.Finish(Status::CANCELLED, this);
+                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
+                    "Failed to process request: " + std::string(e.what()) + 
+                    " (Status: " + std::to_string(static_cast<int>(e.status)) + ")");
+                writer_.Finish(errorStatus, this);
+                break;
+            } catch (const std::exception& e) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
+                    "Unexpected error: " + std::string(e.what()));
+                writer_.Finish(errorStatus, this);
+                break;
+            } catch (...) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
+                    "Failed due to unknown error in BasicParamInfoRequest");
+                writer_.Finish(errorStatus, this);
                 break;
             }
 
@@ -136,12 +152,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 current_response_++;
             } else {
                 std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
-                status_ = CallStatus::kFinish;
-                context_.AsyncNotifyWhenDone(this); 
+                status_ = CallStatus::kFinish; 
                 writer_.Finish(Status::OK, this);
             }
             break;
-
+            
+        //It does not go to kFinish, and I'm not sure why...
         case CallStatus::kFinish:
             std::cout << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";

@@ -174,7 +174,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const override {
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            return catena::exception_with_status("Authorization failed", catena::StatusCode::PERMISSION_DENIED);
         }
         descriptor_.toProto(*paramInfo.mutable_info(), authz);
         return catena::exception_with_status("", catena::StatusCode::OK);

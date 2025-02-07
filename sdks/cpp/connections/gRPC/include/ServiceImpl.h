@@ -117,6 +117,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     /**
      * @brief Gets the scopes from the provided authorization context
+     * @throw catena::exception_with_status permission denied
      */
     std::vector<std::string> getScopes(grpc::ServerContext &context);
 
