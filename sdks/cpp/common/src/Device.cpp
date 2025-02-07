@@ -262,6 +262,21 @@ void Device::toProto(::catena::LanguageList& list) const {
     }
 }
 
+catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    auto foundPack = language_packs_.find(languageId);
+    // ERROR: Did not find the pack.
+    if (foundPack == language_packs_.end()) {
+        return catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+    }
+    // Setting the code and transfering language pack info.
+    pack.set_language(languageId);
+    auto languagePack = pack.mutable_language_pack();
+    foundPack->second->toProto(*languagePack);
+    // Returning an OK status.
+    return catena::exception_with_status("", catena::StatusCode::OK);
+}
+
 catena::DeviceComponent Device::DeviceSerializer::getNext() {
     if (hasMore()) {
         handle_.resume();
