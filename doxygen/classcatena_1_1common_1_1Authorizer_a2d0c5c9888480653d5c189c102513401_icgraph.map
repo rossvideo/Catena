@@ -1,9 +1,11 @@
 <map id="catena::common::Authorizer::readAuthz" name="catena::common::Authorizer::readAuthz">
-<area shape="rect" id="Node000001" title="Check if the client has read authorization." alt="" coords="264,69,471,109"/>
+<area shape="rect" id="Node000001" title="Check if the client has read authorization." alt="" coords="264,101,471,141"/>
 <area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1ParamWithValue.html#a6027ca23cb1897c44d933a9f3a4dd29d" title="deserialize the parameter value from protobuf if authorized" alt="" coords="5,5,216,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="273,69,191,48,192,43,274,63"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1ParamWithValue.html#ac3bed0393b165df02bd34a7520733509" title="serialize the parameter descriptor to protobuf include both the descriptor and the value" alt="" coords="5,69,216,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="250,92,216,92,216,87,250,87"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1ParamWithValue.html#a3115eb76fded6e5f7380c6f4b8ad7c49" title="serialize the parameter value to protobuf if authorized" alt="" coords="5,133,216,173"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="274,115,192,136,191,131,273,110"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="309,98,215,60,180,48,182,43,217,55,311,93"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1ParamWithValue.html#ac9e59ebcc2bfa81da748bbe3f431437d" title="serialize the parameter descriptor to protobuf include both the descriptor and the value" alt="" coords="5,69,216,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="250,109,216,105,216,100,251,104"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1ParamWithValue.html#ac3bed0393b165df02bd34a7520733509" title="serialize the parameter descriptor to protobuf include both the descriptor and the value" alt="" coords="5,133,216,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="251,139,216,143,216,138,250,133"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1ParamWithValue.html#a3115eb76fded6e5f7380c6f4b8ad7c49" title="serialize the parameter value to protobuf if authorized" alt="" coords="5,197,216,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="311,150,217,188,182,200,180,195,215,183,309,145"/>
 </map>
