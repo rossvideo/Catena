@@ -108,7 +108,7 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-
+                // Locking divice and setting value(s).
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 Device::LockGuard lg(dm_);
                 rc = dm_.multiSetValue(reqs_, *authz);
@@ -120,39 +120,6 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                     status_ = CallStatus::kFinish;
                     responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
-
-                // OLD IMPLEMENTATION
-                // // Verifying all requests before setting any values.
-                // catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // for (auto &setValuePayload : reqs_.values()) {
-                //     std::string oid = setValuePayload.oid();
-                //     Device::LockGuard lg(dm_);
-                //     rc = dm_.setValueTry(oid, *authz);
-                //     if (rc.status != catena::StatusCode::OK) {
-                //         break;
-                //     }
-                // }
-                // /**
-                //  * If above is valid, then proceed with setting the values.
-                //  * Since we have already verified the request, we can disable
-                //  * authorization when setting the values.
-                //  */ 
-                // if (rc.status == catena::StatusCode::OK) {
-                //     for (auto &setValuePayload : reqs_.values()) {
-                //         std::string oid = setValuePayload.oid();
-                //         catena::Value value = setValuePayload.value();
-                //         Device::LockGuard lg(dm_);
-                //         dm_.setValue(oid, value, catena::common::Authorizer::kAuthzDisabled);
-                //     }
-                //     // End of kProcess
-                //     status_ = CallStatus::kFinish;
-                //     responder_.Finish(catena::Empty{}, Status::OK, this);
-                // // If abovce is invalid, then Error and end process.
-                // } else {
-                //     errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-                //     status_ = CallStatus::kFinish;
-                //     responder_.Finish(::catena::Empty{}, errorStatus_, this);
-                // }
             } catch (...) { // Error, end process.
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;
