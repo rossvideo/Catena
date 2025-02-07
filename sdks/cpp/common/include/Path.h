@@ -155,6 +155,37 @@ class Path {
     Index front_as_index() const;
 
     /**
+     * @return true if the back of the path is a string, false if it's an Index or empty.
+     */
+    bool back_is_string() const;
+
+    /**
+     * @return true if the back of the path is an Index, false if it's a string or empty.
+     */
+    bool back_is_index() const;
+
+    /**
+     * @return back of Path as a string.
+     * @throws catena::exception_with_status if path is empty or back is not a string.
+     * @code
+     * // recommended usage
+     * std::string oid = p.back_is_string() ? p.back_as_string() : "";
+     * if (oid == "") { // error handling here }
+     * @endcode
+     */
+    const std::string& back_as_string() const;
+
+    /**
+     * @return back of path as an Index.
+     * @throws catena::exception_with_status if path is empty or back is not an Index.
+     * @code
+     * // recommended usage
+     * Path::Index idx = p.back_is_index() ? p.back_as_index() : Path::kError;
+     * if (idx == Path::kError) { // error handling here }
+     */
+    Index back_as_index() const;
+
+    /**
      * @brief return a string representation of the Path
      * @param leading_slash if true, include leading '/' in output (defaults to true)
      * @return std::string the path as a string
@@ -178,6 +209,14 @@ class Path {
     void pop() noexcept;
 
     /**
+     * @brief pop the back of the path.
+     * Fully removes the last segment in the path unless the path is already
+     * empty in which case it does nothing. This action CANNOT be reversed with
+     * unpop.
+     */
+    void popBack() noexcept;
+
+    /**
      * @brief show how much of the path has been consumed
      * @return number of segments that have been popped
      */
@@ -189,7 +228,7 @@ class Path {
     inline void rewind() noexcept {frontIdx_ = 0;}
 
     /**
-     * @brief restore the Path to it's state before the last pop
+     * @brief restore the Path to it's state before the last pop from front.
      */
     inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 

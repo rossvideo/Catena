@@ -100,12 +100,31 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
 
 catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst, Authorizer& authz) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
+    /**
+     * Converting to Path object to validate input (cant end with /-).
+     * The Path constructor will throw an exception if the json pointer is
+     * invalid, so we use a try catch block to catch it.
+     */
+    try {
+        catena::common::Path path(jptr);
+        if (path.back_is_index()) {
+            if (path.back_as_index() == catena::common::Path::kEnd) {
+                // Index is "-"
+                ans = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            }
+        }
+    } catch (const catena::exception_with_status& why) {
+        ans = catena::exception_with_status(why.what(), why.status);
+    }
+
+    if (ans.status == catena::StatusCode::OK) {
+        std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
     
-    // we expect this to be a parameter name
-    if (param != nullptr) {
-        // we have reached the end of the path, deserialize the value
-        param->toProto(dst, authz);
+        // we expect this to be a parameter name
+        if (param != nullptr) {
+            // we have reached the end of the path, deserialize the value
+            ans = param->toProto(dst, authz);
+        }
     }
     return ans;
 }
