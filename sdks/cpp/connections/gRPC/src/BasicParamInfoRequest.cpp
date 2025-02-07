@@ -80,7 +80,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             break;
 
         case CallStatus::kProcess:
+
             new BasicParamInfoRequest(service_, dm_, ok);
+            context_.AsyncNotifyWhenDone(this);
             
             try {
                 std::unique_ptr<IParam> param;
