@@ -194,9 +194,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         return;
                     }
                     // Returning if authorization is enabled and the client does not have monitor scope.
-                    /**
-                     * @todo Authorization needs to be fixed so this might get overhauled later?
-                     */
                     if (service_->authorizationEnabled()) {
                         std::vector<std::string> clientScopes = service_->getScopes(context_);
                         catena::common::Authorizer authz{clientScopes};
