@@ -126,12 +126,10 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
 
 std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
     std::vector<std::unique_ptr<IParam>> result;
-    std::cout << "Checking params_ map contents:" << std::endl;
     try {
         for (const auto& [name, param] : params_) {
-            std::cout << "Found param in map: '" << name << "'" << std::endl;
             if (authz.readAuthz(*param)) { 
-                Path path({name});
+                Path path{name};
                 std::cout << "Checking path: '" << path.toString(true) << "'" << std::endl;
                 auto param_ptr = getParam(path.toString(true), status, authz);  
                 if (param_ptr) {

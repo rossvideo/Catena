@@ -81,8 +81,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kProcess:
             new BasicParamInfoRequest(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);
-
+            
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -114,6 +113,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             }
                         }
                         
+                           
                         status_ = CallStatus::kWrite;
                         [[fallthrough]]; //Fall through to kWrite
                     }
@@ -141,6 +141,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kWrite:
             if (context_.IsCancelled()) {
+                Device::LockGuard lg(dm_);
                 std::cout << "[" << objectId_ << "] cancelled during write\n";
                 status_ = CallStatus::kFinish;
                 writer_.Finish(Status::CANCELLED, this);
@@ -148,9 +149,10 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             }
 
             if (current_response_ < responses_.size()) {
-                writer_.Write(responses_[current_response_], this);
-                current_response_++;
+                Device::LockGuard lg(dm_);
+                writer_.Write(responses_[current_response_++], this);
             } else {
+                Device::LockGuard lg(dm_);
                 std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
                 status_ = CallStatus::kFinish; 
                 writer_.Finish(Status::OK, this);

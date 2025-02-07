@@ -38,8 +38,7 @@
 namespace catena {
 namespace common {
 
-template<typename T>
-concept ValidType = std::same_as<T, size_t> || std::same_as<T, int> || std::convertible_to<T, std::string>;
+using SegmentType = std::variant<std::string, size_t, int>;
 
 /**
  * @brief Converts json pointers to items within the data model to
@@ -101,12 +100,13 @@ class Path {
     explicit Path(const char* literal);
 
     /**
-     * @brief Construct a Path from a sequence of segments
-     * @param args Variable number of arguments that are either Index or string types
+     * @brief Construct a Path from initializer list
+     * @param args List of arguments that are either Index or string types
      */
-    template<ValidType... Args>
-    explicit Path(Args... args) : segments_{}, frontIdx_{0} {
-        (push_back(std::forward<Args>(args)), ...);
+    explicit Path(std::initializer_list<SegmentType> args) : segments_{}, frontIdx_{0} {
+        for (const auto& arg : args) {
+            push_back(arg);
+        }
     }
 
     /**
@@ -197,19 +197,23 @@ class Path {
      * @brief Add a new segment to the path
      * @param segment Either an Index or string to add as a new segment
      */
-    template<ValidType T>
-    void push_back(T segment) {
-        if constexpr (std::same_as<T, Index> || std::same_as<T, int>) {
-            segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(segment));
-        } else {
-            std::string str{segment};
-            if (str == "-") {
-                segments_.emplace_back(std::in_place_type<Index>, kEnd);
-            } else {
-                escape(str);
-                segments_.emplace_back(std::in_place_type<std::string>, str);
-            }
-        }
+    void push_back(SegmentType segment) {
+        std::visit(
+            [this](const auto& val) {
+                if constexpr (std::is_same_v<std::decay_t<decltype(val)>, std::string>) {
+                    if (val == "-") {
+                        segments_.emplace_back(std::in_place_type<Index>, kEnd);
+                    } else {
+                        std::string str = val;
+                        escape(str);
+                        segments_.emplace_back(std::in_place_type<std::string>, str);
+                    }
+                } else {
+                    segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(val));
+                }
+            },
+            segment
+        );
     }
 
 
