@@ -51,10 +51,10 @@ using DetailLevel = patterns::EnumDecorator<catena::Device_DetailLevel>;
 
 template <>
 inline const common::Scopes::FwdMap common::Scopes::fwdMap_ = {{common::Scopes_e::kUndefined, "undefined"},
-                                               {common::Scopes_e::kMonitor, "monitor"},
-                                               {common::Scopes_e::kOperate, "operate"},
-                                               {common::Scopes_e::kConfig, "configure"},
-                                               {common::Scopes_e::kAdmin, "administer"}};
+                                               {common::Scopes_e::kMonitor, "st-2138:mon"},
+                                               {common::Scopes_e::kOperate, "st-2138:op"},
+                                               {common::Scopes_e::kConfig, "st-2138:cfg"},
+                                               {common::Scopes_e::kAdmin, "st-2138:adm"}};
 
 
 template <>
