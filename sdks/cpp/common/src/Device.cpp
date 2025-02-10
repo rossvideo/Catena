@@ -60,22 +60,43 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, Auth
 
 catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::vector<std::pair<const catena::SetValuePayload*, std::unique_ptr<IParam>>> requests;
-    // Getting all params and t
-    for (auto &setValuePayload : src.values()) {
-        requests.push_back(std::make_pair(&setValuePayload, getParam(setValuePayload.oid(), ans, authz)));
-        auto &param = requests.back().second;
-        if (param != nullptr) {
-            if (!authz.readAuthz(*param)) {
-                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    //std::vector<std::pair<const catena::SetValuePayload*, std::unique_ptr<IParam>>> requests;
+    std::vector<std::tuple<const catena::SetValuePayload*, std::unique_ptr<Path>, std::unique_ptr<IParam>>> requests;
+    /**
+     * @todo Update so that the loop:
+     * 1) Gets the path.
+     * 2) Validates that oid does not end in index.
+     * 3) Verify the param exists and permissions.
+     * 4) Make sure element index (if it exists) is not out of bounds.
+     * 5) (LATER) verify ensures that the added value does not cause the array
+     *    to exceed its total length.
+     *    *(5) would be a lot easier if we use element index tbh.
+     */
+    try {
+        for (auto& setValuePayload : src.values()) {
+            catena::common::Path path(setValuePayload.oid());
+            requests.push_back(std::make_tuple(&setValuePayload, std::make_unique<Path>(path), getParam(setValuePayload.oid(), ans, authz)));
+            auto &param = std::tuple requests.back();
+            if (param != nullptr) {
+                if (!authz.readAuthz(*param)) {
+                    return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                }
+                if (!authz.writeAuthz(*param)) {
+                    return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+                }
+            } else {
+                return ans;
             }
-            if (!authz.writeAuthz(*param)) {
-                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
-            }
-        } else {
-            return ans;
         }
+    } catch (const catena::exception_with_status& why) {
+        ans = catena::exception_with_status(why.what(), why.status);
     }
+    /**
+     * @todo Update so that the loop:
+     * 1) Adds extra element to the end if element index is "-".
+     * 2) Gets the element at element index if defined.
+     * 3) Propetly adds the item.
+     */
     for (auto &[setValuePayload, param] : requests) {
         auto jptr = setValuePayload->oid();
         if (jptr.ends_with("/-")) {
@@ -115,7 +136,6 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
         }
         if (ans.status == catena::StatusCode::OK) {
             std::unique_ptr<IParam> param = getParam(path, ans, authz);
-        
             // we expect this to be a parameter name
             if (param != nullptr) {
                 // we have reached the end of the path, deserialize the value
