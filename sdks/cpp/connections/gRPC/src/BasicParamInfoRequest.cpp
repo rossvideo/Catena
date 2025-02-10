@@ -254,7 +254,7 @@ size_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std:
     // Keep checking indices until we find one that doesn't exist
     for (size_t i = 0; ; i++) {
         Path path{base_path, i};
-        auto param = dm_.getParam(path.toString(true), rc);
+        auto param = dm_.getParam(path.toString(), rc);
         if (!param) break;
         length = i + 1;
     }
