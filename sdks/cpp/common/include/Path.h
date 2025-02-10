@@ -242,10 +242,10 @@ class Path {
 
     /**
      * @brief Add a new index segment to the path
-     * @param segment Index to add as a new segment
+     * @param idx Index to add as a new segment
      */
-    void push_back(size_t segment) {
-        segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(segment));
+    void push_back(Index idx) {
+        segments_.emplace_back(std::in_place_type<Index>, idx);
     }
 
   private:
