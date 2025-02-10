@@ -1,7 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923":[8,0,0,4,7],
-"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734":[8,0,0,4,8],
 "namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad":[8,0,0,6],
 "namespacecatena_1_1common.html":[8,0,0,0],
 "namespacecatena_1_1common.html#a028c90c48c39454968736c95d2c0ceb9":[8,0,0,0,33],
