@@ -216,11 +216,11 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
          * lifetime of the top level params does not need to be managed.
          */
         IParam* param = getItem<common::ParamTag>(path.front_as_string());
-        path.pop();
         if (!param || !authz.readAuthz(*param)) {
-            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT); 
+            status = catena::exception_with_status("Param " + path.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT); 
             return nullptr;
         }
+        path.pop();
         if (path.empty()) {
             /**
              * Top level params need to be copied into a unique pointer to be returned.
@@ -235,7 +235,7 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
             return param->getParam(path, authz, status);
         }
     } else {
-        status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+        status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
 }

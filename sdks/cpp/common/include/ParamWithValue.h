@@ -375,7 +375,7 @@ class ParamWithValue : public catena::common::IParam {
                 return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
             } else {
                 // This type is not a CatenaStructArray so it has no sub-params
-                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
                 return nullptr;
             }
         }
@@ -403,7 +403,7 @@ class ParamWithValue : public catena::common::IParam {
 
         std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
         if (!ip) {
-            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
 
@@ -487,7 +487,7 @@ class ParamWithValue : public catena::common::IParam {
         oid.pop();   
 
         if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
-            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
 
