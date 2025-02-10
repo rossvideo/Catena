@@ -33,7 +33,12 @@
 #include <Authorization.h>  
 #include <Device.h>
 
+
 using catena::common::ParamDescriptor;
+
+uint32_t ParamDescriptor::max_length() const {
+    return (max_length_ > 0) ? max_length_ : dev_.get().default_max_length();
+}
 
 void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     

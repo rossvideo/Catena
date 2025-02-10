@@ -137,7 +137,9 @@ void statusUpdateExample(){
 
         // this is the "receiving end" of the status update example
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            handlers[oid](oid, p, idx);
+            if (handlers.find(oid) != handlers.end()) {
+                handlers[oid](oid, p, idx);
+            }
         });
 
         catena::exception_with_status err{"", catena::StatusCode::OK};

@@ -139,6 +139,9 @@ class Descriptor {
       },
       device: () => {
         return "dm";
+      },
+      max_length: () => {
+        return ("max_length" in desc) ? `${desc.max_length}` : "0";
       }
     };
 

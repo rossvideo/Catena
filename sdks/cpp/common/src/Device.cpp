@@ -44,15 +44,33 @@
 
 using namespace catena::common;
 
-catena::exception_with_status Device::setValueTry (const std::string& jptr, Authorizer& authz) {
+/**
+ * Flag used to set default_max_length_. Moved from SharedFlags as you run into
+ * compilation issues otherwise.
+ */
+#include "absl/flags/flag.h"
+ABSL_FLAG(uint32_t, default_max_array_size, 1024, "use this to define the default max length for array and string params.");
+
+uint32_t Device::default_max_length() {
+    if (default_max_length_ <= 0) {
+        default_max_length_ = absl::GetFlag(FLAGS_default_max_array_size);
+        if (default_max_length_ <= 0) { default_max_length_ = 1024; }
+    }
+    return default_max_length_;
+}
+
+catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
         if (param != nullptr) {
             if (!authz.readAuthz(*param)) {
-                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             }
-            if (!authz.writeAuthz(*param)) {
-                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            else if (!authz.writeAuthz(*param)) {
+                ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            }
+            else if (!param->validateSize(value)) {
+                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
         return ans;
