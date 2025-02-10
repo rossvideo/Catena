@@ -163,6 +163,19 @@ class Device {
     void toProto(::catena::LanguageList& list) const;
 
     using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
+
+    /**
+     * @brief Adds a language pack to the device. Requires client to have
+     * admin:w scope.
+     * @param language The language to add to the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     * Intention is for the AddLanguage RPCs / API calls to be serviced by this
+     * method.
+     */
+    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
+
     /**
      * @brief Finds and returns a language pack based on languageId.ABORTED
      * @param languageId The language id of the language pack e.g. "en"
@@ -352,6 +365,15 @@ class Device {
     std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
+     * @brief get all top level parameters
+     * @param status the status of the operation
+     * @param authz the authorizer object
+     * @return a vector of unique pointers to the parameters
+     */
+    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+
+
+    /**
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
      * @param authz the authorizer object
@@ -402,6 +424,12 @@ class Device {
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
     
     /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ComponentLanguagePack&)> languageAddedPushUpdate;
+
+    /**
      * @brief signal emitted when a value is set by the server, or business logic.
      * Intended recipient is the connection manager.
      */
@@ -415,6 +443,8 @@ class Device {
     std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
+    // Required to maintain ownership of added language packs.
+    std::unordered_map<std::string, std::shared_ptr<common::ILanguagePack>> added_packs_;
     std::vector<std::string> access_scopes_;
     std::string default_scope_;
     bool multi_set_enabled_;
