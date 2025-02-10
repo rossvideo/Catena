@@ -64,13 +64,13 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, cate
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
         if (param != nullptr) {
             if (!authz.readAuthz(*param)) {
-                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             }
-            if (!authz.writeAuthz(*param)) {
-                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            else if (!authz.writeAuthz(*param)) {
+                ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
             }
-            if (!param->validateSize(value)) {
-                return catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
+            else if (!param->validateSize(value)) {
+                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
         return ans;
