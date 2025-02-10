@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2024 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,7 @@ extern absl::Flag<bool> FLAGS_authz;
 extern absl::Flag<std::string> FLAGS_static_root;
 
 /**
- * @brief the default max length for array and string params, default is 1024
+ * @brief the default max length for array and string params, default is 1024.
+ * Defined in Device.cpp.
  */
 extern absl::Flag<uint32_t> FLAGS_default_max_array_size;

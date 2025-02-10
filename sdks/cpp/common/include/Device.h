@@ -105,7 +105,7 @@ class Device {
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
-	  subscriptions_{subscriptions} {}
+	    subscriptions_{subscriptions} {}
 
     /**
      * @brief Destroy the Device object
@@ -138,19 +138,12 @@ class Device {
 
     inline const std::string& getDefaultScope() const { return default_scope_; }
 
-	/**
-	 * @brief Sets the default max length for this device's params if
-	 * default_max is valid.
-	 * @param default_max The default max length for params.
-	 */
-    void set_default_max_length(const int default_max) {
-		if (default_max > 0) {default_max_length_ = default_max;}
-    }
-
-	/**
-	 * @return The default max length for this device's params.
-	 */
-    inline uint32_t default_max_length() const { return default_max_length_;}
+    /**
+     * @brief Sets the default_max_length_ to 1024 or the cmd line flag if
+     * defined. Returns the default_max_length_ afterwards.
+     * @return The default max length for this device's array params.
+     */
+    uint32_t default_max_length();
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -425,7 +418,7 @@ class Device {
     std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-    int default_max_length_ = 1024;
+    uint32_t default_max_length_ = 0;
 
     mutable std::mutex mutex_;
 };
