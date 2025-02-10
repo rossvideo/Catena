@@ -58,7 +58,7 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImp
 }
 
 void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *service, bool ok) {
-    if (!service) 
+    if (!service || status_ == CallStatus::kFinish) 
         return;
 
     std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "]: " << timeNow()
@@ -106,6 +106,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     }
 
                     if (rc.status == catena::StatusCode::OK) {
+                        Device::LockGuard lg(dm_);
                         for (auto& top_level_param : top_level_params) {
                             responses_.emplace_back();
                             if (service->authorizationEnabled()) {
@@ -114,10 +115,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                                 top_level_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                             }
                         }
-                        
                            
                         status_ = CallStatus::kWrite;
-                        [[fallthrough]]; //Fall through to kWrite
+                        writer_.Write(responses_[current_response_], this);
                     }
                 }
             } catch (const catena::exception_with_status& e) {
@@ -150,9 +150,10 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 break;
             }
 
-            if (current_response_ < responses_.size()) {
+            if (current_response_ < responses_.size() - 1) {
                 Device::LockGuard lg(dm_);
-                writer_.Write(responses_[current_response_++], this);
+                status_ = CallStatus::kFinish;
+                writer_.Write(responses_[++current_response_], this);
             } else {
                 Device::LockGuard lg(dm_);
                 std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";

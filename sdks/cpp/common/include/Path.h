@@ -38,8 +38,6 @@
 namespace catena {
 namespace common {
 
-using SegmentType = std::variant<std::string, size_t, int>;
-
 /**
  * @brief Converts json pointers to items within the data model to
  * a path of "segments" that can be iterated over.
@@ -103,11 +101,7 @@ class Path {
      * @brief Construct a Path from initializer list
      * @param args List of arguments that are either Index or string types
      */
-    explicit Path(std::initializer_list<SegmentType> args) : segments_{}, frontIdx_{0} {
-        for (const auto& arg : args) {
-            push_back(arg);
-        }
-    }
+    explicit Path(std::initializer_list<Segment> args) : segments_{args}, frontIdx_{0} {};
 
     /**
      * @brief return the number of segments in the Path
@@ -194,28 +188,26 @@ class Path {
     inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 
     /**
-     * @brief Add a new segment to the path
-     * @param segment Either an Index or string to add as a new segment
+     * @brief Add a new string segment to the path
+     * @param segment String to add as a new segment
      */
-    void push_back(SegmentType segment) {
-        std::visit(
-            [this](const auto& val) {
-                if constexpr (std::is_same_v<std::decay_t<decltype(val)>, std::string>) {
-                    if (val == "-") {
-                        segments_.emplace_back(std::in_place_type<Index>, kEnd);
-                    } else {
-                        std::string str = val;
-                        escape(str);
-                        segments_.emplace_back(std::in_place_type<std::string>, str);
-                    }
-                } else {
-                    segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(val));
-                }
-            },
-            segment
-        );
+    void push_back(const std::string& segment) {
+        if (segment == "-") {
+            segments_.emplace_back(std::in_place_type<Index>, kEnd);
+        } else {
+            std::string str = segment;
+            escape(str);
+            segments_.emplace_back(std::in_place_type<std::string>, str);
+        }
     }
 
+    /**
+     * @brief Add a new index segment to the path
+     * @param segment Index to add as a new segment
+     */
+    void push_back(size_t segment) {
+        segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(segment));
+    }
 
   private:
     using Segments = std::vector<Segment>;
