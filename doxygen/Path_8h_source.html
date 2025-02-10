@@ -173,8 +173,8 @@ $(document).ready(function(){initNavTree('Path_8h_source.html',''); initResizabl
 <div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        }</div>
 <div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    }</div>
 <div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordtype">void</span> push_back(Index idx) {</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>        segments_.emplace_back(std::in_place_type&lt;Index&gt;, idx);</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordtype">void</span> push_back(<span class="keywordtype">size_t</span> segment) {</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>        segments_.emplace_back(std::in_place_type&lt;Index&gt;, <span class="keyword">static_cast&lt;</span>Index<span class="keyword">&gt;</span>(segment));</div>
 <div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    }</div>
 <div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span> </div>
 <div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>  <span class="keyword">private</span>:</div>

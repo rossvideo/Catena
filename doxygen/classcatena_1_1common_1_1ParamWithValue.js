@@ -26,5 +26,6 @@ var classcatena_1_1common_1_1ParamWithValue =
     [ "toProto", "classcatena_1_1common_1_1ParamWithValue.html#ac9e59ebcc2bfa81da748bbe3f431437d", null ],
     [ "toProto", "classcatena_1_1common_1_1ParamWithValue.html#ac3bed0393b165df02bd34a7520733509", null ],
     [ "toProto", "classcatena_1_1common_1_1ParamWithValue.html#a3115eb76fded6e5f7380c6f4b8ad7c49", null ],
-    [ "type", "classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e", null ]
+    [ "type", "classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e", null ],
+    [ "validateSize", "classcatena_1_1common_1_1ParamWithValue.html#a6a6f084c85fb99045e334e5732abda32", null ]
 ];
