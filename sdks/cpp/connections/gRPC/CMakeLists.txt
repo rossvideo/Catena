@@ -41,7 +41,9 @@ set(sources
     "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"
     "src/MultiSetValue.cpp"
+    "src/AddLanguage.cpp"
     "src/ListLanguages.cpp"
+    "src/LanguagePackRequest.cpp"
 )
 
 add_library(${target} STATIC ${sources})

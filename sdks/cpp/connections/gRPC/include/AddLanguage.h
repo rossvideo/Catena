@@ -31,10 +31,10 @@
  */
 
 /**
- * @file ListLanguages.h
- * @brief Implements Catena gRPC ListLanguages
+ * @file AddLanguage.h
+ * @brief Implements Catena gRPC AddLanguage
  * @author benjamin.whitten@rossvideo.com
- * @date 2025-01-29
+ * @date 2025-02-03
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -44,23 +44,23 @@
 /**
 * @brief CallData class for the ListLanguages RPC
 */
-class CatenaServiceImpl::ListLanguages : public CallData {
+class CatenaServiceImpl::AddLanguage : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the ListLanguages gRPC.
+         * @brief Constructor for the CallData class of the AddLanguage gRPC.
          * Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dm Address of the device to get the value from.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        ListLanguages(CatenaServiceImpl *service, Device &dm, bool ok);
+        AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Manages the steps of the ListLanguages gRPC command through
+         * @brief Manages the steps of the AddLanguage gRPC commands through
          * the state variable status.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param ok Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
     private:
@@ -74,19 +74,23 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         ServerContext context_;
         /**
-         * @brief Server request (the device's slot).
+         * @brief Server request (slot, id, language).
          */
-        catena::Slot req_;
+        catena::AddLanguagePayload req_;
+        /**
+         * @brief Empty catena value to respond with.
+         */
+        catena::Empty res_;
         /**
          * @brief gRPC async response writer.
          */
-        grpc::ServerAsyncResponseWriter<::catena::LanguageList> responder_;
+        grpc::ServerAsyncResponseWriter<::catena::Empty> responder_;
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
         /**
-         * @brief The device containing the languages to list.
+         * @brief The device to add the LanguagePack to.
          */
         Device &dm_;
         /**
@@ -94,7 +98,7 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         int objectId_;
         /**
-         * @brief The total # of ListLanguages objects.
+         * @brief The total # of AddLanguage objects.
          */
         static int objectCounter_;
 };

@@ -2,8 +2,8 @@
   "slot": 1,
   "multi_set_enabled": true,
   "detail_level": "FULL",
-  "access_scopes": ["monitor", "operate", "configure", "administer"],
-  "default_scope": "operate",
+  "access_scopes": ["mon", "op", "cfg", "adm"],
+  "default_scope": "op",
   "subscriptions": true,
   "language_packs": {
     "packs": {
@@ -39,7 +39,7 @@
     "text_box": {
       "type": "STRING",
       "name": { "display_strings": { "en": "Text Box", "es": "Caja de Texto", "fr": "Boîte de Texte" } },
-      "access_scope": "configure",
+      "access_scope": "cfg",
       "value": { "string_value": "Hello, World!" }
     },
     "button": {
@@ -52,14 +52,14 @@
     "slider": {
       "type": "INT32",
       "name": { "display_strings": { "en": "Slider", "es": "Deslizador", "fr": "Curseur" } },
-      "access_scope": "configure",
+      "access_scope": "cfg",
       "value": { "int32_value": 0 },
       "constraint": { "ref_oid": "basic_slider" }
     },
     "combo_box": {
       "type": "INT32",
       "name": { "display_strings": { "en": "Combo Box", "es": "Caja Combinada", "fr": "Boîte Combo" } },
-      "access_scope": "configure",
+      "access_scope": "cfg",
       "value": { "int32_value": 1 },
       "constraint": {
         "type": "INT_CHOICE",
