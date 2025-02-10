@@ -86,6 +86,10 @@
       "oid_aliases": ["0xFF0E"],
       "read_only": true,
       "value": { "string_value": "eo://status_update.grid" }
+    },
+    "int_array_test" : {
+      "type": "INT32_ARRAY",
+      "value": { "int32_array_values": {"ints" : [1, 2, 3, 4, 5]} }
     }
   },
   "constraints": {

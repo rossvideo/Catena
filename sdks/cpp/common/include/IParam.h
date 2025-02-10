@@ -139,6 +139,7 @@ class IParam {
     virtual std::unique_ptr<IParam> getParam(Path& oid, Authorizer& authz, catena::exception_with_status& status) = 0;
 
     virtual std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) = 0;
+    virtual void popBack(Authorizer& authz, catena::exception_with_status& status) = 0;
 
     /**
      * @brief get a constraint by oid

@@ -406,7 +406,14 @@ class Device {
      */
     catena::exception_with_status setValueTry (const std::string& jptr, Authorizer& authz = Authorizer::kAuthzDisabled);
 
-    // The fix
+    /**
+     * @brief sets the values of the device's parameters using a
+     * MultiSetValuePayload.
+     * @param src The SetValuePayloads to update the device with.
+     * @param authz The Authorizer to test with.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     */
     catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
 
     /**

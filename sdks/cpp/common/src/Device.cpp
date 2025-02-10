@@ -60,51 +60,58 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, Auth
 
 catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    //std::vector<std::pair<const catena::SetValuePayload*, std::unique_ptr<IParam>>> requests;
-    std::vector<std::tuple<const catena::SetValuePayload*, std::unique_ptr<Path>, std::unique_ptr<IParam>>> requests;
-    /**
-     * @todo Update so that the loop:
-     * 1) Gets the path.
-     * 2) Validates that oid does not end in index.
-     * 3) Verify the param exists and permissions.
-     * 4) Make sure element index (if it exists) is not out of bounds.
-     * 5) (LATER) verify ensures that the added value does not cause the array
-     *    to exceed its total length.
-     *    *(5) would be a lot easier if we use element index tbh.
-     */
-    try {
-        for (auto& setValuePayload : src.values()) {
-            catena::common::Path path(setValuePayload.oid());
-            requests.push_back(std::make_tuple(&setValuePayload, std::make_unique<Path>(path), getParam(setValuePayload.oid(), ans, authz)));
-            auto &param = std::tuple requests.back();
-            if (param != nullptr) {
-                if (!authz.readAuthz(*param)) {
-                    return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
-                }
-                if (!authz.writeAuthz(*param)) {
-                    return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
-                }
-            } else {
-                return ans;
-            }
+    std::vector<std::pair<const catena::SetValuePayload*, std::unique_ptr<IParam>>> requests;
+    // Go through all setValuePayloads and verify the requests.
+    for (auto& setValuePayload : src.values()) {
+        auto& oid = setValuePayload.oid();
+        requests.push_back(std::make_pair(&setValuePayload, getParam(oid, ans, authz)));
+        auto &param = requests.back().second;
+        if (param == nullptr) {
+            // ans already defined from getParam()
+            // Remove the last request from the back in case oid has /-.
+            requests.pop_back();
+            break;
         }
-    } catch (const catena::exception_with_status& why) {
-        ans = catena::exception_with_status(why.what(), why.status);
+        else if (!authz.readAuthz(*param)) {
+            ans = catena::exception_with_status("Not authorized to read the param " + oid, catena::StatusCode::INVALID_ARGUMENT);
+            break;
+        }
+        else if (!authz.writeAuthz(*param)) {
+            ans = catena::exception_with_status("Not authorized to write to param" + oid, catena::StatusCode::PERMISSION_DENIED);
+            break;
+        }
     }
-    /**
-     * @todo Update so that the loop:
-     * 1) Adds extra element to the end if element index is "-".
-     * 2) Gets the element at element index if defined.
-     * 3) Propetly adds the item.
+    /** 
+     * Since we add empty slots if the oid ends with "/-", we need to
+     * delete those empty slots if an issue comes up.
+     * We add empty slots above to determine if the param will exceed its limit
+     * or not.
+     * Alternatively you could implement a size var in the param descriptor.
      */
-    for (auto &[setValuePayload, param] : requests) {
-        auto jptr = setValuePayload->oid();
-        if (jptr.ends_with("/-")) {
-            // Add empty field to the end of the param.
-            param = param->addBack(authz, ans);
+    if (ans.status != catena::StatusCode::OK) {
+        for (auto &[setValuePayload, param] : requests) {
+            /**
+             * The Path constructor will throw an exception if the json pointer
+             * is invalid, so we use a try catch block to catch it.
+             */
+            try {
+                catena::common::Path path(setValuePayload->oid());
+                if (path.back_is_index()) {
+                    if (path.back_as_index() == catena::common::Path::kEnd) {
+                        // Index is "/-". Get parent and remove addition.
+                        path.popBack();
+                        getParam(path, ans, authz)->popBack(authz, ans);
+                    }
+                }
+            } catch (const catena::exception_with_status& why) {}
         }
-        ans = param->fromProto(setValuePayload->value(), authz);
-        valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
+    }
+    // If there were no issues then commit all set value requests.
+    else {
+        for (auto &[setValuePayload, param] : requests) {
+            ans = param->fromProto(setValuePayload->value(), authz);
+            valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
+        }
     }
     return ans;
 }

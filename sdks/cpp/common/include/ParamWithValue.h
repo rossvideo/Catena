@@ -272,6 +272,12 @@ class ParamWithValue : public catena::common::IParam {
 
     std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) {
         return addBack(value_.get(), authz, status);
+    }
+
+    void popBack(Authorizer& authz, catena::exception_with_status& status) {
+        return popBack(value_.get(), authz, status);
+    }
+
     /**
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
@@ -297,6 +303,20 @@ class ParamWithValue : public catena::common::IParam {
         return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
     }
 
+    template <typename U>
+    void popBack(U& value, Authorizer& authz, catena::exception_with_status& status) {
+        // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
+        status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    }
+
+    template<meta::IsVector U>
+    void popBack(U& value, Authorizer& authz, catena::exception_with_status& status) {
+        if (value.size() > 0) {
+            value.pop_back();
+        } else {
+            status = catena::exception_with_status("Index out of bounds", catena::StatusCode::INVALID_ARGUMENT);
+        }
+    }
 
     /**
      * @brief get the child parameter that oid points to
@@ -338,7 +358,8 @@ class ParamWithValue : public catena::common::IParam {
 
         if (oidIndex == catena::common::Path::kEnd) {
             // Index is "-", add a new element to the array
-            return std::make_unique<ParamWithValue<U>>(value, descriptor_);
+            oidIndex = value.size();
+            value.push_back(ElemType());
         } else if (oidIndex >= value.size()) {
             // If index is out of bounds, return nullptr
             status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
@@ -518,5 +539,5 @@ inline T& getParamValue(catena::common::IParam* param) {
   return dynamic_cast<ParamWithValue<T>*>(param)->get();
 }
 
-} // namespace common
-} // namespace catena
+}; // namespace common
+}; // namespace catena
