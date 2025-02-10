@@ -38,9 +38,6 @@
 namespace catena {
 namespace common {
 
-template<typename T>
-concept ValidType = std::same_as<T, size_t> || std::same_as<T, int> || std::convertible_to<T, std::string>;
-
 /**
  * @brief Converts json pointers to items within the data model to
  * a path of "segments" that can be iterated over.
@@ -101,13 +98,10 @@ class Path {
     explicit Path(const char* literal);
 
     /**
-     * @brief Construct a Path from a sequence of segments
-     * @param args Variable number of arguments that are either Index or string types
+     * @brief Construct a Path from initializer list
+     * @param args List of arguments that are either Index or string types
      */
-    template<ValidType... Args>
-    explicit Path(Args... args) : segments_{}, frontIdx_{0} {
-        (push_back(std::forward<Args>(args)), ...);
-    }
+    explicit Path(std::initializer_list<Segment> args) : segments_{args}, frontIdx_{0} {};
 
     /**
      * @brief return the number of segments in the Path
@@ -187,7 +181,7 @@ class Path {
 
     /**
      * @brief return a string representation of the Path
-     * @param leading_slash if true, include leading '/' in output (defaults to true)
+     * @param leading_slash if true, include leading '/' in output (defaults to false)
      * @return std::string the path as a string
      * 
      * any popped segments are not included in the returned string.
@@ -233,24 +227,26 @@ class Path {
     inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 
     /**
-     * @brief Add a new segment to the path
-     * @param segment Either an Index or string to add as a new segment
+     * @brief Add a new string segment to the path
+     * @param segment String to add as a new segment
      */
-    template<ValidType T>
-    void push_back(T segment) {
-        if constexpr (std::same_as<T, Index> || std::same_as<T, int>) {
-            segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(segment));
+    void push_back(const std::string& segment) {
+        if (segment == "-") {
+            segments_.emplace_back(std::in_place_type<Index>, kEnd);
         } else {
-            std::string str{segment};
-            if (str == "-") {
-                segments_.emplace_back(std::in_place_type<Index>, kEnd);
-            } else {
-                escape(str);
-                segments_.emplace_back(std::in_place_type<std::string>, str);
-            }
+            std::string str = segment;
+            escape(str);
+            segments_.emplace_back(std::in_place_type<std::string>, str);
         }
     }
 
+    /**
+     * @brief Add a new index segment to the path
+     * @param segment Index to add as a new segment
+     */
+    void push_back(size_t segment) {
+        segments_.emplace_back(std::in_place_type<Index>, static_cast<Index>(segment));
+    }
 
   private:
     using Segments = std::vector<Segment>;

@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -167,6 +167,21 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
+     * @brief serialize the parameter descriptor to protobuf
+     * include both the descriptor and the value
+     * @param paramInfo the protobuf value to serialize to
+     * @param authz the authorization information
+     */
+    catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const override {
+        if (!authz.readAuthz(*this)) {
+            return catena::exception_with_status("Authorization failed", catena::StatusCode::PERMISSION_DENIED);
+        }
+        descriptor_.toProto(*paramInfo.mutable_info(), authz);
+        return catena::exception_with_status("", catena::StatusCode::OK);
+    }
+
+
+    /**
      * @brief deserialize the parameter value from protobuf if authorized
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope
@@ -257,6 +272,12 @@ class ParamWithValue : public catena::common::IParam {
 
     std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) {
         return addBack(value_.get(), authz, status);
+    /**
+     * @brief get the descriptor of the parameter
+     * @return the descriptor of the parameter
+     */
+    const ParamDescriptor& getDescriptor() const override {
+        return descriptor_;
     }
 
   private:

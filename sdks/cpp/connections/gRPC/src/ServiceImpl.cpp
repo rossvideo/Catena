@@ -42,7 +42,9 @@
 #include <DeviceRequest.h>
 #include <GetParam.h>
 #include <ExternalObjectRequest.h>
+#include <BasicParamInfoRequest.h>
 #include <ExecuteCommand.h>
+#include <AddLanguage.h>
 #include <ListLanguages.h>
 #include <LanguagePackRequest.h>
 
@@ -109,8 +111,10 @@ void CatenaServiceImpl::init() {
     new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
+    new BasicParamInfoRequest(this, dm_, true);
     new GetParam(this, dm_, true);
     new ExecuteCommand(this, dm_, true);
+    new AddLanguage(this, dm_, true);
     new ListLanguages(this, dm_, true);
     new LanguagePackRequest(this, dm_, true);
 }
@@ -162,6 +166,12 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
         // there won't be any scopes if authorization is disabled
         return {};
     }
+
+    // We can use this to test authz while getScopes() does not work.
+    // --------------------------------- TEST ---------------------------------
+    // std::vector<std::string> testScopes = {"monitor", "administer:w"};
+    // return testScopes;
+    // --------------------------------- TEST ---------------------------------
 
     //If authorization is enabled, get the authorization context
     auto authContext = context.auth_context();
