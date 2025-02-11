@@ -154,9 +154,6 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:a9819af598c0adf088c53486b3496fa78" id="r_a9819af598c0adf088c53486b3496fa78"><td class="memItemLeft" align="right" valign="top"><a id="a9819af598c0adf088c53486b3496fa78" name="a9819af598c0adf088c53486b3496fa78"></a>
 const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getDefaultScope</b> () const</td></tr>
 <tr class="separator:a9819af598c0adf088c53486b3496fa78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11f14044bef4e2ea30c5808baba6e1b7" id="r_a11f14044bef4e2ea30c5808baba6e1b7"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a11f14044bef4e2ea30c5808baba6e1b7">default_max_length</a> ()</td></tr>
-<tr class="memdesc:a11f14044bef4e2ea30c5808baba6e1b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_max_length_ to 1024 or the cmd line flag if defined. Returns the default_max_length_ afterwards.  <br /></td></tr>
-<tr class="separator:a11f14044bef4e2ea30c5808baba6e1b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8768802e0083f71ed71e7bc20997f0d3" id="r_a8768802e0083f71ed71e7bc20997f0d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8768802e0083f71ed71e7bc20997f0d3">toProto</a> (::catena::Device &amp;dst, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=true) const</td></tr>
 <tr class="memdesc:a8768802e0083f71ed71e7bc20997f0d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
 <tr class="separator:a8768802e0083f71ed71e7bc20997f0d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -192,9 +189,9 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ge
 <tr class="memitem:aa466b51717cbb177efca567264be36c2" id="r_aa466b51717cbb177efca567264be36c2"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa466b51717cbb177efca567264be36c2">getCommand</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
 <tr class="memdesc:aa466b51717cbb177efca567264be36c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a command by oid  <br /></td></tr>
 <tr class="separator:aa466b51717cbb177efca567264be36c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaaae02cf401f535f9f5eb67d1e47b015" id="r_aaaae02cf401f535f9f5eb67d1e47b015"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aaaae02cf401f535f9f5eb67d1e47b015">setValueTry</a> (const std::string &amp;jptr, catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
-<tr class="memdesc:aaaae02cf401f535f9f5eb67d1e47b015"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines if it's possible to set the specified value given the current authorization.  <br /></td></tr>
-<tr class="separator:aaaae02cf401f535f9f5eb67d1e47b015"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51344fdef3f93886c34fd85aa5ac54de" id="r_a51344fdef3f93886c34fd85aa5ac54de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a51344fdef3f93886c34fd85aa5ac54de">setValueTry</a> (const std::string &amp;jptr, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
+<tr class="memdesc:a51344fdef3f93886c34fd85aa5ac54de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines if it's possible to set the specified value given the current authorization.  <br /></td></tr>
+<tr class="separator:a51344fdef3f93886c34fd85aa5ac54de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab74fd94275de7ec9676e9c7b28fbbed9" id="r_ab74fd94275de7ec9676e9c7b28fbbed9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ab74fd94275de7ec9676e9c7b28fbbed9">setValue</a> (const std::string &amp;jptr, catena::Value &amp;src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
 <tr class="memdesc:ab74fd94275de7ec9676e9c7b28fbbed9"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize a protobuf value object into the parameter value pointed to by jptr.  <br /></td></tr>
 <tr class="separator:ab74fd94275de7ec9676e9c7b28fbbed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -319,26 +316,6 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is for the AddLanguage RPCs / API calls to be serviced by this method. </dd></dl>
-
-</div>
-</div>
-<a id="a11f14044bef4e2ea30c5808baba6e1b7" name="a11f14044bef4e2ea30c5808baba6e1b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11f14044bef4e2ea30c5808baba6e1b7">&#9670;&#160;</a></span>default_max_length()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint32_t catena::common::Device::default_max_length </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Sets the default_max_length_ to 1024 or the cmd line flag if defined. Returns the default_max_length_ afterwards. </p>
-<dl class="section return"><dt>Returns</dt><dd>The default max length for this device's array params. </dd></dl>
 
 </div>
 </div>
@@ -745,8 +722,8 @@ template&lt;typename TAG &gt; </div>
 
 </div>
 </div>
-<a id="aaaae02cf401f535f9f5eb67d1e47b015" name="aaaae02cf401f535f9f5eb67d1e47b015"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaaae02cf401f535f9f5eb67d1e47b015">&#9670;&#160;</a></span>setValueTry()</h2>
+<a id="a51344fdef3f93886c34fd85aa5ac54de" name="a51344fdef3f93886c34fd85aa5ac54de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51344fdef3f93886c34fd85aa5ac54de">&#9670;&#160;</a></span>setValueTry()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -756,12 +733,6 @@ template&lt;typename TAG &gt; </div>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>jptr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">catena::Value &amp;&#160;</td>
-          <td class="paramname"><em>value</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
