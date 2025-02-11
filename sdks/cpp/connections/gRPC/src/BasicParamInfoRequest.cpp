@@ -96,8 +96,10 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                      
                     if (service->authorizationEnabled()) {
                         Device::LockGuard lg(dm_);
+
+                        /** TODO: This copy needs to be done in the constructor of Authorizer */
                         std::vector<std::string> scopes = std::move(service->getScopes(context_));
-                        //TODO: This copy^ needs to be done in the constructor of Authorizer
+
                         authz = catena::common::Authorizer{scopes};
                         top_level_params = dm_.getTopLevelParams(rc, authz);
                     } else {
@@ -119,18 +121,62 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         status_ = CallStatus::kWrite;
                         writer_.Write(responses_[current_response_], this);
                     }
+
+
+                    //Get a parameter based on the given path
+                } else if (!req_.oid_prefix().empty()) { 
+                    if (service->authorizationEnabled()) {
+                        Device::LockGuard lg(dm_);
+
+                        /** TODO: This copy needs to be done in the constructor of Authorizer */
+                        std::vector<std::string> scopes = std::move(service->getScopes(context_));
+
+                        authz = catena::common::Authorizer{scopes};
+                        param = dm_.getParam(req_.oid_prefix(), rc, authz);
+                    } else {
+                        Device::LockGuard lg(dm_);
+                        param = dm_.getParam(req_.oid_prefix(), rc);
+                        std::cout << "current path: " << req_.oid_prefix() << std::endl;
+                    }
+
+                    max_index_ = 0;
+ 
+                    if (rc.status == catena::StatusCode::OK && param) {
+                        // Calculate array length if this is a struct array
+                        if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                            max_index_ = calculateArrayLength(req_.oid_prefix());
+                        }
+
+                        // Add main response
+                        responses_.emplace_back();
+                        if (service->authorizationEnabled()) {
+                            param->toProto(responses_.back(), authz);
+                        } else {
+                            param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                        }
+
+                        // Update array length if needed
+                        if (max_index_ > 0) {
+                            updateArrayLengths(responses_.back().info().oid(), max_index_);
+                        }
+
+                        /** TODO: ADD RECURSIVE CALL HERE*/
+
+                        // Start writing responses
+                        status_ = CallStatus::kWrite;
+                        writer_.Write(responses_[current_response_], this);     
+
+                    } else {
+                        throw catena::exception_with_status(rc.what(), rc.status);
+                    }
+                
                 }
+
             } catch (const catena::exception_with_status& e) {
                 status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
                     "Failed to process request: " + std::string(e.what()) + 
                     " (Status: " + std::to_string(static_cast<int>(e.status)) + ")");
-                writer_.Finish(errorStatus, this);
-                break;
-            } catch (const std::exception& e) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
-                    "Unexpected error: " + std::string(e.what()));
                 writer_.Finish(errorStatus, this);
                 break;
             } catch (...) {
@@ -150,15 +196,35 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 break;
             }
 
-            if (current_response_ < responses_.size() - 1) {
+            try {
                 Device::LockGuard lg(dm_);
+                // First, check for if responses exist
+                if (current_response_ >= responses_.size() || responses_.empty()) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, "No more responses"), this);
+                    break;
+                }
+
+                // Then validate the current response
+                if (!responses_[current_response_].has_info()) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, "Invalid response"), this);
+                    break;
+                }
+
+                // If this isn't the last response, write and continue
+                if (current_response_ < responses_.size() - 1) {
+                    writer_.Write(responses_[current_response_++], this);
+                } else {
+                    std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
+                    status_ = CallStatus::kFinish; 
+                    writer_.Finish(Status::OK, this);
+                }
+            } catch (const std::exception& e) {
                 status_ = CallStatus::kFinish;
-                writer_.Write(responses_[++current_response_], this);
-            } else {
-                Device::LockGuard lg(dm_);
-                std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
-                status_ = CallStatus::kFinish; 
-                writer_.Finish(Status::OK, this);
+                writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, 
+                    "Error writing response: " + std::string(e.what())), this);
+                break;
             }
             break;
             
@@ -173,5 +239,39 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+    }
+}
+
+
+/** Finds how many array elements exist at a path
+ *  e.g., if we have /device/0, /device/1, /device/2,
+ *  returns 3
+ */
+uint32_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std::string& base_path) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    uint32_t length = 0;
+    
+    // Keep checking indices until we find one that doesn't exist
+    for (uint32_t i = 0; ; i++) {
+        Path path{base_path, i};
+        auto param = dm_.getParam(path.toString(), rc);
+        if (!param) break;
+        length = i + 1;
+    }
+    
+    return length;
+}
+
+
+/** Updates the array_length field in the protobuf responses
+ * for all responses that contain array_name in their OID
+ */
+void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
+    if (length > 0) {
+        for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
+            if (it->info().oid().find(array_name) != std::string::npos) {
+                it->set_array_length(length);
+            }
+        }
     }
 }
