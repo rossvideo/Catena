@@ -70,7 +70,7 @@ catena::exception_with_status Device::setValueTry (const std::string& jptr, cate
                 ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
             }
             else if (!param->validateSize(value)) {
-                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
+                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
             }
         }
         return ans;

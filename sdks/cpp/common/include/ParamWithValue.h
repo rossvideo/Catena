@@ -217,17 +217,19 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
+        catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        if (!authz.writeAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
-		}
-        if (!validateSize(value)) {
-            return catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::INVALID_ARGUMENT);
+        else if (!authz.writeAuthz(*this)) {
+            ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
         }
-        catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-        return catena::exception_with_status("", catena::StatusCode::OK);
+        else if (!validateSize(value)) {
+            ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
+        } else {
+            catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
+        }
+        return ans;
     }
 
     /**
