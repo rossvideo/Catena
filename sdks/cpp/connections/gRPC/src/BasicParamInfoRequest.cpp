@@ -145,7 +145,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         // Calculate array length if this is a struct array
                         if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
                             max_index_ = calculateArrayLength(req_.oid_prefix());
-                        }
+                        }       
 
                         // Add main response
                         responses_.emplace_back();
@@ -158,9 +158,13 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         // Update array length if needed
                         if (max_index_ > 0) {
                             updateArrayLengths(responses_.back().info().oid(), max_index_);
-                        }
+                        }   
 
                         /** TODO: ADD RECURSIVE CALL HERE*/
+                        if (req_.recursive()) {
+                            getChildren(param.get(), responses_.back().info().oid(), authz);
+                        }
+
 
                         // Start writing responses
                         status_ = CallStatus::kWrite;
@@ -274,4 +278,42 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
             }
         }
     }
+}
+
+void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
+    const auto& descriptor = current_param->getDescriptor();
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+
+    
+
+    for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+        if (child_name.empty() || child_name[0] == '/') continue;
+        
+        std::string child_path = (current_path[0] == '/' ? current_path : "/" + current_path);
+        auto child_type = child_desc->type();
+        
+        // Calculate array length once for both array and non-array types
+        max_index_ = calculateArrayLength(child_path);
+        
+        // Process each index
+        for (size_t i = 0; i < max_index_; i++) {
+            std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
+            auto param = dm_.getParam(indexed_path, rc);
+            if (!param) continue;
+            
+            responses_.emplace_back();
+            if (service_->authorizationEnabled()) {
+                param->toProto(responses_.back(), authz);
+            } else {
+                param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+            }
+            getChildren(param.get(), indexed_path, authz);
+        }
+        
+        if (max_index_ > 0) {
+            updateArrayLengths(child_name, max_index_);
+        }
+    }   
+
+            
 }

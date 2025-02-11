@@ -91,6 +91,15 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         void updateArrayLengths(const std::string& array_name, size_t length);
 
+
+        /**
+         * @brief Gets the children of the parameter.
+         * 
+         * @param param - The parameter to get the children from.
+         * @param oid - The oid of the parameter.
+         */
+       void getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz);
+
         /**
          * @brief Parent CatenaServiceImpl.
          */
