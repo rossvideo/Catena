@@ -251,12 +251,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
  *  e.g., if we have /device/0, /device/1, /device/2,
  *  returns 3
  */
-size_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std::string& base_path) {
+uint32_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std::string& base_path) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
-    size_t length = 0;
+    uint32_t length = 0;
     
     // Keep checking indices until we find one that doesn't exist
-    for (size_t i = 0; ; i++) {
+    for (uint32_t i = 0; ; i++) {
         Path path{base_path, i};
         auto param = dm_.getParam(path.toString(), rc);
         if (!param) break;
@@ -270,7 +270,7 @@ size_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std:
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID
  */
-void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, size_t length) {
+void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             if (it->info().oid().find(array_name) != std::string::npos) {
