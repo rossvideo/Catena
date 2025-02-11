@@ -74,6 +74,23 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
 
     private:
 
+
+        /**
+         * @brief Calculates the length of the array.
+         * 
+         * @param base_path - The base path of the array.
+         * @return The length of the array.
+         */
+        uint32_t calculateArrayLength(const std::string& base_path);
+
+        /**
+         * @brief Updates the array lengths of the responses.
+         * 
+         * @param array_name - The name of the array.
+         * @param length - The length of the array.
+         */
+        void updateArrayLengths(const std::string& array_name, uint32_t length);
+
         /**
          * @brief Parent CatenaServiceImpl.
          */
@@ -134,5 +151,10 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief The current response index.
          */
-        size_t current_response_{0};
+        uint32_t current_response_{0};
+
+        /**
+         * @brief The maximum index of the parameter.
+         */
+        uint32_t max_index_{0};
 };
