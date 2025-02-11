@@ -154,9 +154,11 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:a9819af598c0adf088c53486b3496fa78" id="r_a9819af598c0adf088c53486b3496fa78"><td class="memItemLeft" align="right" valign="top"><a id="a9819af598c0adf088c53486b3496fa78" name="a9819af598c0adf088c53486b3496fa78"></a>
 const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getDefaultScope</b> () const</td></tr>
 <tr class="separator:a9819af598c0adf088c53486b3496fa78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11f14044bef4e2ea30c5808baba6e1b7" id="r_a11f14044bef4e2ea30c5808baba6e1b7"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a11f14044bef4e2ea30c5808baba6e1b7">default_max_length</a> ()</td></tr>
-<tr class="memdesc:a11f14044bef4e2ea30c5808baba6e1b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_max_length_ to 1024 or the cmd line flag if defined. Returns the default_max_length_ afterwards.  <br /></td></tr>
-<tr class="separator:a11f14044bef4e2ea30c5808baba6e1b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa85ab6721433ef36ce655f89ba585e4f" id="r_aa85ab6721433ef36ce655f89ba585e4f"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa85ab6721433ef36ce655f89ba585e4f">default_max_length</a> () const</td></tr>
+<tr class="separator:aa85ab6721433ef36ce655f89ba585e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a322059e8a223311f6ccdef3230af50e2" id="r_a322059e8a223311f6ccdef3230af50e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a322059e8a223311f6ccdef3230af50e2">set_default_max_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#aa85ab6721433ef36ce655f89ba585e4f">default_max_length</a>)</td></tr>
+<tr class="memdesc:a322059e8a223311f6ccdef3230af50e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_max_length_ for this device's array params. If default_max_length &lt;= 0, then it reverts default_max_length_ to kDefaultMaxArrayLength.  <br /></td></tr>
+<tr class="separator:a322059e8a223311f6ccdef3230af50e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8768802e0083f71ed71e7bc20997f0d3" id="r_a8768802e0083f71ed71e7bc20997f0d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8768802e0083f71ed71e7bc20997f0d3">toProto</a> (::catena::Device &amp;dst, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=true) const</td></tr>
 <tr class="memdesc:a8768802e0083f71ed71e7bc20997f0d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
 <tr class="separator:a8768802e0083f71ed71e7bc20997f0d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -322,23 +324,34 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a11f14044bef4e2ea30c5808baba6e1b7" name="a11f14044bef4e2ea30c5808baba6e1b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11f14044bef4e2ea30c5808baba6e1b7">&#9670;&#160;</a></span>default_max_length()</h2>
+<a id="aa85ab6721433ef36ce655f89ba585e4f" name="aa85ab6721433ef36ce655f89ba585e4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa85ab6721433ef36ce655f89ba585e4f">&#9670;&#160;</a></span>default_max_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">uint32_t catena::common::Device::default_max_length </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
-
-<p>Sets the default_max_length_ to 1024 or the cmd line flag if defined. Returns the default_max_length_ afterwards. </p>
 <dl class="section return"><dt>Returns</dt><dd>The default max length for this device's array params. </dd></dl>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_aa85ab6721433ef36ce655f89ba585e4f_icgraph.svg" width="430" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
@@ -696,6 +709,47 @@ template&lt;typename TAG &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
+
+</div>
+</div>
+<a id="a322059e8a223311f6ccdef3230af50e2" name="a322059e8a223311f6ccdef3230af50e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a322059e8a223311f6ccdef3230af50e2">&#9670;&#160;</a></span>set_default_max_length()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::common::Device::set_default_max_length </td>
+          <td>(</td>
+          <td class="paramtype">const uint32_t&#160;</td>
+          <td class="paramname"><em>default_max_length</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sets the default_max_length_ for this device's array params. If default_max_length &lt;= 0, then it reverts default_max_length_ to kDefaultMaxArrayLength. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">default_max_length</td><td>The value to set default_max_length_ to. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#aa85ab6721433ef36ce655f89ba585e4f">default_max_length()</a>, and <a class="el" href="namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8">catena::common::kDefaultMaxArrayLength</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a322059e8a223311f6ccdef3230af50e2_cgraph.svg" width="430" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>

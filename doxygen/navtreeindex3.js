@@ -1,5 +1,8 @@
 var NAVTREEINDEX3 =
 {
+"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb":[8,0,0,4,0],
+"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a42ac065963ecd3a595bbe04eff7582e0":[8,0,0,4,4],
+"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a58e5d3cd8ce1ec9e3fd5b46c3ed166ac":[8,0,0,4,5],
 "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9":[8,0,0,4,2],
 "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64fd6888fcfd5d773add33e104f2c6f0":[8,0,0,4,9],
 "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f":[8,0,0,4,17],
@@ -13,6 +16,7 @@ var NAVTREEINDEX3 =
 "namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad":[8,0,0,6],
 "namespacecatena_1_1common.html":[8,0,0,0],
 "namespacecatena_1_1common.html#a028c90c48c39454968736c95d2c0ceb9":[8,0,0,0,33],
+"namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8":[8,0,0,0,36],
 "namespacecatena_1_1common.html#a2f37737db27ab4b01982ea3514500fb0":[8,0,0,0,31],
 "namespacecatena_1_1common.html#a50a9d30ba7a22910857f12f13ed809cc":[8,0,0,0,35],
 "namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8":[8,0,0,0,30],
