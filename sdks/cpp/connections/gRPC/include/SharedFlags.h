@@ -82,6 +82,5 @@ extern absl::Flag<std::string> FLAGS_static_root;
 
 /**
  * @brief the default max length for array and string params, default is 1024.
- * Defined in Device.cpp.
  */
 extern absl::Flag<uint32_t> FLAGS_default_max_array_size;

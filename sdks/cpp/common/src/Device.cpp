@@ -44,13 +44,6 @@
 
 using namespace catena::common;
 
-/**
- * Flag used to set default_max_length_. Moved from SharedFlags as you run into
- * compilation issues otherwise.
- */
-#include "absl/flags/flag.h"
-ABSL_FLAG(uint32_t, default_max_array_size, 1024, "use this to define the default max length for array and string params.");
-
 uint32_t Device::default_max_length() {
     if (default_max_length_ <= 0) {
         default_max_length_ = absl::GetFlag(FLAGS_default_max_array_size);

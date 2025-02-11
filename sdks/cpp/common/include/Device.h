@@ -66,6 +66,9 @@
 #include <type_traits>
 #include <coroutine>
 
+#include "absl/flags/flag.h"
+#include <../../connections/gRPC/include/SharedFlags.h>
+
 namespace catena {
 namespace common {
 

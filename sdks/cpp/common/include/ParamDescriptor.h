@@ -127,7 +127,7 @@ class ParamDescriptor {
       catena::common::IConstraint* constraint,
       bool isCommand,
       Device& dm,
-      const int max_length,
+      uint32_t max_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
         template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
@@ -296,7 +296,7 @@ class ParamDescriptor {
     std::unordered_map<std::string, ParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
-    int max_length_;
+    uint32_t max_length_;
     
     std::string oid_;
     std::string template_oid_;
