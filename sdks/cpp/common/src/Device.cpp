@@ -45,11 +45,7 @@
 using namespace catena::common;
 
 uint32_t Device::default_max_length() {
-    if (default_max_length_ <= 0) {
-        default_max_length_ = absl::GetFlag(FLAGS_default_max_array_size);
-        if (default_max_length_ <= 0) { default_max_length_ = 1024; }
-    }
-    return default_max_length_;
+    return kDefaultMaxArrayLength <= 0 ? 1024 : kDefaultMaxArrayLength;
 }
 
 catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {

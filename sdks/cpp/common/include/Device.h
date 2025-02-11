@@ -66,11 +66,10 @@
 #include <type_traits>
 #include <coroutine>
 
-#include "absl/flags/flag.h"
-#include <../../connections/gRPC/include/SharedFlags.h>
-
 namespace catena {
 namespace common {
+
+constexpr uint32_t kDefaultMaxArrayLength{1024};
 
 /**
  * @brief Implements the Device interface defined in the protobuf
