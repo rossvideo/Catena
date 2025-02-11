@@ -31,8 +31,6 @@ target_sources(${target}
 
 target_link_libraries(${target}
     ${common_lib}
-    catena_connections_grpc
-    absl::flags_parse
 )
 
 target_compile_features(${target} PUBLIC cxx_std_20)
