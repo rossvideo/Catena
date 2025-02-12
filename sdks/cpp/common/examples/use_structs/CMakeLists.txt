@@ -38,7 +38,9 @@ target_sources(${TARGET}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
 )
 
-target_link_libraries(${TARGET} ${common_lib})
+target_link_libraries(${TARGET}
+    ${common_lib}
+)
 
 target_compile_features(${TARGET}
     PUBLIC
