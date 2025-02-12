@@ -167,6 +167,13 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         uint32_t max_index_{0};
 
+        /**
+         * @brief The mutex for the writer lock.
+         */
         std::mutex mtx_;
+
+        /**
+         * @brief The writer lock.
+         */
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 };
