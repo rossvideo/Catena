@@ -44,6 +44,7 @@
 
 using namespace catena::common;
 
+
 catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
