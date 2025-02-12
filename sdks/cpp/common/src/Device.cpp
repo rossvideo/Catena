@@ -44,15 +44,19 @@
 
 using namespace catena::common;
 
-catena::exception_with_status Device::setValueTry (const std::string& jptr, Authorizer& authz) {
+
+catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
         if (param != nullptr) {
             if (!authz.readAuthz(*param)) {
-                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             }
-            if (!authz.writeAuthz(*param)) {
-                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            else if (!authz.writeAuthz(*param)) {
+                ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            }
+            else if (!param->validateSize(value)) {
+                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
             }
         }
         return ans;
@@ -80,6 +84,44 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
     return ans;
 }
 
+catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    auto foundPack = language_packs_.find(languageId);
+    // ERROR: Did not find the pack.
+    if (foundPack == language_packs_.end()) {
+        return catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+    }
+    // Setting the code and transfering language pack info.
+    pack.set_language(languageId);
+    auto languagePack = pack.mutable_language_pack();
+    foundPack->second->toProto(*languagePack);
+    // Returning an OK status.
+    return catena::exception_with_status("", catena::StatusCode::OK);
+}
+
+catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    // Admin scope required.
+    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
+        return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
+    } else {
+        auto& name = language.language_pack().name();
+        auto& id = language.id();
+        // Making sure LanguagePack is properly formatted.
+        if (name.empty() || id.empty()) {
+            return catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
+        }
+        // added_packs_ here to maintain ownership in device scope.
+        added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
+        language_packs_[id]->fromProto(language.language_pack());      
+        // Pushing update to connect gRPC.
+        ComponentLanguagePack pack;
+        ans = getLanguagePack(id, pack);
+        languageAddedPushUpdate.emit(pack);
+    }
+    return ans;
+}
+
 std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {
@@ -96,8 +138,13 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
              */
             IParam* param = getItem<common::ParamTag>(path.front_as_string());
             path.pop();
-            if (!param || !authz.readAuthz(*param)) {
-                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT); 
+            if (!param) {
+                status = catena::exception_with_status("Param does not exist", catena::StatusCode::NOT_FOUND);
+                return nullptr;
+            }
+            
+            if (!authz.readAuthz(*param)) {
+                status = catena::exception_with_status("Permission denied", catena::StatusCode::PERMISSION_DENIED);
                 return nullptr;
             }
             if (path.empty()) {
@@ -122,6 +169,36 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
         return nullptr;
     }
 }
+
+
+std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
+    std::vector<std::unique_ptr<IParam>> result;
+    try {
+        for (const auto& [name, param] : params_) {
+            if (authz.readAuthz(*param)) { 
+                Path path{name};
+                std::cout << "Checking path: '" << path.toString(true) << "'" << std::endl;
+                auto param_ptr = getParam(path.toString(true), status, authz);  
+                if (param_ptr) {
+                    std::cout << "Successfully got param: '" << path.toString(true) << "'" << std::endl;
+                    result.push_back(std::move(param_ptr));
+                } else {
+                    std::cout << "Failed to get param: " << status.what() << std::endl;
+                }
+            }
+        }
+    } catch (const catena::exception_with_status& why) {
+        status = catena::exception_with_status(why.what(), why.status);
+    }
+    return result;
+}
+
+
+
+
+
+
+
 
 std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.

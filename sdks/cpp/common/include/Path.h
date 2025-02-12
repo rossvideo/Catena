@@ -14,7 +14,7 @@
 
  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -37,6 +37,7 @@
 
 namespace catena {
 namespace common {
+
 /**
  * @brief Converts json pointers to items within the data model to
  * a path of "segments" that can be iterated over.
@@ -97,6 +98,12 @@ class Path {
     explicit Path(const char* literal);
 
     /**
+     * @brief Construct a Path from initializer list
+     * @param args List of arguments that are either Index or string types
+     */
+    explicit Path(std::initializer_list<Segment> args) : segments_{args}, frontIdx_{0} {};
+
+    /**
      * @brief return the number of segments in the Path
      *
      * @return number of segments
@@ -143,11 +150,12 @@ class Path {
 
     /**
      * @brief return a string representation of the Path
+     * @param leading_slash if true, include leading '/' in output (defaults to false)
      * @return std::string the path as a string
      * 
-     * any popped segments are not included in the  returned string.
+     * any popped segments are not included in the returned string.
      */
-    std::string toString() const;
+    std::string toString(bool leading_slash = false) const;
 
     /**
      * @brief return a fully qualified, albeit escaped oid
@@ -179,10 +187,32 @@ class Path {
      */
     inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 
+    /**
+     * @brief Add a new string segment to the path
+     * @param segment String to add as a new segment
+     */
+    void push_back(const std::string& segment) {
+        if (segment == "-") {
+            segments_.emplace_back(std::in_place_type<Index>, kEnd);
+        } else {
+            std::string str = segment;
+            escape(str);
+            segments_.emplace_back(std::in_place_type<std::string>, str);
+        }
+    }
+
+    /**
+     * @brief Add a new index segment to the path
+     * @param idx Index to add as a new segment
+     */
+    void push_back(Index idx) {
+        segments_.emplace_back(std::in_place_type<Index>, idx);
+    }
+
   private:
     using Segments = std::vector<Segment>;
-    Segments segments_; /**< the path split into its components */
-    std::size_t frontIdx_; /**< index of current front of path */
+    Segments segments_{}; /**< the path split into its components */
+    std::size_t frontIdx_{0}; /**< index of current front of path */
 
     /**
      * @brief replace / and ~ characters with ~1 & ~0

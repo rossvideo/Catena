@@ -31,12 +31,11 @@
  */
 
 /**
- * @file Connect.h
- * @brief Implements Catena gRPC Connect
+ * @file GetParam.h
+ * @brief Implements Catena gRPC GetParam
  * @author john.naylor@rossvideo.com
- * @author john.danen@rossvideo.com
- * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
+ * @author zuhayr.sarker@rossvideo.com
+ * @date 2025-02-06
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -44,21 +43,27 @@
 #include <ServiceImpl.h>
 
 /**
-* @brief CallData class for the Connect RPC
+* @brief CallData class for the BasicParamInfoRequest RPC
 */
-class CatenaServiceImpl::Connect : public CallData {
+class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the Connect gRPC.
-         * Calls proceed() once initialized.
+         * @brief Constructor for the CallData class of the BasicParamInfoRequest
+         * gRPC. Calls proceed() once initialized.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to connect to.
+         * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
+        BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+
+        // /**
+        //  * @brief Destructor for the BasicParamInfoRequest class.
+        //  */
+        // ~BasicParamInfoRequest();
+
         /**
-         * @brief Manages the steps of the Connect gRPC command
+         * @brief Manages the steps of the BasicParamInfoRequest gRPC command
          * through the state variable status. Returns the value of the
          * parameter specified by the user.
          *
@@ -68,84 +73,88 @@ class CatenaServiceImpl::Connect : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+
+
+        /**
+         * @brief Calculates the length of the array.
+         * 
+         * @param base_path - The base path of the array.
+         * @return The length of the array.
+         */
+        uint32_t calculateArrayLength(const std::string& base_path);
+
+        /**
+         * @brief Updates the array lengths of the responses.
+         * 
+         * @param array_name - The name of the array.
+         * @param length - The length of the array.
+         */
+        void updateArrayLengths(const std::string& array_name, uint32_t length);
+
         /**
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
+
         /**
          * @brief The context of the gRPC command (ServerContext) for use in 
-         * _writer and other gRPC objects/functions.
+         * _responder and other gRPC objects/functions.
          */
         ServerContext context_;
+
         /**
-         * @brief Server request (Info on connection).
+         * @brief The client's scopes.
          */
-        catena::ConnectPayload req_;
+        std::vector<std::string> clientScopes_;
+
         /**
-         * @brief Server response (updates).
+         * @brief The request payload.
+         */
+        catena::BasicParamInfoRequestPayload req_;
+
+        /**
+         * @brief The response payload.
          */
         catena::PushUpdates res_;
+
         /**
-         * @brief gRPC async writer to write updates.
+         * @brief gRPC async response writer.
          */
-        ServerAsyncWriter<catena::PushUpdates> writer_;
+        ServerAsyncWriter<catena::BasicParamInfoResponse> writer_;
+        
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
+
         /**
-         * @brief The device to connect to.
+         * @brief The device to get the value from.
          */
         Device &dm_;
+        
         /**
-         * @brief The mutex to for locking the object while writing
-         */
-        std::mutex mtx_;
-        /**
-         * @brief Condition variable to notify the object when the value has
-         * been updated
-         */
-        std::condition_variable cv_;
-        /**
-         * @brief Flag to check if the value has been updated
-         */
-        bool hasUpdate_{false};
-        /**
-         * @brief ID of the Connect object
+         * @brief The object's unique id.
          */
         int objectId_;
-        /**
-         * @brief The total # of Connect objects.
-         */
-        static int objectCounter_;
-        /**
-         * @brief Unused???
-         */
-        unsigned int pushUpdatesId_;
-        /**
-         * @brief Id of operation waiting for valueSetByClient to be emitted.
-         * Used when ending the connection.
-         */
-        unsigned int valueSetByClientId_;
-        /**
-         * @brief Id of operation waiting for valueSetByServer to be emitted.
-         * Used when ending the connection.
-         */
-        unsigned int valueSetByServerId_;
-        /**
 
-         * @brief Id of operation waiting for languageAddedPushUpdate to be
-         * emitted. Used when ending the connection.
-         */
-        unsigned int languageAddedId_;
-  
         /**
-         * @brief Signal emitted in the case of an error which requires the all
-         * open connections to be shut down.
+         * @brief The object's unique id counter.
          */
-        static vdk::signal<void()> shutdownSignal_;
+        static int objectCounter_;  
+
+
         /**
-         * @brief ID of the shutdown signal for the Connect object
-        */
-        unsigned int shutdownSignalId_;
+         * @brief The vector of BasicParamInfoResponse objects.
+         */
+        std::vector<catena::BasicParamInfoResponse> responses_;
+
+        /**
+         * @brief The current response index.
+         */
+        uint32_t current_response_{0};
+
+        /**
+         * @brief The maximum index of the parameter.
+         */
+        uint32_t max_index_{0};
 };

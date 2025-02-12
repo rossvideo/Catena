@@ -31,12 +31,10 @@
  */
 
 /**
- * @file Connect.h
- * @brief Implements Catena gRPC Connect
- * @author john.naylor@rossvideo.com
- * @author john.danen@rossvideo.com
- * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
+ * @file ListLanguages.h
+ * @brief Implements Catena gRPC ListLanguages
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2025-01-29
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -44,29 +42,27 @@
 #include <ServiceImpl.h>
 
 /**
-* @brief CallData class for the Connect RPC
+* @brief CallData class for the ListLanguages RPC
 */
-class CatenaServiceImpl::Connect : public CallData {
+class CatenaServiceImpl::ListLanguages : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the Connect gRPC.
+         * @brief Constructor for the CallData class of the ListLanguages gRPC.
          * Calls proceed() once initialized.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to connect to.
+         * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
+        ListLanguages(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Manages the steps of the Connect gRPC command
-         * through the state variable status. Returns the value of the
-         * parameter specified by the user.
+         * @brief Manages the steps of the ListLanguages gRPC command through
+         * the state variable status.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
          * @param ok - Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
-
     private:
         /**
          * @brief Parent CatenaServiceImpl.
@@ -74,78 +70,31 @@ class CatenaServiceImpl::Connect : public CallData {
         CatenaServiceImpl *service_;
         /**
          * @brief The context of the gRPC command (ServerContext) for use in 
-         * _writer and other gRPC objects/functions.
+         * _responder and other gRPC objects/functions.
          */
         ServerContext context_;
         /**
-         * @brief Server request (Info on connection).
+         * @brief Server request (the device's slot).
          */
-        catena::ConnectPayload req_;
+        catena::Slot req_;
         /**
-         * @brief Server response (updates).
+         * @brief gRPC async response writer.
          */
-        catena::PushUpdates res_;
-        /**
-         * @brief gRPC async writer to write updates.
-         */
-        ServerAsyncWriter<catena::PushUpdates> writer_;
+        grpc::ServerAsyncResponseWriter<::catena::LanguageList> responder_;
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
         /**
-         * @brief The device to connect to.
+         * @brief The device containing the languages to list.
          */
         Device &dm_;
         /**
-         * @brief The mutex to for locking the object while writing
-         */
-        std::mutex mtx_;
-        /**
-         * @brief Condition variable to notify the object when the value has
-         * been updated
-         */
-        std::condition_variable cv_;
-        /**
-         * @brief Flag to check if the value has been updated
-         */
-        bool hasUpdate_{false};
-        /**
-         * @brief ID of the Connect object
+         * @brief The object's unique id.
          */
         int objectId_;
         /**
-         * @brief The total # of Connect objects.
+         * @brief The total # of ListLanguages objects.
          */
         static int objectCounter_;
-        /**
-         * @brief Unused???
-         */
-        unsigned int pushUpdatesId_;
-        /**
-         * @brief Id of operation waiting for valueSetByClient to be emitted.
-         * Used when ending the connection.
-         */
-        unsigned int valueSetByClientId_;
-        /**
-         * @brief Id of operation waiting for valueSetByServer to be emitted.
-         * Used when ending the connection.
-         */
-        unsigned int valueSetByServerId_;
-        /**
-
-         * @brief Id of operation waiting for languageAddedPushUpdate to be
-         * emitted. Used when ending the connection.
-         */
-        unsigned int languageAddedId_;
-  
-        /**
-         * @brief Signal emitted in the case of an error which requires the all
-         * open connections to be shut down.
-         */
-        static vdk::signal<void()> shutdownSignal_;
-        /**
-         * @brief ID of the shutdown signal for the Connect object
-        */
-        unsigned int shutdownSignalId_;
 };

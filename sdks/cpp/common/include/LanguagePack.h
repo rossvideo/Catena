@@ -98,7 +98,7 @@ class LanguagePack : public common::ILanguagePack {
      * @param list the list of key/word pairs
      * @param dev the device model to which this language pack belongs
      */
-    LanguagePack(const std::string& name, ListInitializer list, Device& dev);
+    LanguagePack(const std::string& languageCode, const std::string& name, ListInitializer list, Device& dev);
 
     /**
      * @brief deserialize a language pack from a protobuf message

@@ -137,7 +137,9 @@ void statusUpdateExample(){
 
         // this is the "receiving end" of the status update example
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            handlers[oid](oid, p, idx);
+            if (handlers.find(oid) != handlers.end()) {
+                handlers[oid](oid, p, idx);
+            }
         });
 
         catena::exception_with_status err{"", catena::StatusCode::OK};
@@ -189,6 +191,9 @@ void RunRPCServer(std::string addr)
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
         CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
+
+        // Updating device's default max array length.
+        dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
 
         builder.RegisterService(&service);
 
