@@ -134,6 +134,11 @@ class IParam {
     virtual void readOnly(bool flag) = 0;
 
     /**
+     * @brief Validates the size of a string or array value.
+     */
+    virtual bool validateSize(const catena::Value& value) const = 0;
+
+    /**
      * @brief get a child parameter by name
      */
     virtual std::unique_ptr<IParam> getParam(Path& oid, Authorizer& authz, catena::exception_with_status& status) = 0;

@@ -70,6 +70,11 @@ namespace catena {
 namespace common {
 
 /**
+ * @brief The default limit for param array accesses.
+ */
+constexpr uint32_t kDefaultMaxArrayLength{1024};
+
+/**
  * @brief Implements the Device interface defined in the protobuf
  */
 class Device {
@@ -104,7 +109,8 @@ class Device {
     Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
-      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
+      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
+	    subscriptions_{subscriptions}, default_max_length_{kDefaultMaxArrayLength} {}
 
     /**
      * @brief Destroy the Device object
@@ -136,6 +142,21 @@ class Device {
     inline DetailLevel_e detail_level() const { return detail_level_; }
 
     inline const std::string& getDefaultScope() const { return default_scope_; }
+
+    /**
+     * @return The default max length for this device's array params.
+     */
+    inline uint32_t default_max_length() const {return default_max_length_;}
+
+    /**
+     * @brief Sets the default_max_length_ for this device's array params.
+     * If default_max_length <= 0, then it reverts default_max_length_ to
+     * kDefaultMaxArrayLength.
+     * @param default_max_length The value to set default_max_length_ to.
+     */
+    void set_default_max_length(const uint32_t default_max_length) {
+      default_max_length_ = default_max_length > 0 ? default_max_length : kDefaultMaxArrayLength;
+    }
 
     /**
      * @brief Create a protobuf representation of the device.
@@ -404,7 +425,7 @@ class Device {
      * Intention is for MultiSetValue RPCs / API calls to be verified in their
      * entirely before setting any values.
      */
-    catena::exception_with_status setValueTry (const std::string& jptr, Authorizer& authz = Authorizer::kAuthzDisabled);
+    catena::exception_with_status setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled);
 
     /**
      * @brief sets the values of the device's parameters using a
@@ -470,7 +491,8 @@ class Device {
     std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-    
+    uint32_t default_max_length_ = 0;
+
     mutable std::mutex mutex_;
 };
 }  // namespace common

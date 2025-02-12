@@ -127,9 +127,10 @@ class ParamDescriptor {
       catena::common::IConstraint* constraint,
       bool isCommand,
       Device& dm,
+      uint32_t max_length,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, parent_{parent} {
+        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -183,6 +184,15 @@ class ParamDescriptor {
     const std::string& getScope() const;
 
     /**
+     * @brief Returns the max length of the array/string parameter. If max
+     * length is not set in the .JSON file, then the default value of 1024 is
+     * used. The default value can also be configured with the command line
+     * argument "--default_max_length=#".
+     * @returns max_length_
+     */
+    uint32_t max_length() const;
+
+    /**
      * @brief serialize param meta data in to protobuf message
      * @param param the protobuf message to serialize to
      * @param authz the authorization information
@@ -210,6 +220,7 @@ class ParamDescriptor {
      * @return the name in the specified language, or an empty string if the language is not found
      */
     const std::string& name(const std::string& language) const;
+
     /**
      * @brief add an item to one of the collections owned by the device
      * @tparam TAG identifies the collection to which the item will be added
@@ -285,6 +296,7 @@ class ParamDescriptor {
     std::unordered_map<std::string, ParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
+    uint32_t max_length_;
     
     std::string oid_;
     std::string template_oid_;

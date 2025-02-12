@@ -44,15 +44,18 @@
 
 using namespace catena::common;
 
-catena::exception_with_status Device::setValueTry (const std::string& jptr, Authorizer& authz) {
+catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
         if (param != nullptr) {
             if (!authz.readAuthz(*param)) {
-                return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             }
-            if (!authz.writeAuthz(*param)) {
-                return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            else if (!authz.writeAuthz(*param)) {
+                ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+            }
+            else if (!param->validateSize(value)) {
+                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
             }
         }
         return ans;
@@ -77,7 +80,11 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
             break;
         }
         else if (!authz.writeAuthz(*param)) {
-            ans = catena::exception_with_status("Not authorized to write to param" + oid, catena::StatusCode::PERMISSION_DENIED);
+            ans = catena::exception_with_status("Not authorized to write to param " + oid, catena::StatusCode::PERMISSION_DENIED);
+            break;
+        }
+        else if (!param->validateSize(setValuePayload.value())) {
+            ans = catena::exception_with_status("Value exceeds maximum length of " + oid, catena::StatusCode::OUT_OF_RANGE);
             break;
         }
     }
@@ -109,8 +116,7 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
     // If there were no issues then commit all set value requests.
     else {
         for (auto &[setValuePayload, param] : requests) {
-            ans = param->fromProto(setValuePayload->value(), authz);
-            valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
+            ans = param->fromProto(setValuePayload->value(), authz);            
         }
     }
     return ans;
@@ -216,8 +222,12 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
          * lifetime of the top level params does not need to be managed.
          */
         IParam* param = getItem<common::ParamTag>(path.front_as_string());
-        if (!param || !authz.readAuthz(*param)) {
-            status = catena::exception_with_status("Param " + path.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT); 
+        if (!param) {
+            status = catena::exception_with_status("Param " + path.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
+            return nullptr;
+        }
+        if (!authz.readAuthz(*param)) {
+            status = catena::exception_with_status("Not authorized to read the param " + path.fqoid(), catena::StatusCode::PERMISSION_DENIED); 
             return nullptr;
         }
         path.pop();
