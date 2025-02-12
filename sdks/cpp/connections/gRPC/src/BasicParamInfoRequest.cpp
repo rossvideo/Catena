@@ -58,7 +58,7 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImp
 }
 
 void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *service, bool ok) {
-    if (!service || status_ == CallStatus::kFinish) 
+    if (!service)
         return;
 
     std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "]: " << timeNow()
@@ -125,6 +125,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                     //Get a parameter based on the given path
                 } else if (!req_.oid_prefix().empty()) { 
+
                     if (service->authorizationEnabled()) {
                         Device::LockGuard lg(dm_);
 
@@ -155,25 +156,24 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                         }
 
-                        // Update array length if needed
                         if (max_index_ > 0) {
                             updateArrayLengths(responses_.back().info().oid(), max_index_);
                         }   
 
-                        /** TODO: ADD RECURSIVE CALL HERE*/
                         if (req_.recursive()) {
                             getChildren(param.get(), responses_.back().info().oid(), authz);
                         }
 
-
-                        // Start writing responses
+                        writer_lock_.lock();
                         status_ = CallStatus::kWrite;
-                        writer_.Write(responses_[current_response_], this);     
+                        writer_.Write(responses_[0], this); //Write the first response
+                        writer_lock_.unlock();
+
+                        break;
 
                     } else {
                         throw catena::exception_with_status(rc.what(), rc.status);
                     }
-                
                 }
 
             } catch (const catena::exception_with_status& e) {
@@ -192,16 +192,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             }
 
         case CallStatus::kWrite:
-            if (context_.IsCancelled()) {
-                Device::LockGuard lg(dm_);
-                std::cout << "[" << objectId_ << "] cancelled during write\n";
-                status_ = CallStatus::kFinish;
-                writer_.Finish(Status::CANCELLED, this);
-                break;
-            }
-
             try {
-                Device::LockGuard lg(dm_);
                 // First, check for if responses exist
                 if (current_response_ >= responses_.size() || responses_.empty()) {
                     status_ = CallStatus::kFinish;
@@ -216,23 +207,25 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     break;
                 }
 
-                // If this isn't the last response, write and continue
-                if (current_response_ < responses_.size() - 1) {
-                    writer_.Write(responses_[current_response_++], this);
-                } else {
-                    std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
-                    status_ = CallStatus::kFinish; 
-                    writer_.Finish(Status::OK, this);
-                }
+                if (current_response_ < responses_.size()) {
+                    writer_lock_.lock(); //Lock the writer for writing
+                    if (current_response_ >= responses_.size()-1) {
+                        status_ = CallStatus::kFinish; 
+                        writer_.Finish(Status::OK, this);
+                    } else {
+                        current_response_++;
+                        writer_.Write(responses_.at(current_response_), this);
+                    }
+                    writer_lock_.unlock();
+                    break;
+                }        
             } catch (const std::exception& e) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, 
-                    "Error writing response: " + std::string(e.what())), this);
+                "Error writing response: " + std::string(e.what())), this);
                 break;
             }
-            break;
             
-        //It does not go to kFinish, and I'm not sure why...
         case CallStatus::kFinish:
             std::cout << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
@@ -280,40 +273,46 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
     }
 }
 
+
+/** Recursively gets all children of a parameter */
 void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
     const auto& descriptor = current_param->getDescriptor();
     catena::exception_with_status rc{"", catena::StatusCode::OK};
 
-    
-
+    // Iterate through all sub-parameters of the current parameter
     for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+        // Skip invalid child names (empty or absolute paths)
         if (child_name.empty() || child_name[0] == '/') continue;
         
-        std::string child_path = (current_path[0] == '/' ? current_path : "/" + current_path);
-        auto child_type = child_desc->type();
+        // Create path object for the current child
+        Path child_path{current_path};
         
-        // Calculate array length once for both array and non-array types
-        max_index_ = calculateArrayLength(child_path);
+        // Calculate how many array elements exist at this path
+        max_index_ = calculateArrayLength(child_path.toString(true));
         
-        // Process each index
-        for (size_t i = 0; i < max_index_; i++) {
-            std::string indexed_path = child_path + "/" + std::to_string(i) + "/" + child_name;
-            auto param = dm_.getParam(indexed_path, rc);
-            if (!param) continue;
-            
+        // For each array index, get the parameter and its info
+        for (uint32_t i = 0; i < max_index_; i++) {
+            Path indexed_path{child_path.toString(), i, child_name};
+            auto param = dm_.getParam(indexed_path.toString(true), rc);
+            if (!param) continue;  // Skip if parameter doesn't exist
+
+
             responses_.emplace_back();
             if (service_->authorizationEnabled()) {
+                Device::LockGuard lg(dm_);
                 param->toProto(responses_.back(), authz);
             } else {
+                Device::LockGuard lg(dm_);
                 param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
             }
-            getChildren(param.get(), indexed_path, authz);
+
+            // Recursively get children of this parameter
+            getChildren(param.get(), indexed_path.toString(true), authz);
         }
         
+        // Update array length information in responses if this was an array
         if (max_index_ > 0) {
             updateArrayLengths(child_name, max_index_);
         }
-    }   
-
-            
+    }
 }
