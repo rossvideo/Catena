@@ -94,6 +94,14 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
             break;
 
         /**
+         * kRead: This state is not used in GetParam operation, transition to finish
+         */
+        case CallStatus::kRead:
+            status_ = CallStatus::kFinish;
+            writer_.Finish(Status::CANCELLED, this);
+            break;
+
+        /**
          * kProcess: Processes the request asyncronously, updating status to
          * kFinish and notifying the responder once finished.
          */
