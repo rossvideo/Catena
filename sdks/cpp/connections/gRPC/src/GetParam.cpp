@@ -166,5 +166,10 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
             std::cout << "GetParam[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }
