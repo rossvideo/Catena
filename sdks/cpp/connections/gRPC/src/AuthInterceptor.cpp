@@ -143,7 +143,6 @@ void AuthInterceptor::validateToken(const std::string& token, std::string* claim
 }
 
 void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* methods) {
-    bool hijack = false;
     /**
      * If there's a hook point the gRPC call is intercepted before the initial
      * metadata is sent. Authorization data is then found from that.
@@ -151,34 +150,33 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
     if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
         status = grpc::Status(grpc::StatusCode::OK, "");
 
-        auto* metadata = methods->GetRecvInitialMetadata(); 
+        auto* metadata = methods->GetRecvInitialMetadata();
 
         if (metadata == nullptr) {
             std::cout << "No metadata found" << std::endl;
-            status = grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "No metadata found");
-            return;
+            info_->server_context()->TryCancel();
+            // Idk what to do here.
         }
+
+        // Santizing metadata.
+        metadata->erase("claims");
+        metadata->erase("authenticated");
 
         auto authData = metadata->find("authorization");
         // Verfying authData exists and is using Bearer schema.
         if (authData == metadata->end() || !authData->second.starts_with("Bearer ")) {
-            std::cout << "Invalid token due to missing or invalid authorization header" << std::endl;
-            status = grpc::Status(grpc::StatusCode::UNAUTHENTICATED, "Invalid Token");
-            return;
+            //metadata->insert(std::make_pair("authenticated", "false"));
+            methods->Proceed();
         }
         // Getting token (after "bearer") and converting to std::string.
         auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
         std::string JWSToken = std::string(tokenSubStr.begin(), tokenSubStr.end());
 
         try {
+            throw std::runtime_error("Test error");
             // Validating token and extracting claims.
             std::string claims;
             validateToken(JWSToken, &claims);
-            // Sanitizing metadata.
-            metadata->erase("claims");
-            if (metadata->find("claims") != metadata->end()) {
-                throw std::runtime_error("Claims already exist in metadata");
-            }
             /**
              * For some reason you need to save both the string and sting_ref
              * in order for claims to not go out of scope.
@@ -186,22 +184,11 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
             sharedClaims = std::make_shared<std::string>(claims);
             sharedClaimsRef = std::make_shared<grpc::string_ref>(*sharedClaims);
             metadata->insert(std::make_pair("claims", *sharedClaimsRef));
+            metadata->insert(std::make_pair("authenticated", "true"));
         } catch (const std::exception& e) { // Currently enters THIS catch block.
-            std::cout << "Invalid token due to alternate exception: " << e.what() << std::endl;
-            status = grpc::Status(grpc::StatusCode::UNAUTHENTICATED, e.what());
-            info_->server_context()->TryCancel();
+            //metadata->insert(std::make_pair("authenticated", "false"));
         }
-
-        // Updating status and proceeding with gRPC.
-        //grpc::Status status(grpc::StatusCode::OK, "Valid token");
-        //methods->ModifySendStatus(status);
-
-    } else {
-        std::cout << "No interception hook point found" << std::endl;
     }
-    if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::PRE_SEND_STATUS)) {
-        methods->ModifySendStatus(status);
-    }
+    // Continuing with the RPC call.
     methods->Proceed();
-
 }

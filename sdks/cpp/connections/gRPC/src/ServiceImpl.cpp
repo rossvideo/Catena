@@ -163,14 +163,17 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
      * If authorization is enabled, get the authorization context as well as
      * the claims from the client_metadata.
      */
-    auto authContext = context.auth_context();
     auto contextMeta = &context.client_metadata();
-    auto testMeta = *contextMeta;   // TESTING VARIABLE
-
+    auto testMeta = *contextMeta;
 
     //If there is no authorization context, deny the request
-    if (authContext == nullptr || contextMeta == nullptr) {
+    if (contextMeta == nullptr) {
         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
+    }
+
+    bool authenticated = contextMeta->find("authenticated") != contextMeta->end();
+    if (!authenticated) {
+        throw catena::exception_with_status("Not authenticated", catena::StatusCode::UNAUTHENTICATED);
     }
 
     // Get the claims from the authorization context
