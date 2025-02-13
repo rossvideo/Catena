@@ -118,9 +118,9 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>Scopes</b> = std::ve
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a20b78aaeca6d492b463b8330dacfa115" id="r_a20b78aaeca6d492b463b8330dacfa115"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a20b78aaeca6d492b463b8330dacfa115">Authorizer</a> (const <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda">Scopes</a> &amp;clientScopes)</td></tr>
-<tr class="memdesc:a20b78aaeca6d492b463b8330dacfa115"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object.  <br /></td></tr>
-<tr class="separator:a20b78aaeca6d492b463b8330dacfa115"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fd051975022bab3a453e14dd65ba1ab" id="r_a9fd051975022bab3a453e14dd65ba1ab"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a9fd051975022bab3a453e14dd65ba1ab">Authorizer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda">Scopes</a> scopes)</td></tr>
+<tr class="memdesc:a9fd051975022bab3a453e14dd65ba1ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object.  <br /></td></tr>
+<tr class="separator:a9fd051975022bab3a453e14dd65ba1ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2267ed3de4f1a48fbef629a7fbb0c20e" id="r_a2267ed3de4f1a48fbef629a7fbb0c20e"><td class="memItemLeft" align="right" valign="top"><a id="a2267ed3de4f1a48fbef629a7fbb0c20e" name="a2267ed3de4f1a48fbef629a7fbb0c20e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Authorizer</b> (const <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;)=delete</td></tr>
 <tr class="memdesc:a2267ed3de4f1a48fbef629a7fbb0c20e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> does not have copy semantics. <br /></td></tr>
@@ -167,8 +167,8 @@ static <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer<
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for handling authorization information. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a20b78aaeca6d492b463b8330dacfa115" name="a20b78aaeca6d492b463b8330dacfa115"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a20b78aaeca6d492b463b8330dacfa115">&#9670;&#160;</a></span>Authorizer()</h2>
+<a id="a9fd051975022bab3a453e14dd65ba1ab" name="a9fd051975022bab3a453e14dd65ba1ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fd051975022bab3a453e14dd65ba1ab">&#9670;&#160;</a></span>Authorizer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -179,14 +179,14 @@ static <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer<
         <tr>
           <td class="memname">catena::common::Authorizer::Authorizer </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda">Scopes</a> &amp;&#160;</td>
-          <td class="paramname"><em>clientScopes</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html#ae9960a775fac6bc42d22559e2f764eda">Scopes</a>&#160;</td>
+          <td class="paramname"><em>scopes</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -194,8 +194,7 @@ static <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer<
 <p>Construct a new <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pd</td><td>the <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> of the object </td></tr>
-    <tr><td class="paramname">scope</td><td>the scope of the object </td></tr>
+    <tr><td class="paramname">scopes</td><td>Vector of authorization scopes </td></tr>
   </table>
   </dd>
 </dl>
