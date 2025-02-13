@@ -173,6 +173,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0f5bce117d7916d355140211602d55ea" id="r_a0f5bce117d7916d355140211602d55ea"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a0f5bce117d7916d355140211602d55ea">getParam</a> (Path &amp;oid, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
 <tr class="memdesc:a0f5bce117d7916d355140211602d55ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a0f5bce117d7916d355140211602d55ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a357881202bece2996171fae807517637" id="r_a357881202bece2996171fae807517637"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a357881202bece2996171fae807517637">size</a> () const =0</td></tr>
+<tr class="memdesc:a357881202bece2996171fae807517637"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the size of an array parameter.  <br /></td></tr>
+<tr class="separator:a357881202bece2996171fae807517637"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a388a8ad46ff5d3f9cf4a72bfe21601fc" id="r_a388a8ad46ff5d3f9cf4a72bfe21601fc"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a388a8ad46ff5d3f9cf4a72bfe21601fc">addBack</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
+<tr class="memdesc:a388a8ad46ff5d3f9cf4a72bfe21601fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an empty value to and return the back of an array parameter.  <br /></td></tr>
+<tr class="separator:a388a8ad46ff5d3f9cf4a72bfe21601fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a315b9adf74dd4313e51a4f5fe1aae998" id="r_a315b9adf74dd4313e51a4f5fe1aae998"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a315b9adf74dd4313e51a4f5fe1aae998">popBack</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz)=0</td></tr>
+<tr class="memdesc:a315b9adf74dd4313e51a4f5fe1aae998"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pop the back of an array parameter.  <br /></td></tr>
+<tr class="separator:a315b9adf74dd4313e51a4f5fe1aae998"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87f839385b3bba233c80b49444c2c8ac" id="r_a87f839385b3bba233c80b49444c2c8ac"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a87f839385b3bba233c80b49444c2c8ac">getConstraint</a> () const =0</td></tr>
 <tr class="memdesc:a87f839385b3bba233c80b49444c2c8ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid  <br /></td></tr>
 <tr class="separator:a87f839385b3bba233c80b49444c2c8ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,6 +202,46 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><p><a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> is the interface for business logic and connection logic to interact with parameters. </p>
 <p>This class creates an interface for accessing catena parameter without needing to know any type information about the parameter. This allows the connection logic to be decoupled from the generated device code. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a388a8ad46ff5d3f9cf4a72bfe21601fc" name="a388a8ad46ff5d3f9cf4a72bfe21601fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a388a8ad46ff5d3f9cf4a72bfe21601fc">&#9670;&#160;</a></span>addBack()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; catena::common::IParam::addBack </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
+          <td class="paramname"><em>status</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Add an empty value to and return the back of an array parameter. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aaa033a5c0584ec0f06b35dc2670b06d5">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
 <a id="ae2d92a97e18eaa411dee4658e5ca49ef" name="ae2d92a97e18eaa411dee4658e5ca49ef"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae2d92a97e18eaa411dee4658e5ca49ef">&#9670;&#160;</a></span>copy()</h2>
 
@@ -491,6 +540,36 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a315b9adf74dd4313e51a4f5fe1aae998" name="a315b9adf74dd4313e51a4f5fe1aae998"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a315b9adf74dd4313e51a4f5fe1aae998">&#9670;&#160;</a></span>popBack()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::IParam::popBack </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Pop the back of an array parameter. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a329a02e9137d4f9e9f9efccc1262a9de">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
 <a id="a634b9db470586152595e8b2b13baa432" name="a634b9db470586152595e8b2b13baa432"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a634b9db470586152595e8b2b13baa432">&#9670;&#160;</a></span>readOnly() <span class="overload">[1/2]</span></h2>
 
@@ -577,6 +656,35 @@ Public Member Functions</h2></td></tr>
 <p>set the oid of the param </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a0d2d5a3967daccff82a534aada04fd97">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a357881202bece2996171fae807517637" name="a357881202bece2996171fae807517637"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a357881202bece2996171fae807517637">&#9670;&#160;</a></span>size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual uint32_t catena::common::IParam::size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return the size of an array parameter. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
