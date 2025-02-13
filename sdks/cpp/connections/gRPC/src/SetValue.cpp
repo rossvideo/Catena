@@ -108,9 +108,10 @@ void CatenaServiceImpl::SetValue::proceed(CatenaServiceImpl *service, bool ok) {
                     status_ = CallStatus::kFinish;
                     responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
-            } catch (catena::exception_with_status &err) {
+            } catch (catena::exception_with_status &rc) {
                 status_ = CallStatus::kFinish;
-                responder_.Finish(::catena::Empty{}, err, this);
+                errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+                responder_.Finish(::catena::Empty{}, errorStatus_, this);
             } catch (...) { // Error, end process.
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;

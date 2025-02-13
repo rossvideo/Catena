@@ -66,7 +66,7 @@ class AuthInterceptor : public grpc::experimental::Interceptor {
          * @param token - The token to validate.
          * @return bool - True if the token is valid, false otherwise.
          */
-        void validateToken(const std::string& token, std::string* claims);
+        catena::exception_with_status validateToken(const std::string& token, std::string* claims);
         /**
          * @brief Information on the server. Valid claims are appended to its
          * associated ServerContext.
@@ -74,8 +74,6 @@ class AuthInterceptor : public grpc::experimental::Interceptor {
         grpc::experimental::ServerRpcInfo* info_;
         std::shared_ptr<std::string> sharedClaims;
         std::shared_ptr<grpc::string_ref> sharedClaimsRef;
-        grpc::Status status;
-
 };
 class AuthInterceptorFactory : public grpc::experimental::ServerInterceptorFactoryInterface {
     public:
