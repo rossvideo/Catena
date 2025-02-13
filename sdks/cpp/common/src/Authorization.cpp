@@ -46,10 +46,7 @@ bool Authorizer::hasAuthz(const std::string& scope) const {
         return true; // no authorization required
     }
 
-    if (std::find(clientScopes_.get().begin(), clientScopes_.get().end(), scope) == clientScopes_.get().end()) {
-        return false;
-    }
-    return true;
+    return std::find(clientScopes_.begin(), clientScopes_.end(), scope) != clientScopes_.end();
 }
 
 /**

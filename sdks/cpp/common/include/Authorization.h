@@ -76,11 +76,10 @@ class Authorizer {
 
     /**
      * @brief Construct a new Authorizer object
-     * @param pd the ParamDescriptor of the object
-     * @param scope the scope of the object
+     * @param scopes Vector of authorization scopes
      */
-    Authorizer(const Scopes& clientScopes)
-        : clientScopes_{clientScopes} {}
+    explicit Authorizer(Scopes scopes)
+        : clientScopes_{std::move(scopes)} {}
 
     /**
      * @brief Authorizer does not have copy semantics
@@ -139,7 +138,7 @@ class Authorizer {
 
 
   private:
-    std::reference_wrapper<const Scopes> clientScopes_;
+    Scopes clientScopes_;  // Now owns the scopes vector directly
 };
 
 } // namespace common
