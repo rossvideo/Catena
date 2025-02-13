@@ -138,7 +138,7 @@ class Authorizer {
 
 
   private:
-    Scopes clientScopes_;  // Now owns the scopes vector directly
+    Scopes clientScopes_; 
 };
 
 } // namespace common
