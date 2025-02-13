@@ -51,6 +51,7 @@ int CatenaServiceImpl::GetParam::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetParam object, 
  * then starts the process.
  */
+
 CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
@@ -87,6 +88,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
          * kCreate: Updates status to kProcess and requests the GetValue
          * command from the service.
          */ 
+
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
             service_->RequestGetParam(&context_, &req_, &writer_, service_->cq_, service_->cq_,
@@ -144,11 +146,13 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                     writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                     break;
                 }
+
             } catch (...) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(Status::CANCELLED, this);
             }
             break;
+
 
         /**
          * kPostWrite: Finish writing the response to the client.
@@ -162,9 +166,15 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
          * kFinish: Final step of gRPC is to deregister the item from
          * CatenaServiceImpl.
          */
+
         case CallStatus::kFinish:
             std::cout << "GetParam[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
+
+        default:
+            status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            writer_.Finish(errorStatus, this);
     }
 }

@@ -133,10 +133,12 @@ class CatenaServiceImpl::Connect : public CallData {
          */
         unsigned int valueSetByServerId_;
         /**
+
          * @brief Id of operation waiting for languageAddedPushUpdate to be
          * emitted. Used when ending the connection.
          */
         unsigned int languageAddedId_;
+  
         /**
          * @brief Signal emitted in the case of an error which requires the all
          * open connections to be shut down.
