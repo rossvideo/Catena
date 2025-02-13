@@ -377,7 +377,7 @@ class Device {
     /**
      * @brief get a parameter by oid with authorization
      * @param fqoid the fully qualified oid of the parameter
-     * @param authz the authorizer object
+     * @param authz The Authorizer to test read permission with.
      * @param status will contain an error message if the parameter does not exist
      * @return a unique pointer to the parameter, or nullptr if it does not exist
      * 
@@ -388,7 +388,7 @@ class Device {
     /**
      * @brief get a parameter by oid with authorization
      * @param path the full path to the parameter
-     * @param authz the authorizer object
+     ** @param authz The Authorizer to test read permission with.
      * @param status will contain an error message if the parameter does not exist
      * @return a unique pointer to the parameter, or nullptr if it does not exist
      * 
@@ -415,18 +415,8 @@ class Device {
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
-    /**
-     * @brief Determines if it's possible to set the specified value given the
-     * current authorization.
-     * @param jptr json pointer to the part of the device model to update.
-     * @param authz the Authorizer to test with.
-     * @return an exception_with_status with status set OK if possible,
-     * otherwise an error.
-     * Intention is for MultiSetValue RPCs / API calls to be verified in their
-     * entirely before setting any values.
-     */
-    catena::exception_with_status setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled);
-
+    // The path to the param and the value to set it to.
+    using SetValueRequest = std::pair<std::unique_ptr<Path>, const catena::SetValuePayload*>;
     /**
      * @brief sets the values of the device's parameters using a
      * MultiSetValuePayload.
@@ -435,24 +425,27 @@ class Device {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
+    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz = Authorizer::kAuthzDisabled);
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
      * pointed to by jptr.
      * @param jptr json pointer to the part of the device model to update.
      * @param src the value to update the parameter with.
-     * @todo consider using move semantics on the value parameter to emphasize new ownership.
-     * @return an exception_with_status with status set OK if successful, otherwise an error.
-     * Intention is to for SetValue RPCs / API calls to be serviced by this method.
-     * @note on success, this method will emit the valueSetByClient signal.
+     * @param authz The Authorizer to test with.
+     * @return an exception_with_status with status set OK if successful,
+     * otherwise an error.
+     * 
+     * This method essentially redirects the input values to multiSetValue().
+     * It remains to support the old way of setting values.
      */
     catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, Authorizer& authz = Authorizer::kAuthzDisabled);
 
     /**
      * @brief serialize the parameter value to protobuf
-     * @param jptr, json pointer to the part of the device model to serialize.
-     * @param dst, the protobuf value to serialize to.
+     * @param jptr json pointer to the part of the device model to serialize.
+     * @param dst the protobuf value to serialize to.
+     * @param authz The Authorizer to test read permission with.
      * @return an exception_with_status with status set OK if successful, otherwise an error.
      * Intention is to for GetValue RPCs / API calls to be serviced by this method.
      */

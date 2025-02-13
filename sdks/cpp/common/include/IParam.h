@@ -99,13 +99,11 @@ class IParam {
      */
     virtual catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const = 0;
 
-
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param paramInfo the protobuf value to serialize to
      */
     virtual catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const = 0;
-
 
     /**
      * @brief return the type of the param
@@ -143,8 +141,20 @@ class IParam {
      */
     virtual std::unique_ptr<IParam> getParam(Path& oid, Authorizer& authz, catena::exception_with_status& status) = 0;
 
+    /**
+     * @brief Return the size of an array parameter.
+     */
+    virtual uint32_t size() const = 0;
+
+    /**
+     * @brief Add an empty value to and return the back of an array parameter.
+     */
     virtual std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) = 0;
-    virtual void popBack(Authorizer& authz, catena::exception_with_status& status) = 0;
+
+    /**
+     * @brief Pop the back of an array parameter.
+     */
+    virtual catena::exception_with_status popBack(Authorizer& authz) = 0;
 
     /**
      * @brief get a constraint by oid
