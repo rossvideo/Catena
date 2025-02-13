@@ -388,7 +388,7 @@ class Device {
     /**
      * @brief get a parameter by oid with authorization
      * @param path the full path to the parameter
-     ** @param authz The Authorizer to test read permission with.
+     * @param authz The Authorizer to test read permission with.
      * @param status will contain an error message if the parameter does not exist
      * @return a unique pointer to the parameter, or nullptr if it does not exist
      * 

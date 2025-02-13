@@ -53,7 +53,7 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
     std::vector<Path*> appends;
     // Failing multiSetValue if multi set is disabled.
     if (multi_set_enabled_ == false && src.values().size() > 1) {
-        ans = catena::exception_with_status("Multi-set is disabled", catena::StatusCode::PERMISSION_DENIED);
+        ans = catena::exception_with_status("Multi-set is disabled", catena::StatusCode::INVALID_ARGUMENT);
     } else {
         // Looping through and validating set value requests.
         for (auto& setValuePayload : src.values()) {

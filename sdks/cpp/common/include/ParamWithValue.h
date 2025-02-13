@@ -228,7 +228,6 @@ class ParamWithValue : public catena::common::IParam {
             ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
         } else {
             catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-            return ans;
         }
         return ans;
     }
