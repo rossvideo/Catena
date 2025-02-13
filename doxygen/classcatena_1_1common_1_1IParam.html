@@ -237,6 +237,14 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Add an empty value to and return the back of an array parameter. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test write permissions with. </td></tr>
+    <tr><td class="paramname">status</td><td>The status of the operation. OK if successful, otherwise an error. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A unique ptr to the new element, or nullptr if the operation failed. </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aaa033a5c0584ec0f06b35dc2670b06d5">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -565,6 +573,13 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Pop the back of an array parameter. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">authz</td><td>The <a class="el" href="classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information.">Authorizer</a> to test write permissions with. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>OK if succcessful, otherwise an error. </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a329a02e9137d4f9e9f9efccc1262a9de">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
@@ -683,6 +698,7 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Return the size of an array parameter. </p>
+<dl class="section return"><dt>Returns</dt><dd>The size of the array parameter, or 0 if the parameter is not an array. </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
