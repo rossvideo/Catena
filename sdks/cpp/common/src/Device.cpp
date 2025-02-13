@@ -70,11 +70,13 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
                 if (path->back_is_index() ? path->back_as_index() == catena::common::Path::kEnd : false) {
                     path->popBack();
                     param = getParam(*path, ans, authz);
-                    uint32_t oidIndex = param->size();
-                    param = param->addBack(authz, ans);
                     if (param != nullptr) {
-                        path->push_back(oidIndex);
-                        appends.push_back(path);
+                        uint32_t oidIndex = param->size();
+                        param = param->addBack(authz, ans);
+                        if (param != nullptr) {
+                            path->push_back(oidIndex);
+                            appends.push_back(path);
+                        }
                     }
                 // Path does not end in "/-", get param normally.
                 } else {
