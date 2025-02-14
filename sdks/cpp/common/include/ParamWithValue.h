@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -126,6 +126,36 @@ class ParamWithValue : public catena::common::IParam {
      * @brief default destructor
      */
     virtual ~ParamWithValue() = default;
+		
+  private:
+    using Kind = catena::Value::KindCase;
+    /**
+     * @brief A map which returns a value's length using a function determined
+	 * by the indexed Value.kind_case().
+	 * Private for now, might make public later if useful in other scopes.
+     */
+    const std::unordered_map<Kind, std::function<uint32_t(const catena::Value& value)>> getSize {
+        {Kind::kStringValue,              [](const catena::Value& value) {return value.string_value().length();}},
+        {Kind::kInt32ArrayValues,         [](const catena::Value& value) {return value.int32_array_values().ints_size();}},
+        {Kind::kFloat32ArrayValues,       [](const catena::Value& value) {return value.float32_array_values().floats_size();}},
+        {Kind::kStringArrayValues,        [](const catena::Value& value) {return value.string_array_values().strings_size();}},
+        {Kind::kStructArrayValues,        [](const catena::Value& value) {return value.struct_array_values().struct_values_size();}},
+        {Kind::kStructVariantArrayValues, [](const catena::Value& value) {return value.struct_variant_array_values().struct_variants_size();}}
+    };
+
+  public:
+    /**
+     * @brief Validates the size of a string or array value.
+     * This does not check size of all elements in a string array. Therefore
+     * someone could still mount an attack on the system by sending a
+     * string_array with a large value.
+     * @param value The value to validate the size of.
+	 * @returns true if the value's size is within the param's predefined
+	 * limit, or if the value is not a string or array.
+     */
+    bool validateSize(const catena::Value& value) const override {
+        return getSize.contains(value.kind_case()) ? getSize.at(value.kind_case())(value) <= descriptor_.max_length() : true;
+    }
 
     /**
      * @brief creates a shallow copy the parameter
@@ -167,20 +197,39 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
+     * @brief serialize the parameter descriptor to protobuf
+     * include both the descriptor and the value
+     * @param paramInfo the protobuf value to serialize to
+     * @param authz the authorization information
+     */
+    catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const override {
+        if (!authz.readAuthz(*this)) {
+            return catena::exception_with_status("Authorization failed", catena::StatusCode::PERMISSION_DENIED);
+        }
+        descriptor_.toProto(*paramInfo.mutable_info(), authz);
+        return catena::exception_with_status("", catena::StatusCode::OK);
+    }
+
+
+    /**
      * @brief deserialize the parameter value from protobuf if authorized
      * @param value the protobuf value to deserialize from
      * @param clientScope the client scope
      */
     catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
+        catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        if (!authz.writeAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+        else if (!authz.writeAuthz(*this)) {
+            ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+        }
+        else if (!validateSize(value)) {
+            ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
         } else {
             catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-            return catena::exception_with_status("", catena::StatusCode::OK);
         }
+        return ans;
     }
 
     /**
@@ -255,6 +304,14 @@ class ParamWithValue : public catena::common::IParam {
         return descriptor_.executeCommand(value);
     }
 
+    /**
+     * @brief get the descriptor of the parameter
+     * @return the descriptor of the parameter
+     */
+    const ParamDescriptor& getDescriptor() const override {
+        return descriptor_;
+    }
+
   private:
 
     /**
@@ -298,6 +355,18 @@ class ParamWithValue : public catena::common::IParam {
         if (oidIndex == catena::common::Path::kEnd) {
             // Index is "-", add a new element to the array
             oidIndex = value.size();
+            // Checks first to make sure the array is not at max_length.
+            if (oidIndex >= descriptor_.max_length()) {
+                status = catena::exception_with_status("Array at maximum capacity", catena::StatusCode::INVALID_ARGUMENT);
+                return nullptr;
+            }
+            /**
+             * @todo This line leads to issue of adding to the back whenever
+             * param/- is used, even if we are not setting the value.
+             * This also leads to an extra empty value getting added when
+             * trySet is used.
+             * This can also bypass needing write permissions.
+             */
             value.push_back(ElemType());
         } else if (oidIndex >= value.size()) {
             // If index is out of bounds, return nullptr
@@ -424,7 +493,6 @@ class ParamWithValue : public catena::common::IParam {
         }
         std::string oidStr = oid.front_as_string();
         oid.pop();   
-
         if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
             status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;

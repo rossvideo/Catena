@@ -117,6 +117,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
 
     /**
      * @brief Gets the scopes from the provided authorization context
+     * @throw catena::exception_with_status permission denied
      */
     std::vector<std::string> getScopes(grpc::ServerContext &context);
 
@@ -172,9 +173,15 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class GetPopulatedSlots;
     class GetValue;
     class SetValue;
+    class MultiSetValue;
     class Connect;
     class DeviceRequest;
     class ExternalObjectRequest;
+    class BasicParamInfoRequest;
+    class GetParam;
+    class ListLanguages;
+    class LanguagePackRequest;
     // class GetParam;
     class ExecuteCommand;
+    class AddLanguage;
 };

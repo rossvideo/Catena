@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -37,11 +37,16 @@
 #include <GetPopulatedSlots.h>
 #include <GetValue.h>
 #include <SetValue.h>
+#include <MultiSetValue.h>
 #include <Connect.h>
 #include <DeviceRequest.h>
-// #include <GetParam.h>
+#include <GetParam.h>
 #include <ExternalObjectRequest.h>
+#include <BasicParamInfoRequest.h>
 #include <ExecuteCommand.h>
+#include <AddLanguage.h>
+#include <ListLanguages.h>
+#include <LanguagePackRequest.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -104,11 +109,16 @@ void CatenaServiceImpl::init() {
     new GetPopulatedSlots(this, dm_, true);
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
+    new MultiSetValue(this, dm_, true);
     new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
-    // new GetParam(this, dm_, true);
+    new BasicParamInfoRequest(this, dm_, true);
+    new GetParam(this, dm_, true);
     new ExecuteCommand(this, dm_, true);
+    new AddLanguage(this, dm_, true);
+    new ListLanguages(this, dm_, true);
+    new LanguagePackRequest(this, dm_, true);
 }
 
 // Initializing the shutdown signal for all open connections.

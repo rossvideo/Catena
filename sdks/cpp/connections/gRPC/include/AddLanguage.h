@@ -31,13 +31,10 @@
  */
 
 /**
- * @file GetParam.h
- * @brief Implements Catena gRPC GetParam
- * @author john.naylor@rossvideo.com
- * @author john.danen@rossvideo.com
- * @author isaac.robert@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 2025-01-28
+ * @file AddLanguage.h
+ * @brief Implements Catena gRPC AddLanguage
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2025-02-03
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -45,81 +42,63 @@
 #include <ServiceImpl.h>
 
 /**
-* @brief CallData class for the GetParam RPC
+* @brief CallData class for the ListLanguages RPC
 */
-class CatenaServiceImpl::GetParam : public CallData {
+class CatenaServiceImpl::AddLanguage : public CallData {
     public:
-
         /**
-         * @brief Constructor for the CallData class of the GetParam
-         * gRPC. Calls proceed() once initialized.
+         * @brief Constructor for the CallData class of the AddLanguage gRPC.
+         * Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dm Address of the device to get the value from.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        GetParam(CatenaServiceImpl *service, Device &dm, bool ok);
-
+        AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Manages the steps of the GetParam gRPC command
-         * through the state variable status. Returns the value of the
-         * parameter specified by the user.
+         * @brief Manages the steps of the AddLanguage gRPC commands through
+         * the state variable status.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param ok Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
-
     private:
-
         /**
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
-
         /**
          * @brief The context of the gRPC command (ServerContext) for use in 
          * _responder and other gRPC objects/functions.
          */
         ServerContext context_;
-
         /**
-         * @brief The client's scopes.
+         * @brief Server request (slot, id, language).
          */
-        std::vector<std::string> clientScopes_;
-
+        catena::AddLanguagePayload req_;
         /**
-         * @brief The request payload.
+         * @brief Empty catena value to respond with.
          */
-        catena::GetParamPayload req_;
-
-        /**
-         * @brief The response payload.
-         */
-        catena::PushUpdates res_;
-
+        catena::Empty res_;
         /**
          * @brief gRPC async response writer.
          */
-        ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
-
+        grpc::ServerAsyncResponseWriter<::catena::Empty> responder_;
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
-
         /**
-         * @brief The device to get the value from.
+         * @brief The device to add the LanguagePack to.
          */
         Device &dm_;
-
         /**
          * @brief The object's unique id.
          */
         int objectId_;
-
         /**
-         * @brief The object's unique id counter.
+         * @brief The total # of AddLanguage objects.
          */
-        static int objectCounter_;  
+        static int objectCounter_;
 };

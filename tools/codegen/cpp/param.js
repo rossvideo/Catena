@@ -128,6 +128,9 @@ class Descriptor {
       oid: () => {
         return `"${oid}"`;
       },
+      template_oid: () => {
+        return ("template_oid" in desc) ? `"${desc.template_oid}"` : `""`;
+      },
       constraint: () => {
         return constraint ? `&${constraint.variableName()}` : "nullptr";
       },
@@ -136,6 +139,9 @@ class Descriptor {
       },
       device: () => {
         return "dm";
+      },
+      max_length: () => {
+        return ("max_length" in desc) ? `${desc.max_length}` : "0";
       }
     };
 

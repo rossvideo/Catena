@@ -29,6 +29,7 @@
  */
 #include <absl/flags/flag.h>
 #include <cstdlib>
+#include <Device.h>
 
 ABSL_FLAG(uint16_t, port, 6254, "Catena service port");
 ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
@@ -40,3 +41,4 @@ ABSL_FLAG(bool, private_ca, false, "Specify if using a private CA");
 ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
 ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
+ABSL_FLAG(uint32_t, default_max_array_size, catena::common::kDefaultMaxArrayLength, "use this to define the default max length for array and string params.");

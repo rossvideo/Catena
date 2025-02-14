@@ -70,6 +70,11 @@ namespace catena {
 namespace common {
 
 /**
+ * @brief The default limit for param array accesses.
+ */
+constexpr uint32_t kDefaultMaxArrayLength{1024};
+
+/**
  * @brief Implements the Device interface defined in the protobuf
  */
 class Device {
@@ -104,7 +109,8 @@ class Device {
     Device(uint32_t slot, Device_DetailLevel detail_level, std::vector<std::string> access_scopes,
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
-      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled}, subscriptions_{subscriptions} {}
+      default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
+	    subscriptions_{subscriptions}, default_max_length_{kDefaultMaxArrayLength} {}
 
     /**
      * @brief Destroy the Device object
@@ -138,6 +144,21 @@ class Device {
     inline const std::string& getDefaultScope() const { return default_scope_; }
 
     /**
+     * @return The default max length for this device's array params.
+     */
+    inline uint32_t default_max_length() const {return default_max_length_;}
+
+    /**
+     * @brief Sets the default_max_length_ for this device's array params.
+     * If default_max_length <= 0, then it reverts default_max_length_ to
+     * kDefaultMaxArrayLength.
+     * @param default_max_length The value to set default_max_length_ to.
+     */
+    void set_default_max_length(const uint32_t default_max_length) {
+      default_max_length_ = default_max_length > 0 ? default_max_length : kDefaultMaxArrayLength;
+    }
+
+    /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
      * @param shallow if true, only the top-level info is copied, params, commands etc 
@@ -161,6 +182,28 @@ class Device {
      * @param list the protobuf representation of the language list.
      */
     void toProto(::catena::LanguageList& list) const;
+
+    using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
+
+    /**
+     * @brief Adds a language pack to the device. Requires client to have
+     * admin:w scope.
+     * @param language The language to add to the device.
+     * @param authz The authorizer object containing client's scopes.
+     * @return An exception_with_status with status set OK if successful,
+     * otherwise an error.
+     * Intention is for the AddLanguage RPCs / API calls to be serviced by this
+     * method.
+     */
+    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
+
+    /**
+     * @brief Finds and returns a language pack based on languageId.ABORTED
+     * @param languageId The language id of the language pack e.g. "en"
+     * @param pack Output var containing the found LanguagePack.
+     * @return exception_with_status containing the status of the operation.
+     */
+    catena::exception_with_status getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const;
 
     /**
      * @brief DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents
@@ -343,6 +386,15 @@ class Device {
     std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
+     * @brief get all top level parameters
+     * @param status the status of the operation
+     * @param authz the authorizer object
+     * @return a vector of unique pointers to the parameters
+     */
+    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+
+
+    /**
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
      * @param authz the authorizer object
@@ -353,10 +405,22 @@ class Device {
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
     /**
+     * @brief Determines if it's possible to set the specified value given the
+     * current authorization.
+     * @param jptr json pointer to the part of the device model to update.
+     * @param authz the Authorizer to test with.
+     * @return an exception_with_status with status set OK if possible,
+     * otherwise an error.
+     * Intention is for MultiSetValue RPCs / API calls to be verified in their
+     * entirely before setting any values.
+     */
+    catena::exception_with_status setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled);
+
+    /**
      * @brief deserialize a protobuf value object into the parameter value
      * pointed to by jptr.
-     * @param jptr, json pointer to the part of the device model to update.
-     * @param src, the value to update the parameter with.
+     * @param jptr json pointer to the part of the device model to update.
+     * @param src the value to update the parameter with.
      * @todo consider using move semantics on the value parameter to emphasize new ownership.
      * @return an exception_with_status with status set OK if successful, otherwise an error.
      * Intention is to for SetValue RPCs / API calls to be serviced by this method.
@@ -381,6 +445,12 @@ class Device {
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
     
     /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ComponentLanguagePack&)> languageAddedPushUpdate;
+
+    /**
      * @brief signal emitted when a value is set by the server, or business logic.
      * Intended recipient is the connection manager.
      */
@@ -394,11 +464,14 @@ class Device {
     std::unordered_map<std::string, common::IMenuGroup*> menu_groups_;
     std::unordered_map<std::string, IParam*> commands_;
     std::unordered_map<std::string, common::ILanguagePack*> language_packs_;
+    // Required to maintain ownership of added language packs.
+    std::unordered_map<std::string, std::shared_ptr<common::ILanguagePack>> added_packs_;
     std::vector<std::string> access_scopes_;
     std::string default_scope_;
     bool multi_set_enabled_;
     bool subscriptions_;
-    
+    uint32_t default_max_length_ = 0;
+
     mutable std::mutex mutex_;
 };
 }  // namespace common

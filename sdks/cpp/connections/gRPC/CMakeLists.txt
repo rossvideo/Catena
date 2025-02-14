@@ -30,16 +30,22 @@ set(target catena_connections_grpc)
 set(sources 
     "src/PeerInfo.cpp"
     "src/ServiceImpl.cpp" 
+    "src/GetParam.cpp"
     "src/GetPopulatedSlots.cpp"
     "src/SetValue.cpp"
     "src/GetValue.cpp"
     "src/Connect.cpp"
     "src/DeviceRequest.cpp"
     "src/ExternalObjectRequest.cpp"
+    "src/BasicParamInfoRequest.cpp"
     "src/ExecuteCommand.cpp"
     "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"
     "src/AuthInterceptor.cpp"    
+    "src/MultiSetValue.cpp"
+    "src/AddLanguage.cpp"
+    "src/ListLanguages.cpp"
+    "src/LanguagePackRequest.cpp"
 )
 
 add_library(${target} STATIC ${sources})

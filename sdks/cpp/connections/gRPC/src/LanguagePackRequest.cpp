@@ -28,58 +28,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
+// connections/gRPC
+#include <LanguagePackRequest.h>
 
-#include <GetValue.h>
+// Initializes the object counter for LanguagePackRequest to 0.
+int CatenaServiceImpl::LanguagePackRequest::objectCounter_ = 0;
 
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
-
-// Initializes the object counter for GetValue to 0.
-int CatenaServiceImpl::GetValue::objectCounter_ = 0;
-
-/**
- * Constructor which initializes and registers the current GetValue object, 
- * then starts the process.
- */
-CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, Device &dm, bool ok) : service_{service}, dm_{dm}, responder_(&context_), 
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+CatenaServiceImpl::LanguagePackRequest::LanguagePackRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
     proceed(service, ok);
 }
 
-// Manages gRPC command execution process using the state variable status.
-void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
-    std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
-
+void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service, bool ok) {
+    std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: " << timeNow()
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
     if(!ok){
         status_ = CallStatus::kFinish;
     }
-
     switch(status_){
         /** 
-         * kCreate: Updates status to kProcess and requests the GetValue
-         * command from the service.
+         * kCreate: Updates status to kProcess and requests the
+         * LanguagePackRequest command from the service.
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            /**
-             * output variable req_ gives us the OID of the object the user
-             * wants the value of.
-             */
-            service_->RequestGetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            service_->RequestLanguagePackRequest(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
@@ -87,22 +63,13 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new GetValue(service_, dm_, ok);
+            new LanguagePackRequest(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
-            try {
-                catena::Value ans;
+            try { // Getting and returning the requested language.
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // If authorization is enabled, check the client's scopes.
-                if(service->authorizationEnabled()) {
-                    std::vector<std::string> clientScopes = service->getScopes(context_);  
-                    catena::common::Authorizer authz{clientScopes};
-                    Device::LockGuard lg(dm_);
-                    rc = dm_.getValue(req_.oid(), ans, authz);
-                } else {
-                    Device::LockGuard lg(dm_);
-                    rc = dm_.getValue(req_.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
-                }
-                
+                Device::LockGuard lg(dm_);
+                catena::DeviceComponent_ComponentLanguagePack ans;
+                rc = dm_.getLanguagePack(req_.language(), ans);
                 status_ = CallStatus::kFinish;
                 if (rc.status == catena::StatusCode::OK) {
                     responder_.Finish(ans, Status::OK, this);
@@ -114,13 +81,13 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
                 responder_.FinishWithError(errorStatus, this);
             }
-        break;
+            break;
         /**
-         * kFinish: Final step of gRPC is to deregister the item from
+         * kFinish: Final step of gRPC is the deregister the item from
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "GetValue[" << objectId_ << "] finished\n";
+            std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
             service->deregisterItem(this);
             break;
         // default: Error, end process.

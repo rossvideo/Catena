@@ -31,12 +31,14 @@
  */
 
 /**
- * @file Connect.h
- * @brief Implements Catena gRPC Connect
+ * @file MultiSetValue.h
+ * @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
- * @date 2024-06-08
+ * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
+ * @date 2025-01-20
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -44,108 +46,95 @@
 #include <ServiceImpl.h>
 
 /**
-* @brief CallData class for the Connect RPC
+* @brief Generic CallData class for the SetValue and MultiSetValue RPCs.
 */
-class CatenaServiceImpl::Connect : public CallData {
+class CatenaServiceImpl::MultiSetValue : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the Connect gRPC.
-         * Calls proceed() once initialized.
+         * @brief Constructor for the CallData class of the MultiSetValue
+         * gRPC. Calls proceed() once initialized.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to connect to.
+         * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
+        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Manages the steps of the Connect gRPC command
-         * through the state variable status. Returns the value of the
-         * parameter specified by the user.
+         * @brief Manages the steps of the SetValue and MultiSetValue gRPC
+         * commands through the state variable status.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
          * @param ok - Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
-
-    private:
+    protected:
+        /**
+         * @brief Constructor class for child classes.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the value from.
+         * @param ok - Flag to check if the command was successfully executed.
+         * @param objectId - objectCounter_ + 1
+         */ 
+        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId);
+        /**
+         * @brief Requests Multi Set Value from the system and sets the
+         * request to the MultiSetValuePayload.
+         */
+        virtual void request();
+        /**
+         * @brief Creates a new MultiSetValue object to serve other clients
+         * while processing.
+         *
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the value from.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
+        virtual void create(CatenaServiceImpl *service, Device &dm, bool ok);
+        /**
+         * @brief Name of childclass to specify gRPC in console notifications.
+         */
+        std::string typeName;
         /**
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
         /**
          * @brief The context of the gRPC command (ServerContext) for use in 
-         * _writer and other gRPC objects/functions.
+         * _responder and other gRPC objects/functions.
          */
         ServerContext context_;
         /**
-         * @brief Server request (Info on connection).
+         * @brief Server request as a MultiSetValuePayload if not already.
          */
-        catena::ConnectPayload req_;
+        catena::MultiSetValuePayload reqs_;
         /**
-         * @brief Server response (updates).
+         * @brief Server response (UNUSED).
          */
-        catena::PushUpdates res_;
+        catena::Value res_;
         /**
-         * @brief gRPC async writer to write updates.
+         * @brief gRPC async response writer.
          */
-        ServerAsyncWriter<catena::PushUpdates> writer_;
+        ServerAsyncResponseWriter<catena::Empty> responder_;
         /**
          * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
         /**
-         * @brief The device to connect to.
+         * @brief The device containing the value to set.
          */
         Device &dm_;
         /**
-         * @brief The mutex to for locking the object while writing
+         * The status of the transaction for use in responder.finish functions.
          */
-        std::mutex mtx_;
+        Status errorStatus_;
         /**
-         * @brief Condition variable to notify the object when the value has
-         * been updated
-         */
-        std::condition_variable cv_;
-        /**
-         * @brief Flag to check if the value has been updated
-         */
-        bool hasUpdate_{false};
-        /**
-         * @brief ID of the Connect object
+         * @brief The object's unique id.
          */
         int objectId_;
+    private:
         /**
-         * @brief The total # of Connect objects.
+         * @brief The total # of MultiSetValue objects.
          */
         static int objectCounter_;
-        /**
-         * @brief Unused???
-         */
-        unsigned int pushUpdatesId_;
-        /**
-         * @brief Id of operation waiting for valueSetByClient to be emitted.
-         * Used when ending the connection.
-         */
-        unsigned int valueSetByClientId_;
-        /**
-         * @brief Id of operation waiting for valueSetByServer to be emitted.
-         * Used when ending the connection.
-         */
-        unsigned int valueSetByServerId_;
-        /**
-
-         * @brief Id of operation waiting for languageAddedPushUpdate to be
-         * emitted. Used when ending the connection.
-         */
-        unsigned int languageAddedId_;
-  
-        /**
-         * @brief Signal emitted in the case of an error which requires the all
-         * open connections to be shut down.
-         */
-        static vdk::signal<void()> shutdownSignal_;
-        /**
-         * @brief ID of the shutdown signal for the Connect object
-        */
-        unsigned int shutdownSignalId_;
 };

@@ -31,49 +31,70 @@
  */
 
 /**
- * @file SetValue.h
- * @brief Implements Catena gRPC SetValue
+ * @file ListLanguages.h
+ * @brief Implements Catena gRPC ListLanguages
  * @author benjamin.whitten@rossvideo.com
- * @author zuhayr.sarker@rossvideo.com
- * @date 2025-01-20
+ * @date 2025-01-29
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <MultiSetValue.h>
 
 /**
-* @brief CallData class for the SetValue RPC
+* @brief CallData class for the LanguagePackRequest RPC
 */
-class CatenaServiceImpl::SetValue : public MultiSetValue {
+class CatenaServiceImpl::LanguagePackRequest : public CallData {
     public:
         /**
-         * @brief Constructor for the CallData class of the SetValue
+         * @brief Constructor for the CallData class of the LanguagePackRequest
          * gRPC. Calls proceed() once initialized.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
-    private:
+        LanguagePackRequest(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
-         * @brief Requests Set Value from the system and adds the request to
-         * the MultiSetValuePayload in MultiSetValue.
-         */
-        void request() override;
-        /**
-         * @brief Creates a new SetValue object to serve other clients while
-         * processing.
+         * @brief Manages the steps of the LanguagePackRequest command through
+         * the state variable status.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
+         */
+        void proceed(CatenaServiceImpl *service, bool ok) override;
+    private:
         /**
-         * @brief The total # of SetValue objects.
+         * @brief Parent CatenaServiceImpl.
+         */
+        CatenaServiceImpl *service_;
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
+        ServerContext context_;
+        /**
+         * @brief Server request (slot, languageId).
+         */
+        catena::LanguagePackRequestPayload req_;
+        /**
+         * @brief gRPC async response writer.
+         */
+        grpc::ServerAsyncResponseWriter<::catena::DeviceComponent_ComponentLanguagePack> responder_;
+        /**
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         */
+        CallStatus status_;
+        /**
+         * @brief The device containing the language we are requesting.
+         */
+        Device &dm_;
+        /**
+         * @brief The object's unique id.
+         */
+        int objectId_;
+        /**
+         * @brief The total # of LanguagePackRequest objects.
          */
         static int objectCounter_;
 };
