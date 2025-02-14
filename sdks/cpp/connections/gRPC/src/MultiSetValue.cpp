@@ -101,40 +101,21 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                  */
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
+                std::vector<std::string> clientScopes;
                 if (service->authorizationEnabled()) {
-                    std::vector<std::string> clientScopes = service->getScopes(context_);
+                    clientScopes = service->getScopes(context_);
                     sharedAuthz = std::make_shared<catena::common::Authorizer>(clientScopes);
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                // Verifying all requests before setting any values.
+                // Locking divice and setting value(s).
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                for (auto &setValuePayload : reqs_.values()) {
-                    std::string oid = setValuePayload.oid();
-                    catena::Value value = setValuePayload.value();
-                    Device::LockGuard lg(dm_);
-                    rc = dm_.setValueTry(oid, value, *authz);
-                    if (rc.status != catena::StatusCode::OK) {
-                        break;
-                    }
-                }
-                /**
-                 * If above is valid, then proceed with setting the values.
-                 * Since we have already verified the request, we can disable
-                 * authorization when setting the values.
-                 */ 
+                Device::LockGuard lg(dm_);
+                rc = dm_.multiSetValue(reqs_, *authz);
                 if (rc.status == catena::StatusCode::OK) {
-                    for (auto &setValuePayload : reqs_.values()) {
-                        std::string oid = setValuePayload.oid();
-                        catena::Value value = setValuePayload.value();
-                        Device::LockGuard lg(dm_);
-                        dm_.setValue(oid, value, catena::common::Authorizer::kAuthzDisabled);
-                    }
-                    // End of kProcess
                     status_ = CallStatus::kFinish;
                     responder_.Finish(catena::Empty{}, Status::OK, this);
-                // If abovce is invalid, then Error and end process.
                 } else {
                     errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
                     status_ = CallStatus::kFinish;
