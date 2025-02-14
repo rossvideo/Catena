@@ -26,21 +26,19 @@ In the C++ SDK the DeviceModel provides a signals/slots mechanism to tell your b
 //
 // construction of dm not shown
 //
-dm.valueSetByClient.connect([](const ParamAccessor &p, catena::ParamIndex idx, const std::string &peer) {
-    catena::Value v;
-    // note that the DeviceModel is locked, 
-    // so use the non-locking version of getValue to avoid deadlock.
-    p.getValue<false>(&v, idx);
-    std::cout << "Client " << peer << " set " << p.oid() << " to: " << printJSON(v) << '\n';
+dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+    auto value = p.get();
+    std::cout << "Client set " << p.oid() << " to: " << value << '\n';
     // a real service would do something with the value here
 });
 std::thread loop([&dm]() {
     // a real service would possibly send status updates, telemetry or audio meters here
-    auto a_number = dm.param("/a_number");
-    int i = 0;
+    std::unique_ptr<IParam> param = dm.getParam("/counter", err);
+    auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
+    counter.get() = 0;
     while (globalLoop) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        a_number->setValue(i++);
+        counter.get()++;
     }
 });
 loop.detach();
