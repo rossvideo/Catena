@@ -184,26 +184,17 @@ void RunRPCServer(std::string addr)
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
 
-        //Interceptor test code here, not sure if this is where all of this is supposed to be:
-
-        //More AI slop:
-        //std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface> authInterceptorFactory(new AuthInterceptorFactory());
-        // builder.experimental().SetInterceptorCreators({[&authInterceptorFactory](grpc::experimental::ServerRpcInfo* info) {
-        //     return authInterceptorFactory->CreateServerInterceptor(info);
-        // }});
-
-        //Create vector of interceptor factories
-        std::vector<std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>> interceptorCreators;
-        interceptorCreators.push_back(std::make_unique<AuthInterceptorFactory>());
-        
-        //Set inteceptor facctories in server builder
-        builder.experimental().SetInterceptorCreators(std::move(interceptorCreators));
-
-
         builder.AddListeningPort(addr, catena::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
+        if (authz) {
+            //Create vector of interceptor factories
+            std::vector<std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>> interceptorCreators;
+            interceptorCreators.push_back(std::make_unique<AuthInterceptorFactory>());
+            //Set inteceptor facctories in server builder
+            builder.experimental().SetInterceptorCreators(std::move(interceptorCreators));
+        }
         CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
 
         builder.RegisterService(&service);

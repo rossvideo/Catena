@@ -171,6 +171,7 @@ std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
     }
 
+
     bool authenticated = contextMeta->find("authenticated") != contextMeta->end();
     if (!authenticated) {
         throw catena::exception_with_status("Not authenticated", catena::StatusCode::UNAUTHENTICATED);

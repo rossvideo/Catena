@@ -83,10 +83,10 @@ dn/RsYEONbwQSjIfMPkvxF+8HQ==
 )";
 
 
-AuthInterceptor::AuthInterceptor(grpc::experimental::ServerRpcInfo* info) : info_(info) {};
+AuthInterceptor::AuthInterceptor(grpc::experimental::ServerRpcInfo* info) :
+    info_(info), status_("", catena::StatusCode::OK) {};
 
-catena::exception_with_status AuthInterceptor::validateToken(const std::string& token, std::string* claims) {
-    catena::exception_with_status ans{"", catena::StatusCode::OK};
+void AuthInterceptor::validateToken(const std::string& token, std::string* claims) {
     try {
         // Decodes the token into its claims. decoded_jwt< traits::open_source_parsers_jsoncpp >
         auto decodedToken = jwt::decode(token);
@@ -97,62 +97,59 @@ catena::exception_with_status AuthInterceptor::validateToken(const std::string& 
             //.with_issuer("Some given issuer")
             //.with_audience("Placeholder audience");
             //.leeway(60); //Not sure if this is required
-        try {
             // Throws error if the token is invalid.
-            verifier.verify(decodedToken);
-        } catch (...) {
-            ans = catena::exception_with_status("Invalid JWT Token", catena::StatusCode::UNAUTHENTICATED);
-        }
-        auto now = std::chrono::system_clock::now();
-        std::time_t nowSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-        // Check for token's NBF claim
-        if (decodedToken.has_payload_claim("nbf")) {
-            std::time_t nbf = decodedToken.get_payload_claim("nbf").as_date().time_since_epoch().count();
-            // Ensure nbf is limited to 10 digits
-            nbf = static_cast<std::time_t>(nbf / 1000000000);
-            if (nowSinceEpoch < nbf) {
-                ans = catena::exception_with_status("JWT Token is not valid yet (nbf claim)", catena::StatusCode::UNAUTHENTICATED);
+        verifier.verify(decodedToken); // Throws error if invalid.
+        if (status_.status == catena::StatusCode::OK) {
+            auto now = std::chrono::system_clock::now();
+            std::time_t nowSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+            // Check for token's NBF claim
+            if (decodedToken.has_payload_claim("nbf")) {
+                std::time_t nbf = decodedToken.get_payload_claim("nbf").as_date().time_since_epoch().count();
+                // Ensure nbf is limited to 10 digits
+                nbf = static_cast<std::time_t>(nbf / 1000000000);
+                if (nowSinceEpoch < nbf) {
+                    status_ = catena::exception_with_status("JSON web token is not valid yet (nbf claim)", catena::StatusCode::UNAUTHENTICATED);
+                }
+            }
+            // Check if token is expired
+            if (decodedToken.has_payload_claim("exp")) {
+                auto exp = decodedToken.get_payload_claim("exp").as_date().time_since_epoch().count();
+                // Ensure exp is limited to 10 digits
+                exp = static_cast<std::time_t>(exp / 1000000000);
+                if (nowSinceEpoch > exp) {
+                    status_ = catena::exception_with_status("JSON web token is expired", catena::StatusCode::UNAUTHENTICATED);
+                }
             }
         }
-        // Check if token is expired
-        if (decodedToken.has_payload_claim("exp")) {
-            auto exp = decodedToken.get_payload_claim("exp").as_date().time_since_epoch().count();
-            // Ensure exp is limited to 10 digits
-            exp = static_cast<std::time_t>(exp / 1000000000);
-            if (nowSinceEpoch > exp) {
-                ans = catena::exception_with_status("JWT Token is expired", catena::StatusCode::UNAUTHENTICATED);
-            }
-        }
-        if (ans.status == catena::StatusCode::OK) {
+        if (status_.status == catena::StatusCode::OK) {
             // Extracting claims from the token and assigning it to the claims output.
             *claims = decodedToken.get_payload();
         }
     } catch (...) {
-        ans = catena::exception_with_status("Unknown error", catena::StatusCode::INTERNAL);
+        status_ = catena::exception_with_status("Invalid JSON web token", catena::StatusCode::UNAUTHENTICATED);
     }
-    return ans;
 }
 
 void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* methods) {
     // Intercepting right after the initial metadata has been sent.
     if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::POST_RECV_INITIAL_METADATA)) {
+        status_ = catena::exception_with_status("", catena::StatusCode::OK);
         auto* metadata = methods->GetRecvInitialMetadata();
         if (metadata != nullptr) {
-            catena::exception_with_status ans{"", catena::StatusCode::OK};
             try {
                 // Sanitizing metadata and getting auth data (bearer token).
                 metadata->erase("claims");
                 metadata->erase("authenticated");
                 auto authData = metadata->find("authorization");
                 // Verfying authData exists and is using Bearer schema.
-                if (authData == metadata->end() || !authData->second.starts_with("Bearer ")) {
+                if (authData != metadata->end() && authData->second.starts_with("Bearer ")) {
                     // Getting token (after "bearer") and converting to std::string.
                     auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
                     std::string JWSToken = std::string(tokenSubStr.begin(), tokenSubStr.end());
                     // Validating token and extracting claims.
                     std::string claims;
-                    ans = validateToken(JWSToken, &claims);
-                    if (ans.status = catena::StatusCode::OK) {
+                    validateToken(JWSToken, &claims);
+                    if (status_.status == catena::StatusCode::OK) {
                         /* 
                         * Ensuring claims stay in scope and adding them + the
                         * authenticated flag to client_context.
@@ -162,17 +159,22 @@ void AuthInterceptor::Intercept(grpc::experimental::InterceptorBatchMethods* met
                         metadata->insert(std::make_pair("claims", *sharedClaimsRef));
                         metadata->insert(std::make_pair("authenticated", "true"));
                     }
-                    
                 } else { // Auth data not found.
-                    ans = catena::exception_with_status("Bearer token not found", catena::StatusCode::UNAUTHENTICATED);
+                    status_ = catena::exception_with_status("JSON web token not found", catena::StatusCode::UNAUTHENTICATED);
                 }
             } catch (...) {
-                ans = catena::exception_with_status("Unknown error", catena::StatusCode::INTERNAL);
+                status_ = catena::exception_with_status("Unknown error", catena::StatusCode::INTERNAL);
             }
-            if (ans.status != catena::StatusCode::OK) {
-                metadata->insert(std::make_pair("authenticated", ans.what()));
-            }
-        } // Metadata not found, do nothing.
+        } else { // Metadata not found, do nothing.
+            status_ = catena::exception_with_status("No metadata found", catena::StatusCode::NOT_FOUND);
+        } 
+    }
+    // Intercepting the output signal if the status is not OK.
+    else if (methods->QueryInterceptionHookPoint(grpc::experimental::InterceptionHookPoints::PRE_SEND_STATUS)) {
+        if (status_.status != catena::StatusCode::OK) {
+            // If status is not OK, set the status and finish the RPC call.
+            methods->ModifySendStatus(Status(static_cast<grpc::StatusCode>(status_.status), status_.what()));
+        }
     }
     // Continuing with the RPC call.
     methods->Proceed();

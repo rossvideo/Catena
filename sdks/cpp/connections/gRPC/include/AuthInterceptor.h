@@ -43,9 +43,6 @@
 #include <ServiceImpl.h>
 
 
-//Simply for testing purposes
-
-
 class AuthInterceptor : public grpc::experimental::Interceptor {
     public:
         /**
@@ -66,7 +63,7 @@ class AuthInterceptor : public grpc::experimental::Interceptor {
          * @param token - The token to validate.
          * @return bool - True if the token is valid, false otherwise.
          */
-        catena::exception_with_status validateToken(const std::string& token, std::string* claims);
+        void validateToken(const std::string& token, std::string* claims);
         /**
          * @brief Information on the server. Valid claims are appended to its
          * associated ServerContext.
@@ -74,6 +71,7 @@ class AuthInterceptor : public grpc::experimental::Interceptor {
         grpc::experimental::ServerRpcInfo* info_;
         std::shared_ptr<std::string> sharedClaims;
         std::shared_ptr<grpc::string_ref> sharedClaimsRef;
+        catena::exception_with_status status_;
 };
 class AuthInterceptorFactory : public grpc::experimental::ServerInterceptorFactoryInterface {
     public:
