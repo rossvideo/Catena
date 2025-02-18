@@ -32,7 +32,7 @@
 
 
 /**
- * @file ParamWithDescription.h
+ * @file ParamDescriptor.h
  * @brief Interface for accessing parameter descriptions
  * @author John R. Naylor
  * @date 2024-08-20

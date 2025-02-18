@@ -28,6 +28,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file SharedFlags.h
+ * @brief A collection of flags for use in buisness logic.
+ * @author Unknown additional author
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2025-02-12
+ * @copyright Copyright © 2024 Ross Video Ltd
+ */
+
 #include <absl/flags/flag.h>
 
 /**

@@ -65,12 +65,18 @@ using grpc::ServerCompletionQueue;
 using catena::common::Device;
 using catena::common::IParam;
 
+/**
+ * @brief UNUSED. Will probably be removed at later date.
+ */
 class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
 public:
     grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override;
 };
 
+/**
+ * @brief Implements Catena gRPC request handlers.
+ */
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
     /**
