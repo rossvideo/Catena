@@ -104,102 +104,163 @@ $(document).ready(function(){initNavTree('Path_8h_source.html',''); initResizabl
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#define __PRETTY_FUNCTION__ __FUNCSIG__</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment">//</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">#include &lt;variant&gt;</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#include &lt;memory&gt;</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="keyword">namespace </span>common {</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="keyword">class </span>Path {</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keyword">using </span>Index = size_t;</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keyword">using </span>Segment = <span class="keyword">typename</span> std::variant&lt;Index, std::string&gt;;</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span> </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> Index kEnd = Index(-1);</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> Index kError = kEnd - 1;</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    Path() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    Path(<span class="keyword">const</span> Path&amp; other) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    Path&amp; operator=(<span class="keyword">const</span> Path&amp; rhs) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    Path(Path&amp;&amp; other) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    Path&amp; operator=(Path&amp;&amp; rhs) = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keyword">explicit</span> Path(<span class="keyword">const</span> std::string&amp; jptr);</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="comment">/*</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="comment"> * Copyright 2024 Ross Video Ltd</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="comment"> * Redistribution and use in source and binary forms, with or without</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="comment"> * modification, are permitted provided that the following conditions are met:</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="comment"> * 1. Redistributions of source code must retain the above copyright notice,</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="comment"> * this list of conditions and the following disclaimer.</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment"> * 2. Redistributions in binary form must reproduce the above copyright notice,</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment"> * this list of conditions and the following disclaimer in the documentation</span></div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment"> * and/or other materials provided with the distribution.</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="comment"> * 3. Neither the name of the copyright holder nor the names of its</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="comment"> * contributors may be used to endorse or promote products derived from this</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="comment"> * software without specific prior written permission.</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="comment"> * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="comment"> * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="comment"> * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment"> * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="comment"> * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="comment"> * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment"> * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS</span></div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="comment"> * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="comment"> * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="comment"> * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="comment"> * POSSIBILITY OF SUCH DAMAGE.</span></div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">#include &lt;variant&gt;</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacecatena.html">catena</a> {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="keyword">namespace </span>common {</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="foldopen" id="foldopen00065" data-start="{" data-end="};">
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html">   65</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a> {</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">   70</a></span>    <span class="keyword">using </span><a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> = size_t;</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a9e26c035ad5b8f72b56c9e55d140e170">   78</a></span>    <span class="keyword">using </span><a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a9e26c035ad5b8f72b56c9e55d140e170">Segment</a> = <span class="keyword">typename</span> std::variant&lt;Index, std::string&gt;;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">   83</a></span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">kEnd</a> = <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a>(-1);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">   88</a></span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">kError</a> = <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">kEnd</a> - 1;</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    <span class="keyword">explicit</span> Path(<span class="keyword">const</span> <span class="keywordtype">char</span>* literal);</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span> </div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keyword">explicit</span> Path(std::initializer_list&lt;Segment&gt; args) : segments_{args}, frontIdx_{0} {};</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    <span class="keyword">inline</span> Index size()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> segments_.size() - frontIdx_; }</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> empty()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> frontIdx_ &gt;= segments_.size(); }</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span> </div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <span class="keywordtype">bool</span> front_is_string() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <span class="keywordtype">bool</span> front_is_index() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    <span class="keyword">const</span> std::string&amp; front_as_string() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>(<span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>&amp; other) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>&amp; operator=(<span class="keyword">const</span> <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>&amp; rhs) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>(<a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>&amp;&amp; other) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>&amp; operator=(<a class="code hl_class" href="classcatena_1_1common_1_1Path.html">Path</a>&amp;&amp; rhs) = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a70eb4ec1032ba1559cfb38e9760c775d">  106</a></span>    <span class="keyword">explicit</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a70eb4ec1032ba1559cfb38e9760c775d">Path</a>(<span class="keyword">const</span> std::string&amp; jptr);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a3e5a87a21b2a39d4cf877b8c9cbe7800">  114</a></span>    <span class="keyword">explicit</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a3e5a87a21b2a39d4cf877b8c9cbe7800">Path</a>(<span class="keyword">const</span> <span class="keywordtype">char</span>* literal);</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#aa873cc23b11723b7713445e762afe442">  120</a></span>    <span class="keyword">explicit</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#aa873cc23b11723b7713445e762afe442">Path</a>(std::initializer_list&lt;Segment&gt; args) : segments_{args}, frontIdx_{0} {};</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097">  127</a></span>    <span class="keyword">inline</span> <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097">size</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> segments_.size() - frontIdx_; }</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a6a63446ed43392f91ddf06d98eecb53a">  134</a></span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a6a63446ed43392f91ddf06d98eecb53a">empty</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> frontIdx_ &gt;= segments_.size(); }</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a154c0ab9589fbf11d872053e869a62ca">  139</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a154c0ab9589fbf11d872053e869a62ca">front_is_string</a>() <span class="keyword">const</span>;</div>
 <div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    Index front_as_index() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span> </div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    <span class="keywordtype">bool</span> back_is_string() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span> </div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>    <span class="keywordtype">bool</span> back_is_index() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span> </div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    <span class="keyword">const</span> std::string&amp; back_as_string() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span> </div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    Index back_as_index() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>    std::string toString(<span class="keywordtype">bool</span> leading_slash = <span class="keyword">false</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span> </div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    std::string fqoid() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span> </div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <span class="keywordtype">void</span> pop() noexcept;</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    <span class="keywordtype">void</span> popBack() noexcept;</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>    Index walked() const noexcept;</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span> </div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    inline <span class="keywordtype">void</span> rewind() noexcept {frontIdx_ = 0;}</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span> </div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> unpop() noexcept {<span class="keywordflow">if</span> (frontIdx_ &gt; 0) {--frontIdx_;}}</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span> </div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>    <span class="keywordtype">void</span> push_back(<span class="keyword">const</span> std::string&amp; segment) {</div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>        <span class="keywordflow">if</span> (segment == <span class="stringliteral">&quot;-&quot;</span>) {</div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>            segments_.emplace_back(std::in_place_type&lt;Index&gt;, kEnd);</div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>            std::string str = segment;</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>            escape(str);</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>            segments_.emplace_back(std::in_place_type&lt;std::string&gt;, str);</div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>        }</div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>    }</div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span> </div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    <span class="keywordtype">void</span> push_back(Index idx) {</div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>        segments_.emplace_back(std::in_place_type&lt;Index&gt;, idx);</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    }</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span> </div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>    <span class="keyword">using </span>Segments = std::vector&lt;Segment&gt;;</div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>    Segments segments_{}; </div>
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>    std::size_t frontIdx_{0}; </div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>    <span class="keywordtype">void</span> escape(std::string&amp; str);</div>
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span> </div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>    std::string unescape(<span class="keyword">const</span> std::string&amp; str);</div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>};</div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span> </div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>}  <span class="comment">// namespace common</span></div>
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>}  <span class="comment">// namespace catena</span></div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span> </div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>catena::common::Path <span class="keyword">operator</span><span class="stringliteral">&quot;&quot;</span> _path(<span class="keyword">const</span> <span class="keywordtype">char</span>* lit, std::size_t sz);</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a51e9261c2c4b79fafc6cae0c105b7e4c">  144</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a51e9261c2c4b79fafc6cae0c105b7e4c">front_is_index</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a1690b3ea621c581607cf394fbe5f0f7e">  155</a></span>    <span class="keyword">const</span> std::string&amp; <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a1690b3ea621c581607cf394fbe5f0f7e">front_as_string</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#ab7a79c31d5dab66dc08ba641960037aa">  166</a></span>    <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ab7a79c31d5dab66dc08ba641960037aa">front_as_index</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#ad55f7fcb7d9d1c6ef012bd5b72ea6bcd">  171</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ad55f7fcb7d9d1c6ef012bd5b72ea6bcd">back_is_string</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#aef917e2e6824eb8a6e2f4215a4bb0656">  176</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#aef917e2e6824eb8a6e2f4215a4bb0656">back_is_index</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#aee8036a35a13fe883796c8dabfdfb2f0">  187</a></span>    <span class="keyword">const</span> std::string&amp; <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#aee8036a35a13fe883796c8dabfdfb2f0">back_as_string</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span> </div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35">  198</a></span>    <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35">back_as_index</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a4c54a33ecabe230515542939cdf70a97">  207</a></span>    std::string <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a4c54a33ecabe230515542939cdf70a97">toString</a>(<span class="keywordtype">bool</span> leading_slash = <span class="keyword">false</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span> </div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">  215</a></span>    std::string <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">fqoid</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span> </div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a8d8e5e7559aca13d6b49a1561c668c43">  221</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a8d8e5e7559aca13d6b49a1561c668c43">pop</a>() noexcept;</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span> </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a896909eccb70304ae6ee5bb7f367c871">  229</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a896909eccb70304ae6ee5bb7f367c871">popBack</a>() noexcept;</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span> </div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#ac552c2e2e0b9d4d6c63035486bc3ce6a">  235</a></span>    <a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#ac552c2e2e0b9d4d6c63035486bc3ce6a">walked</a>() const noexcept;</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span> </div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a7bc18876ecb0d72b79dc3e3d4ccffb06">  240</a></span>    inline <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a7bc18876ecb0d72b79dc3e3d4ccffb06">rewind</a>() noexcept {frontIdx_ = 0;}</div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span> </div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a25a93d0ba88442cb581c0c73a66a3a82">  245</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a25a93d0ba88442cb581c0c73a66a3a82">unpop</a>() noexcept {<span class="keywordflow">if</span> (frontIdx_ &gt; 0) {--frontIdx_;}}</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span> </div>
+<div class="foldopen" id="foldopen00251" data-start="{" data-end="}">
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a2221bbedfa4abdd2b91cf42dab119718">  251</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a2221bbedfa4abdd2b91cf42dab119718">push_back</a>(<span class="keyword">const</span> std::string&amp; segment) {</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        <span class="keywordflow">if</span> (segment == <span class="stringliteral">&quot;-&quot;</span>) {</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>            segments_.emplace_back(std::in_place_type&lt;Index&gt;, <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">kEnd</a>);</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>            std::string str = segment;</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>            escape(str);</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>            segments_.emplace_back(std::in_place_type&lt;std::string&gt;, str);</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>        }</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>    }</div>
+</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span> </div>
+<div class="foldopen" id="foldopen00265" data-start="{" data-end="}">
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1Path.html#a78d9ce830ff5916038433dbea0462bc8">  265</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1common_1_1Path.html#a78d9ce830ff5916038433dbea0462bc8">push_back</a>(<a class="code hl_typedef" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Index</a> idx) {</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        segments_.emplace_back(std::in_place_type&lt;Index&gt;, idx);</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>    }</div>
+</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span> </div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>    <span class="keyword">using </span>Segments = std::vector&lt;Segment&gt;;</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>    Segments segments_{}; </div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>    std::size_t frontIdx_{0}; </div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>    <span class="keywordtype">void</span> escape(std::string&amp; str);</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span> </div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>    std::string unescape(<span class="keyword">const</span> std::string&amp; str);</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>};</div>
+</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span> </div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>}  <span class="comment">// namespace common</span></div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>}  <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span> </div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><a class="code hl_class" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> <span class="keyword">operator</span><span class="stringliteral">&quot;&quot;</span> _path(<span class="keyword">const</span> <span class="keywordtype">char</span>* lit, std::size_t sz);</div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html">catena::common::Path</a></div><div class="ttdoc">Converts json pointers to items within the data model to a path of &quot;segments&quot; that can be iterated ov...</div><div class="ttdef"><b>Definition</b> Path.h:65</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a154c0ab9589fbf11d872053e869a62ca"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a154c0ab9589fbf11d872053e869a62ca">catena::common::Path::front_is_string</a></div><div class="ttdeci">bool front_is_string() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a1690b3ea621c581607cf394fbe5f0f7e"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a1690b3ea621c581607cf394fbe5f0f7e">catena::common::Path::front_as_string</a></div><div class="ttdeci">const std::string &amp; front_as_string() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a2221bbedfa4abdd2b91cf42dab119718"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a2221bbedfa4abdd2b91cf42dab119718">catena::common::Path::push_back</a></div><div class="ttdeci">void push_back(const std::string &amp;segment)</div><div class="ttdoc">Add a new string segment to the path.</div><div class="ttdef"><b>Definition</b> Path.h:251</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a25a93d0ba88442cb581c0c73a66a3a82"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a25a93d0ba88442cb581c0c73a66a3a82">catena::common::Path::unpop</a></div><div class="ttdeci">void unpop() noexcept</div><div class="ttdoc">restore the Path to it's state before the last pop from front.</div><div class="ttdef"><b>Definition</b> Path.h:245</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a3e5a87a21b2a39d4cf877b8c9cbe7800"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a3e5a87a21b2a39d4cf877b8c9cbe7800">catena::common::Path::Path</a></div><div class="ttdeci">Path(const char *literal)</div><div class="ttdoc">Construct a new Path object.</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a4c54a33ecabe230515542939cdf70a97"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a4c54a33ecabe230515542939cdf70a97">catena::common::Path::toString</a></div><div class="ttdeci">std::string toString(bool leading_slash=false) const</div><div class="ttdoc">return a string representation of the Path</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a51e9261c2c4b79fafc6cae0c105b7e4c"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a51e9261c2c4b79fafc6cae0c105b7e4c">catena::common::Path::front_is_index</a></div><div class="ttdeci">bool front_is_index() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a568efadd6fc647b3d644211699cf8ce9"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">catena::common::Path::Index</a></div><div class="ttdeci">size_t Index</div><div class="ttdoc">Type for indices, unsigned int.</div><div class="ttdef"><b>Definition</b> Path.h:70</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a61a2ae300f348afd7bf9c6eaa3eaf48e"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">catena::common::Path::kEnd</a></div><div class="ttdeci">static constexpr Index kEnd</div><div class="ttdoc">used to signal one-past-the-end array size</div><div class="ttdef"><b>Definition</b> Path.h:83</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a6a63446ed43392f91ddf06d98eecb53a"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a6a63446ed43392f91ddf06d98eecb53a">catena::common::Path::empty</a></div><div class="ttdeci">bool empty() const</div><div class="ttdoc">return true if the Path is empty</div><div class="ttdef"><b>Definition</b> Path.h:134</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a70eb4ec1032ba1559cfb38e9760c775d"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a70eb4ec1032ba1559cfb38e9760c775d">catena::common::Path::Path</a></div><div class="ttdeci">Path(const std::string &amp;jptr)</div><div class="ttdoc">Construct a new Path object.</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a78d9ce830ff5916038433dbea0462bc8"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a78d9ce830ff5916038433dbea0462bc8">catena::common::Path::push_back</a></div><div class="ttdeci">void push_back(Index idx)</div><div class="ttdoc">Add a new index segment to the path.</div><div class="ttdef"><b>Definition</b> Path.h:265</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a7bc18876ecb0d72b79dc3e3d4ccffb06"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a7bc18876ecb0d72b79dc3e3d4ccffb06">catena::common::Path::rewind</a></div><div class="ttdeci">void rewind() noexcept</div><div class="ttdoc">restore the Path to start at its original front</div><div class="ttdef"><b>Definition</b> Path.h:240</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a896909eccb70304ae6ee5bb7f367c871"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a896909eccb70304ae6ee5bb7f367c871">catena::common::Path::popBack</a></div><div class="ttdeci">void popBack() noexcept</div><div class="ttdoc">pop the back of the path. Fully removes the last segment in the path unless the path is already empty...</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a8d8e5e7559aca13d6b49a1561c668c43"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a8d8e5e7559aca13d6b49a1561c668c43">catena::common::Path::pop</a></div><div class="ttdeci">void pop() noexcept</div><div class="ttdoc">pop the front of the path. Decreases the length of the path by 1 unless the path is already empty in ...</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_a9e26c035ad5b8f72b56c9e55d140e170"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#a9e26c035ad5b8f72b56c9e55d140e170">catena::common::Path::Segment</a></div><div class="ttdeci">typename std::variant&lt; Index, std::string &gt; Segment</div><div class="ttdoc">Segment can be interpreted either as an oid (string), or array index (std::size_t)....</div><div class="ttdef"><b>Definition</b> Path.h:78</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aa4da601b74fb1e2aca3d6e05c34f143e"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e">catena::common::Path::kError</a></div><div class="ttdeci">static constexpr Index kError</div><div class="ttdoc">used to signal an error</div><div class="ttdef"><b>Definition</b> Path.h:88</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aa873cc23b11723b7713445e762afe442"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aa873cc23b11723b7713445e762afe442">catena::common::Path::Path</a></div><div class="ttdeci">Path(std::initializer_list&lt; Segment &gt; args)</div><div class="ttdoc">Construct a Path from initializer list.</div><div class="ttdef"><b>Definition</b> Path.h:120</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ab7a79c31d5dab66dc08ba641960037aa"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ab7a79c31d5dab66dc08ba641960037aa">catena::common::Path::front_as_index</a></div><div class="ttdeci">Index front_as_index() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ac552c2e2e0b9d4d6c63035486bc3ce6a"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ac552c2e2e0b9d4d6c63035486bc3ce6a">catena::common::Path::walked</a></div><div class="ttdeci">Index walked() const noexcept</div><div class="ttdoc">show how much of the path has been consumed</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ac6322b03a662c484c09e83df0664ad48"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ac6322b03a662c484c09e83df0664ad48">catena::common::Path::fqoid</a></div><div class="ttdeci">std::string fqoid() const</div><div class="ttdoc">return a fully qualified, albeit escaped oid</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ad2487342bef5315cb4413e25d95c8097"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097">catena::common::Path::size</a></div><div class="ttdeci">Index size() const</div><div class="ttdoc">return the number of segments in the Path</div><div class="ttdef"><b>Definition</b> Path.h:127</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_ad55f7fcb7d9d1c6ef012bd5b72ea6bcd"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#ad55f7fcb7d9d1c6ef012bd5b72ea6bcd">catena::common::Path::back_is_string</a></div><div class="ttdeci">bool back_is_string() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aee8036a35a13fe883796c8dabfdfb2f0"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aee8036a35a13fe883796c8dabfdfb2f0">catena::common::Path::back_as_string</a></div><div class="ttdeci">const std::string &amp; back_as_string() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aef917e2e6824eb8a6e2f4215a4bb0656"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aef917e2e6824eb8a6e2f4215a4bb0656">catena::common::Path::back_is_index</a></div><div class="ttdeci">bool back_is_index() const</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Path_html_aff66461b7b6ecc1b22bd81ff54090b35"><div class="ttname"><a href="classcatena_1_1common_1_1Path.html#aff66461b7b6ecc1b22bd81ff54090b35">catena::common::Path::back_as_index</a></div><div class="ttdeci">Index back_as_index() const</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdoc">top level namespace for Catena. Functionality at this scope includes the protoc generated classes....</div><div class="ttdef"><b>Definition</b> Authorization.h:55</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
