@@ -8,11 +8,16 @@ The recommended process is hopefully simple:
 
 1. Design your device model as a set of JSON or YAML files in a file structure documented [here](Validation.html).
     1. [OPTIONAL] Install the recommended Red Hat extension redhat.vscode-yaml either through vscode or using the command `code --install-extension redhat.vscode-yaml`.
-2. 
-2. Use `full_service --device_model /path/to/your/device.json` to run your model.
-3. Use Postman to get/set your parameters.
-4. Coming soon ... use DashBoard beta to even get a GUI!
-5. If working in C++, replace the placeholder business logic in `full_service.cpp` with your own.
+2. Place your device model in a folder alongside a `CMakeLists.txt` file and a `device_model.cpp` file.
+    1. `CMakeLists.txt` defines how to compile the device.
+    2. `device_model.cpp` should create a `ServiceImpl` object for your device and build a gRPC server around it.
+    3. Example devices can be found in the `sdks/cpp/connections/gRPC/examples` folder.
+3. Add your device folder as a subdirectory in the parent folder's `CMakeLists.txt` file.
+4. Build Catena following the steps documented [here](../sdks/cpp/docs/cpp_sdk_main_page.md). If the CMake file has been configured correctly, this should generate your device's code.
+5. In your build folder, use `./path/to/your/device.json` to run your model.
+6. Use Postman to run various gRPC commands on your model, such as getting/setting your parameters.
+7. Coming soon ... use DashBoard beta to even get a GUI!
+8. If working in C++, add your buisness logic to your `device_model.cpp` file.
 
 All interactions with all attached clients are handled by the Catena Device Model.
 
