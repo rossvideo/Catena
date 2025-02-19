@@ -104,7 +104,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
-  private:
+  protected:
     /**
      * @brief Abstract base class for the CallData classes.
      * Provides the proceed method
@@ -121,6 +121,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         virtual ~CallData() {}
     };
 
+  private:
     /**
      * @brief Gets the scopes from the provided authorization context
      * @throw catena::exception_with_status permission denied
@@ -187,7 +188,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class GetParam;
     class ListLanguages;
     class LanguagePackRequest;
-    // class GetParam;
     class ExecuteCommand;
     class AddLanguage;
 };

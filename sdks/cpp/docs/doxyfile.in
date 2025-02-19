@@ -1,7 +1,7 @@
 PROJECT_NAME           = @CATENA_CPP_VERSION@
 
 RECURSIVE              = YES
-INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/common/include @CMAKE_CURRENT_SOURCE_DIR@/connections/gRPC/include @CMAKE_CURRENT_SOURCE_DIR@/connections/REST/include @CMAKE_CURRENT_SOURCE_DIR@/docs @CMAKE_CURRENT_SOURCE_DIR@/full/include @CMAKE_CURRENT_SOURCE_DIR@/lite/include
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/common/include @CMAKE_CURRENT_SOURCE_DIR@/connections/gRPC/include @CMAKE_CURRENT_SOURCE_DIR@/connections/REST/include @CMAKE_CURRENT_SOURCE_DIR@/docs
 
 USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/cpp_sdk_main_page.md
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/doxygen/
