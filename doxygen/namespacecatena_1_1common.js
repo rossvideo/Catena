@@ -23,7 +23,6 @@ var namespacecatena_1_1common =
     [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
     [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
-    [ "Path", "classcatena_1_1common_1_1Path.html", "classcatena_1_1common_1_1Path" ],
     [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
     [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", null ],
     [ "RangeConstraint", "classcatena_1_1common_1_1RangeConstraint.html", "classcatena_1_1common_1_1RangeConstraint" ],

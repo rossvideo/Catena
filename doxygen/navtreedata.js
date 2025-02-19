@@ -108,15 +108,13 @@ var NAVTREE =
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", null ],
-        [ "Typedefs", "functions_type.html", null ],
-        [ "Enumerations", "functions_enum.html", null ]
+        [ "Typedefs", "functions_type.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
-        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ],
@@ -126,11 +124,10 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"AddLanguage_8h.html",
-"classcatena_1_1PeerInfo.html",
-"classcatena_1_1common_1_1Menu.html#a5f76e110a9895a692e0079893328f08e",
+"Authorization_8h.html",
+"classcatena_1_1common_1_1IParam.html#a87f839385b3bba233c80b49444c2c8ac",
 "classcatena_1_1common_1_1PicklistConstraint.html#a7e765a117b647623ab95678a03e6ebe1",
-"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md38"
+"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md44"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -125,7 +125,7 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>DetailLevel_e</b> = 
 using&#160;</td><td class="memItemRight" valign="bottom"><b>ComponentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
 <tr class="separator:af5359d2fb0ab164b87406666bb1feced"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf7e94c9126d9d5a0d68bd7aae819540" id="r_acf7e94c9126d9d5a0d68bd7aae819540"><td class="memItemLeft" align="right" valign="top"><a id="acf7e94c9126d9d5a0d68bd7aae819540" name="acf7e94c9126d9d5a0d68bd7aae819540"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>SetValueRequest</b> = std::pair&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &gt;, const catena::SetValuePayload * &gt;</td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>SetValueRequest</b> = std::pair&lt; std::unique_ptr&lt; Path &gt;, const catena::SetValuePayload * &gt;</td></tr>
 <tr class="separator:acf7e94c9126d9d5a0d68bd7aae819540"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -191,7 +191,7 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ge
 <tr class="memitem:af92ac546623c8f1d682daa0ec97d9baf" id="r_af92ac546623c8f1d682daa0ec97d9baf"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af92ac546623c8f1d682daa0ec97d9baf">getParam</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
 <tr class="memdesc:af92ac546623c8f1d682daa0ec97d9baf"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
 <tr class="separator:af92ac546623c8f1d682daa0ec97d9baf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3aec551fa6c4fd84282f8548bac70200" id="r_a3aec551fa6c4fd84282f8548bac70200"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a3aec551fa6c4fd84282f8548bac70200">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> &amp;path, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
+<tr class="memitem:a3aec551fa6c4fd84282f8548bac70200" id="r_a3aec551fa6c4fd84282f8548bac70200"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a3aec551fa6c4fd84282f8548bac70200">getParam</a> (catena::common::Path &amp;path, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
 <tr class="memdesc:a3aec551fa6c4fd84282f8548bac70200"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
 <tr class="separator:a3aec551fa6c4fd84282f8548bac70200"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf02994bda482d6c5922cdb0e2c01f98" id="r_adf02994bda482d6c5922cdb0e2c01f98"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adf02994bda482d6c5922cdb0e2c01f98">getTopLevelParams</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
@@ -326,7 +326,7 @@ Here is the caller graph for this function:</div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is for the AddLanguage RPCs / <a class="el" href="classcatena_1_1API.html" title="REST API.">API</a> calls to be serviced by this method. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is for the AddLanguage RPCs / API calls to be serviced by this method. </dd></dl>
 
 </div>
 </div>
@@ -599,7 +599,7 @@ template&lt;typename TAG &gt; </div>
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; catena::common::Device::getParam </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> &amp;&#160;</td>
+          <td class="paramtype">catena::common::Path &amp;&#160;</td>
           <td class="paramname"><em>path</em>, </td>
         </tr>
         <tr>
@@ -761,7 +761,7 @@ template&lt;typename TAG &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / <a class="el" href="classcatena_1_1API.html" title="REST API.">API</a> calls to be serviced by this method. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
 
 </div>
 </div>

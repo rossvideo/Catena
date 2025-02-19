@@ -13,6 +13,5 @@ var searchData=
   ['menus_10',['menus',['../classcatena_1_1common_1_1IMenuGroup.html#ab36da13ce8ac443a9024fedbcc52b022',1,'catena::common::IMenuGroup::menus()'],['../classcatena_1_1common_1_1MenuGroup.html#a8b6ce21e3e1407e2f197d1f9a6ae017b',1,'catena::common::MenuGroup::menus()']]],
   ['menutag_11',['MenuTag',['../structcatena_1_1common_1_1MenuTag.html',1,'catena::common']]],
   ['msvc_12',['Windows Toolchain Installation (MSVC)',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html',1,'']]],
-  ['multisetvalue_13',['multisetvalue',['../classCatenaServiceImpl_1_1MultiSetValue.html',1,'CatenaServiceImpl::MultiSetValue'],['../classCatenaServiceImpl_1_1MultiSetValue.html#a72774c3a3015d2bd4cf04fc61f4ee159',1,'CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &amp;dm, bool ok)'],['../classCatenaServiceImpl_1_1MultiSetValue.html#ae10b13562e8b71eb19cffd12c251b6ff',1,'CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &amp;dm, bool ok, int objectId)'],['../classcatena_1_1common_1_1Device.html#ae7582893bf7829512e7a19d9f9732d3d',1,'catena::common::Device::multiSetValue()']]],
-  ['multisetvalue_2eh_14',['MultiSetValue.h',['../MultiSetValue_8h.html',1,'']]]
+  ['multisetvalue_13',['multiSetValue',['../classcatena_1_1common_1_1Device.html#ae7582893bf7829512e7a19d9f9732d3d',1,'catena::common::Device']]]
 ];

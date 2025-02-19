@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['callstatus_0',['CallStatus',['../classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909d',1,'CatenaServiceImpl']]]
+  ['scopes_5fe_0',['Scopes_e',['../namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8',1,'catena::common']]],
+  ['statuscode_1',['StatusCode',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85',1,'catena']]]
 ];
