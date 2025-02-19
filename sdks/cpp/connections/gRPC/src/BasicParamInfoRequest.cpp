@@ -58,7 +58,7 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImp
 }
 
 void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *service, bool ok) {
-    if (!service || status_ == CallStatus::kFinish) 
+    if (!service)
         return;
 
     std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "]: " << timeNow()
@@ -93,7 +93,6 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
-                     
                     if (service->authorizationEnabled()) {
                         Device::LockGuard lg(dm_);
 
@@ -109,6 +108,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                     if (rc.status == catena::StatusCode::OK) {
                         Device::LockGuard lg(dm_);
+                        responses_.clear();  
                         for (auto& top_level_param : top_level_params) {
                             responses_.emplace_back();
                             if (service->authorizationEnabled()) {
@@ -117,14 +117,18 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                                 top_level_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                             }
                         }
-                           
+                        
+                        writer_lock_.lock();
                         status_ = CallStatus::kWrite;
-                        writer_.Write(responses_[current_response_], this);
+                        writer_.Write(responses_[0], this);  //Write the first response
+                        writer_lock_.unlock();
+                        break;  
                     }
 
 
                     //Get a parameter based on the given path
                 } else if (!req_.oid_prefix().empty()) { 
+
                     if (service->authorizationEnabled()) {
                         Device::LockGuard lg(dm_);
 
@@ -139,12 +143,19 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         std::cout << "current path: " << req_.oid_prefix() << std::endl;
                     }
 
+
+                    // if (param->getDescriptor().type() == catena::ParamType::STRUCT_VARIANT) {
+                    //     std::cout << "param is a variant" << std::endl;
+                    // }
+
                     max_index_ = 0;
  
                     if (rc.status == catena::StatusCode::OK && param) {
                         // Calculate array length if this is a struct array
-                        if (param->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                        if (isArrayType(param->type().value())) {
                             max_index_ = calculateArrayLength(req_.oid_prefix());
+                        }else{
+                            std::cout << "param is not an array type" << std::endl;
                         }
 
                         // Add main response
@@ -155,21 +166,24 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
                         }
 
-                        // Update array length if needed
                         if (max_index_ > 0) {
                             updateArrayLengths(responses_.back().info().oid(), max_index_);
+                        }   
+
+                        if (req_.recursive()) {
+                            getChildren(param.get(), req_.oid_prefix(), authz);
                         }
 
-                        /** TODO: ADD RECURSIVE CALL HERE*/
-
-                        // Start writing responses
+                        writer_lock_.lock();
                         status_ = CallStatus::kWrite;
-                        writer_.Write(responses_[current_response_], this);     
+                        writer_.Write(responses_[0], this); //Write the first response
+                        writer_lock_.unlock();
+
+                        break;
 
                     } else {
                         throw catena::exception_with_status(rc.what(), rc.status);
                     }
-                
                 }
 
             } catch (const catena::exception_with_status& e) {
@@ -188,16 +202,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             }
 
         case CallStatus::kWrite:
-            if (context_.IsCancelled()) {
-                Device::LockGuard lg(dm_);
-                std::cout << "[" << objectId_ << "] cancelled during write\n";
-                status_ = CallStatus::kFinish;
-                writer_.Finish(Status::CANCELLED, this);
-                break;
-            }
-
             try {
-                Device::LockGuard lg(dm_);
                 // First, check for if responses exist
                 if (current_response_ >= responses_.size() || responses_.empty()) {
                     status_ = CallStatus::kFinish;
@@ -212,23 +217,25 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     break;
                 }
 
-                // If this isn't the last response, write and continue
-                if (current_response_ < responses_.size() - 1) {
-                    writer_.Write(responses_[current_response_++], this);
-                } else {
-                    std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "] writing final response\n";
-                    status_ = CallStatus::kFinish; 
-                    writer_.Finish(Status::OK, this);
-                }
+                if (current_response_ < responses_.size()) {
+                    writer_lock_.lock(); //Lock the writer for writing
+                    if (current_response_ >= responses_.size()-1) {
+                        status_ = CallStatus::kFinish; 
+                        writer_.Finish(Status::OK, this);
+                    } else {
+                        current_response_++;
+                        writer_.Write(responses_.at(current_response_), this);
+                    }
+                    writer_lock_.unlock();
+                    break;
+                }        
             } catch (const std::exception& e) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, 
                     "Error writing response: " + std::string(e.what())), this);
-                break;
             }
             break;
             
-        //It does not go to kFinish, and I'm not sure why...
         case CallStatus::kFinish:
             std::cout << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
@@ -273,5 +280,40 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
                 it->set_array_length(length);
             }
         }
+    }
+}
+
+
+/** Recursively gets all children of a parameter */
+void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
+    const auto& descriptor = current_param->getDescriptor();
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+
+    for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+    
+         // Skip invalid child names (empty or absolute paths)
+        if (child_name.empty() || child_name[0] == '/') continue;
+        
+        Path child_path{current_path, child_name};
+        
+        rc = catena::exception_with_status{"", catena::StatusCode::OK};
+        
+        auto sub_param = dm_.getParam(child_path.toString(), rc);        
+        if (rc.status == catena::StatusCode::OK && sub_param) {
+            if (isArrayType(sub_param->type().value())) {  
+                /** TODO: ARRAY LOGIC*/
+            }
+            else {
+                responses_.emplace_back();
+                if (service_->authorizationEnabled()) {
+                    Device::LockGuard lg(dm_);
+                    sub_param->toProto(responses_.back(), authz);
+                } else {
+                    Device::LockGuard lg(dm_);
+                    sub_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                }                
+                getChildren(sub_param.get(), child_path.toString(), authz);
+            }
+        }        
     }
 }
