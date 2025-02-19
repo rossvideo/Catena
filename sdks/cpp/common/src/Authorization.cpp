@@ -51,7 +51,6 @@ Authorizer::Authorizer(const std::string& JWSToken) {
             .leeway(300); // 5 minutes of leeway for nbf and exp.
             //.with_issuer("Some given issuer")
             //.with_audience("Placeholder audience");
-            //.leeway(60); //Not sure if this is required
             // Throws error if the token is invalid.
         verifier.verify(decodedToken); // Throws error if invalid.
 

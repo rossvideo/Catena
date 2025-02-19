@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -73,7 +73,19 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
-
+        /**
+         * @brief Checks if the parameter is an array type.
+         * 
+         * @param type - The type of the parameter.
+         * @return True if the parameter is an array type, false otherwise.
+         */
+        static bool isArrayType(catena::ParamType type) {
+            return (type == catena::ParamType::STRUCT_ARRAY ||
+                    type == catena::ParamType::INT32_ARRAY ||
+                    type == catena::ParamType::FLOAT32_ARRAY ||
+                    type == catena::ParamType::STRING_ARRAY ||
+                    type == catena::ParamType::STRUCT_VARIANT_ARRAY);
+        }
 
         /**
          * @brief Calculates the length of the array.
@@ -90,6 +102,15 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @param length - The length of the array.
          */
         void updateArrayLengths(const std::string& array_name, uint32_t length);
+
+
+        /**
+         * @brief Gets the children of the parameter.
+         * 
+         * @param param - The parameter to get the children from.
+         * @param oid - The oid of the parameter.
+         */
+       void getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.
@@ -151,4 +172,14 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @brief The maximum index of the parameter.
          */
         uint32_t max_index_{0};
+
+        /**
+         * @brief The mutex for the writer lock.
+         */
+        std::mutex mtx_;
+
+        /**
+         * @brief The writer lock.
+         */
+        std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 };
