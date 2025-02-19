@@ -1,6 +1,29 @@
 var hierarchy =
 [
+    [ "catena::API", "classcatena_1_1API.html", null ],
+    [ "catena::CatenaService::AsyncService", null, [
+      [ "CatenaServiceImpl", "classCatenaServiceImpl.html", null ]
+    ] ],
+    [ "grpc::AuthMetadataProcessor", null, [
+      [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
+    ] ],
     [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
+    [ "CatenaServiceImpl::CallData", "classCatenaServiceImpl_1_1CallData.html", [
+      [ "CatenaServiceImpl::AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", null ],
+      [ "CatenaServiceImpl::BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", null ],
+      [ "CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
+      [ "CatenaServiceImpl::DeviceRequest", "classCatenaServiceImpl_1_1DeviceRequest.html", null ],
+      [ "CatenaServiceImpl::ExecuteCommand", "classCatenaServiceImpl_1_1ExecuteCommand.html", null ],
+      [ "CatenaServiceImpl::ExternalObjectRequest", "classCatenaServiceImpl_1_1ExternalObjectRequest.html", null ],
+      [ "CatenaServiceImpl::GetParam", "classCatenaServiceImpl_1_1GetParam.html", null ],
+      [ "CatenaServiceImpl::GetPopulatedSlots", "classCatenaServiceImpl_1_1GetPopulatedSlots.html", null ],
+      [ "CatenaServiceImpl::GetValue", "classCatenaServiceImpl_1_1GetValue.html", null ],
+      [ "CatenaServiceImpl::LanguagePackRequest", "classCatenaServiceImpl_1_1LanguagePackRequest.html", null ],
+      [ "CatenaServiceImpl::ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", null ],
+      [ "CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", [
+        [ "CatenaServiceImpl::SetValue", "classCatenaServiceImpl_1_1SetValue.html", null ]
+      ] ]
+    ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::Device", "classcatena_1_1common_1_1Device.html", null ],
@@ -44,6 +67,8 @@ var hierarchy =
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
     [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
+    [ "catena::common::Path", "classcatena_1_1common_1_1Path.html", null ],
+    [ "catena::PeerInfo", "classcatena_1_1PeerInfo.html", null ],
     [ "catena::meta::PopFrontT< L >", "classcatena_1_1meta_1_1PopFrontT.html", null ],
     [ "catena::meta::PopFrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1PopFrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
     [ "catena::common::Device::DeviceSerializer::promise_type", "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html", null ],
@@ -59,6 +84,9 @@ var hierarchy =
     ] ],
     [ "catena::patterns::Singleton< GenericFactory< P, K, Ms... > >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::patterns::GenericFactory< P, K, Ms >", "classcatena_1_1patterns_1_1GenericFactory.html", null ]
+    ] ],
+    [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
+      [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
     [ "std::true_type", null, [

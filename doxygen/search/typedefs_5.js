@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['nthelement_0',['NthElement',['../namespacecatena_1_1meta.html#a92857e8db79d45eeea75c41a9518d8df',1,'catena::meta']]]
+  ['maker_0',['Maker',['../classcatena_1_1patterns_1_1GenericFactory.html#abb2a34f8ec0f4711264ab399e7098773',1,'catena::patterns::GenericFactory']]]
 ];

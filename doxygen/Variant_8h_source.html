@@ -114,13 +114,12 @@ $(document).ready(function(){initNavTree('Variant_8h_source.html',''); initResiz
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html">   45</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structcatena_1_1meta_1_1is__variant.html">is_variant</a>&lt;T, std::void_t&lt;decltype(std::get&lt;0&gt;(std::declval&lt;T&gt;()))&gt;&gt; : std::true_type {};</div>
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment">// Concept to check if a type is a std::variant</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno"><a class="line" href="conceptcatena_1_1meta_1_1IsVariant.html">   49</a></span><span class="keyword">concept </span><a class="code hl_concept" href="conceptcatena_1_1meta_1_1IsVariant.html">IsVariant</a> = is_variant&lt;T&gt;::value;</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>} <span class="comment">// namespace meta</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>} <span class="comment">// namespace catena</span></div>
-<div class="ttc" id="aconceptcatena_1_1meta_1_1IsVariant_html"><div class="ttname"><a href="conceptcatena_1_1meta_1_1IsVariant.html">catena::meta::IsVariant</a></div><div class="ttdef"><b>Definition</b> Variant.h:49</div></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno"><a class="line" href="conceptcatena_1_1meta_1_1IsVariant.html">   51</a></span><span class="keyword">concept </span><a class="code hl_concept" href="conceptcatena_1_1meta_1_1IsVariant.html">IsVariant</a> = is_variant&lt;T&gt;::value;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>} <span class="comment">// namespace meta</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>} <span class="comment">// namespace catena</span></div>
+<div class="ttc" id="aconceptcatena_1_1meta_1_1IsVariant_html"><div class="ttname"><a href="conceptcatena_1_1meta_1_1IsVariant.html">catena::meta::IsVariant</a></div><div class="ttdoc">Concept to check if a type is a std::variant.</div><div class="ttdef"><b>Definition</b> Variant.h:51</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdoc">top level namespace for Catena. Functionality at this scope includes the protoc generated classes....</div><div class="ttdef"><b>Definition</b> Authorization.h:55</div></div>
 <div class="ttc" id="astructcatena_1_1meta_1_1is__variant_html"><div class="ttname"><a href="structcatena_1_1meta_1_1is__variant.html">catena::meta::is_variant</a></div><div class="ttdoc">type trait to determine if a type is a std::variant default is false</div><div class="ttdef"><b>Definition</b> Variant.h:38</div></div>
 </div><!-- fragment --></div><!-- contents -->
