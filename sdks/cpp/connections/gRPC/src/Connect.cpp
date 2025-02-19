@@ -184,6 +184,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     // if an error is thrown, no update is pushed to the client
                 } 
             });
+
             // Waiting for a language to be added to execute code.
             languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
                 try {

@@ -99,13 +99,11 @@ class IParam {
      */
     virtual catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const = 0;
 
-
     /**
      * @brief serialize the parameter descriptor to protobuf
      * @param paramInfo the protobuf value to serialize to
      */
     virtual catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const = 0;
-
 
     /**
      * @brief return the type of the param
@@ -134,9 +132,38 @@ class IParam {
     virtual void readOnly(bool flag) = 0;
 
     /**
+     * @brief Validates the size of a string or array value.
+     */
+    virtual bool validateSize(const catena::Value& value) const = 0;
+
+    /**
      * @brief get a child parameter by name
      */
     virtual std::unique_ptr<IParam> getParam(Path& oid, Authorizer& authz, catena::exception_with_status& status) = 0;
+
+    /**
+     * @brief Return the size of an array parameter.
+     * @return The size of the array parameter, or 0 if the parameter is not an
+     * array.
+     */
+    virtual uint32_t size() const = 0;
+
+    /**
+     * @brief Add an empty value to and return the back of an array parameter.
+     * @param authz The Authorizer to test write permissions with.
+     * @param status The status of the operation. OK if successful, otherwise
+     * an error.
+     * @return A unique ptr to the new element, or nullptr if the operation
+     * failed.
+     */
+    virtual std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) = 0;
+
+    /**
+     * @brief Pop the back of an array parameter.
+     * @param authz The Authorizer to test write permissions with.
+     * @return OK if succcessful, otherwise an error.
+     */
+    virtual catena::exception_with_status popBack(Authorizer& authz) = 0;
 
     /**
      * @brief get a constraint by oid

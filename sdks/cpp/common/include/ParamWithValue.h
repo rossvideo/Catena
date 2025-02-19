@@ -126,6 +126,36 @@ class ParamWithValue : public catena::common::IParam {
      * @brief default destructor
      */
     virtual ~ParamWithValue() = default;
+		
+  private:
+    using Kind = catena::Value::KindCase;
+    /**
+     * @brief A map which returns a value's length using a function determined
+	 * by the indexed Value.kind_case().
+	 * Private for now, might make public later if useful in other scopes.
+     */
+    const std::unordered_map<Kind, std::function<uint32_t(const catena::Value& value)>> getSize {
+        {Kind::kStringValue,              [](const catena::Value& value) {return value.string_value().length();}},
+        {Kind::kInt32ArrayValues,         [](const catena::Value& value) {return value.int32_array_values().ints_size();}},
+        {Kind::kFloat32ArrayValues,       [](const catena::Value& value) {return value.float32_array_values().floats_size();}},
+        {Kind::kStringArrayValues,        [](const catena::Value& value) {return value.string_array_values().strings_size();}},
+        {Kind::kStructArrayValues,        [](const catena::Value& value) {return value.struct_array_values().struct_values_size();}},
+        {Kind::kStructVariantArrayValues, [](const catena::Value& value) {return value.struct_variant_array_values().struct_variants_size();}}
+    };
+
+  public:
+    /**
+     * @brief Validates the size of a string or array value.
+     * This does not check size of all elements in a string array. Therefore
+     * someone could still mount an attack on the system by sending a
+     * string_array with a large value.
+     * @param value The value to validate the size of.
+	 * @returns true if the value's size is within the param's predefined
+	 * limit, or if the value is not a string or array.
+     */
+    bool validateSize(const catena::Value& value) const override {
+        return getSize.contains(value.kind_case()) ? getSize.at(value.kind_case())(value) <= descriptor_.max_length() : true;
+    }
 
     /**
      * @brief creates a shallow copy the parameter
@@ -187,15 +217,19 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
+        catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-        if (!authz.writeAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+        else if (!authz.writeAuthz(*this)) {
+            ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
+        }
+        else if (!validateSize(value)) {
+            ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
         } else {
             catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
-            return catena::exception_with_status("", catena::StatusCode::OK);
         }
+        return ans;
     }
 
     /**
@@ -271,6 +305,36 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
+     * @brief Gets the size of the array parameter.
+     * @return The size of the array parameter, or 0 if the parameter is not an
+     * array.
+     */
+    uint32_t size() const override {     
+        return size(value_.get());
+    }
+
+    /**
+     * @brief Adds an empty element to the end of an array parameter.
+     * @param authz The Authorizer to test write permissions with.
+     * @param status The status of the operation. OK if successful, otherwise
+     * an error.
+     * @return A unique ptr to the new element, or nullptr if the operation
+     * failed.
+     */
+    std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) {     
+        return addBack(value_.get(), authz, status);
+    }
+
+    /**
+     * @brief Removes the last element from an array parameter.
+     * @param authz The Authorizer to test write permissions with.
+     * @return OK if succcessful, otherwise an error.
+     */
+    catena::exception_with_status popBack(Authorizer& authz) {
+        return popBack(value_.get(), authz);
+    }
+
+    /**
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
      */
@@ -279,6 +343,112 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   private:
+    /**
+     * @brief Gets the size of the array parameter.
+     * @return 0.
+     * 
+     * This generic template is used when the type is not a CatenaStructArray.
+     * Since there is no .size() attribute, it only returns 0.
+     */
+    template <typename U>
+    uint32_t size(U& value) const {     
+        return 0;
+    }
+
+    /**
+     * @brief Gets the size of the array parameter.
+     * @return The size of the array parameter.
+     * 
+     * This specialization is used when the type is a CatenaStructArray.
+     */
+    template<meta::IsVector U>
+    uint32_t size(U& value) const {     
+        return value.size();
+    }
+
+    /**
+     * @brief Adds an empty element to the end of an array parameter.
+     * @tparam U The type of the value that we are adding to the back of.
+     * @param value The value that we are adding to the back of.
+     * @param authz The Authorizer to test write permissions with.
+     * @param status The status of the operation. OK if successful, otherwise
+     * an error.
+     * @return nullptr.
+     * 
+     * This generic template is used when the type is not a CatenaStructArray.
+     * Since you cant add to the back, it only returns nullptr.
+     */
+    template <typename U>
+    std::unique_ptr<IParam> addBack(U& value, Authorizer& authz, catena::exception_with_status& status) {
+        status = catena::exception_with_status("Cannot add to param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        return nullptr;
+    }
+    
+    /**
+     * @brief Adds an empty element to the end of an array parameter.
+     * @tparam U the type of the value that we are adding to the back of.
+     * @param value The value that we are adding to the back of.
+     * @param authz The Authorizer to test write permissions with.
+     * @param status The status of the operation. OK if successful, otherwise
+     * an error.
+     * @return A unique ptr to the new element, or nullptr if the operation
+     * failed.
+     * 
+     * This specialization is used when the type is a CatenaStructArray.
+     */
+    template<meta::IsVector U>
+    std::unique_ptr<IParam> addBack(U& value, Authorizer& authz, catena::exception_with_status& status) {
+        using ElemType = U::value_type;
+        auto oidIndex = value.size();
+        if (!authz.writeAuthz(*this)) {
+            status = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
+            return nullptr;
+        } else if (oidIndex >= descriptor_.max_length()) {
+            status = catena::exception_with_status("Array " + descriptor_.getOid() + " at maximum capacity", catena::StatusCode::INVALID_ARGUMENT);
+            return nullptr;
+        } else {
+            value.push_back(ElemType());
+            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+        }
+    }
+
+    /**
+     * @brief Removes the last element from an array parameter.
+     * @tparam U the type of the value that we are poping the back of.
+     * @param value The value that we are poping the back of.
+     * @param authz The Authorizer to test write permissions with.
+     * @return catena::exception_with_status error.
+     * 
+     * This generic template is used when the type is not a CatenaStructArray.
+     * Since you cant pop the back, it only returns an error.
+     */
+    template <typename U>
+    catena::exception_with_status popBack(U& value, Authorizer& authz) {
+        // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
+        return catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+    }
+
+    /**
+     * @brief Removes the last element from an array parameter.
+     * @tparam U the type of the value that we are poping the back of.
+     * @param value The value that we are poping the back of.
+     * @param authz The Authorizer to test write permissions with.
+     * @return OK if successful, error otherwise.
+     * 
+     * This specialization is used when the type is a CatenaStructArray.
+     */
+    template<meta::IsVector U>
+    catena::exception_with_status popBack(U& value, Authorizer& authz) {
+        catena::exception_with_status ans = catena::exception_with_status("", catena::StatusCode::OK);
+        if (!authz.writeAuthz(*this)) {
+            ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
+        } else if (value.size() <= 0) {
+            ans = catena::exception_with_status("Index out of bounds", catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            value.pop_back();
+        }
+        return ans;
+    }
 
     /**
      * @brief get the child parameter that oid points to
@@ -318,11 +488,7 @@ class ParamWithValue : public catena::common::IParam {
         size_t oidIndex = oid.front_as_index();
         oid.pop();
 
-        if (oidIndex == catena::common::Path::kEnd) {
-            // Index is "-", add a new element to the array
-            oidIndex = value.size();
-            value.push_back(ElemType());
-        } else if (oidIndex >= value.size()) {
+        if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
             // If index is out of bounds, return nullptr
             status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
@@ -337,7 +503,7 @@ class ParamWithValue : public catena::common::IParam {
                 return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
             } else {
                 // This type is not a CatenaStructArray so it has no sub-params
-                status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
                 return nullptr;
             }
         }
@@ -365,7 +531,7 @@ class ParamWithValue : public catena::common::IParam {
 
         std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
         if (!ip) {
-            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
 
@@ -447,9 +613,8 @@ class ParamWithValue : public catena::common::IParam {
         }
         std::string oidStr = oid.front_as_string();
         oid.pop();   
-
         if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
-            status = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
 
@@ -501,5 +666,5 @@ inline T& getParamValue(catena::common::IParam* param) {
   return dynamic_cast<ParamWithValue<T>*>(param)->get();
 }
 
-} // namespace common
-} // namespace catena
+}; // namespace common
+}; // namespace catena
