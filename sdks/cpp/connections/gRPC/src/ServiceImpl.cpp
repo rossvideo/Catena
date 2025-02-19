@@ -161,11 +161,9 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-
 std::string CatenaServiceImpl::CallData::getJWSToken() {
     // Getting client metadata from context.
     auto clientMeta = &context_.client_metadata();
-    auto testMeta = *clientMeta;
     if (clientMeta == nullptr) {
         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
     }

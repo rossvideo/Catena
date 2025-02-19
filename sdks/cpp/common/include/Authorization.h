@@ -65,6 +65,7 @@ namespace common {
  */
 class Authorizer {
   public:
+  // Temporary until we figue ot how keys work.
 	const std::string PUBLIC_KEY = R"(
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
@@ -86,10 +87,9 @@ mwIDAQAB
      */
     static Authorizer kAuthzDisabled;
 
-	using Metadata = std::multimap<std::string, std::string>;
     /**
      * @brief Construct a new Authorizer object
-     * @param token The JSON web token to validate and extract scopes from.
+     * @param token The JWS token to validate and extract scopes from.
      */
     Authorizer(const std::string& JWSToken);
 
@@ -150,14 +150,20 @@ mwIDAQAB
 
 
   private:
-	 /**
-     * @brief Construct a new Authorizer object
-     * @param pd the ParamDescriptor of the object
-     * @param scope the scope of the object
-     */
-    Authorizer(const Scopes& clientScopes)
-        : clientScopes_{clientScopes} {}
+    void validateTyp(std::string& typ) {
+      if (typ != "" && typ != "") {
+        throw;
+      }
+    }
 
+
+	  /**
+     * @brief Construct for kAuthzDisabled
+     */
+    Authorizer() : clientScopes_{{""}} {}
+    /**
+     * @brief Client scopes extracted from a valid JWS token.
+     */
   	Scopes clientScopes_;
 };
 

@@ -35,46 +35,26 @@
 
 using catena::common::Authorizer;
 
-// placeholder for disabled authorization
-static const std::vector<std::string> kAuthzDisabledScope = {""};
-
 // initialize the disabled authorization object
-Authorizer Authorizer::kAuthzDisabled = {kAuthzDisabledScope};
+Authorizer Authorizer::kAuthzDisabled;
 
 Authorizer::Authorizer(const std::string& JWSToken) {
     try {
         // Decodes the token into its claims. decoded_jwt< traits::open_source_parsers_jsoncpp >
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
         // Currently set to verify iss, aud, nbf and exp
+        // *Note nbf and exp are automatically verified.
         auto verifier = jwt::verify()
             // pubkey, privkey, pubpass, privpass - pending to change based on given JWT
-            .allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""));
+            .allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""))
+            .with_type("at+jwt")
+            .leeway(300); // 5 minutes of leeway for nbf and exp.
             //.with_issuer("Some given issuer")
             //.with_audience("Placeholder audience");
             //.leeway(60); //Not sure if this is required
             // Throws error if the token is invalid.
         verifier.verify(decodedToken); // Throws error if invalid.
 
-        auto now = std::chrono::system_clock::now();
-        std::time_t nowSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
-        // Check for token's NBF claim
-        if (decodedToken.has_payload_claim("nbf")) {
-            std::time_t nbf = decodedToken.get_payload_claim("nbf").as_date().time_since_epoch().count();
-            // Ensure nbf is limited to 10 digits
-            nbf = static_cast<std::time_t>(nbf / 1000000000);
-            if (nowSinceEpoch < nbf) {
-                throw;
-            }
-        }
-        // Check if token is expired
-        if (decodedToken.has_payload_claim("exp")) {
-            auto exp = decodedToken.get_payload_claim("exp").as_date().time_since_epoch().count();
-            // Ensure exp is limited to 10 digits
-            exp = static_cast<std::time_t>(exp / 1000000000);
-            if (nowSinceEpoch > exp) {
-                throw;
-            }
-        }
         // Extracting scopes from the decoded token's claims.
         auto claims = decodedToken.get_payload_json();
         for (picojson::value::object::const_iterator it = claims.begin(); it != claims.end(); ++it) {

@@ -105,7 +105,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     class CallData {
       public:
-        using Metadata = std::multimap<std::string, std::string>;
         /**
          * @brief Proceed function to be implemented by the CallData classes.
          */
