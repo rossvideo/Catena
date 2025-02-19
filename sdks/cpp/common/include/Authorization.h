@@ -45,6 +45,7 @@
 #include <Enums.h>
 #include <IParam.h>
 #include <ParamDescriptor.h>
+#include <jwt-cpp/jwt.h>
 
 #include <functional>
 
@@ -64,6 +65,17 @@ namespace common {
  */
 class Authorizer {
   public:
+	const std::string PUBLIC_KEY = R"(
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
+4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u
++qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyeh
+kd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ
+0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdg
+cKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbc
+mwIDAQAB
+-----END PUBLIC KEY-----
+)";
     /**
      * @brief The scopes of the object
      */
@@ -74,13 +86,12 @@ class Authorizer {
      */
     static Authorizer kAuthzDisabled;
 
+	using Metadata = std::multimap<std::string, std::string>;
     /**
      * @brief Construct a new Authorizer object
-     * @param pd the ParamDescriptor of the object
-     * @param scope the scope of the object
+     * @param token The JSON web token to validate and extract scopes from.
      */
-    Authorizer(const Scopes& clientScopes)
-        : clientScopes_{clientScopes} {}
+    Authorizer(const std::string& JWSToken);
 
     /**
      * @brief Authorizer does not have copy semantics
@@ -139,7 +150,15 @@ class Authorizer {
 
 
   private:
-    std::reference_wrapper<const Scopes> clientScopes_;
+	 /**
+     * @brief Construct a new Authorizer object
+     * @param pd the ParamDescriptor of the object
+     * @param scope the scope of the object
+     */
+    Authorizer(const Scopes& clientScopes)
+        : clientScopes_{clientScopes} {}
+
+  	Scopes clientScopes_;
 };
 
 } // namespace common

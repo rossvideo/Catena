@@ -70,11 +70,6 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
          */
         CatenaServiceImpl *service_;
         /**
-         * @brief Context for gRPC command request for the server to use to
-         * send data back to the client
-         */
-        ServerContext context_;
-        /**
          * @brief Request payload for command
          */
         catena::ExecuteCommandPayload req_;

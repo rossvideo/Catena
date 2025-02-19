@@ -87,35 +87,24 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                catena::common::Authorizer authz = std::vector<std::string>{};
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    authz = sharedAuthz.get();
+                } else {
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
 
                 //Gather all top-level params if prefix is empty and recursive is false
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
-                    std::vector<std::unique_ptr<IParam>> top_level_params;
-
-                     
-                    if (service->authorizationEnabled()) {
-                        Device::LockGuard lg(dm_);
-
-                        /** TODO: This copy needs to be done in the constructor of Authorizer */
-                        std::vector<std::string> scopes = std::move(service->getScopes(context_));
-
-                        authz = catena::common::Authorizer{scopes};
-                        top_level_params = dm_.getTopLevelParams(rc, authz);
-                    } else {
-                        Device::LockGuard lg(dm_);
-                        top_level_params = dm_.getTopLevelParams(rc);
-                    }
+                    std::vector<std::unique_ptr<IParam>> top_level_params = dm_.getTopLevelParams(rc, *authz);
 
                     if (rc.status == catena::StatusCode::OK) {
                         Device::LockGuard lg(dm_);
                         for (auto& top_level_param : top_level_params) {
                             responses_.emplace_back();
-                            if (service->authorizationEnabled()) {
-                                top_level_param->toProto(responses_.back(), authz);
-                            } else {
-                                top_level_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                            }
+                            top_level_param->toProto(responses_.back(), *authz);
                         }
                            
                         status_ = CallStatus::kWrite;
@@ -127,11 +116,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 } else if (!req_.oid_prefix().empty()) { 
                     if (service->authorizationEnabled()) {
                         Device::LockGuard lg(dm_);
-
-                        /** TODO: This copy needs to be done in the constructor of Authorizer */
-                        std::vector<std::string> scopes = std::move(service->getScopes(context_));
-
-                        authz = catena::common::Authorizer{scopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         param = dm_.getParam(req_.oid_prefix(), rc, authz);
                     } else {
                         Device::LockGuard lg(dm_);
@@ -149,11 +134,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                         // Add main response
                         responses_.emplace_back();
-                        if (service->authorizationEnabled()) {
-                            param->toProto(responses_.back(), authz);
-                        } else {
-                            param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                        }
+                        param->toProto(responses_.back(), *authz);
 
                         // Update array length if needed
                         if (max_index_ > 0) {
@@ -172,11 +153,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 
                 }
 
-            } catch (const catena::exception_with_status& e) {
+            } catch (catena::exception_with_status& err) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
-                    "Failed to process request: " + std::string(e.what()) + 
-                    " (Status: " + std::to_string(static_cast<int>(e.status)) + ")");
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
                 writer_.Finish(errorStatus, this);
                 break;
             } catch (...) {

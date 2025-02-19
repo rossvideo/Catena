@@ -121,8 +121,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                      * client's scopes.
                      */
                     if(service_->authorizationEnabled()){
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         if (authz.readAuthz(*p)){
                             this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
@@ -162,8 +161,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                      * client's scopes.
                      */
                     if (service_->authorizationEnabled()){
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         if (authz.readAuthz(*p)){
                             this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
@@ -196,8 +194,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     }
                     // Returning if authorization is enabled and the client does not have monitor scope.
                     if (service_->authorizationEnabled()) {
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }

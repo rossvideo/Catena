@@ -162,65 +162,19 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
 }
 
 
-//Gets the scopes from the provided authorization context
-std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
-    if(!authorizationEnabled_){
-        // there won't be any scopes if authorization is disabled
-        return {};
-    }
-    auto address =  &context;
-    /**
-     * If authorization is enabled, get the authorization context as well as
-     * the claims from the client_metadata.
-     */
-    auto contextMeta = &context.client_metadata();
-    auto testMeta = *contextMeta;
-
-    //If there is no authorization context, deny the request
-    if (contextMeta == nullptr) {
+std::string CatenaServiceImpl::CallData::getJWSToken() {
+    // Getting client metadata from context.
+    auto clientMeta = &context_.client_metadata();
+    auto testMeta = *clientMeta;
+    if (clientMeta == nullptr) {
         throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
     }
-
-
-    bool authenticated = contextMeta->find("authenticated") != contextMeta->end();
-    if (!authenticated) {
-        throw catena::exception_with_status("Not authenticated", catena::StatusCode::UNAUTHENTICATED);
+    // Verfying "authorization" exists and is using Bearer schema.
+    auto authData = clientMeta->find("authorization");
+    if (authData == clientMeta->end() || !authData->second.starts_with("Bearer ")) {
+        throw catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     }
-
-    // Get the claims from the authorization context
-    //std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
-    auto claimsStr = contextMeta->find("claims");
-    // If there are no claims, deny the request
-    if (claimsStr == contextMeta->end()) {
-        throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
-    }
-    // Parse string of claims into a picojson object
-    picojson::value claims;
-    // inline std::string picojson::parse(picojson::value &out, const std::string &s)
-    std::string err = picojson::parse(claims, claimsStr->second.data());
-
-    // If there was an error parsing the claims, deny the request
-    if (!err.empty()) {
-        throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
-    }
-
-    // Extract the scopes from the claims
-    std::vector<std::string> scopes;
-    const picojson::value::object &obj = claims.get<picojson::object>();
-    for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
-        if (it->first == "scope"){
-            std::string scopeClaim = it->second.get<std::string>();
-            std::istringstream iss(scopeClaim);
-            while (std::getline(iss, scopeClaim, ' ')) {
-                scopes.push_back(scopeClaim);
-            }
-        }
-    }
-    /**
-     * Freeing the memory associated with claims once we are done with it.
-     * Cannot remove the claims from the contextMeta as it is a const object.
-     * Be sure to not use this field in the future.
-     */
-
-    return scopes;
+    // Getting token (after "bearer") and converting to std::string.
+    auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
+    return std::string(tokenSubStr.begin(), tokenSubStr.end());
 }

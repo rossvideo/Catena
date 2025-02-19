@@ -41,7 +41,6 @@ set(sources
     "src/ExecuteCommand.cpp"
     "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"
-    "src/AuthInterceptor.cpp"    
     "src/MultiSetValue.cpp"
     "src/AddLanguage.cpp"
     "src/ListLanguages.cpp"

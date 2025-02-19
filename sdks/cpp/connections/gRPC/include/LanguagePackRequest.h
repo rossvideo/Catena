@@ -69,11 +69,6 @@ class CatenaServiceImpl::LanguagePackRequest : public CallData {
          */
         CatenaServiceImpl *service_;
         /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _responder and other gRPC objects/functions.
-         */
-        ServerContext context_;
-        /**
          * @brief Server request (slot, languageId).
          */
         catena::LanguagePackRequestPayload req_;

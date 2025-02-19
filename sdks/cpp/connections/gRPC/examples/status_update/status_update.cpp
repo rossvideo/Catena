@@ -48,7 +48,6 @@
 #include <SharedFlags.h>
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
-#include <AuthInterceptor.h> // NEW
 
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
@@ -190,13 +189,6 @@ void RunRPCServer(std::string addr)
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
-        if (authz) {
-            //Create vector of interceptor factories
-            std::vector<std::unique_ptr<grpc::experimental::ServerInterceptorFactoryInterface>> interceptorCreators;
-            interceptorCreators.push_back(std::make_unique<AuthInterceptorFactory>());
-            //Set inteceptor facctories in server builder
-            builder.experimental().SetInterceptorCreators(std::move(interceptorCreators));
-        }
         CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
 
         // Updating device's default max array length.

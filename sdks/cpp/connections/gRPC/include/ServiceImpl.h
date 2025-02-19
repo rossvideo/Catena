@@ -105,6 +105,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     class CallData {
       public:
+        using Metadata = std::multimap<std::string, std::string>;
         /**
          * @brief Proceed function to be implemented by the CallData classes.
          */
@@ -113,13 +114,17 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
          * @brief Destructor for the CallData class.
          */
         virtual ~CallData() {}
+      protected:
+        /**
+         * Helper function to extract the client's JWS token from server context.
+         */
+        std::string getJWSToken();
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
+        ServerContext context_;
     };
-
-    /**
-     * @brief Gets the scopes from the provided authorization context
-     * @throw catena::exception_with_status permission denied
-     */
-    std::vector<std::string> getScopes(grpc::ServerContext &context);
 
     // Aliases for special vectors and unique_ptrs.
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
