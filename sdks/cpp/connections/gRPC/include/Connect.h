@@ -148,4 +148,14 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief ID of the shutdown signal for the Connect object
         */
         unsigned int shutdownSignalId_;
+
+        /**
+         * @brief Updates the response with the new value
+         * 
+         * @param oid - The OID of the value to update
+         * @param idx - The index of the value to update
+         * @param p - The parameter to update
+         * @param authz - The authorizer to use
+         */
+        void updateResponse(const std::string& oid, size_t idx, IParam* p, catena::common::Authorizer& authz);
 };

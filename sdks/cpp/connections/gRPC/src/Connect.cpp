@@ -124,22 +124,10 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         std::vector<std::string> clientScopes = service_->getScopes(context_);
                         catena::common::Authorizer authz{clientScopes};
                         if (authz.readAuthz(*p)){
-                            this->res_.mutable_value()->set_oid(oid);
-                            this->res_.mutable_value()->set_element_index(idx);
-                            
-                            catena::Value* value = this->res_.mutable_value()->mutable_value();
-                            p->toProto(*value, authz);
-                            this->hasUpdate_ = true;
-                            this->cv_.notify_one();
+                            updateResponse(oid, idx, const_cast<IParam*>(p), authz);
                         }
                     } else {
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-
-                        catena::Value* value = this->res_.mutable_value()->mutable_value();
-                        p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
+                        updateResponse(oid, idx, const_cast<IParam*>(p), catena::common::Authorizer::kAuthzDisabled);
                     }
                 }catch(catena::exception_with_status& why){
                     // if an error is thrown, no update is pushed to the client
@@ -165,20 +153,10 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         std::vector<std::string> clientScopes = service_->getScopes(context_);
                         catena::common::Authorizer authz{clientScopes};
                         if (authz.readAuthz(*p)){
-                            this->res_.mutable_value()->set_oid(oid);
-                            this->res_.mutable_value()->set_element_index(idx);
-                            catena::Value* value = this->res_.mutable_value()->mutable_value();
-                            p->toProto(*value, authz);
-                            this->hasUpdate_ = true;
-                            this->cv_.notify_one(); 
+                            updateResponse(oid, idx, const_cast<IParam*>(p), authz);
                         }
                     } else { 
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-                        catena::Value* value = this->res_.mutable_value()->mutable_value();
-                        p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
+                        updateResponse(oid, idx, const_cast<IParam*>(p), catena::common::Authorizer::kAuthzDisabled);
                     }
                 }catch(catena::exception_with_status& why){
                     // if an error is thrown, no update is pushed to the client
@@ -259,5 +237,17 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+    }
+}
+
+void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t idx, IParam* p, catena::common::Authorizer& authz) {
+    this->res_.mutable_value()->set_oid(oid);
+    this->res_.mutable_value()->set_element_index(idx);
+    
+    catena::Value* value = this->res_.mutable_value()->mutable_value();
+    auto rc = p->toProto(*value, authz);
+    if (rc.status == catena::StatusCode::OK) {
+        this->hasUpdate_ = true;
+        this->cv_.notify_one();
     }
 }
