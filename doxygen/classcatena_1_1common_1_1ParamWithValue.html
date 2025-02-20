@@ -188,7 +188,7 @@ T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> ()</td></t
 const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () const</td></tr>
 <tr class="memdesc:ae82e6d80eba47a6ad86222b2f1041a65"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the value of the parameter (const version) <br /></td></tr>
 <tr class="separator:ae82e6d80eba47a6ad86222b2f1041a65"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bedb3aa28dd3e2ee0f3ca0daf585cd6" id="r_a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;oid, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status) override</td></tr>
+<tr class="memitem:a0bedb3aa28dd3e2ee0f3ca0daf585cd6" id="r_a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a> (Path &amp;oid, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status) override</td></tr>
 <tr class="memdesc:a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac847671a24dc48644bfc6b6a960bffc0" id="r_ac847671a24dc48644bfc6b6a960bffc0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ac847671a24dc48644bfc6b6a960bffc0">defineCommand</a> (std::function&lt; catena::CommandResponse(catena::Value)&gt; command) override</td></tr>
@@ -247,7 +247,7 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>OidAliases</b> = std
 <tr class="memdesc:a487044851ec828b06464c8990fd0add1 inherit pub_types_classcatena_1_1common_1_1IParam"><td class="mdescLeft">&#160;</td><td class="mdescRight">OidAliases is a vector of strings. <br /></td></tr>
 <tr class="separator:a487044851ec828b06464c8990fd0add1 inherit pub_types_classcatena_1_1common_1_1IParam"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2bff9998f4a7337df46b388563708d8f inherit pub_types_classcatena_1_1common_1_1IParam" id="r_a2bff9998f4a7337df46b388563708d8f"><td class="memItemLeft" align="right" valign="top">
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Path</b> = <a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a></td></tr>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Path</b> = catena::common::Path</td></tr>
 <tr class="separator:a2bff9998f4a7337df46b388563708d8f inherit pub_types_classcatena_1_1common_1_1IParam"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -607,7 +607,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::getParam </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;&#160;</td>
+          <td class="paramtype">Path &amp;&#160;</td>
           <td class="paramname"><em>oid</em>, </td>
         </tr>
         <tr>

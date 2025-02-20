@@ -3,10 +3,7 @@ var namespacecatena =
     [ "common", "namespacecatena_1_1common.html", "namespacecatena_1_1common" ],
     [ "meta", "namespacecatena_1_1meta.html", "namespacecatena_1_1meta" ],
     [ "patterns", "namespacecatena_1_1patterns.html", "namespacecatena_1_1patterns" ],
-    [ "API", "classcatena_1_1API.html", "classcatena_1_1API" ],
     [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
-    [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],
-    [ "PeerManager", "classcatena_1_1PeerManager.html", "classcatena_1_1PeerManager" ],
     [ "StatusCode", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85", [
       [ "OK", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb", null ],
       [ "CANCELLED", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a09a0c7607585f76475b04e3ba9ed3b7f", null ],
@@ -27,8 +24,6 @@ var namespacecatena =
       [ "DATA_LOSS", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551", null ],
       [ "DO_NOT_USE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f", null ]
     ] ],
-    [ "expandEnvVariables", "namespacecatena.html#aa3ce72179203719924c0cff74fd3f82c", null ],
-    [ "getServerCredentials", "namespacecatena.html#a017591597626fbc61b3a291c214d2185", null ],
     [ "readFile", "namespacecatena.html#a274b596fd164b9f6c1ec6dfe8c278efc", null ],
     [ "subs", "namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad", null ]
 ];
