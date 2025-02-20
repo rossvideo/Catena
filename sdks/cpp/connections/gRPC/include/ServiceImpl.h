@@ -65,12 +65,18 @@ using grpc::ServerCompletionQueue;
 using catena::common::Device;
 using catena::common::IParam;
 
+/**
+ * @brief UNUSED. Will probably be removed at later date.
+ */
 class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
 public:
     grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override;
 };
 
+/**
+ * @brief Implements Catena gRPC request handlers.
+ */
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
     /**
@@ -98,7 +104,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
-  private:
+  /*
+   * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
+   * cannot be inherited.
+   */
+  protected:
     /**
      * @brief Abstract base class for the CallData classes.
      * Provides the proceed method
@@ -127,7 +137,8 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
          */
         ServerContext context_;
     };
-
+  
+  private:
     // Aliases for special vectors and unique_ptrs.
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
     using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;
@@ -188,7 +199,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class GetParam;
     class ListLanguages;
     class LanguagePackRequest;
-    // class GetParam;
     class ExecuteCommand;
     class AddLanguage;
 };

@@ -273,21 +273,16 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
     const auto& descriptor = current_param->getDescriptor();
     catena::exception_with_status rc{"", catena::StatusCode::OK};
 
-    for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
-    
-         // Skip invalid child names (empty or absolute paths)
-        if (child_name.empty() || child_name[0] == '/') continue;
-        
-        Path child_path{current_path, child_name};
-        
-        rc = catena::exception_with_status{"", catena::StatusCode::OK};
-        
-        auto sub_param = dm_.getParam(child_path.toString(), rc);        
-        if (rc.status == catena::StatusCode::OK && sub_param) {
-            if (isArrayType(sub_param->type().value())) {  
-                /** TODO: ARRAY LOGIC*/
-            }
-            else {
+    // Lambda function to process children of a parameter
+    auto processChildren = [&](const std::string& parent_path) {
+        for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+            if (child_name.empty() || child_name[0] == '/') continue;
+            
+            rc = catena::exception_with_status{"", catena::StatusCode::OK};
+            Path child_path{parent_path, child_name};
+            auto sub_param = dm_.getParam(child_path.toString(), rc);
+            
+            if (rc.status == catena::StatusCode::OK && sub_param) {
                 responses_.emplace_back();
                 if (service_->authorizationEnabled()) {
                     Device::LockGuard lg(dm_);
@@ -295,9 +290,26 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
                 } else {
                     Device::LockGuard lg(dm_);
                     sub_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                }                
+                }
                 getChildren(sub_param.get(), child_path.toString(), authz);
             }
-        }        
+        }
+    };
+
+    // Check if current parameter is an array type
+    if (isArrayType(current_param->type().value())) {
+        max_index_ = calculateArrayLength(current_path);
+        
+        // Process each array element's children
+        for (uint32_t i = 0; i < max_index_; i++) {
+            Path indexed_path{current_path, i};
+            auto indexed_param = dm_.getParam(indexed_path.toString(), rc);
+            if (!indexed_param) continue;
+            
+            processChildren(indexed_path.toString());
+        }
+    } else {
+        // For non-array types, process children normally
+        processChildren(current_path);
     }
 }

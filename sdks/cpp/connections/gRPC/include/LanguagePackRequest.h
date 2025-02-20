@@ -31,8 +31,8 @@
  */
 
 /**
- * @file ListLanguages.h
- * @brief Implements Catena gRPC ListLanguages
+ * @file LanguagePackRequest.h
+ * @brief Implements Catena gRPC LanguagePackRequest
  * @author benjamin.whitten@rossvideo.com
  * @date 2025-01-29
  * @copyright Copyright © 2024 Ross Video Ltd
