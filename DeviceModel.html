@@ -15,38 +15,43 @@ style="width: 100%;" alt="Catena Logo" />
 <figcaption aria-hidden="true">Alt</figcaption>
 </figure>
 <p>As previously mentioned, it’s possible to represent a device model
-using human-authored JSON.</p>
+using human-authored JSON and YAML.</p>
 <p>The example service, <code>full_service</code> that’s part of
 Catena’s C++ SDK imports and initializes itself from JSON files and then
 provides access to it using the RPCs defined in
 <code>interface/service.proto</code>.</p>
-<p>There are some example device models in JSON such as
+<p>There are some example device models in JSON and YAML such as
 <code>device.minimal.json</code>.</p>
 <figure>
 <img src="images/device.minimal.png" alt="Alt" />
 <figcaption aria-hidden="true">Alt</figcaption>
 </figure>
-<p>It’s possible to validate the JSON device models against a set of
-schemata in the <code>schema</code> directory. This defines the
+<p>It’s possible to validate the JSON and YAML device models against a
+set of schemata in the <code>schema</code> directory. This defines the
 top-level schema for device models and param.</p>
 <p>If you’re using <code>vscode</code> it’s possible to have
-intellisense mark up device models by including this snippet in your
-<code>settings.json</code>.</p>
+intellisense mark up JSON device models by including this snippet in
+your <code>settings.json</code>.</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;json.schemas&quot;:</span> <span class="ot">[</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;fileMatch&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/example_device_models/device.*.json&quot;</span><span class="ot">,</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;url&quot;</span><span class="fu">:</span> <span class="st">&quot;./schema/catena.device_schema.json&quot;</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;fileMatch&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/example_device_models/**/param.*.json&quot;</span><span class="ot">,</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;url&quot;</span><span class="fu">:</span> <span class="st">&quot;./schema/catena.param_schema.json&quot;</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/nab_2024/device.*.json&quot;</span><span class="ot">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/sdks/cpp/lite/examples/*/device.*.json&quot;</span><span class="ot">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/sdks/cpp/connections/gRPC/examples/*/device.*.json&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;url&quot;</span><span class="fu">:</span> <span class="st">&quot;./schema/catena.device_schema.json&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;fileMatch&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/example_device_models/**/param.*.json&quot;</span><span class="ot">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/sdks/cpp/lite/examples/**/param.*.json&quot;</span><span class="ot">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;/sdks/cpp/connections/gRPC/examples/**/param.*.json&quot;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;url&quot;</span><span class="fu">:</span> <span class="st">&quot;./schema/catena.param_schema.json&quot;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span><span class="er">,</span></span></code></pre></div>
 <p>This will cause incorrect code to be highlighted like this typo…</p>
 <figure>
 <img src="images/device.minimal.error.png" alt="alt" />
@@ -61,6 +66,26 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="
 <img src="images/autocomplete.png" alt="alt" />
 <figcaption aria-hidden="true">alt</figcaption>
 </figure>
+<p>This is also possible with YAML device models using the modified
+snippet.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="er">&quot;yaml.schemas&quot;:</span> <span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;./schema/catena.device_schema.json&quot;</span> <span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/example_device_models/device.*.yaml&quot;</span><span class="ot">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/nab_2024/device.*.yaml&quot;</span><span class="ot">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/sdks/cpp/lite/examples/*/device.*.yaml&quot;</span><span class="ot">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/sdks/cpp/connections/gRPC/examples/*/device.*.yaml&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;./schema/catena.param_schema.json&quot;</span> <span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/example_device_models/**/param.*.yaml&quot;</span><span class="ot">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/sdks/cpp/lite/examples/**/param.*.yaml&quot;</span><span class="ot">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/sdks/cpp/connections/gRPC/examples/**/param.*.yaml&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>However, the recommended Red Hat extension redhat.vscode-yaml is
+required for it to function. This can be installed either through vscode
+directly or by using the command
+<code>code --install-extension redhat.vscode-yaml</code>.</p>
 <div style="text-align: center">
 <p><a href="Validation.html">Next Page: Device Model Validation</a></p>
 </div>
