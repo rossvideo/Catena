@@ -104,6 +104,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
+  /*
+   * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
+   * cannot be inherited.
+   */
   protected:
     /**
      * @brief Abstract base class for the CallData classes.
