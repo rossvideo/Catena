@@ -51,10 +51,6 @@
 
 #include <functional>
 
-/* Test Keys:
- * 
- */
-
 /**
  * @brief top level namespace for Catena. Functionality at this scope includes the protoc generated classes.
  * Most everything else is in child namespaces such as common, meta, etc.
@@ -71,7 +67,10 @@ namespace common {
  */
 class Authorizer {
   public:
-  // Temporary until we figue ot how keys work.
+  /**
+   * @brief Public key provided here temporarily until key gen is figured out.
+   * @todo Remove
+   */
 	const std::string PUBLIC_KEY = R"(
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
@@ -99,6 +98,8 @@ mwIDAQAB
      * @param JWSToken The JWS token to authenticate and extract scopes from.
      * @throw Throws an catena::exception_with_status UNAUTHENTICATED if the
      * JWS token is invalid or anything else goes wrong.
+     * @todo Additional verifier fields (issuer, audience) to be figured out at
+     * a later date.
      */
     Authorizer(const std::string& JWSToken);
 
