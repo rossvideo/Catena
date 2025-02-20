@@ -29,6 +29,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
  * @file Authorization.h
  * @brief Class for handling authorization information
@@ -36,7 +37,8 @@
  * @author John Danen
  * @date 2024-09-18
  * @author Ben Whitten benjamin.whitten@rossvideo.com
- * @date 2025-01-29
+ * @author Zuhayr Sarker zuhayr.sarker@rossvideo.com
+ * @date 2025-02-20
  * @copyright Copyright (c) 2024 Ross Video
  */
 
@@ -48,6 +50,10 @@
 #include <jwt-cpp/jwt.h>
 
 #include <functional>
+
+/* Test Keys:
+ * 
+ */
 
 /**
  * @brief top level namespace for Catena. Functionality at this scope includes the protoc generated classes.
@@ -88,8 +94,11 @@ mwIDAQAB
     static Authorizer kAuthzDisabled;
 
     /**
-     * @brief Construct a new Authorizer object
-     * @param token The JWS token to validate and extract scopes from.
+     * @brief Constructs a new Authorizer object by authenticating and
+     * extracting client scopes from a JWS token.
+     * @param JWSToken The JWS token to authenticate and extract scopes from.
+     * @throw Throws an catena::exception_with_status UNAUTHENTICATED if the
+     * JWS token is invalid or anything else goes wrong.
      */
     Authorizer(const std::string& JWSToken);
 
@@ -156,9 +165,8 @@ mwIDAQAB
       }
     }
 
-
 	  /**
-     * @brief Construct for kAuthzDisabled
+     * @brief Constructor for kAuthzDisabled authorizer. 
      */
     Authorizer() : clientScopes_{{""}} {}
     /**

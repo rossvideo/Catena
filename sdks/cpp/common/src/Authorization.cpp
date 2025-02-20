@@ -40,18 +40,14 @@ Authorizer Authorizer::kAuthzDisabled;
 
 Authorizer::Authorizer(const std::string& JWSToken) {
     try {
-        // Decodes the token into its claims. decoded_jwt< traits::open_source_parsers_jsoncpp >
+        // Decoding token, constructing verifier, and verifying the token.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
-        // Currently set to verify iss, aud, nbf and exp
-        // *Note nbf and exp are automatically verified.
         auto verifier = jwt::verify()
-            // pubkey, privkey, pubpass, privpass - pending to change based on given JWT
             .allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""))
             .with_type("at+jwt")
+            //.with_issuer("https://catena.rossvideo.com")
+            //.with_audience("https://catena.rossvideo.com")
             .leeway(300); // 5 minutes of leeway for nbf and exp.
-            //.with_issuer("Some given issuer")
-            //.with_audience("Placeholder audience");
-            // Throws error if the token is invalid.
         verifier.verify(decodedToken); // Throws error if invalid.
 
         // Extracting scopes from the decoded token's claims.
@@ -65,8 +61,13 @@ Authorizer::Authorizer(const std::string& JWSToken) {
                 }
             }
         }
+        
+    // Catch error thrown by verifier.verify().
+    } catch (jwt::error::token_verification_exception err) {
+        throw catena::exception_with_status(err.what(), catena::StatusCode::UNAUTHENTICATED);
+    // Catch any other errors (probably from jwt::decode())
     } catch (...) {
-        throw catena::exception_with_status("Invalid JWS token", catena::StatusCode::UNAUTHENTICATED);
+        throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     }
 }
 

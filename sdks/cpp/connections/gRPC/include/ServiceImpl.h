@@ -115,12 +115,15 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
         virtual ~CallData() {}
       protected:
         /**
-         * Helper function to extract the client's JWS token from server context.
+         * @brief Extracts the JWS Bearer token from the server context's
+         * client metadata.
+         * @return The JWS Bearer token as a string.
+         * @throw Throws a Catena::exception_with_status UNAUTHENTICATED if a
+         * JWS bearer token is not found.
          */
-        std::string getJWSToken();
+        std::string getJWSToken() const;
         /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _responder and other gRPC objects/functions.
+         * @brief The context of the gRPC command.
          */
         ServerContext context_;
     };

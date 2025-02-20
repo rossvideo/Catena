@@ -161,18 +161,18 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-std::string CatenaServiceImpl::CallData::getJWSToken() {
+std::string CatenaServiceImpl::CallData::getJWSToken() const {
     // Getting client metadata from context.
     auto clientMeta = &context_.client_metadata();
     if (clientMeta == nullptr) {
-        throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
+        throw catena::exception_with_status("Client metadata not found", catena::StatusCode::UNAUTHENTICATED);
     }
-    // Verfying "authorization" exists and is using Bearer schema.
+    // Getting authorization data (JWS bearer token) from client metadata.
     auto authData = clientMeta->find("authorization");
     if (authData == clientMeta->end() || !authData->second.starts_with("Bearer ")) {
         throw catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     }
-    // Getting token (after "bearer") and converting to std::string.
+    // Getting token (after "bearer") and returning as an std::string.
     auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
     return std::string(tokenSubStr.begin(), tokenSubStr.end());
 }
