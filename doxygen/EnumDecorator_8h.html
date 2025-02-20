@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('EnumDecorator_8h.html',''); initResiza
 
 <p>Provides an enum with useful extra functionality.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;ReflectionMacros.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;<a class="el" href="ReflectionMacros_8h_source.html">ReflectionMacros.h</a>&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
 <code>#include &lt;unordered_map&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
@@ -136,10 +136,10 @@ Namespaces</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="define-members" name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a9a6e6ecf602b40698d5ccb09cbb6e9e9" id="r_a9a6e6ecf602b40698d5ccb09cbb6e9e9"><td class="memItemLeft" align="right" valign="top"><a id="a9a6e6ecf602b40698d5ccb09cbb6e9e9" name="a9a6e6ecf602b40698d5ccb09cbb6e9e9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>MAPPAIR</b>(x)&#160;&#160;&#160;    { enumName::ARGTYPE(x), ARGNAME(x) }</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>MAPPAIR</b>(x)&#160;&#160;&#160;    { <a class="el" href="ReflectionMacros_8h.html#ac56e03409d63e789260039c78f5b148e">enumName::ARGTYPE</a>(x), <a class="el" href="ReflectionMacros_8h.html#aa2b9586e15f114d382a5cb073fb6935c">ARGNAME</a>(x) }</td></tr>
 <tr class="separator:a9a6e6ecf602b40698d5ccb09cbb6e9e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4efb63614bd79379972316647d418afe" id="r_a4efb63614bd79379972316647d418afe"><td class="memItemLeft" align="right" valign="top"><a id="a4efb63614bd79379972316647d418afe" name="a4efb63614bd79379972316647d418afe"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ENUMDECORATOR_DECLARATION</b>(className,  utype, ...)&#160;&#160;&#160;    enum class className##_e : utype{DOFOREACH(ARGTYPE, __VA_ARGS__)};</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>ENUMDECORATOR_DECLARATION</b>(className,  utype, ...)&#160;&#160;&#160;    enum class className##_e : utype{DOFOREACH(<a class="el" href="ReflectionMacros_8h.html#ac56e03409d63e789260039c78f5b148e">ARGTYPE</a>, __VA_ARGS__)};</td></tr>
 <tr class="separator:a4efb63614bd79379972316647d418afe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60a733875fc211e0d4ccce79d6fb2759" id="r_a60a733875fc211e0d4ccce79d6fb2759"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="EnumDecorator_8h.html#a60a733875fc211e0d4ccce79d6fb2759">ENUMDECORATOR_DEFINITION</a>(className,  utype, ...)</td></tr>
 <tr class="separator:a60a733875fc211e0d4ccce79d6fb2759"><td class="memSeparator" colspan="2">&#160;</td></tr>

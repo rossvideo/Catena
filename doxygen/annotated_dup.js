@@ -25,6 +25,7 @@ var annotated_dup =
         [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
         [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
         [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
+        [ "Path", "classcatena_1_1common_1_1Path.html", "classcatena_1_1common_1_1Path" ],
         [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
         [ "PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", null ],
         [ "RangeConstraint", "classcatena_1_1common_1_1RangeConstraint.html", "classcatena_1_1common_1_1RangeConstraint" ],
@@ -51,6 +52,11 @@ var annotated_dup =
         [ "GenericFactory", "classcatena_1_1patterns_1_1GenericFactory.html", "classcatena_1_1patterns_1_1GenericFactory" ],
         [ "Singleton", "classcatena_1_1patterns_1_1Singleton.html", "classcatena_1_1patterns_1_1Singleton" ]
       ] ],
-      [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ]
-    ] ]
+      [ "API", "classcatena_1_1API.html", "classcatena_1_1API" ],
+      [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
+      [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],
+      [ "PeerManager", "classcatena_1_1PeerManager.html", "classcatena_1_1PeerManager" ]
+    ] ],
+    [ "CatenaServiceImpl", "classCatenaServiceImpl.html", "classCatenaServiceImpl" ],
+    [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
 ];

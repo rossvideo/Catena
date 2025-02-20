@@ -1,9 +1,14 @@
 var searchData=
 [
-  ['validatesize_0',['validatesize',['../classcatena_1_1common_1_1IParam.html#ab63f7ba713770bf22b840090ea5aad27',1,'catena::common::IParam::validateSize()'],['../classcatena_1_1common_1_1ParamWithValue.html#a6a6f084c85fb99045e334e5732abda32',1,'catena::common::ParamWithValue::validateSize()']]],
-  ['value_1',['value',['../classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f',1,'catena::patterns::EnumDecorator']]],
-  ['valuesetbyclient_2',['valueSetByClient',['../classcatena_1_1common_1_1Device.html#ad0504576b2baa494010be749c94e03f4',1,'catena::common::Device']]],
-  ['valuesetbyserver_3',['valueSetByServer',['../classcatena_1_1common_1_1Device.html#aa14bba71eb227107bbae177a21c9d5a8',1,'catena::common::Device']]],
-  ['variant_2eh_4',['Variant.h',['../Variant_8h.html',1,'']]],
-  ['vscode_20workspaces_5',['VSCode Workspaces',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md13',1,'']]]
+  ['unauthenticated_0',['UNAUTHENTICATED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734',1,'catena']]],
+  ['unavailable_1',['UNAVAILABLE',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e',1,'catena']]],
+  ['unhandled_5fexception_2',['unhandled_exception',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729',1,'catena::common::Device::DeviceSerializer::promise_type']]],
+  ['unimplemented_3',['UNIMPLEMENTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f',1,'catena']]],
+  ['unknown_4',['UNKNOWN',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9',1,'catena']]],
+  ['unpop_5',['unpop',['../classcatena_1_1common_1_1Path.html#a25a93d0ba88442cb581c0c73a66a3a82',1,'catena::common::Path']]],
+  ['update_20node_20if_20required_6',['update node if required',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md7',1,'Update node if required'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md24',1,'Update node if required']]],
+  ['use_20the_20rest_20connection_20manager_7',['Install boost libraries if you want to use the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md25',1,'']]],
+  ['using_20docker_20with_20the_20catena_20c_20sdk_8',['Using Docker With The Catena C++ SDK',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html',1,'']]],
+  ['using_20the_20rest_20connection_20manager_9',['Install boost if using the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md45',1,'']]],
+  ['utils_2eh_10',['utils.h',['../utils_8h.html',1,'']]]
 ];
