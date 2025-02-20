@@ -20,7 +20,7 @@ There are some example device models in JSON and YAML such as `device.minimal.js
 
 It's possible to validate the JSON and YAML device models against a set of schemata in the `schema` directory. This defines the top-level schema for device models and param.
 
-If you're using `vscode` it's possible to have intellisense mark up device models by including these snippets in your `settings.json`.
+If you're using `vscode` it's possible to have intellisense mark up JSON device models by including this snippet in your `settings.json`.
 
 ```json
 "json.schemas": [
@@ -42,6 +42,19 @@ If you're using `vscode` it's possible to have intellisense mark up device model
     "url": "./schema/catena.param_schema.json"
   }
 ],
+```
+This will cause incorrect code to be highlighted like this typo...
+
+![alt](images/device.minimal.error.png)
+
+... and show tooltips and auto-completion options
+
+![alt](images/tooltip.png)
+
+![alt](images/autocomplete.png)
+
+This is also possible with YAML device models using the modified snippet.
+```json
 "yaml.schemas": {
     "./schema/catena.device_schema.json" : [
         "/example_device_models/device.*.yaml",
@@ -56,17 +69,7 @@ If you're using `vscode` it's possible to have intellisense mark up device model
     ]
 }
 ```
-
-This will cause incorrect code to be highlighted like this typo...
-
-![alt](images/device.minimal.error.png)
-
-... and show tooltips and auto-completion options
-
-![alt](images/tooltip.png)
-
-![alt](images/autocomplete.png)
-
+However, the recommended Red Hat extension redhat.vscode-yaml is required for it to function. This can be installed either through vscode directly or by using the command `code --install-extension redhat.vscode-yaml`.
 
 <div style="text-align: center">
 
