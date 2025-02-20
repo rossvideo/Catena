@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -246,7 +246,8 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
     
     catena::Value* value = this->res_.mutable_value()->mutable_value();
     auto rc = p->toProto(*value, authz);
-    if (rc.status == catena::StatusCode::OK) {
+    //If the param has read authorization, or authorization is disabled, send the update
+    if (rc.status == catena::StatusCode::OK && (&authz == &catena::common::Authorizer::kAuthzDisabled || authz.readAuthz(*p))) {
         this->hasUpdate_ = true;
         this->cv_.notify_one();
     }
