@@ -28,6 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file ServiceCredentials.h
+ * @brief A collection of functions to set up grpc::ServerCredentials object
+ * and expand envrionment variables in str.
+ * @copyright Copyright © 2024 Ross Video Ltd
+ * @author Unknown
+ */
 
 // protobuf interface
 #include <interface/service.grpc.pb.h>
