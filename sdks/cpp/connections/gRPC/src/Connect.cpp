@@ -106,61 +106,11 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             // Waiting for a value set by server to be sent to execute code.
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                try{
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    /** 
-                     * Set the object id and index to the values set by the
-                     * client, then convert to a proto and assign it to the
-                     * IParam p.
-                     * Additionally, if authorization is enabled, check the
-                     * client's scopes.
-                     */
-                    if(service_->authorizationEnabled()){
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
-                        if (authz.readAuthz(*p)){
-                            updateResponse(oid, idx, const_cast<IParam*>(p), authz);
-                        }
-                    } else {
-                        updateResponse(oid, idx, const_cast<IParam*>(p), catena::common::Authorizer::kAuthzDisabled);
-                    }
-                }catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                } 
+                updateResponse(oid, idx, p);
             });
             // Waiting for a value set by client to be sent to execute code.
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                try{
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    /** 
-                     * Set the object id and index to the values set by the
-                     * client, then convert to a proto and assign it to the
-                     * IParam p.
-                     * Additionally, if authorization is enabled, check the
-                     * client's scopes.
-                     */
-                    if (service_->authorizationEnabled()){
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
-                        if (authz.readAuthz(*p)){
-                            updateResponse(oid, idx, const_cast<IParam*>(p), authz);
-                        }
-                    } else { 
-                        updateResponse(oid, idx, const_cast<IParam*>(p), catena::common::Authorizer::kAuthzDisabled);
-                    }
-                }catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                } 
+                updateResponse(oid, idx, p);
             });
 
             // Waiting for a language to be added to execute code.
@@ -240,15 +190,38 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t idx, IParam* p, catena::common::Authorizer& authz) {
-    this->res_.mutable_value()->set_oid(oid);
-    this->res_.mutable_value()->set_element_index(idx);
-    
-    catena::Value* value = this->res_.mutable_value()->mutable_value();
-    auto rc = p->toProto(*value, authz);
-    //If the param has read authorization, or authorization is disabled, send the update
-    if (rc.status == catena::StatusCode::OK && (&authz == &catena::common::Authorizer::kAuthzDisabled || authz.readAuthz(*p))) {
-        this->hasUpdate_ = true;
-        this->cv_.notify_one();
+/**
+ * Updates the response message with parameter values and handles authorization checks.
+ */
+void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t idx, const IParam* p) {
+    try {
+        // If Connect was cancelled, notify client and end process
+        if (this->context_.IsCancelled()) {
+            this->hasUpdate_ = true;
+            this->cv_.notify_one();
+            return;
+        }
+
+        // Handle authorization if enabled
+        catena::common::Authorizer authz{service_->authorizationEnabled() 
+            ? service_->getScopes(context_) 
+            : std::vector<std::string>{}};
+
+        if (service_->authorizationEnabled() && !authz.readAuthz(*p)) {
+            return;
+        }
+
+        this->res_.mutable_value()->set_oid(oid);
+        this->res_.mutable_value()->set_element_index(idx);
+        
+        catena::Value* value = this->res_.mutable_value()->mutable_value();
+        auto rc = p->toProto(*value, authz);
+        //If the param conversion was successful, send the update
+        if (rc.status == catena::StatusCode::OK) {
+            this->hasUpdate_ = true;
+            this->cv_.notify_one();
+        }
+    } catch(catena::exception_with_status& why) {
+        // if an error is thrown, no update is pushed to the client
     }
 }
