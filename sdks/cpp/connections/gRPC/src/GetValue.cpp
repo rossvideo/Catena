@@ -89,6 +89,13 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
             // Used to serve other clients while processing.
             new GetValue(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
+
+            if (req_.slot() != dm_.slot()) {
+                status_ = CallStatus::kFinish;
+                responder_.Finish(catena::Value(), Status::OK, this);
+                break;
+            }
+
             try {
                 catena::Value ans;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -114,7 +121,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
                 responder_.FinishWithError(errorStatus, this);
             }
-        break;
+            break;
         /**
          * kFinish: Final step of gRPC is to deregister the item from
          * CatenaServiceImpl.

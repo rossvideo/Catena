@@ -130,9 +130,8 @@ class CppGen {
     hloc(warning);
     hloc(`#include <Device.h>`);
     hloc(`#include <StructInfo.h>`);
-    hloc(`extern catena::common::Device dm;`);
     hloc(`namespace ${this.device.namespace} {`);
-
+    hloc(`extern catena::common::Device dm;`);
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
     bloc(`using namespace ${this.device.namespace};`);
@@ -193,7 +192,7 @@ class CppGen {
       bloc(`{`, 1);
       bloc(keyWordPairs.map((key) => { return `{ "${key}", "${lang.words[key]}" }` }).join(",\n    "), 2);
       bloc(`},`, 1);
-      bloc(`dm`, 1);
+      bloc(`${this.device.namespace}::dm`, 1);
       bloc(`};`);
     }
   }
@@ -211,7 +210,7 @@ class CppGen {
       let groupNamePairs = Object.keys(groupName);
       bloc(`MenuGroup _${group}Group {\n  "${group}", `);
       bloc(`  {\n    ${groupNamePairs.map((key) => { return `{ "${key}", "${groupName[key]}" }` }).join(",\n    ")}`);
-      bloc(`  },\n  dm\n};`);
+      bloc(`  },\n  ${this.device.namespace}::dm\n};`);
       
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
@@ -234,7 +233,7 @@ class CppGen {
     if ("constraints" in this.device.desc) {
       let constraints = this.device.desc.constraints;
       for (let oid in constraints) {
-        this.device.constraints[oid] = new Constraint(oid, constraints[oid]);
+        this.device.constraints[oid] = new Constraint(oid, constraints[oid], this.device.namespace);
         bloc(this.device.constraints[oid] .getInitializer());
       }
     }
