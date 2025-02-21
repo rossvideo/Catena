@@ -106,14 +106,14 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         top_level_params = dm_.getTopLevelParams(rc);
                     }
 
-                    max_index_ = 0;
-
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
                         Device::LockGuard lg(dm_);
                         
                         responses_.clear();  
                         // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
+                            max_index_ = 0;
+                            
                             // Create a path for the parameter and check if it's an array type
                             Path top_level_path{top_level_param->getOid()};
                             
@@ -312,6 +312,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             auto sub_param = dm_.getParam(child_path.toString(), rc);
             
             if (rc.status == catena::StatusCode::OK && sub_param) {
+                
                 responses_.emplace_back();
                 if (service_->authorizationEnabled()) {
                     Device::LockGuard lg(dm_);
@@ -330,6 +331,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
         }
     };
 
+    
     // Check if current parameter is an array type
     if (isArrayType(current_param->type().value())) {
         max_index_ = calculateArrayLength(current_path);
