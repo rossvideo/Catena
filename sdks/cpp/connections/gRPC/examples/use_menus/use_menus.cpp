@@ -25,6 +25,7 @@
 
 // device model
 #include "device.use_menus.json.h" 
+using namespace use_menus;
 
 //common
 #include <utils.h>

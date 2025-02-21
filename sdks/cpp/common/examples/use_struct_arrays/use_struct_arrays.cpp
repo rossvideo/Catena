@@ -28,6 +28,7 @@
 
 // device model
 #include "device.AudioDeck.json.h" 
+using namespace AudioDeck;
 
 // common
 #include <Device.h>

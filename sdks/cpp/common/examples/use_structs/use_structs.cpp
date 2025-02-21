@@ -31,7 +31,7 @@
 
 // device model
 #include "device.use_structs.json.h" 
-
+using namespace use_structs;
 
 // common
 #include <Device.h>

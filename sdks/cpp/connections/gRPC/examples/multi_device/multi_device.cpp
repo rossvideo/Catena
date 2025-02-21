@@ -38,7 +38,7 @@
 
 // device model
 #include "device.a.json.h" 
-//#include "device.b.json.h" 
+#include "device.b.json.h" 
 
 //common
 #include <utils.h>
@@ -108,21 +108,26 @@ void RunRPCServer(std::string addr)
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
-        CatenaServiceImpl service(cq.get(), dm0, EOPath, authz);
-        builder.RegisterService(&service);
+        CatenaServiceImpl serviceA(cq.get(), a::dm, EOPath, authz);
+        CatenaServiceImpl serviceB(cq.get(), b::dm, EOPath, authz);
+        builder.RegisterService(&serviceA);
+        builder.RegisterService(&serviceB);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
         std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
 
         globalServer = server.get();
 
-        service.init();
-        std::thread cq_thread([&]() { service.processEvents(); });
+        serviceA.init();
+        serviceB.init();
+        std::thread cq_threadA([&]() { serviceA.processEvents(); });
+        std::thread cq_threadB([&]() { serviceB.processEvents(); });
         
         // wait for the server to shutdown and tidy up
         server->Wait();
         cq->Shutdown();
-        cq_thread.join();
+        cq_threadA.join();
+        cq_threadB.join();
 
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';

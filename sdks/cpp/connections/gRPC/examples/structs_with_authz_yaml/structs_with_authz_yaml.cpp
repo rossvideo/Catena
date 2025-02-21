@@ -21,7 +21,8 @@
  */
 
 // device model
-#include "device.AudioDeck.yaml.h" 
+#include "device.AudioDeck.yaml.h"
+using namespace AudioDeck;
 
 //common
 #include <utils.h>

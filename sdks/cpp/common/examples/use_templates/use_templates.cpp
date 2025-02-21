@@ -31,6 +31,7 @@
 
 // device model
 #include "device.use_templates.json.h"  
+using namespace use_templates;
 
 // common
 #include <Device.h>

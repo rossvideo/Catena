@@ -22,7 +22,8 @@
  */
 
 // device model
-#include "device.video_player.json.h" 
+#include "device.video_player.json.h"
+using namespace video_player;
 
 //common
 #include <utils.h>

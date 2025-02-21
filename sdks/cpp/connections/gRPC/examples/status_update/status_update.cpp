@@ -38,6 +38,7 @@
 
 // device model
 #include "device.status_update.json.h" 
+using namespace status_update;
 
 //common
 #include <utils.h>

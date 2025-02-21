@@ -91,7 +91,7 @@ function removeArraySuffix(type) {
  * @param {boolean} isCommand true if the param is a command, false otherwise
  */
 class Descriptor {
-  constructor(desc, oid, deviceNamespace, constraint, parentOid = "", isCommand) {
+  constructor(desc, oid, constraint, parentOid = "", isCommand) {
     const args = {
       type: () => { 
         return `catena::ParamType::${desc.type}`;
@@ -138,7 +138,7 @@ class Descriptor {
         return !!isCommand;
       },
       device: () => {
-        return `${deviceNamespace}::dm`;
+        return "dm";
       },
       max_length: () => {
         return ("max_length" in desc) ? `${desc.max_length}` : "0";
@@ -181,7 +181,6 @@ class Param {
 
     this.oid = oid;
     this.namespace = namespace;
-    this.deviceNamespace = device.namespace;
     this.subParams = {};
     this.type = isCommand ? "EMPTY" : desc.type;
     this.value = desc.value;
@@ -192,7 +191,7 @@ class Param {
       if (desc.constraint.ref_oid) {
         this.constraint = device.getConstraint(desc.constraint.ref_oid);
       } else {
-        this.constraint = new Constraint(oid, desc.constraint, this.deviceNamespace, this);
+        this.constraint = new Constraint(oid, desc.constraint, this);
       }
     }
 
@@ -212,7 +211,7 @@ class Param {
       }
     }
 
-    this.descriptor = new Descriptor(desc, oid, this.deviceNamespace, this.constraint, parent?.oid, isCommand);
+    this.descriptor = new Descriptor(desc, oid, this.constraint, parent?.oid, isCommand);
 
     if ("params" in desc) {
       if (!this.hasTypeInfo()) {
@@ -465,7 +464,7 @@ class Param {
   initializeParamWithValue() {
     let valueVar = this.isCommand ? "catena::common::emptyValue" : this.oid;
     return `catena::common::ParamWithValue<${this.objectNamespaceType()}> ` +
-           `_${this.oid}Param(${valueVar}, _${this.oid}Descriptor, ${this.deviceNamespace}::dm, ${this.isCommand});`;
+           `_${this.oid}Param(${valueVar}, _${this.oid}Descriptor, dm, ${this.isCommand});`;
   }
 
   /**

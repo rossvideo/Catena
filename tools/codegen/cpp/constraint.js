@@ -217,7 +217,7 @@ function strictArg(desc) {
  */
 function sharedArg(desc) {
   if (this.shared) {
-    return `true, ${this.deviceNamespace}::dm`;
+    return `true, dm`;
   } else {
     return "false";
   }
@@ -230,13 +230,12 @@ class Constraint extends CppCtor {
    * @param {string} oid object id of the constraint being processed
    * @param {object} desc descriptor of parent object
    */
-  constructor(oid, desc, deviceNamespace, parentParam) {
+  constructor(oid, desc, parentParam) {
     // structure of shared constraints vary from param constraints
     super(desc);
     this.shared = parentParam == undefined ? true : false;
     this.initialized = false;
     this.oid = oid;
-    this.deviceNamespace = deviceNamespace;
     this.parentParam = parentParam;
     // arguments change based on constraint type
     this.findType(desc);

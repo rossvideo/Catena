@@ -31,6 +31,7 @@
 
 // device model
 #include "device.use_constraints.json.h"
+using namespace use_constraints;
 
 //common
 #include <Device.h>

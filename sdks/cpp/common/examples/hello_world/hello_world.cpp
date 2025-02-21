@@ -30,6 +30,7 @@
 // this include header was generated from the json device model
 // it's in the BINARY folder structure, not SOURCE.
 #include "device.hello_world.json.h" // dm
+using namespace hello_world;
 
 #include <IParam.h> // catena::common::IParam
 #include <Tags.h> // catena::common::Device::ParamTag

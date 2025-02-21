@@ -425,7 +425,7 @@ class Device {
      * @return An exception_with_status with status set OK if successful,
      * otherwise an error.
      */
-    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz = Authorizer::kAuthzDisabled);
+    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload& src, Authorizer& authz = Authorizer::kAuthzDisabled);
 
     /**
      * @brief deserialize a protobuf value object into the parameter value

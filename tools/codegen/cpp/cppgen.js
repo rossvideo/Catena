@@ -134,7 +134,7 @@ class CppGen {
     hloc(`extern catena::common::Device dm;`);
     bloc(warning);
     bloc(`#include "${this.headerFilename}"`);
-    bloc(`using namespace ${this.device.namespace};`);
+    //bloc(`using namespace ${this.device.namespace};`);
     bloc(`#include <ParamDescriptor.h>`);
     bloc(`#include <ParamWithValue.h>`);
     bloc(`#include <LanguagePack.h>`);
@@ -149,6 +149,7 @@ class CppGen {
     bloc(`#include <functional>`);
     bloc(`#include <Menu.h>`);
     bloc(`#include <MenuGroup.h>`);
+    bloc(`namespace ${this.device.namespace} {`)
     bloc(`using catena::Device_DetailLevel;`);
     bloc(`using DetailLevel = catena::common::DetailLevel;`);
     bloc(`using catena::common::Scopes_e;`);
@@ -192,7 +193,7 @@ class CppGen {
       bloc(`{`, 1);
       bloc(keyWordPairs.map((key) => { return `{ "${key}", "${lang.words[key]}" }` }).join(",\n    "), 2);
       bloc(`},`, 1);
-      bloc(`${this.device.namespace}::dm`, 1);
+      bloc(`dm`, 1);
       bloc(`};`);
     }
   }
@@ -210,7 +211,7 @@ class CppGen {
       let groupNamePairs = Object.keys(groupName);
       bloc(`MenuGroup _${group}Group {\n  "${group}", `);
       bloc(`  {\n    ${groupNamePairs.map((key) => { return `{ "${key}", "${groupName[key]}" }` }).join(",\n    ")}`);
-      bloc(`  },\n  ${this.device.namespace}::dm\n};`);
+      bloc(`  },\n  dm\n};`);
       
       let menus = menuGroups[group].menus;
       for (let menu in menus) {
@@ -233,7 +234,7 @@ class CppGen {
     if ("constraints" in this.device.desc) {
       let constraints = this.device.desc.constraints;
       for (let oid in constraints) {
-        this.device.constraints[oid] = new Constraint(oid, constraints[oid], this.device.namespace);
+        this.device.constraints[oid] = new Constraint(oid, constraints[oid]);
         bloc(this.device.constraints[oid] .getInitializer());
       }
     }
@@ -384,6 +385,7 @@ class CppGen {
    */
   finish = () => {
     hloc(`} // namespace ${this.device.namespace}`);
+    cloc(`} // namespace ${this.device.namespace}`);
     postscript();
     coda();
   };

@@ -37,7 +37,7 @@
 
 // device model
 #include "device.import_params.json.h"
-
+using namespace import_params;
 
 // common
 #include <Device.h>

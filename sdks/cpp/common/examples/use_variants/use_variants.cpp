@@ -31,7 +31,7 @@
 
 // device model
 #include "device.use_variants.json.h" 
-
+using namespace use_variants;
 
 // common
 #include <Device.h>

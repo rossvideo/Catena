@@ -44,7 +44,7 @@
 
 using namespace catena::common;
 
-catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload& src, Authorizer& authz) {
     // Transaction status.
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Vector of verified set value requests.
