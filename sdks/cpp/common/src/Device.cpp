@@ -388,12 +388,53 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
 }
 
 Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
+    // Call the overloaded version with an explicitly constructed empty vector
+    static const std::vector<std::string> empty_vector;
+    return getComponentSerializer(authz, empty_vector, shallow);
+}
+
+Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string> subscribed_oids, bool shallow) const {
+    std::cout << "getComponentSerializer received vector size: " << subscribed_oids.size() << std::endl;
+    for (const auto& oid : subscribed_oids) {
+        std::cout << "Received OID: '" << oid << "'" << std::endl;
+    }
     catena::DeviceComponent component{};
     if (!shallow) {
         // If not shallow, send the whole device as a single message
         toProto(*component.mutable_device(), authz, shallow);
         co_return component; 
     }
+
+    // Helper function to check if an OID is subscribed
+    auto is_subscribed = [&subscribed_oids, this](const std::string& oid) {
+        std::cout << "Checking subscription for OID: '" << oid << "'" << std::endl;
+        
+        // If subscriptions are disabled or no subscriptions specified, allow all
+        if (!subscriptions_) {
+            std::cout << "Subscriptions disabled, allowing all" << std::endl;
+            return true;
+        }
+        if (subscribed_oids.empty()) {
+            std::cout << "No subscriptions specified, allowing all" << std::endl;
+            return true;
+        }
+
+        std::cout << "Checking against " << subscribed_oids.size() << " subscribed OIDs:" << std::endl;
+        for (const auto& subscribed : subscribed_oids) {
+            std::cout << "    - '" << subscribed << "'" << std::endl;
+        }
+        
+        // Check if the OID exists in subscribed_oids, return false if not found
+        auto it = std::find_if(subscribed_oids.begin(), subscribed_oids.end(),
+            [&oid](const std::string& subscribed_oid) {
+                bool matches = !subscribed_oid.empty() && oid.find(subscribed_oid) != std::string::npos;
+                std::cout << "Comparing with '" << subscribed_oid << "': " << (matches ? "match" : "no match") << std::endl;
+                return matches;
+            });
+        bool result = it != subscribed_oids.end();
+        std::cout << "Final result: " << (result ? "subscribed" : "not subscribed") << std::endl;
+        return result;
+    };
 
     // If shallow, send the device in parts
     // send the basic device info first
@@ -408,30 +449,40 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool 
         dst->add_access_scopes(scope);
     }
 
+    // Send menu groups if subscribed or if subscriptions are disabled
     for (auto& [menu_group_name, menu_group] : menu_groups_) {
-        ::catena::MenuGroup* dstMenuGroup = &(*dst->mutable_menu_groups())[menu_group_name];
-        menu_group->toProto(*dstMenuGroup, true);
+        if (is_subscribed(menu_group_name)) {
+            ::catena::MenuGroup* dstMenuGroup = &(*dst->mutable_menu_groups())[menu_group_name];
+            menu_group->toProto(*dstMenuGroup, true);
+        }
     }
 
+    // Send language packs if subscribed or if subscriptions are disabled
     for (const auto& [language, language_pack] : language_packs_) {
-        co_yield component; // yield the previous component before overwriting it
-        component.Clear();
-        ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
-        language_pack->toProto(*dstPack);
-        component.mutable_language_pack()->set_language(language);
+        if (is_subscribed(language)) {
+            co_yield component;
+            component.Clear();
+            ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+            language_pack->toProto(*dstPack);
+            component.mutable_language_pack()->set_language(language);
+        }
     }
 
+    // Send constraints if subscribed or if subscriptions are disabled
     for (const auto& [name, constraint] : constraints_) {
-        co_yield component; // yield the previous component before overwriting it
-        component.Clear();
-        ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
-        constraint->toProto(*dstConstraint);
-        component.mutable_shared_constraint()->set_oid(name);
+        if (is_subscribed(name)) {
+            co_yield component;
+            component.Clear();
+            ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+            constraint->toProto(*dstConstraint);
+            component.mutable_shared_constraint()->set_oid(name);
+        }
     }
 
+    // Send params if authorized and either subscribed or if subscriptions are disabled
     for (const auto& [name, param] : params_) {
-        if (authz.readAuthz(*param)) {
-            co_yield component; // yield the previous component before overwriting it
+        if (authz.readAuthz(*param) && is_subscribed(name)) {
+            co_yield component;
             component.Clear();
             ::catena::Param* dstParam = component.mutable_param()->mutable_param();
             param->toProto(*dstParam, authz);
@@ -439,24 +490,28 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool 
         }
     }
 
+    // Send commands if authorized and either subscribed or if subscriptions are disabled
     for (const auto& [name, command] : commands_) {
-        if (authz.readAuthz(*command)) {
-            co_yield component; // yield the previous component before overwriting it
+        if (authz.readAuthz(*command) && is_subscribed(name)) {
+            co_yield component;
             component.Clear();
             ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
-            command->toProto(*dstCommand,authz);
+            command->toProto(*dstCommand, authz);
             component.mutable_command()->set_oid(name);
         }
     }
 
+    // Send menus if subscribed or if subscriptions are disabled
     for (const auto& [name, menu_groups_] : menu_groups_) {
         for (const auto& [menu_name, menu] : *menu_groups_->menus()) {
-            co_yield component; // yield the previous component before overwriting it
-            component.Clear();
-            ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
-            menu.toProto(*dstMenu);
-            std::string oid = "/" + name + "/" + menu_name;
-            component.mutable_menu()->set_oid(oid);
+            std::string oid = name + "/" + menu_name;
+            if (is_subscribed(oid)) {
+                co_yield component;
+                component.Clear();
+                ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
+                menu.toProto(*dstMenu);
+                component.mutable_menu()->set_oid(oid);
+            }
         }
     }
     
