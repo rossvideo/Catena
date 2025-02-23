@@ -30,6 +30,5 @@ var searchData=
   ['structinfo_27',['StructInfo',['../structcatena_1_1common_1_1StructInfo.html',1,'catena::common']]],
   ['structinfo_2eh_28',['StructInfo.h',['../StructInfo_8h.html',1,'']]],
   ['submodules_29',['Initialize git submodules',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md26',1,'']]],
-  ['subs_30',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
-  ['subscriptions_31',['subscriptions',['../classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1',1,'catena::common::Device']]]
+  ['subs_30',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]]
 ];
