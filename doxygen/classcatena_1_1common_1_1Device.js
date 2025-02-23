@@ -24,6 +24,7 @@ var classcatena_1_1common_1_1Device =
     [ "setValue", "classcatena_1_1common_1_1Device.html#ab74fd94275de7ec9676e9c7b28fbbed9", null ],
     [ "slot", "classcatena_1_1common_1_1Device.html#adae63c83dfa563977613dbf8440c45be", null ],
     [ "slot", "classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce", null ],
+    [ "subscriptions", "classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#a8768802e0083f71ed71e7bc20997f0d3", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#a15505cc94e033ba2ef4b42ab7ebfcafa", null ],
     [ "toProto", "classcatena_1_1common_1_1Device.html#a7420ac96f72817f5ad4fbf3c5d747a8a", null ],
