@@ -48,6 +48,7 @@
 #include <IParam.h>
 #include <ParamDescriptor.h>
 #include <jwt-cpp/jwt.h>
+#include <curl/curl.h>
 
 #include <functional>
 
@@ -101,7 +102,7 @@ mwIDAQAB
      * @todo Additional verifier fields (issuer, audience) to be figured out at
      * a later date.
      */
-    Authorizer(const std::string& JWSToken);
+    Authorizer(const std::string& JWSToken, const std::string& keycloakServer = "auth.enterprise.rossvideo.cloud", const std::string& realm = "catena");
 
     /**
      * @brief Authorizer does not have copy semantics
@@ -160,16 +161,29 @@ mwIDAQAB
 
 
   private:
-    void validateTyp(std::string& typ) {
-      if (typ != "" && typ != "") {
-        throw;
-      }
-    }
-
 	  /**
      * @brief Constructor for kAuthzDisabled authorizer. 
      */
     Authorizer() : clientScopes_{{""}} {}
+
+    /**
+     * @brief Tells curl how to write the output.
+     * @param contents The contents of output.
+     * @param size The size of each member.
+     * @param numMembers The number of members.
+     * @param output The variable to write to.
+     * @return The total size.
+     */
+    static size_t curlWriteFunction(char* contents, size_t size, size_t numMembers, void* output);
+
+    /**
+     * @brief Fetches the JWKS from the given authz server.
+     * @param url The url to the authz server.
+     * @return The JWKS.
+     * @throw Catena::exception_with_status if the JWKS cannot be fetched.
+     */
+    std::string fetchJWKS(const std::string& url);
+
     /**
      * @brief Client scopes extracted from a valid JWS token.
      */

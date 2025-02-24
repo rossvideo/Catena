@@ -38,7 +38,8 @@ using catena::common::Authorizer;
 // initialize the disabled authorization object
 Authorizer Authorizer::kAuthzDisabled;
 
-Authorizer::Authorizer(const std::string& JWSToken) {
+Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakServer, const std::string& realm) {
+    std::string jwks = fetchJWKS("https://" + keycloakServer + "/realms/" + realm + "/protocol/openid-connect/certs");
     try {
         // Decoding token, constructing verifier, and verifying the token.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
@@ -69,6 +70,33 @@ Authorizer::Authorizer(const std::string& JWSToken) {
     } catch (...) {
         throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     }
+}
+
+size_t Authorizer::curlWriteFunction(char* contents, size_t size, size_t numMembers, void* output) {
+    size_t realSize = size * numMembers;
+    std::string *str = (std::string *)output;
+    str->append(contents, size * numMembers);
+    return realSize;
+}
+
+std::string Authorizer::fetchJWKS(const std::string& url) {
+    // Initializing CURL.
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        throw catena::exception_with_status("Failed to initialize curl", catena::StatusCode::INTERNAL);
+    }
+    // Setting up CURL options.
+    std::string jwks;
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteFunction);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&jwks);
+    // Running CURL and returning the jwks.
+    CURLcode res =  curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK) {
+        throw catena::exception_with_status("Failed to fetch JWKS", catena::StatusCode::INTERNAL);
+    }
+    return jwks;
 }
 
 bool Authorizer::hasAuthz(const std::string& scope) const {
