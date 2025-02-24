@@ -39,16 +39,23 @@ using catena::common::Authorizer;
 Authorizer Authorizer::kAuthzDisabled;
 
 Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakServer, const std::string& realm) {
-    std::string jwks = fetchJWKS("https://" + keycloakServer + "/realms/" + realm + "/protocol/openid-connect/certs");
+    std::string issuer = "https://" + keycloakServer + "/realms/" + realm + "/protocol/openid-connect/certs";
+    std::string jwks = fetchJWKS(issuer);
+    std::map<std::string, std::string> jwksInfo;
+    parseJWKS(jwks, jwksInfo);
     try {
         // Decoding token, constructing verifier, and verifying the token.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
-        auto verifier = jwt::verify()
-            .allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""))
-            .with_type("at+jwt")
-            //.with_issuer("https://catena.rossvideo.com")
-            //.with_audience("https://catena.rossvideo.com")
-            .leeway(300); // 5 minutes of leeway for nbf and exp.
+        auto verifier = jwt::verify();
+        //     .allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""))
+        //     .with_type("at+jwt")
+        //     // .with_issuer("https://catena.rossvideo.com")
+        //     // .with_audience("https://catena.rossvideo.com")
+        //     .leeway(300); // 5 minutes of leeway for nbf and exp.
+        if (jwksInfo["alg"] == "ES256") {
+
+            verifier.allow_algorithm(jwt::algorithm::es256("", "", "", ""));
+        }
         verifier.verify(decodedToken); // Throws error if invalid.
 
         // Extracting scopes from the decoded token's claims.
@@ -97,6 +104,30 @@ std::string Authorizer::fetchJWKS(const std::string& url) {
         throw catena::exception_with_status("Failed to fetch JWKS", catena::StatusCode::INTERNAL);
     }
     return jwks;
+}
+
+void Authorizer::parseJWKS(const std::string& jwks, std::map<std::string, std::string>& jwksMap, std::string alg) {
+    try {
+        auto rc = catena::exception_with_status("", catena::StatusCode::OK);
+        picojson::value jsonData;
+        picojson::parse(jsonData, jwks);   
+        picojson::value keys = jsonData.get("keys");
+        for (auto key : keys.get<picojson::array>()) {
+            if (key.get("alg").get<std::string>() == alg) {
+                // Algorithm found, extracting its fields.
+                for (auto [field, value] : key.get<picojson::object>()) {
+                    jwksMap[field] = value.get<std::string>();
+                }
+                break;
+            }
+        }
+    } catch (...) {
+        throw catena::exception_with_status("Failed to parse JWKS from authz server", catena::StatusCode::INTERNAL);
+    }
+    // Did not find specified algorithm in JWKS.
+    if (jwksMap.empty()) {
+        throw catena::exception_with_status("Authz server does allow the algorithm " + alg, catena::StatusCode::UNAUTHENTICATED);
+    }
 }
 
 bool Authorizer::hasAuthz(const std::string& scope) const {

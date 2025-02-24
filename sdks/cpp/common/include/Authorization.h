@@ -184,6 +184,8 @@ mwIDAQAB
      */
     std::string fetchJWKS(const std::string& url);
 
+    void parseJWKS(const std::string& jwks, std::map<std::string, std::string>& jwksMap, std::string alg = "ES256");
+
     /**
      * @brief Client scopes extracted from a valid JWS token.
      */
