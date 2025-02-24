@@ -12,6 +12,7 @@ var classcatena_1_1common_1_1IParam =
     [ "getOid", "classcatena_1_1common_1_1IParam.html#ad188e7291de350c17f6d3e18f55c5576", null ],
     [ "getParam", "classcatena_1_1common_1_1IParam.html#a0f5bce117d7916d355140211602d55ea", null ],
     [ "getScope", "classcatena_1_1common_1_1IParam.html#ace2807e50e373d9dc5c02452876a9d8e", null ],
+    [ "isArrayType", "classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0", null ],
     [ "operator=", "classcatena_1_1common_1_1IParam.html#a5d48dd676d9bdf9333f8cee83b3af164", null ],
     [ "popBack", "classcatena_1_1common_1_1IParam.html#a315b9adf74dd4313e51a4f5fe1aae998", null ],
     [ "readOnly", "classcatena_1_1common_1_1IParam.html#a634b9db470586152595e8b2b13baa432", null ],

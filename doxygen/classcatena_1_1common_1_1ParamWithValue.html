@@ -209,6 +209,9 @@ const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> () c
 <tr class="memitem:a082a1de0c426c8f5d6282ad6612ff5f9" id="r_a082a1de0c426c8f5d6282ad6612ff5f9"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a082a1de0c426c8f5d6282ad6612ff5f9">getDescriptor</a> () const override</td></tr>
 <tr class="memdesc:a082a1de0c426c8f5d6282ad6612ff5f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the descriptor of the parameter  <br /></td></tr>
 <tr class="separator:a082a1de0c426c8f5d6282ad6612ff5f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5657a8fc5c8d8b6f21c59bc9888bd954" id="r_a5657a8fc5c8d8b6f21c59bc9888bd954"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5657a8fc5c8d8b6f21c59bc9888bd954">isArrayType</a> () const override</td></tr>
+<tr class="memdesc:a5657a8fc5c8d8b6f21c59bc9888bd954"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the parameter is an array type.  <br /></td></tr>
+<tr class="separator:a5657a8fc5c8d8b6f21c59bc9888bd954"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14b802777a2d6e916bd37ac5321f7ee8" id="r_a14b802777a2d6e916bd37ac5321f7ee8"><td class="memItemLeft" align="right" valign="top"><a id="a14b802777a2d6e916bd37ac5321f7ee8" name="a14b802777a2d6e916bd37ac5321f7ee8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addParam</b> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> *param)</td></tr>
 <tr class="memdesc:a14b802777a2d6e916bd37ac5321f7ee8"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a child parameter <br /></td></tr>
@@ -688,6 +691,45 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
+<a id="a5657a8fc5c8d8b6f21c59bc9888bd954" name="a5657a8fc5c8d8b6f21c59bc9888bd954"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5657a8fc5c8d8b6f21c59bc9888bd954">&#9670;&#160;</a></span>isArrayType()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a>&lt; T &gt;::isArrayType </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Check if the parameter is an array type. </p>
+<dl class="section return"><dt>Returns</dt><dd>true if the parameter is an array type </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0">catena::common::IParam</a>.</p>
+
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e">catena::common::ParamWithValue&lt; T &gt;::type()</a>.</p>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a5657a8fc5c8d8b6f21c59bc9888bd954_cgraph.svg" width="100%" height="300"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+
+</div>
+</div>
 <a id="a329a02e9137d4f9e9f9efccc1262a9de" name="a329a02e9137d4f9e9f9efccc1262a9de"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a329a02e9137d4f9e9f9efccc1262a9de">&#9670;&#160;</a></span>popBack()</h2>
 
@@ -1103,6 +1145,11 @@ template&lt;typename T &gt; </div>
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a5d100719a0270a1b71ab5221bcda3b4e_cgraph.svg" width="516" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a5d100719a0270a1b71ab5221bcda3b4e_icgraph.svg" width="480" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>

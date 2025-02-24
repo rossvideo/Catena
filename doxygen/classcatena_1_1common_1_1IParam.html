@@ -197,6 +197,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ad8e8b3d2e2ea7ad8a6bc60af426b5e3e" id="r_ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ad8e8b3d2e2ea7ad8a6bc60af426b5e3e">getDescriptor</a> () const =0</td></tr>
 <tr class="memdesc:ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the descriptor of the parameter  <br /></td></tr>
 <tr class="separator:ad8e8b3d2e2ea7ad8a6bc60af426b5e3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3df0c29a015ceab195e6dafd17fae0b0" id="r_a3df0c29a015ceab195e6dafd17fae0b0"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0">isArrayType</a> () const =0</td></tr>
+<tr class="memdesc:a3df0c29a015ceab195e6dafd17fae0b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the parameter is an array type.  <br /></td></tr>
+<tr class="separator:a3df0c29a015ceab195e6dafd17fae0b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> is the interface for business logic and connection logic to interact with parameters. </p>
@@ -545,6 +548,36 @@ Public Member Functions</h2></td></tr>
 <p>get the parameter access scope </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#acd4912fbb721d5c0c98497b2c11859c9">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a3df0c29a015ceab195e6dafd17fae0b0" name="a3df0c29a015ceab195e6dafd17fae0b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3df0c29a015ceab195e6dafd17fae0b0">&#9670;&#160;</a></span>isArrayType()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool catena::common::IParam::isArrayType </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Check if the parameter is an array type. </p>
+<dl class="section return"><dt>Returns</dt><dd>true if the parameter is an array type (INT32_ARRAY, FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY) </dd></dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a5657a8fc5c8d8b6f21c59bc9888bd954">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
