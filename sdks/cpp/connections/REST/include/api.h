@@ -28,6 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file api.h
+ * @brief Implements REST API
+ * @author unknown
+ * @copyright Copyright © 2024 Ross Video Ltd
+ */
+
 #pragma once
 
 #define CROW_ENABLE_SSL
@@ -39,6 +46,10 @@
 #include <string>
 
 namespace catena {
+
+/**
+ * @brief REST API
+ */
 class API {
   public:
     explicit API(uint16_t port = 443);

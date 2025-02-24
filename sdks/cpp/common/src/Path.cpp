@@ -122,9 +122,52 @@ const std::string& Path::front_as_string() const {
     }
 }
 
+bool Path::back_is_string() const {
+    bool ans = false;
+    if (segments_.size() > 0 && std::holds_alternative<std::string>(segments_[segments_.size() - 1])) {
+        ans = true;
+    }
+    return ans;
+}
+
+bool Path::back_is_index() const {
+    bool ans = false;
+    if (segments_.size() > 0 && std::holds_alternative<Index>(segments_[segments_.size() - 1])) {
+        ans = true;
+    }
+    return ans;
+}
+
+Index Path::back_as_index() const {
+    Index ans = kError;
+    if (back_is_index()) {
+        ans = std::get<Index>(segments_[segments_.size() - 1]);
+    }
+    return ans;
+}
+
+const std::string& Path::back_as_string() const {
+    static const std::string Error{""};
+    if (back_is_string()) {
+        return std::get<std::string>(segments_[segments_.size() - 1]);
+    } else {
+        return Error;
+    }
+}
+
 void Path::pop() noexcept {
     if (frontIdx_ < segments_.size()) {
         ++frontIdx_;
+    }
+}
+
+void Path::popBack() noexcept {
+    if (segments_.size() > 0) {
+        segments_.pop_back();
+        // Making sure the index is not out of bounds.
+        if (frontIdx_ > segments_.size()) {
+            frontIdx_ = segments_.size();
+        }
     }
 }
 

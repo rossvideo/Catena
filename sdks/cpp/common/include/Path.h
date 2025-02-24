@@ -4,22 +4,35 @@
 #define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
-/** Copyright 2024 Ross Video Ltd
-
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
- 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
- INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-//
+/*
+ * Copyright 2024 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /**
  * @brief Handles Path objects used to uniquely identify and access OIDs
@@ -28,7 +41,10 @@
  * @author John R. Naylor (john.naylor@rossvideo.com)
  */
 
-/** @example path.cpp demonstrates use of a variety of json-pointers that are useful with catena models. */
+/**
+ * @example path.cpp demonstrates use of a variety of json-pointers that are useful with catena models.
+ */
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -145,8 +161,41 @@ class Path {
      * // recommended usage
      * Path::Index idx = p.front_is_index() ? p.front_as_index() : Path::kError;
      * if (idx == Path::kError) { // error handling here }
+     * @endcode
      */
     Index front_as_index() const;
+
+    /**
+     * @return true if the back of the path is a string, false if it's an Index or empty.
+     */
+    bool back_is_string() const;
+
+    /**
+     * @return true if the back of the path is an Index, false if it's a string or empty.
+     */
+    bool back_is_index() const;
+
+    /**
+     * @return back of Path as a string.
+     * @throws catena::exception_with_status if path is empty or back is not a string.
+     * @code
+     * // recommended usage
+     * std::string oid = p.back_is_string() ? p.back_as_string() : "";
+     * if (oid == "") { // error handling here }
+     * @endcode
+     */
+    const std::string& back_as_string() const;
+
+    /**
+     * @return back of path as an Index.
+     * @throws catena::exception_with_status if path is empty or back is not an Index.
+     * @code
+     * // recommended usage
+     * Path::Index idx = p.back_is_index() ? p.back_as_index() : Path::kError;
+     * if (idx == Path::kError) { // error handling here }
+     * @endcode
+     */
+    Index back_as_index() const;
 
     /**
      * @brief return a string representation of the Path
@@ -172,6 +221,14 @@ class Path {
     void pop() noexcept;
 
     /**
+     * @brief pop the back of the path.
+     * Fully removes the last segment in the path unless the path is already
+     * empty in which case it does nothing. This action CANNOT be reversed with
+     * unpop.
+     */
+    void popBack() noexcept;
+
+    /**
      * @brief show how much of the path has been consumed
      * @return number of segments that have been popped
      */
@@ -183,7 +240,7 @@ class Path {
     inline void rewind() noexcept {frontIdx_ = 0;}
 
     /**
-     * @brief restore the Path to it's state before the last pop
+     * @brief restore the Path to it's state before the last pop from front.
      */
     inline void unpop() noexcept {if (frontIdx_ > 0) {--frontIdx_;}}
 

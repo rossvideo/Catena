@@ -44,42 +44,119 @@
 
 using namespace catena::common;
 
-
-catena::exception_with_status Device::setValueTry (const std::string& jptr, catena::Value& value, Authorizer& authz) {
+catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+    // Transaction status.
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
-        if (param != nullptr) {
-            if (!authz.readAuthz(*param)) {
-                ans = catena::exception_with_status("Param does not exist", catena::StatusCode::INVALID_ARGUMENT);
-            }
-            else if (!authz.writeAuthz(*param)) {
-                ans = catena::exception_with_status("Not authorized to write to param", catena::StatusCode::PERMISSION_DENIED);
-            }
-            else if (!param->validateSize(value)) {
-                ans = catena::exception_with_status("Value exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
+    // Vector of verified set value requests.
+    std::vector<SetValueRequest> requests;
+    // Vector of paths to verified appends.
+    std::vector<Path*> appends;
+    // Failing multiSetValue if multi set is disabled.
+    if (multi_set_enabled_ == false && src.values().size() > 1) {
+        ans = catena::exception_with_status("Multi-set is disabled ", catena::StatusCode::PERMISSION_DENIED);
+    } else {
+        // Looping through and validating set value requests.
+        for (auto& setValuePayload : src.values()) {
+            try {
+                requests.push_back(SetValueRequest{std::make_unique<Path>(setValuePayload.oid()), &setValuePayload});
+                Path* path = requests.back().first.get();
+                std::unique_ptr<IParam> param;
+                /*
+                 * Path ends in "/-". We need to add to the back of the parent
+                 * param's internal vector and get its index. Index is required
+                 * as too many appends will cause the vector to be reallocated,
+                 * making all pointers to that param's values invalid.
+                 */
+                if (path->back_is_index() ? path->back_as_index() == catena::common::Path::kEnd : false) {
+                    path->popBack();
+                    param = getParam(*path, ans, authz);
+                    if (param != nullptr) {
+                        uint32_t oidIndex = param->size();
+                        param = param->addBack(authz, ans);
+                        if (param != nullptr) {
+                            path->push_back(oidIndex);
+                            appends.push_back(path);
+                        }
+                    }
+                // Path does not end in "/-", get param normally.
+                } else {
+                    param = getParam(*path, ans, authz);
+                }
+                // Rewind path to start for future use.
+                path->rewind();
+                // Validate that the request is valid.
+                if (param == nullptr) {
+                    break;
+                }
+                else if (!authz.readAuthz(*param)) {
+                    ans = catena::exception_with_status("Not authorized to read the param " + setValuePayload.oid(), catena::StatusCode::PERMISSION_DENIED);
+                    break;
+                }
+                else if (!authz.writeAuthz(*param)) {
+                    ans = catena::exception_with_status("Not authorized to write to param " + setValuePayload.oid(), catena::StatusCode::PERMISSION_DENIED);
+                    break;
+                }
+                else if (!param->validateSize(setValuePayload.value())) {
+                    ans = catena::exception_with_status("Value exceeds maximum length of " + setValuePayload.oid(), catena::StatusCode::OUT_OF_RANGE);
+                    break;
+                }
+            // Try-catch to catch exceptions thrown by the Path constructor.
+            } catch (const catena::exception_with_status& why) {
+                ans = catena::exception_with_status(why.what(), why.status);
+                break;
             }
         }
-        return ans;
-}
-
-catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
-    catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
-    if (param != nullptr) {
-        ans = param->fromProto(src, authz);
-        valueSetByClient.emit(jptr, param.get(), 0);
+        // Something went wrong above. Rolling back all appends before returning.
+        if (ans.status != catena::StatusCode::OK) { 
+            for (Path* append_path : appends) {
+                append_path->popBack();
+                getParam(*append_path, ans, authz)->popBack(authz);
+            }
+        // Everything is valid, commiting all set value requests.
+        } else if (ans.status == catena::StatusCode::OK) {
+            for (auto& [path, setValuePayload] : requests) {
+                std::unique_ptr<IParam> param = getParam(*path, ans, authz);
+                ans = param->fromProto(setValuePayload->value(), authz);
+                valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
+            }   
+        }
     }
     return ans;
 }
 
+catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
+    catena::MultiSetValuePayload setValues;
+    catena::SetValuePayload* setValuePayload = setValues.add_values();
+    setValuePayload->set_oid(jptr);
+    setValuePayload->set_allocated_value(&src);
+    return multiSetValue(setValues, authz);
+}
+
 catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst, Authorizer& authz) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    std::unique_ptr<IParam> param = getParam(jptr, ans, authz);
-    
-    // we expect this to be a parameter name
-    if (param != nullptr) {
-        // we have reached the end of the path, deserialize the value
-        param->toProto(dst, authz);
+    /**
+     * Converting to Path object to validate input (cant end with /-).
+     * The Path constructor will throw an exception if the json pointer is
+     * invalid, so we use a try catch block to catch it.
+     */
+    try {
+        catena::common::Path path(jptr);
+        if (path.back_is_index()) {
+            if (path.back_as_index() == catena::common::Path::kEnd) {
+                // Index is "-"
+                ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
+            }
+        }
+        if (ans.status == catena::StatusCode::OK) {
+            std::unique_ptr<IParam> param = getParam(path, ans, authz);
+            // we expect this to be a parameter name
+            if (param != nullptr) {
+                // we have reached the end of the path, deserialize the value
+                ans = param->toProto(dst, authz);
+            }
+        }
+    } catch (const catena::exception_with_status& why) {
+        ans = catena::exception_with_status(why.what(), why.status);
     }
     return ans;
 }
@@ -103,13 +180,13 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
     if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
-        return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
+        return catena::exception_with_status("Not authorized to add language ", catena::StatusCode::PERMISSION_DENIED);
     } else {
         auto& name = language.language_pack().name();
         auto& id = language.id();
         // Making sure LanguagePack is properly formatted.
         if (name.empty() || id.empty()) {
-            return catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
+            return catena::exception_with_status("Invalid language pack ", catena::StatusCode::INVALID_ARGUMENT);
         }
         // added_packs_ here to maintain ownership in device scope.
         added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
@@ -126,50 +203,52 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {
         catena::common::Path path(fqoid);
-        if (path.empty()) {
-            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
-        if (path.front_is_string()) {
-            /**
-             * Top level param objects are defined in the device models generated cpp body file and exist for the lifetime of 
-             * the program. The device has a map of pointers to these params. These are not unique pointers because the 
-             * lifetime of the top level params does not need to be managed.
-             */
-            IParam* param = getItem<common::ParamTag>(path.front_as_string());
-            path.pop();
-            if (!param) {
-                status = catena::exception_with_status("Param does not exist", catena::StatusCode::NOT_FOUND);
-                return nullptr;
-            }
-            
-            if (!authz.readAuthz(*param)) {
-                status = catena::exception_with_status("Permission denied", catena::StatusCode::PERMISSION_DENIED);
-                return nullptr;
-            }
-            if (path.empty()) {
-                /**
-                 * Top level params need to be copied into a unique pointer to be returned.
-                 * 
-                 * This is a shallow copy.
-                 */
-                return param->copy();
-            } else {
-                /**
-                 * Sub-param objects are created by the getParam function so the lifetime of the object is managed by the caller.
-                 */
-                return param->getParam(path, authz, status);
-            }
-        } else {
-            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
-        }
+        return getParam(path, status, authz);
     } catch (const catena::exception_with_status& why) {
         status = catena::exception_with_status(why.what(), why.status);
         return nullptr;
     }
 }
 
+std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz) const {
+    if (path.empty()) {
+        status = catena::exception_with_status("Invalid json pointer ", catena::StatusCode::INVALID_ARGUMENT);
+        return nullptr;
+    }
+    if (path.front_is_string()) {
+        /**
+         * Top level param objects are defined in the device models generated cpp body file and exist for the lifetime of 
+         * the program. The device has a map of pointers to these params. These are not unique pointers because the 
+         * lifetime of the top level params does not need to be managed.
+         */
+        IParam* param = getItem<common::ParamTag>(path.front_as_string());
+        if (!param) {
+            status = catena::exception_with_status("Param " + path.fqoid() + " does not exist ", catena::StatusCode::NOT_FOUND);
+            return nullptr;
+        }
+        if (!authz.readAuthz(*param)) {
+            status = catena::exception_with_status("Not authorized to read the param " + path.fqoid(), catena::StatusCode::PERMISSION_DENIED); 
+            return nullptr;
+        }
+        path.pop();
+        if (path.empty()) {
+            /**
+             * Top level params need to be copied into a unique pointer to be returned.
+             * 
+             * This is a shallow copy.
+             */
+            return param->copy();
+        } else {
+            /**
+             * Sub-param objects are created by the getParam function so the lifetime of the object is managed by the caller.
+             */
+            return param->getParam(path, authz, status);
+        }
+    } else {
+        status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
+        return nullptr;
+    }
+}
 
 std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception_with_status& status, Authorizer& authz) const {
     std::vector<std::unique_ptr<IParam>> result;
@@ -193,36 +272,29 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
     return result;
 }
 
-
-
-
-
-
-
-
 std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
    // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
     try {
         catena::common::Path path(fqoid);
         if (path.empty()) {
-            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Invalid json pointer ", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
         if (path.front_is_string()) {
             IParam* param = getItem<common::CommandTag>(path.front_as_string());
             path.pop();
             if (!param) {
-                status = catena::exception_with_status("Command not found: " + fqoid, catena::StatusCode::INVALID_ARGUMENT);
+                status = catena::exception_with_status("Command not found: " + fqoid, catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
             if (path.empty()) {
                 return param->copy();
             } else {
-                status = catena::exception_with_status("sub-commands not implemented", catena::StatusCode::UNIMPLEMENTED);
+                status = catena::exception_with_status("sub-commands not implemented ", catena::StatusCode::UNIMPLEMENTED);
                 return nullptr;
             }
         } else {
-            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Invalid json pointer ", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
     } catch (const catena::exception_with_status& why) {
