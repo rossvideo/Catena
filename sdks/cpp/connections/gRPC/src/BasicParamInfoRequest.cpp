@@ -118,7 +118,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             Path top_level_path{top_level_param->getOid()};
                             
                             // For array types, calculate how many elements exist
-                            if (isArrayType(top_level_param->type().value())) {
+                            if (top_level_param->isArrayType()) {
                                 max_index_ = calculateArrayLength(top_level_path.toString(true));
                             }
                             
@@ -157,14 +157,13 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     } else {
                         Device::LockGuard lg(dm_);
                         param = dm_.getParam(req_.oid_prefix(), rc);
-                        std::cout << "current path: " << req_.oid_prefix() << std::endl;
                     }
 
                     max_index_ = 0;
  
                     if (rc.status == catena::StatusCode::OK && param) {
                         // Calculate array length if this parameter is an array
-                        if (isArrayType(param->type().value())) {
+                        if (param->isArrayType()) {
                             max_index_ = calculateArrayLength(req_.oid_prefix());
                         }
 
@@ -333,7 +332,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
 
     
     // Check if current parameter is an array type
-    if (isArrayType(current_param->type().value())) {
+    if (current_param->isArrayType()) {
         max_index_ = calculateArrayLength(current_path);
 
         
