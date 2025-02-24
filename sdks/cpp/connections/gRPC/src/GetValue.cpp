@@ -51,7 +51,7 @@ int CatenaServiceImpl::GetValue::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetValue object, 
  * then starts the process.
  */
-CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, Device &dm, bool ok) : service_{service}, dm_{dm}, responder_(&context_), 
+CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok) : service_{service}, dms_{dms}, responder_(&context_), 
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
@@ -87,12 +87,12 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new GetValue(service_, dm_, ok);
+            new GetValue(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
 
-            if (req_.slot() != dm_.slot()) {
+            if (dms_.find(req_.slot()) == dms_.end()) {
                 status_ = CallStatus::kFinish;
-                responder_.Finish(catena::Value(), Status::OK, this);
+                responder_.FinishWithError(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
                 break;
             }
 
@@ -101,13 +101,15 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
-                    std::vector<std::string> clientScopes = service->getScopes(context_);  
+                    std::vector<std::string> clientScopes = service->getScopes(context_);
                     catena::common::Authorizer authz{clientScopes};
-                    Device::LockGuard lg(dm_);
-                    rc = dm_.getValue(req_.oid(), ans, authz);
+                    Device* dm = dms_[req_.slot()].front();
+                    Device::LockGuard lg(*dm);
+                    rc = dm->getValue(req_.oid(), ans, authz);
                 } else {
-                    Device::LockGuard lg(dm_);
-                    rc = dm_.getValue(req_.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
+                    Device* dm = dms_[req_.slot()].front();
+                    Device::LockGuard lg(*dm);
+                    rc = dm->getValue(req_.oid(), ans,  catena::common::Authorizer::kAuthzDisabled);
                 }
                 
                 status_ = CallStatus::kFinish;

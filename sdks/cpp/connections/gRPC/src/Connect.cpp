@@ -55,8 +55,8 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -96,7 +96,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new Connect(service_, dm_, ok);
+            new Connect(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){
@@ -104,122 +104,124 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 hasUpdate_ = true;
                 this->cv_.notify_one();
             });
-            // Waiting for a value set by server to be sent to execute code.
-            valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                try{
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    /** 
-                     * Set the object id and index to the values set by the
-                     * client, then convert to a proto and assign it to the
-                     * IParam p.
-                     * Additionally, if authorization is enabled, check the
-                     * client's scopes.
-                     */
-                    if(service_->authorizationEnabled()){
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
-                        if (authz.readAuthz(*p)){
+            for (auto& [slot, dms] : dms_) {
+                auto dm = dms.front();
+                // Waiting for a value set by server to be sent to execute code.
+                unsigned int valueSetByServerId = dm->valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                    try{
+                        // If Connect was cancelled, notify client and end process.
+                        if (this->context_.IsCancelled()){
+                            this->hasUpdate_ = true;
+                            this->cv_.notify_one();
+                            return;
+                        }
+                        /** 
+                         * Set the object id and index to the values set by the
+                         * client, then convert to a proto and assign it to the
+                         * IParam p.
+                         * Additionally, if authorization is enabled, check the
+                         * client's scopes.
+                         */
+                        if(service_->authorizationEnabled()){
+                            std::vector<std::string> clientScopes = service_->getScopes(context_);
+                            catena::common::Authorizer authz{clientScopes};
+                            if (authz.readAuthz(*p)){
+                                this->res_.mutable_value()->set_oid(oid);
+                                this->res_.mutable_value()->set_element_index(idx);
+                                
+                                catena::Value* value = this->res_.mutable_value()->mutable_value();
+                                p->toProto(*value, authz);
+                                this->hasUpdate_ = true;
+                                this->cv_.notify_one();
+                            }
+                        } else {
                             this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
-                            
+
                             catena::Value* value = this->res_.mutable_value()->mutable_value();
-                            p->toProto(*value, authz);
+                            p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
                             this->hasUpdate_ = true;
                             this->cv_.notify_one();
                         }
-                    } else {
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-
-                        catena::Value* value = this->res_.mutable_value()->mutable_value();
-                        p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                    }
-                }catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                } 
-            });
-            // Waiting for a value set by client to be sent to execute code.
-            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                try{
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    /** 
-                     * Set the object id and index to the values set by the
-                     * client, then convert to a proto and assign it to the
-                     * IParam p.
-                     * Additionally, if authorization is enabled, check the
-                     * client's scopes.
-                     */
-                    if (service_->authorizationEnabled()){
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
-                        if (authz.readAuthz(*p)){
+                    }catch(catena::exception_with_status& why){
+                        // if an error is thrown, no update is pushed to the client
+                    } 
+                });
+                signalHandlerIds_[slot].push_back(valueSetByServerId);
+                // Waiting for a value set by client to be sent to execute code.
+                unsigned int valueSetByClientId = dm->valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                    try{
+                        // If Connect was cancelled, notify client and end process.
+                        if (this->context_.IsCancelled()){
+                            this->hasUpdate_ = true;
+                            this->cv_.notify_one();
+                            return;
+                        }
+                        /** 
+                         * Set the object id and index to the values set by the
+                         * client, then convert to a proto and assign it to the
+                         * IParam p.
+                         * Additionally, if authorization is enabled, check the
+                         * client's scopes.
+                         */
+                        if (service_->authorizationEnabled()){
+                            std::vector<std::string> clientScopes = service_->getScopes(context_);
+                            catena::common::Authorizer authz{clientScopes};
+                            if (authz.readAuthz(*p)){
+                                this->res_.mutable_value()->set_oid(oid);
+                                this->res_.mutable_value()->set_element_index(idx);
+                                catena::Value* value = this->res_.mutable_value()->mutable_value();
+                                p->toProto(*value, authz);
+                                this->hasUpdate_ = true;
+                                this->cv_.notify_one(); 
+                            }
+                        } else { 
                             this->res_.mutable_value()->set_oid(oid);
                             this->res_.mutable_value()->set_element_index(idx);
                             catena::Value* value = this->res_.mutable_value()->mutable_value();
-                            p->toProto(*value, authz);
+                            p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
                             this->hasUpdate_ = true;
-                            this->cv_.notify_one(); 
+                            this->cv_.notify_one();
                         }
-                    } else { 
-                        this->res_.mutable_value()->set_oid(oid);
-                        this->res_.mutable_value()->set_element_index(idx);
-                        catena::Value* value = this->res_.mutable_value()->mutable_value();
-                        p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                    }
-                }catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                } 
-            });
-
-            // Waiting for a language to be added to execute code.
-            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
-                try {
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    // Returning if authorization is enabled and the client does not have monitor scope.
-                    if (service_->authorizationEnabled()) {
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
-                        if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+                    }catch(catena::exception_with_status& why){
+                        // if an error is thrown, no update is pushed to the client
+                    } 
+                });
+                signalHandlerIds_[slot].push_back(valueSetByClientId);
+                // Waiting for a language to be added to execute code.
+                unsigned int languageAddedId = dm->languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+                    try {
+                        // If Connect was cancelled, notify client and end process.
+                        if (this->context_.IsCancelled()){
+                            this->hasUpdate_ = true;
+                            this->cv_.notify_one();
                             return;
                         }
+                        // Returning if authorization is enabled and the client does not have monitor scope.
+                        if (service_->authorizationEnabled()) {
+                            std::vector<std::string> clientScopes = service_->getScopes(context_);
+                            catena::common::Authorizer authz{clientScopes};
+                            if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
+                                return;
+                            }
+                        }
+                        // Updating res_'s device_component and pushing update.
+                        auto pack = this->res_.mutable_device_component()->mutable_language_pack();
+                        pack->set_language(l.language());
+                        pack->mutable_language_pack()->CopyFrom(l.language_pack());
+                        this->hasUpdate_ = true;
+                        this->cv_.notify_one();
+                    } catch(catena::exception_with_status& why){
+                        // if an error is thrown, no update is pushed to the client
                     }
-                    // Updating res_'s device_component and pushing update.
-                    auto pack = this->res_.mutable_device_component()->mutable_language_pack();
-                    pack->set_language(l.language());
-                    pack->mutable_language_pack()->CopyFrom(l.language_pack());
-                    this->hasUpdate_ = true;
-                    this->cv_.notify_one();
-                } catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                }
-            });
-
-            // send client a empty update with slot of the device
-            {
-                status_ = CallStatus::kWrite;
+                });
+                signalHandlerIds_[slot].push_back(languageAddedId);
+                // send client a empty update with slot of the device
                 catena::PushUpdates populatedSlots;
-                populatedSlots.set_slot(dm_.slot());
+                populatedSlots.set_slot(slot);
                 writer_.Write(populatedSlots, this);
             }
+            status_ = CallStatus::kWrite;
             break;
         /**
          * kWrite: Waits until an update to either set res to device's slot or
@@ -238,8 +240,10 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
-                res_.set_slot(dm_.slot());
-                writer_.Write(res_, this);
+                for (auto& [slot, dms] : dms_) {
+                    res_.set_slot(slot);
+                    writer_.Write(res_, this);
+                }
             }
             lock.unlock();
             break;
@@ -249,9 +253,11 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
             shutdownSignal_.disconnect(shutdownSignalId_);
-            dm_.valueSetByClient.disconnect(valueSetByClientId_);
-            dm_.valueSetByServer.disconnect(valueSetByServerId_);
-            dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+            for (auto [slot, signalHandlerIds] : signalHandlerIds_) {
+                dms_[slot].front()->valueSetByClient.disconnect(signalHandlerIds[0]);
+                dms_[slot].front()->valueSetByServer.disconnect(signalHandlerIds[1]);
+                dms_[slot].front()->languageAddedPushUpdate.disconnect(signalHandlerIds[2]);
+            }
             service->deregisterItem(this);
             break;
         // default: Error, end process.

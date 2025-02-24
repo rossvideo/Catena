@@ -79,6 +79,8 @@ public:
  */
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
+    using Slot = uint32_t;
+    using DeviceMap = std::unordered_map<Slot, std::vector<Device*>>;
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.
@@ -87,6 +89,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      * @param authz Flag to enable authorization.
      */
     CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
+    void registerDevice(Device &dm);
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -163,6 +166,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      * @brief Returns the current time as a string including microseconds.
      */
     static std::string timeNow();
+    /**
+     * @brief A map of slots and their connected devices.
+     * Devices in global scope so it should be fine for this to be a ptr.
+     */
+    DeviceMap dms_;
 
   public:
     /**

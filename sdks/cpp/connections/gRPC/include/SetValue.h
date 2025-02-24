@@ -52,11 +52,11 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
          * @brief Constructor for the CallData class of the SetValue
          * gRPC. Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+        SetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
     private:
         /**
          * @brief Requests Set Value from the system and adds the request to
@@ -67,11 +67,11 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
          * @brief Creates a new SetValue object to serve other clients while
          * processing.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
+        void create(CatenaServiceImpl *service, DeviceMap &dms, bool ok) override;
         /**
          * @brief The total # of SetValue objects.
          */

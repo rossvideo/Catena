@@ -108,26 +108,23 @@ void RunRPCServer(std::string addr)
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
-        CatenaServiceImpl serviceA(cq.get(), a::dm, EOPath, authz);
-        CatenaServiceImpl serviceB(cq.get(), b::dm, EOPath, authz);
-        builder.RegisterService(&serviceA);
-        builder.RegisterService(&serviceB);
+        CatenaServiceImpl service(cq.get(), a::dm, EOPath, authz);
+        service.registerDevice(a::dm);
+        service.registerDevice(b::dm);
+        builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
         std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';
 
         globalServer = server.get();
 
-        serviceA.init();
-        serviceB.init();
-        std::thread cq_threadA([&]() { serviceA.processEvents(); });
-        std::thread cq_threadB([&]() { serviceB.processEvents(); });
+        service.init();
+        std::thread cq_thread([&]() { service.processEvents(); });
         
         // wait for the server to shutdown and tidy up
         server->Wait();
         cq->Shutdown();
-        cq_threadA.join();
-        cq_threadB.join();
+        cq_thread.join();
 
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';

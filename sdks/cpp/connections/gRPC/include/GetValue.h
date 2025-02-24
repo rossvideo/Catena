@@ -52,11 +52,11 @@ class CatenaServiceImpl::GetValue : public CallData{
          * @brief Constructor for the CallData class of the GetValue
          * gRPC. Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        GetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+        GetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Manages the steps of the GetValue gRPC command
          * through the state variable status. Returns the value of the
@@ -94,9 +94,9 @@ class CatenaServiceImpl::GetValue : public CallData{
          */
         CallStatus status_;
         /**
-         * @brief The device to get the value from.
+         * @brief A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
         /**
          * @brief The object's unique id.
          */

@@ -98,17 +98,23 @@ std::string CatenaServiceImpl::timeNow() {
 
 
 CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath, bool authz)
-        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath}, authorizationEnabled_{authz} {}
+        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath}, authorizationEnabled_{authz} {
+            registerDevice(dm);
+        }
+
+void CatenaServiceImpl::registerDevice(Device &dm) {
+    dms_[dm.slot()].push_back(&dm);
+}
 
 /**
  * Creates the CallData objects for each gRPC command.
  */
 void CatenaServiceImpl::init() {
-    new GetPopulatedSlots(this, dm_, true);
-    new GetValue(this, dm_, true);
-    new SetValue(this, dm_, true);
-    new MultiSetValue(this, dm_, true);
-    new Connect(this, dm_, true);
+    new GetPopulatedSlots(this, dms_, true);
+    new GetValue(this, dms_, true);
+    new SetValue(this, dms_, true);
+    new MultiSetValue(this, dms_, true);
+    new Connect(this, dms_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
     new BasicParamInfoRequest(this, dm_, true);

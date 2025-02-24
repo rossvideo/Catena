@@ -48,8 +48,8 @@ using catena::common::Path;
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 
-CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bool ok)
-    : MultiSetValue(service, dm, ok, objectCounter_++) {
+CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : MultiSetValue(service, dms, ok, objectCounter_++) {
     typeName = "SetValue";
     service->registerItem(this);
     proceed(service, ok);
@@ -60,6 +60,6 @@ void CatenaServiceImpl::SetValue::request() {
     service_->RequestSetValue(&context_, req, &responder_, service_->cq_, service_->cq_, this);
 }
 
-void CatenaServiceImpl::SetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
-    new SetValue(service, dm, ok);
+void CatenaServiceImpl::SetValue::create(CatenaServiceImpl *service, DeviceMap &dms, bool ok) {
+    new SetValue(service, dms, ok);
 }

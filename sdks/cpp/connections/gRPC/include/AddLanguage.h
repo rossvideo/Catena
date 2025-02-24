@@ -51,7 +51,7 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          * Calls proceed() once initialized.
          *
          * @param service Pointer to the parent CatenaServiceImpl.
-         * @param dm Address of the device to get the value from.
+         * @param dms The device to get the value from.
          * @param ok Flag to check if the command was successfully executed.
          */ 
         AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok);

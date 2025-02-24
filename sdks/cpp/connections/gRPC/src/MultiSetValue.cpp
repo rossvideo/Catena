@@ -48,23 +48,23 @@ using catena::common::Path;
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
 
-CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok)
-    : MultiSetValue(service, dm, ok, objectCounter_++) {
+CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : MultiSetValue(service, dms, ok, objectCounter_++) {
     typeName = "MultiSetValue";
     service->registerItem(this);
     proceed(service, ok);
 }
 
-CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId)
-    : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
+CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok, int objectId)
+    : service_{service}, dms_{dms}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
 void CatenaServiceImpl::MultiSetValue::request() {
     service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
 }
 
-void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
-    new MultiSetValue(service, dm, ok);
+void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, DeviceMap &dms, bool ok) {
+    new MultiSetValue(service, dms, ok);
 }
 
 void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool ok) { 
@@ -91,41 +91,62 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            create(service_, dm_, ok);
+            create(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
-            try {
-                /**
-                 * Creating authorization object depending on client scopes.
-                 * Shared ptr to maintain lifetime of object. Raw ptr ensures
-                 * kAUthzDisabled is not deleted when out of scope.
-                 */
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
-                std::vector<std::string> clientScopes;
-                if (service->authorizationEnabled()) {
-                    clientScopes = service->getScopes(context_);
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(clientScopes);
-                    authz = sharedAuthz.get();
+            { // rc and reqMap scope.
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unordered_map<Slot, catena::MultiSetValuePayload> reqMap;
+            // Checking all requests to ensure valid slots and adding them to reqMap.
+            for (auto req : reqs_.values()) {
+                if (dms_.find(req.slot()) == dms_.end()) {
+                    rc = catena::exception_with_status("No device registered with slot " + std::to_string(req.slot()), catena::StatusCode::INVALID_ARGUMENT);
+                    break;
                 } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                    *reqMap[req.slot()].add_values() = req;
                 }
-                // Locking divice and setting value(s).
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
-                Device::LockGuard lg(dm_);
-                rc = dm_.multiSetValue(reqs_, *authz);
-                if (rc.status == catena::StatusCode::OK) {
-                    status_ = CallStatus::kFinish;
-                    responder_.Finish(catena::Empty{}, Status::OK, this);
-                } else {
-                    errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+            }
+            if (rc.status == catena::StatusCode::OK) {
+                try {
+                    /**
+                     * Creating authorization object depending on client scopes.
+                     * Shared ptr to maintain lifetime of object. Raw ptr ensures
+                     * kAUthzDisabled is not deleted when out of scope.
+                     */
+                    std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                    catena::common::Authorizer* authz;
+                    std::vector<std::string> clientScopes;
+                    if (service->authorizationEnabled()) {
+                        clientScopes = service->getScopes(context_);
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(clientScopes);
+                        authz = sharedAuthz.get();
+                    } else {
+                        authz = &catena::common::Authorizer::kAuthzDisabled;
+                    }
+                    for (auto [slot, reqs] : reqMap) {
+                        for (auto dm : dms_[slot]) {
+                            // Locking device and setting value(s).
+                            Device::LockGuard lg(*dm);
+                            rc = dm->multiSetValue(reqs, *authz);
+                            if (rc.status != catena::StatusCode::OK) { break; }
+                        }
+                        if (rc.status != catena::StatusCode::OK) { break; }
+                    }
+                } catch (...) { // Error, end process.
+                    errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                     status_ = CallStatus::kFinish;
                     responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
-            } catch (...) { // Error, end process.
-                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+            }
+            // Sending final status.
+            if (rc.status == catena::StatusCode::OK) {
+                status_ = CallStatus::kFinish;
+                responder_.Finish(catena::Empty{}, Status::OK, this);
+            } else {
+                errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
                 status_ = CallStatus::kFinish;
                 responder_.Finish(::catena::Empty{}, errorStatus_, this);
             }
+            } // rc and reqMap scope.
             break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from

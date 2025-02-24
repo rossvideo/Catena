@@ -54,29 +54,29 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @brief Constructor for the CallData class of the MultiSetValue
          * gRPC. Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+        MultiSetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Manages the steps of the SetValue and MultiSetValue gRPC
          * commands through the state variable status.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param ok Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
     protected:
         /**
          * @brief Constructor class for child classes.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         * @param objectId - objectCounter_ + 1
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dm Address of the device to get the value from.
+         * @param ok Flag to check if the command was successfully executed.
+         * @param objectId objectCounter_ + 1
          */ 
-        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId);
+        MultiSetValue(CatenaServiceImpl *service, DeviceMap &dms, bool ok, int objectId);
         /**
          * @brief Requests Multi Set Value from the system and sets the
          * request to the MultiSetValuePayload.
@@ -86,11 +86,11 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @brief Creates a new MultiSetValue object to serve other clients
          * while processing.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        virtual void create(CatenaServiceImpl *service, Device &dm, bool ok);
+        virtual void create(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Name of childclass to specify gRPC in console notifications.
          */
@@ -121,9 +121,9 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief The device containing the value to set.
+         * @brief A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
         /**
          * The status of the transaction for use in responder.finish functions.
          */
