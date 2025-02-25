@@ -421,107 +421,73 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     *dst->mutable_default_scope() = default_scope_;
     dst->set_multi_set_enabled(multi_set_enabled_);
     dst->set_subscriptions(subscriptions_);
-
     for (auto& scope : access_scopes_) {
         dst->add_access_scopes(scope);
     }
 
-    if (shallow) {
-        // In shallow mode with MINIMAL detail level, only include minimal_set parameters
-        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
-            // Add minimal set parameters
-            google::protobuf::Map<std::string, ::catena::Param> dstParams{};
-            for (const auto& [name, param] : params_) {
-                if (authz.readAuthz(*param) && param->getDescriptor().minimalSet()) {
-                    ::catena::Param dstParam{};
-                    param->toProto(dstParam, authz);
-                    dstParams[name] = dstParam;
-                }
-            }
-            dst->mutable_params()->swap(dstParams);
-        } else {
-            // For FULL mode, include everything
-            toProto(*dst, authz, shallow);
-        }
-        co_return component;
-    }
-
     // Helper function to check if an OID is subscribed
     auto is_subscribed = [&subscribed_oids, this](const std::string& oid) {
-        std::cout << "Checking subscription for OID: '" << oid << "'" << std::endl;
-        std::cout << "Current detail level: " << detail_level_ << std::endl;
-
-        // If subscriptions are disabled or in FULL mode, allow all
-        if (!subscriptions_ || detail_level_ == catena::Device_DetailLevel_FULL) {
-            std::cout << "Subscriptions disabled or FULL mode, allowing all" << std::endl;
+        if (!subscriptions_) {
             return true;
         }
 
-        // If no subscriptions specified and in MINIMAL mode, return true to let minimal_set be the deciding factor
-        if (subscribed_oids.empty() && detail_level_ == catena::Device_DetailLevel_MINIMAL) {
-            std::cout << "No subscriptions specified and in MINIMAL mode, letting minimal_set be the deciding factor" << std::endl;
+        if (subscribed_oids.empty()) {
             return true;
         }
 
-        // If we have explicit subscriptions, check them
-        if (!subscribed_oids.empty()) {
-            std::cout << "Checking against " << subscribed_oids.size() << " subscribed OIDs:" << std::endl;
-            for (const auto& subscribed : subscribed_oids) {
-                std::cout << "    - '" << subscribed << "'" << std::endl;
-            }
-            
-            auto it = std::find_if(subscribed_oids.begin(), subscribed_oids.end(),
-                [&oid](const std::string& subscribed_oid) {
-                    bool matches = !subscribed_oid.empty() && oid.find(subscribed_oid) != std::string::npos;
-                    std::cout << "Comparing with '" << subscribed_oid << "': " << (matches ? "match" : "no match") << std::endl;
-                    return matches;
-                });
-            bool result = it != subscribed_oids.end();
-            std::cout << "Final result: " << (result ? "subscribed" : "not subscribed") << std::endl;
-            return result;
-        }
-
-        return false;
+        return std::any_of(subscribed_oids.begin(), subscribed_oids.end(),
+            [&oid](const std::string& subscribed_oid) {
+                return !subscribed_oid.empty() && oid.find(subscribed_oid) != std::string::npos;
+            });
     };
 
-    // Send menu groups if subscribed or if subscriptions are disabled
-    for (auto& [menu_group_name, menu_group] : menu_groups_) {
-        if (is_subscribed(menu_group_name)) {
-            ::catena::MenuGroup* dstMenuGroup = &(*dst->mutable_menu_groups())[menu_group_name];
-            menu_group->toProto(*dstMenuGroup, true);
+    // In FULL mode, send all subscribed menus, language packs, and constraints
+    if (detail_level_ == catena::Device_DetailLevel_FULL) {
+        // Send menus from menu groups if subscribed
+        for (const auto& [group_name, menu_group] : menu_groups_) {
+            for (const auto& [menu_name, menu] : *menu_group->menus()) {
+                std::string oid = group_name + "/" + menu_name;
+                if (is_subscribed(oid)) {
+                    co_yield component;
+                    component.Clear();
+                    ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
+                    menu.toProto(*dstMenu);
+                    component.mutable_menu()->set_oid(oid);
+                }
+            }
+        }
+
+        // Send language packs if subscribed
+        for (const auto& [language, language_pack] : language_packs_) {
+            if (is_subscribed(language)) {
+                co_yield component;
+                component.Clear();
+                ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+                language_pack->toProto(*dstPack);
+                component.mutable_language_pack()->set_language(language);
+            }
+        }
+
+        // Send constraints if subscribed
+        for (const auto& [name, constraint] : constraints_) {
+            if (is_subscribed(name)) {
+                co_yield component;
+                component.Clear();
+                ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+                constraint->toProto(*dstConstraint);
+                component.mutable_shared_constraint()->set_oid(name);
+            }
         }
     }
 
-    // Send language packs if subscribed or if subscriptions are disabled
-    for (const auto& [language, language_pack] : language_packs_) {
-        if (is_subscribed(language)) {
-            co_yield component;
-            component.Clear();
-            ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
-            language_pack->toProto(*dstPack);
-            component.mutable_language_pack()->set_language(language);
-        }
-    }
-
-    // Send constraints if subscribed or if subscriptions are disabled
-    for (const auto& [name, constraint] : constraints_) {
-        if (is_subscribed(name)) {
-            co_yield component;
-            component.Clear();
-            ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
-            constraint->toProto(*dstConstraint);
-            component.mutable_shared_constraint()->set_oid(name);
-        }
-    }
-
-    // Send params if authorized and either subscribed or if subscriptions are disabled
+    // Send params if authorized and either:
+    // 1. They are minimal_set (always sent regardless of mode)
+    // 2. In FULL mode and subscribed
     for (const auto& [name, param] : params_) {
-        bool should_send = authz.readAuthz(*param) && is_subscribed(name);
-        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
-            std::cout << "Checking minimal set for param: '" << name << "'" << std::endl;
-            should_send = should_send && param->getDescriptor().minimalSet();
-            std::cout << "Minimal set check result: " << (should_send ? "true" : "false") << std::endl;
-        }
+        bool should_send = authz.readAuthz(*param) && 
+            (param->getDescriptor().minimalSet() || 
+             (detail_level_ == catena::Device_DetailLevel_FULL && is_subscribed(name)));
+        
         if (should_send) {
             co_yield component;
             component.Clear();
@@ -531,32 +497,20 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send commands if authorized and either subscribed or if subscriptions are disabled
+    // Send commands if authorized and either:
+    // 1. They are minimal_set (always sent regardless of mode)
+    // 2. In FULL mode and subscribed
     for (const auto& [name, command] : commands_) {
-        bool should_send = authz.readAuthz(*command) && is_subscribed(name);
-        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
-            should_send = should_send && command->getDescriptor().minimalSet();
-        }
+        bool should_send = authz.readAuthz(*command) && 
+            (command->getDescriptor().minimalSet() || 
+             (detail_level_ == catena::Device_DetailLevel_FULL && is_subscribed(name)));
+        
         if (should_send) {
             co_yield component;
             component.Clear();
             ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
             command->toProto(*dstCommand, authz);
             component.mutable_command()->set_oid(name);
-        }
-    }
-
-    // Send menus if subscribed or if subscriptions are disabled
-    for (const auto& [name, menu_groups_] : menu_groups_) {
-        for (const auto& [menu_name, menu] : *menu_groups_->menus()) {
-            std::string oid = name + "/" + menu_name;
-            if (is_subscribed(oid)) {
-                co_yield component;
-                component.Clear();
-                ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
-                menu.toProto(*dstMenu);
-                component.mutable_menu()->set_oid(oid);
-            }
         }
     }
     
