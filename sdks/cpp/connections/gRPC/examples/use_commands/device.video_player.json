@@ -15,6 +15,7 @@
     "state": {
       "type": "STRING",
       "read_only": true,
+      "minimal_set": true,
       "value": { "string_value": "stopped" },
       "constraint": {
         "type": "STRING_CHOICE",
@@ -26,6 +27,7 @@
     },
     "video_file": {
       "type": "STRING",
+      "minimal_set": true,
       "value": { "string_value": "eo://video/1" },
       "constraint": {
         "type": "STRING_CHOICE",
