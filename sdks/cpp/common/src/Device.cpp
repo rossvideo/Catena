@@ -425,6 +425,11 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         dst->add_access_scopes(scope);
     }
 
+    // If detail level is NONE, only send device info and return
+    if (detail_level_ == catena::Device_DetailLevel_NONE) {
+        co_return component;
+    }
+
     // Helper function to check if an OID is subscribed
     auto is_subscribed = [&subscribed_oids, this](const std::string& oid) {
         if (!subscriptions_) {
@@ -441,17 +446,16 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
             });
     };
 
-    // Send non-minimal components if in FULL mode or if in SUBSCRIPTION mode with subscriptions
-    bool send_non_minimal = detail_level_ == catena::Device_DetailLevel_FULL || 
-                          (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscribed_oids.empty());
-
-    // Send menus, language packs, and constraints only in FULL or SUBSCRIPTION mode
-    if (send_non_minimal) {
-        // Send menus from menu groups if subscribed
+    // Only send non-minimal items in FULL mode or if explicitly subscribed in SUBSCRIPTION mode
+    if (detail_level_ == catena::Device_DetailLevel_FULL || 
+        (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscribed_oids.empty())) {
+        
+        // Send menus only in FULL mode or if subscribed in SUBSCRIPTION mode
         for (const auto& [group_name, menu_group] : menu_groups_) {
             for (const auto& [menu_name, menu] : *menu_group->menus()) {
                 std::string oid = group_name + "/" + menu_name;
-                if (is_subscribed(oid)) {
+                if (detail_level_ == catena::Device_DetailLevel_FULL || 
+                    (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(oid))) {
                     co_yield component;
                     component.Clear();
                     ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
@@ -461,9 +465,10 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
             }
         }
 
-        // Send language packs if subscribed
+        // Send language packs only in FULL mode or if subscribed in SUBSCRIPTION mode
         for (const auto& [language, language_pack] : language_packs_) {
-            if (is_subscribed(language)) {
+            if (detail_level_ == catena::Device_DetailLevel_FULL || 
+                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(language))) {
                 co_yield component;
                 component.Clear();
                 ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
@@ -472,9 +477,10 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
             }
         }
 
-        // Send constraints if subscribed
+        // Send constraints only in FULL mode or if subscribed in SUBSCRIPTION mode
         for (const auto& [name, constraint] : constraints_) {
-            if (is_subscribed(name)) {
+            if (detail_level_ == catena::Device_DetailLevel_FULL || 
+                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name))) {
                 co_yield component;
                 component.Clear();
                 ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
@@ -484,14 +490,20 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send params if authorized and either minimal_set or subscribed, but not in COMMANDS mode
+    // Send parameters if:
+    // 1. Not in COMMANDS mode AND
+    // 2. Authorized to read AND
+    // 3. Either:
+    //    - Parameter is in minimal_set OR
+    //    - In FULL mode OR
+    //    - In SUBSCRIPTION mode and explicitly subscribed
     if (detail_level_ != catena::Device_DetailLevel_COMMANDS) {
         for (const auto& [name, param] : params_) {
-            bool should_send = authz.readAuthz(*param) && 
+            if (authz.readAuthz(*param) && 
                 (param->getDescriptor().minimalSet() || 
-                 (send_non_minimal && is_subscribed(name)));
-            
-            if (should_send) {
+                 detail_level_ == catena::Device_DetailLevel_FULL ||
+                 (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name)))) {
+                
                 co_yield component;
                 component.Clear();
                 ::catena::Param* dstParam = component.mutable_param()->mutable_param();
@@ -501,14 +513,20 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send commands if authorized and minimal, full or subscribed
+    // Send commands if:
+    // 1. Authorized to read AND
+    // 2. Either:
+    //    - Command is in minimal_set OR
+    //    - In COMMANDS mode OR
+    //    - In FULL mode OR
+    //    - In SUBSCRIPTION mode and explicitly subscribed
     for (const auto& [name, command] : commands_) {
-        bool should_send = authz.readAuthz(*command) && 
+        if (authz.readAuthz(*command) && 
             (command->getDescriptor().minimalSet() || 
              detail_level_ == catena::Device_DetailLevel_COMMANDS ||
-             (send_non_minimal && is_subscribed(name)));
-        
-        if (should_send) {
+             detail_level_ == catena::Device_DetailLevel_FULL ||
+             (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name)))) {
+            
             co_yield component;
             component.Clear();
             ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
