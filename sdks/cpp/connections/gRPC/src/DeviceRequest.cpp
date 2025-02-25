@@ -99,9 +99,11 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 if (service->authorizationEnabled()) {
                     clientScopes_ = service->getScopes(context_);  
                     authz_ = std::make_unique<catena::common::Authorizer>(clientScopes_); 
+                    dm_.detail_level(req_.detail_level());
                     serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
                     /** NOTE: Subscriptions are not currently enabled with authorization */
                 } else {
+                    dm_.detail_level(req_.detail_level());
                     if (dm_.subscriptions()) {
                         std::vector<std::string> oids;
                         const auto& repeated_oids = req_.subscribed_oids();

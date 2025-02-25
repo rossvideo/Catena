@@ -314,7 +314,11 @@ void Device::toProto(::catena::Device& dst, Authorizer& authz, bool shallow) con
     // if we're not doing a shallow copy, we need to copy all the Items
     google::protobuf::Map<std::string, ::catena::Param> dstParams{};
     for (const auto& [name, param] : params_) {
-        if (authz.readAuthz(*param)) {
+        bool should_send = authz.readAuthz(*param);
+        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+            should_send = should_send && param->getDescriptor().minimalSet();
+        }
+        if (should_send) {
             ::catena::Param dstParam{};
             param->toProto(dstParam, authz);
             dstParams[name] = dstParam;
@@ -325,7 +329,11 @@ void Device::toProto(::catena::Device& dst, Authorizer& authz, bool shallow) con
     // make deep copy of the commands
     google::protobuf::Map<std::string, ::catena::Param> dstCommands{};
     for (const auto& [name, command] : commands_) {
-        if (authz.readAuthz(*command)) {
+        bool should_send = authz.readAuthz(*command);
+        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+            should_send = should_send && command->getDescriptor().minimalSet();
+        }
+        if (should_send) {
             ::catena::Param dstCommand{};
             command->toProto(dstCommand, authz); // uses param's toProto method
             dstCommands[name] = dstCommand;
@@ -335,28 +343,34 @@ void Device::toProto(::catena::Device& dst, Authorizer& authz, bool shallow) con
 
     // make deep copy of the constraints
     google::protobuf::Map<std::string, ::catena::Constraint> dstConstraints{};
-    for (const auto& [name, constraint] : constraints_) {
-        ::catena::Constraint dstConstraint{};
-        constraint->toProto(dstConstraint);
-        dstConstraints[name] = dstConstraint;
+    if (detail_level_ != catena::Device_DetailLevel_MINIMAL) {
+        for (const auto& [name, constraint] : constraints_) {
+            ::catena::Constraint dstConstraint{};
+            constraint->toProto(dstConstraint);
+            dstConstraints[name] = dstConstraint;
+        }
     }
     dst.mutable_constraints()->swap(dstConstraints); // n.b. lowercase swap, not an error
 
     // make deep copy of the language packs
     ::catena::LanguagePacks dstPacks{};
-    for (const auto& [name, pack] : language_packs_) {
-        ::catena::LanguagePack dstPack{};
-        pack->toProto(dstPack);
-        dstPacks.mutable_packs()->insert({name, dstPack});
+    if (detail_level_ != catena::Device_DetailLevel_MINIMAL) {
+        for (const auto& [name, pack] : language_packs_) {
+            ::catena::LanguagePack dstPack{};
+            pack->toProto(dstPack);
+            dstPacks.mutable_packs()->insert({name, dstPack});
+        }
     }
     dst.mutable_language_packs()->Swap(&dstPacks); // N.B uppercase Swap, not an error
 
     // make a copy of the menu groups
     google::protobuf::Map<std::string, ::catena::MenuGroup> dstMenuGroups{};
-    for (const auto& [name, group] : menu_groups_) {
-        ::catena::MenuGroup dstGroup{};
-        group->toProto(dstGroup, false);
-        dstMenuGroups[name] = dstGroup;
+    if (detail_level_ != catena::Device_DetailLevel_MINIMAL) {
+        for (const auto& [name, group] : menu_groups_) {
+            ::catena::MenuGroup dstGroup{};
+            group->toProto(dstGroup, false);
+            dstMenuGroups[name] = dstGroup;
+        }
     }
     dst.mutable_menu_groups()->swap(dstMenuGroups); // lowercase swap, not an error
 }
@@ -399,45 +413,8 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         std::cout << "Received OID: '" << oid << "'" << std::endl;
     }
     catena::DeviceComponent component{};
-    if (!shallow) {
-        // If not shallow, send the whole device as a single message
-        toProto(*component.mutable_device(), authz, shallow);
-        co_return component; 
-    }
-
-    // Helper function to check if an OID is subscribed
-    auto is_subscribed = [&subscribed_oids, this](const std::string& oid) {
-        std::cout << "Checking subscription for OID: '" << oid << "'" << std::endl;
-        
-        // If subscriptions are disabled or no subscriptions specified, allow all
-        if (!subscriptions_) {
-            std::cout << "Subscriptions disabled, allowing all" << std::endl;
-            return true;
-        }
-        if (subscribed_oids.empty()) {
-            std::cout << "No subscriptions specified, allowing all" << std::endl;
-            return true;
-        }
-
-        std::cout << "Checking against " << subscribed_oids.size() << " subscribed OIDs:" << std::endl;
-        for (const auto& subscribed : subscribed_oids) {
-            std::cout << "    - '" << subscribed << "'" << std::endl;
-        }
-        
-        // Check if the OID exists in subscribed_oids, return false if not found
-        auto it = std::find_if(subscribed_oids.begin(), subscribed_oids.end(),
-            [&oid](const std::string& subscribed_oid) {
-                bool matches = !subscribed_oid.empty() && oid.find(subscribed_oid) != std::string::npos;
-                std::cout << "Comparing with '" << subscribed_oid << "': " << (matches ? "match" : "no match") << std::endl;
-                return matches;
-            });
-        bool result = it != subscribed_oids.end();
-        std::cout << "Final result: " << (result ? "subscribed" : "not subscribed") << std::endl;
-        return result;
-    };
-
-    // If shallow, send the device in parts
-    // send the basic device info first
+    
+    // Always send basic device info first
     catena::Device* dst = component.mutable_device();
     dst->set_slot(slot_);
     dst->set_detail_level(detail_level_);
@@ -448,6 +425,64 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     for (auto& scope : access_scopes_) {
         dst->add_access_scopes(scope);
     }
+
+    if (shallow) {
+        // In shallow mode with MINIMAL detail level, only include minimal_set parameters
+        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+            // Add minimal set parameters
+            google::protobuf::Map<std::string, ::catena::Param> dstParams{};
+            for (const auto& [name, param] : params_) {
+                if (authz.readAuthz(*param) && param->getDescriptor().minimalSet()) {
+                    ::catena::Param dstParam{};
+                    param->toProto(dstParam, authz);
+                    dstParams[name] = dstParam;
+                }
+            }
+            dst->mutable_params()->swap(dstParams);
+        } else {
+            // For FULL mode, include everything
+            toProto(*dst, authz, shallow);
+        }
+        co_return component;
+    }
+
+    // Helper function to check if an OID is subscribed
+    auto is_subscribed = [&subscribed_oids, this](const std::string& oid) {
+        std::cout << "Checking subscription for OID: '" << oid << "'" << std::endl;
+        std::cout << "Current detail level: " << detail_level_ << std::endl;
+
+        // If subscriptions are disabled or in FULL mode, allow all
+        if (!subscriptions_ || detail_level_ == catena::Device_DetailLevel_FULL) {
+            std::cout << "Subscriptions disabled or FULL mode, allowing all" << std::endl;
+            return true;
+        }
+
+        // If no subscriptions specified and in MINIMAL mode, return true to let minimal_set be the deciding factor
+        if (subscribed_oids.empty() && detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+            std::cout << "No subscriptions specified and in MINIMAL mode, letting minimal_set be the deciding factor" << std::endl;
+            return true;
+        }
+
+        // If we have explicit subscriptions, check them
+        if (!subscribed_oids.empty()) {
+            std::cout << "Checking against " << subscribed_oids.size() << " subscribed OIDs:" << std::endl;
+            for (const auto& subscribed : subscribed_oids) {
+                std::cout << "    - '" << subscribed << "'" << std::endl;
+            }
+            
+            auto it = std::find_if(subscribed_oids.begin(), subscribed_oids.end(),
+                [&oid](const std::string& subscribed_oid) {
+                    bool matches = !subscribed_oid.empty() && oid.find(subscribed_oid) != std::string::npos;
+                    std::cout << "Comparing with '" << subscribed_oid << "': " << (matches ? "match" : "no match") << std::endl;
+                    return matches;
+                });
+            bool result = it != subscribed_oids.end();
+            std::cout << "Final result: " << (result ? "subscribed" : "not subscribed") << std::endl;
+            return result;
+        }
+
+        return false;
+    };
 
     // Send menu groups if subscribed or if subscriptions are disabled
     for (auto& [menu_group_name, menu_group] : menu_groups_) {
@@ -481,7 +516,13 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 
     // Send params if authorized and either subscribed or if subscriptions are disabled
     for (const auto& [name, param] : params_) {
-        if (authz.readAuthz(*param) && is_subscribed(name)) {
+        bool should_send = authz.readAuthz(*param) && is_subscribed(name);
+        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+            std::cout << "Checking minimal set for param: '" << name << "'" << std::endl;
+            should_send = should_send && param->getDescriptor().minimalSet();
+            std::cout << "Minimal set check result: " << (should_send ? "true" : "false") << std::endl;
+        }
+        if (should_send) {
             co_yield component;
             component.Clear();
             ::catena::Param* dstParam = component.mutable_param()->mutable_param();
@@ -492,7 +533,11 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 
     // Send commands if authorized and either subscribed or if subscriptions are disabled
     for (const auto& [name, command] : commands_) {
-        if (authz.readAuthz(*command) && is_subscribed(name)) {
+        bool should_send = authz.readAuthz(*command) && is_subscribed(name);
+        if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+            should_send = should_send && command->getDescriptor().minimalSet();
+        }
+        if (should_send) {
             co_yield component;
             component.Clear();
             ::catena::Param* dstCommand = component.mutable_command()->mutable_param();

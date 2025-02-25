@@ -34,7 +34,8 @@
     "counter": {
       "type": "INT32",
       "name": { "display_strings": { "en": "Counter", "es": "Contador", "fr": "Compteur" } },
-      "value": { "int32_value": 0 }
+      "value": { "int32_value": 0 },
+      "minimal_set": true
     },
     "text_box": {
       "type": "STRING",
