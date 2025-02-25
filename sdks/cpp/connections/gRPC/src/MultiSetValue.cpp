@@ -124,12 +124,12 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
             } catch (catena::exception_with_status& err) {
                 status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                responder_.FinishWithError(errorStatus, this);
-            } catch (...) { // Error, end process.
-                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
-                status_ = CallStatus::kFinish;
-                responder_.Finish(::catena::Empty{}, errorStatus_, this);
-            }
+                responder_.FinishWithError(errorStatus, this);}
+            // } catch (...) { // Error, end process.
+            //     errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+            //     status_ = CallStatus::kFinish;
+            //     responder_.Finish(::catena::Empty{}, errorStatus_, this);
+            // }
             break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from

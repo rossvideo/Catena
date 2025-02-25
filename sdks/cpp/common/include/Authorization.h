@@ -74,6 +74,13 @@ class Authorizer {
    */
 	const std::string PUBLIC_KEY = R"(
 -----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWPi1EJlURdm7dDWyBZse3b5A/5pz
+7bT43Xi3f89v0S4qBOq9IvhA84wqoTCWwue5lql4xph0PRUmqPJNXsEyOQ==
+-----END PUBLIC KEY-----
+)";
+
+const std::string PUBLIC_KEY_RSA = R"(
+-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
 4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u
 +qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyeh
@@ -83,6 +90,8 @@ cKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbc
 mwIDAQAB
 -----END PUBLIC KEY-----
 )";
+  
+  
     /**
      * @brief The scopes of the object
      */
@@ -183,6 +192,11 @@ mwIDAQAB
      * @throw Catena::exception_with_status if the JWKS cannot be fetched.
      */
     std::string fetchJWKS(const std::string& url);
+
+    using b64String = std::vector<unsigned char>;
+    b64String base64UrlDecode(const std::string& input);
+
+    std::string ES256Key(const std::string& x, const std::string& y);
 
     void parseJWKS(const std::string& jwks, std::map<std::string, std::string>& jwksMap, std::string alg = "ES256");
 

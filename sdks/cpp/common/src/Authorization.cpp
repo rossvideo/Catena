@@ -39,23 +39,27 @@ using catena::common::Authorizer;
 Authorizer Authorizer::kAuthzDisabled;
 
 Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakServer, const std::string& realm) {
+    // Fetching and parsing the jwks from authz server.
     std::string issuer = "https://" + keycloakServer + "/realms/" + realm + "/protocol/openid-connect/certs";
     std::string jwks = fetchJWKS(issuer);
     std::map<std::string, std::string> jwksInfo;
     parseJWKS(jwks, jwksInfo);
+    std::string publicKey = ES256Key(jwksInfo["x"], jwksInfo["y"]);
     try {
         // Decoding token, constructing verifier, and verifying the token.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
-        auto verifier = jwt::verify();
-        //     .allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""))
-        //     .with_type("at+jwt")
-        //     // .with_issuer("https://catena.rossvideo.com")
-        //     // .with_audience("https://catena.rossvideo.com")
-        //     .leeway(300); // 5 minutes of leeway for nbf and exp.
-        if (jwksInfo["alg"] == "ES256") {
-
-            verifier.allow_algorithm(jwt::algorithm::es256("", "", "", ""));
-        }
+        auto verifier = jwt::verify()
+            .allow_algorithm(jwt::algorithm::es256(publicKey));
+            //.allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""));
+            // .with_type("at+jwt")
+            // // .with_issuer("https://catena.rossvideo.com")
+            // // .with_audience("https://catena.rossvideo.com")
+            // .leeway(300); // 5 minutes of leeway for nbf and exp.
+        // if (jwksInfo["alg"] == "ES256") {
+        //     if (jwksInfo["crv"] == "P-256") {
+        //         verifier.allow_algorithm(jwt::algorithm::es256(publicKey));
+        //     }
+        // }
         verifier.verify(decodedToken); // Throws error if invalid.
 
         // Extracting scopes from the decoded token's claims.
@@ -72,11 +76,11 @@ Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakS
         
     // Catch error thrown by verifier.verify().
     } catch (jwt::error::token_verification_exception err) {
-        throw catena::exception_with_status(err.what(), catena::StatusCode::UNAUTHENTICATED);
+        throw catena::exception_with_status(err.what(), catena::StatusCode::UNAUTHENTICATED);}
     // Catch any other errors (probably from jwt::decode())
-    } catch (...) {
-        throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
-    }
+    // } catch (...) {
+    //     throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
+    // }
 }
 
 size_t Authorizer::curlWriteFunction(char* contents, size_t size, size_t numMembers, void* output) {
@@ -139,6 +143,85 @@ bool Authorizer::hasAuthz(const std::string& scope) const {
         return false;
     }
     return true;
+}
+
+Authorizer::b64String Authorizer::base64UrlDecode(const std::string& input) {
+    // Replace characters that are not allowed in base64url and add padding.
+    std::string base64 = input;
+    std::replace(base64.begin(), base64.end(), '-', '+');
+    std::replace(base64.begin(), base64.end(), '_', '/');
+    while (base64.size() % 4) { base64 += '='; }
+    // Decode the base64url string.
+    EVP_ENCODE_CTX* ctx = EVP_ENCODE_CTX_new();
+    EVP_DecodeInit(ctx);
+    b64String decoded(base64.size());
+    int outLen = decoded.size(), inLen = base64.size();
+    EVP_DecodeUpdate(ctx, decoded.data(), &outLen, (unsigned char*)base64.data(), inLen);
+    decoded.resize(outLen);
+    EVP_ENCODE_CTX_free(ctx);
+    return decoded;
+}
+
+std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
+    // Decoding x and y from base64URL and converting to BIGNUM.
+    b64String xB64 = base64UrlDecode(x);
+    b64String yB64 = base64UrlDecode(y); 
+    // BIGNUM* xBN = BN_bin2bn(xB64.data(), xB64.size(), NULL);
+    // BIGNUM* yBN = BN_bin2bn(yB64.data(), yB64.size(), NULL);
+    
+    // EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+    // EVP_PKEY_keygen_init(pctx);
+    // // Setting the EC curve.
+    // EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx, NID_X9_62_prime256v1);
+    // point
+
+    // // Generating the EC key.
+    // EVP_PKEY* pkey = NULL;
+    // EVP_PKEY_keygen(pctx, &pkey);
+    // EVP_PKEY_CTX_free(pctx);
+
+    // EC_KEY* eckey = EVP_PKEY_get1_EC_KEY(pkey);
+    // EC_GROUP* group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
+    // EC_POINT* point = EC_POINT_new(group);
+    // EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL);
+
+    // EVP_PKEY* pubkey = EVP_PKEY_new();
+    // EVP_MD_CTX_set_pkey_ctx
+
+
+    // return "";
+
+    // OLD CODE
+    EC_KEY* ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    if (!ecKey) {
+        throw catena::exception_with_status("Failed to create EC_KEY", catena::StatusCode::INTERNAL);
+    }
+    // Converting x and y to BIGNUM and using them to create a point.
+    const EC_GROUP* group = EC_KEY_get0_group(ecKey);
+    BIGNUM* xBN = BN_bin2bn(xB64.data(), xB64.size(), NULL);
+    BIGNUM* yBN = BN_bin2bn(yB64.data(), yB64.size(), NULL);
+    EC_POINT* point = EC_POINT_new(group);
+    if (!EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL)) {
+        throw catena::exception_with_status("Failed to set affine coordinates", catena::StatusCode::INTERNAL);
+    }
+    // Using point to find the public key and writing in PEM format to buffer.
+    EC_KEY_set_public_key(ecKey, point);
+    BIO* bio = BIO_new(BIO_s_mem());
+    if (!PEM_write_bio_EC_PUBKEY(bio, ecKey)) {
+        throw catena::exception_with_status("Failed to write public key to buffer", catena::StatusCode::INTERNAL);
+    }
+    // Converting buffer to string and storing it in publicKey.
+    char* pemData;
+    long len = BIO_get_mem_data(bio, &pemData);
+    std::string publicKey(pemData, len);
+    // Freeing memory and returning public key.
+    BIO_free(bio);
+    EC_KEY_free(ecKey);
+    EC_POINT_free(point);
+    BN_free(xBN);
+    BN_free(yBN);
+    publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
+    return publicKey;
 }
 
 /**
