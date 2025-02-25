@@ -414,7 +414,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     }
     catena::DeviceComponent component{};
     
-    // Always send basic device info first
+    // Send basic device information first
     catena::Device* dst = component.mutable_device();
     dst->set_slot(slot_);
     dst->set_detail_level(detail_level_);
@@ -425,7 +425,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         dst->add_access_scopes(scope);
     }
 
-    // If detail level is NONE, only send device info and return
+    // If detail level is NONE, only send the above device info and return
     if (detail_level_ == catena::Device_DetailLevel_NONE) {
         co_return component;
     }
@@ -477,7 +477,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
             }
         }
 
-        // Send constraints only in FULL mode or if subscribed in SUBSCRIPTION mode
+        // Send constraints only in FULL mode or if subscribed to
         for (const auto& [name, constraint] : constraints_) {
             if (detail_level_ == catena::Device_DetailLevel_FULL || 
                 (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name))) {
@@ -490,13 +490,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send parameters if:
-    // 1. Not in COMMANDS mode AND
-    // 2. Authorized to read AND
-    // 3. Either:
-    //    - Parameter is in minimal_set OR
-    //    - In FULL mode OR
-    //    - In SUBSCRIPTION mode and explicitly subscribed
+    // Send parameters if authorized, and either in the minimal set or if subscribed to
     if (detail_level_ != catena::Device_DetailLevel_COMMANDS) {
         for (const auto& [name, param] : params_) {
             if (authz.readAuthz(*param) && 
@@ -513,13 +507,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send commands if:
-    // 1. Authorized to read AND
-    // 2. Either:
-    //    - Command is in minimal_set OR
-    //    - In COMMANDS mode OR
-    //    - In FULL mode OR
-    //    - In SUBSCRIPTION mode and explicitly subscribed
+    // Send commands if authorized
     for (const auto& [name, command] : commands_) {
         if (authz.readAuthz(*command) && 
             (command->getDescriptor().minimalSet() || 
