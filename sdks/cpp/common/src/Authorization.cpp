@@ -145,7 +145,7 @@ bool Authorizer::hasAuthz(const std::string& scope) const {
     return true;
 }
 
-Authorizer::b64String Authorizer::base64UrlDecode(const std::string& input) {
+Authorizer::decodedB64Str Authorizer::base64UrlDecode(const std::string& input) {
     // Replace characters that are not allowed in base64url and add padding.
     std::string base64 = input;
     std::replace(base64.begin(), base64.end(), '-', '+');
@@ -154,7 +154,7 @@ Authorizer::b64String Authorizer::base64UrlDecode(const std::string& input) {
     // Decode the base64url string.
     EVP_ENCODE_CTX* ctx = EVP_ENCODE_CTX_new();
     EVP_DecodeInit(ctx);
-    b64String decoded(base64.size());
+    decodedB64Str decoded(base64.size());
     int outLen = decoded.size(), inLen = base64.size();
     EVP_DecodeUpdate(ctx, decoded.data(), &outLen, (unsigned char*)base64.data(), inLen);
     decoded.resize(outLen);
@@ -164,11 +164,41 @@ Authorizer::b64String Authorizer::base64UrlDecode(const std::string& input) {
 
 std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
     // Decoding x and y from base64URL and converting to BIGNUM.
-    b64String xB64 = base64UrlDecode(x);
-    b64String yB64 = base64UrlDecode(y); 
-    // BIGNUM* xBN = BN_bin2bn(xB64.data(), xB64.size(), NULL);
-    // BIGNUM* yBN = BN_bin2bn(yB64.data(), yB64.size(), NULL);
+    decodedB64Str xD = base64UrlDecode(x);
+    decodedB64Str yD = base64UrlDecode(y); 
+    BIGNUM* xBN = BN_bin2bn(xD.data(), xD.size(), NULL);
+    BIGNUM* yBN = BN_bin2bn(yD.data(), yD.size(), NULL);
     
+    EC_GROUP* group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
+    EC_POINT* point = EC_POINT_new(group);
+    EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL);
+
+    unsigned char* encodedPoint = NULL;
+    size_t encodedLen = EC_POINT_point2buf(group, point, POINT_CONVERSION_UNCOMPRESSED, &encodedPoint, NULL);
+    std::cerr<<std::string((const char*)encodedPoint)<<"\n";
+
+    EVP_PKEY* pkey = EVP_PKEY_new(); // Issue probably has to be with how I'm making the EVP_PKEY...
+    EVP_PKEY_set1_encoded_public_key(pkey, encodedPoint, encodedLen);
+
+    BIO* bio = BIO_new(BIO_s_mem());
+    PEM_write_bio_PUBKEY(bio, pkey);
+
+    char* pemData;
+    long len = BIO_get_mem_data(bio, &pemData);
+    std::string publicKey(pemData, len);
+    // Freeing memory and returning public key.
+    EVP_PKEY_free(pkey);
+    EC_POINT_free(point);
+    EC_GROUP_free(group);
+    BN_free(xBN);
+    BN_free(yBN);
+    BIO_free(bio);
+    OPENSSL_free(encodedPoint);
+    publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
+    return publicKey;
+
+    return "";
+
     // EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
     // EVP_PKEY_keygen_init(pctx);
     // // Setting the EC curve.
@@ -191,37 +221,37 @@ std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
 
     // return "";
 
-    // OLD CODE
-    EC_KEY* ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-    if (!ecKey) {
-        throw catena::exception_with_status("Failed to create EC_KEY", catena::StatusCode::INTERNAL);
-    }
-    // Converting x and y to BIGNUM and using them to create a point.
-    const EC_GROUP* group = EC_KEY_get0_group(ecKey);
-    BIGNUM* xBN = BN_bin2bn(xB64.data(), xB64.size(), NULL);
-    BIGNUM* yBN = BN_bin2bn(yB64.data(), yB64.size(), NULL);
-    EC_POINT* point = EC_POINT_new(group);
-    if (!EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL)) {
-        throw catena::exception_with_status("Failed to set affine coordinates", catena::StatusCode::INTERNAL);
-    }
-    // Using point to find the public key and writing in PEM format to buffer.
-    EC_KEY_set_public_key(ecKey, point);
-    BIO* bio = BIO_new(BIO_s_mem());
-    if (!PEM_write_bio_EC_PUBKEY(bio, ecKey)) {
-        throw catena::exception_with_status("Failed to write public key to buffer", catena::StatusCode::INTERNAL);
-    }
-    // Converting buffer to string and storing it in publicKey.
-    char* pemData;
-    long len = BIO_get_mem_data(bio, &pemData);
-    std::string publicKey(pemData, len);
-    // Freeing memory and returning public key.
-    BIO_free(bio);
-    EC_KEY_free(ecKey);
-    EC_POINT_free(point);
-    BN_free(xBN);
-    BN_free(yBN);
-    publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
-    return publicKey;
+    // // OLD CODE
+    // EC_KEY* ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    // if (!ecKey) {
+    //     throw catena::exception_with_status("Failed to create EC_KEY", catena::StatusCode::INTERNAL);
+    // }
+    // // Converting x and y to BIGNUM and using them to create a point.
+    // const EC_GROUP* group = EC_KEY_get0_group(ecKey);
+    // BIGNUM* xBN = BN_bin2bn(xB64.data(), xB64.size(), NULL);
+    // BIGNUM* yBN = BN_bin2bn(yB64.data(), yB64.size(), NULL);
+    // EC_POINT* point = EC_POINT_new(group);
+    // if (!EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL)) {
+    //     throw catena::exception_with_status("Failed to set affine coordinates", catena::StatusCode::INTERNAL);
+    // }
+    // // Using point to find the public key and writing in PEM format to buffer.
+    // EC_KEY_set_public_key(ecKey, point);
+    // BIO* bio = BIO_new(BIO_s_mem());
+    // if (!PEM_write_bio_EC_PUBKEY(bio, ecKey)) {
+    //     throw catena::exception_with_status("Failed to write public key to buffer", catena::StatusCode::INTERNAL);
+    // }
+    // // Converting buffer to string and storing it in publicKey.
+    // char* pemData;
+    // long len = BIO_get_mem_data(bio, &pemData);
+    // std::string publicKey(pemData, len);
+    // // Freeing memory and returning public key.
+    // BIO_free(bio);
+    // EC_KEY_free(ecKey);
+    // EC_POINT_free(point);
+    // BN_free(xBN);
+    // BN_free(yBN);
+    // publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
+    // return publicKey;
 }
 
 /**

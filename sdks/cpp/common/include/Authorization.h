@@ -193,8 +193,8 @@ mwIDAQAB
      */
     std::string fetchJWKS(const std::string& url);
 
-    using b64String = std::vector<unsigned char>;
-    b64String base64UrlDecode(const std::string& input);
+    using decodedB64Str = std::vector<unsigned char>;
+    decodedB64Str base64UrlDecode(const std::string& input);
 
     std::string ES256Key(const std::string& x, const std::string& y);
 
