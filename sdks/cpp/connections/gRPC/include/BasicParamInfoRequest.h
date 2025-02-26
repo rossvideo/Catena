@@ -74,20 +74,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
 
     private:
         /**
-         * @brief Checks if the parameter is an array type.
-         * 
-         * @param type - The type of the parameter.
-         * @return True if the parameter is an array type, false otherwise.
-         */
-        static bool isArrayType(catena::ParamType type) {
-            return (type == catena::ParamType::STRUCT_ARRAY ||
-                    type == catena::ParamType::INT32_ARRAY ||
-                    type == catena::ParamType::FLOAT32_ARRAY ||
-                    type == catena::ParamType::STRING_ARRAY ||
-                    type == catena::ParamType::STRUCT_VARIANT_ARRAY);
-        }
-
-        /**
          * @brief Calculates the length of the array.
          * 
          * @param base_path - The base path of the array.
