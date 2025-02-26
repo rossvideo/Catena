@@ -161,11 +161,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         uint32_t current_response_{0};
 
         /**
-         * @brief The maximum index of the parameter.
-         */
-        uint32_t max_index_{0};
-
-        /**
          * @brief The mutex for the writer lock.
          */
         std::mutex mtx_;
