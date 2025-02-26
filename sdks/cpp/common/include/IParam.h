@@ -191,6 +191,12 @@ class IParam {
      */
     virtual const ParamDescriptor& getDescriptor() const = 0;
 
+    /**
+     * @brief Check if the parameter is an array type
+     * @return true if the parameter is an array type (INT32_ARRAY, FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY)
+     */
+    virtual bool isArrayType() const = 0;
+
 };
 }  // namespace common
 
