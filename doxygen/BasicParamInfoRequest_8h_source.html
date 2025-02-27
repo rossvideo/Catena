@@ -178,10 +178,12 @@ $(document).ready(function(){initNavTree('BasicParamInfoRequest_8h_source.html',
 <div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
 <div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>        uint32_t current_response_{0};</div>
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span> </div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>        std::mutex mtx_;</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>        uint32_t max_index_{0};</div>
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        std::unique_lock&lt;std::mutex&gt; writer_lock_{mtx_, std::defer_lock};</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>};</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        std::mutex mtx_;</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        std::unique_lock&lt;std::mutex&gt; writer_lock_{mtx_, std::defer_lock};</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>};</div>
 </div>
 <div class="ttc" id="aServiceImpl_8h_html"><div class="ttname"><a href="ServiceImpl_8h.html">ServiceImpl.h</a></div><div class="ttdoc">Implements Catena gRPC request handlers.</div></div>
 <div class="ttc" id="aclassCatenaServiceImpl_1_1BasicParamInfoRequest_html"><div class="ttname"><a href="classCatenaServiceImpl_1_1BasicParamInfoRequest.html">CatenaServiceImpl::BasicParamInfoRequest</a></div><div class="ttdoc">CallData class for the BasicParamInfoRequest RPC.</div><div class="ttdef"><b>Definition</b> BasicParamInfoRequest.h:48</div></div>
