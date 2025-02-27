@@ -98,10 +98,23 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
                 if (service->authorizationEnabled()) {
                     clientScopes_ = service->getScopes(context_);  
-                    authz_ = std::make_unique<catena::common::Authorizer>(clientScopes_);
+                    authz_ = std::make_unique<catena::common::Authorizer>(clientScopes_); 
+                    dm_.detail_level(req_.detail_level());
                     serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
+                    /** NOTE: Subscriptions are not currently enabled with authorization */
                 } else {
-                    serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
+                    dm_.detail_level(req_.detail_level());
+                    if (dm_.subscriptions()) {
+                        std::vector<std::string> oids;
+                        const auto& repeated_oids = req_.subscribed_oids();
+                        oids.reserve(repeated_oids.size());
+                        for (const auto& oid : repeated_oids) {
+                            oids.push_back(oid);
+                        }
+                        serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, oids, shallowCopy);
+                    } else {
+                        serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
+                    }
                 }
             }
             status_ = CallStatus::kWrite;

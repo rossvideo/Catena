@@ -128,9 +128,11 @@ class ParamDescriptor {
       bool isCommand,
       Device& dm,
       uint32_t max_length,
+      bool minimal_set,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
+        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, 
+        parent_{parent}, minimal_set_{minimal_set} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -286,6 +288,16 @@ class ParamDescriptor {
      */
     inline bool isCommand() const { return isCommand_; }
 
+    /**
+     * @brief return true if the parameter is part of the minimal set
+     */
+    inline bool minimalSet() const { return minimal_set_; }
+
+    /**
+     * @brief set whether the parameter is part of the minimal set\
+     */
+    inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
+
   private:
     ParamType type_;  // ParamType is from param.pb.h
     std::vector<std::string> oid_aliases_;
@@ -293,6 +305,7 @@ class ParamDescriptor {
     std::string widget_;
     std::string scope_;
     bool read_only_;
+
     std::unordered_map<std::string, ParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
@@ -304,6 +317,7 @@ class ParamDescriptor {
     std::reference_wrapper<Device> dev_;
 
     bool isCommand_;
+    bool minimal_set_;
 
     // default command implementation
     std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 
