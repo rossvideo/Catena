@@ -194,4 +194,5 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class LanguagePackRequest;
     class ExecuteCommand;
     class AddLanguage;
+    class UpdateSubscriptions;
 };

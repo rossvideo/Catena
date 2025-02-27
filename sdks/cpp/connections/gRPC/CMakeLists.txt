@@ -45,6 +45,7 @@ set(sources
     "src/AddLanguage.cpp"
     "src/ListLanguages.cpp"
     "src/LanguagePackRequest.cpp"
+    "src/UpdateSubscriptions.cpp"
 )
 
 add_library(${target} STATIC ${sources})
