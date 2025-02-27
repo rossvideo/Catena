@@ -173,11 +173,20 @@ std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
     EC_POINT* point = EC_POINT_new(group);
     EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL);
 
+    // std::string encodedStr = std::string(xD.begin(), xD.end()) + std::string(yD.begin(), yD.end());
     unsigned char* encodedPoint = NULL;
     size_t encodedLen = EC_POINT_point2buf(group, point, POINT_CONVERSION_UNCOMPRESSED, &encodedPoint, NULL);
-    std::cerr<<std::string((const char*)encodedPoint)<<"\n";
+    //std::cerr<<std::string((const char*)encodedPoint)<<"\n";
+    
+    // int EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid);
 
-    EVP_PKEY* pkey = EVP_PKEY_new(); // Issue probably has to be with how I'm making the EVP_PKEY...
+
+    EVP_PKEY* pkey = EVP_PKEY_new();
+    // SET PARAMS
+    // OSSL_PARAM *EC_GROUP_to_params(const EC_GROUP *group, OSSL_LIB_CTX *libctx, const char *propq, BN_CTX *bnctx);
+    // int EVP_PKEY_set_params(EVP_PKEY *pkey, OSSL_PARAM params[]);
+    OSSL* params = EC_GROUP_to_params(group, NULL, NULL, NULL);
+    EVP_PKEY_set_params(pkey, params);
     EVP_PKEY_set1_encoded_public_key(pkey, encodedPoint, encodedLen);
 
     BIO* bio = BIO_new(BIO_s_mem());
@@ -197,7 +206,6 @@ std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
     publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
     return publicKey;
 
-    return "";
 
     // EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
     // EVP_PKEY_keygen_init(pctx);
