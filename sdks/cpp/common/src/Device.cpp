@@ -407,9 +407,6 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool 
 
 Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string> subscribed_oids, bool shallow) const {
     std::cout << "getComponentSerializer received vector size: " << subscribed_oids.size() << std::endl;
-    for (const auto& oid : subscribed_oids) {
-        std::cout << "Received OID: '" << oid << "'" << std::endl;
-    }
     catena::DeviceComponent component{};
     
     // Send basic device information first
@@ -429,19 +426,40 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     }
 
     // Helper function to check if an OID is subscribed
-    auto is_subscribed = [&subscribed_oids, this](const std::string& oid) {
+    auto is_subscribed = [&subscribed_oids, this](const std::string& param_name) {
         if (!subscriptions_) {
             return true;
         }
 
-        if (subscribed_oids.empty()) {
+        if (subscribed_oids.empty() && detail_level_ != catena::Device_DetailLevel_SUBSCRIPTIONS) {
             return true;
         }
 
-        return std::any_of(subscribed_oids.begin(), subscribed_oids.end(),
-            [&oid](const std::string& subscribed_oid) {
-                return !subscribed_oid.empty() && oid.find(subscribed_oid) != std::string::npos;
-            });
+        if (subscribed_oids.empty() && detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+            return false;
+        }
+        
+        for (const auto& subscription_oid : subscribed_oids) {
+            // Exact match (after removing leading slash)
+            if (param_name == subscription_oid.substr(1)) {
+                return true;
+            }
+            
+            // Wildcard match (subscription ends with *)
+            if (!subscription_oid.substr(1).empty() && subscription_oid.substr(1).back() == '*') {
+                std::string prefix = subscription_oid.substr(1).substr(0, subscription_oid.substr(1).size() - 1);
+                if (param_name.find(prefix) == 0) {
+                    return true;
+                }
+            }
+            
+            // Substring match
+            if (!subscription_oid.substr(1).empty() && param_name.find(subscription_oid.substr(1)) != std::string::npos) {
+                return true;
+            }
+        }
+        
+        return false;
     };
 
     // Only send non-minimal items in FULL mode or if explicitly subscribed in SUBSCRIPTION mode
@@ -491,11 +509,12 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     // Send parameters if authorized, and either in the minimal set or if subscribed to
     if (detail_level_ != catena::Device_DetailLevel_COMMANDS) {
         for (const auto& [name, param] : params_) {
-            if (authz.readAuthz(*param) && 
-                (param->getDescriptor().minimalSet() || 
-                 detail_level_ == catena::Device_DetailLevel_FULL ||
-                 (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name)))) {
-                
+            bool auth_check = authz.readAuthz(*param);
+            bool minimal_check = param->getDescriptor().minimalSet();
+            bool full_check = detail_level_ == catena::Device_DetailLevel_FULL;
+            bool subscription_check = detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name);
+            
+            if (auth_check && (minimal_check || full_check || subscription_check)) {
                 co_yield component;
                 component.Clear();
                 ::catena::Param* dstParam = component.mutable_param()->mutable_param();

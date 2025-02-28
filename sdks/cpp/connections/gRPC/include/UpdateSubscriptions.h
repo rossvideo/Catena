@@ -41,6 +41,9 @@
 
 //connections/gRPC
 #include <ServiceImpl.h>
+#include <atomic>
+#include <mutex>
+#include <SubscriptionManager.h>
 
 /**
  * @brief CallData class for the UpdateSubscriptions RPC
@@ -59,7 +62,7 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * parameter specified by the user.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
-    
+
     private:
         /**
          * @brief Helper method to process a wildcard subscription
@@ -74,6 +77,12 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @param authz The authorizer to use for access control
          */
         void processExactSubscription(const std::string& oid, catena::common::Authorizer& authz);
+
+        /**
+         * @brief Helper method to send all currently subscribed parameters
+         * @param authz The authorizer to use for access control
+         */
+        void sendSubscribedParameters(catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.
@@ -97,9 +106,19 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
         catena::UpdateSubscriptionsPayload req_;
 
         /**
-         * @brief The response payload.
+         * @brief The response payload for a single response.
          */
         catena::DeviceComponent_ComponentParam res_;
+
+        /**
+         * @brief Vector to store all responses to be sent
+         */
+        std::vector<catena::DeviceComponent_ComponentParam> responses_;
+
+        /**
+         * @brief Current response index being processed
+         */
+        uint32_t current_response_{0};
 
         /**
          * @brief gRPC async response writer.
@@ -125,15 +144,14 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @brief The object's unique id.
          */
         int objectId_;
-
-        /**
-         * @brief Set of exact OID subscriptions
-         */
-        std::set<std::string> exactSubscriptions_;
-
-        /**
-         * @brief Set of wildcard OID subscriptions (stored without the * character)
-         */
-        std::set<std::string> wildcardSubscriptions_;
         
+        /**
+         * @brief The mutex for the writer lock.
+         */
+        std::mutex mtx_;
+
+        /**
+         * @brief The writer lock.
+         */
+        std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 };

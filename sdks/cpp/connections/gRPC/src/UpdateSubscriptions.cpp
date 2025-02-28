@@ -33,6 +33,7 @@
 
 // connections/gRPC
 #include <UpdateSubscriptions.h>
+#include <SubscriptionManager.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -90,6 +91,10 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 // Use a dummy authorizer for now
                 catena::common::Authorizer authz(std::vector<std::string>{});
                 
+                // Clear the responses vector to prepare for new responses
+                responses_.clear();
+                current_response_ = 0;
+                
                 // Process added OIDs
                 for (const auto& oid : req_.added_oids()) {
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
@@ -118,15 +123,26 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     std::string baseOid = isWildcard ? oid.substr(0, oid.length() - 1) : oid;
                     
                     if (isWildcard) {
-                        wildcardSubscriptions_.erase(baseOid);
+                        SubscriptionManager::getInstance().removeWildcardSubscription(baseOid);
                     } else {
-                        exactSubscriptions_.erase(oid);
+                        SubscriptionManager::getInstance().removeExactSubscription(oid);
                     }
                 }
                 
-                // When done writing responses, finish
-                status_ = CallStatus::kFinish;
-                writer_.Finish(Status::OK, this);
+                // Always send the current set of subscribed parameters
+                sendSubscribedParameters(authz);
+                
+                // If we have responses to write, start writing them
+                if (!responses_.empty()) {
+                    writer_lock_.lock();
+                    status_ = CallStatus::kWrite;
+                    writer_.Write(responses_[0], this);
+                    writer_lock_.unlock();
+                } else {
+                    // No responses to write, finish the RPC
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(Status::OK, this);
+                }
                 
             } catch (const catena::exception_with_status& e) {
                 status_ = CallStatus::kFinish;
@@ -139,6 +155,32 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
                     "Failed due to unknown error in UpdateSubscriptions");
                 writer_.Finish(errorStatus, this);
+            }
+            break;
+
+        case CallStatus::kWrite:
+            try {
+                // Validate that we have responses to write
+                if (current_response_ >= responses_.size() || responses_.empty()) {
+                    status_ = CallStatus::kFinish;
+                    writer_.Finish(grpc::Status::OK, this);
+                    break;
+                }
+
+                // Write responses sequentially until we're done
+                writer_lock_.lock();
+                if (current_response_ >= responses_.size() - 1) {
+                    status_ = CallStatus::kFinish; 
+                    writer_.Finish(Status::OK, this);
+                } else {
+                    current_response_++;
+                    writer_.Write(responses_.at(current_response_), this);
+                }
+                writer_lock_.unlock();
+            } catch (const std::exception& e) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, 
+                    "Error writing response: " + std::string(e.what())), this);
             }
             break;
 
@@ -155,6 +197,53 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
     }
 }
 
+void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::common::Authorizer& authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    
+    // Get a reference to the subscription manager
+    auto& subscriptionManager = SubscriptionManager::getInstance();
+    
+    // Lock the subscription sets while we're accessing them
+    std::lock_guard<std::mutex> lock(subscriptionManager.getSubscriptionMutex());
+    
+    // First, handle exact subscriptions
+    for (const auto& oid : subscriptionManager.getExactSubscriptions()) {
+        std::unique_ptr<IParam> param;
+        
+        {
+            Device::LockGuard lg(dm_);
+            param = dm_.getParam(oid, rc);
+        }
+        
+        if (param) {
+            catena::DeviceComponent_ComponentParam response;
+            response.set_oid(oid);  // Set the OID in the response
+            param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
+            responses_.push_back(response);
+        }
+    }
+    
+    // Then, handle wildcard subscriptions
+    for (const auto& baseOid : subscriptionManager.getWildcardSubscriptions()) {
+        std::vector<std::unique_ptr<IParam>> params;
+        
+        {
+            Device::LockGuard lg(dm_);
+            params = dm_.getTopLevelParams(rc);
+        }
+        
+        for (auto& param : params) {
+            std::string paramOid = param->getOid();
+            if (paramOid.find(baseOid) == 0) {
+                catena::DeviceComponent_ComponentParam response;
+                response.set_oid(paramOid); 
+                param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
+                responses_.push_back(response);
+            }
+        }
+    }
+}
+
 void CatenaServiceImpl::UpdateSubscriptions::processWildcardSubscription(const std::string& baseOid, catena::common::Authorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     std::vector<std::unique_ptr<IParam>> params;
@@ -165,19 +254,23 @@ void CatenaServiceImpl::UpdateSubscriptions::processWildcardSubscription(const s
         params = dm_.getTopLevelParams(rc);
     }
     
-    // Filter and process params that match the prefix
+    // Verify that at least one parameter matches the wildcard pattern
+    bool foundMatch = false;
     for (auto& param : params) {
         std::string paramOid = param->getOid();
         if (paramOid.find(baseOid) == 0) {
-            // Send this parameter to the client
-            res_ = {};  // Clear previous response
-            param->toProto(*res_.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
-            writer_.Write(res_, this);
+            foundMatch = true;
+            break;
         }
     }
     
-    // Add to wildcard subscriptions
-    wildcardSubscriptions_.insert(baseOid);
+    // Only add to subscriptions if at least one parameter matches
+    if (foundMatch) {
+        // Add to wildcard subscriptions
+        SubscriptionManager::getInstance().addWildcardSubscription(baseOid);
+    } else {
+        std::cout << "No parameters found matching wildcard pattern: " << baseOid << "*" << std::endl;
+    }
 }
 
 void CatenaServiceImpl::UpdateSubscriptions::processExactSubscription(const std::string& oid, catena::common::Authorizer& authz) {
@@ -191,13 +284,8 @@ void CatenaServiceImpl::UpdateSubscriptions::processExactSubscription(const std:
     }
     
     if (param) {
-        // Send this parameter to the client
-        res_ = {};  // Clear previous response
-        param->toProto(*res_.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
-        writer_.Write(res_, this);
-        
         // Add to exact subscriptions
-        exactSubscriptions_.insert(oid);
+        SubscriptionManager::getInstance().addExactSubscription(oid);
     } else {
         std::cout << "Parameter not found for OID: " << oid << std::endl;
     }

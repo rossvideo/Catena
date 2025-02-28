@@ -33,6 +33,8 @@
 
 // connections/gRPC
 #include <DeviceRequest.h>
+#include <UpdateSubscriptions.h>
+#include <SubscriptionManager.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -107,10 +109,22 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                     if (dm_.subscriptions()) {
                         std::vector<std::string> oids;
                         const auto& repeated_oids = req_.subscribed_oids();
-                        oids.reserve(repeated_oids.size());
-                        for (const auto& oid : repeated_oids) {
-                            oids.push_back(oid);
+                        
+                        // If detail_level is SUBSCRIPTIONS and subscribed_oids is empty,
+                        // use the static subscription sets from UpdateSubscriptions
+                        if (req_.detail_level() == catena::Device_DetailLevel_SUBSCRIPTIONS && 
+                            repeated_oids.empty()) {
+                            
+                            // Get all subscribed OIDs from the SubscriptionManager
+                            oids = SubscriptionManager::getInstance().getAllSubscribedOids(dm_);
+                        } else {
+                            // Otherwise, use the subscribed_oids from the request
+                            oids.reserve(repeated_oids.size());
+                            for (const auto& oid : repeated_oids) {
+                                oids.push_back(oid);
+                            }
                         }
+                        
                         serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, oids, shallowCopy);
                     } else {
                         serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
