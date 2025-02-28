@@ -68,27 +68,20 @@ namespace common {
  */
 class Authorizer {
   public:
-  /**
-   * @brief Public key provided here temporarily until key gen is figured out.
-   * @todo Remove
-   */
-	const std::string PUBLIC_KEY = R"(
+
+const std::string es256k_pub_key = R"(
 -----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWPi1EJlURdm7dDWyBZse3b5A/5pz
-7bT43Xi3f89v0S4qBOq9IvhA84wqoTCWwue5lql4xph0PRUmqPJNXsEyOQ==
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIEjHqw+8+Ove6pGdMZ6Oio8/s4hc
+CdUSHLF3bb8pMl5d5C/NyG5eFfcF31mafvoecHofFGmwMESt8UInDrkDiA==
 -----END PUBLIC KEY-----
 )";
 
-const std::string PUBLIC_KEY_RSA = R"(
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
-4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u
-+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyeh
-kd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ
-0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdg
-cKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbc
-mwIDAQAB
------END PUBLIC KEY-----
+const std::string es256k_priv_key = R"(
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIGivhC8vcKu7/eCihZc1XrtN2et1s5DDMDIwMEdLh5RGoAoGCCqGSM49
+AwEHoUQDQgAEIEjHqw+8+Ove6pGdMZ6Oio8/s4hcCdUSHLF3bb8pMl5d5C/NyG5e
+FfcF31mafvoecHofFGmwMESt8UInDrkDiA==
+-----END EC PRIVATE KEY-----
 )";
   
   

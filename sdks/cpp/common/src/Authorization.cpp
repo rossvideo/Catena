@@ -48,8 +48,13 @@ Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakS
     try {
         // Decoding token, constructing verifier, and verifying the token.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
+        int index;
         auto verifier = jwt::verify()
-            .allow_algorithm(jwt::algorithm::es256(publicKey));
+					  .allow_algorithm(jwt::algorithm::es256(publicKey))
+					  .with_issuer("auth0");
+        // auto verifier = jwt::verify()
+        //     .allow_algorithm(jwt::algorithm::es256k(es256k_pub_key, es256k_priv_key, "", ""))
+        //     .with_issuer("auth0");
             //.allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""));
             // .with_type("at+jwt")
             // // .with_issuer("https://catena.rossvideo.com")
@@ -169,97 +174,50 @@ std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
     BIGNUM* xBN = BN_bin2bn(xD.data(), xD.size(), NULL);
     BIGNUM* yBN = BN_bin2bn(yD.data(), yD.size(), NULL);
     
+    // Creating an EC_POINT with out x and y coordinates.
     EC_GROUP* group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
     EC_POINT* point = EC_POINT_new(group);
     EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL);
 
-    // std::string encodedStr = std::string(xD.begin(), xD.end()) + std::string(yD.begin(), yD.end());
+    // Encoding the point and creating a EVP_PKEY with the public key.
     unsigned char* encodedPoint = NULL;
     size_t encodedLen = EC_POINT_point2buf(group, point, POINT_CONVERSION_UNCOMPRESSED, &encodedPoint, NULL);
-    //std::cerr<<std::string((const char*)encodedPoint)<<"\n";
-    
-    // int EVP_PKEY_CTX_set_ec_paramgen_curve_nid(EVP_PKEY_CTX *ctx, int nid);
+
+    int rc;
+    // Writing the public key to a buffer.
+    EVP_PKEY_CTX* tctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);             // Setting up context for an EC key.
+    rc = EVP_PKEY_paramgen_init(tctx);                                         // Initializing the key algorithm context.
+    rc = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(tctx, NID_X9_62_prime256v1); // Setting the group name to EC P-256.
+    //EVP_PKEY* tkey = NULL;
+    //rc = EVP_PKEY_keygen(tctx, &tkey);                                       // Generating the key.
+
+    OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string("group", (char*)"prime256v1", 0),
+        OSSL_PARAM_construct_octet_string("encoded-pub-key", encodedPoint, encodedLen),
+        OSSL_PARAM_construct_end()
+    };
+
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);  
+    EVP_PKEY* pkey = NULL;
+    //rc = EVP_PKEY_paramgen(tctx, &pkey);
+    rc = EVP_PKEY_fromdata_init(ctx);
+    rc = EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_PUBLIC_KEY, params);
+    ERR_print_errors_fp(stderr);
+    // rc = EVP_PKEY_paramgen_init(ctx);
+    // rc = EVP_PKEY_paramgen(ctx, &pkey);
 
 
-    EVP_PKEY* pkey = EVP_PKEY_new();
-    // SET PARAMS
-    // OSSL_PARAM *EC_GROUP_to_params(const EC_GROUP *group, OSSL_LIB_CTX *libctx, const char *propq, BN_CTX *bnctx);
-    // int EVP_PKEY_set_params(EVP_PKEY *pkey, OSSL_PARAM params[]);
-    OSSL* params = EC_GROUP_to_params(group, NULL, NULL, NULL);
-    EVP_PKEY_set_params(pkey, params);
-    EVP_PKEY_set1_encoded_public_key(pkey, encodedPoint, encodedLen);
+    //rc = EVP_PKEY_set1_encoded_public_key(pkey, encodedPoint, encodedLen);  // Setting the public key to our encoded key from above.
+
 
     BIO* bio = BIO_new(BIO_s_mem());
-    PEM_write_bio_PUBKEY(bio, pkey);
-
+    rc = PEM_write_bio_PUBKEY(bio, pkey);
+    ERR_print_errors_fp(stderr);
     char* pemData;
     long len = BIO_get_mem_data(bio, &pemData);
     std::string publicKey(pemData, len);
-    // Freeing memory and returning public key.
-    EVP_PKEY_free(pkey);
-    EC_POINT_free(point);
-    EC_GROUP_free(group);
-    BN_free(xBN);
-    BN_free(yBN);
-    BIO_free(bio);
-    OPENSSL_free(encodedPoint);
-    publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
+
     return publicKey;
-
-
-    // EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
-    // EVP_PKEY_keygen_init(pctx);
-    // // Setting the EC curve.
-    // EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx, NID_X9_62_prime256v1);
-    // point
-
-    // // Generating the EC key.
-    // EVP_PKEY* pkey = NULL;
-    // EVP_PKEY_keygen(pctx, &pkey);
-    // EVP_PKEY_CTX_free(pctx);
-
-    // EC_KEY* eckey = EVP_PKEY_get1_EC_KEY(pkey);
-    // EC_GROUP* group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
-    // EC_POINT* point = EC_POINT_new(group);
-    // EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL);
-
-    // EVP_PKEY* pubkey = EVP_PKEY_new();
-    // EVP_MD_CTX_set_pkey_ctx
-
-
-    // return "";
-
-    // // OLD CODE
-    // EC_KEY* ecKey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
-    // if (!ecKey) {
-    //     throw catena::exception_with_status("Failed to create EC_KEY", catena::StatusCode::INTERNAL);
-    // }
-    // // Converting x and y to BIGNUM and using them to create a point.
-    // const EC_GROUP* group = EC_KEY_get0_group(ecKey);
-    // BIGNUM* xBN = BN_bin2bn(xB64.data(), xB64.size(), NULL);
-    // BIGNUM* yBN = BN_bin2bn(yB64.data(), yB64.size(), NULL);
-    // EC_POINT* point = EC_POINT_new(group);
-    // if (!EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL)) {
-    //     throw catena::exception_with_status("Failed to set affine coordinates", catena::StatusCode::INTERNAL);
-    // }
-    // // Using point to find the public key and writing in PEM format to buffer.
-    // EC_KEY_set_public_key(ecKey, point);
-    // BIO* bio = BIO_new(BIO_s_mem());
-    // if (!PEM_write_bio_EC_PUBKEY(bio, ecKey)) {
-    //     throw catena::exception_with_status("Failed to write public key to buffer", catena::StatusCode::INTERNAL);
-    // }
-    // // Converting buffer to string and storing it in publicKey.
-    // char* pemData;
-    // long len = BIO_get_mem_data(bio, &pemData);
-    // std::string publicKey(pemData, len);
-    // // Freeing memory and returning public key.
-    // BIO_free(bio);
-    // EC_KEY_free(ecKey);
-    // EC_POINT_free(point);
-    // BN_free(xBN);
-    // BN_free(yBN);
-    // publicKey.erase(std::remove(publicKey.begin(), publicKey.end(), '\n'), publicKey.cend());
-    // return publicKey;
 }
 
 /**
