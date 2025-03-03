@@ -1,73 +1,45 @@
-/** Copyright 2024 Ross Video Ltd
-
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that
- the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the
- following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
- following disclaimer in the documentation and/or other materials provided with the distribution.
-
- 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or
- promote products derived from this software without specific prior written permission.
-
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- DAMAGE.
-*/
-//
-
-/**
- * @file Authorization.cpp
- * @brief Implements the Authorizer class
- * @author John Danen
- * @date 2024-12-06
- * @copyright Copyright (c) 2024 Ross Video
+/*
+ * Copyright 2024 Ross Video Ltd
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <Authorization.h>
 
 using catena::common::Authorizer;
 
-// initialize the disabled authorization object
+// initialize the disabled authorization object with private constructor.
 Authorizer Authorizer::kAuthzDisabled;
 
-Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakServer, const std::string& realm) {
-    // Fetching and parsing the jwks from authz server.
-    std::string issuer = "https://" + keycloakServer + "/realms/" + realm + "/protocol/openid-connect/certs";
-    std::string jwks = fetchJWKS(issuer);
-    std::map<std::string, std::string> jwksInfo;
-    parseJWKS(jwks, jwksInfo);
-    std::string publicKey = ES256Key(jwksInfo["x"], jwksInfo["y"]);
+Authorizer::Authorizer(const std::string& JWSToken) {
     try {
-        // Decoding token, constructing verifier, and verifying the token.
+        // Deconding the token and extracting scopes.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
-        int index;
-        auto verifier = jwt::verify()
-					  .allow_algorithm(jwt::algorithm::es256(publicKey))
-					  .with_issuer("auth0");
-        // auto verifier = jwt::verify()
-        //     .allow_algorithm(jwt::algorithm::es256k(es256k_pub_key, es256k_priv_key, "", ""))
-        //     .with_issuer("auth0");
-            //.allow_algorithm(jwt::algorithm::rs256(PUBLIC_KEY, "", "", ""));
-            // .with_type("at+jwt")
-            // // .with_issuer("https://catena.rossvideo.com")
-            // // .with_audience("https://catena.rossvideo.com")
-            // .leeway(300); // 5 minutes of leeway for nbf and exp.
-        // if (jwksInfo["alg"] == "ES256") {
-        //     if (jwksInfo["crv"] == "P-256") {
-        //         verifier.allow_algorithm(jwt::algorithm::es256(publicKey));
-        //     }
-        // }
-        verifier.verify(decodedToken); // Throws error if invalid.
 
-        // Extracting scopes from the decoded token's claims.
         auto claims = decodedToken.get_payload_json();
         for (picojson::value::object::const_iterator it = claims.begin(); it != claims.end(); ++it) {
             if (it->first == "scope"){
@@ -78,64 +50,9 @@ Authorizer::Authorizer(const std::string& JWSToken, const std::string& keycloakS
                 }
             }
         }
-        
-    // Catch error thrown by verifier.verify().
-    } catch (jwt::error::token_verification_exception err) {
-        throw catena::exception_with_status(err.what(), catena::StatusCode::UNAUTHENTICATED);}
-    // Catch any other errors (probably from jwt::decode())
-    // } catch (...) {
-    //     throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
-    // }
-}
-
-size_t Authorizer::curlWriteFunction(char* contents, size_t size, size_t numMembers, void* output) {
-    size_t realSize = size * numMembers;
-    std::string *str = (std::string *)output;
-    str->append(contents, size * numMembers);
-    return realSize;
-}
-
-std::string Authorizer::fetchJWKS(const std::string& url) {
-    // Initializing CURL.
-    CURL* curl = curl_easy_init();
-    if (!curl) {
-        throw catena::exception_with_status("Failed to initialize curl", catena::StatusCode::INTERNAL);
-    }
-    // Setting up CURL options.
-    std::string jwks;
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteFunction);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&jwks);
-    // Running CURL and returning the jwks.
-    CURLcode res =  curl_easy_perform(curl);
-    curl_easy_cleanup(curl);
-    if (res != CURLE_OK) {
-        throw catena::exception_with_status("Failed to fetch JWKS", catena::StatusCode::INTERNAL);
-    }
-    return jwks;
-}
-
-void Authorizer::parseJWKS(const std::string& jwks, std::map<std::string, std::string>& jwksMap, std::string alg) {
-    try {
-        auto rc = catena::exception_with_status("", catena::StatusCode::OK);
-        picojson::value jsonData;
-        picojson::parse(jsonData, jwks);   
-        picojson::value keys = jsonData.get("keys");
-        for (auto key : keys.get<picojson::array>()) {
-            if (key.get("alg").get<std::string>() == alg) {
-                // Algorithm found, extracting its fields.
-                for (auto [field, value] : key.get<picojson::object>()) {
-                    jwksMap[field] = value.get<std::string>();
-                }
-                break;
-            }
-        }
+    // Catch error.
     } catch (...) {
-        throw catena::exception_with_status("Failed to parse JWKS from authz server", catena::StatusCode::INTERNAL);
-    }
-    // Did not find specified algorithm in JWKS.
-    if (jwksMap.empty()) {
-        throw catena::exception_with_status("Authz server does allow the algorithm " + alg, catena::StatusCode::UNAUTHENTICATED);
+        throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     }
 }
 
@@ -148,76 +65,6 @@ bool Authorizer::hasAuthz(const std::string& scope) const {
         return false;
     }
     return true;
-}
-
-Authorizer::decodedB64Str Authorizer::base64UrlDecode(const std::string& input) {
-    // Replace characters that are not allowed in base64url and add padding.
-    std::string base64 = input;
-    std::replace(base64.begin(), base64.end(), '-', '+');
-    std::replace(base64.begin(), base64.end(), '_', '/');
-    while (base64.size() % 4) { base64 += '='; }
-    // Decode the base64url string.
-    EVP_ENCODE_CTX* ctx = EVP_ENCODE_CTX_new();
-    EVP_DecodeInit(ctx);
-    decodedB64Str decoded(base64.size());
-    int outLen = decoded.size(), inLen = base64.size();
-    EVP_DecodeUpdate(ctx, decoded.data(), &outLen, (unsigned char*)base64.data(), inLen);
-    decoded.resize(outLen);
-    EVP_ENCODE_CTX_free(ctx);
-    return decoded;
-}
-
-std::string Authorizer::ES256Key(const std::string& x, const std::string& y) {
-    // Decoding x and y from base64URL and converting to BIGNUM.
-    decodedB64Str xD = base64UrlDecode(x);
-    decodedB64Str yD = base64UrlDecode(y); 
-    BIGNUM* xBN = BN_bin2bn(xD.data(), xD.size(), NULL);
-    BIGNUM* yBN = BN_bin2bn(yD.data(), yD.size(), NULL);
-    
-    // Creating an EC_POINT with out x and y coordinates.
-    EC_GROUP* group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
-    EC_POINT* point = EC_POINT_new(group);
-    EC_POINT_set_affine_coordinates(group, point, xBN, yBN, NULL);
-
-    // Encoding the point and creating a EVP_PKEY with the public key.
-    unsigned char* encodedPoint = NULL;
-    size_t encodedLen = EC_POINT_point2buf(group, point, POINT_CONVERSION_UNCOMPRESSED, &encodedPoint, NULL);
-
-    int rc;
-    // Writing the public key to a buffer.
-    EVP_PKEY_CTX* tctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);             // Setting up context for an EC key.
-    rc = EVP_PKEY_paramgen_init(tctx);                                         // Initializing the key algorithm context.
-    rc = EVP_PKEY_CTX_set_ec_paramgen_curve_nid(tctx, NID_X9_62_prime256v1); // Setting the group name to EC P-256.
-    //EVP_PKEY* tkey = NULL;
-    //rc = EVP_PKEY_keygen(tctx, &tkey);                                       // Generating the key.
-
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string("group", (char*)"prime256v1", 0),
-        OSSL_PARAM_construct_octet_string("encoded-pub-key", encodedPoint, encodedLen),
-        OSSL_PARAM_construct_end()
-    };
-
-    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);  
-    EVP_PKEY* pkey = NULL;
-    //rc = EVP_PKEY_paramgen(tctx, &pkey);
-    rc = EVP_PKEY_fromdata_init(ctx);
-    rc = EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_PUBLIC_KEY, params);
-    ERR_print_errors_fp(stderr);
-    // rc = EVP_PKEY_paramgen_init(ctx);
-    // rc = EVP_PKEY_paramgen(ctx, &pkey);
-
-
-    //rc = EVP_PKEY_set1_encoded_public_key(pkey, encodedPoint, encodedLen);  // Setting the public key to our encoded key from above.
-
-
-    BIO* bio = BIO_new(BIO_s_mem());
-    rc = PEM_write_bio_PUBKEY(bio, pkey);
-    ERR_print_errors_fp(stderr);
-    char* pemData;
-    long len = BIO_get_mem_data(bio, &pemData);
-    std::string publicKey(pemData, len);
-
-    return publicKey;
 }
 
 /**

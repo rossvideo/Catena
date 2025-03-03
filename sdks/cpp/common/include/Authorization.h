@@ -53,7 +53,8 @@
 #include <functional>
 
 /**
- * @brief top level namespace for Catena. Functionality at this scope includes the protoc generated classes.
+ * @brief top level namespace for Catena. Functionality at this scope includes
+ * the protoc generated classes.
  * Most everything else is in child namespaces such as common, meta, etc.
  */
 namespace catena {
@@ -68,23 +69,6 @@ namespace common {
  */
 class Authorizer {
   public:
-
-const std::string es256k_pub_key = R"(
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIEjHqw+8+Ove6pGdMZ6Oio8/s4hc
-CdUSHLF3bb8pMl5d5C/NyG5eFfcF31mafvoecHofFGmwMESt8UInDrkDiA==
------END PUBLIC KEY-----
-)";
-
-const std::string es256k_priv_key = R"(
------BEGIN EC PRIVATE KEY-----
-MHcCAQEEIGivhC8vcKu7/eCihZc1XrtN2et1s5DDMDIwMEdLh5RGoAoGCCqGSM49
-AwEHoUQDQgAEIEjHqw+8+Ove6pGdMZ6Oio8/s4hcCdUSHLF3bb8pMl5d5C/NyG5e
-FfcF31mafvoecHofFGmwMESt8UInDrkDiA==
------END EC PRIVATE KEY-----
-)";
-  
-  
     /**
      * @brief The scopes of the object
      */
@@ -96,15 +80,15 @@ FfcF31mafvoecHofFGmwMESt8UInDrkDiA==
     static Authorizer kAuthzDisabled;
 
     /**
-     * @brief Constructs a new Authorizer object by authenticating and
-     * extracting client scopes from a JWS token.
-     * @param JWSToken The JWS token to authenticate and extract scopes from.
+     * @brief Constructs a new Authorizer object by extracting client scopes
+     * from a JWS token.
+     * Authorizer expects the JWSToken to be valid. Authentication of the token
+     * is to be handled by the API gateway.
+     * @param JWSToken The JWS token to extract scopes from.
      * @throw Throws an catena::exception_with_status UNAUTHENTICATED if the
-     * JWS token is invalid or anything else goes wrong.
-     * @todo Additional verifier fields (issuer, audience) to be figured out at
-     * a later date.
+     * authorizer fails to decoded the JWS Token.
      */
-    Authorizer(const std::string& JWSToken, const std::string& keycloakServer = "auth.enterprise.rossvideo.cloud", const std::string& realm = "catena");
+    Authorizer(const std::string& JWSToken);
 
     /**
      * @brief Authorizer does not have copy semantics
@@ -167,32 +151,6 @@ FfcF31mafvoecHofFGmwMESt8UInDrkDiA==
      * @brief Constructor for kAuthzDisabled authorizer. 
      */
     Authorizer() : clientScopes_{{""}} {}
-
-    /**
-     * @brief Tells curl how to write the output.
-     * @param contents The contents of output.
-     * @param size The size of each member.
-     * @param numMembers The number of members.
-     * @param output The variable to write to.
-     * @return The total size.
-     */
-    static size_t curlWriteFunction(char* contents, size_t size, size_t numMembers, void* output);
-
-    /**
-     * @brief Fetches the JWKS from the given authz server.
-     * @param url The url to the authz server.
-     * @return The JWKS.
-     * @throw Catena::exception_with_status if the JWKS cannot be fetched.
-     */
-    std::string fetchJWKS(const std::string& url);
-
-    using decodedB64Str = std::vector<unsigned char>;
-    decodedB64Str base64UrlDecode(const std::string& input);
-
-    std::string ES256Key(const std::string& x, const std::string& y);
-
-    void parseJWKS(const std::string& jwks, std::map<std::string, std::string>& jwksMap, std::string alg = "ES256");
-
     /**
      * @brief Client scopes extracted from a valid JWS token.
      */
