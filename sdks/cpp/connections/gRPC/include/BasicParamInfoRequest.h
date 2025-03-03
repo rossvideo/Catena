@@ -73,13 +73,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
-        /**
-         * @brief Calculates the length of the array.
-         * 
-         * @param base_path - The base path of the array.
-         * @return The length of the array.
-         */
-        uint32_t calculateArrayLength(const std::string& base_path);
 
         /**
          * @brief Updates the array lengths of the responses.

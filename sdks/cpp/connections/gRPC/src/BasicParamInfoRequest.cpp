@@ -125,7 +125,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                             // For array types, calculate and update array length
                             if (top_level_param->isArrayType()) {
-                                uint32_t array_length = calculateArrayLength(top_level_path.toString(true));
+                                uint32_t array_length = top_level_param->size();
                                 if (array_length > 0) {
                                     updateArrayLengths(top_level_param->getOid(), array_length);
                                 }
@@ -166,7 +166,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                         // Calculate and update array length if this parameter is an array
                         if (param->isArrayType()) {
-                            uint32_t array_length = calculateArrayLength(Path{param->getOid()}.toString(true));
+                            uint32_t array_length = param->size();
                             if (array_length > 0) {
                                 updateArrayLengths(param->getOid(), array_length);
                             }
@@ -253,25 +253,6 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 }
 
 
-/** Finds how many array elements exist at a path
- *  e.g., if we have /device/0, /device/1, /device/2,
- *  returns 3
- */
-uint32_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std::string& base_path) {
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
-    uint32_t length = 0;
-    
-    // Keep checking indices until we find one that doesn't exist
-    for (uint32_t i = 0; ; i++) {
-        Path path{base_path, i};
-        auto param = dm_.getParam(path.toString(), rc);
-        if (!param) break;
-        length = i + 1;
-    }
-    
-    return length;
-}
-
 
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID
@@ -316,10 +297,14 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
 
                 // If this child is an array, calculate and update its length
                 if (sub_param->isArrayType()) {
+                    uint32_t array_length = sub_param->size();
+                    if (array_length > 0) {
+                        updateArrayLengths(sub_param->getOid(), array_length);
+                    }
+                    
                     // Process array children if we're not already inside an array element
                     if (!Path{parent_path}.back_is_index()) {
                         getChildren(sub_param.get(), child_path.toString(), authz);
-                    } else {
                     }
                 }
             }
@@ -328,7 +313,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
 
     // Check if current parameter is an array type
     if (current_param->isArrayType()) {
-        uint32_t array_length = calculateArrayLength(current_path);
+        uint32_t array_length = current_param->size();
         
         // Process each array element's children
         for (uint32_t i = 0; i < array_length; i++) {
