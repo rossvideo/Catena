@@ -2,8 +2,8 @@
   "slot": 1,
   "multi_set_enabled": true,
   "detail_level": "FULL",
-  "access_scopes": ["st-2138:mon", "st-2138:op", "st-2138:cfg", "st-2138:adm"],
-  "default_scope": "st-2138:mon",
+  "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+  "default_scope": "st2138:mon",
   "language_packs": {},
   "params": {
     "eq": {
@@ -13,22 +13,22 @@
         "response": {
           "type": "INT32",
           "name": { "display_strings": { "en": "Response" } },
-          "access_scope": "st-2138:mon"
+          "access_scope": "st2138:mon"
         },
         "frequency": {
           "type": "FLOAT32",
           "name": { "display_strings": { "en": "Frequency" } },
-          "access_scope": "st-2138:op"
+          "access_scope": "st2138:op"
         },
         "gain": {
           "type": "FLOAT32",
           "name": { "display_strings": { "en": "Gain" } },
-          "access_scope": "st-2138:cfg"
+          "access_scope": "st2138:cfg"
         },
         "q_factor": {
           "type": "FLOAT32",
           "name": { "display_strings": { "en": "Q Factor" } },
-          "access_scope": "st-2138:adm"
+          "access_scope": "st2138:adm"
         }
       }
     },
