@@ -35,7 +35,6 @@ find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 set(sources "src/api.cpp")
 add_library(${target} STATIC ${sources})
 
-find_package(CURL REQUIRED)
 find_package(jwt-cpp CONFIG REQUIRED)
 
 # Specify include directories
@@ -52,7 +51,7 @@ add_subdirectory(${CROW_ROOT_DIR})
 
 # Link Crow and Boost.System to your target
 # todo: add jwt-cpp
-target_link_libraries(${target} PRIVATE Boost::system CURL::libcurl jwt-cpp::jwt-cpp catena_proto_common absl::flags_parse)
+target_link_libraries(${target} PRIVATE Boost::system jwt-cpp::jwt-cpp catena_proto_common absl::flags_parse)
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 

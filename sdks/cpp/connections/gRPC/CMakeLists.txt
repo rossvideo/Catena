@@ -49,7 +49,6 @@ set(sources
 
 add_library(${target} STATIC ${sources})
 
-find_package(CURL REQUIRED)
 find_package(jwt-cpp CONFIG REQUIRED)
 
 target_include_directories(
@@ -63,7 +62,6 @@ target_link_libraries(${target}
     PUBLIC
         grpc_service
         catena_grpc_common
-        CURL::libcurl
         jwt-cpp::jwt-cpp
 )
 

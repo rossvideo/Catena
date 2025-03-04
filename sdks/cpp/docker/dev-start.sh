@@ -12,6 +12,10 @@ fi
 
 docker_gid=$(cut -d: -f3 < <(getent group docker))
 
+docker network create catena-network
+
+# docker pull envoyproxy/envoy:v1.33-latest
+
 docker buildx build \
     -f $1/sdks/cpp/docker/dockerfiles/Dockerfile.develop \
     -t catena-develop:latest \
@@ -22,10 +26,21 @@ docker buildx build \
     $1
 
 docker run \
+    --name catena-develop-container \
+    --network catena-network \
     -it \
     -v $1:/home/${USER}/Catena \
     -w /home/${USER}/Catena/sdks/cpp \
-    -p 6254:6254 \
+    -p 50051:50051 \
     --rm \
     catena-develop:latest \
     /bin/bash -c "~/Catena/sdks/cpp/docker/build.sh; /bin/bash"
+
+docker rm -f envoy
+docker network rm catena-network
+
+# RUN ENVOY
+# docker pull envoyproxy/envoy:v1.33-latest
+# docker run -d --name envoy --network catena-network -p 6254:6254 -v /home/vboxuser/Documents/Catena/sdks/cpp/docker/envoy.yaml:/etc/envoy/envoy.yaml envoyproxy/envoy:v1.33-latest -c /etc/envoy/envoy.yaml
+
+# docker exec -it catena-develop-container /bin/bash

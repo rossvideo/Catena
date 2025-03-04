@@ -48,7 +48,6 @@
 #include <IParam.h>
 #include <ParamDescriptor.h>
 #include <jwt-cpp/jwt.h>
-#include <curl/curl.h>
 
 #include <functional>
 
