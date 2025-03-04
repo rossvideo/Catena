@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# Replace placeholders in the template file with environment variables
+cat <<EOF > /tmp/envoy/envoy.yaml
 # This YAML file is used to configure the Envoy proxy server that verifies JWS
 # tokens using the AUTHZ server and routes gRPC requests to the gRPC server
 # running in the container.
@@ -33,10 +37,10 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
               providers:
                 jwtProvider:
-                  issuer: https://auth.enterprise.rossvideo.cloud/realms/catena
+                  issuer: ${AUTHZ_SERVER}/realms/${REALM}
                   remote_jwks:
                     http_uri:
-                      uri: https://auth.enterprise.rossvideo.cloud/realms/catena/protocol/openid-connect/certs
+                      uri: ${AUTHZ_SERVER}/realms/${REALM}/protocol/openid-connect/certs
                       cluster: jwks_cluster
                       timeout: 5s
                   forward: true
@@ -75,13 +79,13 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: auth.enterprise.rossvideo.cloud
+                address: ${AUTHZ_SERVER}
                 port_value: 443 # JWKS endpoint.
     transport_socket:
       name: envoy.transport_sockets.tls
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-        sni: auth.enterprise.rossvideo.cloud
+        sni: ${AUTHZ_SERVER}
 
   # Cluster for handling authenticated gRPC requests.
   # Passes them off to port 50051.
@@ -101,3 +105,9 @@ static_resources:
               socket_address:
                 address: catena-develop-container
                 port_value: 50051 # Typical port for gRPC calls.
+EOF
+
+echo "Created file"
+
+# Start Envoy with the generated configuration file
+envoy -c /tmp/envoy/envoy.yaml
