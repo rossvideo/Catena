@@ -108,6 +108,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse(oid, idx, p);
             });
+
             // Waiting for a value set by client to be sent to execute code.
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse(oid, idx, p);
@@ -201,13 +202,44 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
             this->cv_.notify_one();
             return;
         }
+        
+        // Check if we should process this update based on detail level
+        bool should_update = false;
+        switch (req_.detail_level()) {
+            case catena::Device_DetailLevel_FULL:
+                // Always update for FULL detail level
+                should_update = true;
+                break;
+                
+            case catena::Device_DetailLevel_SUBSCRIPTIONS:
+                // Only update if OID is subscribed
+                {
+                    auto subscribedOids = subscriptionManager_.getAllSubscribedOids(dm_);
+                    should_update = (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                }
+                break;
+                
+            case catena::Device_DetailLevel_MINIMAL:
+                // For MINIMAL, only update if it's in the minimal set
+                should_update = p->getDescriptor().minimalSet();
+                break;
+                
+            case catena::Device_DetailLevel_COMMANDS:
+                // For COMMANDS, only update command parameters
+                should_update = p->getDescriptor().isCommand();
+                break;
+                
+            case catena::Device_DetailLevel_NONE:
+                // Don't send any updates
+                should_update = false;
+                break;
+                
+            default:
+                std::cout << "Unknown detail level: " << req_.detail_level() << std::endl;
+                return;
+        }
 
-        // Handle authorization if enabled
-        catena::common::Authorizer authz{service_->authorizationEnabled() 
-            ? service_->getScopes(context_) 
-            : std::vector<std::string>{}};
-
-        if (service_->authorizationEnabled() && !authz.readAuthz(*p)) {
+        if (!should_update) {
             return;
         }
 
@@ -215,7 +247,15 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
         this->res_.mutable_value()->set_element_index(idx);
         
         catena::Value* value = this->res_.mutable_value()->mutable_value();
-        auto rc = p->toProto(*value, authz);
+        catena::exception_with_status rc{"", catena::StatusCode::OK};
+
+        if (service_->authorizationEnabled()) {
+            catena::common::Authorizer authz{service_->getScopes(context_)};
+            rc = p->toProto(*value, authz);
+        } else {
+            rc = p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
+        }
+
         //If the param conversion was successful, send the update
         if (rc.status == catena::StatusCode::OK) {
             this->hasUpdate_ = true;

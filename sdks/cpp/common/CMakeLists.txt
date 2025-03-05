@@ -37,6 +37,7 @@ set(sources
     "src/PicklistConstraint.cpp"
     "src/Menu.cpp"
     "src/MenuGroup.cpp"
+    "src/SubscriptionManager.cpp"
 
 )
 
