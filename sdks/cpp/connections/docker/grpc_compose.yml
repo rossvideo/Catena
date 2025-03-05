@@ -2,16 +2,38 @@ version: '3.8'  # Docker Compose file format version
 
 networks:
   catena_network:
+    name: catena_network
     driver: bridge
+  catena_prv:
+    name: catena_prv
+    driver: bridge
+    internal: true
 
 services:
+  envoy_API_gateway:
+    image: envoyproxy/envoy:v1.33-latest
+    container_name: envoy_API_gateway
+    networks:
+      - catena_network
+      - catena_prv
+    ports:
+      - 6254:6254
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+      #- /etc/letsencrypt:/etc/letsencrypt:ro
+    command:
+      - envoy
+      - -c
+      - /etc/envoy/envoy.yaml
+      - --log-level
+      - info
+
+
   status_update:
     image: catena_status_update
     container_name: catena_status_update
     networks:
-      - catena_network
-    ports:
-      - "6254:6254"  # Map port 6254 on host to 6254 in container
+      - catena_prv
     logging:
       driver: "json-file"
       options:
@@ -20,19 +42,19 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      - "--secure_comms=tls"
-      - "--cert_file=fullchain.pem"
-      - "--key_file=privkey.pem"
-
+      - "./opt/status_update/status_update --authz"
+      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      # - "--secure_comms=tls"
+      # - "--cert_file=fullchain.pem"
+      # - "--key_file=privkey.pem"
+      # - "--authz"
+      # - "tail -f /dev/null"
 
   use_menus:
     image: catena_use_menus
     container_name: catena_use_menus
     networks:
-      - catena_network
-    ports:
-      - "6256:6254"  # Map port 6256 on host to 6254 in container
+      - catena_prv
     logging:
       driver: "json-file"
       options:
@@ -41,18 +63,19 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      - "--secure_comms=tls"
-      - "--cert_file=fullchain.pem"
-      - "--key_file=privkey.pem"
+      - "./opt/use_menus --authz"
+      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      # - "--secure_comms=tls"
+      # - "--cert_file=fullchain.pem"
+      # - "--key_file=privkey.pem"
+      # - "--authz"
+      # - "tail -f /dev/null"
 
   use_structs:
     image: catena_structs_with_authz
     container_name: catena_structs_with_authz
     networks:
-      - catena_network
-    ports:
-      - "6258:6254"  # Map port 6258 on host to 6254 in container
+      - catena_prv
     logging:
       driver: "json-file"
       options:
@@ -61,19 +84,19 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      - "--secure_comms=tls"
-      - "--cert_file=fullchain.pem"
-      - "--key_file=privkey.pem"
-      - "--authz=true"
+      - "./opt/structs_with_authz --authz"
+      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      # - "--secure_comms=tls"
+      # - "--cert_file=fullchain.pem"
+      # - "--key_file=privkey.pem"
+      # - "--authz"
+      # - "tail -f /dev/null"
 
   use_commands:
     image: catena_use_commands
     container_name: catena_use_commands
     networks:
-      - catena_network
-    ports:
-      - "6260:6254"  # Map port 6258 on host to 6254 in container
+      - catena_prv
     logging:
       driver: "json-file"
       options:
@@ -82,8 +105,11 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      - "--secure_comms=tls"
-      - "--cert_file=fullchain.pem"
-      - "--key_file=privkey.pem"
+      - "./opt/use_commands --authz"
+      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
+      # - "--secure_comms=tls"
+      # - "--cert_file=fullchain.pem"
+      # - "--key_file=privkey.pem"
+      # - "--authz"
+      # - "tail -f /dev/null"
 

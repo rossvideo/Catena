@@ -55,3 +55,5 @@ make_image(catena_structs_with_authz ${CATENA_CPP_ROOT_DIR} "base.hash;structs_w
 
 # make the structs with authz image
 make_image(catena_use_commands ${CATENA_CPP_ROOT_DIR} "base.hash;use_commands")
+
+COMMAND ${DOCKER_CMD} pull envoyproxy/envoy:v1.33-latest
