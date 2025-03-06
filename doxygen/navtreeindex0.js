@@ -161,6 +161,8 @@ var NAVTREEINDEX0 =
 "StructInfo_8h.html#a78f6e68869990f230baee7774d764623":[11,0,0,0,25,9],
 "StructInfo_8h.html#addddb371559a45d42994973db1a69f08":[11,0,0,0,25,7],
 "StructInfo_8h_source.html":[11,0,0,0,25],
+"SubscriptionManager_8h.html":[11,0,1,0,0,18],
+"SubscriptionManager_8h_source.html":[11,0,1,0,0,18],
 "Tags_8h.html":[11,0,0,0,26],
 "Tags_8h.html#a764e6373739edd434886539928e91f7a":[11,0,0,0,26,6],
 "Tags_8h_source.html":[11,0,0,0,26],
@@ -247,7 +249,5 @@ var NAVTREEINDEX0 =
 "classCatenaServiceImpl_1_1SetValue.html#acbe83430f6f115201155574620829cc7":[10,0,1,13,0],
 "classJWTAuthMetadataProcessor.html":[10,0,2],
 "classcatena_1_1API.html":[8,0,0,3],
-"classcatena_1_1API.html":[10,0,0,3],
-"classcatena_1_1API.html#a9ba6af23559c9a56ebeb551f522a2192":[10,0,0,3,0],
-"classcatena_1_1API.html#a9ba6af23559c9a56ebeb551f522a2192":[8,0,0,3,0]
+"classcatena_1_1API.html":[10,0,0,4]
 };

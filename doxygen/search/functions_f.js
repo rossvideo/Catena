@@ -6,9 +6,11 @@ var searchData=
   ['readonly_3',['readonly',['../classcatena_1_1common_1_1IParam.html#a8e53f1ada467889732259adb72cff031',1,'catena::common::IParam::readOnly()'],['../classcatena_1_1common_1_1ParamDescriptor.html#ae2295c848506d6ef6c0a492101bade47',1,'catena::common::ParamDescriptor::readOnly() const'],['../classcatena_1_1common_1_1ParamDescriptor.html#afe18d380497132f06e6eef76f4de7b12',1,'catena::common::ParamDescriptor::readOnly(bool flag)'],['../classcatena_1_1common_1_1ParamWithValue.html#a5444af1e9f14b4b761aeb2fd06696ea8',1,'catena::common::ParamWithValue::readOnly() const override'],['../classcatena_1_1common_1_1ParamWithValue.html#a4bc78bbd1bbb04d564747e55045c0ccc',1,'catena::common::ParamWithValue::readOnly(bool flag) override'],['../classcatena_1_1common_1_1IParam.html#a634b9db470586152595e8b2b13baa432',1,'catena::common::IParam::readOnly()']]],
   ['registeritem_4',['registerItem',['../classCatenaServiceImpl.html#a5cceb267107e0837203946cde5469269',1,'CatenaServiceImpl']]],
   ['removepeer_5',['removePeer',['../classcatena_1_1PeerManager.html#a2a17dcf1482152378f302932249cbba1',1,'catena::PeerManager']]],
-  ['request_6',['request',['../classCatenaServiceImpl_1_1MultiSetValue.html#a58566e199663d84d177068fe39bffc2e',1,'CatenaServiceImpl::MultiSetValue']]],
-  ['rethrow_5fif_5fexception_7',['rethrow_if_exception',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3',1,'catena::common::Device::DeviceSerializer::promise_type']]],
-  ['return_5fvalue_8',['return_value',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#ab73a06963d0609c0895261a13499d5c9',1,'catena::common::Device::DeviceSerializer::promise_type']]],
-  ['rewind_9',['rewind',['../classcatena_1_1common_1_1Path.html#a7bc18876ecb0d72b79dc3e3d4ccffb06',1,'catena::common::Path']]],
-  ['run_10',['run',['../classcatena_1_1API.html#a9ba6af23559c9a56ebeb551f522a2192',1,'catena::API']]]
+  ['removesubscription_6',['removeSubscription',['../classcatena_1_1grpc_1_1SubscriptionManager.html#adbeb9e2d53e06060e47d5e3e815d284e',1,'catena::grpc::SubscriptionManager']]],
+  ['removewildcardsubscription_7',['removeWildcardSubscription',['../classcatena_1_1grpc_1_1SubscriptionManager.html#afa254953a7019890eb0b52fe5385bb17',1,'catena::grpc::SubscriptionManager']]],
+  ['request_8',['request',['../classCatenaServiceImpl_1_1MultiSetValue.html#a58566e199663d84d177068fe39bffc2e',1,'CatenaServiceImpl::MultiSetValue']]],
+  ['rethrow_5fif_5fexception_9',['rethrow_if_exception',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3',1,'catena::common::Device::DeviceSerializer::promise_type']]],
+  ['return_5fvalue_10',['return_value',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#ab73a06963d0609c0895261a13499d5c9',1,'catena::common::Device::DeviceSerializer::promise_type']]],
+  ['rewind_11',['rewind',['../classcatena_1_1common_1_1Path.html#a7bc18876ecb0d72b79dc3e3d4ccffb06',1,'catena::common::Path']]],
+  ['run_12',['run',['../classcatena_1_1API.html#a9ba6af23559c9a56ebeb551f522a2192',1,'catena::API']]]
 ];
