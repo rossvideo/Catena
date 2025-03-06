@@ -2,6 +2,8 @@
 # tokens using the AUTHZ server and routes gRPC requests to the gRPC server
 # running in the container.
 
+# TODO - STILL NEED TO CONFIGURE TLS
+
 static_resources:
 
   # Listens to ports 6254-6260, verifies JWS tokens, and routes them to the
@@ -101,6 +103,17 @@ static_resources:
                     string_match: { exact: "6260"}
                 route:
                   cluster: use_commands_cluster
+      # Setting up TLS
+      # transport_socket:
+      #   name: envoy.transport_sockets.tls
+      #   typed_config:
+      #     "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+      #     common_tls_context:
+      #       tls_certificates:
+      #       - certificate_chain:
+      #           filename: "/etc/letsencrypt/live/catena.rossvideo.com/fullchain.pem"
+      #         private_key:
+      #           filename: "/etc/letsencrypt/live/catena.rossvideo.com/privkey.pem"
 
   clusters:
   # Cluster for handling jwks.

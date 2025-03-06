@@ -22,8 +22,8 @@ services:
       - 6258:6258
       - 6260:6260
     volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./envoy.yaml:/etc/envoy/envoy.yaml
-      #- /etc/letsencrypt:/etc/letsencrypt:ro
     command:
       - envoy
       - -c
