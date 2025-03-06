@@ -38,6 +38,9 @@
 using catena::common::Device;
 using catena::common::IParam;
 
+namespace catena {
+namespace grpc {
+
 bool SubscriptionManager::addSubscription(const std::string& oid) {
     std::lock_guard<std::mutex> lock(subscriptionMutex_);
     auto [_, inserted] = exactSubscriptions_.insert(oid);
@@ -78,7 +81,7 @@ std::vector<std::string> SubscriptionManager::getAllSubscribedOids(catena::commo
         
         {
             // Use the LockGuard class from Device
-            Device::LockGuard lg(dm);
+            catena::common::Device::LockGuard lg(dm);
             params = dm.getTopLevelParams(rc);
         }
         
@@ -103,4 +106,7 @@ const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
 
 std::mutex& SubscriptionManager::getSubscriptionMutex() {
     return subscriptionMutex_;
-} 
+}
+
+} // namespace grpc
+} // namespace catena 

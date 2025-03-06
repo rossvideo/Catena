@@ -41,8 +41,8 @@
  */
 
 // connections/gRPC
-#include <ServiceImpl.h>
-#include <SubscriptionManager.h>
+#include "ServiceImpl.h"
+#include "SubscriptionManager.h"
 
 /**
 * @brief CallData class for the Connect RPC
@@ -153,7 +153,7 @@ class CatenaServiceImpl::Connect : public CallData {
         /**
          * @brief Subscription manager instance for this connection
          */
-        SubscriptionManager subscriptionManager_;
+        catena::grpc::SubscriptionManager subscriptionManager_;
 
         /**
          * @brief Updates the response message with parameter values and handles 

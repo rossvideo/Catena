@@ -32,7 +32,7 @@
 
 /**
  * @file SubscriptionManager.h
- * @brief Centralized manager for parameter subscriptions
+ * @brief Centralized manager for parameter subscriptions in gRPC connections
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-03-25
  * @copyright Copyright © 2024 Ross Video Ltd
@@ -45,8 +45,11 @@
 #include <memory>
 #include <Device.h>
 
+namespace catena {
+namespace grpc {
+
 /**
- * @brief Class for managing parameter subscriptions
+ * @brief Class for managing parameter subscriptions in gRPC connections
  */
 class SubscriptionManager {
 public:
@@ -109,18 +112,10 @@ public:
     std::mutex& getSubscriptionMutex();
 
 private:
-    /**
-     * @brief Set of exact OID subscriptions
-     */
     std::set<std::string> exactSubscriptions_;
-
-    /**
-     * @brief Set of wildcard OID subscriptions (stored without the * character)
-     */
     std::set<std::string> wildcardSubscriptions_;
-
-    /**
-     * @brief Mutex for protecting access to the subscription sets
-     */
     std::mutex subscriptionMutex_;
-}; 
+};
+
+} // namespace grpc
+} // namespace catena 

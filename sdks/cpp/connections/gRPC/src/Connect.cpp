@@ -212,10 +212,11 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
                 break;
                 
             case catena::Device_DetailLevel_SUBSCRIPTIONS:
-                // Only update if OID is subscribed
+                // Update if OID is subscribed or in minimal set
                 {
                     auto subscribedOids = subscriptionManager_.getAllSubscribedOids(dm_);
-                    should_update = (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    should_update = p->getDescriptor().minimalSet() || 
+                                  (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
                 }
                 break;
                 
