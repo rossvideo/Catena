@@ -96,7 +96,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
 
-                //Gather all top-level params if prefix is empty and recursive is false
+                // Mode 1: Get all top-level parameters
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
                     {
@@ -104,14 +104,28 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     top_level_params = dm_.getTopLevelParams(rc, *authz);
                     }
 
-                    if (rc.status == catena::StatusCode::OK) {
+                    if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
                         Device::LockGuard lg(dm_);
+                        
                         responses_.clear();  
+                        // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
+                            // Create a path for the parameter and check if it's an array type
+                            Path top_level_path{top_level_param->getOid()};
+                            
+                            // Add the parameter to our response list
                             responses_.emplace_back();
                             top_level_param->toProto(responses_.back(), *authz);
+                            // For array types, calculate and update array length
+                            if (top_level_param->isArrayType()) {
+                                uint32_t array_length = top_level_param->size();
+                                if (array_length > 0) {
+                                    updateArrayLengths(top_level_param->getOid(), array_length);
+                                }
+                            }   
                         }
                         
+                        // Begin writing responses back to the client
                         writer_lock_.lock();
                         status_ = CallStatus::kWrite;
                         writer_.Write(responses_[0], this);  //Write the first response
@@ -119,54 +133,37 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         break;  
                     }
 
-
-                    //Get a parameter based on the given path
+                // Mode 2: Get a specific parameter and its children
                 } else if (!req_.oid_prefix().empty()) { 
-
-                    if (service->authorizationEnabled()) {
-                        Device::LockGuard lg(dm_);
-                        catena::common::Authorizer authz{getJWSToken()};
-                        param = dm_.getParam(req_.oid_prefix(), rc, authz);
-                    } else {
-                        Device::LockGuard lg(dm_);
-                        param = dm_.getParam(req_.oid_prefix(), rc);
-                        std::cout << "current path: " << req_.oid_prefix() << std::endl;
+                    {
+                    Device::LockGuard lg(dm_);
+                    param = dm_.getParam(req_.oid_prefix(), rc, *authz);
                     }
 
-
-                    // if (param->getDescriptor().type() == catena::ParamType::STRUCT_VARIANT) {
-                    //     std::cout << "param is a variant" << std::endl;
-                    // }
-
-                    max_index_ = 0;
- 
                     if (rc.status == catena::StatusCode::OK && param) {
-                        // Calculate array length if this is a struct array
-                        if (isArrayType(param->type().value())) {
-                            max_index_ = calculateArrayLength(req_.oid_prefix());
-                        }else{
-                            std::cout << "param is not an array type" << std::endl;
-                        }
-
-                        // Add main response
+                        // Add the main parameter to the response list
                         responses_.emplace_back();
                         param->toProto(responses_.back(), *authz);
 
-                        if (max_index_ > 0) {
-                            updateArrayLengths(responses_.back().info().oid(), max_index_);
+                        // Calculate and update array length if this parameter is an array
+                        if (param->isArrayType()) {
+                            uint32_t array_length = param->size();
+                            if (array_length > 0) {
+                                updateArrayLengths(param->getOid(), array_length);
+                            }
                         }   
 
+                        // If recursive flag is set, get all children of this parameter
                         if (req_.recursive()) {
                             getChildren(param.get(), req_.oid_prefix(), *authz);
                         }
 
+                        // Begin writing responses back to the client
                         writer_lock_.lock();
                         status_ = CallStatus::kWrite;
                         writer_.Write(responses_[0], this); //Write the first response
                         writer_lock_.unlock();
-
                         break;
-
                     } else {
                         throw catena::exception_with_status(rc.what(), rc.status);
                     }
@@ -187,20 +184,21 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kWrite:
             try {
-                // First, check for if responses exist
+                // Validate that we have responses to write
                 if (current_response_ >= responses_.size() || responses_.empty()) {
                     status_ = CallStatus::kFinish;
                     writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, "No more responses"), this);
                     break;
                 }
 
-                // Then validate the current response
+                // Ensure the current response is valid
                 if (!responses_[current_response_].has_info()) {
                     status_ = CallStatus::kFinish;
                     writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, "Invalid response"), this);
                     break;
                 }
 
+                // Write responses sequentially until we're done
                 if (current_response_ < responses_.size()) {
                     writer_lock_.lock(); //Lock the writer for writing
                     if (current_response_ >= responses_.size()-1) {
@@ -234,25 +232,6 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 }
 
 
-/** Finds how many array elements exist at a path
- *  e.g., if we have /device/0, /device/1, /device/2,
- *  returns 3
- */
-uint32_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const std::string& base_path) {
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
-    uint32_t length = 0;
-    
-    // Keep checking indices until we find one that doesn't exist
-    for (uint32_t i = 0; ; i++) {
-        Path path{base_path, i};
-        auto param = dm_.getParam(path.toString(), rc);
-        if (!param) break;
-        length = i + 1;
-    }
-    
-    return length;
-}
-
 
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID
@@ -260,15 +239,17 @@ uint32_t CatenaServiceImpl::BasicParamInfoRequest::calculateArrayLength(const st
 void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
-            if (it->info().oid().find(array_name) != std::string::npos) {
+            // Only update if the OID exactly matches the array name
+            if (it->info().oid() == array_name) {
                 it->set_array_length(length);
             }
         }
     }
 }
 
-
-/** Recursively gets all children of a parameter */
+/**
+ * Recursively gets all children of a parameter
+ */
 void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
     const auto& descriptor = current_param->getDescriptor();
     catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -283,30 +264,46 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             auto sub_param = dm_.getParam(child_path.toString(), rc);
             
             if (rc.status == catena::StatusCode::OK && sub_param) {
+                // Add all parameters (array or not) when found as children
                 responses_.emplace_back();
-                if (service_->authorizationEnabled()) {
-                    Device::LockGuard lg(dm_);
-                    sub_param->toProto(responses_.back(), authz);
-                } else {
-                    Device::LockGuard lg(dm_);
-                    sub_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                {
+                Device::LockGuard lg(dm_);
+                sub_param->toProto(responses_.back(), authz);
                 }
-                getChildren(sub_param.get(), child_path.toString(), authz);
+
+                // If this child is an array, calculate and update its length
+                if (sub_param->isArrayType()) {
+                    uint32_t array_length = sub_param->size();
+                    if (array_length > 0) {
+                        updateArrayLengths(sub_param->getOid(), array_length);
+                    }
+                    
+                    // Process array children if we're not already inside an array element
+                    if (!Path{parent_path}.back_is_index()) {
+                        getChildren(sub_param.get(), child_path.toString(), authz);
+                    }
+                }
             }
         }
     };
 
     // Check if current parameter is an array type
-    if (isArrayType(current_param->type().value())) {
-        max_index_ = calculateArrayLength(current_path);
+    if (current_param->isArrayType()) {
+        uint32_t array_length = current_param->size();
         
         // Process each array element's children
-        for (uint32_t i = 0; i < max_index_; i++) {
+        for (uint32_t i = 0; i < array_length; i++) {
             Path indexed_path{current_path, i};
             auto indexed_param = dm_.getParam(indexed_path.toString(), rc);
             if (!indexed_param) continue;
-            
+
+            // Process children of this array element
             processChildren(indexed_path.toString());
+        }
+
+        // Update the array length for the array itself
+        if (array_length > 0) {
+            updateArrayLengths(current_param->getOid(), array_length);
         }
     } else {
         // For non-array types, process children normally

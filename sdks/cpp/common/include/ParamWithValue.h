@@ -342,6 +342,18 @@ class ParamWithValue : public catena::common::IParam {
         return descriptor_;
     }
 
+    /**
+     * @brief Check if the parameter is an array type
+     * @return true if the parameter is an array type
+     */
+    bool isArrayType() const override {
+        return (type().value() == catena::ParamType::STRUCT_ARRAY ||
+                type().value() == catena::ParamType::INT32_ARRAY ||
+                type().value() == catena::ParamType::FLOAT32_ARRAY ||
+                type().value() == catena::ParamType::STRING_ARRAY ||
+                type().value() == catena::ParamType::STRUCT_VARIANT_ARRAY);
+    }
+
   private:
     /**
      * @brief Gets the size of the array parameter.
