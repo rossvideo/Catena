@@ -34,7 +34,7 @@
  * @file SubscriptionManager.h
  * @brief Centralized manager for parameter subscriptions in gRPC connections
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-03-25
+ * @date 2025-03-06
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
