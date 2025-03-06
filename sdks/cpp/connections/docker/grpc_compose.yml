@@ -18,6 +18,9 @@ services:
       - catena_prv
     ports:
       - 6254:6254
+      - 6256:6256
+      - 6258:6258
+      - 6260:6260
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
       #- /etc/letsencrypt:/etc/letsencrypt:ro
