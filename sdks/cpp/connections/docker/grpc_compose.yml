@@ -1,27 +1,28 @@
 version: '3.8'  # Docker Compose file format version
 
 networks:
-  catena_network:
+  catena_network: # Public network for client to communicate with gateway.
     name: catena_network
     driver: bridge
-  catena_prv:
+  catena_prv: # Private network for gateway to communicate with services.
     name: catena_prv
     driver: bridge
     internal: true
 
+# Setting up the envoyproxy container.
 services:
   envoy_API_gateway:
     image: envoyproxy/envoy:v1.33-latest
     container_name: envoy_API_gateway
-    networks:
+    networks: # Must be a part of both pub and prv networks.
       - catena_network
       - catena_prv
-    ports:
+    ports: # Mapping ports from host to container.
       - 6254:6254
       - 6256:6256
       - 6258:6258
       - 6260:6260
-    volumes:
+    volumes: # letsencrypt contains keys for TLS.
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./envoy.yaml:/etc/envoy/envoy.yaml
     command:
@@ -31,27 +32,19 @@ services:
       - --log-level
       - info
 
-
+  # Example service container.
   status_update:
     image: catena_status_update
     container_name: catena_status_update
     networks:
-      - catena_prv
+      - catena_prv # Only connected to the prv network.
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "./opt/status_update/status_update --authz"
-      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      # - "--secure_comms=tls"
-      # - "--cert_file=fullchain.pem"
-      # - "--key_file=privkey.pem"
-      # - "--authz"
-      # - "tail -f /dev/null"
+      - "--authz" # Starting service with authorization enabled.
 
   use_menus:
     image: catena_use_menus
@@ -63,16 +56,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "./opt/use_menus --authz"
-      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      # - "--secure_comms=tls"
-      # - "--cert_file=fullchain.pem"
-      # - "--key_file=privkey.pem"
-      # - "--authz"
-      # - "tail -f /dev/null"
+      - "--authz"
 
   use_structs:
     image: catena_structs_with_authz
@@ -84,16 +69,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "./opt/structs_with_authz --authz"
-      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      # - "--secure_comms=tls"
-      # - "--cert_file=fullchain.pem"
-      # - "--key_file=privkey.pem"
-      # - "--authz"
-      # - "tail -f /dev/null"
+      - "--authz"
 
   use_commands:
     image: catena_use_commands
@@ -105,14 +82,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
     command:
-      - "./opt/use_commands --authz"
-      # - "--certs=/etc/letsencrypt/live/catena.rossvideo.com"
-      # - "--secure_comms=tls"
-      # - "--cert_file=fullchain.pem"
-      # - "--key_file=privkey.pem"
-      # - "--authz"
-      # - "tail -f /dev/null"
+      - "--authz"
 

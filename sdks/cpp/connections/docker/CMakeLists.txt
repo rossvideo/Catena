@@ -56,4 +56,11 @@ make_image(catena_structs_with_authz ${CATENA_CPP_ROOT_DIR} "base.hash;structs_w
 # make the structs with authz image
 make_image(catena_use_commands ${CATENA_CPP_ROOT_DIR} "base.hash;use_commands")
 
-#COMMAND ${DOCKER_CMD} pull envoyproxy/envoy:v1.33-latest
+# Pulls Envoy Proxy image v.1.33
+execute_process (
+    COMMAND ${DOCKER_CMD} pull envoyproxy/envoy:v1.33-latest
+    RESULT_VARIABLE result
+)
+if (NOT result EQUAL 0)
+    message(FATAL_ERROR "Failed to pull the envoy image")
+endif()

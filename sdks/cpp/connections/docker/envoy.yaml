@@ -1,13 +1,14 @@
 # This YAML file is used to configure the Envoy proxy server that verifies JWS
 # tokens using the AUTHZ server and routes gRPC requests to the gRPC server
 # running in the container.
-
-# TODO - STILL NEED TO CONFIGURE TLS
+# Communication with client is done vie TLS while communication between envoy
+# and services is done unencrypted via the private network Catena_prv.
 
 static_resources:
 
-  # Listens to ports 6254-6260, verifies JWS tokens, and routes them to the
-  # appropriate clusters.
+  # Envoy listener recieves signals from ports 6254-6260 and routes them
+  # accordingly.
+  # Alternatively you can have a seperate listener per port.
   listeners:
   - name: listener_status_update
     address:
@@ -28,19 +29,21 @@ static_resources:
           address: 0.0.0.0
           port_value: 6260
     filter_chains:
-    # Filters out http requests from the port above.
+
+    # This filten handles the http requests from the port above.
     - filters:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
           append_x_forwarded_port: true # Append to header for future routing.
-          # Required to log info
+          # Setting up a log.
           access_log:
           - name: envoy.access_loggers.stdout
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
           http_filters:
+
           # First filter verifies the JWS token. If invalid, it cancels the
           # request.
           - name: envoy.filters.http.jwt_authn
@@ -48,10 +51,16 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
               providers:
                 jwtProvider:
+                  # This is the authz server.
                   issuer: https://auth.enterprise.rossvideo.cloud/realms/catena
+                  audiences:
+                  - st-2138.grpc.service
+                  - st-2138.rest.service
                   remote_jwks:
                     http_uri:
+                      # This is the path to the authz server's public keys.
                       uri: https://auth.enterprise.rossvideo.cloud/realms/catena/protocol/openid-connect/certs
+                      # Cluster handles authentication.
                       cluster: jwks_cluster
                       timeout: 5s
                   forward: true
@@ -60,22 +69,25 @@ static_resources:
                   prefix: "/"
                 requires:
                   provider_name: jwtProvider
-          # If verified, the second filter routes the request.
+
+          # If verified, the second filter routes the request according to the
+          # route config below.
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
-          # Routes the valid request to the associated gRPC_custer.
-          # Could probably have this seperate REST and gRPC calls.
           route_config:
             name: local_route
             virtual_hosts:
             - name: default
               domains: ["*"]
+              # This routes the request to the appropriate cluster depending on
+              # the port number the command was recieved on.
               routes:
+              # Example route, all others are very similar.
               - match: # Routes port 6254 to the status_update_cluster.
                   prefix: "/"
                   headers:
-                  - name: x-forwarded-port
+                  - name: x-forwarded-port # Set using "append_x_forwarded_port" above.
                     string_match: { exact: "6254"} # IN port
                 route:
                   cluster: status_update_cluster # The cluster to map it to.
@@ -87,7 +99,6 @@ static_resources:
                     string_match: { exact: "6256"}
                 route:
                   cluster: use_menus_cluster
-              
               - match: # Routes port 6258 to the structs_with_authz_cluster.
                   prefix: "/"
                   headers:
@@ -95,7 +106,6 @@ static_resources:
                     string_match: { exact: "6258"}
                 route:
                   cluster: structs_with_authz_cluster
-              
               - match: # Routes port 6260 to the status_update_cluster.
                   prefix: "/"
                   headers:
@@ -103,20 +113,23 @@ static_resources:
                     string_match: { exact: "6260"}
                 route:
                   cluster: use_commands_cluster
-      # Setting up TLS
-      # transport_socket:
-      #   name: envoy.transport_sockets.tls
-      #   typed_config:
-      #     "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
-      #     common_tls_context:
-      #       tls_certificates:
-      #       - certificate_chain:
-      #           filename: "/etc/letsencrypt/live/catena.rossvideo.com/fullchain.pem"
-      #         private_key:
-      #           filename: "/etc/letsencrypt/live/catena.rossvideo.com/privkey.pem"
+
+      # This sets up a transport socket to communicate with the client via TLS.
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:
+            tls_certificates:
+              # Filepath to the generated fullchain and private key to use.
+            - certificate_chain:
+                filename: "/etc/letsencrypt/live/catena.rossvideo.com/fullchain.pem"
+              private_key:
+                filename: "/etc/letsencrypt/live/catena.rossvideo.com/privkey.pem"
+
 
   clusters:
-  # Cluster for handling jwks.
+  # This cluster handles the JWS token verification.
   - name: jwks_cluster
     type: STRICT_DNS
     lb_policy: ROUND_ROBIN
@@ -127,8 +140,11 @@ static_resources:
         - endpoint:
             address:
               socket_address:
+                # This is the authz server.
                 address: auth.enterprise.rossvideo.cloud
                 port_value: 443 # JWKS endpoint.
+    # This sets up a transport socket to communicate with the authz server via
+    # TLS.
     transport_socket:
       name: envoy.transport_sockets.tls
       typed_config:
@@ -136,6 +152,7 @@ static_resources:
         sni: auth.enterprise.rossvideo.cloud
 
   # Cluster for handling authenticated gRPC requests to status_update.
+  # Example cluster, all others are very similar.
   - name: status_update_cluster
     type: STRICT_DNS
     typed_extension_protocol_options:
@@ -174,7 +191,6 @@ static_resources:
               socket_address:
                 address: catena_use_menus
                 port_value: 6254
-  
   # Cluster for handling authenticated gRPC requests to structs_with_authz.
   - name: structs_with_authz_cluster
     type: STRICT_DNS
@@ -192,7 +208,6 @@ static_resources:
               socket_address:
                 address: catena_structs_with_authz
                 port_value: 6254
-  
   # Cluster for handling authenticated gRPC requests to use_commands.
   - name: use_commands_cluster
     type: STRICT_DNS
