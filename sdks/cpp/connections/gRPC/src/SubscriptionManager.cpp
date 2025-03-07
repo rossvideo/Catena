@@ -64,7 +64,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid) {
     return uniqueSubscriptions_.erase(oid) > 0;
 }
 
-// Update the list of all subscribed OIDs by combining unique and expanded wildcard subscriptions
+// Update the list of all subscribed OIDs by combining unique and wildcard subscriptions
 void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
     allSubscribedOids_.clear();
     
@@ -92,7 +92,7 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
     }
 }
 
-// Get all subscribed OIDs, including expanded wildcard subscriptions
+// Get all subscribed OIDs, including wildcard subscriptions
 const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(catena::common::Device& dm) {
     updateAllSubscribedOids_(dm);
     return allSubscribedOids_;

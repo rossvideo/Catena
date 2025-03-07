@@ -59,7 +59,7 @@ public:
 
     /**
      * @brief Add an OID subscription
-     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param.*")
+     * @param oid The OID to subscribe to (can be either a unique OID or a wildcard)
      * @return true if the subscription was added, false if it already existed
      */
     bool addSubscription(const std::string& oid);
@@ -91,7 +91,7 @@ public:
     const std::set<std::string>& getWildcardSubscriptions();
 
 private:
-    std::set<std::string> uniqueSubscriptions_;  // Renamed from exactSubscriptions_
+    std::set<std::string> uniqueSubscriptions_; 
     std::set<std::string> wildcardSubscriptions_;
     std::vector<std::string> allSubscribedOids_;
 
