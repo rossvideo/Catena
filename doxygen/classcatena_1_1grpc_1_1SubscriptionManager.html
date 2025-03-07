@@ -120,9 +120,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:afa254953a7019890eb0b52fe5385bb17" id="r_afa254953a7019890eb0b52fe5385bb17"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#afa254953a7019890eb0b52fe5385bb17">removeWildcardSubscription</a> (const std::string &amp;baseOid)</td></tr>
 <tr class="memdesc:afa254953a7019890eb0b52fe5385bb17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a wildcard OID subscription.  <br /></td></tr>
 <tr class="separator:afa254953a7019890eb0b52fe5385bb17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac051556b1ac0578bea29b4f9d18963c7" id="r_ac051556b1ac0578bea29b4f9d18963c7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#ac051556b1ac0578bea29b4f9d18963c7">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm)</td></tr>
-<tr class="memdesc:ac051556b1ac0578bea29b4f9d18963c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
-<tr class="separator:ac051556b1ac0578bea29b4f9d18963c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ba32ef3fbff7ee40277966f36f5b977" id="r_a3ba32ef3fbff7ee40277966f36f5b977"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a3ba32ef3fbff7ee40277966f36f5b977">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm)</td></tr>
+<tr class="memdesc:a3ba32ef3fbff7ee40277966f36f5b977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
+<tr class="separator:a3ba32ef3fbff7ee40277966f36f5b977"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11c1749dd3f8898b3db9f5583ac90a1e" id="r_a11c1749dd3f8898b3db9f5583ac90a1e"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a11c1749dd3f8898b3db9f5583ac90a1e">getExactSubscriptions</a> ()</td></tr>
 <tr class="memdesc:a11c1749dd3f8898b3db9f5583ac90a1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all exact subscriptions.  <br /></td></tr>
 <tr class="separator:a11c1749dd3f8898b3db9f5583ac90a1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -190,14 +190,14 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ac051556b1ac0578bea29b4f9d18963c7" name="ac051556b1ac0578bea29b4f9d18963c7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac051556b1ac0578bea29b4f9d18963c7">&#9670;&#160;</a></span>getAllSubscribedOids()</h2>
+<a id="a3ba32ef3fbff7ee40277966f36f5b977" name="a3ba32ef3fbff7ee40277966f36f5b977"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3ba32ef3fbff7ee40277966f36f5b977">&#9670;&#160;</a></span>getAllSubscribedOids()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::string &gt; catena::grpc::SubscriptionManager::getAllSubscribedOids </td>
+          <td class="memname">const std::vector&lt; std::string &gt; &amp; catena::grpc::SubscriptionManager::getAllSubscribedOids </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;&#160;</td>
           <td class="paramname"><em>dm</em></td><td>)</td>
@@ -213,7 +213,7 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Vector of all subscribed OIDs </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the vector of all subscribed OIDs </dd></dl>
 
 </div>
 </div>
