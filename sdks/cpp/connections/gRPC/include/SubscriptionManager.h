@@ -89,9 +89,9 @@ public:
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use for expanding wildcard subscriptions
-     * @return Vector of all subscribed OIDs
+     * @return Reference to the vector of all subscribed OIDs
      */
-    std::vector<std::string> getAllSubscribedOids(catena::common::Device& dm);
+    const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
 
     /**
      * @brief Get all exact subscriptions
@@ -114,7 +114,14 @@ public:
 private:
     std::set<std::string> exactSubscriptions_;
     std::set<std::string> wildcardSubscriptions_;
+    std::vector<std::string> allSubscribedOids_;
     std::mutex subscriptionMutex_;
+
+    /**
+     * @brief Update the combined list of all subscribed OIDs
+     * @param dm The device model to use for expanding wildcard subscriptions
+     */
+    void updateAllSubscribedOids(catena::common::Device& dm);
 };
 
 } // namespace grpc
