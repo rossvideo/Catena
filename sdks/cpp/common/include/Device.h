@@ -342,6 +342,15 @@ class Device {
     DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string> subscribed_oids, bool shallow = false) const;
 
     /**
+     * @brief get a serializer for the device
+     * @param clientScopes the scopes of the client
+     * @param subscribed_oids the oids of the subscribed parameters
+     * @param shallow if true, the device will be returned in parts, otherwise the whole device will be returned in one message
+     * @return a DeviceSerializer object
+     */
+    DeviceSerializer getComponentSerializer(Authorizer& authz, std::vector<std::string>& subscribed_oids, bool shallow = false) const;
+
+    /**
      * @brief add an item to one of the collections owned by the device
      * @tparam TAG identifies the collection to which the item will be added
      * @param key item's unique key

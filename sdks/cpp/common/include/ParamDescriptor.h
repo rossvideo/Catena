@@ -112,6 +112,7 @@ class ParamDescriptor {
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
+     * @param minimalSet the parameter's minimal set status
      * @param dm the device that the parameter belongs to
      * @param parent the parent parameter
      */
@@ -184,6 +185,17 @@ class ParamDescriptor {
      * @brief get the access scope of the parameter
      */
     const std::string& getScope() const;
+
+    /**   
+     * @brief get the minimal set status of the parameter
+     */
+    inline bool minimalSet() const { return minimal_set_; }
+
+    /**
+     * @brief set the minimal set status of the parameter
+     */
+    inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
+
 
     /**
      * @brief Returns the max length of the array/string parameter. If max

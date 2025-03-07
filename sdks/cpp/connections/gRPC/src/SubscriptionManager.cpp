@@ -38,28 +38,36 @@
 using catena::common::Device;
 using catena::common::IParam;
 
-bool SubscriptionManager::addExactSubscription(const std::string& oid) {
+namespace catena {
+namespace grpc {
+
+// Add an OID subscription (e.g. "/my_param")   
+bool SubscriptionManager::addSubscription(const std::string& oid) {
     std::lock_guard<std::mutex> lock(subscriptionMutex_);
     auto [_, inserted] = exactSubscriptions_.insert(oid);
     return inserted;
 }
 
+// Add a wildcard OID subscription (e.g. "my_param.*")
 bool SubscriptionManager::addWildcardSubscription(const std::string& baseOid) {
     std::lock_guard<std::mutex> lock(subscriptionMutex_);
     auto [_, inserted] = wildcardSubscriptions_.insert(baseOid);
     return inserted;
 }
 
-bool SubscriptionManager::removeExactSubscription(const std::string& oid) {
+// Remove an OID subscription (e.g. "/my_param")
+bool SubscriptionManager::removeSubscription(const std::string& oid) {
     std::lock_guard<std::mutex> lock(subscriptionMutex_);
     return exactSubscriptions_.erase(oid) > 0;
 }
 
+// Remove a wildcard OID subscription (e.g. "my_param.*")
 bool SubscriptionManager::removeWildcardSubscription(const std::string& baseOid) {
     std::lock_guard<std::mutex> lock(subscriptionMutex_);
     return wildcardSubscriptions_.erase(baseOid) > 0;
 }
 
+// Get all subscribed OIDs, including wildcard subscriptions
 std::vector<std::string> SubscriptionManager::getAllSubscribedOids(catena::common::Device& dm) {
     std::vector<std::string> oids;
     
@@ -77,8 +85,7 @@ std::vector<std::string> SubscriptionManager::getAllSubscribedOids(catena::commo
         std::vector<std::unique_ptr<IParam>> params;
         
         {
-            // Use the LockGuard class from Device
-            Device::LockGuard lg(dm);
+            catena::common::Device::LockGuard lg(dm);
             params = dm.getTopLevelParams(rc);
         }
         
@@ -93,14 +100,20 @@ std::vector<std::string> SubscriptionManager::getAllSubscribedOids(catena::commo
     return oids;
 }
 
+// Get all exact subscriptions
 const std::set<std::string>& SubscriptionManager::getExactSubscriptions() {
     return exactSubscriptions_;
 }
 
+// Get all wildcard subscriptions
 const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
     return wildcardSubscriptions_;
 }
 
+// Get the subscription mutex
 std::mutex& SubscriptionManager::getSubscriptionMutex() {
     return subscriptionMutex_;
-} 
+}
+
+} // namespace grpc
+} // namespace catena 

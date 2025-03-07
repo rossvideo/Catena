@@ -73,13 +73,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
-        /**
-         * @brief Calculates the length of the array.
-         * 
-         * @param base_path - The base path of the array.
-         * @return The length of the array.
-         */
-        uint32_t calculateArrayLength(const std::string& base_path);
 
         /**
          * @brief Updates the array lengths of the responses.
@@ -159,11 +152,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @brief The current response index.
          */
         uint32_t current_response_{0};
-
-        /**
-         * @brief The maximum index of the parameter.
-         */
-        uint32_t max_index_{0};
 
         /**
          * @brief The mutex for the writer lock.
