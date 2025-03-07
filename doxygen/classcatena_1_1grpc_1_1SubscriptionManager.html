@@ -111,27 +111,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa417e409ce446cbdf63e6076bb45d7aa" id="r_aa417e409ce446cbdf63e6076bb45d7aa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#aa417e409ce446cbdf63e6076bb45d7aa">addSubscription</a> (const std::string &amp;oid)</td></tr>
 <tr class="memdesc:aa417e409ce446cbdf63e6076bb45d7aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
 <tr class="separator:aa417e409ce446cbdf63e6076bb45d7aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e159619097a96940f161515005a31af" id="r_a2e159619097a96940f161515005a31af"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a2e159619097a96940f161515005a31af">addWildcardSubscription</a> (const std::string &amp;baseOid)</td></tr>
-<tr class="memdesc:a2e159619097a96940f161515005a31af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a wildcard OID subscription.  <br /></td></tr>
-<tr class="separator:a2e159619097a96940f161515005a31af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adbeb9e2d53e06060e47d5e3e815d284e" id="r_adbeb9e2d53e06060e47d5e3e815d284e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#adbeb9e2d53e06060e47d5e3e815d284e">removeSubscription</a> (const std::string &amp;oid)</td></tr>
 <tr class="memdesc:adbeb9e2d53e06060e47d5e3e815d284e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an OID subscription.  <br /></td></tr>
 <tr class="separator:adbeb9e2d53e06060e47d5e3e815d284e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa254953a7019890eb0b52fe5385bb17" id="r_afa254953a7019890eb0b52fe5385bb17"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#afa254953a7019890eb0b52fe5385bb17">removeWildcardSubscription</a> (const std::string &amp;baseOid)</td></tr>
-<tr class="memdesc:afa254953a7019890eb0b52fe5385bb17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a wildcard OID subscription.  <br /></td></tr>
-<tr class="separator:afa254953a7019890eb0b52fe5385bb17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ba32ef3fbff7ee40277966f36f5b977" id="r_a3ba32ef3fbff7ee40277966f36f5b977"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a3ba32ef3fbff7ee40277966f36f5b977">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm)</td></tr>
 <tr class="memdesc:a3ba32ef3fbff7ee40277966f36f5b977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
 <tr class="separator:a3ba32ef3fbff7ee40277966f36f5b977"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11c1749dd3f8898b3db9f5583ac90a1e" id="r_a11c1749dd3f8898b3db9f5583ac90a1e"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a11c1749dd3f8898b3db9f5583ac90a1e">getExactSubscriptions</a> ()</td></tr>
-<tr class="memdesc:a11c1749dd3f8898b3db9f5583ac90a1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all exact subscriptions.  <br /></td></tr>
-<tr class="separator:a11c1749dd3f8898b3db9f5583ac90a1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59b4d2b444bb5517fc2787dcc9a44fad" id="r_a59b4d2b444bb5517fc2787dcc9a44fad"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a59b4d2b444bb5517fc2787dcc9a44fad">getUniqueSubscriptions</a> ()</td></tr>
+<tr class="memdesc:a59b4d2b444bb5517fc2787dcc9a44fad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all unique subscriptions.  <br /></td></tr>
+<tr class="separator:a59b4d2b444bb5517fc2787dcc9a44fad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab412c2fb2b6e620697fca76f8ebb0d0a" id="r_ab412c2fb2b6e620697fca76f8ebb0d0a"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#ab412c2fb2b6e620697fca76f8ebb0d0a">getWildcardSubscriptions</a> ()</td></tr>
 <tr class="memdesc:ab412c2fb2b6e620697fca76f8ebb0d0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all wildcard subscriptions.  <br /></td></tr>
 <tr class="separator:ab412c2fb2b6e620697fca76f8ebb0d0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9ef4adfaf389fa18433a4f4bacc6b2a" id="r_ac9ef4adfaf389fa18433a4f4bacc6b2a"><td class="memItemLeft" align="right" valign="top">std::mutex &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#ac9ef4adfaf389fa18433a4f4bacc6b2a">getSubscriptionMutex</a> ()</td></tr>
-<tr class="memdesc:ac9ef4adfaf389fa18433a4f4bacc6b2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the mutex for protecting access to the subscription sets.  <br /></td></tr>
-<tr class="separator:ac9ef4adfaf389fa18433a4f4bacc6b2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for managing parameter subscriptions in gRPC connections. </p>
@@ -155,34 +146,7 @@ Public Member Functions</h2></td></tr>
 <p>Add an OID subscription. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">oid</td><td>The OID to subscribe to </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if the subscription was added, false if it already existed </dd></dl>
-
-</div>
-</div>
-<a id="a2e159619097a96940f161515005a31af" name="a2e159619097a96940f161515005a31af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2e159619097a96940f161515005a31af">&#9670;&#160;</a></span>addWildcardSubscription()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::grpc::SubscriptionManager::addWildcardSubscription </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>baseOid</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Add a wildcard OID subscription. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">baseOid</td><td>The base OID without the wildcard character </td></tr>
+    <tr><td class="paramname">oid</td><td>The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param.*") </td></tr>
   </table>
   </dd>
 </dl>
@@ -217,14 +181,14 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a11c1749dd3f8898b3db9f5583ac90a1e" name="a11c1749dd3f8898b3db9f5583ac90a1e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11c1749dd3f8898b3db9f5583ac90a1e">&#9670;&#160;</a></span>getExactSubscriptions()</h2>
+<a id="a59b4d2b444bb5517fc2787dcc9a44fad" name="a59b4d2b444bb5517fc2787dcc9a44fad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59b4d2b444bb5517fc2787dcc9a44fad">&#9670;&#160;</a></span>getUniqueSubscriptions()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::set&lt; std::string &gt; &amp; catena::grpc::SubscriptionManager::getExactSubscriptions </td>
+          <td class="memname">const std::set&lt; std::string &gt; &amp; catena::grpc::SubscriptionManager::getUniqueSubscriptions </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -232,28 +196,8 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Get all exact subscriptions. </p>
-<dl class="section return"><dt>Returns</dt><dd>Reference to the set of exact subscriptions </dd></dl>
-
-</div>
-</div>
-<a id="ac9ef4adfaf389fa18433a4f4bacc6b2a" name="ac9ef4adfaf389fa18433a4f4bacc6b2a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac9ef4adfaf389fa18433a4f4bacc6b2a">&#9670;&#160;</a></span>getSubscriptionMutex()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::mutex &amp; catena::grpc::SubscriptionManager::getSubscriptionMutex </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Get the mutex for protecting access to the subscription sets. </p>
-<dl class="section return"><dt>Returns</dt><dd>Reference to the subscription mutex </dd></dl>
+<p>Get all unique subscriptions. </p>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the set of unique subscriptions </dd></dl>
 
 </div>
 </div>
@@ -296,34 +240,7 @@ Public Member Functions</h2></td></tr>
 <p>Remove an OID subscription. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">oid</td><td>The OID to unsubscribe from </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true if the subscription was removed, false if it didn't exist </dd></dl>
-
-</div>
-</div>
-<a id="afa254953a7019890eb0b52fe5385bb17" name="afa254953a7019890eb0b52fe5385bb17"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afa254953a7019890eb0b52fe5385bb17">&#9670;&#160;</a></span>removeWildcardSubscription()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::grpc::SubscriptionManager::removeWildcardSubscription </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>baseOid</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Remove a wildcard OID subscription. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">baseOid</td><td>The base OID without the wildcard character </td></tr>
+    <tr><td class="paramname">oid</td><td>The OID to unsubscribe from (can be either a unique OID or a wildcard) </td></tr>
   </table>
   </dd>
 </dl>
