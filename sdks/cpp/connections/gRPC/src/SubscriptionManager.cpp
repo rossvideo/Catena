@@ -41,40 +41,37 @@ using catena::common::IParam;
 namespace catena {
 namespace grpc {
 
-// Add an OID subscription (e.g. "/my_param")   
+// Returns true if the OID ends with ".*", indicating it's a wildcard subscription
+bool SubscriptionManager::isWildcard(const std::string& oid) {
+    return oid.length() >= 2 && oid.substr(oid.length() - 2) == ".*";
+}
+
+// Add a subscription (either unique or wildcard). Returns true if added, false if already exists
 bool SubscriptionManager::addSubscription(const std::string& oid) {
-    std::lock_guard<std::mutex> lock(subscriptionMutex_);
-    auto [_, inserted] = exactSubscriptions_.insert(oid);
+    if (isWildcard(oid)) {
+        auto [_, inserted] = wildcardSubscriptions_.insert(oid);
+        return inserted;
+    }
+    auto [_, inserted] = uniqueSubscriptions_.insert(oid);
     return inserted;
 }
 
-// Add a wildcard OID subscription (e.g. "my_param.*")
-bool SubscriptionManager::addWildcardSubscription(const std::string& baseOid) {
-    std::lock_guard<std::mutex> lock(subscriptionMutex_);
-    auto [_, inserted] = wildcardSubscriptions_.insert(baseOid);
-    return inserted;
-}
-
-// Remove an OID subscription (e.g. "/my_param")
+// Remove a subscription (either unique or wildcard). Returns true if removed, false if not found
 bool SubscriptionManager::removeSubscription(const std::string& oid) {
-    std::lock_guard<std::mutex> lock(subscriptionMutex_);
-    return exactSubscriptions_.erase(oid) > 0;
+    if (isWildcard(oid)) {
+        return wildcardSubscriptions_.erase(oid) > 0;
+    }
+    return uniqueSubscriptions_.erase(oid) > 0;
 }
 
-// Remove a wildcard OID subscription (e.g. "my_param.*")
-bool SubscriptionManager::removeWildcardSubscription(const std::string& baseOid) {
-    std::lock_guard<std::mutex> lock(subscriptionMutex_);
-    return wildcardSubscriptions_.erase(baseOid) > 0;
-}
-
-// Update the combined list of all subscribed OIDs
-void SubscriptionManager::updateAllSubscribedOids(catena::common::Device& dm) {
+// Update the list of all subscribed OIDs by combining unique and expanded wildcard subscriptions
+void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
     allSubscribedOids_.clear();
     
-    // Add exact subscriptions
+    // Add unique subscriptions
     allSubscribedOids_.insert(allSubscribedOids_.end(), 
-                             exactSubscriptions_.begin(), 
-                             exactSubscriptions_.end());
+                             uniqueSubscriptions_.begin(), 
+                             uniqueSubscriptions_.end());
     
     // Add wildcard subscriptions (need to expand these to actual matching parameters)
     for (const auto& baseOid : wildcardSubscriptions_) {
@@ -95,26 +92,20 @@ void SubscriptionManager::updateAllSubscribedOids(catena::common::Device& dm) {
     }
 }
 
-// Get all subscribed OIDs, including wildcard subscriptions
+// Get all subscribed OIDs, including expanded wildcard subscriptions
 const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(catena::common::Device& dm) {
-    std::lock_guard<std::mutex> lock(subscriptionMutex_);
-    updateAllSubscribedOids(dm);
+    updateAllSubscribedOids_(dm);
     return allSubscribedOids_;
 }
 
-// Get all exact subscriptions
-const std::set<std::string>& SubscriptionManager::getExactSubscriptions() {
-    return exactSubscriptions_;
+// Get the set of unique (non-wildcard) subscriptions
+const std::set<std::string>& SubscriptionManager::getUniqueSubscriptions() {
+    return uniqueSubscriptions_;
 }
 
-// Get all wildcard subscriptions
+// Get the set of wildcard subscriptions
 const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
     return wildcardSubscriptions_;
-}
-
-// Get the subscription mutex
-std::mutex& SubscriptionManager::getSubscriptionMutex() {
-    return subscriptionMutex_;
 }
 
 } // namespace grpc

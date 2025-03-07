@@ -40,7 +40,6 @@
 
 #include <set>
 #include <string>
-#include <mutex>
 #include <vector>
 #include <memory>
 #include <Device.h>
@@ -60,31 +59,17 @@ public:
 
     /**
      * @brief Add an OID subscription
-     * @param oid The OID to subscribe to
+     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param.*")
      * @return true if the subscription was added, false if it already existed
      */
     bool addSubscription(const std::string& oid);
 
     /**
-     * @brief Add a wildcard OID subscription
-     * @param baseOid The base OID without the wildcard character
-     * @return true if the subscription was added, false if it already existed
-     */
-    bool addWildcardSubscription(const std::string& baseOid);
-
-    /**
      * @brief Remove an OID subscription
-     * @param oid The OID to unsubscribe from
+     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard)
      * @return true if the subscription was removed, false if it didn't exist
      */
     bool removeSubscription(const std::string& oid);
-
-    /**
-     * @brief Remove a wildcard OID subscription
-     * @param baseOid The base OID without the wildcard character
-     * @return true if the subscription was removed, false if it didn't exist
-     */
-    bool removeWildcardSubscription(const std::string& baseOid);
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
@@ -94,10 +79,10 @@ public:
     const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
 
     /**
-     * @brief Get all exact subscriptions
-     * @return Reference to the set of exact subscriptions
+     * @brief Get all unique subscriptions
+     * @return Reference to the set of unique subscriptions
      */
-    const std::set<std::string>& getExactSubscriptions();
+    const std::set<std::string>& getUniqueSubscriptions();
 
     /**
      * @brief Get all wildcard subscriptions
@@ -105,23 +90,23 @@ public:
      */
     const std::set<std::string>& getWildcardSubscriptions();
 
-    /**
-     * @brief Get the mutex for protecting access to the subscription sets
-     * @return Reference to the subscription mutex
-     */
-    std::mutex& getSubscriptionMutex();
-
 private:
-    std::set<std::string> exactSubscriptions_;
+    std::set<std::string> uniqueSubscriptions_;  // Renamed from exactSubscriptions_
     std::set<std::string> wildcardSubscriptions_;
     std::vector<std::string> allSubscribedOids_;
-    std::mutex subscriptionMutex_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs
      * @param dm The device model to use for expanding wildcard subscriptions
      */
-    void updateAllSubscribedOids(catena::common::Device& dm);
+    void updateAllSubscribedOids_(catena::common::Device& dm);
+
+    /**
+     * @brief Check if an OID is a wildcard subscription
+     * @param oid The OID to check
+     * @return true if the OID ends with ".*"
+     */
+    static bool isWildcard(const std::string& oid);
 };
 
 } // namespace grpc
