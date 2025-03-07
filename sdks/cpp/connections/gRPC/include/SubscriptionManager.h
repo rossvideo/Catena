@@ -32,9 +32,9 @@
 
 /**
  * @file SubscriptionManager.h
- * @brief Centralized manager for parameter subscriptions
+ * @brief Centralized manager for parameter subscriptions in gRPC connections
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-02-27
+ * @date 2025-03-06
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -43,23 +43,27 @@
 #include <mutex>
 #include <vector>
 #include <memory>
-#include <patterns/Singleton.h>
 #include <Device.h>
 
-/**
- * @brief Singleton class for managing parameter subscriptions
- */
-class SubscriptionManager : public catena::patterns::Singleton<SubscriptionManager> {
-    // Allow Singleton to access our constructor
-    friend class catena::patterns::Singleton<SubscriptionManager>;
+namespace catena {
+namespace grpc {
 
+/**
+ * @brief Class for managing parameter subscriptions in gRPC connections
+ */
+class SubscriptionManager {
 public:
     /**
-     * @brief Add an exact OID subscription
-     * @param oid The exact OID to subscribe to
+     * @brief Constructor
+     */
+    SubscriptionManager() = default;
+
+    /**
+     * @brief Add an OID subscription
+     * @param oid The OID to subscribe to
      * @return true if the subscription was added, false if it already existed
      */
-    bool addExactSubscription(const std::string& oid);
+    bool addSubscription(const std::string& oid);
 
     /**
      * @brief Add a wildcard OID subscription
@@ -69,11 +73,11 @@ public:
     bool addWildcardSubscription(const std::string& baseOid);
 
     /**
-     * @brief Remove an exact OID subscription
-     * @param oid The exact OID to unsubscribe from
+     * @brief Remove an OID subscription
+     * @param oid The OID to unsubscribe from
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeExactSubscription(const std::string& oid);
+    bool removeSubscription(const std::string& oid);
 
     /**
      * @brief Remove a wildcard OID subscription
@@ -85,9 +89,9 @@ public:
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use for expanding wildcard subscriptions
-     * @return Vector of all subscribed OIDs
+     * @return Reference to the vector of all subscribed OIDs
      */
-    std::vector<std::string> getAllSubscribedOids(catena::common::Device& dm);
+    const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
 
     /**
      * @brief Get all exact subscriptions
@@ -108,24 +112,17 @@ public:
     std::mutex& getSubscriptionMutex();
 
 private:
-    /**
-     * @brief Private constructor to enforce singleton pattern
-     * @param p Protector to ensure only Singleton can create instances
-     */
-    SubscriptionManager(typename catena::patterns::Singleton<SubscriptionManager>::Protector p) {}
-
-    /**
-     * @brief Set of exact OID subscriptions
-     */
     std::set<std::string> exactSubscriptions_;
-
-    /**
-     * @brief Set of wildcard OID subscriptions (stored without the * character)
-     */
     std::set<std::string> wildcardSubscriptions_;
+    std::vector<std::string> allSubscribedOids_;
+    std::mutex subscriptionMutex_;
 
     /**
-     * @brief Mutex for protecting access to the subscription sets
+     * @brief Update the combined list of all subscribed OIDs
+     * @param dm The device model to use for expanding wildcard subscriptions
      */
-    std::mutex subscriptionMutex_;
-}; 
+    void updateAllSubscribedOids(catena::common::Device& dm);
+};
+
+} // namespace grpc
+} // namespace catena 

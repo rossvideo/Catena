@@ -339,7 +339,6 @@ class Device {
      * @return a DeviceSerializer object
      */
     DeviceSerializer getComponentSerializer(Authorizer& authz, bool shallow = false) const;
-    DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string> subscribed_oids, bool shallow = false) const;
 
     /**
      * @brief get a serializer for the device
@@ -348,7 +347,7 @@ class Device {
      * @param shallow if true, the device will be returned in parts, otherwise the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    DeviceSerializer getComponentSerializer(Authorizer& authz, std::vector<std::string>& subscribed_oids, bool shallow = false) const;
+    DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const;
 
     /**
      * @brief add an item to one of the collections owned by the device

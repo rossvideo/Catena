@@ -186,7 +186,7 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
-    /**   
+    /**
      * @brief get the minimal set status of the parameter
      */
     inline bool minimalSet() const { return minimal_set_; }
@@ -195,7 +195,6 @@ class ParamDescriptor {
      * @brief set the minimal set status of the parameter
      */
     inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
-
 
     /**
      * @brief Returns the max length of the array/string parameter. If max
@@ -299,16 +298,6 @@ class ParamDescriptor {
      * @brief return true if this is a command parameter
      */
     inline bool isCommand() const { return isCommand_; }
-
-    /**
-     * @brief return true if the parameter is part of the minimal set
-     */
-    inline bool minimalSet() const { return minimal_set_; }
-
-    /**
-     * @brief set whether the parameter is part of the minimal set\
-     */
-    inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
 
   private:
     ParamType type_;  // ParamType is from param.pb.h

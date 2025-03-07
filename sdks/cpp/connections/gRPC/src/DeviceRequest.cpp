@@ -107,25 +107,25 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 } else {
                     dm_.detail_level(req_.detail_level());
                     if (dm_.subscriptions()) {
-                        std::vector<std::string> oids;
-                        const auto& repeated_oids = req_.subscribed_oids();
+                        // std::vector<std::string> oids;
+                        // const auto& repeated_oids = req_.subscribed_oids();
                         
-                        // If detail_level is SUBSCRIPTIONS and subscribed_oids is empty,
-                        // use the static subscription sets from UpdateSubscriptions
-                        if (req_.detail_level() == catena::Device_DetailLevel_SUBSCRIPTIONS && 
-                            repeated_oids.empty()) {
+                        // // If detail_level is SUBSCRIPTIONS and subscribed_oids is empty,
+                        // // use the static subscription sets from UpdateSubscriptions
+                        // if (req_.detail_level() == catena::Device_DetailLevel_SUBSCRIPTIONS && 
+                        //     repeated_oids.empty()) {
                             
-                            // Get all subscribed OIDs from the SubscriptionManager
-                            oids = SubscriptionManager::getInstance().getAllSubscribedOids(dm_);
-                        } else {
-                            // Otherwise, use the subscribed_oids from the request
-                            oids.reserve(repeated_oids.size());
-                            for (const auto& oid : repeated_oids) {
-                                oids.push_back(oid);
-                            }
-                        }
+                        //     // Get all subscribed OIDs from the SubscriptionManager
+                        //     //oids = SubscriptionManager::getInstance().getAllSubscribedOids(dm_); // does not work
+                        // } else {
+                        //     // Otherwise, use the subscribed_oids from the request
+                        //     oids.reserve(repeated_oids.size());
+                        //     for (const auto& oid : repeated_oids) {
+                        //         oids.push_back(oid);
+                        //     }
+                        // }
                         
-                        serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, oids, shallowCopy);
+                        // serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, oids, shallowCopy);
                     } else {
                         serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
                     }

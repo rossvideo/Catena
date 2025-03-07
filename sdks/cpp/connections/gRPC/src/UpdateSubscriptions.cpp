@@ -123,9 +123,9 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     std::string baseOid = isWildcard ? oid.substr(0, oid.length() - 1) : oid;
                     
                     if (isWildcard) {
-                        SubscriptionManager::getInstance().removeWildcardSubscription(baseOid);
+                        //SubscriptionManager::getInstance().removeWildcardSubscription(baseOid);
                     } else {
-                        SubscriptionManager::getInstance().removeExactSubscription(oid);
+                        //SubscriptionManager::getInstance().removeExactSubscription(oid);
                     }
                 }
                 
@@ -198,50 +198,50 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
 }
 
 void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::common::Authorizer& authz) {
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // catena::exception_with_status rc{"", catena::StatusCode::OK};
     
-    // Get a reference to the subscription manager
-    auto& subscriptionManager = SubscriptionManager::getInstance();
+    // // I can't get an instance anymore, that's old code
+    // auto& subscriptionManager = SubscriptionManager::getInstance();
     
-    // Lock the subscription sets while we're accessing them
-    std::lock_guard<std::mutex> lock(subscriptionManager.getSubscriptionMutex());
+    // // Lock the subscription sets while we're accessing them
+    // std::lock_guard<std::mutex> lock(subscriptionManager.getSubscriptionMutex());
     
-    // First, handle exact subscriptions
-    for (const auto& oid : subscriptionManager.getExactSubscriptions()) {
-        std::unique_ptr<IParam> param;
+    // // First, handle exact subscriptions
+    // for (const auto& oid : subscriptionManager.getExactSubscriptions()) {
+    //     std::unique_ptr<IParam> param;
         
-        {
-            Device::LockGuard lg(dm_);
-            param = dm_.getParam(oid, rc);
-        }
+    //     {
+    //         Device::LockGuard lg(dm_);
+    //         param = dm_.getParam(oid, rc);
+    //     }
         
-        if (param) {
-            catena::DeviceComponent_ComponentParam response;
-            response.set_oid(oid);  // Set the OID in the response
-            param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
-            responses_.push_back(response);
-        }
-    }
+    //     if (param) {
+    //         catena::DeviceComponent_ComponentParam response;
+    //         response.set_oid(oid);  // Set the OID in the response
+    //         param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
+    //         responses_.push_back(response);
+    //     }
+    // }
     
-    // Then, handle wildcard subscriptions
-    for (const auto& baseOid : subscriptionManager.getWildcardSubscriptions()) {
-        std::vector<std::unique_ptr<IParam>> params;
+    // // Then, handle wildcard subscriptions
+    // for (const auto& baseOid : subscriptionManager.getWildcardSubscriptions()) {
+    //     std::vector<std::unique_ptr<IParam>> params;
         
-        {
-            Device::LockGuard lg(dm_);
-            params = dm_.getTopLevelParams(rc);
-        }
+    //     {
+    //         Device::LockGuard lg(dm_);
+    //         params = dm_.getTopLevelParams(rc);
+    //     }
         
-        for (auto& param : params) {
-            std::string paramOid = param->getOid();
-            if (paramOid.find(baseOid) == 0) {
-                catena::DeviceComponent_ComponentParam response;
-                response.set_oid(paramOid); 
-                param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
-                responses_.push_back(response);
-            }
-        }
-    }
+    //     for (auto& param : params) {
+    //         std::string paramOid = param->getOid();
+    //         if (paramOid.find(baseOid) == 0) {
+    //             catena::DeviceComponent_ComponentParam response;
+    //             response.set_oid(paramOid); 
+    //             param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
+    //             responses_.push_back(response);
+    //         }
+    //     }
+    // }
 }
 
 void CatenaServiceImpl::UpdateSubscriptions::processWildcardSubscription(const std::string& baseOid, catena::common::Authorizer& authz) {
@@ -267,7 +267,7 @@ void CatenaServiceImpl::UpdateSubscriptions::processWildcardSubscription(const s
     // Only add to subscriptions if at least one parameter matches
     if (foundMatch) {
         // Add to wildcard subscriptions
-        SubscriptionManager::getInstance().addWildcardSubscription(baseOid);
+        //SubscriptionManager::getInstance().addWildcardSubscription(baseOid);
     } else {
         std::cout << "No parameters found matching wildcard pattern: " << baseOid << "*" << std::endl;
     }
@@ -285,7 +285,7 @@ void CatenaServiceImpl::UpdateSubscriptions::processExactSubscription(const std:
     
     if (param) {
         // Add to exact subscriptions
-        SubscriptionManager::getInstance().addExactSubscription(oid);
+        //SubscriptionManager::getInstance().addExactSubscription(oid);
     } else {
         std::cout << "Parameter not found for OID: " << oid << std::endl;
     }

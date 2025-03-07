@@ -67,17 +67,14 @@ bool SubscriptionManager::removeWildcardSubscription(const std::string& baseOid)
     return wildcardSubscriptions_.erase(baseOid) > 0;
 }
 
-// Get all subscribed OIDs, including wildcard subscriptions
-std::vector<std::string> SubscriptionManager::getAllSubscribedOids(catena::common::Device& dm) {
-    std::vector<std::string> oids;
-    
-    // Lock the subscription sets while accessing them
-    std::lock_guard<std::mutex> lock(subscriptionMutex_);
+// Update the combined list of all subscribed OIDs
+void SubscriptionManager::updateAllSubscribedOids(catena::common::Device& dm) {
+    allSubscribedOids_.clear();
     
     // Add exact subscriptions
-    for (const auto& oid : exactSubscriptions_) {
-        oids.push_back(oid);
-    }
+    allSubscribedOids_.insert(allSubscribedOids_.end(), 
+                             exactSubscriptions_.begin(), 
+                             exactSubscriptions_.end());
     
     // Add wildcard subscriptions (need to expand these to actual matching parameters)
     for (const auto& baseOid : wildcardSubscriptions_) {
@@ -92,12 +89,17 @@ std::vector<std::string> SubscriptionManager::getAllSubscribedOids(catena::commo
         for (auto& param : params) {
             std::string paramOid = param->getOid();
             if (paramOid.find(baseOid) == 0) {
-                oids.push_back(paramOid);
+                allSubscribedOids_.push_back(paramOid);
             }
         }
     }
-    
-    return oids;
+}
+
+// Get all subscribed OIDs, including wildcard subscriptions
+const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(catena::common::Device& dm) {
+    std::lock_guard<std::mutex> lock(subscriptionMutex_);
+    updateAllSubscribedOids(dm);
+    return allSubscribedOids_;
 }
 
 // Get all exact subscriptions

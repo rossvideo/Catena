@@ -405,7 +405,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool 
     return getComponentSerializer(authz, empty_vector, shallow);
 }
 
-Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string> subscribed_oids, bool shallow) const {
+Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow) const {
     std::cout << "getComponentSerializer received vector size: " << subscribed_oids.size() << std::endl;
     catena::DeviceComponent component{};
     
