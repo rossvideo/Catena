@@ -109,12 +109,19 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             std::unique_ptr<IParam> command = nullptr;
             // Check if authorization is enabled
-            if (service_->authorizationEnabled()) {
-                std::vector<std::string> clientScopes = service->getScopes(context_);
-                catena::common::Authorizer authz{clientScopes};
-                command = dm_.getCommand(req_.oid(), rc, authz);
-            } else {
-                command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+            try {
+                if (service_->authorizationEnabled()) {
+                    catena::common::Authorizer authz{getJWSToken()};
+                    command = dm_.getCommand(req_.oid(), rc, authz);
+                } else {
+                    command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                }
+            // Likely authentication error, end process.
+            } catch (catena::exception_with_status& err) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
+                stream_.Finish(errorStatus, this);
+                break;
             }
 
             // If the command is not found, return an error

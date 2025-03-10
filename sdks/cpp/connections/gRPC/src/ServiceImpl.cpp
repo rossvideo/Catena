@@ -70,6 +70,7 @@ grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadat
 
     // remove the 'Bearer ' text from the beginning
     try {
+        std::cout<<"Removed bearer text"<<std::endl;
         grpc::string_ref t = authz->second.substr(7);
         std::string token(t.begin(), t.end());
         auto decoded = jwt::decode(token);
@@ -104,6 +105,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std:
  * Creates the CallData objects for each gRPC command.
  */
 void CatenaServiceImpl::init() {
+    
     new GetPopulatedSlots(this, dm_, true);
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
@@ -159,48 +161,18 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-
-//Gets the scopes from the provided authorization context
-std::vector<std::string> CatenaServiceImpl::getScopes(ServerContext &context) {
-    if(!authorizationEnabled_){
-        // there won't be any scopes if authorization is disabled
-        return {};
+std::string CatenaServiceImpl::CallData::getJWSToken() const {
+    // Getting client metadata from context.
+    auto clientMeta = &context_.client_metadata();
+    if (clientMeta == nullptr) {
+        throw catena::exception_with_status("Client metadata not found", catena::StatusCode::UNAUTHENTICATED);
     }
-
-    //If authorization is enabled, get the authorization context
-    auto authContext = context.auth_context();
-
-    //If there is no authorization context, deny the request
-    if (authContext == nullptr) {
-        throw catena::exception_with_status("invalid authorization context", catena::StatusCode::PERMISSION_DENIED);
+    // Getting authorization data (JWS bearer token) from client metadata.
+    auto authData = clientMeta->find("authorization");
+    if (authData == clientMeta->end() || !authData->second.starts_with("Bearer ")) {
+        throw catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     }
-
-    // Get the claims from the authorization context
-    std::vector<grpc::string_ref> claimsStr = authContext->FindPropertyValues("claims");
-    // If there are no claims, deny the request
-    if (claimsStr.empty()) {
-        throw catena::exception_with_status("No claims found", catena::StatusCode::PERMISSION_DENIED);
-    }
-    // Parse string of claims into a picojson object
-    picojson::value claims;
-    std::string err = picojson::parse(claims, claimsStr[0].data());
-
-    // If there was an error parsing the claims, deny the request
-    if (!err.empty()) {
-        throw catena::exception_with_status("Error parsing claims", catena::StatusCode::PERMISSION_DENIED);
-    }
-
-    // Extract the scopes from the claims
-    std::vector<std::string> scopes;
-    const picojson::value::object &obj = claims.get<picojson::object>();
-    for (picojson::value::object::const_iterator it = obj.begin(); it != obj.end(); ++it) {
-        if (it->first == "scope"){
-            std::string scopeClaim = it->second.get<std::string>();
-            std::istringstream iss(scopeClaim);
-            while (std::getline(iss, scopeClaim, ' ')) {
-                scopes.push_back(scopeClaim);
-            }
-        }
-    }
-    return scopes;
+    // Getting token (after "bearer") and returning as an std::string.
+    auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
+    return std::string(tokenSubStr.begin(), tokenSubStr.end());
 }
