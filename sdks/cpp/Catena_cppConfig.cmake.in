@@ -18,6 +18,5 @@ set_and_check(CATENA_CODEGEN "@PACKAGE_CATENA_CODEGEN_INSTALL_DIR@")
 find_dependency(Protobuf)
 find_dependency(gRPC)
 find_dependency(jwt-cpp)
-find_dependency(CURL)
 
 check_required_components(Catena_cpp)

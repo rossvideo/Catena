@@ -37,7 +37,7 @@ Authorizer Authorizer::kAuthzDisabled;
 
 Authorizer::Authorizer(const std::string& JWSToken) {
     try {
-        // Deconding the token and extracting scopes.
+        // Decoding the token and extracting scopes.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
 
         auto claims = decodedToken.get_payload_json();
