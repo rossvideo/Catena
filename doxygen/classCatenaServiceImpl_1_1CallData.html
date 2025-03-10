@@ -92,8 +92,6 @@ $(document).ready(function(){initNavTree('classCatenaServiceImpl_1_1CallData.htm
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pro-methods">Protected Member Functions</a> &#124;
-<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classCatenaServiceImpl_1_1CallData-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">CatenaServiceImpl::CallData Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div></div>
 </div><!--header-->
@@ -108,11 +106,6 @@ Inheritance diagram for CatenaServiceImpl::CallData:</div>
 <div class="dyncontent">
 <div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1CallData__inherit__graph.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
-<div class="dynheader">
-Collaboration diagram for CatenaServiceImpl::CallData:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1CallData__coll__graph.svg" width="164" height="139"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -123,57 +116,10 @@ Public Member Functions</h2></td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~CallData</b> ()</td></tr>
 <tr class="memdesc:a5275c8b9cf83c4d42685c5f2f71bf7c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class. <br /></td></tr>
 <tr class="separator:a5275c8b9cf83c4d42685c5f2f71bf7c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
-Protected Member Functions</h2></td></tr>
-<tr class="memitem:a665177806c242a75b96e89722d509cfc" id="r_a665177806c242a75b96e89722d509cfc"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1CallData.html#a665177806c242a75b96e89722d509cfc">getJWSToken</a> () const</td></tr>
-<tr class="memdesc:a665177806c242a75b96e89722d509cfc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the server context's client metadata.  <br /></td></tr>
-<tr class="separator:a665177806c242a75b96e89722d509cfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
-Protected Attributes</h2></td></tr>
-<tr class="memitem:a752c4dc80b04fb3bd09ddb4f648e8997" id="r_a752c4dc80b04fb3bd09ddb4f648e8997"><td class="memItemLeft" align="right" valign="top"><a id="a752c4dc80b04fb3bd09ddb4f648e8997" name="a752c4dc80b04fb3bd09ddb4f648e8997"></a>
-ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b></td></tr>
-<tr class="memdesc:a752c4dc80b04fb3bd09ddb4f648e8997"><td class="mdescLeft">&#160;</td><td class="mdescRight">The context of the gRPC command. <br /></td></tr>
-<tr class="separator:a752c4dc80b04fb3bd09ddb4f648e8997"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Abstract base class for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> classes. Provides the proceed method. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a665177806c242a75b96e89722d509cfc" name="a665177806c242a75b96e89722d509cfc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a665177806c242a75b96e89722d509cfc">&#9670;&#160;</a></span>getJWSToken()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string CatenaServiceImpl::CallData::getJWSToken </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Extracts the JWS Bearer token from the server context's client metadata. </p>
-<dl class="section return"><dt>Returns</dt><dd>The JWS Bearer token as a string. </dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">Throws</td><td>a Catena::exception_with_status UNAUTHENTICATED if a JWS bearer token is not found. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="aba26342ca6c03540492ec0b1d1d8e848" name="aba26342ca6c03540492ec0b1d1d8e848"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aba26342ca6c03540492ec0b1d1d8e848">&#9670;&#160;</a></span>proceed()</h2>
 

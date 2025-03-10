@@ -8,5 +8,5 @@ var searchData=
   ['hasauthz_5',['hasAuthz',['../classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957',1,'catena::common::Authorizer']]],
   ['hasmore_6',['hasMore',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#ae6d00e431c45be6d66a51292deacd41d',1,'catena::common::Device::DeviceSerializer']]],
   ['haspeer_7',['hasPeer',['../classcatena_1_1PeerManager.html#a44846c511a729bd43bc9eba69dfade26',1,'catena::PeerManager']]],
-  ['homebrew_8',['Install homebrew',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'']]]
+  ['homebrew_8',['Install homebrew',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md33',1,'']]]
 ];
