@@ -41,9 +41,9 @@ using catena::common::IParam;
 namespace catena {
 namespace grpc {
 
-// Returns true if the OID ends with ".*", indicating it's a wildcard subscription
+// Returns true if the OID ends with "/*", indicating it's a wildcard subscription
 bool SubscriptionManager::isWildcard(const std::string& oid) {
-    return oid.length() >= 2 && oid.substr(oid.length() - 2) == ".*";
+    return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
 
 // Add a subscription (either unique or wildcard). Returns true if added, false if already exists
@@ -85,7 +85,9 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
         
         for (auto& param : params) {
             std::string paramOid = param->getOid();
-            if (paramOid.find(baseOid) == 0) {
+            // Remove the "/*" from the base OID for comparison
+            std::string basePath = baseOid.substr(0, baseOid.length() - 2);
+            if (paramOid.find(basePath) == 0) {
                 allSubscribedOids_.push_back(paramOid);
             }
         }
@@ -103,7 +105,7 @@ const std::set<std::string>& SubscriptionManager::getUniqueSubscriptions() {
     return uniqueSubscriptions_;
 }
 
-// Get the set of wildcard subscriptions
+// Get the set of wildcard subscriptions (OIDs ending with "/*")
 const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
     return wildcardSubscriptions_;
 }

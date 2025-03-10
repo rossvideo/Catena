@@ -59,14 +59,14 @@ public:
 
     /**
      * @brief Add an OID subscription
-     * @param oid The OID to subscribe to (can be either a unique OID or a wildcard)
+     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @return true if the subscription was added, false if it already existed
      */
     bool addSubscription(const std::string& oid);
 
     /**
      * @brief Remove an OID subscription
-     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard)
+     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*")
      * @return true if the subscription was removed, false if it didn't exist
      */
     bool removeSubscription(const std::string& oid);
@@ -86,7 +86,7 @@ public:
 
     /**
      * @brief Get all wildcard subscriptions
-     * @return Reference to the set of wildcard subscriptions
+     * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
      */
     const std::set<std::string>& getWildcardSubscriptions();
 
@@ -104,7 +104,7 @@ private:
     /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
-     * @return true if the OID ends with ".*"
+     * @return true if the OID ends with "/*"
      */
     static bool isWildcard(const std::string& oid);
 };
