@@ -52,18 +52,18 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief Constructor for the CallData class of the Connect gRPC.
          * Calls proceed() once initialized.
          *
-         * @param service Pointer to the parent CatenaServiceImpl.
-         * @param dms A map of slots and their connected devices.
-         * @param ok Flag to check if the command was successfully executed.
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to connect to.
+         * @param ok - Flag to check if the command was successfully executed.
          */ 
-        Connect(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
+        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
          * @brief Manages the steps of the Connect gRPC command
          * through the state variable status. Returns the value of the
          * parameter specified by the user.
          *
-         * @param service Pointer to the parent CatenaServiceImpl.
-         * @param ok Flag to check if the command was successfully executed.
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param ok - Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
@@ -89,9 +89,9 @@ class CatenaServiceImpl::Connect : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief A map of slots and their connected devices.
+         * @brief The device to connect to.
          */
-        DeviceMap &dms_;
+        Device &dm_;
         /**
          * @brief The mutex to for locking the object while writing
          */
@@ -117,23 +117,23 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief Unused???
          */
         unsigned int pushUpdatesId_;
-        unsigned int pushUpdatesSlot_;
         /**
          * @brief Id of operation waiting for valueSetByClient to be emitted.
          * Used when ending the connection.
          */
-        std::vector<unsigned int> valueSetByClientIds_;
+        unsigned int valueSetByClientId_;
         /**
          * @brief Id of operation waiting for valueSetByServer to be emitted.
          * Used when ending the connection.
          */
-        std::vector<unsigned int> valueSetByServerIds_;
-        std::unordered_map<Slot, std::vector<unsigned int>> signalHandlerIds_;
+        unsigned int valueSetByServerId_;
         /**
+
          * @brief Id of operation waiting for languageAddedPushUpdate to be
          * emitted. Used when ending the connection.
          */
-        std::vector<unsigned int> signalHandlers_;
+        unsigned int languageAddedId_;
+  
         /**
          * @brief Signal emitted in the case of an error which requires the all
          * open connections to be shut down.

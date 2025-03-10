@@ -93,18 +93,14 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
             // Used to serve other clients while processing.
             create(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
-            try {
-                /**
-                 * Creating authorization object depending on client scopes.
-                 * Shared ptr to maintain lifetime of object. Raw ptr ensures
-                 * kAUthzDisabled is not deleted when out of scope.
-                 */
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
-                std::vector<std::string> clientScopes;
-                if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
-                    authz = sharedAuthz.get();
+            { // rc and reqMap scope.
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unordered_map<Slot, catena::MultiSetValuePayload> reqMap;
+            // Checking all requests to ensure valid slots and adding them to reqMap.
+            for (auto req : reqs_.values()) {
+                if (dms_.find(req.slot()) == dms_.end()) {
+                    rc = catena::exception_with_status("No device registered with slot " + std::to_string(req.slot()), catena::StatusCode::INVALID_ARGUMENT);
+                    break;
                 } else {
                     *reqMap[req.slot()].add_values() = req;
                 }
@@ -120,33 +116,34 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                     catena::common::Authorizer* authz;
                     std::vector<std::string> clientScopes;
                     if (service->authorizationEnabled()) {
-                        clientScopes = service->getScopes(context_);
-                        sharedAuthz = std::make_shared<catena::common::Authorizer>(clientScopes);
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
                         authz = sharedAuthz.get();
                     } else {
                         authz = &catena::common::Authorizer::kAuthzDisabled;
                     }
                     for (auto [slot, reqs] : reqMap) {
-                        for (auto dm : dms_[slot]) {
-                            // Locking device and setting value(s).
-                            Device::LockGuard lg(*dm);
-                            rc = dm->multiSetValue(reqs, *authz);
-                            if (rc.status != catena::StatusCode::OK) { break; }
-                        }
+                        // Locking device and setting value(s).
+                        Device::LockGuard lg(*dms_[slot]);
+                        rc = dms_[slot]->multiSetValue(reqs, *authz);
                         if (rc.status != catena::StatusCode::OK) { break; }
                     }
+                // Likely authentication error, end process.
+                } catch (catena::exception_with_status& err) {
+                    status_ = CallStatus::kFinish;
+                    grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
+                    responder_.FinishWithError(errorStatus, this);
                 } catch (...) { // Error, end process.
                     errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                     status_ = CallStatus::kFinish;
                     responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
-            // Likely authentication error, end process.
-            } catch (catena::exception_with_status& err) {
+            }
+            // Sending final status.
+            if (rc.status == catena::StatusCode::OK) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                responder_.FinishWithError(errorStatus, this);
-            } catch (...) { // Error, end process.
-                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
+                responder_.Finish(catena::Empty{}, Status::OK, this);
+            } else {
+                errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
                 status_ = CallStatus::kFinish;
                 responder_.Finish(::catena::Empty{}, errorStatus_, this);
             }

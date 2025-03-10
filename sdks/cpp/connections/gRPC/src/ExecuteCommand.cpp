@@ -52,8 +52,8 @@ int CatenaServiceImpl::ExecuteCommand::objectCounter_ = 0;
  * Constructor which initializes and registers the current ExecuteCommand
  * object, then starts the process
  */
-CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, stream_(&context_),
+CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, stream_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -91,7 +91,7 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new ExecuteCommand(service_, dm_, ok);
+            new ExecuteCommand(service_, dms_, ok);
             /** 
              * ExecuteCommand RPC always begins with reading initial request
              * from client
@@ -106,15 +106,21 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
          */
         case CallStatus::kRead:
         {
+            // Making sure the slot is registered.
+            if (dms_.find(req_.slot()) == dms_.end()) {
+                status_ = CallStatus::kFinish;
+                stream_.Finish(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
+                break;
+            }
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             std::unique_ptr<IParam> command = nullptr;
             // Check if authorization is enabled
             try {
                 if (service_->authorizationEnabled()) {
                     catena::common::Authorizer authz{getJWSToken()};
-                    command = dm_.getCommand(req_.oid(), rc, authz);
+                    command = dms_[req_.slot()]->getCommand(req_.oid(), rc, authz);
                 } else {
-                    command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                    command = dms_[req_.slot()]->getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
                 }
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {

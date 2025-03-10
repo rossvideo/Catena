@@ -80,7 +80,7 @@ public:
 class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
   public:
     using Slot = uint32_t;
-    using DeviceMap = std::unordered_map<Slot, std::vector<Device*>>;
+    using DeviceMap = std::unordered_map<Slot, Device*>;
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.
@@ -157,10 +157,6 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      * @brief The completion queue for the server for event processing
      */
     ServerCompletionQueue* cq_; 
-    /**
-     * @brief The device to implement Catena services to
-     */
-    Device &dm_;
     /**
      * @brief The path to the external object
      */

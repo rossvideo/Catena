@@ -51,10 +51,10 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          * Calls proceed() once initialized.
          *
          * @param service Pointer to the parent CatenaServiceImpl.
-         * @param dms The device to get the value from.
+         * @param dms A map of slots and their connected devices.
          * @param ok Flag to check if the command was successfully executed.
          */ 
-        AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok);
+        AddLanguage(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Manages the steps of the AddLanguage gRPC commands through
          * the state variable status.
@@ -85,9 +85,9 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief The device to add the LanguagePack to.
+         * @brief A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
         /**
          * @brief The object's unique id.
          */

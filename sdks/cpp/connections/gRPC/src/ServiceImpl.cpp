@@ -99,12 +99,16 @@ std::string CatenaServiceImpl::timeNow() {
 
 
 CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath, bool authz)
-        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath}, authorizationEnabled_{authz} {
+        : catena::CatenaService::AsyncService{}, cq_{cq}, EOPath_{EOPath}, authorizationEnabled_{authz} {
             registerDevice(dm);
         }
 
 void CatenaServiceImpl::registerDevice(Device &dm) {
-    dms_[dm.slot()].push_back(&dm);
+    if (dms_.find(dm.slot()) == dms_.end()) {
+        dms_[dm.slot()] = &dm;
+    } else {
+        throw catena::exception_with_status("Device already registered with slot " + std::to_string(dm.slot()), catena::StatusCode::INVALID_ARGUMENT);
+    }
 }
 
 /**
@@ -115,15 +119,15 @@ void CatenaServiceImpl::init() {
     new GetValue(this, dms_, true);
     new SetValue(this, dms_, true);
     new MultiSetValue(this, dms_, true);
-    new Connect(this, dms_, true);
-    new DeviceRequest(this, dm_, true);
-    new ExternalObjectRequest(this, dm_, true);
-    new BasicParamInfoRequest(this, dm_, true);
-    new GetParam(this, dm_, true);
-    new ExecuteCommand(this, dm_, true);
-    new AddLanguage(this, dm_, true);
-    new ListLanguages(this, dm_, true);
-    new LanguagePackRequest(this, dm_, true);
+    new Connect(this, *dms_.begin()->second, true); // TODO later...
+    new DeviceRequest(this, dms_, true);
+    new ExternalObjectRequest(this, dms_, true);
+    new BasicParamInfoRequest(this, dms_, true);
+    new GetParam(this, dms_, true);
+    new ExecuteCommand(this, dms_, true);
+    new AddLanguage(this, dms_, true);
+    new ListLanguages(this, dms_, true);
+    new LanguagePackRequest(this, dms_, true);
 }
 
 // Initializing the shutdown signal for all open connections.

@@ -55,8 +55,8 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
-    : service_{service}, dms_{dms}, writer_(&context_),
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
+    : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -96,7 +96,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new Connect(service_, dms_, ok);
+            new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){
@@ -128,31 +128,25 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                         if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }
-                        // Returning if authorization is enabled and the client does not have monitor scope.
-                        if (service_->authorizationEnabled()) {
-                            std::vector<std::string> clientScopes = service_->getScopes(context_);
-                            catena::common::Authorizer authz{clientScopes};
-                            if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
-                                return;
-                            }
-                        }
-                        // Updating res_'s device_component and pushing update.
-                        auto pack = this->res_.mutable_device_component()->mutable_language_pack();
-                        pack->set_language(l.language());
-                        pack->mutable_language_pack()->CopyFrom(l.language_pack());
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                    } catch(catena::exception_with_status& why){
-                        // if an error is thrown, no update is pushed to the client
                     }
-                });
-                signalHandlerIds_[slot].push_back(languageAddedId);
-                // send client a empty update with slot of the device
+                    // Updating res_'s device_component and pushing update.
+                    auto pack = this->res_.mutable_device_component()->mutable_language_pack();
+                    pack->set_language(l.language());
+                    pack->mutable_language_pack()->CopyFrom(l.language_pack());
+                    this->hasUpdate_ = true;
+                    this->cv_.notify_one();
+                } catch(catena::exception_with_status& why){
+                    // if an error is thrown, no update is pushed to the client
+                }
+            });
+
+            // send client a empty update with slot of the device
+            {
+                status_ = CallStatus::kWrite;
                 catena::PushUpdates populatedSlots;
-                populatedSlots.set_slot(slot);
+                populatedSlots.set_slot(dm_.slot());
                 writer_.Write(populatedSlots, this);
             }
-            status_ = CallStatus::kWrite;
             break;
         /**
          * kWrite: Waits until an update to either set res to device's slot or
@@ -171,10 +165,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
-                for (auto& [slot, dms] : dms_) {
-                    res_.set_slot(slot);
-                    writer_.Write(res_, this);
-                }
+                res_.set_slot(dm_.slot());
+                writer_.Write(res_, this);
             }
             lock.unlock();
             break;
@@ -184,11 +176,9 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
             shutdownSignal_.disconnect(shutdownSignalId_);
-            for (auto [slot, signalHandlerIds] : signalHandlerIds_) {
-                dms_[slot].front()->valueSetByClient.disconnect(signalHandlerIds[0]);
-                dms_[slot].front()->valueSetByServer.disconnect(signalHandlerIds[1]);
-                dms_[slot].front()->languageAddedPushUpdate.disconnect(signalHandlerIds[2]);
-            }
+            dm_.valueSetByClient.disconnect(valueSetByClientId_);
+            dm_.valueSetByServer.disconnect(valueSetByServerId_);
+            dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
             service->deregisterItem(this);
             break;
         // default: Error, end process.

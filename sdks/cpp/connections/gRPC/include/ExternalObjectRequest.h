@@ -52,11 +52,11 @@ class CatenaServiceImpl::ExternalObjectRequest : public CallData {
         /**
          * @brief Constructor for ExternalObjectRequest class
          *
-         * @param service the service to which the request is made
-         * @param dm the device for which the request is made
-         * @param ok flag to check if request is successful 
+         * @param service The service to which the request is made.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if request is successful.
          */
-        ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        ExternalObjectRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Destrutor for ExternalObjectRequest, although it isn't used.
          */
@@ -88,9 +88,9 @@ class CatenaServiceImpl::ExternalObjectRequest : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief Reference to the device to which the request is made
+         * @brief (UNUSED?) A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
         /**
          * @brief Unique identifier for command object
          */

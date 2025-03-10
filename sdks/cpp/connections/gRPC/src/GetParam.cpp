@@ -52,8 +52,8 @@ int CatenaServiceImpl::GetParam::objectCounter_ = 0;
  * then starts the process.
  */
 
-CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -100,8 +100,14 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
-            new GetParam(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);  
+            new GetParam(service_, dms_, ok);
+            context_.AsyncNotifyWhenDone(this);
+            // Making sure the slot is registered.
+            if (dms_.find(req_.slot()) == dms_.end()) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
+                break;
+            }
             status_ = CallStatus::kWrite;
             //break; // No break so it is allowed to fall through to the write case
 
@@ -121,7 +127,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
                 
-                param = dm_.getParam(req_.oid(), rc, *authz);
+                param = dms_[req_.slot()]->getParam(req_.oid(), rc, *authz);
                 
                 if (rc.status == catena::StatusCode::OK && param) {
                     catena::DeviceComponent_ComponentParam response;

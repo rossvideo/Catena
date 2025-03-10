@@ -34,8 +34,8 @@
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::ListLanguages::objectCounter_ = 0;
 
-CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
     proceed(service, ok);
@@ -63,12 +63,18 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new ListLanguages(service_, dm_, ok);
+            new ListLanguages(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
+            // Making sure the slot is registered.
+            if (dms_.find(req_.slot()) == dms_.end()) {
+                status_ = CallStatus::kFinish;
+                responder_.FinishWithError(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
+                break;
+            }
             try { // Getting and returning languages.
-                Device::LockGuard lg(dm_);
+                Device::LockGuard lg(*dms_[req_.slot()]);
                 catena::LanguageList ans;
-                dm_.toProto(ans);
+                dms_[req_.slot()]->toProto(ans);
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
             } catch (...) { // Error, end process.

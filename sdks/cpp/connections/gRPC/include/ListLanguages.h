@@ -50,11 +50,11 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          * @brief Constructor for the CallData class of the ListLanguages gRPC.
          * Calls proceed() once initialized.
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dms A map of slots and their connected devices.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
-        ListLanguages(CatenaServiceImpl *service, Device &dm, bool ok);
+        ListLanguages(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Manages the steps of the ListLanguages gRPC command through
          * the state variable status.
@@ -81,9 +81,9 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief The device containing the languages to list.
+         * @brief A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
         /**
          * @brief The object's unique id.
          */

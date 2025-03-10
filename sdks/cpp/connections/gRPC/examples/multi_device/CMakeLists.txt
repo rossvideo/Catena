@@ -30,12 +30,12 @@ add_executable(${TARGET})
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
 generate_catena_device(
-    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.a.json
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.video_player_a.json
     TARGET ${TARGET}
 )
 
 generate_catena_device(
-    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.b.json
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.video_player_b.json
     TARGET ${TARGET}
 )
 

@@ -37,6 +37,7 @@
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
  * @date 2024-06-08
+ * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -52,10 +53,10 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
          * @brief Constructor for ExecuteCommand class
          *
          * @param service the service to which the command wll be executed
-         * @param dm the device to execute the command to
+         * @param dms A map of slots and their connected devices.
          * @param ok flag to check if command was successfully executed 
          */
-        ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok);
+        ExecuteCommand(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
         /**
          * @brief Manages gRPC command execution through a state machine
          *
@@ -87,9 +88,9 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief Reference to the device to execute the command to
+         * @brief A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
         /**
          * @brief Unique identifier for command object
          */

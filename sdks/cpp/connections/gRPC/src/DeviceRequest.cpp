@@ -52,8 +52,8 @@ int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -88,8 +88,18 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new DeviceRequest(service_, dm_, ok);  // to serve other clients
+            new DeviceRequest(service_, dms_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
+
+            // Making sure the slot is registered.
+            if (dms_.find(req_.slot()) == dms_.end()) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
+                break;
+            } else {
+                dm_ = dms_[req_.slot()];
+            }
+
             // shutdownSignalId_ = shutdownSignal.connect([this](){
             //     context_.TryCancel();
             //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
@@ -99,9 +109,9 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
                 if (service->authorizationEnabled()) {                    
                     authz_ = std::make_unique<catena::common::Authorizer>(getJWSToken());
-                    serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
+                    serializer_ = dm_->getComponentSerializer(*authz_, shallowCopy);
                 } else {
-                    serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
+                    serializer_ = dm_->getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
                 }
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
@@ -131,7 +141,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 try {     
                     catena::DeviceComponent component{};
                     {
-                        Device::LockGuard lg(dm_);
+                        Device::LockGuard lg(*dm_);
                         component = serializer_->getNext();
                     }
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;

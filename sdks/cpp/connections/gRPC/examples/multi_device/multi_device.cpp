@@ -37,8 +37,8 @@
  */
 
 // device model
-#include "device.a.json.h" 
-#include "device.b.json.h" 
+#include "device.video_player_a.json.h" 
+#include "device.video_player_b.json.h" 
 
 //common
 #include <utils.h>
@@ -108,9 +108,8 @@ void RunRPCServer(std::string addr)
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
-        CatenaServiceImpl service(cq.get(), a::dm, EOPath, authz);
-        service.registerDevice(a::dm);
-        service.registerDevice(b::dm);
+        CatenaServiceImpl service(cq.get(), video_player_a::dm, EOPath, authz);
+        service.registerDevice(video_player_b::dm);
         builder.RegisterService(&service);
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
@@ -138,7 +137,7 @@ int main(int argc, char* argv[])
     absl::ParseCommandLine(argc, argv);
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
-  
+
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     return 0;

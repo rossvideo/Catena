@@ -49,8 +49,8 @@ using catena::common::Path;
 
 int CatenaServiceImpl::BasicParamInfoRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -81,9 +81,16 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
         case CallStatus::kProcess:
 
-            new BasicParamInfoRequest(service_, dm_, ok);
+            new BasicParamInfoRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
-            
+            // Making sure the slot is registered.
+            if (dms_.find(req_.slot()) == dms_.end()) {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
+                break;
+            } else {
+                dm_ = dms_[req_.slot()];
+            }
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -100,12 +107,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
                     {
-                    Device::LockGuard lg(dm_);
-                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                    Device::LockGuard lg(*dm_);
+                    top_level_params = dm_->getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        Device::LockGuard lg(dm_);
+                        Device::LockGuard lg(*dm_);
                         
                         responses_.clear();  
                         // Process each top-level parameter
@@ -136,8 +143,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 // Mode 2: Get a specific parameter and its children
                 } else if (!req_.oid_prefix().empty()) { 
                     {
-                    Device::LockGuard lg(dm_);
-                    param = dm_.getParam(req_.oid_prefix(), rc, *authz);
+                    Device::LockGuard lg(*dm_);
+                    param = dm_->getParam(req_.oid_prefix(), rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && param) {
@@ -261,13 +268,13 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             
             rc = catena::exception_with_status{"", catena::StatusCode::OK};
             Path child_path{parent_path, child_name};
-            auto sub_param = dm_.getParam(child_path.toString(), rc);
+            auto sub_param = dm_->getParam(child_path.toString(), rc);
             
             if (rc.status == catena::StatusCode::OK && sub_param) {
                 // Add all parameters (array or not) when found as children
                 responses_.emplace_back();
                 {
-                Device::LockGuard lg(dm_);
+                Device::LockGuard lg(*dm_);
                 sub_param->toProto(responses_.back(), authz);
                 }
 
@@ -294,7 +301,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
         // Process each array element's children
         for (uint32_t i = 0; i < array_length; i++) {
             Path indexed_path{current_path, i};
-            auto indexed_param = dm_.getParam(indexed_path.toString(), rc);
+            auto indexed_param = dm_->getParam(indexed_path.toString(), rc);
             if (!indexed_param) continue;
 
             // Process children of this array element

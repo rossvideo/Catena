@@ -52,8 +52,8 @@ int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current
  * ExternalObjectRequest object, then starts the process
  */
-CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -92,7 +92,7 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new ExternalObjectRequest(service_, dm_, ok);  // to serve other clients
+            new ExternalObjectRequest(service_, dms_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             status_ = CallStatus::kWrite;
             // fall thru to start writing

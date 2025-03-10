@@ -34,8 +34,8 @@
 // Initializes the object counter for LanguagePackRequest to 0.
 int CatenaServiceImpl::LanguagePackRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::LanguagePackRequest::LanguagePackRequest(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+CatenaServiceImpl::LanguagePackRequest::LanguagePackRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok)
+    : service_{service}, dms_{dms}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
     proceed(service, ok);
@@ -63,13 +63,19 @@ void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service,
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new LanguagePackRequest(service_, dm_, ok);
+            new LanguagePackRequest(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
+            // Making sure the slot is registered.
+            if (dms_.find(req_.slot()) == dms_.end()) {
+                status_ = CallStatus::kFinish;
+                responder_.FinishWithError(Status(grpc::StatusCode::INVALID_ARGUMENT, "No device registered with slot " + std::to_string(req_.slot())), this);
+                break;
+            }
             try { // Getting and returning the requested language.
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                Device::LockGuard lg(dm_);
+                Device::LockGuard lg(*dms_[req_.slot()]);
                 catena::DeviceComponent_ComponentLanguagePack ans;
-                rc = dm_.getLanguagePack(req_.language(), ans);
+                rc = dms_[req_.slot()]->getLanguagePack(req_.language(), ans);
                 status_ = CallStatus::kFinish;
                 if (rc.status == catena::StatusCode::OK) {
                     responder_.Finish(ans, Status::OK, this);

@@ -1,0 +1,134 @@
+{
+  "slot": 2,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+  "default_scope": "st2138:mon",
+  "subscriptions": true,
+
+  "language_packs": {
+    "packs": {
+      "es": {
+        "name": "Spanish",
+        "words": {
+          "greeting": "Hola",
+          "parting": "Adiós"
+        }
+      },
+      "en": {
+        "name": "English",
+        "words": {
+          "greeting": "Hello",
+          "parting": "Goodbye"
+        }
+      },
+      "fr": {
+        "name": "French",
+        "words": {
+          "greeting": "Bonjour",
+          "parting": "Adieu"
+        }
+      }
+    }
+  },
+
+  "params": {
+    "state": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "State b" } },
+      "read_only": true,
+      "value": { "string_value": "stopped" },
+      "constraint": {
+        "type": "STRING_CHOICE",
+        "string_choice": {
+          "choices": ["stopped", "playing", "paused", "rewinding", "fast_forwarding"],
+          "strict": true
+        }
+      }
+    },
+    "video_file": {
+      "type": "STRING",
+      "name": { "display_strings": { "en": "Video file b" } },
+      "value": { "string_value": "eo://video/2" },
+      "constraint": {
+        "type": "STRING_CHOICE",
+        "string_choice": {
+          "choices": ["eo://video/1", "eo://video/2", "eo://video/3"],
+          "strict": true
+        }
+      }
+    },
+    "speaker": {
+      "type": "STRUCT",
+      "params": {
+        "volume": {
+          "type": "FLOAT32",
+          "name": { "display_strings": { "en": "Volume b" } },
+          "value": {"float32_value": 0.5}
+        },
+        "state": {
+          "type": "STRING",
+          "name": { "display_strings": { "en": "State b" } },
+          "value": { "string_value": "on" },
+          "constraint": {
+            "type": "STRING_CHOICE",
+            "string_choice": {
+              "choices": ["on", "off"],
+              "strict": true
+            }
+          }
+        }
+      }
+    },
+    "speakers": {
+      "name": {"display_strings": {"en": "Speakers b"}},
+      "type": "STRUCT_ARRAY",
+      "template_oid": "/speaker",
+      "value": {
+        "struct_array_values": {
+          "struct_values": [
+            {
+              "struct_value" : {
+                "name": {"display_strings": {"en": "Speaker 1b"}},
+                "fields": {
+                  "volume": {"value": {"float32_value": 0.5}},
+                  "state": {"value": {"string_value": "on"}}
+                }
+              }
+            },
+            {
+              "struct_value" : {
+                "name": {"display_strings": {"en": "Speaker 2b"}},
+                "fields": {
+                  "volume": {"value": {"float32_value": 1}},
+                  "state": {"value": {"string_value": "off"}}
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  "commands": {
+    "play": {
+      "type":"EMPTY"
+    },
+    "pause": {
+      "type":"EMPTY"
+    },
+    "stop": {
+      "type":"EMPTY"
+    },
+    "rewind": {
+      "type": "EMPTY"
+    },
+    "fast_forward": {
+      "type": "EMPTY"
+    },
+    "load": {
+      "type":"STRING"
+    }
+  }
+}

@@ -52,10 +52,10 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @brief Constructor for ExternalObjectRequest class
          *
          * @param service the service to which the request is made
-         * @param dm the device for which the request is made
+         * @param dms A map of slots and their connected devices.
          * @param ok flag to check if request is successful 
          */
-        DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        DeviceRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
          /**
          * @brief Manages gRPC request through a state machine
          *
@@ -96,9 +96,13 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          */
         CallStatus status_;
         /**
-         * @brief Reference to the device to which the request is made
+         * @brief A map of slots and their connected devices.
          */
-        Device &dm_;
+        DeviceMap &dms_;
+        /**
+         * @brief Pointer to the device at req_.slot().
+         */
+        Device *dm_;
         /**
          * @brief Unique identifier for device request object
          */

@@ -52,10 +52,10 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * gRPC. Calls proceed() once initialized.
          *
          * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
+         * @param dms A map of slots and their connected devices.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        BasicParamInfoRequest(CatenaServiceImpl *service, DeviceMap &dms, bool ok);
 
         // /**
         //  * @brief Destructor for the BasicParamInfoRequest class.
@@ -122,9 +122,13 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         CallStatus status_;
 
         /**
+         * @brief A map of slots and their connected devices.
+         */
+        DeviceMap &dms_;
+        /**
          * @brief The device to get the value from.
          */
-        Device &dm_;
+        Device *dm_;
         
         /**
          * @brief The object's unique id.
@@ -135,7 +139,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @brief The object's unique id counter.
          */
         static int objectCounter_;  
-
 
         /**
          * @brief The vector of BasicParamInfoResponse objects.
