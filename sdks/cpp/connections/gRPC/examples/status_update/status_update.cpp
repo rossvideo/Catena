@@ -181,7 +181,6 @@ void RunRPCServer(std::string addr)
         //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
         //     throw std::invalid_argument(why.str());
         // }
-
         grpc::ServerBuilder builder;
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
@@ -196,6 +195,7 @@ void RunRPCServer(std::string addr)
         dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));
 
         builder.RegisterService(&service);
+
 
         std::unique_ptr<Server> server(builder.BuildAndStart());
         std::cout << "GRPC on " << addr << " secure mode: " << absl::GetFlag(FLAGS_secure_comms) << '\n';

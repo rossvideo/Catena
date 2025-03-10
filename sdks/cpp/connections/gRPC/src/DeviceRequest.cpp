@@ -97,11 +97,10 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
             // });
             {
+            try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-                if (service->authorizationEnabled()) {
-                    clientScopes_ = service->getScopes(context_);  
-                    authz_ = std::make_unique<catena::common::Authorizer>(clientScopes_); 
-                    dm_.detail_level(req_.detail_level());
+                if (service->authorizationEnabled()) {                    
+                    authz_ = std::make_unique<catena::common::Authorizer>(getJWSToken());
                     serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
                     /** NOTE: Subscriptions are not currently enabled with authorization */
                 } else {
@@ -130,6 +129,13 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                         serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
                     }
                 }
+            // Likely authentication error, end process.
+            } catch (catena::exception_with_status& err) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
+                writer_.Finish(errorStatus, this);
+                break;
+            }
             }
             status_ = CallStatus::kWrite;
             // fall thru to start writing

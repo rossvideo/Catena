@@ -125,8 +125,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     }
                     // Returning if authorization is enabled and the client does not have monitor scope.
                     if (service_->authorizationEnabled()) {
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }
@@ -244,19 +243,26 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
             return;
         }
 
+        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+        catena::common::Authorizer* authz;
+        if (service_->authorizationEnabled()) {
+            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+            authz = sharedAuthz.get();
+        } else {
+            authz = &catena::common::Authorizer::kAuthzDisabled;
+        }
+
+        if (service_->authorizationEnabled() && !authz->readAuthz(*p)) {
+            return;
+        }
+
         this->res_.mutable_value()->set_oid(oid);
         this->res_.mutable_value()->set_element_index(idx);
         
         catena::Value* value = this->res_.mutable_value()->mutable_value();
+
         catena::exception_with_status rc{"", catena::StatusCode::OK};
-
-        if (service_->authorizationEnabled()) {
-            catena::common::Authorizer authz{service_->getScopes(context_)};
-            rc = p->toProto(*value, authz);
-        } else {
-            rc = p->toProto(*value, catena::common::Authorizer::kAuthzDisabled);
-        }
-
+        rc = p->toProto(*value, *authz);
         //If the param conversion was successful, send the update
         if (rc.status == catena::StatusCode::OK) {
             this->hasUpdate_ = true;

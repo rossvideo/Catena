@@ -112,31 +112,20 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                catena::common::Authorizer authz{std::vector<std::string>{}};
-                /**
-                 * If authorization is enabled, check the client's scopes.
-                 */
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
                 if (service->authorizationEnabled()) {
-                    std::vector<std::string> scopes = service->getScopes(context_);
-                    authz = catena::common::Authorizer{scopes};  
-                    {
-                        Device::LockGuard lg(dm_);
-                        param = dm_.getParam(req_.oid(), rc, authz);
-                    }
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    authz = sharedAuthz.get();
                 } else {
-                    {
-                        Device::LockGuard lg(dm_);
-                        param = dm_.getParam(req_.oid(), rc); //Run without authorization
-                    }
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
+                
+                param = dm_.getParam(req_.oid(), rc, *authz);
                 
                 if (rc.status == catena::StatusCode::OK && param) {
                     catena::DeviceComponent_ComponentParam response;
-                    if (service->authorizationEnabled()) {
-                        param->toProto(*response.mutable_param(), authz);
-                    } else {
-                        param->toProto(*response.mutable_param(), catena::common::Authorizer::kAuthzDisabled);
-                    }
+                    param->toProto(*response.mutable_param(), *authz);
                     writer_.Write(response, this);
                     status_ = CallStatus::kFinish;
                     writer_.Finish(Status::OK, this);
@@ -146,7 +135,11 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                     writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                     break;
                 }
-
+            // Likely authentication error, end process.
+            } catch (catena::exception_with_status& err) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
+                writer_.Finish(errorStatus, this);
             } catch (...) {
                 status_ = CallStatus::kFinish;
                 writer_.Finish(Status::CANCELLED, this);
