@@ -100,7 +100,12 @@ std::string CatenaServiceImpl::timeNow() {
 
 
 CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath, bool authz)
-        : catena::CatenaService::AsyncService{}, cq_{cq}, dm_{dm}, EOPath_{EOPath}, authorizationEnabled_{authz} {}
+        : catena::CatenaService::AsyncService{}, 
+          cq_{cq}, 
+          dm_{dm}, 
+          EOPath_{EOPath}, 
+          authorizationEnabled_{authz},
+          subscriptionManager_{} {}
 
 /**
  * Creates the CallData objects for each gRPC command.
@@ -120,7 +125,7 @@ void CatenaServiceImpl::init() {
     new AddLanguage(this, dm_, true);
     new ListLanguages(this, dm_, true);
     new LanguagePackRequest(this, dm_, true);
-    new UpdateSubscriptions(this, dm_, true);
+    new UpdateSubscriptions(this, dm_, subscriptionManager_, true);
 }
 
 // Initializing the shutdown signal for all open connections.

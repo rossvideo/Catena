@@ -53,8 +53,12 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
         /**
          * @brief Constructor for the CallData class of the UpdateSubscriptions RPC
          * gRPC. Calls proceed() once initialized.
+         * @param service The CatenaServiceImpl instance
+         * @param dm The device model
+         * @param subscriptionManager The subscription manager to use
+         * @param ok Flag indicating if initialization was successful
          */
-        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, bool ok);
+        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::grpc::SubscriptionManager& subscriptionManager, bool ok);
 
         /**
          * @brief Manages the steps of the UpdateSubscriptions gRPC command
@@ -65,18 +69,12 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
 
     private:
         /**
-         * @brief Helper method to process a wildcard subscription
-         * @param baseOid The base OID without the wildcard character
+         * @brief Helper method to process a subscription
+         * @param baseOid The base OID 
          * @param authz The authorizer to use for access control
          */
-        void processWildcardSubscription(const std::string& baseOid, catena::common::Authorizer& authz);
+        void processSubscription(const std::string& baseOid, catena::common::Authorizer& authz);
 
-        /**
-         * @brief Helper method to process an exact OID subscription
-         * @param oid The exact OID to subscribe to
-         * @param authz The authorizer to use for access control
-         */
-        void processExactSubscription(const std::string& oid, catena::common::Authorizer& authz);
 
         /**
          * @brief Helper method to send all currently subscribed parameters
@@ -154,4 +152,9 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @brief The writer lock.
          */
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
+        /**
+         * @brief Reference to the subscription manager
+         */
+        catena::grpc::SubscriptionManager& subscriptionManager_;
 };

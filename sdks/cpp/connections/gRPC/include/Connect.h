@@ -146,9 +146,9 @@ class CatenaServiceImpl::Connect : public CallData {
         unsigned int shutdownSignalId_;
 
         /**
-         * @brief Subscription manager instance for this connection
+         * @brief Reference to the subscription manager
          */
-        catena::grpc::SubscriptionManager subscriptionManager_;
+        catena::grpc::SubscriptionManager& subscriptionManager_;
 
         /**
          * @brief Updates the response message with parameter values and handles 
