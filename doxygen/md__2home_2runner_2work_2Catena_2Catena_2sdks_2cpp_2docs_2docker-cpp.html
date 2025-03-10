@@ -99,29 +99,45 @@ Terminal</h1>
 <h2><a class="anchor" id="autotoc_md11"></a>
 Requirements</h2>
 <ul>
-<li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> and add it to your system path</li>
-<li>If on Linux, make sure to <a href="https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user">enable docker as non-root user</a></li>
+<li>Install <a href="https://docs.docker.com/get-docker/">Docker</a> and add it to your system path.</li>
+<li>If on Linux, make sure to <a href="https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user">enable docker as non-root user</a>.</li>
 </ul>
-<p>In the Catena/sdks/cpp/docker/ directory run <code>./dev-start.sh &lt;absolute/path/to/Catena&gt;</code></p>
-<p><em><b>Note</b></em>: if you get the error: </p><div class="fragment"><div class="line">exit status 22: unpigz: abourt: zlib version less than 1.2.3</div>
-</div><!-- fragment --><p> download the <a href="https://zlib.net/pigz/">latest version of pigz</a>.</p>
 <h1><a class="anchor" id="autotoc_md12"></a>
-VSCode Workspaces</h1>
+VSCode</h1>
 <h2><a class="anchor" id="autotoc_md13"></a>
-Extensions Required</h2>
+Recommended Extensions</h2>
 <ul>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a> additionally follow the Docker software install instructions listed in the extension if not already set up.</li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers">Dev Containers</a> for integration with the Catena workspace.</li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools">Cmake Tools</a> for build setup</li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker">Docker</a>. Additionally, follow the Docker software install instructions listed in the extension if not already set up.</li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools">Cmake Tools</a> for build setup.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md14"></a>
+<h1><a class="anchor" id="autotoc_md14"></a>
+Setting up and Running</h1>
+<h2><a class="anchor" id="autotoc_md15"></a>
+Setting up Catena Service(s) with Docker</h2>
+<p>The diagram below outlines the Catena architecture for containers as well as JWS token authentication.</p>
+<div style="text-align: center"></div><div style="text-align: center"><div class="image">
+<object type="image/svg+xml" data="Catena.UML.Layered.Services.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Alt</div></div>
+    </div><div style="text-align: center"></div><p>Setting up a Catena service(s) with Docker requires four things:</p><ol type="1">
+<li>A keycloak server to generate public keys with.</li>
+<li>A container set up with Envoy proxy for recieving requests via TLS, validating JWS tokens with the keycloak server, and routing valid requests to their respective service. This can be configured via an <a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/envoy.yaml">envoy.yaml</a> file.</li>
+<li>A public and private Docker network for communication between containers. <br  />
+</li>
+<li>A <a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/grpc_compose.yml">Docker compose</a> file to create the containers, connect the service containers to the private network, and connect the Envoy proxy to both networks.</li>
+</ol>
+<p>For an example of Catena services set up with a Docker image, see the <a href="https://github.com/rossvideo/Catena/tree/main/sdks/cpp/connections/docker">connections/docker</a> folder.</p>
+<p><em><b>Note:</b></em> If you wish to run your service without authentication/authorization, you can ignore the keycloak server and Envoy proxy container and simply connect your Catena sevice(s) to the public network. In this case, your service's should also be run with <code>--authz=false</code>.</p>
+<h2><a class="anchor" id="autotoc_md16"></a>
 Steps to run</h2>
-<p>Press F1 to open the command palette and select the option <code>Dev Containers: Open worspace in Container</code>, navigating to your Catena workspace file</p>
-<p><em><b>Note</b></em>: if you get the error: </p><div class="fragment"><div class="line">exit status 22: unpigz: abourt: zlib version less than 1.2.3</div>
-</div><!-- fragment --><p> download the <a href="https://zlib.net/pigz/">latest version of pigz</a>.</p>
-<p>Ensure the C/C++ Extension pack is enabled in the container as well as any other extensions you might want.</p>
-<p>Continue to sdks/cpp/build, emptying it and using </p><div class="fragment"><div class="line">cmake -G Ninja -DCONNECTIONS=gRPC -DCATENA_MODEL=lite .. </div>
-</div><!-- fragment --> </div></div><!-- contents -->
+<ol type="1">
+<li>Build Catena with <code>cmake -DDOCKER=on</code>.</li>
+<li>Navigate to the folder containing your Docker compose file.</li>
+<li>Run the file using <code>docker-compose -f /path/to/your/file up -d</code>.</li>
+</ol>
+<p>Once your containers are created, you can check their status using <code>docker ps -a</code>. You should have one container per service as well as an additional container running Envoy Proxy.</p>
+<p>If one or more of these containers have exited, you can debug using <code>docker logs &lt;container name&gt;</code>. </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
