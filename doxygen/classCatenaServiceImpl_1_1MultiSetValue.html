@@ -111,7 +111,7 @@ Inheritance diagram for CatenaServiceImpl::MultiSetValue:</div>
 <div class="dynheader">
 Collaboration diagram for CatenaServiceImpl::MultiSetValue:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1MultiSetValue__coll__graph.svg" width="100%" height="536"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1MultiSetValue__coll__graph.svg" width="100%" height="499"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -140,6 +140,10 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>request</b> (
 <tr class="memitem:a6025d380ed3a924ea98821455bc0144f" id="r_a6025d380ed3a924ea98821455bc0144f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a6025d380ed3a924ea98821455bc0144f">create</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
 <tr class="memdesc:a6025d380ed3a924ea98821455bc0144f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> object to serve other clients while processing.  <br /></td></tr>
 <tr class="separator:a6025d380ed3a924ea98821455bc0144f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
+<tr class="memitem:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData" id="r_a665177806c242a75b96e89722d509cfc"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1CallData.html#a665177806c242a75b96e89722d509cfc">getJWSToken</a> () const</td></tr>
+<tr class="memdesc:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the server context's client metadata.  <br /></td></tr>
+<tr class="separator:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -151,10 +155,6 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>typeName</b></
 <a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>service_</b></td></tr>
 <tr class="memdesc:a3ccba7408a60a75d96a2d947c07cab37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parent <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a>. <br /></td></tr>
 <tr class="separator:a3ccba7408a60a75d96a2d947c07cab37"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad6ecd96cd97ed949df10e4fe195b2140" id="r_ad6ecd96cd97ed949df10e4fe195b2140"><td class="memItemLeft" align="right" valign="top"><a id="ad6ecd96cd97ed949df10e4fe195b2140" name="ad6ecd96cd97ed949df10e4fe195b2140"></a>
-ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b></td></tr>
-<tr class="memdesc:ad6ecd96cd97ed949df10e4fe195b2140"><td class="mdescLeft">&#160;</td><td class="mdescRight">The context of the gRPC command (ServerContext) for use in _responder and other gRPC objects/functions. <br /></td></tr>
-<tr class="separator:ad6ecd96cd97ed949df10e4fe195b2140"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4cc58c0392d648403ad5a52d4f45dc09" id="r_a4cc58c0392d648403ad5a52d4f45dc09"><td class="memItemLeft" align="right" valign="top"><a id="a4cc58c0392d648403ad5a52d4f45dc09" name="a4cc58c0392d648403ad5a52d4f45dc09"></a>
 catena::MultiSetValuePayload&#160;</td><td class="memItemRight" valign="bottom"><b>reqs_</b></td></tr>
 <tr class="memdesc:a4cc58c0392d648403ad5a52d4f45dc09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Server request as a MultiSetValuePayload if not already. <br /></td></tr>
@@ -181,6 +181,11 @@ ServerAsyncResponseWriter&lt; catena::Empty &gt;&#160;</td><td class="memItemRig
 int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr>
 <tr class="memdesc:a9fd9481b8a039ac4ee5306b0730608b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The object's unique id. <br /></td></tr>
 <tr class="separator:a9fd9481b8a039ac4ee5306b0730608b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
+<tr class="memitem:a752c4dc80b04fb3bd09ddb4f648e8997 inherit pro_attribs_classCatenaServiceImpl_1_1CallData" id="r_a752c4dc80b04fb3bd09ddb4f648e8997"><td class="memItemLeft" align="right" valign="top">
+ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b></td></tr>
+<tr class="memdesc:a752c4dc80b04fb3bd09ddb4f648e8997 inherit pro_attribs_classCatenaServiceImpl_1_1CallData"><td class="mdescLeft">&#160;</td><td class="mdescRight">The context of the gRPC command. <br /></td></tr>
+<tr class="separator:a752c4dc80b04fb3bd09ddb4f648e8997 inherit pro_attribs_classCatenaServiceImpl_1_1CallData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Generic <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class for the <a class="el" href="classCatenaServiceImpl_1_1SetValue.html" title="CallData class for the SetValue RPC.">SetValue</a> and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> RPCs. </p>
