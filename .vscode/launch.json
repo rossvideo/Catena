@@ -92,7 +92,7 @@
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
-                 "--secure_comms", "ssl",
+                //  "--secure_comms", "tls",
                  "--authz"
         ], // Any command-line arguments go here
         "stopAtEntry": false,

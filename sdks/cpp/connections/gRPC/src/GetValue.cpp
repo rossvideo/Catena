@@ -101,11 +101,9 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
-                    std::vector<std::string> clientScopes = service->getScopes(context_);
-                    catena::common::Authorizer authz{clientScopes};
-                    Device* dm = dms_[req_.slot()].front();
-                    Device::LockGuard lg(*dm);
-                    rc = dm->getValue(req_.oid(), ans, authz);
+                    catena::common::Authorizer authz{getJWSToken()};
+                    Device::LockGuard lg(dm_);
+                    rc = dm_.getValue(req_.oid(), ans, authz);
                 } else {
                     Device* dm = dms_[req_.slot()].front();
                     Device::LockGuard lg(*dm);
@@ -118,6 +116,11 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 } else { // Error, end process.
                     responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                 }
+            // Likely authentication error, end process.
+            } catch (catena::exception_with_status& err) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
+                responder_.FinishWithError(errorStatus, this);
             } catch (...) { // Error, end process.
                 status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");

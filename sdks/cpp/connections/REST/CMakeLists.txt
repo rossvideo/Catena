@@ -37,7 +37,6 @@ add_library(${target} STATIC ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)
 
-
 # Specify include directories
 include_directories(
     ${CROW_ROOT_DIR}/include

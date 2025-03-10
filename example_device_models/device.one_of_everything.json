@@ -2,8 +2,8 @@
   "slot": 1,
   "multi_set_enabled": true,
   "detail_level": "FULL",
-  "access_scopes": ["st-2138:mon", "st-2138:op", "st-2138:cfg", "st-2138:adm"],
-  "default_scope": "st-2138:mon",
+  "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+  "default_scope": "st2138:mon",
   "params": {
     "a_number": {
       "type": "INT32",
@@ -14,7 +14,7 @@
       "type": "FLOAT32",
       "value": { "float32_value": 12.34},
       "name": { "display_strings": { "en": "Float Example" } },
-      "access_scope": "st-2138:op",
+      "access_scope": "st2138:op",
       "widget": "default",
       "constraint": {
         "type": "FLOAT_RANGE",
@@ -30,7 +30,7 @@
       "type": "STRING",
       "value": { "string_value": "Hello, World!" },
       "name": { "display_strings": { "en": "String Example" } },
-      "access_scope": "st-2138:cfg"
+      "access_scope": "st2138:cfg"
     },
     "number_array": {
       "type": "INT32_ARRAY",
@@ -50,7 +50,7 @@
     "outer_nested_struct": {
       "type": "STRUCT",
       "name": { "display_strings": { "en": "Top Level Nested Struct Array Example" } },
-      "access_scope": "st-2138:op",
+      "access_scope": "st2138:op",
       "params": {
         "inner_nested_struct": {
           "type": "STRUCT",
@@ -59,7 +59,7 @@
             "num_1": {
               "type": "INT32",
               "name": { "display_strings": { "en": "Int Example" } },
-              "access_scope": "st-2138:cfg"
+              "access_scope": "st2138:cfg"
             },
             "num_2": {
               "type": "INT32",
@@ -103,13 +103,13 @@
     "ref_struct": {
       "type": "STRUCT",
       "name": { "display_strings": { "en": "Top Level Struct Example" } },
-      "access_scope": "st-2138:op",
+      "access_scope": "st2138:op",
       "params": {
         "num_1": {
           "type": "INT32",
           "value": { "int32_value": 1 },
           "name": { "display_strings": { "en": "Int Inside Struct Example 1" } },
-          "access_scope": "st-2138:cfg"
+          "access_scope": "st2138:cfg"
         },
         "num_2": {
           "type": "INT32",

@@ -1,0 +1,259 @@
+# 
+# Copyright 2024 Ross Video Ltd
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+# 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+# 
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# This YAML file is used to configure the Envoy proxy server that verifies JWS
+# tokens using the AUTHZ server and routes gRPC requests to the gRPC service
+# running in a container.
+# Communication with client is done vie TLS while communication between Envoy
+# and services is done unencrypted over the private network Catena_prv.
+#
+
+static_resources:
+
+  # Envoy listener recieves signals from ports 6254-6260 and routes them
+  # accordingly.
+  # Alternatively you can have a seperate listener per port.
+  listeners:
+  - name: listener_status_update
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 6254
+    additional_addresses:
+    - address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 6256
+    - address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 6258
+    - address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 6260
+    filter_chains:
+
+    # This filten handles the http requests from the port above.
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          append_x_forwarded_port: true # Append to header for future routing.
+          # Setting up a log for debugging.
+          access_log:
+          - name: envoy.access_loggers.stdout
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+          http_filters:
+
+          # First filter verifies the JWS token. If invalid, it cancels the
+          # request.
+          - name: envoy.filters.http.jwt_authn
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+              providers:
+                jwtProvider:
+                  # This is the authz server.
+                  issuer: https://auth.enterprise.rossvideo.cloud/realms/catena
+                  audiences:
+                  - st-2138.grpc.service
+                  - st-2138.rest.service
+                  remote_jwks:
+                    http_uri:
+                      # This is the path to the authz server's public keys.
+                      uri: https://auth.enterprise.rossvideo.cloud/realms/catena/protocol/openid-connect/certs
+                      # Cluster handles authentication.
+                      cluster: jwks_cluster
+                      timeout: 5s
+                  forward: true
+              rules:
+              - match:
+                  prefix: "/"
+                requires:
+                  provider_name: jwtProvider
+
+          # If verified, the second filter routes the request according to the
+          # route config below.
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: default
+              domains: ["*"]
+              # This routes the request to the appropriate cluster depending on
+              # the port number the command was recieved on.
+              routes:
+              # Example route, all others are very similar.
+              - match: # Routes port 6254 to the status_update_cluster.
+                  prefix: "/"
+                  headers:
+                  - name: x-forwarded-port # Set using "append_x_forwarded_port" above.
+                    string_match: { exact: "6254"} # IN port
+                route:
+                  cluster: status_update_cluster # The cluster to map it to.
+
+              - match: # Routes port 6256 to the use_menus_cluster.
+                  prefix: "/"
+                  headers:
+                  - name: x-forwarded-port
+                    string_match: { exact: "6256"}
+                route:
+                  cluster: use_menus_cluster
+              - match: # Routes port 6258 to the structs_with_authz_cluster.
+                  prefix: "/"
+                  headers:
+                  - name: x-forwarded-port
+                    string_match: { exact: "6258"}
+                route:
+                  cluster: structs_with_authz_cluster
+              - match: # Routes port 6260 to the status_update_cluster.
+                  prefix: "/"
+                  headers:
+                  - name: x-forwarded-port
+                    string_match: { exact: "6260"}
+                route:
+                  cluster: use_commands_cluster
+
+      # This sets up a transport socket to communicate with the client via TLS.
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:
+            tls_certificates:
+              # Filepath to the generated fullchain and private key to use.
+            - certificate_chain:
+                filename: "/etc/letsencrypt/live/catena.rossvideo.com/fullchain.pem"
+              private_key:
+                filename: "/etc/letsencrypt/live/catena.rossvideo.com/privkey.pem"
+
+
+  clusters:
+  # This cluster handles the JWS token verification.
+  - name: jwks_cluster
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: jwks_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                # This is the authz server.
+                address: auth.enterprise.rossvideo.cloud
+                port_value: 443 # JWKS endpoint.
+    # This sets up a transport socket to communicate with the authz server via
+    # TLS.
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: auth.enterprise.rossvideo.cloud
+
+  # Cluster for handling authenticated gRPC requests to status_update.
+  # Example cluster, all others are very similar.
+  - name: status_update_cluster
+    type: STRICT_DNS
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    load_assignment:
+      cluster_name: status_update_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                # Name of the container to pass the call into.
+                # Should be connected to catena_prv.
+                address: catena_status_update
+                # The port value to pass the call through. Default is 6254, and
+                # conflict is impossible since containers are isolated.
+                port_value: 6254
+  
+  # Cluster for handling authenticated gRPC requests to use_menus.
+  - name: use_menus_cluster
+    type: STRICT_DNS
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    load_assignment:
+      cluster_name: use_menus_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: catena_use_menus
+                port_value: 6254
+  # Cluster for handling authenticated gRPC requests to structs_with_authz.
+  - name: structs_with_authz_cluster
+    type: STRICT_DNS
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    load_assignment:
+      cluster_name: structs_with_authz_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: catena_structs_with_authz
+                port_value: 6254
+  # Cluster for handling authenticated gRPC requests to use_commands.
+  - name: use_commands_cluster
+    type: STRICT_DNS
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    load_assignment:
+      cluster_name: use_commands_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: catena_use_commands
+                port_value: 6254

@@ -75,11 +75,6 @@ class CatenaServiceImpl::ExternalObjectRequest : public CallData {
          */
         CatenaServiceImpl *service_;
         /**
-         * @brief Context for gRPC command request for the server to use to
-         * send data back to the client
-         */
-        ServerContext context_;
-        /**
          * @brief Request payload for external object
          */
         catena::ExternalObjectRequestPayload req_;

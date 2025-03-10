@@ -17,8 +17,6 @@ The motivation is to enable reuse of parameter descriptors and save on file size
 > It strips out redundant information which saves space both on disk and on the wire
 > The SDKs know how to use the logical JSON pointers to navigate the model correctly.
 
-Templated parameters are __not__ currently supported in the C++ SDK, [issue #91](https://github.com/rossvideo/Catena/issues/91).
-
 <div style="text-align: center">
 
 [Next Page: Param Descriptors](Params.html)

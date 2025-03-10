@@ -93,23 +93,24 @@ Happily, the C++ SDK hides this complexity from the device developer. The parame
 // There is an implementation limit of 15 struct members
 //
 struct Coords {
-    REFLECTABLE_STRUCT(Coords, (float)x, (float)y, (float)z);
+    int REFLECTABLE_STRUCT(Coords, float x, float y, float z);
 };
 
 // note nested struct
 struct Location {
-    REFLECTABLE_STRUCT(Location, (Coords)coords, (float)latitude, (float)longitude, (int32_t)altitude,
-                       (std::string)name);
+    int REFLECTABLE_STRUCT(Location, Coords coords, float latitude, float longitude, int32_t altitude,
+                       std::string name);
 };
 
 // read & write the PODS using canonical C++
 Location loc = {{91.f, 82.f, 73.f}, 10.0f, 20.0f, -30, "Old Trafford"}, loc2;
-std::unique_ptr<ParamAccessor> locParam = dm.param("/location");
-locParam->getValue(loc2);
+catena::exception_with_status ans{"", catena::StatusCode::OK};
+std::unique_ptr<IParam> locParam = dm.getParam("/location", ans);
+loc2 = locParam->get();
 std::cout << "Location: " << loc2.latitude << ", " << loc2.longitude << ", " << loc2.altitude << ", "
             << loc2.name << ", " << loc2.coords.x << ", " << loc2.coords.y << ", " << loc2.coords.z
             << '\n';
-locParam->setValue(loc);
+locParam->get() = loc;
 {% endraw %}
 ```
 
