@@ -124,8 +124,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     }
                     // Returning if authorization is enabled and the client does not have monitor scope.
                     if (service_->authorizationEnabled()) {
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }
@@ -202,12 +201,16 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
             return;
         }
 
-        // Handle authorization if enabled
-        catena::common::Authorizer authz{service_->authorizationEnabled() 
-            ? service_->getScopes(context_) 
-            : std::vector<std::string>{}};
+        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+        catena::common::Authorizer* authz;
+        if (service_->authorizationEnabled()) {
+            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+            authz = sharedAuthz.get();
+        } else {
+            authz = &catena::common::Authorizer::kAuthzDisabled;
+        }
 
-        if (service_->authorizationEnabled() && !authz.readAuthz(*p)) {
+        if (service_->authorizationEnabled() && !authz->readAuthz(*p)) {
             return;
         }
 
@@ -215,7 +218,7 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
         this->res_.mutable_value()->set_element_index(idx);
         
         catena::Value* value = this->res_.mutable_value()->mutable_value();
-        auto rc = p->toProto(*value, authz);
+        auto rc = p->toProto(*value, *authz);
         //If the param conversion was successful, send the update
         if (rc.status == catena::StatusCode::OK) {
             this->hasUpdate_ = true;

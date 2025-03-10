@@ -100,11 +100,6 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          */
         CatenaServiceImpl *service_;
         /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _responder and other gRPC objects/functions.
-         */
-        ServerContext context_;
-        /**
          * @brief Server request as a MultiSetValuePayload if not already.
          */
         catena::MultiSetValuePayload reqs_;

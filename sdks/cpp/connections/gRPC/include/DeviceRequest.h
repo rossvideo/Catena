@@ -70,11 +70,6 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          */
         CatenaServiceImpl *service_;
         /**
-         * @brief Context for gRPC command request for the server to use to
-         * send data back to the client
-         */
-        ServerContext context_;
-        /**
          * @brief A list of scopes that the client has access to
          */
         std::vector<std::string> clientScopes_;

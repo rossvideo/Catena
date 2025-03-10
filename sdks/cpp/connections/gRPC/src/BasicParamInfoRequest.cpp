@@ -87,23 +87,21 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                catena::common::Authorizer authz = std::vector<std::string>{};
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    authz = sharedAuthz.get();
+                } else {
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
 
                 // Mode 1: Get all top-level parameters
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
-
-                    if (service->authorizationEnabled()) {
-                        Device::LockGuard lg(dm_);
-
-                        /** TODO: This copy needs to be done in the constructor of Authorizer */
-                        std::vector<std::string> scopes = std::move(service->getScopes(context_));
-
-                        authz = catena::common::Authorizer{scopes};
-                        top_level_params = dm_.getTopLevelParams(rc, authz);
-                    } else {
-                        Device::LockGuard lg(dm_);
-                        top_level_params = dm_.getTopLevelParams(rc);
+                    {
+                    Device::LockGuard lg(dm_);
+                    top_level_params = dm_.getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
@@ -117,12 +115,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             
                             // Add the parameter to our response list
                             responses_.emplace_back();
-                            if (service->authorizationEnabled()) {
-                                top_level_param->toProto(responses_.back(), authz);
-                            } else {
-                                top_level_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                            }
-
+                            top_level_param->toProto(responses_.back(), *authz);
                             // For array types, calculate and update array length
                             if (top_level_param->isArrayType()) {
                                 uint32_t array_length = top_level_param->size();
@@ -142,27 +135,15 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                 // Mode 2: Get a specific parameter and its children
                 } else if (!req_.oid_prefix().empty()) { 
-                    if (service->authorizationEnabled()) {
-                        Device::LockGuard lg(dm_);
-
-                        /** TODO: This copy needs to be done in the constructor of Authorizer */
-                        std::vector<std::string> scopes = std::move(service->getScopes(context_));
-
-                        authz = catena::common::Authorizer{scopes};
-                        param = dm_.getParam(req_.oid_prefix(), rc, authz);
-                    } else {
-                        Device::LockGuard lg(dm_);
-                        param = dm_.getParam(req_.oid_prefix(), rc);
+                    {
+                    Device::LockGuard lg(dm_);
+                    param = dm_.getParam(req_.oid_prefix(), rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && param) {
                         // Add the main parameter to the response list
                         responses_.emplace_back();
-                        if (service->authorizationEnabled()) {
-                            param->toProto(responses_.back(), authz);
-                        } else {
-                            param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
-                        }
+                        param->toProto(responses_.back(), *authz);
 
                         // Calculate and update array length if this parameter is an array
                         if (param->isArrayType()) {
@@ -174,7 +155,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                         // If recursive flag is set, get all children of this parameter
                         if (req_.recursive()) {
-                            getChildren(param.get(), req_.oid_prefix(), authz);
+                            getChildren(param.get(), req_.oid_prefix(), *authz);
                         }
 
                         // Begin writing responses back to the client
@@ -188,11 +169,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     }
                 }
 
-            } catch (const catena::exception_with_status& e) {
+            } catch (catena::exception_with_status& err) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::INTERNAL, 
-                    "Failed to process request: " + std::string(e.what()) + 
-                    " (Status: " + std::to_string(static_cast<int>(e.status)) + ")");
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
                 writer_.Finish(errorStatus, this);
                 break;
             } catch (...) {
@@ -287,12 +266,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
             if (rc.status == catena::StatusCode::OK && sub_param) {
                 // Add all parameters (array or not) when found as children
                 responses_.emplace_back();
-                if (service_->authorizationEnabled()) {
-                    Device::LockGuard lg(dm_);
-                    sub_param->toProto(responses_.back(), authz);
-                } else {
-                    Device::LockGuard lg(dm_);
-                    sub_param->toProto(responses_.back(), catena::common::Authorizer::kAuthzDisabled);
+                {
+                Device::LockGuard lg(dm_);
+                sub_param->toProto(responses_.back(), authz);
                 }
 
                 // If this child is an array, calculate and update its length
