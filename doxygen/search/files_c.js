@@ -7,6 +7,5 @@ var searchData=
   ['singleton_2eh_4',['Singleton.h',['../Singleton_8h.html',1,'']]],
   ['status_2eh_5',['Status.h',['../Status_8h.html',1,'']]],
   ['streamable_2eh_6',['Streamable.h',['../Streamable_8h.html',1,'']]],
-  ['structinfo_2eh_7',['StructInfo.h',['../StructInfo_8h.html',1,'']]],
-  ['subscriptionmanager_2eh_8',['SubscriptionManager.h',['../SubscriptionManager_8h.html',1,'']]]
+  ['structinfo_2eh_7',['StructInfo.h',['../StructInfo_8h.html',1,'']]]
 ];

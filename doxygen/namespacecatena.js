@@ -28,7 +28,7 @@ var namespacecatena =
       [ "DO_NOT_USE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f", null ]
     ] ],
     [ "expandEnvVariables", "namespacecatena.html#aa3ce72179203719924c0cff74fd3f82c", null ],
-    [ "getServerCredentials", "namespacecatena.html#a989cc41eb5054f4902e9bf6a66334373", null ],
+    [ "getServerCredentials", "namespacecatena.html#a017591597626fbc61b3a291c214d2185", null ],
     [ "readFile", "namespacecatena.html#a274b596fd164b9f6c1ec6dfe8c278efc", null ],
     [ "subs", "namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad", null ]
 ];
