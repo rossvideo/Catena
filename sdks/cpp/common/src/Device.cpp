@@ -100,6 +100,20 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
                     ans = catena::exception_with_status("Value exceeds maximum length of " + setValuePayload.oid(), catena::StatusCode::OUT_OF_RANGE);
                     break;
                 }
+                // Validate total_length if working with string array.
+                else if (param->type().value() == STRING_ARRAY) {
+                    uint32_t index = 0;
+                    if (path->back_is_index() && setValuePayload.value().kind_case() == catena::Value::KindCase::kStringValue) {
+                        index = path->back_as_index();
+                        Path parentPath(setValuePayload.oid());
+                        parentPath.popBack();
+                        param = getParam(parentPath, ans, authz);
+                    }
+                    if (!param->validateTotalSize(setValuePayload.value(), index)) {
+                        ans = catena::exception_with_status("Total length exceeds maximum length of " + setValuePayload.oid(), catena::StatusCode::OUT_OF_RANGE);
+                        break;
+                    }
+                }
             // Try-catch to catch exceptions thrown by the Path constructor.
             } catch (const catena::exception_with_status& why) {
                 ans = catena::exception_with_status(why.what(), why.status);
@@ -118,7 +132,17 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
                 std::unique_ptr<IParam> param = getParam(*path, ans, authz);
                 ans = param->fromProto(setValuePayload->value(), authz);
                 valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
-            }   
+                // Resetting totalArraySize if String Array.
+                if (param->type().value() == STRING_ARRAY) {
+                    // If inserting string we need the parent array param.
+                    if (setValuePayload->value().kind_case() == catena::Value::KindCase::kStringValue) {
+                        path->rewind();
+                        path->popBack();
+                        param = getParam(*path, ans, authz);
+                    }
+                    param->resetTotalSize();
+                }
+            }
         }
     }
     return ans;

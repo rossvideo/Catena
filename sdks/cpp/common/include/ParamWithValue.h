@@ -82,6 +82,7 @@ class ParamWithValue : public catena::common::IParam {
         } else {
             dev.addItem<common::ParamTag>(descriptor.getOid(), this);
         }
+        resetTotalSize();
     }
 
     /**
@@ -91,6 +92,17 @@ class ParamWithValue : public catena::common::IParam {
         T& value,
         ParamDescriptor& descriptor
     ) : value_{value}, descriptor_{descriptor} {}
+
+    /**
+     * @brief Construct a new ParamWithValue object without adding it to device
+     */
+    ParamWithValue(
+        T& value,
+        ParamDescriptor& descriptor,
+        std::vector<std::size_t>& totalArraySize
+    ) : value_{value}, descriptor_{descriptor} {
+        totalArraySize_ = totalArraySize;
+    }
 
     /**
      * @brief Construct a new ParamWithValue object using FieldInfo
@@ -157,6 +169,34 @@ class ParamWithValue : public catena::common::IParam {
         return getSize.contains(value.kind_case()) ? getSize.at(value.kind_case())(value) <= descriptor_.max_length() : true;
     }
 
+    bool validateTotalSize(const catena::Value& value, uint32_t index = 0) override {
+        std::size_t totalSize = 0;
+        if (type().value() == STRING_ARRAY) {
+            // Case 1: Inserting string
+            if (value.kind_case() == Kind::kStringValue) {
+                // Case 1a: Appending string
+                if (index >= totalArraySize_.size()) {
+                    totalArraySize_.push_back(value.string_value().length());
+                // Case 1b: Replacing string
+                } else {
+                    totalArraySize_[index] = value.string_value().length();
+                }
+                // Getting totalSize
+                for (std::size_t size : totalArraySize_) {totalSize += size;}
+            // Case 2: Replacing array
+            } else {
+                for (const std::string& str : value.string_array_values().strings()) {
+                    totalSize += str.length();
+                }
+            }
+        }
+        return totalSize <= descriptor_.total_length();
+    }
+
+    void resetTotalSize() override {
+        resetTotalSize(value_.get());
+    }
+
     /**
      * @brief creates a shallow copy the parameter
      * 
@@ -165,7 +205,7 @@ class ParamWithValue : public catena::common::IParam {
      * ParamWithValue objects only contain two references, so they are cheap to copy
      */
     std::unique_ptr<IParam> copy() const override {
-        return std::make_unique<ParamWithValue<T>>(value_.get(), descriptor_);
+        return std::make_unique<ParamWithValue<T>>(value_.get(), descriptor_, totalArraySize_);
     }
 
     /**
@@ -462,6 +502,18 @@ class ParamWithValue : public catena::common::IParam {
         return ans;
     }
 
+
+    template <typename U>
+    void resetTotalSize(U& value) { return; }
+
+    void resetTotalSize(std::vector<std::string>& value) {
+        totalArraySize_.clear();
+        // for (const std::string& str : value_.get()) {
+        for (auto& str : value) {
+            totalArraySize_.push_back(str.length());
+        }
+    }
+
     /**
      * @brief get the child parameter that oid points to
      * @tparam U the type of the value that we are getting the child parameter from
@@ -671,6 +723,11 @@ class ParamWithValue : public catena::common::IParam {
   private:
     ParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
+    /* 
+     * The length of each string of a string array and each index.
+     * This is used in totalLength validation for multiSetValues.
+     */
+    std::vector<std::size_t>  totalArraySize_;
 };
 
 template<typename T>
