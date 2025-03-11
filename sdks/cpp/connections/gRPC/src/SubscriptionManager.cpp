@@ -73,22 +73,61 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
                              uniqueSubscriptions_.begin(), 
                              uniqueSubscriptions_.end());
     
-    // Add wildcard subscriptions (need to expand these to actual matching parameters)
-    for (const auto& baseOid : wildcardSubscriptions_) {
+    // Add wildcard subscriptions 
+    for (const auto& wildcardOid : wildcardSubscriptions_) {
         catena::exception_with_status rc{"", catena::StatusCode::OK};
-        std::vector<std::unique_ptr<IParam>> params;
         
+        // Remove the "/*" from the wildcard OID to get base path
+        std::string basePath = wildcardOid.substr(0, wildcardOid.length() - 2);
+        
+        // First try to get the base parameter
+        std::unique_ptr<IParam> baseParam;
         {
             catena::common::Device::LockGuard lg(dm);
-            params = dm.getTopLevelParams(rc);
+            baseParam = dm.getParam(basePath, rc);
         }
         
-        for (auto& param : params) {
-            std::string paramOid = param->getOid();
-            // Remove the "/*" from the base OID for comparison
-            std::string basePath = baseOid.substr(0, baseOid.length() - 2);
-            if (paramOid.find(basePath) == 0) {
-                allSubscribedOids_.push_back(paramOid);
+        if (baseParam) {
+            // If we found the base parameter, add it and all its children
+            allSubscribedOids_.push_back(basePath);
+            
+            // If it's a struct or array, we need to get all its children
+            if (baseParam->getDescriptor().type() == catena::ParamType::STRUCT || 
+                baseParam->getDescriptor().type() == catena::ParamType::STRUCT_ARRAY) {
+                
+                std::vector<std::unique_ptr<IParam>> allParams;
+                {
+                    catena::common::Device::LockGuard lg(dm);
+                    allParams = dm.getTopLevelParams(rc);
+                }
+                
+                // Check each parameter to see if it's under our base path
+                for (auto& param : allParams) {
+                    std::string paramOid = param->getOid();
+                    if (paramOid.find(basePath) == 0) {
+                        if (paramOid.length() == basePath.length() || 
+                            paramOid[basePath.length()] == '/') {
+                            allSubscribedOids_.push_back(paramOid);
+                        }
+                    }
+                }
+            }
+        } else {
+            // If base parameter not found, try to find any parameters that start with this path
+            std::vector<std::unique_ptr<IParam>> allParams;
+            {
+                catena::common::Device::LockGuard lg(dm);
+                allParams = dm.getTopLevelParams(rc);
+            }
+            
+            for (auto& param : allParams) {
+                std::string paramOid = param->getOid();
+                if (paramOid.find(basePath) == 0) {
+                    if (paramOid.length() == basePath.length() || 
+                        paramOid[basePath.length()] == '/') {
+                        allSubscribedOids_.push_back(paramOid);
+                    }
+                }
             }
         }
     }

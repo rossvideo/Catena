@@ -232,74 +232,89 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
 }
 
 void CatenaServiceImpl::UpdateSubscriptions::processSubscription(const std::string& oid, catena::common::Authorizer& authz) {
-    std::cout << "processSubscription called with OID: " << oid << std::endl;
     catena::exception_with_status rc{"", catena::StatusCode::OK};
-    
-    // Check if this is a wildcard subscription (ends with *)
-    bool isWildcard = !oid.empty() && oid.back() == '*';
-    std::cout << "isWildcard check: " << std::boolalpha << isWildcard << std::endl;
-    std::string baseOid = isWildcard ? oid.substr(0, oid.length() - 1) : oid;
-    // Remove trailing slash if present
-    if (!baseOid.empty() && baseOid.back() == '/') {
-        baseOid = baseOid.substr(0, baseOid.length() - 1);
-    }
-    std::cout << "baseOid: " << baseOid << std::endl;
-    
-    if (isWildcard) {
-        std::cout << "Processing wildcard subscription" << std::endl;
+
+    // Check if this is a wildcard subscription
+    if (subscriptionManager_.isWildcard(oid)) {
+        // Extract base OID (everything before the wildcard)
+        std::string baseOid = oid.substr(0, oid.length() - 2); // Remove "/*"
         
-        // Try to get the parameter directly first
-        std::unique_ptr<IParam> param;
-        {
-            Device::LockGuard lg(dm_);
-            param = dm_.getParam(baseOid, rc);
+        // Get the base parameter
+        auto baseParam = dm_.getParam(baseOid, rc);
+        if (!baseParam) {
+            std::cout << "Failed to get base parameter for wildcard subscription: " << rc.what() << std::endl;
+            return;
         }
-        
-        if (param) {
-            // If we found the parameter, add the subscription
-            std::cout << "Found matching parameter: " << baseOid << std::endl;
-            subscriptionManager_.addSubscription(oid);
-        } else {
-            // If not found directly, try to find any parameters that start with this base OID
-            std::vector<std::unique_ptr<IParam>> allParams;
-            {
-                Device::LockGuard lg(dm_);
-                allParams = dm_.getTopLevelParams(rc);
-            }
+
+        // If base param is a STRUCT or STRUCT_ARRAY, get its children
+        if (baseParam->type().value() == catena::ParamType::STRUCT || 
+            baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
             
-            bool foundMatch = false;
-            for (auto& p : allParams) {
-                std::string paramOid = p->getOid();
-                std::cout << "Checking paramOid: " << paramOid << " against baseOid: " << baseOid << std::endl;
-                if (paramOid.find(baseOid) == 0) {
-                    foundMatch = true;
-                    break;
+            const auto& descriptor = baseParam->getDescriptor();
+            const auto& subParams = descriptor.getAllSubParams();
+
+            // For STRUCT_ARRAY, we need to iterate through array indices
+            if (baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                for (size_t i = 0; i < baseParam->size(); i++) {
+                    // Create path with array index
+                    catena::common::Path path(baseOid);
+                    path.push_back(i);
+
+                    // Get array element
+                    auto arrayElem = dm_.getParam(path.toString(), rc);
+                    if (!arrayElem) {
+                        std::cout << "Failed to get array element at index " << i << ": " << rc.what() << std::endl;
+                        continue;
+                    }
+
+                    // Process each child of the array element
+                    for (const auto& [childOid, childDesc] : subParams) {
+                        catena::common::Path childPath = path;
+                        childPath.push_back(childOid);
+                        
+                        auto childParam = dm_.getParam(childPath.toString(), rc);
+                        if (childParam) {
+                            catena::DeviceComponent_ComponentParam response;
+                            response.set_oid(childPath.toString());
+                            auto err = childParam->toProto(*response.mutable_param(), authz);
+                            if (err.status != catena::StatusCode::OK) {
+                                std::cout << "Failed to serialize parameter " << childPath.toString() << ": " << err.what() << std::endl;
+                                continue;
+                            }
+                            responses_.push_back(response);
+                        }
+                    }
                 }
-            }
-            
-            if (foundMatch) {
-                std::cout << "Adding wildcard subscription: " << oid << std::endl;
-                subscriptionManager_.addSubscription(oid);
-            } else {
-                std::cout << "No parameters found matching wildcard pattern: " << oid << std::endl;
+            } else { // STRUCT type
+                // Process each child directly
+                for (const auto& [childOid, childDesc] : subParams) {
+                    std::string fullOid = baseOid + "/" + childOid;
+                    auto childParam = dm_.getParam(fullOid, rc);
+                    if (childParam) {
+                        catena::DeviceComponent_ComponentParam response;
+                        response.set_oid(fullOid);
+                        auto err = childParam->toProto(*response.mutable_param(), authz);
+                        if (err.status != catena::StatusCode::OK) {
+                            std::cout << "Failed to serialize parameter " << fullOid << ": " << err.what() << std::endl;
+                            continue;
+                        }
+                        responses_.push_back(response);
+                    }
+                }
             }
         }
     } else {
-        std::cout << "Processing unique subscription" << std::endl;
-        // Handle unique subscription
-        std::unique_ptr<IParam> param;
-        
-        // Get the parameter
-        {
-            Device::LockGuard lg(dm_);
-            param = dm_.getParam(baseOid, rc);
-        }
-        
+        // Non-wildcard subscription - get the parameter directly
+        auto param = dm_.getParam(oid, rc);
         if (param) {
-            std::cout << "Adding unique subscription: " << baseOid << std::endl;
-            subscriptionManager_.addSubscription(baseOid);
-        } else {
-            std::cout << "Parameter not found for OID: " << baseOid << std::endl;
+            catena::DeviceComponent_ComponentParam response;
+            response.set_oid(oid);
+            auto err = param->toProto(*response.mutable_param(), authz);
+            if (err.status != catena::StatusCode::OK) {
+                std::cout << "Failed to serialize parameter " << oid << ": " << err.what() << std::endl;
+                return;
+            }
+            responses_.push_back(response);
         }
     }
 }

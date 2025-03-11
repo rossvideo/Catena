@@ -57,6 +57,9 @@ public:
      */
     SubscriptionManager() = default;
 
+
+
+
     /**
      * @brief Add an OID subscription
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
@@ -90,6 +93,13 @@ public:
      */
     const std::set<std::string>& getWildcardSubscriptions();
 
+    /**
+     * @brief Check if an OID is a wildcard subscription
+     * @param oid The OID to check
+     * @return true if the OID ends with "/*"
+     */
+    static bool isWildcard(const std::string& oid);
+
 private:
     std::set<std::string> uniqueSubscriptions_; 
     std::set<std::string> wildcardSubscriptions_;
@@ -100,13 +110,6 @@ private:
      * @param dm The device model to use for expanding wildcard subscriptions
      */
     void updateAllSubscribedOids_(catena::common::Device& dm);
-
-    /**
-     * @brief Check if an OID is a wildcard subscription
-     * @param oid The OID to check
-     * @return true if the OID ends with "/*"
-     */
-    static bool isWildcard(const std::string& oid);
 };
 
 } // namespace grpc
