@@ -112,6 +112,7 @@ class ParamDescriptor {
      * @param template_oid the parameter's template oid
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
+     * @param minimalSet the parameter's minimal set status
      * @param dm the device that the parameter belongs to
      * @param parent the parent parameter
      */
@@ -128,9 +129,10 @@ class ParamDescriptor {
       bool isCommand,
       Device& dm,
       uint32_t max_length,
+      bool minimalSet,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, parent_{parent} {
+        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, minimalSet_{minimalSet},parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -182,6 +184,17 @@ class ParamDescriptor {
      * @brief get the access scope of the parameter
      */
     const std::string& getScope() const;
+
+    /**   
+     * @brief get the minimal set status of the parameter
+     */
+    inline bool minimalSet() const { return minimalSet_; }
+
+    /**
+     * @brief set the minimal set status of the parameter
+     */
+    inline void setMinimalSet(bool flag) { minimalSet_ = flag; }
+
 
     /**
      * @brief Returns the max length of the array/string parameter. If max
@@ -304,6 +317,7 @@ class ParamDescriptor {
     std::reference_wrapper<Device> dev_;
 
     bool isCommand_;
+    bool minimalSet_;
 
     // default command implementation
     std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 

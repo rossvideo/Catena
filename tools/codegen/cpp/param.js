@@ -142,6 +142,9 @@ class Descriptor {
       },
       max_length: () => {
         return ("max_length" in desc) ? `${desc.max_length}` : "0";
+      },
+      minimal_set: () => {
+        return ("minimal_set" in desc) ? `${desc.minimal_set}` : "false";
       }
     };
 
@@ -149,6 +152,7 @@ class Descriptor {
     this.parentOid = parentOid;
     const argsArray = Object.values(args);
     this.args = argsArray.map(arg => arg()).join(', ');
+    this.minimalSet = desc.minimal_set;
   }
 
   /**
