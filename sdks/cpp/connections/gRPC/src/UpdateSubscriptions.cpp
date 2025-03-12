@@ -98,9 +98,27 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
                 
-                // Clear the responses vector to prepare for new responses
+                // Clear any existing responses
                 responses_.clear();
                 current_response_ = 0;
+                
+                // Process removed OIDs first to ensure clean state
+                for (const auto& oid : req_.removed_oids()) {
+                    std::cout << "Removing subscription for OID: " << oid << std::endl;
+                    if (subscriptionManager_.isWildcard(oid)) {
+                        // For wildcard removals, we need to remove all matching subscriptions
+                        std::string baseOid = oid.substr(0, oid.length() - 2); // Remove "/*"
+                        auto allSubscribed = subscriptionManager_.getAllSubscribedOids(dm_);
+                        for (const auto& subscribedOid : allSubscribed) {
+                            // Remove if it starts with the base OID
+                            if (subscribedOid.find(baseOid) == 0) {
+                                subscriptionManager_.removeSubscription(subscribedOid);
+                            }
+                        }
+                    } else {
+                        subscriptionManager_.removeSubscription(oid);
+                    }
+                }
                 
                 // Process added OIDs
                 for (const auto& oid : req_.added_oids()) {
@@ -112,25 +130,16 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     }
                 }
                 
-                // Process removed OIDs
-                for (const auto& oid : req_.removed_oids()) {
-                    std::cout << "Removing subscription for OID: " << oid << std::endl;
-                    subscriptionManager_.removeSubscription(oid);
-                }
-                
                 // Now that all subscriptions are processed, send current values for all subscribed parameters
                 sendSubscribedParameters(*authz);
-                
-                // If we have responses to write, start writing them
+
+                // If we have responses, start writing them
                 if (!responses_.empty()) {
-                    writer_lock_.lock();
                     status_ = CallStatus::kWrite;
-                    writer_.Write(responses_[0], this);
-                    writer_lock_.unlock();
+                    writer_.Write(responses_[current_response_], this);
                 } else {
-                    // No responses to write, finish the RPC
                     status_ = CallStatus::kFinish;
-                    writer_.Finish(Status::OK, this);
+                    writer_.Finish(grpc::Status::OK, this);
                 }
                 
             } catch (const catena::exception_with_status& e) {
@@ -148,28 +157,18 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
             break;
 
         case CallStatus::kWrite:
-            try {
-                // Validate that we have responses to write
-                if (current_response_ >= responses_.size() || responses_.empty()) {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(grpc::Status::OK, this);
-                    break;
-                }
-
-                // Write responses sequentially until we're done
-                writer_lock_.lock();
-                if (current_response_ >= responses_.size() - 1) {
-                    status_ = CallStatus::kFinish; 
-                    writer_.Finish(Status::OK, this);
-                } else {
-                    current_response_++;
-                    writer_.Write(responses_.at(current_response_), this);
-                }
-                writer_lock_.unlock();
-            } catch (const std::exception& e) {
+            if (!ok) {
                 status_ = CallStatus::kFinish;
-                writer_.Finish(grpc::Status(grpc::StatusCode::INTERNAL, 
-                    "Error writing response: " + std::string(e.what())), this);
+                writer_.Finish(grpc::Status::CANCELLED, this);
+                break;
+            }
+
+            current_response_++;
+            if (current_response_ < responses_.size()) {
+                writer_.Write(responses_[current_response_], this);
+            } else {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(grpc::Status::OK, this);
             }
             break;
 
@@ -179,7 +178,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
             service->deregisterItem(this);
             break;
 
-        default:    
+        default:
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
