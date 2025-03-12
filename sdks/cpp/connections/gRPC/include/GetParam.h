@@ -78,12 +78,6 @@ class CatenaServiceImpl::GetParam : public CallData {
         CatenaServiceImpl *service_;
 
         /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _responder and other gRPC objects/functions.
-         */
-        ServerContext context_;
-
-        /**
          * @brief The client's scopes.
          */
         std::vector<std::string> clientScopes_;

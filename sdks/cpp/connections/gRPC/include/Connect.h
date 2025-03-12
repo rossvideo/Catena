@@ -41,7 +41,8 @@
  */
 
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "ServiceImpl.h"
+#include "SubscriptionManager.h"
 
 /**
 * @brief CallData class for the Connect RPC
@@ -72,11 +73,6 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
-        /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _writer and other gRPC objects/functions.
-         */
-        ServerContext context_;
         /**
          * @brief Server request (Info on connection).
          */
@@ -148,4 +144,19 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief ID of the shutdown signal for the Connect object
         */
         unsigned int shutdownSignalId_;
+
+        /**
+         * @brief Subscription manager instance for this connection
+         */
+        catena::grpc::SubscriptionManager subscriptionManager_;
+
+        /**
+         * @brief Updates the response message with parameter values and handles 
+         * authorization checks.
+         * 
+         * @param oid - The OID of the value to update
+         * @param idx - The index of the value to update
+         * @param p - The parameter to update
+         */
+        void updateResponse(const std::string& oid, size_t idx, const IParam* p);
 };

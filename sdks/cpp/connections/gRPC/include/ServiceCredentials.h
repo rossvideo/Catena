@@ -60,6 +60,6 @@ void expandEnvVariables(std::string &str);
  * 
  * @return initialized ServerCredentials
  */
-std::shared_ptr<grpc::ServerCredentials> getServerCredentials();
+std::shared_ptr<::grpc::ServerCredentials> getServerCredentials();
 
 } // namespace catena

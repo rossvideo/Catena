@@ -128,7 +128,8 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
     catena::MultiSetValuePayload setValues;
     catena::SetValuePayload* setValuePayload = setValues.add_values();
     setValuePayload->set_oid(jptr);
-    setValuePayload->set_allocated_value(&src);
+
+    setValuePayload->mutable_value()->CopyFrom(src);
     return multiSetValue(setValues, authz);
 }
 
@@ -256,10 +257,8 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
         for (const auto& [name, param] : params_) {
             if (authz.readAuthz(*param)) { 
                 Path path{name};
-                std::cout << "Checking path: '" << path.toString(true) << "'" << std::endl;
                 auto param_ptr = getParam(path.toString(true), status, authz);  
                 if (param_ptr) {
-                    std::cout << "Successfully got param: '" << path.toString(true) << "'" << std::endl;
                     result.push_back(std::move(param_ptr));
                 } else {
                     std::cout << "Failed to get param: " << status.what() << std::endl;
