@@ -17,5 +17,6 @@ var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
     [ "ServiceCredentials.h", "ServiceCredentials_8h.html", "ServiceCredentials_8h" ],
     [ "ServiceImpl.h", "ServiceImpl_8h.html", "ServiceImpl_8h" ],
     [ "SetValue.h", "SetValue_8h.html", "SetValue_8h" ],
-    [ "SharedFlags.h", "SharedFlags_8h.html", "SharedFlags_8h" ]
+    [ "SharedFlags.h", "SharedFlags_8h.html", "SharedFlags_8h" ],
+    [ "SubscriptionManager.h", "SubscriptionManager_8h.html", "SubscriptionManager_8h" ]
 ];
