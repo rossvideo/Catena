@@ -51,6 +51,7 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
     std::vector<SetValueRequest> requests;
     // Vector of paths to verified appends.
     std::vector<Path*> appends;
+    std::vector<std::unique_ptr<catena::common::IParam>> altered;
     // Failing multiSetValue if multi set is disabled.
     if (multi_set_enabled_ == false && src.values().size() > 1) {
         ans = catena::exception_with_status("Multi-set is disabled ", catena::StatusCode::PERMISSION_DENIED);
@@ -103,13 +104,17 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
                 // Validate total_length if working with string array.
                 else if (param->type().value() == STRING_ARRAY) {
                     uint32_t index = 0;
+                    // If inserting a string we need the parent string array.
                     if (path->back_is_index() && setValuePayload.value().kind_case() == catena::Value::KindCase::kStringValue) {
                         index = path->back_as_index();
                         Path parentPath(setValuePayload.oid());
                         parentPath.popBack();
                         param = getParam(parentPath, ans, authz);
                     }
-                    if (!param->validateTotalSize(setValuePayload.value(), index)) {
+                    bool valid = param->validateTotalSize(setValuePayload.value(), index);
+                    altered.push_back(std::move(param));
+                    // Returning an error if the size is invalid.
+                    if (!valid) {
                         ans = catena::exception_with_status("Total length exceeds maximum length of " + setValuePayload.oid(), catena::StatusCode::OUT_OF_RANGE);
                         break;
                     }
@@ -126,24 +131,21 @@ catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayloa
                 append_path->popBack();
                 getParam(*append_path, ans, authz)->popBack(authz);
             }
+            for (std::unique_ptr<IParam>& param : altered) {
+                param->resetTotalSize();
+            }
         // Everything is valid, commiting all set value requests.
         } else if (ans.status == catena::StatusCode::OK) {
             for (auto& [path, setValuePayload] : requests) {
                 std::unique_ptr<IParam> param = getParam(*path, ans, authz);
+                if (!param) { // Array issue, we need to add back to the back of the parent param.
+                    break;
+                }
                 ans = param->fromProto(setValuePayload->value(), authz);
                 valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
-                // Resetting totalArraySize if String Array.
-                if (param->type().value() == STRING_ARRAY) {
-                    // If inserting string we need the parent array param.
-                    if (setValuePayload->value().kind_case() == catena::Value::KindCase::kStringValue) {
-                        path->rewind();
-                        path->popBack();
-                        param = getParam(*path, ans, authz);
-                    }
-                    param->resetTotalSize();
-                }
             }
         }
+        // Reverting the totalSize of any string arrays we altered.
     }
     return ans;
 }

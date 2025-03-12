@@ -93,13 +93,10 @@ class ParamWithValue : public catena::common::IParam {
         ParamDescriptor& descriptor
     ) : value_{value}, descriptor_{descriptor} {}
 
-    /**
-     * @brief Construct a new ParamWithValue object without adding it to device
-     */
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
-        std::vector<std::size_t>& totalArraySize
+        std::shared_ptr<std::vector<std::size_t>> totalArraySize
     ) : value_{value}, descriptor_{descriptor} {
         totalArraySize_ = totalArraySize;
     }
@@ -112,7 +109,9 @@ class ParamWithValue : public catena::common::IParam {
         const FieldInfo<FieldType, ParentType>& field, 
         ParentType& parentValue,
         ParamDescriptor& parentDescriptor
-    ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {}
+    ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {
+        resetTotalSize();
+    }
 
     /**
      * @brief ParamWithValue can not be copied directly
@@ -157,32 +156,46 @@ class ParamWithValue : public catena::common::IParam {
 
   public:
     /**
-     * @brief Validates the size of a string or array value.
-     * This does not check size of all elements in a string array. Therefore
-     * someone could still mount an attack on the system by sending a
-     * string_array with a large value.
+     * @brief Validates that the nmber of elements in a string or array value
+     * does not exceed the defined max_length_.
      * @param value The value to validate the size of.
 	 * @returns true if the value's size is within the param's predefined
 	 * limit, or if the value is not a string or array.
      */
     bool validateSize(const catena::Value& value) const override {
+        /*
+         * This function cannot handle inserting string into string array as it
+         * will compare the string's length and not array size. Ignore and use
+         * validateTotalSize() instead.
+         */
+        if (value.kind_case() == Kind::kStringValue && type().value() == STRING_ARRAY) {
+            return true;
+        }
         return getSize.contains(value.kind_case()) ? getSize.at(value.kind_case())(value) <= descriptor_.max_length() : true;
     }
 
+    /**
+     * @brief Validates that the sum of all strings in a string array does not
+     * exceed the defined total_length_.
+     * @param value The value you are inserting into/setting the array.
+     * @param index The index you are inserting the string into.
+     * @returns true if the total size of the array is within the limits of the
+     * defined total_length_.
+     */
     bool validateTotalSize(const catena::Value& value, uint32_t index = 0) override {
         std::size_t totalSize = 0;
         if (type().value() == STRING_ARRAY) {
             // Case 1: Inserting string
             if (value.kind_case() == Kind::kStringValue) {
                 // Case 1a: Appending string
-                if (index >= totalArraySize_.size()) {
-                    totalArraySize_.push_back(value.string_value().length());
+                if (index >= totalArraySize_->size()) {
+                    totalArraySize_->push_back(value.string_value().length());
                 // Case 1b: Replacing string
                 } else {
-                    totalArraySize_[index] = value.string_value().length();
+                    totalArraySize_->at(index) = value.string_value().length();
                 }
-                // Getting totalSize
-                for (std::size_t size : totalArraySize_) {totalSize += size;}
+                // Getting sum totalArraySize = totalSize
+                for (std::size_t size : *totalArraySize_) {totalSize += size;}
             // Case 2: Replacing array
             } else {
                 for (const std::string& str : value.string_array_values().strings()) {
@@ -190,9 +203,14 @@ class ParamWithValue : public catena::common::IParam {
                 }
             }
         }
+        // Ensuring the totalSize <= defined total_length field.
         return totalSize <= descriptor_.total_length();
     }
 
+    /**
+     * @brief Resets the totalArraySize_ vector to the sum of the strings in
+     * the current value's string array.
+     */
     void resetTotalSize() override {
         resetTotalSize(value_.get());
     }
@@ -502,15 +520,34 @@ class ParamWithValue : public catena::common::IParam {
         return ans;
     }
 
-
+    /**
+     * @brief Resets the totalArraySize_ vector to the sum of the strings in
+     * the current value's string array.
+     * @tparam U the type of the ParamWithValue's value.
+     * @param value get().
+     * 
+     * This specialization sets totalArraySize_ to an empty vector and is used
+     * for all types other than STRING_ARRAY.
+     */
     template <typename U>
-    void resetTotalSize(U& value) { return; }
+    void resetTotalSize(U& value) { totalArraySize_ = nullptr; }
 
+    /**
+     * @brief Resets the totalArraySize_ vector to the sum of the strings in
+     * the current value's string array.
+     * @param value get().
+     * 
+     * This specialization is used when value is a STRING_ARRAY.
+     */
     void resetTotalSize(std::vector<std::string>& value) {
-        totalArraySize_.clear();
+        if (!totalArraySize_) {
+            totalArraySize_ = std::make_shared<std::vector<std::size_t>>();
+        } else {
+            totalArraySize_->clear();
+        }
         // for (const std::string& str : value_.get()) {
-        for (auto& str : value) {
-            totalArraySize_.push_back(str.length());
+        for (std::string& str : value) {
+            totalArraySize_->push_back(str.length());
         }
     }
 
@@ -552,10 +589,14 @@ class ParamWithValue : public catena::common::IParam {
         size_t oidIndex = oid.front_as_index();
         oid.pop();
 
-        if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
+        
+
+        if (oidIndex > value.size() || oidIndex == catena::common::Path::kEnd) {
             // If index is out of bounds, return nullptr
             status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
             return nullptr;
+        } else if (oidIndex == value.size()) {
+            addBack(value, authz, status);
         }
 
         if (oid.empty()) {
@@ -727,7 +768,7 @@ class ParamWithValue : public catena::common::IParam {
      * The length of each string of a string array and each index.
      * This is used in totalLength validation for multiSetValues.
      */
-    std::vector<std::size_t>  totalArraySize_;
+    std::shared_ptr<std::vector<std::size_t>> totalArraySize_;
 };
 
 template<typename T>

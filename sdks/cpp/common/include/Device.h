@@ -110,7 +110,8 @@ class Device {
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
-	    subscriptions_{subscriptions}, default_max_length_{kDefaultMaxArrayLength} {}
+	    subscriptions_{subscriptions}, default_max_length_{kDefaultMaxArrayLength},
+      default_total_length_{kDefaultMaxArrayLength}  {}
 
     /**
      * @brief Destroy the Device object
@@ -148,6 +149,8 @@ class Device {
      */
     inline uint32_t default_max_length() const {return default_max_length_;}
 
+    inline uint32_t default_total_length() const {return default_total_length_;}
+
     /**
      * @brief Sets the default_max_length_ for this device's array params.
      * If default_max_length <= 0, then it reverts default_max_length_ to
@@ -156,6 +159,16 @@ class Device {
      */
     void set_default_max_length(const uint32_t default_max_length) {
       default_max_length_ = default_max_length > 0 ? default_max_length : kDefaultMaxArrayLength;
+    }
+
+    /**
+     * @brief Sets the default_total_length_ for this device's array params.
+     * If default_total_length <= 0, then it reverts default_total_length_ to
+     * kDefaultMaxArrayLength.
+     * @param default_total_length The value to set default_total_length_ to.
+     */
+    void set_default_total_length(const uint32_t default_total_length) {
+      default_total_length_ = default_total_length > 0 ? default_total_length : kDefaultMaxArrayLength;
     }
 
     /**
@@ -494,6 +507,7 @@ class Device {
     bool multi_set_enabled_;
     bool subscriptions_;
     uint32_t default_max_length_ = 0;
+    uint32_t default_total_length_ = 0;
 
     mutable std::mutex mutex_;
 };
