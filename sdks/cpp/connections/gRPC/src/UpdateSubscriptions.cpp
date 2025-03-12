@@ -105,7 +105,6 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 // Process added OIDs
                 for (const auto& oid : req_.added_oids()) {
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
-                    
                     try {
                         processSubscription(oid, *authz);
                     } catch (const std::exception& e) {
@@ -117,10 +116,9 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 for (const auto& oid : req_.removed_oids()) {
                     std::cout << "Removing subscription for OID: " << oid << std::endl;
                     subscriptionManager_.removeSubscription(oid);
-
                 }
                 
-                // Always send the current set of subscribed parameters
+                // Now that all subscriptions are processed, send current values for all subscribed parameters
                 sendSubscribedParameters(*authz);
                 
                 // If we have responses to write, start writing them
@@ -234,6 +232,9 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
 void CatenaServiceImpl::UpdateSubscriptions::processSubscription(const std::string& oid, catena::common::Authorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
 
+    // Add the subscription first
+    subscriptionManager_.addSubscription(oid);
+
     // Check if this is a wildcard subscription
     if (subscriptionManager_.isWildcard(oid)) {
         // Extract base OID (everything before the wildcard)
@@ -246,6 +247,9 @@ void CatenaServiceImpl::UpdateSubscriptions::processSubscription(const std::stri
             return;
         }
 
+        // Add subscription for base parameter
+        subscriptionManager_.addSubscription(baseOid);
+
         // If base param is a STRUCT or STRUCT_ARRAY, get its children
         if (baseParam->type().value() == catena::ParamType::STRUCT || 
             baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
@@ -257,28 +261,34 @@ void CatenaServiceImpl::UpdateSubscriptions::processSubscription(const std::stri
             if (baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
                 for (size_t i = 0; i < baseParam->size(); i++) {
                     // Create path with array index
-                    catena::common::Path path(baseOid);
+                    Path path(baseOid);
                     path.push_back(i);
 
                     // Get array element
-                    auto arrayElem = dm_.getParam(path.toString(), rc);
+                    auto arrayElem = dm_.getParam(path.toString(true), rc);
                     if (!arrayElem) {
                         std::cout << "Failed to get array element at index " << i << ": " << rc.what() << std::endl;
                         continue;
                     }
 
+                    // Add subscription for array element
+                    subscriptionManager_.addSubscription(path.toString(true));
+
                     // Process each child of the array element
                     for (const auto& [childOid, childDesc] : subParams) {
-                        catena::common::Path childPath = path;
+                        Path childPath = path;
                         childPath.push_back(childOid);
                         
-                        auto childParam = dm_.getParam(childPath.toString(), rc);
+                        auto childParam = dm_.getParam(childPath.toString(true), rc);
                         if (childParam) {
+                            // Add subscription for child
+                            subscriptionManager_.addSubscription(childPath.toString(true));
+
                             catena::DeviceComponent_ComponentParam response;
-                            response.set_oid(childPath.toString());
+                            response.set_oid(childPath.toString(true));
                             auto err = childParam->toProto(*response.mutable_param(), authz);
                             if (err.status != catena::StatusCode::OK) {
-                                std::cout << "Failed to serialize parameter " << childPath.toString() << ": " << err.what() << std::endl;
+                                std::cout << "Failed to serialize parameter " << childPath.toString(true) << ": " << err.what() << std::endl;
                                 continue;
                             }
                             responses_.push_back(response);
@@ -288,14 +298,19 @@ void CatenaServiceImpl::UpdateSubscriptions::processSubscription(const std::stri
             } else { // STRUCT type
                 // Process each child directly
                 for (const auto& [childOid, childDesc] : subParams) {
-                    std::string fullOid = baseOid + "/" + childOid;
-                    auto childParam = dm_.getParam(fullOid, rc);
+                    Path childPath(baseOid);
+                    childPath.push_back(childOid);
+
+                    auto childParam = dm_.getParam(childPath.toString(true), rc);
                     if (childParam) {
+                        // Add subscription for child
+                        subscriptionManager_.addSubscription(childPath.toString(true));
+
                         catena::DeviceComponent_ComponentParam response;
-                        response.set_oid(fullOid);
+                        response.set_oid(childPath.toString(true));
                         auto err = childParam->toProto(*response.mutable_param(), authz);
                         if (err.status != catena::StatusCode::OK) {
-                            std::cout << "Failed to serialize parameter " << fullOid << ": " << err.what() << std::endl;
+                            std::cout << "Failed to serialize parameter " << childPath.toString(true) << ": " << err.what() << std::endl;
                             continue;
                         }
                         responses_.push_back(response);
