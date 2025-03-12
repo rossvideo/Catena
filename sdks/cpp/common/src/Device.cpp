@@ -128,7 +128,7 @@ catena::exception_with_status Device::setValue (const std::string& jptr, catena:
     catena::MultiSetValuePayload setValues;
     catena::SetValuePayload* setValuePayload = setValues.add_values();
     setValuePayload->set_oid(jptr);
-    setValuePayload->set_allocated_value(&src);
+    setValuePayload->mutable_value()->CopyFrom(src);
     return multiSetValue(setValues, authz);
 }
 
