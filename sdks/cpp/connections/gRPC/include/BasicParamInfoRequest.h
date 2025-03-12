@@ -155,5 +155,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief The writer lock.
          */
+
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 };

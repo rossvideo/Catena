@@ -64,17 +64,9 @@ CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bo
  * Manages the steps of the GetParam gRPC command through the state variable status.
  */
 void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
-    /**
-     * If the service is null or the status is kFinish, return.
-     */
-    if (!service || status_ == CallStatus::kFinish) {
-        return;
-    }
-
-    std::cout << "GetParam proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-              << std::endl;
-
+    std::cout << "GetParam::proceed[" << objectId_ << "]: " << timeNow()
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
     
     if(!ok) {
         std::cout << "GetParam[" << objectId_ << "] cancelled\n";
@@ -85,10 +77,9 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
     
     switch (status_) {
         /** 
-         * kCreate: Updates status to kProcess and requests the GetValue
+         * kCreate: Updates status to kProcess and requests the GetParam
          * command from the service.
          */ 
-
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
             service_->RequestGetParam(&context_, &req_, &writer_, service_->cq_, service_->cq_,
@@ -103,15 +94,15 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
             new GetParam(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);  
             status_ = CallStatus::kWrite;
-            //break; // No break so it is allowed to fall through to the write case
+            // Falling through to kWrite.
 
         /**
          * kWrite: Writes the response to the client.
          */
         case CallStatus::kWrite:
             try {
-                std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
+                // Creating authorizer.
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service->authorizationEnabled()) {
@@ -120,20 +111,18 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                
-                param = dm_.getParam(req_.oid(), rc, *authz);
-                
+                // Getting the param.
+                std::unique_ptr<IParam> param = dm_.getParam(req_.oid(), rc, *authz);
+                // If everything was successful, writing to the client.
                 if (rc.status == catena::StatusCode::OK && param) {
                     catena::DeviceComponent_ComponentParam response;
+                    response.set_oid(param->getOid());
                     param->toProto(*response.mutable_param(), *authz);
+                    status_ = CallStatus::kPostWrite;
                     writer_.Write(response, this);
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status::OK, this);
-                    break;
-                } else {
+                } else { // Error
                     status_ = CallStatus::kFinish;
                     writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                    break;
                 }
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
@@ -145,7 +134,6 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                 writer_.Finish(Status::CANCELLED, this);
             }
             break;
-
 
         /**
          * kPostWrite: Finish writing the response to the client.
@@ -159,7 +147,6 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
          * kFinish: Final step of gRPC is to deregister the item from
          * CatenaServiceImpl.
          */
-
         case CallStatus::kFinish:
             std::cout << "GetParam[" << objectId_ << "] finished\n";
             service->deregisterItem(this);

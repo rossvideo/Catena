@@ -137,8 +137,9 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
          */
         ServerContext context_;
     };
-  
+
   private:
+
     // Aliases for special vectors and unique_ptrs.
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
     using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;

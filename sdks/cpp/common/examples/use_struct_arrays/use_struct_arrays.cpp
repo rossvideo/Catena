@@ -71,13 +71,13 @@ int main() {
 
 
     // add a new audio channel to audio_deck
-    ip = dm.getParam("/audio_deck/-", err);
-    if (ip == nullptr){
+    // getParam /- is invalid.
+    value.Clear();
+    err = dm.setValue("/audio_deck/-", value);
+    if (err.status != catena::StatusCode::OK){
         std::cerr << "Error: " << err.what() << std::endl;
         return EXIT_FAILURE;
     }
-    value.Clear();
-    ip->toProto(value, Authorizer::kAuthzDisabled);
     std::cout << "new audio channel: " << value.DebugString() << std::endl;
 
     ip = dm.getParam("/audio_deck/3/eq_list/0/response", err);
