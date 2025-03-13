@@ -99,14 +99,15 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 // Mode 1: Get all top-level parameters
                 if (req_.oid_prefix().empty() && !req_.recursive()) {
                     std::vector<std::unique_ptr<IParam>> top_level_params;
+
                     {
                     Device::LockGuard lg(dm_);
                     top_level_params = dm_.getTopLevelParams(rc, *authz);
+
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        Device::LockGuard lg(dm_);
-                        
+                        Device::LockGuard lg(dm_);                      
                         responses_.clear();  
                         // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
@@ -142,9 +143,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 
                     if (rc.status == catena::StatusCode::OK && param) {
                         // Add the main parameter to the response list
+
                         responses_.emplace_back();
                         param->toProto(responses_.back(), *authz);
-
                         // Calculate and update array length if this parameter is an array
                         if (param->isArrayType()) {
                             uint32_t array_length = param->size();
@@ -305,6 +306,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param
         if (array_length > 0) {
             updateArrayLengths(current_param->getOid(), array_length);
         }
+
     } else {
         // For non-array types, process children normally
         processChildren(current_path);
