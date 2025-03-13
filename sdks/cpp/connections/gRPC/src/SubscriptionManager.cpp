@@ -37,6 +37,7 @@
 // Use the correct namespaces
 using catena::common::Device;
 using catena::common::IParam;
+using catena::common::Path;
 
 namespace catena {
 namespace grpc {
@@ -47,21 +48,113 @@ bool SubscriptionManager::isWildcard(const std::string& oid) {
 }
 
 // Add a subscription (either unique or wildcard). Returns true if added, false if already exists
-bool SubscriptionManager::addSubscription(const std::string& oid) {
+bool SubscriptionManager::addSubscription(const std::string& oid, catena::common::Device& dm) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+
+    // Check if this is a wildcard subscription
     if (isWildcard(oid)) {
+        // Extract base OID (everything before the wildcard)
+        std::string baseOid = oid.substr(0, oid.length() - 2); // Remove "/*"
+        
+        // Add the wildcard subscription
         auto [_, inserted] = wildcardSubscriptions_.insert(oid);
+        if (!inserted) return false;
+
+        // Add subscription for base parameter
+        uniqueSubscriptions_.insert(baseOid);
+
+        // Get the base parameter
+        std::unique_ptr<IParam> baseParam;
+        {
+            catena::common::Device::LockGuard lg(dm);
+            baseParam = dm.getParam(baseOid, rc);
+        }
+        
+        if (!baseParam) {
+            std::cout << "Failed to get base parameter for wildcard subscription: " << rc.what() << std::endl;
+            return false;
+        }
+
+        // If base param is a STRUCT or STRUCT_ARRAY, get its children
+        if (baseParam->type().value() == catena::ParamType::STRUCT || 
+            baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
+            
+            const auto& descriptor = baseParam->getDescriptor();
+            const auto& subParams = descriptor.getAllSubParams();
+
+            // For STRUCT_ARRAY, we need to iterate through array indices
+            if (baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
+                for (size_t i = 0; i < baseParam->size(); i++) {
+                    // Create path with array index
+                    Path path(baseOid);
+                    path.push_back(i);
+
+                    // Get array element
+                    auto arrayElem = dm.getParam(path.toString(true), rc);
+                    if (!arrayElem) {
+                        std::cout << "Failed to get array element at index " << i << ": " << rc.what() << std::endl;
+                        continue;
+                    }
+
+                    // Add subscription for array element
+                    uniqueSubscriptions_.insert(path.toString(true));
+
+                    // Process each child of the array element
+                    for (const auto& [childOid, childDesc] : subParams) {
+                        Path childPath = path;
+                        childPath.push_back(childOid);
+                        
+                        auto childParam = dm.getParam(childPath.toString(true), rc);
+                        if (childParam) {
+                            uniqueSubscriptions_.insert(childPath.toString(true));
+                        }
+                    }
+                }
+            } else { // STRUCT type
+                // Process each child directly
+                for (const auto& [childOid, childDesc] : subParams) {
+                    Path childPath(baseOid);
+                    childPath.push_back(childOid);
+
+                    auto childParam = dm.getParam(childPath.toString(true), rc);
+                    if (childParam) {
+                        uniqueSubscriptions_.insert(childPath.toString(true));
+                    }
+                }
+            }
+        }
+        return true;
+    } else {
+        // Non-wildcard subscription
+        auto [_, inserted] = uniqueSubscriptions_.insert(oid);
         return inserted;
     }
-    auto [_, inserted] = uniqueSubscriptions_.insert(oid);
-    return inserted;
 }
 
 // Remove a subscription (either unique or wildcard). Returns true if removed, false if not found
 bool SubscriptionManager::removeSubscription(const std::string& oid) {
     if (isWildcard(oid)) {
-        return wildcardSubscriptions_.erase(oid) > 0;
+        // For wildcard removals, we need to remove all matching subscriptions
+        std::string baseOid = oid.substr(0, oid.length() - 2); // Remove "/*"
+        
+        // Remove the wildcard subscription itself
+        if (!wildcardSubscriptions_.erase(oid)) {
+            return false;
+        }
+
+        // Remove all subscriptions that start with the base OID
+        auto it = uniqueSubscriptions_.begin();
+        while (it != uniqueSubscriptions_.end()) {
+            if (it->find(baseOid) == 0) {
+                it = uniqueSubscriptions_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        return true;
+    } else {
+        return uniqueSubscriptions_.erase(oid) > 0;
     }
-    return uniqueSubscriptions_.erase(oid) > 0;
 }
 
 // Update the list of all subscribed OIDs by combining unique and wildcard subscriptions
@@ -90,27 +183,20 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
         if (baseParam) {
             // If we found the base parameter, add it and all its children
             allSubscribedOids_.push_back(basePath);
-            
-            // If it's a struct or array, we need to get all its children
-            if (baseParam->getDescriptor().type() == catena::ParamType::STRUCT || 
-                baseParam->getDescriptor().type() == catena::ParamType::STRUCT_ARRAY) {
-                
-                std::vector<std::unique_ptr<IParam>> allParams;
-                {
-                    catena::common::Device::LockGuard lg(dm);
-                    allParams = dm.getTopLevelParams(rc);
-                }
-                
-                // Check each parameter to see if it's under our base path
-                for (auto& param : allParams) {
-                    std::string paramOid = param->getOid();
-                    if (paramOid.find(basePath) == 0) {
-                        if (paramOid.length() == basePath.length() || 
-                            paramOid[basePath.length()] == '/') {
-                            allSubscribedOids_.push_back(paramOid);
-                        }
+
+            // If base parameter is an array, process each element
+            if (baseParam->isArrayType()) {
+                uint32_t array_length = baseParam->size();
+                for (uint32_t i = 0; i < array_length; i++) {
+                    Path indexed_path{basePath, std::to_string(i)};
+                    auto indexed_param = dm.getParam(indexed_path.toString(), rc);
+                    if (indexed_param) {
+                        allSubscribedOids_.push_back(indexed_path.toString());
+                        processChildren_(indexed_path.toString(), indexed_param.get(), dm);
                     }
                 }
+            } else {
+                processChildren_(basePath, baseParam.get(), dm);
             }
         } else {
             // If base parameter not found, try to find any parameters that start with this path
@@ -126,8 +212,40 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
                     if (paramOid.length() == basePath.length() || 
                         paramOid[basePath.length()] == '/') {
                         allSubscribedOids_.push_back(paramOid);
+                        processChildren_(paramOid, param.get(), dm);
                     }
                 }
+            }
+        }
+    }
+}
+
+void SubscriptionManager::processChildren_(const std::string& parent_path, IParam* current_param, catena::common::Device& dm) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    const auto& descriptor = current_param->getDescriptor();
+    
+    for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
+        if (child_name.empty() || child_name[0] == '/') continue;
+        
+        Path child_path{parent_path, child_name};
+        auto sub_param = dm.getParam(child_path.toString(), rc);
+        
+        if (rc.status == catena::StatusCode::OK && sub_param) {
+            allSubscribedOids_.push_back(child_path.toString());
+
+            // If this child is an array, process its elements
+            if (sub_param->isArrayType()) {
+                uint32_t array_length = sub_param->size();
+                for (uint32_t i = 0; i < array_length; i++) {
+                    Path indexed_path{child_path.toString(), i};
+                    auto indexed_param = dm.getParam(indexed_path.toString(), rc);
+                    if (indexed_param) {
+                        allSubscribedOids_.push_back(indexed_path.toString());
+                        processChildren_(indexed_path.toString(), indexed_param.get(), dm);
+                    }
+                }
+            } else {
+                processChildren_(child_path.toString(), sub_param.get(), dm);
             }
         }
     }
