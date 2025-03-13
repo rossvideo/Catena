@@ -35,8 +35,6 @@ find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 set(sources "src/api.cpp")
 add_library(${target} STATIC ${sources})
 
-find_package(jwt-cpp CONFIG REQUIRED)
-
 # Specify include directories
 include_directories(
     ${CROW_ROOT_DIR}/include

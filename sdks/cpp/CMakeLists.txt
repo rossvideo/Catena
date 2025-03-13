@@ -97,10 +97,16 @@ if (APPLE)
   set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
 
   set(CPP_OPTS -E -x c -P)
+  include_directories("/opt/homebrew/include")
 endif (APPLE)
 
 # was in if(APPLE) moved here to troublshoot build failure on Ubuntu VM
-include_directories("$ENV{HOME}/.local/include")
+include_directories(
+  "$ENV{HOME}/.local/include"
+)
+find_package(jwt-cpp CONFIG REQUIRED)
+find_package(OpenSSL CONFIG REQUIRED)
+
 
 # find the c preprocessor and set the options to use with it
 if (APPLE)
@@ -157,6 +163,10 @@ endif()
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
 message(STATUS "Using protobuf ${Protobuf_VERSION}")
+
+# find the jwt-cpp package; needed by all connection types
+find_package(jwt-cpp CONFIG REQUIRED)
+message(STATUS "Using jwt-cpp ${jwt-cpp_VERSION}")
 
 # Locate the input proto files
 set (relative_interface "../../interface/")

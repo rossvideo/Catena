@@ -50,8 +50,6 @@ set(sources
 
 add_library(${target} STATIC ${sources})
 
-find_package(jwt-cpp CONFIG REQUIRED)
-
 target_include_directories(
     ${target}
     PUBLIC
