@@ -111,7 +111,7 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                 // Locking divice and setting value(s).
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 Device::LockGuard lg(dm_);
-                rc = dm_.multiSetValue(reqs_, *authz);
+                rc = dm_.tryMultiSetValue(reqs_, *authz);
                 if (rc.status == catena::StatusCode::OK) {
                     status_ = CallStatus::kFinish;
                     responder_.Finish(catena::Empty{}, Status::OK, this);

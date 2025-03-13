@@ -197,6 +197,7 @@ class IParam {
      */
     virtual bool isArrayType() const = 0;
 
+    virtual catena::exception_with_status validateSetValue(const catena::Value& value, uint32_t index) = 0;
 };
 }  // namespace common
 

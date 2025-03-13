@@ -424,6 +424,10 @@ class Device {
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
+    catena::exception_with_status tryMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
+    
+    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
+
     // The path to the param and the value to set it to.
     using SetValueRequest = std::pair<std::unique_ptr<Path>, const catena::SetValuePayload*>;
     /**

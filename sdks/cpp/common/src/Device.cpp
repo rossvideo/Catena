@@ -44,6 +44,31 @@
 
 using namespace catena::common;
 
+catena::exception_with_status Device::tryMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    for (const catena::SetValuePayload& setValuePayload : src.values()) {
+        try {
+            Path path(setValuePayload.oid());
+            uint32_t index = 0;
+            if (path.back_is_index()) {
+                index = path.back_as_index();
+                path.popBack();
+            }
+            std::unique_ptr<IParam> param = getParam(path, ans, authz);
+            ans = param->validateSetValue(setValuePayload.value(), index);
+        } catch (const catena::exception_with_status& why) {
+            ans = catena::exception_with_status(why.what(), why.status);
+            break;
+        }
+    }
+    return ans;
+}
+
+catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    return ans;
+}
+
 catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
     // Transaction status.
     catena::exception_with_status ans{"", catena::StatusCode::OK};
