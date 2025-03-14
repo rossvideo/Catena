@@ -735,7 +735,11 @@ class ParamWithValue : public catena::common::IParam {
      */
     template<typename U, typename V>
     catena::exception_with_status updateTracker(U& oValue, const V& nValue, uint32_t* index) {
-        return catena::exception_with_status("OK", catena::StatusCode::OK);
+        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
+        if (!std::is_same<U, V>::value)  {
+            ans = catena::exception_with_status("Value type does not match type of " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        }
+        return ans;
     }
     /**
      * @brief Set string overload of updateTracker, updates mSizeTracker.
@@ -754,11 +758,13 @@ class ParamWithValue : public catena::common::IParam {
      * @param index The index to insert at. Must be specified.
      * @returns catena::exception_with_status.
      */
-    template<meta::IsVector U, typename V>
-    catena::exception_with_status updateTracker(U& arrayValue, const V& value, uint32_t* index) {
+    template<typename U, typename V>
+    catena::exception_with_status updateTracker(std::vector<U>& arrayValue, const V& value, uint32_t* index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         if (!index) {
             ans = catena::exception_with_status("Index not specified in SetValue " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        } else if (!std::is_same<U, V>::value)  {
+            ans = catena::exception_with_status("Value type does not match type of " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         } else {
             // Append
             if (*index == uint32_t(Path::kEnd)) {
