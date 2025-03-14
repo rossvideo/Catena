@@ -454,10 +454,6 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
                 }
             }
             
-            // Substring match
-            if (!subscription_oid.substr(1).empty() && param_name.find(subscription_oid.substr(1)) != std::string::npos) {
-                return true;
-            }
         }
         
         return false;
