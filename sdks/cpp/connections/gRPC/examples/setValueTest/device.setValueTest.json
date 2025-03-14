@@ -1,0 +1,44 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+  "default_scope": "st2138:op",
+  "params": {
+
+    "int_test" : {
+      "type": "INT32",
+      "value": {"int32_value": 0}
+    },
+
+    "float_test" : {
+      "type": "FLOAT32",
+      "value": {"float32_value": 0}
+    },
+
+    "string_test" : {
+      "type": "STRING",
+      "value": {"string_value": "0"},
+      "max_length": 10
+    },
+
+    "int_array_test" : {
+      "type": "INT32_ARRAY",
+      "value": {"int32_array_values": {"ints": [0]}},
+      "max_length": 5
+    },
+
+    "float_array_test" : {
+      "type" : "FLOAT32_ARRAY",
+      "value": {"float32_array_values": {"floats": [0]}},
+      "max_length": 3
+    },
+
+    "string_array_test" : {
+      "type" : "STRING_ARRAY",
+      "value": {"string_array_values": {"strings": ["0"]}},
+      "max_length": 5,
+      "total_length": 10
+    }
+  }
+}
