@@ -14,7 +14,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -36,7 +36,6 @@ function(cmake_catena_grpc_common)
     add_library(${target} STATIC ${sources})
 
     # set up include directories
-    set (EXTERNAL_INCLUDES "/usr/local/include")
     target_include_directories(
         ${target}
         PUBLIC
@@ -44,8 +43,6 @@ function(cmake_catena_grpc_common)
             $<BUILD_INTERFACE:${GRPC_SERVICE_DIR}>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp/grpc_service>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
-        PRIVATE
-            ${EXTERNAL_INCLUDES}
     )
 
     # Explicitly link against the libraries in the ./local folder, not system folders
