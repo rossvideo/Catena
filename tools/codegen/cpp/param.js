@@ -143,6 +143,9 @@ class Descriptor {
       max_length: () => {
         return ("max_length" in desc) ? `${desc.max_length}` : "0";
       },
+      total_length: () => {
+        return ("total_length" in desc) ? `${desc.total_length}` : "0";
+      },
       minimal_set: () => {
         return ("minimal_set" in desc) ? `${desc.minimal_set}` : "false";
       }

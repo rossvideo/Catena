@@ -896,7 +896,7 @@ class ParamWithValue : public catena::common::IParam {
                 for (std::size_t length : *tSizeTracker_) {
                     totalLength += length;
                 }
-                if (totalLength > descriptor_.max_length()) {
+                if (totalLength > descriptor_.total_length()) {
                     ans = catena::exception_with_status("Array " + descriptor_.getOid() + " exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
                 }
             }
