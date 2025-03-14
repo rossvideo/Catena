@@ -75,54 +75,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, catena::common
             return false;
         }
 
-        // If base param is a STRUCT or STRUCT_ARRAY, get its children
-        if (baseParam->type().value() == catena::ParamType::STRUCT || 
-            baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
-            
-            const auto& descriptor = baseParam->getDescriptor();
-            const auto& subParams = descriptor.getAllSubParams();
-
-            // For STRUCT_ARRAY, we need to iterate through array indices
-            if (baseParam->type().value() == catena::ParamType::STRUCT_ARRAY) {
-                for (size_t i = 0; i < baseParam->size(); i++) {
-                    // Create path with array index
-                    Path path(baseOid);
-                    path.push_back(i);
-
-                    // Get array element
-                    auto arrayElem = dm.getParam(path.toString(true), rc);
-                    if (!arrayElem) {
-                        std::cout << "Failed to get array element at index " << i << ": " << rc.what() << std::endl;
-                        continue;
-                    }
-
-                    // Add subscription for array element
-                    uniqueSubscriptions_.insert(path.toString(true));
-
-                    // Process each child of the array element
-                    for (const auto& [childOid, childDesc] : subParams) {
-                        Path childPath = path;
-                        childPath.push_back(childOid);
-                        
-                        auto childParam = dm.getParam(childPath.toString(true), rc);
-                        if (childParam) {
-                            uniqueSubscriptions_.insert(childPath.toString(true));
-                        }
-                    }
-                }
-            } else { // STRUCT type
-                // Process each child directly
-                for (const auto& [childOid, childDesc] : subParams) {
-                    Path childPath(baseOid);
-                    childPath.push_back(childOid);
-
-                    auto childParam = dm.getParam(childPath.toString(true), rc);
-                    if (childParam) {
-                        uniqueSubscriptions_.insert(childPath.toString(true));
-                    }
-                }
-            }
-        }
+        processChildren_(baseOid, baseParam.get(), dm);
         return true;
     } else {
         // Non-wildcard subscription
