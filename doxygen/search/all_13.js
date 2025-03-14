@@ -37,5 +37,7 @@ var searchData=
   ['submodules_34',['Initialize git submodules',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md28',1,'']]],
   ['subs_35',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
   ['subscriptionmanager_36',['subscriptionmanager',['../classcatena_1_1grpc_1_1SubscriptionManager.html',1,'catena::grpc::SubscriptionManager'],['../classcatena_1_1grpc_1_1SubscriptionManager.html#adde3ea0f834d9bb83fb7e02c2f157841',1,'catena::grpc::SubscriptionManager::SubscriptionManager()']]],
-  ['subscriptionmanager_2eh_37',['SubscriptionManager.h',['../SubscriptionManager_8h.html',1,'']]]
+  ['subscriptionmanager_2eh_37',['SubscriptionManager.h',['../SubscriptionManager_8h.html',1,'']]],
+  ['subscriptionmanager_5f_38',['subscriptionManager_',['../classCatenaServiceImpl.html#ae80f9b831bf7032ee1b6bb176bf06931',1,'CatenaServiceImpl']]],
+  ['subscriptions_39',['subscriptions',['../classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1',1,'catena::common::Device']]]
 ];
