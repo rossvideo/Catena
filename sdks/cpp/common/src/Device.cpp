@@ -44,18 +44,65 @@
 
 using namespace catena::common;
 
-catena::exception_with_status Device::tryMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
-    catena::exception_with_status ans{"", catena::StatusCode::OK};
+bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz) {
+    // Looping through and validating set value requests.
     for (const catena::SetValuePayload& setValuePayload : src.values()) {
         try {
+            // Getting param, or parent param if the final segment is an index.
             Path path(setValuePayload.oid());
-            uint32_t index = 0;
+            std::unique_ptr<uint32_t> index;
             if (path.back_is_index()) {
-                index = path.back_as_index();
+                index = std::make_unique<uint32_t>(path.back_as_index());
                 path.popBack();
             }
             std::unique_ptr<IParam> param = getParam(path, ans, authz);
-            ans = param->validateSetValue(setValuePayload.value(), index);
+            // Validating serValue operation.
+            if (!param) {
+                break;
+            } else if (!param->validateSetValue(setValuePayload.value(), index.get(), authz, ans)) {
+                break;
+            }
+        } catch (const catena::exception_with_status& why) {
+            ans = catena::exception_with_status(why.what(), why.status);
+            break;
+        }
+    }
+    // Resetting trackers regardless of whether something went wrong or not.
+    for (const catena::SetValuePayload& setValuePayload : src.values()) {
+        // Creating another exception_with_status as to not overwrite ans.
+        catena::exception_with_status status{"", catena::StatusCode::OK};
+        // Getting param, or parent param if the final segment is an index.
+        Path path(setValuePayload.oid());
+        std::unique_ptr<uint32_t> index;
+        if (path.back_is_index()) {
+            index = std::make_unique<uint32_t>(path.back_as_index());
+            path.popBack();
+        }
+        std::unique_ptr<IParam> param = getParam(path, status, authz);
+        // Resetting the param's trackers.
+        if (param) { param->resetValidate(); }
+    }
+    // Returning true if successful.
+    return ans.status == catena::StatusCode::OK;
+}
+
+catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    // Looping through and commiting all setValue operations.
+    for (const catena::SetValuePayload& setValuePayload : src.values()) {
+        try {
+            // Getting param and setting its value.
+            Path path(setValuePayload.oid());
+            std::unique_ptr<IParam> param = getParam(path, ans, authz);
+            ans = param->fromProto(setValuePayload.value(), authz);
+            valueSetByClient.emit(setValuePayload.oid(), param.get(), 0);
+            // Resetting trackers to match new value.
+            if (path.back_is_index()) {
+                path.rewind();
+                path.popBack();
+                param = getParam(path, ans, authz);
+            }
+            param->resetValidate();
         } catch (const catena::exception_with_status& why) {
             ans = catena::exception_with_status(why.what(), why.status);
             break;
@@ -64,98 +111,16 @@ catena::exception_with_status Device::tryMultiSetValue (catena::MultiSetValuePay
     return ans;
 }
 
-catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
-    catena::exception_with_status ans{"", catena::StatusCode::OK};
-    return ans;
-}
-
-catena::exception_with_status Device::multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
-    // Transaction status.
-    catena::exception_with_status ans{"", catena::StatusCode::OK};
-    // Vector of verified set value requests.
-    std::vector<SetValueRequest> requests;
-    // Vector of paths to verified appends.
-    std::vector<Path*> appends;
-    // Failing multiSetValue if multi set is disabled.
-    if (multi_set_enabled_ == false && src.values().size() > 1) {
-        ans = catena::exception_with_status("Multi-set is disabled ", catena::StatusCode::PERMISSION_DENIED);
-    } else {
-        // Looping through and validating set value requests.
-        for (auto& setValuePayload : src.values()) {
-            try {
-                requests.push_back(SetValueRequest{std::make_unique<Path>(setValuePayload.oid()), &setValuePayload});
-                Path* path = requests.back().first.get();
-                std::unique_ptr<IParam> param;
-                /*
-                 * Path ends in "/-". We need to add to the back of the parent
-                 * param's internal vector and get its index. Index is required
-                 * as too many appends will cause the vector to be reallocated,
-                 * making all pointers to that param's values invalid.
-                 */
-                if (path->back_is_index() ? path->back_as_index() == catena::common::Path::kEnd : false) {
-                    path->popBack();
-                    param = getParam(*path, ans, authz);
-                    if (param != nullptr) {
-                        uint32_t oidIndex = param->size();
-                        param = param->addBack(authz, ans);
-                        if (param != nullptr) {
-                            path->push_back(oidIndex);
-                            appends.push_back(path);
-                        }
-                    }
-                // Path does not end in "/-", get param normally.
-                } else {
-                    param = getParam(*path, ans, authz);
-                }
-                // Rewind path to start for future use.
-                path->rewind();
-                // Validate that the request is valid.
-                if (param == nullptr) {
-                    break;
-                }
-                else if (!authz.readAuthz(*param)) {
-                    ans = catena::exception_with_status("Not authorized to read the param " + setValuePayload.oid(), catena::StatusCode::PERMISSION_DENIED);
-                    break;
-                }
-                else if (!authz.writeAuthz(*param)) {
-                    ans = catena::exception_with_status("Not authorized to write to param " + setValuePayload.oid(), catena::StatusCode::PERMISSION_DENIED);
-                    break;
-                }
-                else if (!param->validateSize(setValuePayload.value())) {
-                    ans = catena::exception_with_status("Value exceeds maximum length of " + setValuePayload.oid(), catena::StatusCode::OUT_OF_RANGE);
-                    break;
-                }
-            // Try-catch to catch exceptions thrown by the Path constructor.
-            } catch (const catena::exception_with_status& why) {
-                ans = catena::exception_with_status(why.what(), why.status);
-                break;
-            }
-        }
-        // Something went wrong above. Rolling back all appends before returning.
-        if (ans.status != catena::StatusCode::OK) { 
-            for (Path* append_path : appends) {
-                append_path->popBack();
-                getParam(*append_path, ans, authz)->popBack(authz);
-            }
-        // Everything is valid, commiting all set value requests.
-        } else if (ans.status == catena::StatusCode::OK) {
-            for (auto& [path, setValuePayload] : requests) {
-                std::unique_ptr<IParam> param = getParam(*path, ans, authz);
-                ans = param->fromProto(setValuePayload->value(), authz);
-                valueSetByClient.emit(setValuePayload->oid(), param.get(), 0);
-            }   
-        }
-    }
-    return ans;
-}
-
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
     catena::MultiSetValuePayload setValues;
     catena::SetValuePayload* setValuePayload = setValues.add_values();
     setValuePayload->set_oid(jptr);
-
     setValuePayload->mutable_value()->CopyFrom(src);
-    return multiSetValue(setValues, authz);
+    if (tryMultiSetValue(setValues, ans, authz)) {
+        ans = commitMultiSetValue(setValues, authz);
+    }
+    return ans;
 }
 
 catena::exception_with_status Device::getValue (const std::string& jptr, catena::Value& dst, Authorizer& authz) const {
@@ -172,8 +137,7 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
                 // Index is "-"
                 ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
             }
-        }
-        if (ans.status == catena::StatusCode::OK) {
+        } else {
             std::unique_ptr<IParam> param = getParam(path, ans, authz);
             // we expect this to be a parameter name
             if (param != nullptr) {

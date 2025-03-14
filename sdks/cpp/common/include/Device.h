@@ -424,21 +424,26 @@ class Device {
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
-    catena::exception_with_status tryMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
-    
-    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
-
-    // The path to the param and the value to set it to.
-    using SetValueRequest = std::pair<std::unique_ptr<Path>, const catena::SetValuePayload*>;
     /**
-     * @brief sets the values of the device's parameters using a
-     * MultiSetValuePayload.
-     * @param src The SetValuePayloads to update the device with.
+     * @brief Validates each payload in a multiSetValuePayload without commit
+     * changes to param value_s.
+     * @param src The MultiSetValuePayload to validate.
+     * @param ans The exception_with_status to return.
      * @param authz The Authorizer to test with.
-     * @return An exception_with_status with status set OK if successful,
-     * otherwise an error.
+     * @returns true if the call is valid.
      */
-    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz = Authorizer::kAuthzDisabled);
+    bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz = Authorizer::kAuthzDisabled);
+    
+    /**
+     * @brief Sets the values of a device's parameter's using a
+     * MultiSetValuePayload.
+     * This function assumes that tryMultiSetValue is called at some point
+     * beforehand to validate the call.
+     * @param src The MultiSetValuePayload to update the device with.
+     * @param authz The Authroizer with the client's scopes.
+     * @returns an exception_with_status with status set OK if successful.
+     */
+    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
@@ -449,7 +454,8 @@ class Device {
      * @return an exception_with_status with status set OK if successful,
      * otherwise an error.
      * 
-     * This method essentially redirects the input values to multiSetValue().
+     * This method essentially redirects the input values to tryMultiSetValue()
+     * and commitMultiSetValue().
      * It remains to support the old way of setting values.
      */
     catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, Authorizer& authz = Authorizer::kAuthzDisabled);

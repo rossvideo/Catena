@@ -132,11 +132,6 @@ class IParam {
     virtual void readOnly(bool flag) = 0;
 
     /**
-     * @brief Validates the size of a string or array value.
-     */
-    virtual bool validateSize(const catena::Value& value) const = 0;
-
-    /**
      * @brief get a child parameter by name
      */
     virtual std::unique_ptr<IParam> getParam(Path& oid, Authorizer& authz, catena::exception_with_status& status) = 0;
@@ -196,8 +191,18 @@ class IParam {
      * @return true if the parameter is an array type (INT32_ARRAY, FLOAT32_ARRAY, STRING_ARRAY, STRUCT_ARRAY, or STRUCT_VARIANT_ARRAY)
      */
     virtual bool isArrayType() const = 0;
-
-    virtual catena::exception_with_status validateSetValue(const catena::Value& value, uint32_t index) = 0;
+    /**
+     * @brief Validates a setValue operation without changing the param's value.
+     * @param value The value we want to set the param to.
+     * @param index The index of the subparam to set (or nullptr if none).
+     * @param ans Catena::exception_with_status output.
+     * @returns true if valid.
+     */
+    virtual bool validateSetValue(const catena::Value& value, uint32_t* index, Authorizer& authz, catena::exception_with_status& ans) = 0;
+    /**
+     * @brief Resets any trackers that might have been changed in validateSetValue.
+     */
+    virtual void resetValidate() = 0;
 };
 }  // namespace common
 
