@@ -24,7 +24,13 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
-set(CMAKE_OSX_DEPLOYMENT_TARGET "14.5" CACHE STRING "Minimum OS X deployment version")
+
+# Force macOS deployment target to match our OpenSSL build
+set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum OS X deployment version" FORCE)
+if(APPLE)
+    add_compile_definitions(_DARWIN_C_SOURCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmacosx-version-min=15.0")
+endif()
 
 project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 
@@ -95,12 +101,19 @@ if (APPLE)
   set(CMAKE_OSX_FRAMEWORK_PATH "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks")
   set(GRPC_LIB_CMAKE "$ENV{HOME}/.local/lib/cmake")
   set(CMAKE_PREFIX_PATH "${GRPC_LIB_CMAKE}/protobuf;${GRPC_LIB_CMAKE}/grpc;${GRPC_LIB_CMAKE}/grpc/modules;${GRPC_LIB_CMAKE}/absl;${GRPC_LIB_CMAKE}/utf8_range")
+  
+  set(OPENSSL_USE_STATIC_LIBS TRUE)
+  set(OPENSSL_NO_SYSTEM_PATHS TRUE)
+  unset(OPENSSL_CRYPTO_LIBRARY CACHE)
+  unset(OPENSSL_SSL_LIBRARY CACHE)
+  set(OPENSSL_ROOT_DIR $ENV{HOME}/.local)
+  set(OPENSSL_CRYPTO_LIBRARY $ENV{HOME}/.local/lib/libcrypto.a)
+  set(OPENSSL_SSL_LIBRARY $ENV{HOME}/.local/lib/libssl.a)
 
   set(CPP_OPTS -E -x c -P)
-  include_directories("/opt/homebrew/include")
 endif (APPLE)
 
-# was in if(APPLE) moved here to troublshoot build failure on Ubuntu VM
+# was in if(APPLE) moved here to troubleshoot build failure on Ubuntu VM
 include_directories(
   "$ENV{HOME}/.local/include"
 )

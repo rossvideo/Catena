@@ -48,7 +48,12 @@ function(cmake_catena_grpc_common)
             ${EXTERNAL_INCLUDES}
     )
 
+    # Explicitly link against the libraries in the ./local folder, not system folders
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
+
     # link against the gRPC interface
+    target_link_directories(${target} BEFORE PRIVATE ${HOME}/.local/lib)
     target_link_libraries(${target} PUBLIC ${GRPC_TARGET})
     target_compile_features(${target} PUBLIC cxx_std_20)
 

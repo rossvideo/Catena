@@ -57,6 +57,8 @@ public:
      */
     SubscriptionManager() = default;
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
     /**
      * @brief Add an OID subscription
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
@@ -89,6 +91,7 @@ public:
      * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
      */
     const std::set<std::string>& getWildcardSubscriptions();
+#pragma clang diagnostic pop
 
 private:
     std::set<std::string> uniqueSubscriptions_; 
@@ -101,13 +104,17 @@ private:
      */
     void updateAllSubscribedOids_(catena::common::Device& dm);
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
     /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
      * @return true if the OID ends with "/*"
      */
     static bool isWildcard(const std::string& oid);
+#pragma clang diagnostic pop
 };
+
 
 } // namespace grpc
 } // namespace catena 
