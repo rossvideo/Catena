@@ -128,6 +128,7 @@ void catena::common::fromProto<std::vector<int32_t>>(const Value& src, std::vect
     if (!src.has_int32_array_values()) {
         return;
     }
+    dst->clear();
     const catena::Int32List& int_array = src.int32_array_values();
     const catena::common::IConstraint* constraint = pd.getConstraint();
     catena::Value item;
