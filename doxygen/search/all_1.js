@@ -12,7 +12,7 @@ var searchData=
   ['addpeer_9',['addPeer',['../classcatena_1_1PeerManager.html#a66cc797ea23d2948dd54cb3386b37f9c',1,'catena::PeerManager']]],
   ['addproduct_10',['addProduct',['../classcatena_1_1patterns_1_1GenericFactory.html#a31ee2959ec29c96c0be704711ab38b2d',1,'catena::patterns::GenericFactory']]],
   ['addsubparam_11',['addSubParam',['../classcatena_1_1common_1_1ParamDescriptor.html#acbd43f226aa1753c32bcca3612dff9ad',1,'catena::common::ParamDescriptor']]],
-  ['addsubscription_12',['addSubscription',['../classcatena_1_1grpc_1_1SubscriptionManager.html#a51c8f6bd6bbf4731ea6b0523033dd1d5',1,'catena::grpc::SubscriptionManager']]],
+  ['addsubscription_12',['addSubscription',['../classcatena_1_1grpc_1_1SubscriptionManager.html#aa417e409ce446cbdf63e6076bb45d7aa',1,'catena::grpc::SubscriptionManager']]],
   ['already_5fexists_13',['ALREADY_EXISTS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]],
   ['alternativenames_14',['alternativeNames',['../namespacecatena_1_1common.html#a50a9d30ba7a22910857f12f13ed809cc',1,'catena::common']]],
   ['and_20asio_15',['If you&apos;re targeting REST, install boost, and asio',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md40',1,'']]],
