@@ -57,7 +57,8 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  */
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish},
+        subscriptionManager_{service->subscriptionManager_} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process
@@ -108,6 +109,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse(oid, idx, p);
             });
+
             // Waiting for a value set by client to be sent to execute code.
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse(oid, idx, p);
@@ -124,8 +126,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     }
                     // Returning if authorization is enabled and the client does not have monitor scope.
                     if (service_->authorizationEnabled()) {
-                        std::vector<std::string> clientScopes = service_->getScopes(context_);
-                        catena::common::Authorizer authz{clientScopes};
+                        catena::common::Authorizer authz{getJWSToken()};
                         if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }
@@ -201,13 +202,58 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
             this->cv_.notify_one();
             return;
         }
+        
+        // Check if we should process this update based on detail level
+        bool should_update = false;
+        switch (req_.detail_level()) {
+            case catena::Device_DetailLevel_FULL:
+                // Always update for FULL detail level
+                should_update = true;
+                break;
+                
+            case catena::Device_DetailLevel_SUBSCRIPTIONS:
+                // Update if OID is subscribed or in minimal set
+                {
+                    auto subscribedOids = subscriptionManager_.getAllSubscribedOids(dm_);
+                    should_update = p->getDescriptor().minimalSet() || 
+                                  (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                }
+                break;
+                
+            case catena::Device_DetailLevel_MINIMAL:
+                // For MINIMAL, only update if it's in the minimal set
+                should_update = p->getDescriptor().minimalSet();
+                break;
+                
+            case catena::Device_DetailLevel_COMMANDS:
+                // For COMMANDS, only update command parameters
+                should_update = p->getDescriptor().isCommand();
+                break;
+                
+            case catena::Device_DetailLevel_NONE:
+                // Don't send any updates
+                should_update = false;
+                break;
+                
+            default:
+                std::cout << "Unknown detail level: " << req_.detail_level() << std::endl;
+                return;
+        }
 
-        // Handle authorization if enabled
-        catena::common::Authorizer authz{service_->authorizationEnabled() 
-            ? service_->getScopes(context_) 
-            : std::vector<std::string>{}};
+        if (!should_update) {
+            return;
+        }
 
-        if (service_->authorizationEnabled() && !authz.readAuthz(*p)) {
+        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+        catena::common::Authorizer* authz;
+        if (service_->authorizationEnabled()) {
+            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+            authz = sharedAuthz.get();
+        } else {
+            authz = &catena::common::Authorizer::kAuthzDisabled;
+        }
+
+        if (service_->authorizationEnabled() && !authz->readAuthz(*p)) {
             return;
         }
 
@@ -215,7 +261,9 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
         this->res_.mutable_value()->set_element_index(idx);
         
         catena::Value* value = this->res_.mutable_value()->mutable_value();
-        auto rc = p->toProto(*value, authz);
+
+        catena::exception_with_status rc{"", catena::StatusCode::OK};
+        rc = p->toProto(*value, *authz);
         //If the param conversion was successful, send the update
         if (rc.status == catena::StatusCode::OK) {
             this->hasUpdate_ = true;

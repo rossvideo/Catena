@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -31,51 +31,67 @@
  */
 
 /**
- * @file GetParam.h
- * @brief Implements Catena gRPC GetParam
+ * @file UpdateSubscriptions.h
+ * @brief Implements Catena gRPC UpdateSubscriptions
  * @author john.naylor@rossvideo.com
- * @author john.danen@rossvideo.com
- * @author isaac.robert@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-01-28
+ * @date 2025-02-27
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
-// connections/gRPC
+//connections/gRPC
 #include <ServiceImpl.h>
+#include <atomic>
+#include <mutex>
+#include <SubscriptionManager.h>
 
 /**
-* @brief CallData class for the GetParam RPC
-*/
-class CatenaServiceImpl::GetParam : public CallData {
+ * @brief CallData class for the UpdateSubscriptions RPC
+ */
+class CatenaServiceImpl::UpdateSubscriptions : public CallData {
     public:
-
         /**
-         * @brief Constructor for the CallData class of the GetParam
+         * @brief Constructor for the CallData class of the UpdateSubscriptions RPC
          * gRPC. Calls proceed() once initialized.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        GetParam(CatenaServiceImpl *service, Device &dm, bool ok);
+         * @param service The CatenaServiceImpl instance
+         * @param dm The device model
+         * @param subscriptionManager The subscription manager to use
+         * @param ok Flag indicating if initialization was successful
+         */
+        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::grpc::SubscriptionManager& subscriptionManager, bool ok);
 
         /**
-         * @brief Manages the steps of the GetParam gRPC command
+         * @brief Manages the steps of the UpdateSubscriptions gRPC command
          * through the state variable status. Returns the value of the
          * parameter specified by the user.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
+        /**
+         * @brief Helper method to process a subscription
+         * @param baseOid The base OID 
+         * @param authz The authorizer to use for access control
+         */
+        void processSubscription(const std::string& baseOid, catena::common::Authorizer& authz);
+
+
+        /**
+         * @brief Helper method to send all currently subscribed parameters
+         * @param authz The authorizer to use for access control
+         */
+        void sendSubscribedParameters(catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
+
+        /**
+         * @brief The context of the gRPC command (ServerContext) for use in 
+         * _responder and other gRPC objects/functions.
+         */
+        ServerContext context_;
 
         /**
          * @brief The client's scopes.
@@ -85,12 +101,22 @@ class CatenaServiceImpl::GetParam : public CallData {
         /**
          * @brief The request payload.
          */
-        catena::GetParamPayload req_;
+        catena::UpdateSubscriptionsPayload req_;
 
         /**
-         * @brief The response payload.
+         * @brief The response payload for a single response.
          */
-        catena::PushUpdates res_;
+        catena::DeviceComponent_ComponentParam res_;
+
+        /**
+         * @brief Vector to store all responses to be sent
+         */
+        std::vector<catena::DeviceComponent_ComponentParam> responses_;
+
+        /**
+         * @brief Current response index being processed
+         */
+        uint32_t current_response_{0};
 
         /**
          * @brief gRPC async response writer.
@@ -108,12 +134,27 @@ class CatenaServiceImpl::GetParam : public CallData {
         Device &dm_;
 
         /**
-         * @brief The object's unique id.
-         */
-        int objectId_;
-
-        /**
          * @brief The object's unique id counter.
          */
         static int objectCounter_;  
+
+        /**
+         * @brief The object's unique id.
+         */
+        int objectId_;
+        
+        /**
+         * @brief The mutex for the writer lock.
+         */
+        std::mutex mtx_;
+
+        /**
+         * @brief The writer lock.
+         */
+        std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
+        /**
+         * @brief Reference to the subscription manager
+         */
+        catena::grpc::SubscriptionManager& subscriptionManager_;
 };

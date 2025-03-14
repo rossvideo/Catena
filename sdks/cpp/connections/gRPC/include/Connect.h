@@ -41,7 +41,8 @@
  */
 
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "ServiceImpl.h"
+#include "SubscriptionManager.h"
 
 /**
 * @brief CallData class for the Connect RPC
@@ -72,11 +73,6 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
-        /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _writer and other gRPC objects/functions.
-         */
-        ServerContext context_;
         /**
          * @brief Server request (Info on connection).
          */
@@ -148,6 +144,11 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief ID of the shutdown signal for the Connect object
         */
         unsigned int shutdownSignalId_;
+
+        /**
+         * @brief Reference to the subscription manager
+         */
+        catena::grpc::SubscriptionManager& subscriptionManager_;
 
         /**
          * @brief Updates the response message with parameter values and handles 

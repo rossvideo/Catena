@@ -73,13 +73,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
-        /**
-         * @brief Calculates the length of the array.
-         * 
-         * @param base_path - The base path of the array.
-         * @return The length of the array.
-         */
-        uint32_t calculateArrayLength(const std::string& base_path);
 
         /**
          * @brief Updates the array lengths of the responses.
@@ -102,12 +95,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @brief Parent CatenaServiceImpl.
          */
         CatenaServiceImpl *service_;
-
-        /**
-         * @brief The context of the gRPC command (ServerContext) for use in 
-         * _responder and other gRPC objects/functions.
-         */
-        ServerContext context_;
 
         /**
          * @brief The client's scopes.
@@ -161,11 +148,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         uint32_t current_response_{0};
 
         /**
-         * @brief The maximum index of the parameter.
-         */
-        uint32_t max_index_{0};
-
-        /**
          * @brief The mutex for the writer lock.
          */
         std::mutex mtx_;
@@ -173,5 +155,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief The writer lock.
          */
+
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 };

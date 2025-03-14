@@ -103,8 +103,7 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                 catena::common::Authorizer* authz;
                 std::vector<std::string> clientScopes;
                 if (service->authorizationEnabled()) {
-                    clientScopes = service->getScopes(context_);
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(clientScopes);
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
@@ -121,6 +120,11 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                     status_ = CallStatus::kFinish;
                     responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
+            // Likely authentication error, end process.
+            } catch (catena::exception_with_status& err) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
+                responder_.FinishWithError(errorStatus, this);
             } catch (...) { // Error, end process.
                 errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;

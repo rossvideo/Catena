@@ -49,6 +49,7 @@
 
 // gRPC interface
 #include <interface/service.grpc.pb.h>
+#include <SubscriptionManager.h>
 
 #include <grpcpp/grpcpp.h>
 #include <jwt-cpp/jwt.h>
@@ -104,6 +105,11 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::grpc::SubscriptionManager subscriptionManager_;
+
   /*
    * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
    * cannot be inherited.
@@ -123,14 +129,22 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
          * @brief Destructor for the CallData class.
          */
         virtual ~CallData() {}
+      protected:
+        /**
+         * @brief Extracts the JWS Bearer token from the server context's
+         * client metadata.
+         * @return The JWS Bearer token as a string.
+         * @throw Throws a Catena::exception_with_status UNAUTHENTICATED if a
+         * JWS bearer token is not found.
+         */
+        std::string getJWSToken() const;
+        /**
+         * @brief The context of the gRPC command.
+         */
+        ServerContext context_;
     };
 
   private:
-    /**
-     * @brief Gets the scopes from the provided authorization context
-     * @throw catena::exception_with_status permission denied
-     */
-    std::vector<std::string> getScopes(grpc::ServerContext &context);
 
     // Aliases for special vectors and unique_ptrs.
     using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
@@ -194,4 +208,5 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     class LanguagePackRequest;
     class ExecuteCommand;
     class AddLanguage;
+    class UpdateSubscriptions;
 };
