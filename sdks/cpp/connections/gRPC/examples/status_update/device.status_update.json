@@ -82,10 +82,6 @@
         }
       }
     },
-    "string_array_test": {
-      "type" : "STRING_ARRAY",
-      "value": {"string_array_values": {"strings": ["0"]}}
-    },
     "dashboard_UI": {
       "type": "STRING",
       "oid_aliases": ["0xFF0E"],
