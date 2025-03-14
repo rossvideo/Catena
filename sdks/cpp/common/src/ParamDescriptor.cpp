@@ -45,6 +45,7 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     param.set_type(type_);
     param.set_read_only(read_only_);
     param.set_widget(widget_);
+    param.set_minimal_set(minimal_set_);
 
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);

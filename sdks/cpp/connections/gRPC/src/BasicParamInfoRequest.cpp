@@ -248,11 +248,9 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
     }
 }
 
-
 /**
  * Recursively gets all children of a parameter
  */
-
 void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
     const auto& descriptor = current_param->getDescriptor();
     catena::exception_with_status rc{"", catena::StatusCode::OK};

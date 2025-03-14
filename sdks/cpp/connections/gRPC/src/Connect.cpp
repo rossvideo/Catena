@@ -57,7 +57,8 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  */
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish},
+        subscriptionManager_{service->subscriptionManager_} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process

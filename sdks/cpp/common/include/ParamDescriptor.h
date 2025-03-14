@@ -129,10 +129,11 @@ class ParamDescriptor {
       bool isCommand,
       Device& dm,
       uint32_t max_length,
-      bool minimalSet,
+      bool minimal_set,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, minimalSet_{minimalSet},parent_{parent} {
+        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, 
+        parent_{parent}, minimal_set_{minimal_set} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -185,16 +186,15 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
-    /**   
+    /**
      * @brief get the minimal set status of the parameter
      */
-    inline bool minimalSet() const { return minimalSet_; }
+    inline bool minimalSet() const { return minimal_set_; }
 
     /**
      * @brief set the minimal set status of the parameter
      */
-    inline void setMinimalSet(bool flag) { minimalSet_ = flag; }
-
+    inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
 
     /**
      * @brief Returns the max length of the array/string parameter. If max
@@ -306,6 +306,7 @@ class ParamDescriptor {
     std::string widget_;
     std::string scope_;
     bool read_only_;
+
     std::unordered_map<std::string, ParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
@@ -317,7 +318,7 @@ class ParamDescriptor {
     std::reference_wrapper<Device> dev_;
 
     bool isCommand_;
-    bool minimalSet_;
+    bool minimal_set_;
 
     // default command implementation
     std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 

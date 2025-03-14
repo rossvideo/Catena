@@ -52,13 +52,13 @@ void catena::expandEnvVariables(std::string &str) {
 
 // creates a Security Credentials object based on the command line options
 std::shared_ptr<grpc::ServerCredentials> catena::getServerCredentials() {
-    std::shared_ptr<grpc::ServerCredentials> ans;
+    std::shared_ptr<::grpc::ServerCredentials> ans;
     if (absl::GetFlag(FLAGS_secure_comms).compare("off") == 0) {
         // run without secure comms
-        ans = grpc::InsecureServerCredentials();
+        ans = ::grpc::InsecureServerCredentials();
     } else if (absl::GetFlag(FLAGS_secure_comms).compare("tls") == 0) {
         // create our server credentials options
-        grpc::SslServerCredentialsOptions ssl_opts(
+        ::grpc::SslServerCredentialsOptions ssl_opts(
           absl::GetFlag(FLAGS_mutual_authc) ? GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY
                                             : GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
 
@@ -79,14 +79,14 @@ std::shared_ptr<grpc::ServerCredentials> catena::getServerCredentials() {
         std::string server_key = catena::readFile(server_key_fn);
         std::string server_cert = catena::readFile(server_certfn);
         ssl_opts.pem_key_cert_pairs.push_back(
-          grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
+          ::grpc::SslServerCredentialsOptions::PemKeyCertPair{server_key, server_cert});
 
         // create the credentials object
-        ans = grpc::SslServerCredentials(ssl_opts);
+        ans = ::grpc::SslServerCredentials(ssl_opts);
 
         // attach the authz processor if needed
         if (absl::GetFlag(FLAGS_authz)) {
-            const std::shared_ptr<grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
+            const std::shared_ptr<::grpc::AuthMetadataProcessor> authzProcessor(new JWTAuthMetadataProcessor());
             ans->SetAuthMetadataProcessor(authzProcessor);
         }
 
