@@ -321,7 +321,7 @@ class ParamWithValue : public catena::common::IParam {
      * @return A unique ptr to the new element, or nullptr if the operation
      * failed.
      */
-    std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) {     
+    std::unique_ptr<IParam> addBack(Authorizer& authz, catena::exception_with_status& status) override{     
         return addBack(value_.get(), authz, status);
     }
 
@@ -330,7 +330,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz The Authorizer to test write permissions with.
      * @return OK if succcessful, otherwise an error.
      */
-    catena::exception_with_status popBack(Authorizer& authz) {
+    catena::exception_with_status popBack(Authorizer& authz) override {
         return popBack(value_.get(), authz);
     }
 

@@ -14,7 +14,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -45,7 +45,12 @@ function(cmake_catena_grpc_common)
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
     )
 
+    # Explicitly link against the libraries in the ./local folder, not system folders
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
+
     # link against the gRPC interface
+    target_link_directories(${target} BEFORE PRIVATE ${HOME}/.local/lib)
     target_link_libraries(${target} PUBLIC ${GRPC_TARGET})
     target_compile_features(${target} PUBLIC cxx_std_20)
 
