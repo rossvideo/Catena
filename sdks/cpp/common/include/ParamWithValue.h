@@ -732,8 +732,11 @@ class ParamWithValue : public catena::common::IParam {
     template<typename U, typename V>
     catena::exception_with_status updateTracker(U& oValue, const V& nValue, uint32_t* index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        if (!std::is_same<U, V>::value)  {
-            ans = catena::exception_with_status("Value type does not match type of " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        // Cannot have index if parent is not an array (does not exist).
+        if (index) {
+            ans = catena::exception_with_status("Index not applicable to non-array type param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        } else if (!std::is_same<U, V>::value)  {
+            ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         }
         return ans;
     }
@@ -744,7 +747,14 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     catena::exception_with_status updateTracker(std::string& oldValue, const std::string& newValue, uint32_t* index) {
-        return initializeTracker(newValue);
+        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
+        // Cannot have index if parent is not an array (does not exist).
+        if (index) {
+            ans = catena::exception_with_status("Index not applicable to non-array type param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            ans = initializeTracker(newValue);
+        }
+        return ans;
     }
     /**
      * @brief Insert/append value overload of updateTracker, updates
@@ -758,9 +768,9 @@ class ParamWithValue : public catena::common::IParam {
     catena::exception_with_status updateTracker(std::vector<U>& arrayValue, const V& value, uint32_t* index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         if (!index) {
-            ans = catena::exception_with_status("Index not specified in SetValue " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Index not specified in SetValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         } else if (!std::is_same<U, V>::value)  {
-            ans = catena::exception_with_status("Value type does not match type of " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         } else {
             // Append
             if (*index == uint32_t(Path::kEnd)) {
@@ -786,7 +796,7 @@ class ParamWithValue : public catena::common::IParam {
         if (std::is_same<U, V>::value)  {
             ans = initializeTracker(newArray);
         } else {
-            ans = catena::exception_with_status("Array type does not match type of " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         }
         return ans;
     }
@@ -801,7 +811,7 @@ class ParamWithValue : public catena::common::IParam {
     catena::exception_with_status updateTracker(std::vector<std::string>& arrayValue, const std::string& value, uint32_t* index) {
         catena::exception_with_status ans = catena::exception_with_status("OK", catena::StatusCode::OK);
         if (!index) {
-            ans = catena::exception_with_status("Index not specified in setValue " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Index not specified in setValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         } else {
             // Append
             if (*index == uint32_t(Path::kEnd)) {
@@ -883,23 +893,24 @@ class ParamWithValue : public catena::common::IParam {
         // Checking write permissions.
         else if (!authz.writeAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
-        } else {
-            // Current behaviour: If unimplemented ignore.
-            if (updateTrackerMap.contains(value.kind_case())) {
-                // Updating our trackers.
-                ans = updateTrackerMap.at(value.kind_case())(value, index);
-            }
-            // Validating max length.
-            if (*mSizeTracker_ > descriptor_.max_length()) {
-                ans = catena::exception_with_status("Array " + descriptor_.getOid() + " at maximum capacity", catena::StatusCode::OUT_OF_RANGE);
-            // Validating total length.
-            } else if (tSizeTracker_) {
-                std::size_t totalLength = 0;
-                for (std::size_t length : *tSizeTracker_) {
-                    totalLength += length;
-                }
-                if (totalLength > descriptor_.total_length()) {
-                    ans = catena::exception_with_status("Array " + descriptor_.getOid() + " exceeds maximum length", catena::StatusCode::OUT_OF_RANGE);
+        // Currently: If unimplemented ignore.
+        } else if (updateTrackerMap.contains(value.kind_case())) {
+            // Updating trackers.
+            ans = updateTrackerMap.at(value.kind_case())(value, index);
+            // If the above was successful, check mSize and tSize.
+            if (ans.status == catena::StatusCode::OK) {
+                // Validating max length.
+                if (*mSizeTracker_ > descriptor_.max_length()) {
+                    ans = catena::exception_with_status("Param " + descriptor_.getOid() + " exceeds maximum capacity", catena::StatusCode::OUT_OF_RANGE);
+                // Validating total length if applicable.
+                } else if (tSizeTracker_) {
+                    std::size_t totalLength = 0;
+                    for (std::size_t length : *tSizeTracker_) {
+                        totalLength += length;
+                    }
+                    if (totalLength > descriptor_.total_length()) {
+                        ans = catena::exception_with_status("String array param " + descriptor_.getOid() + " exceeds total length", catena::StatusCode::OUT_OF_RANGE);
+                    }
                 }
             }
         }
