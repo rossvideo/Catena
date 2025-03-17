@@ -167,9 +167,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8e53f1ada467889732259adb72cff031" id="r_a8e53f1ada467889732259adb72cff031"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a8e53f1ada467889732259adb72cff031">readOnly</a> (bool flag)=0</td></tr>
 <tr class="memdesc:a8e53f1ada467889732259adb72cff031"><td class="mdescLeft">&#160;</td><td class="mdescRight">set read only status of the param  <br /></td></tr>
 <tr class="separator:a8e53f1ada467889732259adb72cff031"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab63f7ba713770bf22b840090ea5aad27" id="r_ab63f7ba713770bf22b840090ea5aad27"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ab63f7ba713770bf22b840090ea5aad27">validateSize</a> (const catena::Value &amp;value) const =0</td></tr>
-<tr class="memdesc:ab63f7ba713770bf22b840090ea5aad27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates the size of a string or array value.  <br /></td></tr>
-<tr class="separator:ab63f7ba713770bf22b840090ea5aad27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f5bce117d7916d355140211602d55ea" id="r_a0f5bce117d7916d355140211602d55ea"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a0f5bce117d7916d355140211602d55ea">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">Path</a> &amp;oid, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status)=0</td></tr>
 <tr class="memdesc:a0f5bce117d7916d355140211602d55ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a child parameter by name  <br /></td></tr>
 <tr class="separator:a0f5bce117d7916d355140211602d55ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,6 +197,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3df0c29a015ceab195e6dafd17fae0b0" id="r_a3df0c29a015ceab195e6dafd17fae0b0"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0">isArrayType</a> () const =0</td></tr>
 <tr class="memdesc:a3df0c29a015ceab195e6dafd17fae0b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the parameter is an array type.  <br /></td></tr>
 <tr class="separator:a3df0c29a015ceab195e6dafd17fae0b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0f590200712b540a65d38206ec98b49" id="r_ae0f590200712b540a65d38206ec98b49"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ae0f590200712b540a65d38206ec98b49">validateSetValue</a> (const catena::Value &amp;value, uint32_t *index, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans)=0</td></tr>
+<tr class="memdesc:ae0f590200712b540a65d38206ec98b49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
+<tr class="separator:ae0f590200712b540a65d38206ec98b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0524a3a6faa1200e946ebdaa32db3d70" id="r_a0524a3a6faa1200e946ebdaa32db3d70"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a0524a3a6faa1200e946ebdaa32db3d70">resetValidate</a> ()=0</td></tr>
+<tr class="memdesc:a0524a3a6faa1200e946ebdaa32db3d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets any trackers that might have been changed in validateSetValue.  <br /></td></tr>
+<tr class="separator:a0524a3a6faa1200e946ebdaa32db3d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> is the interface for business logic and connection logic to interact with parameters. </p>
@@ -677,6 +680,35 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a0524a3a6faa1200e946ebdaa32db3d70" name="a0524a3a6faa1200e946ebdaa32db3d70"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0524a3a6faa1200e946ebdaa32db3d70">&#9670;&#160;</a></span>resetValidate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::common::IParam::resetValidate </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Resets any trackers that might have been changed in validateSetValue. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a99130fd6880369ab0955c70522876814">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+
+</div>
+</div>
 <a id="af88f70976495a6fc8cdad0369ce29aad" name="af88f70976495a6fc8cdad0369ce29aad"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af88f70976495a6fc8cdad0369ce29aad">&#9670;&#160;</a></span>setOid()</h2>
 
@@ -904,8 +936,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab63f7ba713770bf22b840090ea5aad27" name="ab63f7ba713770bf22b840090ea5aad27"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab63f7ba713770bf22b840090ea5aad27">&#9670;&#160;</a></span>validateSize()</h2>
+<a id="ae0f590200712b540a65d38206ec98b49" name="ae0f590200712b540a65d38206ec98b49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0f590200712b540a65d38206ec98b49">&#9670;&#160;</a></span>validateSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -914,11 +946,33 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool catena::common::IParam::validateSize </td>
+          <td class="memname">virtual bool catena::common::IParam::validateSetValue </td>
           <td>(</td>
           <td class="paramtype">const catena::Value &amp;&#160;</td>
-          <td class="paramname"><em>value</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t *&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
+          <td class="paramname"><em>ans</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -928,9 +982,18 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Validates the size of a string or array value. </p>
+<p>Validates a setValue operation without changing the param's value. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">value</td><td>The value we want to set the param to. </td></tr>
+    <tr><td class="paramname">index</td><td>The index of the subparam to set (or nullptr if none). </td></tr>
+    <tr><td class="paramname">ans</td><td>Catena::exception_with_status output. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if valid. </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6a6f084c85fb99045e334e5732abda32">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6c6dedd5b08e5fde9b32a1dc5ed251be">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
