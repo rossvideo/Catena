@@ -488,11 +488,7 @@ class ParamWithValue : public catena::common::IParam {
         size_t oidIndex = oid.front_as_index();
         oid.pop();
 
-        if (oidIndex == catena::common::Path::kEnd) {
-            // If index is "-", add to the end of the array
-            oidIndex = value.size();
-            value.push_back(ElemType());
-        } else if (oidIndex >= value.size()) {
+        if (oidIndex >= value.size() || oidIndex == catena::common::Path::kEnd) {
             // If index is out of bounds, return nullptr
             status = catena::exception_with_status("Index out of bounds in path " + oid.fqoid(), catena::StatusCode::OUT_OF_RANGE);
             return nullptr;

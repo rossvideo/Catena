@@ -98,16 +98,26 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
         try {
             // Getting param and setting its value.
             Path path(setValuePayload.oid());
-            std::unique_ptr<IParam> param = getParam(path, ans, authz);
+            std::unique_ptr<IParam> parent = nullptr;
+            std::unique_ptr<IParam> param = nullptr;
+            if (path.back_is_index()) {
+                Path::Index index = path.back_as_index();
+                path.popBack();
+                parent = getParam(path, ans, authz);
+                if (index == Path::kEnd) {
+                    param = parent->addBack(authz, ans);
+                } else {
+                    path.push_back(index);
+                    param = parent->getParam(path, authz, ans);
+                }
+            } else {
+                param = getParam(path, ans, authz);
+            }
             ans = param->fromProto(setValuePayload.value(), authz);
             valueSetByClient.emit(setValuePayload.oid(), param.get(), 0);
             // Resetting trackers to match new value.
-            if (path.back_is_index()) {
-                path.rewind();
-                path.popBack();
-                param = getParam(path, ans, authz);
-            }
-            param->resetValidate();
+            if (parent) { parent->resetValidate();
+            } else { param->resetValidate(); }
         } catch (const catena::exception_with_status& why) {
             ans = catena::exception_with_status(why.what(), why.status);
             break;
