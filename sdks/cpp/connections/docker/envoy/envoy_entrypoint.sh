@@ -1,4 +1,6 @@
-#
+#!/bin/sh
+
+# 
 # Copyright 2024 Ross Video Ltd
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -29,42 +31,11 @@
 #
 
 #
-# This cmake file is used to build some example services as docker images for
-# use in grpc_compose.yml.
+# Entrypoint script for envoy.yaml. Subsitutes environment variables in the
+# envoy.yaml file and starts envoy.
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/03/17
 #
 
-cmake_minimum_required(VERSION 3.20)
-project(catena-docker-services)
-
-# Ensure we have the docker app, alias it to DOCKER_CMD.
-find_program(DOCKER_CMD docker REQUIRED)
-
-# Include the make_image function.
-include(DockerFunctions.cmake)
-
-# Make our base image.
-make_image(base . "")
-
-# Make the status update image.
-make_image(catena_status_update ${CATENA_CPP_ROOT_DIR} "base.hash;status_update")
-
-# Make the use menus image.
-make_image(catena_use_menus ${CATENA_CPP_ROOT_DIR} "base.hash;use_menus")
-
-# Make the structs with authz image.
-make_image(catena_structs_with_authz ${CATENA_CPP_ROOT_DIR} "base.hash;structs_with_authz")
-
-# Make the structs with authz image.
-make_image(catena_use_commands ${CATENA_CPP_ROOT_DIR} "base.hash;use_commands")
-
-# Pulls Envoy Proxy image v.1.33.
-execute_process (
-    COMMAND ${DOCKER_CMD} pull envoyproxy/envoy:v1.33-latest
-    RESULT_VARIABLE result
-)
-if (NOT result EQUAL 0)
-    message(FATAL_ERROR "Failed to pull the envoy image")
-endif()
-
-# Make envoy_proxy image with entrypoint envoy/envoy_entrypoint.sh.
-make_image(catena_envoy ${CATENA_CPP_ROOT_DIR} "")
+envsubst < /etc/envoy/envoy_tmp.yaml > /etc/envoy/envoy.yaml
+envoy -c /etc/envoy/envoy.yaml --log-level info
