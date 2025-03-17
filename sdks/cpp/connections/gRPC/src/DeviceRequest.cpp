@@ -99,9 +99,27 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
                 if (service->authorizationEnabled()) {                    
                     authz_ = std::make_unique<catena::common::Authorizer>(getJWSToken());
-                    serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
+                    
+                    // If subscriptions are enabled and we have subscribed OIDs
+                    if (dm_.subscriptions() && !req_.subscribed_oids().empty()) {
+                        subscribed_oids_.reserve(req_.subscribed_oids().size());
+                        for (const auto& oid : req_.subscribed_oids()) {
+                            subscribed_oids_.push_back(oid);
+                        }
+                        serializer_ = dm_.getComponentSerializer(*authz_, subscribed_oids_, shallowCopy);
+                    } else {
+                        serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
+                    }
                 } else {
-                    serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
+                    if (dm_.subscriptions() && !req_.subscribed_oids().empty()) {
+                        subscribed_oids_.reserve(req_.subscribed_oids().size());
+                        for (const auto& oid : req_.subscribed_oids()) {
+                            subscribed_oids_.push_back(oid);
+                        }
+                        serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, subscribed_oids_, shallowCopy);
+                    } else {
+                        serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
+                    }
                 }
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {

@@ -428,14 +428,17 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 
     // Helper function to check if an OID is subscribed
     auto is_subscribed = [&subscribed_oids, this](const std::string& param_name) {
+        // If subscriptions are not enabled, only return true if we're not in SUBSCRIPTIONS mode
         if (!subscriptions_) {
-            return true;
+            return detail_level_ != catena::Device_DetailLevel_SUBSCRIPTIONS;
         }
 
+        // If we have no subscribed OIDs and we're not in SUBSCRIPTIONS mode, return true
         if (subscribed_oids.empty() && detail_level_ != catena::Device_DetailLevel_SUBSCRIPTIONS) {
             return true;
         }
 
+        // If we have no subscribed OIDs and we're in SUBSCRIPTIONS mode, return false
         if (subscribed_oids.empty() && detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
             return false;
         }
@@ -453,7 +456,6 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
                     return true;
                 }
             }
-            
         }
         
         return false;
