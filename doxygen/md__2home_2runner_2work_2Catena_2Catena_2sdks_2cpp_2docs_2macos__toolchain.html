@@ -93,16 +93,16 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2Catena_2Caten
   <div class="headertitle"><div class="title">macos Toolchain Installation</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md30"></a> This toolchain installation has been verified on macOS Ventura 13.2.1, Sonoma 14.x and Sequoia 15.0.1 on a M1 Pro equipped macbook pro.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md30"></a> This toolchain installation has been verified on macOS Sequoia 15.0.x on a M1 Pro equipped macbook pro.</p>
 <h1><a class="anchor" id="autotoc_md31"></a>
 Getting a C++ compiler</h1>
 <p><code>xcode-select --install</code></p>
 <p>verify with...</p>
 <div class="fragment"><div class="line">c++ --version</div>
-<div class="line">Apple clang version 14.0.0 (clang-1400.0.29.202)</div>
-<div class="line">Target: arm64-apple-darwin22.3.0</div>
+<div class="line">Apple clang version 16.0.0 (clang-1600.0.26.6)</div>
+<div class="line">Target: arm64-apple-darwin24.3.0</div>
 <div class="line">Thread model: posix</div>
-<div class="line">InstalledDir: /Library/Developer/CommandLineTools/usr/bin</div>
+<div class="line">InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md32"></a>
 Installing cmake</h1>
 <ol type="1">
@@ -111,54 +111,79 @@ Installing cmake</h1>
 </ol>
 <p>In <code>~/.zprofile</code> ...</p>
 <div class="fragment"><div class="line">PATH=&quot;/Applications/CMake.app/Contents/bin&quot;:&quot;$PATH&quot;</div>
-</div><!-- fragment --><div class="fragment"><div class="line">source ~/.zprofile</div>
+<div class="line">source ~/.zprofile</div>
+<div class="line"> </div>
+<div class="line"># verify with ...</div>
+<div class="line">cmake --version</div>
+<div class="line">cmake version 3.28.0</div>
+<div class="line"> </div>
+<div class="line">CMake suite maintained and supported by Kitware (kitware.com/cmake).</div>
 </div><!-- fragment --><h1><a class="anchor" id="autotoc_md33"></a>
 Dependencies</h1>
+<p>Instead of using the system versions of libraries used such as OpenSSL, we get better control over their versioning by installing them under $HOME/.local and directing dependent libraries, such as gRPC to use the $HOME/.local version instead of the system version.</p>
 <h2><a class="anchor" id="autotoc_md34"></a>
-Install and Build gRPC and Protobufs</h2>
-<p>Carefully follow <a href="https://grpc.io/docs/languages/cpp/quickstart/">these steps</a></p>
-<p>or <a href="https://github.com/grpc/grpc/blob/master/BUILDING.md">these</a> which are a bit different.</p>
-<p>After upgrading to MacOS 13.3, these instructions no longer worked. I had to run this command to create the build folder.</p>
-<div class="fragment"><div class="line">% cmake ../.. -DgRPC_INSTALL=ON                \</div>
-<div class="line">              -DCMAKE_BUILD_TYPE=Release       \</div>
-<div class="line">              -DgRPC_ABSL_PROVIDER=package     \</div>
-<div class="line">              -DgRPC_CARES_PROVIDER=package    \</div>
-<div class="line">              -DgRPC_PROTOBUF_PROVIDER=package \</div>
-<div class="line">              -DgRPC_RE2_PROVIDER=package      \</div>
-<div class="line">              -DgRPC_SSL_PROVIDER=package      \</div>
-<div class="line">              -DgRPC_ZLIB_PROVIDER=package \</div>
-<div class="line">              -DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \</div>
-<div class="line">              -DCMAKE_PREFIX_PATH=/Users/$USER/.local </div>
+Clone, build and install OpenSSL</h2>
+<div class="fragment"><div class="line">curl -O https://www.openssl.org/source/openssl-3.2.1.tar.gz</div>
+<div class="line">tar xzf openssl-3.2.1.tar.gz</div>
+<div class="line">cd openssl-3.2.1</div>
+<div class="line"> </div>
+<div class="line"># set up the local install target and OS version</div>
+<div class="line">./Configure --prefix=$HOME/.local darwin64-arm64-cc -mmacosx-version-min=15.0</div>
+<div class="line">make</div>
+<div class="line">make install</div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md35"></a>
+Install and Build gRPC and Protobufs</h2>
+<p>Carefully follow <a href="https://grpc.io/docs/languages/cpp/quickstart/">these steps</a> but use the instructions below for the cmake arguments.</p>
+<div class="fragment"><div class="line">cmake ../.. -DgRPC_INSTALL=ON    \</div>
+<div class="line">-DCMAKE_BUILD_TYPE=Release       \</div>
+<div class="line">-DgRPC_ABSL_PROVIDER=package     \</div>
+<div class="line">-DgRPC_CARES_PROVIDER=module     \</div>
+<div class="line">-DgRPC_PROTOBUF_PROVIDER=package \</div>
+<div class="line">-DgRPC_RE2_PROVIDER=module       \</div>
+<div class="line">-DgRPC_SSL_PROVIDER=package      \</div>
+<div class="line">-DgRPC_ZLIB_PROVIDER=module      \</div>
+<div class="line">-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \</div>
+<div class="line">-DCMAKE_PREFIX_PATH=/Users/$USER/.local \</div>
+<div class="line">-DOPENSSL_ROOT_DIR=/Users/$USER/.local \</div>
+<div class="line">-DOPENSSL_CRYPTO_LIBRARY=/Users/$USER/.local/lib/libcrypto.a \</div>
+<div class="line">-DOPENSSL_SSL_LIBRARY=/Users/$USER/.local/lib/libssl.a \</div>
+<div class="line">-DCMAKE_INSTALL_PREFIX=/Users/$USER/.local</div>
+<div class="line"> </div>
+<div class="line">make -j $(sysctl -n hw.ncpu)</div>
+<div class="line">make install</div>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md36"></a>
 Install homebrew</h2>
 <p>Several of the other dependencies are installed using homebrew.</p>
 <div class="fragment"><div class="line">/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md36"></a>
-Install and Build jwt-cpp</h2>
-<ol type="1">
-<li>Install openSSL eg. <code>brew install openssl</code></li>
-<li>Run <code>git clone <a href="https://github.com/Thalhammer/jwt-cpp">https://github.com/Thalhammer/jwt-cpp</a> &amp;&amp; cd jwt-cpp &amp;&amp; mkdir build &amp;&amp; cd build</code></li>
-<li>Run <code>cmake -DCMAKE_BUILD_TYPE=Release ..</code></li>
-<li>Build and add to path</li>
-</ol>
-<h1><a class="anchor" id="autotoc_md37"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md37"></a>
+Clone, build and install jwt-cpp into the $HOME/.local folder</h2>
+<div class="fragment"><div class="line">cd $HOME</div>
+<div class="line">git clone https://github.com/Thalhammer/jwt-cpp &amp;&amp; cd jwt-cpp &amp;&amp; mkdir build &amp;&amp; cd build</div>
+<div class="line"> cmake .. \</div>
+<div class="line"> -DCMAKE_INSTALL_PREFIX=$HOME/.local \</div>
+<div class="line"> -DCMAKE_BUILD_TYPE=Release \</div>
+<div class="line"> -DJWT_BUILD_EXAMPLES=OFF \</div>
+<div class="line"> -DJWT_BUILD_TESTS=OFF \</div>
+<div class="line"> -DJWT_DISABLE_PICOJSON=OFF \</div>
+<div class="line"> -DJWT_EXTERNAL_NLOHMANN_JSON=ON</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md38"></a>
 Optionally install doxygen</h1>
 <p>Note that this app isn't signed so, by default it cannot be installed.</p>
 <p>You can work around this, at your own risk, by <code>ctrl+click</code> on the <code>.dmg</code> downloaded <a href="https://www.doxygen.nl/files/Doxygen-1.9.6.dmg">from here</a></p>
 <p>Add it to your path, in <code>~/.zprofile</code> ...</p>
 <div class="fragment"><div class="line">&quot;/Applications/Doxygen.app/Contents/Resources/&quot;:&quot;$PATH&quot;</div>
 </div><!-- fragment --><div class="fragment"><div class="line">source ~/.zprofile</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md38"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md39"></a>
 graphviz installation</h2>
 <p>Doxygen can add inheritance diagrams and call trees if the program called <code>dot</code> which is part of graphviz is installed.</p>
 <p>It needs to be installed using <a href="https://docs.brew.sh/Installation">brew</a>, which itself may need installation if not already present</p>
 <div class="fragment"><div class="line">brew install graphviz</div>
-</div><!-- fragment --> <h1><a class="anchor" id="autotoc_md39"></a>
+</div><!-- fragment --> <h1><a class="anchor" id="autotoc_md40"></a>
 Optionally install Google Test</h1>
 <p>It can be installed using <a href="https://docs.brew.sh/Installation">brew</a>, which itself may need installation if not already present</p>
 <p><code>brew install googletest</code></p>
 <p>To build without Google Test, empty the build folder and run <code>cmake .. -DUNIT_TESTING=OFF</code></p>
-<h1><a class="anchor" id="autotoc_md40"></a>
+<h1><a class="anchor" id="autotoc_md41"></a>
 If you're targeting REST, install boost, and asio</h1>
 <div class="fragment"><div class="line">brew install boost &amp;&amp; brew install asio</div>
 </div><!-- fragment --> </div></div><!-- contents -->

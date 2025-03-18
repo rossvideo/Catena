@@ -22,8 +22,7 @@ var hierarchy =
       [ "CatenaServiceImpl::ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", null ],
       [ "CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", [
         [ "CatenaServiceImpl::SetValue", "classCatenaServiceImpl_1_1SetValue.html", null ]
-      ] ],
-      [ "CatenaServiceImpl::UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", null ]
+      ] ]
     ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
