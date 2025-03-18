@@ -197,9 +197,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3df0c29a015ceab195e6dafd17fae0b0" id="r_a3df0c29a015ceab195e6dafd17fae0b0"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0">isArrayType</a> () const =0</td></tr>
 <tr class="memdesc:a3df0c29a015ceab195e6dafd17fae0b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the parameter is an array type.  <br /></td></tr>
 <tr class="separator:a3df0c29a015ceab195e6dafd17fae0b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0f590200712b540a65d38206ec98b49" id="r_ae0f590200712b540a65d38206ec98b49"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ae0f590200712b540a65d38206ec98b49">validateSetValue</a> (const catena::Value &amp;value, uint32_t *index, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans)=0</td></tr>
-<tr class="memdesc:ae0f590200712b540a65d38206ec98b49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
-<tr class="separator:ae0f590200712b540a65d38206ec98b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6426280764c8d2345d517967f51278e9" id="r_a6426280764c8d2345d517967f51278e9"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a6426280764c8d2345d517967f51278e9">validateSetValue</a> (const catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans)=0</td></tr>
+<tr class="memdesc:a6426280764c8d2345d517967f51278e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
+<tr class="separator:a6426280764c8d2345d517967f51278e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0524a3a6faa1200e946ebdaa32db3d70" id="r_a0524a3a6faa1200e946ebdaa32db3d70"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a0524a3a6faa1200e946ebdaa32db3d70">resetValidate</a> ()=0</td></tr>
 <tr class="memdesc:a0524a3a6faa1200e946ebdaa32db3d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets any trackers that might have been changed in validateSetValue.  <br /></td></tr>
 <tr class="separator:a0524a3a6faa1200e946ebdaa32db3d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -936,8 +936,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ae0f590200712b540a65d38206ec98b49" name="ae0f590200712b540a65d38206ec98b49"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae0f590200712b540a65d38206ec98b49">&#9670;&#160;</a></span>validateSetValue()</h2>
+<a id="a6426280764c8d2345d517967f51278e9" name="a6426280764c8d2345d517967f51278e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6426280764c8d2345d517967f51278e9">&#9670;&#160;</a></span>validateSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -954,7 +954,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t *&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a>&#160;</td>
           <td class="paramname"><em>index</em>, </td>
         </tr>
         <tr>
@@ -993,7 +993,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if valid. </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6c6dedd5b08e5fde9b32a1dc5ed251be">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a9bdf6304d6242373d67b8ff0bd38b7c6">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>

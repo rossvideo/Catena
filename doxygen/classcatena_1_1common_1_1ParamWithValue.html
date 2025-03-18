@@ -242,9 +242,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addParam</b> (const s
 <tr class="memitem:acd4912fbb721d5c0c98497b2c11859c9" id="r_acd4912fbb721d5c0c98497b2c11859c9"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#acd4912fbb721d5c0c98497b2c11859c9">getScope</a> () const override</td></tr>
 <tr class="memdesc:acd4912fbb721d5c0c98497b2c11859c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter scope  <br /></td></tr>
 <tr class="separator:acd4912fbb721d5c0c98497b2c11859c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c6dedd5b08e5fde9b32a1dc5ed251be" id="r_a6c6dedd5b08e5fde9b32a1dc5ed251be"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a6c6dedd5b08e5fde9b32a1dc5ed251be">validateSetValue</a> (const catena::Value &amp;value, uint32_t *index, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans) override</td></tr>
-<tr class="memdesc:a6c6dedd5b08e5fde9b32a1dc5ed251be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
-<tr class="separator:a6c6dedd5b08e5fde9b32a1dc5ed251be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bdf6304d6242373d67b8ff0bd38b7c6" id="r_a9bdf6304d6242373d67b8ff0bd38b7c6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a9bdf6304d6242373d67b8ff0bd38b7c6">validateSetValue</a> (const catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a> index, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans) override</td></tr>
+<tr class="memdesc:a9bdf6304d6242373d67b8ff0bd38b7c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates a setValue operation without changing the param's value.  <br /></td></tr>
+<tr class="separator:a9bdf6304d6242373d67b8ff0bd38b7c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99130fd6880369ab0955c70522876814" id="r_a99130fd6880369ab0955c70522876814"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a99130fd6880369ab0955c70522876814">resetValidate</a> () override</td></tr>
 <tr class="memdesc:a99130fd6880369ab0955c70522876814"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resets any trackers that might have been changed in validateSetValue.  <br /></td></tr>
 <tr class="separator:a99130fd6880369ab0955c70522876814"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1196,8 +1196,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a6c6dedd5b08e5fde9b32a1dc5ed251be" name="a6c6dedd5b08e5fde9b32a1dc5ed251be"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6c6dedd5b08e5fde9b32a1dc5ed251be">&#9670;&#160;</a></span>validateSetValue()</h2>
+<a id="a9bdf6304d6242373d67b8ff0bd38b7c6" name="a9bdf6304d6242373d67b8ff0bd38b7c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bdf6304d6242373d67b8ff0bd38b7c6">&#9670;&#160;</a></span>validateSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1216,7 +1216,7 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t *&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Path.html#a568efadd6fc647b3d644211699cf8ce9">Path::Index</a>&#160;</td>
           <td class="paramname"><em>index</em>, </td>
         </tr>
         <tr>
@@ -1255,13 +1255,13 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if valid. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#ae0f590200712b540a65d38206ec98b49">catena::common::IParam</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a6426280764c8d2345d517967f51278e9">catena::common::IParam</a>.</p>
 
 <p class="reference">References <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#afad5b36761f61bbd3e043f26a0f767af">catena::common::ParamDescriptor::getOid()</a>, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#adb7dd3894cca91946bb849b4227f7bc1">catena::common::ParamDescriptor::max_length()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::OUT_OF_RANGE</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ad3fb42e97cb4be764d4e5826034d5dfa">catena::common::ParamDescriptor::total_length()</a>, and <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1">catena::common::Authorizer::writeAuthz()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a6c6dedd5b08e5fde9b32a1dc5ed251be_cgraph.svg" width="516" height="307"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamWithValue_a9bdf6304d6242373d67b8ff0bd38b7c6_cgraph.svg" width="516" height="307"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
