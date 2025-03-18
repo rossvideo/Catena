@@ -198,7 +198,7 @@ class IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    virtual bool validateSetValue(const catena::Value& value, uint32_t* index, Authorizer& authz, catena::exception_with_status& ans) = 0;
+    virtual bool validateSetValue(const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans) = 0;
     /**
      * @brief Resets any trackers that might have been changed in validateSetValue.
      */

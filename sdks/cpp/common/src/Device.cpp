@@ -54,16 +54,16 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
             try {
                 // Getting param, or parent param if the final segment is an index.
                 Path path(setValuePayload.oid());
-                std::unique_ptr<uint32_t> index;
+                Path::Index index = Path::kNone;
                 if (path.back_is_index()) {
-                    index = std::make_unique<uint32_t>(path.back_as_index());
+                    index = path.back_as_index();
                     path.popBack();
                 }
                 std::unique_ptr<IParam> param = getParam(path, ans, authz);
                 // Validating serValue operation.
                 if (!param) {
                     break;
-                } else if (!param->validateSetValue(setValuePayload.value(), index.get(), authz, ans)) {
+                } else if (!param->validateSetValue(setValuePayload.value(), index, authz, ans)) {
                     break;
                 }
             } catch (const catena::exception_with_status& why) {
@@ -75,15 +75,10 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
         for (const catena::SetValuePayload& setValuePayload : src.values()) {
             // Creating another exception_with_status as to not overwrite ans.
             catena::exception_with_status status{"", catena::StatusCode::OK};
-            // Getting param, or parent param if the final segment is an index.
+            // Resetting param's trackers, or parent param's if back is index.
             Path path(setValuePayload.oid());
-            std::unique_ptr<uint32_t> index;
-            if (path.back_is_index()) {
-                index = std::make_unique<uint32_t>(path.back_as_index());
-                path.popBack();
-            }
+            if (path.back_is_index()) { path.popBack(); }
             std::unique_ptr<IParam> param = getParam(path, status, authz);
-            // Resetting the param's trackers.
             if (param) { param->resetValidate(); }
         }
     }
@@ -96,10 +91,11 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
     // Looping through and commiting all setValue operations.
     for (const catena::SetValuePayload& setValuePayload : src.values()) {
         try {
-            // Getting param and setting its value.
+            // Figuring out parent param for appends and resetValidate().
             Path path(setValuePayload.oid());
             std::unique_ptr<IParam> parent = nullptr;
             std::unique_ptr<IParam> param = nullptr;
+            // Get parent.
             if (path.back_is_index()) {
                 Path::Index index = path.back_as_index();
                 path.popBack();
@@ -110,14 +106,17 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
                     path.push_back(index);
                     param = parent->getParam(path, authz, ans);
                 }
+            // Get normal.
             } else {
                 param = getParam(path, ans, authz);
             }
+            // Setting value and emitting signal.
             ans = param->fromProto(setValuePayload.value(), authz);
             valueSetByClient.emit(setValuePayload.oid(), param.get(), 0);
             // Resetting trackers to match new value.
             if (parent) { parent->resetValidate();
             } else { param->resetValidate(); }
+
         } catch (const catena::exception_with_status& why) {
             ans = catena::exception_with_status(why.what(), why.status);
             break;

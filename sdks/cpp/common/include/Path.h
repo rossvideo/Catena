@@ -87,6 +87,11 @@ class Path {
      */
     static constexpr Index kError = kEnd - 1;
 
+    /**
+     * @brief used to signal no index
+     */
+    static constexpr Index kNone = kEnd - 2;
+
   public:
 
     Path() = default;

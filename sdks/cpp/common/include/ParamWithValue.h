@@ -726,18 +726,22 @@ class ParamWithValue : public catena::common::IParam {
 
     // Tracker updaters. One overload for each case.
     /**
-     * @brief Set value overload of updateTracker, default. Makes a call to
-     * initializeTracker if index indefined and types are the same.
+     * @brief Default set value overload of updateTracker. Makes a call to
+     * initializeTracker requirements are met.
+     * @param oldValue The paramWithValue's existing value.
+     * @param newValue The value to replace oldValue with. Must be the same
+     * type as oldValude.
+     * @param index The index to insert the value at. Must be Path::kNone.
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status updateTracker(U& oldValue, const V& newValue, uint32_t* index) {
+    catena::exception_with_status updateTracker(U& oldValue, const V& newValue, Path::Index index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index cannot be defined.
-        if (index) {
+        if (index != Path::kNone) {
             ans = catena::exception_with_status("Index not applicable to setValue for param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // newValue must be the same type at oldValue.
-        } else if (!std::is_same<U, V>::value)  {
+        } else if (!std::is_same<U, V>::value) {
             ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // Calling initializeTracker if valid input.
         } else {
@@ -746,50 +750,53 @@ class ParamWithValue : public catena::common::IParam {
         return ans;
     }
     /**
-     * @brief Insert/append value overload of updateTracker, updates
-     * mSizeTracker.
-     * @param oldValue The param's existing array value.
-     * @param newValue The new value to insert/append.
-     * @param index The index to insert at. Must be specified.
+     * @brief Insert/append value to array overload of updateTracker, updates
+     * mSizeTracker accordingly.
+     * @param arrayValue The paramWithValue's existing array.
+     * @param value The value to insert/append. Must be the same type as
+     * arrayValue's contents.
+     * @param index The index to insert the value at. Cannot be Path::kNone and
+     * must be within bounds.
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V> requires (!meta::IsVector<V>)
-    catena::exception_with_status updateTracker(std::vector<U>& arrayValue, const V& value, uint32_t* index) {
+    catena::exception_with_status updateTracker(std::vector<U>& arrayValue, const V& value, Path::Index index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index must be specified.
-        if (!index) {
+        if (index == Path::kNone) {
             ans = catena::exception_with_status("Index not specified in SetValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // Value must be the same type as what's stored in the array.
-        } else if (!std::is_same<U, V>::value)  {
+        } else if (!std::is_same<U, V>::value) {
             ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // Index must be within bounds.
-        } else if (*index > *mSizeTracker_ && *index != uint32_t(Path::kEnd)) {
+        } else if (index >= *mSizeTracker_ && index != Path::kEnd) {
             ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
         // Case 1: Appending to the end.
-        } else if (*index == uint32_t(Path::kEnd)) {
+        } else if (index == Path::kEnd) {
             *mSizeTracker_ += 1;
         }
         // Case 2: Inserting (do nothing).
         return ans;
     }
     /**
-     * @brief Insert/append string array overload of updateTracker, updates
-     * mSizeTracker and tSizeTracker.
-     * @param oldValue The param's existing array value.
-     * @param newValue The string value to insert/append.
-     * @param index The index to insert at. Must be specified.
+     * @brief Insert/append string to string array overload of updateTracker,
+     * updates mSizeTracker and tSizeTracker accordingly.
+     * @param arrayValue The paramWithValue's existing string array.
+     * @param value The string to insert/append.
+     * @param index The index to insert the value at. Cannot be Path::kNone and
+     * must be within bounds.
      * @returns catena::exception_with_status.
      */
-    catena::exception_with_status updateTracker(std::vector<std::string>& arrayValue, const std::string& value, uint32_t* index) {
+    catena::exception_with_status updateTracker(std::vector<std::string>& arrayValue, const std::string& value, Path::Index index) {
         catena::exception_with_status ans = catena::exception_with_status("OK", catena::StatusCode::OK);
         // Index must be defined.
-        if (!index) {
+        if (index == Path::kNone) {
             ans = catena::exception_with_status("Index not specified in setValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
         // Index must be within bounds.
-        } else if (*index > *mSizeTracker_ && *index != uint32_t(Path::kEnd)) {
+        } else if (index >= *mSizeTracker_ && index != Path::kEnd) {
             ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
         // Case 1: Appending
-        } else if (*index == uint32_t(Path::kEnd)) {
+        } else if (index == Path::kEnd) {
             *mSizeTracker_ += 1;
             tSizeTracker_->push_back(value.length());
         // Case 2: Inserting
@@ -808,40 +815,40 @@ class ParamWithValue : public catena::common::IParam {
      * @param index The index to update (or nullptr if none).
      * @returns catena::exception_with_status.
      */
-    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, uint32_t*)>> updateTrackerMap {
-        {Kind::kInt32Value, [this](const catena::Value& value, uint32_t* index) {
+    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index)>> updateTrackerMap {
+        {Kind::kInt32Value, [this](const catena::Value& value, Path::Index index) {
             return this->updateTracker(this->get(), value.int32_value(), index);
         }},
-        {Kind::kFloat32Value, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kFloat32Value, [this](const catena::Value& value, Path::Index index) {
             return this->updateTracker(this->get(), value.float32_value(), index);
         }},
-        {Kind::kStringValue, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kStringValue, [this](const catena::Value& value, Path::Index index) {
             return this->updateTracker(this->get(), value.string_value(), index);
         }},
-        {Kind::kStructValue, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kStructValue, [this](const catena::Value& value, Path::Index index) {
             return this->updateTracker(this->get(), value.struct_value(), index);
         }},
-        {Kind::kInt32ArrayValues, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kInt32ArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto ints = value.int32_array_values().ints();
             auto protoVector = std::vector<int>(ints.begin(), ints.end());
             return this->updateTracker(this->get(), protoVector, index);
         }},
-        {Kind::kFloat32ArrayValues, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kFloat32ArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto floats = value.float32_array_values().floats();
             auto protoVector = std::vector<float>(floats.begin(), floats.end());
             return this->updateTracker(this->get(), protoVector, index);
         }},
-        {Kind::kStringArrayValues, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kStringArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto strings = value.string_array_values().strings();
             auto protoVector = std::vector<std::string>(strings.begin(), strings.end());
             return this->updateTracker(this->get(), protoVector, index);
         }},
-        {Kind::kStructArrayValues, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kStructArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto structs = value.struct_array_values().struct_values();
             auto protoVector = std::vector<catena::StructValue>(structs.begin(), structs.end());
             return this->updateTracker(this->get(), protoVector, index);
         }},
-        {Kind::kStructVariantArrayValues, [this](const catena::Value& value, uint32_t* index) {
+        {Kind::kStructVariantArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto structs = value.struct_variant_array_values().struct_variants();
             auto protoVector = std::vector<catena::StructVariantValue>(structs.begin(), structs.end());
             return this->updateTracker(this->get(), protoVector, index);
@@ -856,7 +863,7 @@ class ParamWithValue : public catena::common::IParam {
      * @param ans Catena::exception_with_status output.
      * @returns true if valid.
      */
-    bool validateSetValue(const catena::Value& value, uint32_t* index, Authorizer& authz, catena::exception_with_status& ans) override {
+    bool validateSetValue(const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans) override {
         // Checking read permissions.
         if (!authz.readAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to read the param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
