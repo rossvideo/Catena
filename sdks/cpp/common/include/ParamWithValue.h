@@ -657,25 +657,25 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   private: // Tracker functions.
+    template<typename U>
+    /**
+     * @brief Helper function to return length of value if it's a string.
+     * @returns The length of value if it's a string, or 0 otherwise.
+     */
+    std::size_t str_length(const U& value) const { return 0; }
+    std::size_t str_length(const std::string& value) const { return value.length(); }
     // Tracker initializers. One overload for each case.
     /**
-     * @brief Default initializeTracker(). Does nothing.
+     * @brief Default initializeTracker(). Sets mSizeTracker to length of value
+     * if it's a string
      * @returns catena::exception_with_status OK.
      */
     template<typename U>
     catena::exception_with_status initializeTracker(const U& value) {
-        return catena::exception_with_status("OK", catena::StatusCode::OK);
-    }
-    /**
-     * @brief std::string overload of initializeTracker(). Sets mSizeTracker to
-     * the length of value.
-     * @param value The param's string value.
-     * @returns catena::exception_with_status.
-     */
-    catena::exception_with_status initializeTracker(const std::string& value) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         try {
-            *mSizeTracker_ = value.length();
+            // 0 unless value is a string.
+            *mSizeTracker_ = str_length(value);
         } catch (...) {
             ans = catena::exception_with_status("Could not initialize tracker for " + descriptor_.getOid(), catena::StatusCode::INTERNAL);
         }
@@ -683,7 +683,8 @@ class ParamWithValue : public catena::common::IParam {
     }
     /**
      * @brief std::vector overload of initializeTracker(). Sets mSizeTracker to
-     * the number of elements in arrayValue.
+     * the number of elements in arrayValue and tSizeTracker to the total
+     * length of all values in arrayValue if arrayValue is a string array.
      * @param arrayValue The param's vector value.
      * @returns catena::exception_with_status.
      */
@@ -692,31 +693,18 @@ class ParamWithValue : public catena::common::IParam {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         try {
             *mSizeTracker_ = arrayValue.size();
-        } catch (...) {
-            ans = catena::exception_with_status("Could not initialize tracker for " + descriptor_.getOid(), catena::StatusCode::INTERNAL);
-        }
-        return ans;
-    }
-    /**
-     * @brief STRING_ARRAY overload of initializeTracker(). Sets mSizeTracker
-     * to the number of elements in arrayValue and tSizeTracker to the length
-     * of each string at each index.
-     * @param value The param's string array value.
-     * @returns catena::exception_with_status.
-     */
-    catena::exception_with_status initializeTracker(const std::vector<std::string>& arrayValue) {
-        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        try {
-            // Initializing/clearing the tSizeTracker.
-            if (!tSizeTracker_) {
-                tSizeTracker_ = std::make_shared<TSizeTracker>();
-            } else {
-                tSizeTracker_->clear();
-            }
-            // Setting mSizeTracker and tSizeTracker.
-            *mSizeTracker_ = arrayValue.size();
-            for (auto& value : arrayValue) {
-                tSizeTracker_->push_back(value.length());
+            // STRING_ARRAY only functionality.
+            if (descriptor_.type() == catena::ParamType::STRING_ARRAY) {
+                // Initializing/clearing the tSizeTracker.
+                if (!tSizeTracker_) {
+                    tSizeTracker_ = std::make_shared<TSizeTracker>();
+                } else {
+                    tSizeTracker_->clear();
+                }
+                // Setting mSizeTracker and tSizeTracker.
+                for (auto& value : arrayValue) {
+                    tSizeTracker_->push_back(str_length(value));
+                }
             }
         } catch (...) {
             ans = catena::exception_with_status("Could not initialize tracker for " + descriptor_.getOid(), catena::StatusCode::INTERNAL);
@@ -751,7 +739,7 @@ class ParamWithValue : public catena::common::IParam {
     }
     /**
      * @brief Insert/append value to array overload of updateTracker, updates
-     * mSizeTracker accordingly.
+     * mSizeTracker accordingly, and tSizeTracker if string array.
      * @param arrayValue The paramWithValue's existing array.
      * @param value The value to insert/append. Must be the same type as
      * arrayValue's contents.
@@ -774,34 +762,12 @@ class ParamWithValue : public catena::common::IParam {
         // Case 1: Appending to the end.
         } else if (index == Path::kEnd) {
             *mSizeTracker_ += 1;
-        }
-        // Case 2: Inserting (do nothing).
-        return ans;
-    }
-    /**
-     * @brief Insert/append string to string array overload of updateTracker,
-     * updates mSizeTracker and tSizeTracker accordingly.
-     * @param arrayValue The paramWithValue's existing string array.
-     * @param value The string to insert/append.
-     * @param index The index to insert the value at. Cannot be Path::kNone and
-     * must be within bounds.
-     * @returns catena::exception_with_status.
-     */
-    catena::exception_with_status updateTracker(std::vector<std::string>& arrayValue, const std::string& value, Path::Index index) {
-        catena::exception_with_status ans = catena::exception_with_status("OK", catena::StatusCode::OK);
-        // Index must be defined.
-        if (index == Path::kNone) {
-            ans = catena::exception_with_status("Index not specified in setValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        // Index must be within bounds.
-        } else if (index >= *mSizeTracker_ && index != Path::kEnd) {
-            ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
-        // Case 1: Appending
-        } else if (index == Path::kEnd) {
-            *mSizeTracker_ += 1;
-            tSizeTracker_->push_back(value.length());
-        // Case 2: Inserting
-        } else {
-            tSizeTracker_->at(index) = value.length();
+            if (descriptor_.type() == catena::ParamType::STRING_ARRAY) {
+                tSizeTracker_->push_back(str_length(value));
+            }
+        // Case 2: Inserting (do nothing unless string array).
+        } else if (descriptor_.type() == catena::ParamType::STRING_ARRAY) {
+            tSizeTracker_->at(index) = str_length(value);
         }
         return ans;
     }
