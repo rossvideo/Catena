@@ -801,7 +801,7 @@ class ParamWithValue : public catena::common::IParam {
             tSizeTracker_->push_back(value.length());
         // Case 2: Inserting
         } else {
-            tSizeTracker_->at(*index) = value.length();
+            tSizeTracker_->at(index) = value.length();
         }
         return ans;
     }
