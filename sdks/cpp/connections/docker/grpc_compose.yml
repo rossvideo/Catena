@@ -57,11 +57,9 @@ services:
     environment:
       - AUTHZ_SERVER=$AUTHZ_SERVER
       - REALM=$REALM
+      - HOST=$HOST
     ports: # Mapping ports from host to container.
       - 6254:6254
-      - 6256:6256
-      - 6258:6258
-      - 6260:6260
     volumes: # letsencrypt contains keys for TLS.
       - /etc/letsencrypt:/etc/letsencrypt:ro
     # Entrypoint defined in catena_envoy_dockerfile.

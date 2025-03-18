@@ -47,19 +47,6 @@ static_resources:
       socket_address:
         address: 0.0.0.0
         port_value: 6254
-    additional_addresses:
-    - address:
-        socket_address:
-          address: 0.0.0.0
-          port_value: 6256
-    - address:
-        socket_address:
-          address: 0.0.0.0
-          port_value: 6258
-    - address:
-        socket_address:
-          address: 0.0.0.0
-          port_value: 6260
     filter_chains:
 
     # This filten handles the http requests from the port above.
@@ -107,42 +94,42 @@ static_resources:
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+          # Routes the call based on domain. virtual_hosts are all very similar.
+          # *Note: If running locally $HOST needs to be "localhost:port".
           route_config:
             name: local_route
             virtual_hosts:
-            - name: default
-              domains: ["*"]
-              # This routes the request to the appropriate cluster depending on
-              # the port number the command was recieved on.
+            # Routes to status_update_cluster if domain starts with "status_update."
+            - name: status_update
+              domains: ["status_update.$HOST"]
               routes:
-              # Example route, all others are very similar.
-              - match: # Routes port 6254 to the status_update_cluster.
+              - match:
                   prefix: "/"
-                  headers:
-                  - name: x-forwarded-port # Set using "append_x_forwarded_port" above.
-                    string_match: { exact: "6254"} # IN port
                 route:
-                  cluster: status_update_cluster # The cluster to map it to.
-
-              - match: # Routes port 6256 to the use_menus_cluster.
+                  cluster: status_update_cluster
+            # Routes to use_menus_cluster if domain starts with "use_menus."
+            - name: use_menus
+              domains: ["use_menus.$HOST"]
+              routes:
+              - match:
                   prefix: "/"
-                  headers:
-                  - name: x-forwarded-port
-                    string_match: { exact: "6256"}
                 route:
                   cluster: use_menus_cluster
-              - match: # Routes port 6258 to the structs_with_authz_cluster.
+             # Routes to use_structs_cluster if domain starts with "use_structs."
+            - name: use_structs
+              domains: ["use_structs.$HOST"]
+              routes:
+              - match:
                   prefix: "/"
-                  headers:
-                  - name: x-forwarded-port
-                    string_match: { exact: "6258"}
                 route:
-                  cluster: structs_with_authz_cluster
-              - match: # Routes port 6260 to the status_update_cluster.
+                  cluster: use_structs_cluster
+            # Routes to use_commands_cluster if domain starts with "use_commands."
+            - name: use_commands
+              domains: ["use_commands.$HOST"]
+              routes:
+              - match:
                   prefix: "/"
-                  headers:
-                  - name: x-forwarded-port
-                    string_match: { exact: "6260"}
                 route:
                   cluster: use_commands_cluster
 
@@ -224,7 +211,7 @@ static_resources:
                 address: catena_use_menus
                 port_value: 6254
   # Cluster for handling authenticated gRPC requests to structs_with_authz.
-  - name: structs_with_authz_cluster
+  - name: use_structs_cluster
     type: STRICT_DNS
     typed_extension_protocol_options:
       envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
@@ -232,7 +219,7 @@ static_resources:
         explicit_http_config:
           http2_protocol_options: {}
     load_assignment:
-      cluster_name: structs_with_authz_cluster
+      cluster_name: use_structs_cluster
       endpoints:
       - lb_endpoints:
         - endpoint:
