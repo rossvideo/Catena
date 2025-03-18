@@ -726,31 +726,20 @@ class ParamWithValue : public catena::common::IParam {
 
     // Tracker updaters. One overload for each case.
     /**
-     * @brief Set value overload of updateTracker, does nothing.
+     * @brief Set value overload of updateTracker, default. Makes a call to
+     * initializeTracker if index indefined and types are the same.
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status updateTracker(U& oValue, const V& nValue, uint32_t* index) {
+    catena::exception_with_status updateTracker(U& oldValue, const V& newValue, uint32_t* index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        // Cannot have index if parent is not an array (does not exist).
+        // Index cannot be defined.
         if (index) {
-            ans = catena::exception_with_status("Index not applicable to non-array type param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Index not applicable to setValue for param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        // newValue must be the same type at oldValue.
         } else if (!std::is_same<U, V>::value)  {
             ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        }
-        return ans;
-    }
-    /**
-     * @brief Set string overload of updateTracker, updates mSizeTracker.
-     * @param oldValue The param's existing string value.
-     * @param newValue The param's new string value.
-     * @returns catena::exception_with_status.
-     */
-    catena::exception_with_status updateTracker(std::string& oldValue, const std::string& newValue, uint32_t* index) {
-        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        // Cannot have index if parent is not an array (does not exist).
-        if (index) {
-            ans = catena::exception_with_status("Index not applicable to non-array type param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        // Calling initializeTracker if valid input.
         } else {
             ans = initializeTracker(newValue);
         }
@@ -764,40 +753,23 @@ class ParamWithValue : public catena::common::IParam {
      * @param index The index to insert at. Must be specified.
      * @returns catena::exception_with_status.
      */
-    template<typename U, typename V>
+    template<typename U, typename V> requires (!meta::IsVector<V>)
     catena::exception_with_status updateTracker(std::vector<U>& arrayValue, const V& value, uint32_t* index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
+        // Index must be specified.
         if (!index) {
             ans = catena::exception_with_status("Index not specified in SetValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        // Value must be the same type as what's stored in the array.
         } else if (!std::is_same<U, V>::value)  {
             ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        } else {
-            // Append
-            if (*index == uint32_t(Path::kEnd)) {
-                *mSizeTracker_ += 1;
-            // Invalid
-            } else if (*index > *mSizeTracker_) {
-                ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
-            }
-            // If inserting then we do nothing to the tracker array.
+        // Index must be within bounds.
+        } else if (*index > *mSizeTracker_ && *index != uint32_t(Path::kEnd)) {
+            ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
+        // Case 1: Appending to the end.
+        } else if (*index == uint32_t(Path::kEnd)) {
+            *mSizeTracker_ += 1;
         }
-        return ans;
-    }
-    /**
-     * @brief Set array overload of updateTracker, updates mSizeTracker if
-     * there is no type mismatch.
-     * @param oldValue The param's existing array value.
-     * @param newValue The param's new array value.
-     * @returns catena::exception_with_status.
-     */
-    template<typename U, typename V>
-    catena::exception_with_status updateTracker(std::vector<U>& oldArray, const std::vector<V>& newArray, uint32_t* index) {
-        catena::exception_with_status ans{"OK", catena::StatusCode::OK};
-        if (std::is_same<U, V>::value)  {
-            ans = initializeTracker(newArray);
-        } else {
-            ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        }
+        // Case 2: Inserting (do nothing).
         return ans;
     }
     /**
@@ -810,20 +782,19 @@ class ParamWithValue : public catena::common::IParam {
      */
     catena::exception_with_status updateTracker(std::vector<std::string>& arrayValue, const std::string& value, uint32_t* index) {
         catena::exception_with_status ans = catena::exception_with_status("OK", catena::StatusCode::OK);
+        // Index must be defined.
         if (!index) {
             ans = catena::exception_with_status("Index not specified in setValue call to " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
+        // Index must be within bounds.
+        } else if (*index > *mSizeTracker_ && *index != uint32_t(Path::kEnd)) {
+            ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
+        // Case 1: Appending
+        } else if (*index == uint32_t(Path::kEnd)) {
+            *mSizeTracker_ += 1;
+            tSizeTracker_->push_back(value.length());
+        // Case 2: Inserting
         } else {
-            // Append
-            if (*index == uint32_t(Path::kEnd)) {
-                *mSizeTracker_ += 1;
-                tSizeTracker_->push_back(value.length());
-            // Insert
-            } else if (*index < tSizeTracker_->size()) {
-                tSizeTracker_->at(*index) = value.length();
-            // Invalid
-            } else {
-                ans = catena::exception_with_status("Index out of bounds of array " + descriptor_.getOid(), catena::StatusCode::OUT_OF_RANGE);
-            }
+            tSizeTracker_->at(*index) = value.length();
         }
         return ans;
     }
