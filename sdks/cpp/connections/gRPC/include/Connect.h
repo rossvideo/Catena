@@ -56,8 +56,9 @@ class CatenaServiceImpl::Connect : public CallData {
          * @param service - Pointer to the parent CatenaServiceImpl.
          * @param dm - Address of the device to connect to.
          * @param ok - Flag to check if the command was successfully executed.
+         * @param subscription_manager - Reference to the subscription manager for managing subscriptions.
          */ 
-        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
+        Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager);
         /**
          * @brief Manages the steps of the Connect gRPC command
          * through the state variable status. Returns the value of the
@@ -129,7 +130,6 @@ class CatenaServiceImpl::Connect : public CallData {
          */
         unsigned int valueSetByServerId_;
         /**
-
          * @brief Id of operation waiting for languageAddedPushUpdate to be
          * emitted. Used when ending the connection.
          */
@@ -144,11 +144,6 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief ID of the shutdown signal for the Connect object
         */
         unsigned int shutdownSignalId_;
-
-        /**
-         * @brief Reference to the subscription manager
-         */
-        catena::grpc::SubscriptionManager& subscriptionManager_;
 
         /**
          * @brief Updates the response message with parameter values and handles 

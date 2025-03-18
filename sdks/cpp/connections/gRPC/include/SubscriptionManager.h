@@ -95,7 +95,7 @@ public:
     /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
-     * @return true if the OID ends with "/*"
+     * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
     static bool isWildcard(const std::string& oid);
 
