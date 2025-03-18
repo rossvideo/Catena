@@ -1,5 +1,7 @@
 <map id="catena::common::Authorizer::writeAuthz" name="catena::common::Authorizer::writeAuthz">
-<area shape="rect" id="Node000001" title="Check if the client has write authorization." alt="" coords="264,5,471,45"/>
+<area shape="rect" id="Node000001" title="Check if the client has write authorization." alt="" coords="264,37,471,77"/>
 <area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1ParamWithValue.html#a6027ca23cb1897c44d933a9f3a4dd29d" title="deserialize the parameter value from protobuf if authorized" alt="" coords="5,5,216,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="250,28,216,28,216,23,250,23"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="250,45,216,41,216,36,251,40"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1ParamWithValue.html#a6c6dedd5b08e5fde9b32a1dc5ed251be" title="Validates a setValue operation without changing the param&#39;s value." alt="" coords="5,69,216,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="251,75,216,79,216,74,250,69"/>
 </map>

@@ -119,23 +119,21 @@ Setting up Catena Service(s) with Docker</h2>
 <object type="image/svg+xml" data="Catena.UML.Layered.Services.svg" style="pointer-events: none;"></object>
 <div class="caption">
 Alt</div></div>
-    </div><div style="text-align: center"></div><p>Setting up a Catena service(s) with Docker requires five things:</p><ol type="1">
-<li><a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/CMakeLists.txt">CMake</a> and <a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/catena_status_update_dockerfile">Dockerfiles</a> for initializing docker images with files and entrypoints.</li>
+    </div><div style="text-align: center"></div><p>Setting up a Catena service(s) with Docker requires four things:</p><ol type="1">
 <li>A keycloak server to generate public keys with.</li>
-<li>A container set up with Envoy proxy for recieving requests via TLS, validating JWS tokens with the keycloak server, and routing valid requests to their respective service. This can be configured via an <a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/envoy/envoy.yaml">envoy.yaml</a> file.</li>
+<li>A container set up with Envoy proxy for recieving requests via TLS, validating JWS tokens with the keycloak server, and routing valid requests to their respective service. This can be configured via an <a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/envoy.yaml">envoy.yaml</a> file.</li>
 <li>A public and private Docker network for communication between containers. <br  />
 </li>
 <li>A <a href="https://github.com/rossvideo/Catena/blob/main/sdks/cpp/connections/docker/grpc_compose.yml">Docker compose</a> file to create the containers, connect the service containers to the private network, and connect the Envoy proxy to both networks.</li>
 </ol>
 <p>For an example of Catena services set up with a Docker image, see the <a href="https://github.com/rossvideo/Catena/tree/main/sdks/cpp/connections/docker">connections/docker</a> folder.</p>
 <p><em><b>Note:</b></em> If you wish to run your service without authentication/authorization, you can ignore the keycloak server and Envoy proxy container and simply connect your Catena sevice(s) to the public network. In this case, your service's should also be run with <code>--authz=false</code>.</p>
-<p><em><b>Note:</b></em> For setting authorization server and realm via the command line, you will need a dockerfile and entrypoint script for your envoy image which replaces the environment variables found in envoy.yaml. See example above for more info.</p>
 <h2><a class="anchor" id="autotoc_md16"></a>
 Steps to run</h2>
 <ol type="1">
 <li>Build Catena with <code>cmake -DDOCKER=on</code>.</li>
 <li>Navigate to the folder containing your Docker compose file.</li>
-<li>Run the file using <code>AUTHZ_SERVER=your.authorization.server REALM=realm docker-compose -f /path/to/your/file up -d</code>.</li>
+<li>Run the file using <code>docker-compose -f /path/to/your/file up -d</code>.</li>
 </ol>
 <p>Once your containers are created, you can check their status using <code>docker ps -a</code>. You should have one container per service as well as an additional container running Envoy Proxy.</p>
 <p>If one or more of these containers have exited, you can debug using <code>docker logs &lt;container name&gt;</code>. </p>
