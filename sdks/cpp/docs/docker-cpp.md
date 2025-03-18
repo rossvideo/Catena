@@ -36,7 +36,7 @@ For an example of Catena services set up with a Docker image, see the [connectio
 ### Steps to run
 1. Build Catena with ```cmake -DDOCKER=on```.
 2. Navigate to the folder containing your Docker compose file.
-3. Run the file using ```AUTHZ_SERVER=your.authorization.server REALM=realm docker-compose -f /path/to/your/file up -d```.
+3. Run the file using ```AUTHZ_SERVER=your.authorization.server REALM=realm HOST=host docker-compose -f /path/to/your/file up -d```.
 
 Once your containers are created, you can check their status using ```docker ps -a```. You should have one container per service as well as an additional container running Envoy Proxy.
 
