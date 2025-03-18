@@ -27,7 +27,7 @@ var searchData=
   ['compiling_20and_20installing_20catena_24',['Cross Compiling and installing Catena',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md8',1,'']]],
   ['compiling_20grpc_25',['Cross Compiling gRPC',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md5',1,'']]],
   ['compiling_20jwt_20cpp_26',['Cross Compiling JWT-CPP',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md6',1,'']]],
-  ['connect_27',['connect',['../classCatenaServiceImpl_1_1Connect.html#aa0c9451ff134f2576f7864759c55722d',1,'CatenaServiceImpl::Connect::Connect()'],['../classCatenaServiceImpl_1_1Connect.html',1,'CatenaServiceImpl::Connect']]],
+  ['connect_27',['connect',['../classCatenaServiceImpl_1_1Connect.html#ad9326f1bbaf6d390225f2317b1f54639',1,'CatenaServiceImpl::Connect::Connect()'],['../classCatenaServiceImpl_1_1Connect.html',1,'CatenaServiceImpl::Connect']]],
   ['connect_2eh_28',['Connect.h',['../Connect_8h.html',1,'']]],
   ['connection_20manager_29',['connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md47',1,'Install boost if using the REST connection manager'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md27',1,'Install boost libraries if you want to use the REST connection manager']]],
   ['const_5fiterator_30',['const_iterator',['../classcatena_1_1common_1_1ILanguagePack.html#ac56aa1e8ab3688b2d161c10d57781ef9',1,'catena::common::ILanguagePack']]],
