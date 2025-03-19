@@ -14,6 +14,7 @@ var classCatenaServiceImpl =
     [ "ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", "classCatenaServiceImpl_1_1ListLanguages" ],
     [ "MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", "classCatenaServiceImpl_1_1MultiSetValue" ],
     [ "SetValue", "classCatenaServiceImpl_1_1SetValue.html", "classCatenaServiceImpl_1_1SetValue" ],
+    [ "UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", "classCatenaServiceImpl_1_1UpdateSubscriptions" ],
     [ "CallStatus", "classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909d", [
       [ "kCreate", "classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909dab9bd4b7bbc4fbe61cec6edd5bad6496d", null ],
       [ "kProcess", "classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909da3fc05876acd3bdfabc21ceefddf8846c", null ],
@@ -28,5 +29,6 @@ var classCatenaServiceImpl =
     [ "init", "classCatenaServiceImpl.html#a277195cdaaad6fc8b70dabc27a322103", null ],
     [ "processEvents", "classCatenaServiceImpl.html#ae915df806984a0f15798aaa9d5b46d0c", null ],
     [ "registerItem", "classCatenaServiceImpl.html#a5cceb267107e0837203946cde5469269", null ],
-    [ "shutdownServer", "classCatenaServiceImpl.html#aa20fbc7c7b095cf38712a04be8ac1bee", null ]
+    [ "shutdownServer", "classCatenaServiceImpl.html#aa20fbc7c7b095cf38712a04be8ac1bee", null ],
+    [ "subscriptionManager_", "classCatenaServiceImpl.html#ae80f9b831bf7032ee1b6bb176bf06931", null ]
 ];
