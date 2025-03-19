@@ -145,6 +145,12 @@ class Device {
     inline const std::string& getDefaultScope() const { return default_scope_; }
 
     /**
+     * @brief Check if subscriptions are enabled for this device
+     * @return true if subscriptions are enabled, false otherwise
+     */
+    inline bool subscriptions() const { return subscriptions_; }
+
+    /**
      * @return The default max length for this device's array params.
      */
     inline uint32_t default_max_length() const {return default_max_length_;}
@@ -355,7 +361,7 @@ class Device {
      * @param shallow if true, the device will be returned in parts, otherwise the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    DeviceSerializer getComponentSerializer(Authorizer& authz, std::vector<std::string>& subscribed_oids, bool shallow = false) const;
+    DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const;
 
     /**
      * @brief add an item to one of the collections owned by the device
@@ -483,6 +489,15 @@ class Device {
      * Intention is to for GetValue RPCs / API calls to be serviced by this method.
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+
+    /**
+     * @brief check if a parameter should be sent based on detail level and authorization
+     * @param param the parameter to check
+     * @param is_subscribed true if the parameter is subscribed, false otherwise
+     * @param authz the authorizer object
+     * @return true if the parameter should be sent, false otherwise
+     */
+    bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const;
 
   public:
     /**

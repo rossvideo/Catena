@@ -313,27 +313,32 @@ void Device::toProto(::catena::Device& dst, Authorizer& authz, bool shallow) con
     dst.set_subscriptions(subscriptions_);
     if (shallow) { return; }
 
-    // if we're not doing a shallow copy, we need to copy all the Items
-    google::protobuf::Map<std::string, ::catena::Param> dstParams{};
-    for (const auto& [name, param] : params_) {
-        if (authz.readAuthz(*param)) {
-            ::catena::Param dstParam{};
-            param->toProto(dstParam, authz);
-            dstParams[name] = dstParam;
+    // Helper function to serialize a collection of IParams
+    auto serializeParamCollection = [&](const std::unordered_map<std::string, IParam*>& collection, 
+                                      google::protobuf::Map<std::string, ::catena::Param>& dstMap) {
+        for (const auto& [name, param] : collection) {
+            if (shouldSendParam(*param, true, authz)) {
+                ::catena::Param dstParam{};
+                param->toProto(dstParam, authz);
+                dstMap[name] = dstParam;
+            }
         }
-    }
-    dst.mutable_params()->swap(dstParams); // n.b. lowercase swap, not an error
+    };
 
-    // make deep copy of the commands
+    // Serialize parameters
+    google::protobuf::Map<std::string, ::catena::Param> dstParams{};
+    serializeParamCollection(params_, dstParams);
+    dst.mutable_params()->swap(dstParams); //lowercase swap, not an error
+
+    // Serialize commands
     google::protobuf::Map<std::string, ::catena::Param> dstCommands{};
-    for (const auto& [name, command] : commands_) {
-        if (authz.readAuthz(*command)) {
-            ::catena::Param dstCommand{};
-            command->toProto(dstCommand, authz); // uses param's toProto method
-            dstCommands[name] = dstCommand;
-        }
-    }
+    serializeParamCollection(commands_, dstCommands);
     dst.mutable_commands()->swap(dstCommands); // n.b. lowercase swap, not an error
+
+    // If in minimal detail level, skip the rest of the serialization
+    if (detail_level_ == catena::Device_DetailLevel_MINIMAL) {
+        return;
+    }
 
     // make deep copy of the constraints
     google::protobuf::Map<std::string, ::catena::Constraint> dstConstraints{};
@@ -390,79 +395,140 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
 }
 
 Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
-    catena::DeviceComponent component{};
-    if (!shallow) {
-        // If not shallow, send the whole device as a single message
-        toProto(*component.mutable_device(), authz, shallow);
-        co_return component; 
-    }
+    // Call the overloaded version with an explicitly constructed empty vector
+    static const std::vector<std::string> empty_vector;
+    return getComponentSerializer(authz, empty_vector, shallow);
+}
 
-    // If shallow, send the device in parts
-    // send the basic device info first
+Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow) const {
+    std::cout << "getComponentSerializer received vector size: " << subscribed_oids.size() << std::endl;
+    catena::DeviceComponent component{};
+    
+    // Send basic device information first
     catena::Device* dst = component.mutable_device();
     dst->set_slot(slot_);
     dst->set_detail_level(detail_level_);
     *dst->mutable_default_scope() = default_scope_;
     dst->set_multi_set_enabled(multi_set_enabled_);
     dst->set_subscriptions(subscriptions_);
-
     for (auto& scope : access_scopes_) {
         dst->add_access_scopes(scope);
     }
 
-    for (auto& [menu_group_name, menu_group] : menu_groups_) {
-        ::catena::MenuGroup* dstMenuGroup = &(*dst->mutable_menu_groups())[menu_group_name];
-        menu_group->toProto(*dstMenuGroup, true);
+    // If detail level is NONE, only send the above device info and return
+    if (detail_level_ == catena::Device_DetailLevel_NONE) {
+        co_return component;
     }
 
-    for (const auto& [language, language_pack] : language_packs_) {
-        co_yield component; // yield the previous component before overwriting it
-        component.Clear();
-        ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
-        language_pack->toProto(*dstPack);
-        component.mutable_language_pack()->set_language(language);
+    // Helper function to check if an OID is subscribed
+    auto is_subscribed = [&subscribed_oids, this](const std::string& param_name) {
+        // If subscriptions are disabled or we're not in SUBSCRIPTIONS mode, everything is subscribed
+        if (!subscriptions_ || (subscribed_oids.empty() && detail_level_ != catena::Device_DetailLevel_SUBSCRIPTIONS)) {
+            return true;
+        }
+        
+        // If we're in SUBSCRIPTIONS mode but have no subscriptions, nothing is subscribed
+        if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && subscribed_oids.empty()) {
+            return false;
+        }
+        
+        // Check each subscription for exact or wildcard matches
+        for (const auto& subscription_oid : subscribed_oids) {
+            std::string oid = subscription_oid.substr(1);  // Remove leading slash
+            if (param_name == oid) {
+                return true;
+            }
+            
+            // Check for wildcard match (ends with *)
+            if (!oid.empty() && oid.back() == '*' && param_name.find(oid.substr(0, oid.size() - 1)) == 0) {
+                return true;
+            }
+        }
+        
+        return false;
+    };
+
+    // Helper function to check if an item should be sent based on detail level and subscription
+    auto shouldSendItem = [&](const std::string& oid) {
+        return detail_level_ == catena::Device_DetailLevel_FULL || 
+               (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(oid));
+    };
+
+    // Only send non-minimal items in FULL mode or if explicitly subscribed in SUBSCRIPTION mode
+    if (detail_level_ == catena::Device_DetailLevel_FULL || 
+        (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscribed_oids.empty())) {
+        
+        // Send menus
+        for (const auto& [group_name, menu_group] : menu_groups_) {
+            for (const auto& [name, menu] : *menu_group->menus()) {
+                std::string oid = group_name + "/" + name;
+                if (shouldSendItem(oid)) {
+                    co_yield component;
+                    component.Clear();
+                    ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
+                    menu.toProto(*dstMenu);
+                    component.mutable_menu()->set_oid(oid);
+                }
+            }
+        }
+
+        // Send language packs
+        for (const auto& [language, language_pack] : language_packs_) {
+            if (shouldSendItem(language)) {
+                co_yield component;
+                component.Clear();
+                ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
+                language_pack->toProto(*dstPack);
+                component.mutable_language_pack()->set_language(language);
+            }
+        }
+
+        // Send constraints
+        for (const auto& [name, constraint] : constraints_) {
+            if (shouldSendItem(name)) {
+                co_yield component;
+                component.Clear();
+                ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
+                constraint->toProto(*dstConstraint);
+                component.mutable_shared_constraint()->set_oid(name);
+            }
+        }
     }
 
-    for (const auto& [name, constraint] : constraints_) {
-        co_yield component; // yield the previous component before overwriting it
-        component.Clear();
-        ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
-        constraint->toProto(*dstConstraint);
-        component.mutable_shared_constraint()->set_oid(name);
+    // Send parameters if authorized, and either in the minimal set or if subscribed to
+    if (detail_level_ != catena::Device_DetailLevel_COMMANDS) {
+        for (const auto& [name, param] : params_) {
+            if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
+                co_yield component;
+                component.Clear();
+                ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+                param->toProto(*dstParam, authz);
+                component.mutable_param()->set_oid(name);
+            }
+        }
     }
 
-    for (const auto& [name, param] : params_) {
-        if (authz.readAuthz(*param)) {
-            co_yield component; // yield the previous component before overwriting it
+    // Send commands if authorized
+    for (const auto& [name, param] : commands_) {
+        if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
+            co_yield component;
             component.Clear();
-            ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+            ::catena::Param* dstParam = component.mutable_command()->mutable_param();
             param->toProto(*dstParam, authz);
-            component.mutable_param()->set_oid(name);
-        }
-    }
-
-    for (const auto& [name, command] : commands_) {
-        if (authz.readAuthz(*command)) {
-            co_yield component; // yield the previous component before overwriting it
-            component.Clear();
-            ::catena::Param* dstCommand = component.mutable_command()->mutable_param();
-            command->toProto(*dstCommand,authz);
             component.mutable_command()->set_oid(name);
-        }
-    }
-
-    for (const auto& [name, menu_groups_] : menu_groups_) {
-        for (const auto& [menu_name, menu] : *menu_groups_->menus()) {
-            co_yield component; // yield the previous component before overwriting it
-            component.Clear();
-            ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
-            menu.toProto(*dstMenu);
-            std::string oid = "/" + name + "/" + menu_name;
-            component.mutable_menu()->set_oid(oid);
         }
     }
     
     // return the last component
     co_return component;
+}
+
+bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
+    bool auth_check = authz.readAuthz(param);
+    bool minimal_check = param.getDescriptor().minimalSet();
+    bool full_check = detail_level_ == DetailLevel(Device_DetailLevel_FULL);
+    bool subscription_check = detail_level_ == DetailLevel(Device_DetailLevel_SUBSCRIPTIONS) && is_subscribed;
+    
+    return auth_check && (minimal_check || full_check || subscription_check);
 }
 

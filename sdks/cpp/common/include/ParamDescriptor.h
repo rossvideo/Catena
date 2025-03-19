@@ -189,16 +189,15 @@ class ParamDescriptor {
      */
     const std::string& getScope() const;
 
-    /**   
+    /**
      * @brief get the minimal set status of the parameter
      */
-    inline bool minimalSet() const { return minimalSet_; }
+    inline bool minimalSet() const { return minimal_set_; }
 
     /**
      * @brief set the minimal set status of the parameter
      */
-    inline void setMinimalSet(bool flag) { minimalSet_ = flag; }
-
+    inline void setMinimalSet(bool flag) { minimal_set_ = flag; }
 
     /**
      * @brief Returns the max length of the array/string parameter. If max
@@ -318,6 +317,7 @@ class ParamDescriptor {
     std::string widget_;
     std::string scope_;
     bool read_only_;
+
     std::unordered_map<std::string, ParamDescriptor*> subParams_;
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
@@ -330,7 +330,7 @@ class ParamDescriptor {
     std::reference_wrapper<Device> dev_;
 
     bool isCommand_;
-    bool minimalSet_;
+    bool minimal_set_;
 
     // default command implementation
     std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 
