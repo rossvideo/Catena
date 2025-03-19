@@ -505,14 +505,16 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send commands if authorized
-    for (const auto& [name, param] : commands_) {
-        if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
-            co_yield component;
-            component.Clear();
-            ::catena::Param* dstParam = component.mutable_command()->mutable_param();
-            param->toProto(*dstParam, authz);
-            component.mutable_command()->set_oid(name);
+    // Send commands if authorized and in COMMANDS mode
+    if (detail_level_ == catena::Device_DetailLevel_COMMANDS) {
+        for (const auto& [name, param] : commands_) {
+            if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
+                co_yield component;
+                component.Clear();
+                ::catena::Param* dstParam = component.mutable_command()->mutable_param();
+                param->toProto(*dstParam, authz);
+                component.mutable_command()->set_oid(name);
+            }
         }
     }
     
@@ -521,11 +523,25 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 }
 
 bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
-    bool auth_check = authz.readAuthz(param);
-    bool minimal_check = param.getDescriptor().minimalSet();
-    bool full_check = detail_level_ == DetailLevel(Device_DetailLevel_FULL);
-    bool subscription_check = detail_level_ == DetailLevel(Device_DetailLevel_SUBSCRIPTIONS) && is_subscribed;
-    
-    return auth_check && (minimal_check || full_check || subscription_check);
+    // First check authorization
+    if (!authz.readAuthz(param)) {
+        return false;
+    }
+
+    // Then check detail level
+    switch (detail_level_) {
+        case Device_DetailLevel_NONE:
+            return false;
+        case Device_DetailLevel_MINIMAL:
+            return param.getDescriptor().minimalSet();
+        case Device_DetailLevel_FULL:
+            return true;
+        case Device_DetailLevel_SUBSCRIPTIONS:
+            return is_subscribed;
+        case Device_DetailLevel_COMMANDS:
+            return param.getDescriptor().isCommand();
+        default:
+            return false;
+    }
 }
 

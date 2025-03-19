@@ -97,6 +97,8 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             {
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
+                dm_.detail_level(req_.detail_level());
+                
                 if (service->authorizationEnabled()) {                    
                     authz_ = std::make_unique<catena::common::Authorizer>(getJWSToken());
                     
