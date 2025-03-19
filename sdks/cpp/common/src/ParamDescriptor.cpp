@@ -40,6 +40,10 @@ uint32_t ParamDescriptor::max_length() const {
     return (max_length_ > 0) ? max_length_ : dev_.get().default_max_length();
 }
 
+std::size_t ParamDescriptor::total_length() const {
+    return (total_length_ > 0) ? total_length_ : dev_.get().default_total_length();
+}
+
 void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     
     param.set_type(type_);
