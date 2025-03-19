@@ -43,6 +43,7 @@
 #include <vector>
 #include <memory>
 #include <Device.h>
+#include <IParam.h>
 
 namespace catena {
 namespace grpc {
@@ -60,9 +61,10 @@ public:
     /**
      * @brief Add an OID subscription
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
+     * @param dm The device model to use 
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid);
+    bool addSubscription(const std::string& oid, catena::common::Device& dm);
 
     /**
      * @brief Remove an OID subscription
@@ -73,7 +75,7 @@ public:
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
-     * @param dm The device model to use for expanding wildcard subscriptions
+     * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
     const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
@@ -90,7 +92,22 @@ public:
      */
     const std::set<std::string>& getWildcardSubscriptions();
 
+    /**
+     * @brief Check if an OID is a wildcard subscription
+     * @param oid The OID to check
+     * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
+     */
+    static bool isWildcard(const std::string& oid);
+
 private:
+    /**
+     * @brief Process children of a parameter recursively
+     * @param parent_path The path of the parent parameter
+     * @param current_param The current parameter to process
+     * @param dm The device model to use
+     */
+    void processChildren_(const std::string& parent_path, catena::common::IParam* current_param, catena::common::Device& dm);
+
     std::set<std::string> uniqueSubscriptions_; 
     std::set<std::string> wildcardSubscriptions_;
     std::vector<std::string> allSubscribedOids_;
@@ -100,13 +117,6 @@ private:
      * @param dm The device model to use for expanding wildcard subscriptions
      */
     void updateAllSubscribedOids_(catena::common::Device& dm);
-
-    /**
-     * @brief Check if an OID is a wildcard subscription
-     * @param oid The OID to check
-     * @return true if the OID ends with "/*"
-     */
-    static bool isWildcard(const std::string& oid);
 };
 
 } // namespace grpc
