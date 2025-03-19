@@ -130,13 +130,13 @@ class ParamDescriptor {
       Device& dm,
       uint32_t max_length,
       std::size_t total_length,
-      bool minimalSet,
+      bool minimal_set,
       ParamDescriptor* parent)
       : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
         scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
         constraint_{constraint}, isCommand_{isCommand}, dev_{dm},
         max_length_{max_length}, total_length_{total_length},
-        minimalSet_{minimalSet}, parent_{parent} {
+        minimal_set_{minimal_set}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
