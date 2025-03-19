@@ -100,38 +100,33 @@ static_resources:
           route_config:
             name: local_route
             virtual_hosts:
-            # Routes to status_update_cluster if domain starts with "status_update."
-            - name: status_update
-              domains: ["status_update.$HOST"]
+            - name: default_route
+              domains: ["*"]
               routes:
+              # Routes to status_update_cluster if domain starts with "status_update."
               - match:
-                  prefix: "/"
+                  prefix: "/status_update/"
                 route:
                   cluster: status_update_cluster
-            # Routes to use_menus_cluster if domain starts with "use_menus."
-            - name: use_menus
-              domains: ["use_menus.$HOST"]
-              routes:
+                  prefix_rewrite: "/"
+              # Routes to use_menus_cluster if domain starts with "use_menus."
               - match:
-                  prefix: "/"
+                  prefix: "/use_menus/"
                 route:
                   cluster: use_menus_cluster
-             # Routes to use_structs_cluster if domain starts with "use_structs."
-            - name: use_structs
-              domains: ["use_structs.$HOST"]
-              routes:
+                  prefix_rewrite: "/"
+              # Routes to use_structs_cluster if domain starts with "use_structs."
               - match:
-                  prefix: "/"
+                  prefix: "/use_structs/"
                 route:
                   cluster: use_structs_cluster
-            # Routes to use_commands_cluster if domain starts with "use_commands."
-            - name: use_commands
-              domains: ["use_commands.$HOST"]
-              routes:
+                  prefix_rewrite: "/"
+              # Routes to use_commands_cluster if domain starts with "use_commands."
               - match:
-                  prefix: "/"
+                  prefix: "/use_commands/"
                 route:
                   cluster: use_commands_cluster
+                  prefix_rewrite: "/"
 
       # This sets up a transport socket to communicate with the client via TLS.
       transport_socket:
