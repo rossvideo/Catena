@@ -55,10 +55,9 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager)
     : service_{service}, dm_{dm}, writer_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish},
-        subscriptionManager_{service->subscriptionManager_} {
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process
@@ -97,7 +96,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new Connect(service_, dm_, ok);
+            new Connect(service_, dm_, ok, service_->subscriptionManager_);
             context_.AsyncNotifyWhenDone(this);
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){
@@ -214,7 +213,7 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
             case catena::Device_DetailLevel_SUBSCRIPTIONS:
                 // Update if OID is subscribed or in minimal set
                 {
-                    auto subscribedOids = subscriptionManager_.getAllSubscribedOids(dm_);
+                    auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
                     should_update = p->getDescriptor().minimalSet() || 
                                   (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
                 }

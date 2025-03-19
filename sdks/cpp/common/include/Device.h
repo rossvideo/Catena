@@ -466,6 +466,15 @@ class Device {
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
+    /**
+     * @brief check if a parameter should be sent based on detail level and authorization
+     * @param param the parameter to check
+     * @param is_subscribed true if the parameter is subscribed, false otherwise
+     * @param authz the authorizer object
+     * @return true if the parameter should be sent, false otherwise
+     */
+    bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const;
+
   public:
     /**
      * @brief signal emitted when a value is set by the client.
