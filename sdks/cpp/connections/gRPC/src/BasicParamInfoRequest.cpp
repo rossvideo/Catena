@@ -103,7 +103,6 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     {
                     Device::LockGuard lg(dm_);
                     top_level_params = dm_.getTopLevelParams(rc, *authz);
-
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
@@ -142,21 +141,22 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     }
 
                     if (rc.status == catena::StatusCode::OK && param) {
-                        // Add the main parameter to the response list
-
-                        responses_.emplace_back();
-                        param->toProto(responses_.back(), *authz);
-                        // Calculate and update array length if this parameter is an array
-                        if (param->isArrayType()) {
-                            uint32_t array_length = param->size();
-                            if (array_length > 0) {
-                                updateArrayLengths(param->getOid(), array_length);
-                            }
-                        }   
-
-                        // If recursive flag is set, get all children of this parameter
+                        responses_.clear();
+                        
                         if (req_.recursive()) {
-                            getChildren(param.get(), req_.oid_prefix(), *authz);
+                            // Use visitor pattern to collect all parameter info recursively
+                            ParamInfoVisitor visitor(responses_, *authz, *this);
+                            catena::common::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
+                        } else {
+                            // Just add the main parameter
+                            responses_.emplace_back();
+                            param->toProto(responses_.back(), *authz);
+                            if (param->isArrayType()) {
+                                uint32_t array_length = param->size();
+                                if (array_length > 0) {
+                                    updateArrayLengths(param->getOid(), array_length);
+                                }
+                            }
                         }
 
                         // Begin writing responses back to the client
@@ -245,70 +245,5 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
                 it->set_array_length(length);
             }
         }
-    }
-}
-
-/**
- * Recursively gets all children of a parameter
- */
-void CatenaServiceImpl::BasicParamInfoRequest::getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz) {
-    const auto& descriptor = current_param->getDescriptor();
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
-
-    // Lambda function to process children of a parameter
-    auto processChildren = [&](const std::string& parent_path) {
-        for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
-            if (child_name.empty() || child_name[0] == '/') continue;
-            
-            rc = catena::exception_with_status{"", catena::StatusCode::OK};
-            Path child_path{parent_path, child_name};
-            auto sub_param = dm_.getParam(child_path.toString(), rc);
-            
-            if (rc.status == catena::StatusCode::OK && sub_param) {
-                // Add all parameters (array or not) when found as children
-                responses_.emplace_back();
-                {
-                Device::LockGuard lg(dm_);
-                sub_param->toProto(responses_.back(), authz);
-                }
-
-                // If this child is an array, calculate and update its length
-                if (sub_param->isArrayType()) {
-                    uint32_t array_length = sub_param->size();
-                    if (array_length > 0) {
-                        updateArrayLengths(sub_param->getOid(), array_length);
-                    }
-                    
-                    // Process array children if we're not already inside an array element
-                    if (!Path{parent_path}.back_is_index()) {
-                        getChildren(sub_param.get(), child_path.toString(), authz);
-                    }
-                }
-            }
-        }
-    };
-
-    // Check if current parameter is an array type
-    if (current_param->isArrayType()) {
-        uint32_t array_length = current_param->size();
-        
-        // Process each array element's children
-        for (uint32_t i = 0; i < array_length; i++) {
-            Path indexed_path{current_path, i};
-            auto indexed_param = dm_.getParam(indexed_path.toString(), rc);
-            if (!indexed_param) continue;
-
-            // Process children of this array element
-            processChildren(indexed_path.toString());
-        }
-
-        // Update the array length for the array itself
-        if (array_length > 0) {
-            updateArrayLengths(current_param->getOid(), array_length);
-        }
-
-    } else {
-        // For non-array types, process children normally
-        processChildren(current_path);
     }
 }

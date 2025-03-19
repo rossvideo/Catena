@@ -44,6 +44,7 @@
 #include <memory>
 #include <Device.h>
 #include <IParam.h>
+#include <ParamVisitor.h>
 
 namespace catena {
 namespace grpc {
@@ -100,13 +101,18 @@ public:
     static bool isWildcard(const std::string& oid);
 
 private:
-    /**
-     * @brief Process children of a parameter recursively
-     * @param parent_path The path of the parent parameter
-     * @param current_param The current parameter to process
-     * @param dm The device model to use
-     */
-    void processChildren_(const std::string& parent_path, catena::common::IParam* current_param, catena::common::Device& dm);
+    // Visitor class for collecting subscribed OIDs
+    class SubscriptionVisitor : public catena::common::ParamVisitor {
+    public:
+        explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+        
+        void visit(catena::common::IParam* param, const std::string& path) override {
+            oids_.push_back(path);
+        }
+        
+    private:
+        std::vector<std::string>& oids_;
+    };
 
     std::set<std::string> uniqueSubscriptions_; 
     std::set<std::string> wildcardSubscriptions_;

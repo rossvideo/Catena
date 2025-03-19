@@ -41,10 +41,12 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
+#include <ParamVisitor.h>
+
 
 /**
-* @brief CallData class for the BasicParamInfoRequest RPC
-*/
+ * @brief CallData class for the BasicParamInfoRequest RPC
+ */
 class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
     public:
         /**
@@ -57,11 +59,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */ 
         BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok);
 
-        // /**
-        //  * @brief Destructor for the BasicParamInfoRequest class.
-        //  */
-        // ~BasicParamInfoRequest();
-
         /**
          * @brief Manages the steps of the BasicParamInfoRequest gRPC command
          * through the state variable status. Returns the value of the
@@ -73,7 +70,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
     private:
-
         /**
          * @brief Updates the array lengths of the responses.
          * 
@@ -81,15 +77,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @param length - The length of the array.
          */
         void updateArrayLengths(const std::string& array_name, uint32_t length);
-
-
-        /**
-         * @brief Gets the children of the parameter.
-         * 
-         * @param param - The parameter to get the children from.
-         * @param oid - The oid of the parameter.
-         */
-       void getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.
@@ -136,7 +123,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         static int objectCounter_;  
 
-
         /**
          * @brief The vector of BasicParamInfoResponse objects.
          */
@@ -155,6 +141,32 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief The writer lock.
          */
-
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
+    // Visitor class for collecting parameter info
+    class ParamInfoVisitor : public catena::common::ParamVisitor {
+        public:
+            ParamInfoVisitor(std::vector<catena::BasicParamInfoResponse>& responses, 
+                            catena::common::Authorizer& authz,
+                            BasicParamInfoRequest& request)
+                : responses_(responses), authz_(authz), request_(request) {}
+            
+            void visit(IParam* param, const std::string& path) override {
+                responses_.emplace_back();
+                param->toProto(responses_.back(), authz_);
+                
+                // Update array length if this is an array type
+                if (param->isArrayType()) {
+                    uint32_t array_length = param->size();
+                    if (array_length > 0) {
+                        request_.updateArrayLengths(param->getOid(), array_length);
+                    }
+                }
+            }
+            
+        private:
+            std::vector<catena::BasicParamInfoResponse>& responses_;
+            catena::common::Authorizer& authz_;
+            BasicParamInfoRequest& request_;
+    };
 };
