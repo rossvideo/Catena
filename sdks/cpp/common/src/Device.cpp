@@ -455,18 +455,6 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(oid));
     };
 
-    // Helper function to check if a parameter should be sent
-    auto shouldSendParamItem = [&](const std::string& oid, const IParam& param) {
-        // Always send minimal set parameters in SUBSCRIPTIONS mode
-        if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && param.getDescriptor().minimalSet()) {
-            return true;
-        }
-        
-        // For non-minimal set parameters, check subscription status
-        return detail_level_ == catena::Device_DetailLevel_FULL || 
-               (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(oid));
-    };
-
     // Only send non-minimal items in FULL mode or if explicitly subscribed in SUBSCRIPTION mode
     if (detail_level_ == catena::Device_DetailLevel_FULL || 
         (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscribed_oids.empty())) {
@@ -511,7 +499,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     // Send parameters if authorized, and either in the minimal set or if subscribed to
     if (detail_level_ != catena::Device_DetailLevel_COMMANDS) {
         for (const auto& [name, param] : params_) {
-            if (this->shouldSendParam(*param, is_subscribed(name), authz) && shouldSendParamItem(name, *param)) {
+            if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
                 co_yield component;
                 component.Clear();
                 ::catena::Param* dstParam = component.mutable_param()->mutable_param();
@@ -524,7 +512,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
     // Send commands if authorized and in COMMANDS mode
     if (detail_level_ == catena::Device_DetailLevel_COMMANDS) {
         for (const auto& [name, param] : commands_) {
-            if (this->shouldSendParam(*param, is_subscribed(name), authz) && shouldSendParamItem(name, *param)) {
+            if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
                 co_yield component;
                 component.Clear();
                 ::catena::Param* dstParam = component.mutable_command()->mutable_param();
@@ -553,6 +541,9 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
         case Device_DetailLevel_FULL:
             return true;
         case Device_DetailLevel_SUBSCRIPTIONS:
+            if (param.getDescriptor().minimalSet()) {
+                return true;
+            }
             return is_subscribed;
         case Device_DetailLevel_COMMANDS:
             return param.getDescriptor().isCommand();
