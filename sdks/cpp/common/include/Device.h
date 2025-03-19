@@ -110,7 +110,8 @@ class Device {
       std::string default_scope, bool multi_set_enabled, bool subscriptions)
       : slot_{slot}, detail_level_{detail_level}, access_scopes_{access_scopes},
       default_scope_{default_scope}, multi_set_enabled_{multi_set_enabled},
-	    subscriptions_{subscriptions}, default_max_length_{kDefaultMaxArrayLength} {}
+	    subscriptions_{subscriptions}, default_max_length_{kDefaultMaxArrayLength},
+      default_total_length_{kDefaultMaxArrayLength}  {}
 
     /**
      * @brief Destroy the Device object
@@ -153,6 +154,10 @@ class Device {
      * @return The default max length for this device's array params.
      */
     inline uint32_t default_max_length() const {return default_max_length_;}
+    /**
+     * @return The default total length for this device's string array params.
+     */
+    inline uint32_t default_total_length() const {return default_total_length_;}
 
     /**
      * @brief Sets the default_max_length_ for this device's array params.
@@ -162,6 +167,15 @@ class Device {
      */
     void set_default_max_length(const uint32_t default_max_length) {
       default_max_length_ = default_max_length > 0 ? default_max_length : kDefaultMaxArrayLength;
+    }
+    /**
+     * @brief Sets the default_total_length_ for this device's array params.
+     * If default_total_length <= 0, then it reverts default_total_length_ to
+     * kDefaultMaxArrayLength.
+     * @param default_total_length The value to set default_total_length_ to.
+     */
+    void set_default_total_length(const uint32_t default_total_length) {
+      default_total_length_ = default_total_length > 0 ? default_total_length : kDefaultMaxArrayLength;
     }
 
     /**
@@ -430,17 +444,26 @@ class Device {
      */
     std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
 
-    // The path to the param and the value to set it to.
-    using SetValueRequest = std::pair<std::unique_ptr<Path>, const catena::SetValuePayload*>;
     /**
-     * @brief sets the values of the device's parameters using a
-     * MultiSetValuePayload.
-     * @param src The SetValuePayloads to update the device with.
+     * @brief Validates each payload in a multiSetValuePayload without commit
+     * changes to param value_s.
+     * @param src The MultiSetValuePayload to validate.
+     * @param ans The exception_with_status to return.
      * @param authz The Authorizer to test with.
-     * @return An exception_with_status with status set OK if successful,
-     * otherwise an error.
+     * @returns true if the call is valid.
      */
-    catena::exception_with_status multiSetValue (catena::MultiSetValuePayload src, Authorizer& authz = Authorizer::kAuthzDisabled);
+    bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz = Authorizer::kAuthzDisabled);
+    
+    /**
+     * @brief Sets the values of a device's parameter's using a
+     * MultiSetValuePayload.
+     * This function assumes that tryMultiSetValue is called at some point
+     * beforehand to validate the call.
+     * @param src The MultiSetValuePayload to update the device with.
+     * @param authz The Authroizer with the client's scopes.
+     * @returns an exception_with_status with status set OK if successful.
+     */
+    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
@@ -451,7 +474,8 @@ class Device {
      * @return an exception_with_status with status set OK if successful,
      * otherwise an error.
      * 
-     * This method essentially redirects the input values to multiSetValue().
+     * This method essentially redirects the input values to tryMultiSetValue()
+     * and commitMultiSetValue().
      * It remains to support the old way of setting values.
      */
     catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, Authorizer& authz = Authorizer::kAuthzDisabled);
@@ -509,6 +533,7 @@ class Device {
     bool multi_set_enabled_;
     bool subscriptions_;
     uint32_t default_max_length_ = 0;
+    uint32_t default_total_length_ = 0;
 
     mutable std::mutex mutex_;
 };

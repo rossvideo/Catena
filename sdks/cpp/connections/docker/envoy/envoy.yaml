@@ -1,5 +1,5 @@
 # 
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -84,14 +84,14 @@ static_resources:
               providers:
                 jwtProvider:
                   # This is the authz server.
-                  issuer: https://auth.enterprise.rossvideo.cloud/realms/catena
+                  issuer: https://$AUTHZ_SERVER/realms/$REALM
                   audiences:
                   - st-2138.grpc.service
                   - st-2138.rest.service
                   remote_jwks:
                     http_uri:
                       # This is the path to the authz server's public keys.
-                      uri: https://auth.enterprise.rossvideo.cloud/realms/catena/protocol/openid-connect/certs
+                      uri: https://$AUTHZ_SERVER/realms/$REALM/protocol/openid-connect/certs
                       # Cluster handles authentication.
                       cluster: jwks_cluster
                       timeout: 5s
@@ -173,7 +173,7 @@ static_resources:
             address:
               socket_address:
                 # This is the authz server.
-                address: auth.enterprise.rossvideo.cloud
+                address: $AUTHZ_SERVER
                 port_value: 443 # JWKS endpoint.
     # This sets up a transport socket to communicate with the authz server via
     # TLS.
@@ -181,7 +181,7 @@ static_resources:
       name: envoy.transport_sockets.tls
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-        sni: auth.enterprise.rossvideo.cloud
+        sni: $AUTHZ_SERVER
 
   # Cluster for handling authenticated gRPC requests to status_update.
   # Example cluster, all others are very similar.

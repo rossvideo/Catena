@@ -49,11 +49,14 @@ networks:
 # Setting up the envoyproxy container.
 services:
   envoy_API_gateway:
-    image: envoyproxy/envoy:v1.33-latest
+    image: catena_envoy
     container_name: envoy_API_gateway
     networks: # Must be a part of both pub and prv networks.
       - catena_network
       - catena_prv
+    environment:
+      - AUTHZ_SERVER=$AUTHZ_SERVER
+      - REALM=$REALM
     ports: # Mapping ports from host to container.
       - 6254:6254
       - 6256:6256
@@ -61,14 +64,8 @@ services:
       - 6260:6260
     volumes: # letsencrypt contains keys for TLS.
       - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./envoy.yaml:/etc/envoy/envoy.yaml
-    command:
-      - envoy
-      - -c
-      - /etc/envoy/envoy.yaml
-      - --log-level
-      - info
-
+    # Entrypoint defined in catena_envoy_dockerfile.
+    
   # Example service container.
   status_update:
     image: catena_status_update

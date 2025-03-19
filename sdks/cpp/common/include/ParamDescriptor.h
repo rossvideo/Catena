@@ -129,11 +129,14 @@ class ParamDescriptor {
       bool isCommand,
       Device& dm,
       uint32_t max_length,
+      std::size_t total_length,
       bool minimal_set,
       ParamDescriptor* parent)
-      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget}, scope_{scope}, read_only_{read_only},
-        template_oid_{template_oid}, constraint_{constraint}, isCommand_{isCommand}, dev_{dm}, max_length_{max_length}, 
-        parent_{parent}, minimal_set_{minimal_set} {
+      : type_{type}, oid_aliases_{oid_aliases}, name_{name}, widget_{widget},
+        scope_{scope}, read_only_{read_only}, template_oid_{template_oid},
+        constraint_{constraint}, isCommand_{isCommand}, dev_{dm},
+        max_length_{max_length}, total_length_{total_length},
+        minimal_set_{minimal_set}, parent_{parent} {
       setOid(oid);
       if (parent_ != nullptr) {
         parent_->addSubParam(oid, this);
@@ -204,6 +207,14 @@ class ParamDescriptor {
      * @returns max_length_
      */
     uint32_t max_length() const;
+    /**
+     * @brief Returns the total length of the string_array parameter. If max
+     * length is not set in the .JSON file, then the default value of 1024 is
+     * used. The default value can also be configured with the command line
+     * argument "--default_max_length=#".
+     * @returns total_length_
+     */
+    std::size_t total_length() const;
 
     /**
      * @brief serialize param meta data in to protobuf message
@@ -311,6 +322,7 @@ class ParamDescriptor {
     std::unordered_map<std::string, catena::common::IParam*> commands_;
     common::IConstraint* constraint_;
     uint32_t max_length_;
+    std::size_t total_length_;
     
     std::string oid_;
     std::string template_oid_;
