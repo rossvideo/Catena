@@ -66,8 +66,10 @@ API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm} {
     ([this]() { return this->getPopulatedSlots(); });
     CROW_ROUTE(app_, "/v1/GetValue")
     ([this](const crow::request& req) { return this->getValue(req); });
-    CROW_ROUTE(app_, "/v1/MultiSetValue").methods(crow::HTTPMethod::POST)
-    ([this](const crow::request& req) { return this->mulltiSetValue(req); });
+    CROW_ROUTE(app_, "/v1/SetValue").methods(crow::HTTPMethod::PATCH)
+    ([this](const crow::request& req) { return this->setValue(req); });
+    CROW_ROUTE(app_, "/v1/MultiSetValue").methods(crow::HTTPMethod::PATCH)
+    ([this](const crow::request& req) { return this->multiSetValue(req); });
 }
 
 std::string API::version() const {
@@ -107,6 +109,27 @@ std::string API::getJWSToken(const crow::request& req) const {
     }
     // Getting token (after "bearer") and returning as an std::string.
     return auth_header.substr(std::string("Bearer ").length());
+}
+
+crow::response API::finish(google::protobuf::Message& msg) const {
+    crow::response res;
+    
+    // Converting the value to JSON.
+    std::string json_output;
+    google::protobuf::util::JsonPrintOptions options;
+    options.add_whitespace = true;
+    auto status = MessageToJsonString(msg, &json_output, options);
+
+    // Check if the conversion was successful.
+    if (!status.ok()) {
+        res = crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to convert protobuf to JSON");
+    } else {
+        // Create and return a Crow response with JSON content type.
+        res.code = toCrowStatus_.at(catena::StatusCode::OK);
+        res.set_header("Content-Type", "application/json");
+        res.write(json_output);
+    }
+    return res;
 }
 
 bool API::is_port_in_use_() const {

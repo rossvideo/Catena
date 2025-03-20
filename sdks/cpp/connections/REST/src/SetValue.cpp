@@ -44,35 +44,12 @@
 
 using catena::API;
 
-crow::response API::getValue(const crow::request& req) {
-    try {
-        // Converting JSON to GetValuePayload.
-        catena::GetValuePayload payload;
-        absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), &payload);
-        if (!status.ok()) {
-            return crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to parse MultiSetValuePayload");
-        }
-        // Getting value at oid from device.
-        catena::Value ans;
-        catena::exception_with_status rc{"", catena::StatusCode::OK};
-        if(authorizationEnabled_) {
-            catena::common::Authorizer authz{getJWSToken(req)};
-            Device::LockGuard lg(dm_);
-            rc = dm_.getValue(payload.oid(), ans, authz);
-        } else {
-            Device::LockGuard lg(dm_);
-            rc = dm_.getValue(payload.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
-        }
-        // Finishing by converting to crow::response.
-        if (rc.status == catena::StatusCode::OK) {
-            return finish(ans);
-        } else {
-            return crow::response(toCrowStatus_.at(rc.status), rc.what());
-        }
-    // Likely authentication error, end process.
-    } catch (catena::exception_with_status& err) {
-        return crow::response(toCrowStatus_.at(err.status), err.what());
-    } catch (...) { // Error, end process.
-        return crow::response(toCrowStatus_.at(catena::StatusCode::UNKNOWN), "Unknown Error");
+crow::response API::setValue(const crow::request& req) {
+    // Creating MultiSetValuePayload and converting JSON to inner ValuePayload.
+    catena::MultiSetValuePayload payload;
+    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), payload.add_values());
+    if (!status.ok()) {
+        return crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to parse SetValuePayload");
     }
+    return multiSetValue(payload, req);
 }
