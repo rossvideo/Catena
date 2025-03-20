@@ -143,30 +143,26 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
 
-    // Visitor class for collecting parameter info
-    class ParamInfoVisitor : public catena::common::ParamVisitor {
-        public:
-            ParamInfoVisitor(std::vector<catena::BasicParamInfoResponse>& responses, 
-                            catena::common::Authorizer& authz,
-                            BasicParamInfoRequest& request)
-                : responses_(responses), authz_(authz), request_(request) {}
-            
-            void visit(IParam* param, const std::string& path) override {
-                responses_.emplace_back();
-                param->toProto(responses_.back(), authz_);
-                
-                // Update array length if this is an array type
-                if (param->isArrayType()) {
-                    uint32_t array_length = param->size();
-                    if (array_length > 0) {
-                        request_.updateArrayLengths(param->getOid(), array_length);
-                    }
-                }
-            }
-            
-        private:
-            std::vector<catena::BasicParamInfoResponse>& responses_;
-            catena::common::Authorizer& authz_;
-            BasicParamInfoRequest& request_;
-    };
+        
+
+        /**
+         * @brief Visitor class for collecting parameter info
+         */
+        class BasicParamInfoVisitor : public catena::common::ParamVisitor {
+            public:
+                BasicParamInfoVisitor(Device& device, catena::common::Authorizer& authz, 
+                                    std::vector<catena::BasicParamInfoResponse>& responses,
+                                    BasicParamInfoRequest& request)
+                    : device_(device), authz_(authz), responses_(responses), request_(request) {}
+
+                void visit(IParam* param, const std::string& path) override;
+                void visitArray(IParam* param, const std::string& path, uint32_t length) override;
+                void visitArrayElement(IParam* param, const std::string& path, uint32_t index) override {}
+
+            private:
+                Device& device_;
+                catena::common::Authorizer& authz_;
+                std::vector<catena::BasicParamInfoResponse>& responses_;
+                BasicParamInfoRequest& request_;
+        };
 };

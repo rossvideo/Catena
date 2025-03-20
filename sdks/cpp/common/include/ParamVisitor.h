@@ -52,11 +52,11 @@ public:
     // Called for each parameter during traversal
     virtual void visit(IParam* param, const std::string& path) = 0;
     
-    // Called before processing children of a parameter
-    virtual void preVisitChildren(IParam* param, const std::string& path) {}
+    // Called when an array parameter is encountered
+    virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
     
-    // Called after processing children of a parameter
-    virtual void postVisitChildren(IParam* param, const std::string& path) {}
+    // Called for each array element
+    virtual void visitArrayElement(IParam* param, const std::string& path, uint32_t index) = 0;
 };
 
 // Helper function to traverse parameters using a visitor

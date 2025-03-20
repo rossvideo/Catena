@@ -110,6 +110,9 @@ private:
             oids_.push_back(path);
         }
         
+        void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
+        void visitArrayElement(catena::common::IParam* param, const std::string& path, uint32_t index) override {}
+
     private:
         std::vector<std::string>& oids_;
     };

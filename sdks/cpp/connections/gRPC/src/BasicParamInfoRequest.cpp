@@ -145,7 +145,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         
                         if (req_.recursive()) {
                             // Use visitor pattern to collect all parameter info recursively
-                            ParamInfoVisitor visitor(responses_, *authz, *this);
+                            BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
                             catena::common::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
                         } else {
                             // Just add the main parameter
@@ -245,5 +245,19 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
                 it->set_array_length(length);
             }
         }
+    }
+}
+
+void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
+    responses_.emplace_back();
+    {
+        Device::LockGuard lg(device_);
+        param->toProto(responses_.back(), authz_);
+    }
+}
+
+void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
+    if (length > 0) {
+        request_.updateArrayLengths(param->getOid(), length);
     }
 }

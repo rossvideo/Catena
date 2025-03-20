@@ -40,18 +40,21 @@ void traverseParams(IParam* param, const std::string& path, Device& device, Para
     // Visit the current parameter
     visitor.visit(param, path);
 
-    // Call pre-visit hook
-    visitor.preVisitChildren(param, path);
-
     // Handle array types specially
     if (param->isArrayType()) {
         uint32_t array_length = param->size();
-        for (uint32_t i = 0; i < array_length; i++) {
-            Path indexed_path{path, std::to_string(i)};
-            catena::exception_with_status rc{"", catena::StatusCode::OK};
-            auto indexed_param = device.getParam(indexed_path.toString(), rc);
-            if (indexed_param) {
-                traverseParams(indexed_param.get(), indexed_path.toString(), device, visitor);
+        if (array_length > 0) {
+            visitor.visitArray(param, path, array_length);
+            
+            // Process each array element
+            for (uint32_t i = 0; i < array_length; i++) {
+                Path indexed_path{path, std::to_string(i)};
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
+                auto indexed_param = device.getParam(indexed_path.toString(), rc);
+                if (indexed_param) {
+                    visitor.visitArrayElement(indexed_param.get(), indexed_path.toString(), i);
+                    traverseParams(indexed_param.get(), indexed_path.toString(), device, visitor);
+                }
             }
         }
     } else {
@@ -69,9 +72,6 @@ void traverseParams(IParam* param, const std::string& path, Device& device, Para
             }
         }
     }
-
-    // Call post-visit hook
-    visitor.postVisitChildren(param, path);
 }
 
 } // namespace common
