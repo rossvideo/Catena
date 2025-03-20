@@ -87,6 +87,7 @@ class API {
     bool authorizationEnabled_;
 
     std::string getJWSToken(const crow::request& req) const;
+    crow::response finish(google::protobuf::Message& msg) const;
 
     /**
      * @returns The slots that are populated by dm_.
@@ -101,7 +102,9 @@ class API {
      */
     crow::response getValue(const crow::request& req);
 
-    crow::response mulltiSetValue(const crow::request& req);
+    crow::response setValue(const crow::request& req);
+    crow::response multiSetValue(const crow::request& req);
+    crow::response multiSetValue(catena::MultiSetValuePayload& payload, const crow::request& req);
 
   private:
   bool is_port_in_use_() const;

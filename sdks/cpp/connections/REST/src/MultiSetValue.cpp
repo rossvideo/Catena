@@ -44,13 +44,9 @@
 
 using catena::API;
 
-crow::response API::mulltiSetValue(const crow::request& req) {
+crow::response API::multiSetValue(catena::MultiSetValuePayload& payload, const crow::request& req) {
     try {
-        // Converting JSON to MultiSetValuePayload.
-        catena::MultiSetValuePayload payload;
-        std::string bin_out = "";
-        auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), &payload);
-
+        // Setting up authorizer if enabled.
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
         std::vector<std::string> clientScopes;
@@ -67,13 +63,10 @@ crow::response API::mulltiSetValue(const crow::request& req) {
         if (dm_.tryMultiSetValue(payload, rc, *authz)) {
             dm_.commitMultiSetValue(payload, *authz);
         }
+        // Finishing by converting to crow::response.
         if (rc.status == catena::StatusCode::OK) {
-            // Create and return a Crow response with JSON content type.
-            crow::response res;
-            res.code = toCrowStatus_.at(catena::StatusCode::OK);
-            res.set_header("Content-Type", "application/json");
-            res.write("{}");
-            return res;
+            auto ans = catena::Empty{};
+            return finish(ans);
         } else {
             return crow::response(toCrowStatus_.at(rc.status), rc.what());
         }
@@ -83,4 +76,14 @@ crow::response API::mulltiSetValue(const crow::request& req) {
     } catch (...) { // Error, end process.
         return crow::response(toCrowStatus_.at(catena::StatusCode::UNKNOWN), "Unknown Error");
     }
+}
+
+crow::response API::multiSetValue(const crow::request& req) {
+    // Converting JSON to MultiSetValuePayload.
+    catena::MultiSetValuePayload payload;
+    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), &payload);
+    if (!status.ok()) {
+        return crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to parse MultiSetValuePayload");
+    }
+    return multiSetValue(payload, req);
 }

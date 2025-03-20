@@ -37,6 +37,7 @@ set(sources
     "src/GetPopulatedSlots.cpp"
     "src/GetValue.cpp"
     "src/MultiSetValue.cpp"
+    "src/SetValue.cpp"
 )
 
 add_library(${target} STATIC ${sources})
