@@ -28,7 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
+// common
+#include <Tags.h>
 
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
@@ -40,7 +41,6 @@
 
 #include <iostream>
 #include <regex>
-
 
 using catena::API;
 
@@ -55,13 +55,11 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-API::API(uint16_t port) : version_{"1.0.0"}, port_{port} {
+API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm} {
     CROW_ROUTE(app_, "/v1/PopulatedSlots")
-    ([]() {
+    ([this]() {
         ::catena::SlotList slotList;
-        slotList.add_slots(1);
-        slotList.add_slots(42);
-        slotList.add_slots(65535);
+        slotList.add_slots(this->dm_.slot());
 
         // Convert the SlotList message to JSON
         std::string json_output;
@@ -81,9 +79,6 @@ API::API(uint16_t port) : version_{"1.0.0"}, port_{port} {
         res.write(json_output);
         return res;
     });
-
-    
-
 }
 
 std::string API::version() const {
@@ -91,26 +86,29 @@ std::string API::version() const {
 }
 
 void API::run() {
-    if (is_port_in_use_()) {
-        std::cerr << "Port " << port_ << " is already in use" << std::endl;
-        return;
-    }
-    asio::ssl::context ssl_context(asio::ssl::context::tlsv12);
+    // if (is_port_in_use_()) {
+    //     std::cerr << "Port " << port_ << " is already in use" << std::endl;
+    //     return;
+    // }
+    // asio::ssl::context ssl_context(asio::ssl::context::tlsv12);
 
-    // find our certs
-    std::string path_to_certs(absl::GetFlag(FLAGS_certs));
-    expandEnvVariables(path_to_certs);
+    // // find our certs
+    // std::string path_to_certs(absl::GetFlag(FLAGS_certs));
+    // expandEnvVariables(path_to_certs);
     
-    // Set up SSL/TLS
-    ssl_context.set_options(asio::ssl::context::default_workarounds | 
-                            asio::ssl::context::no_sslv2 | 
-                            asio::ssl::context::single_dh_use);
+    // path_to_certs = "/home/vboxuser/test_certs";
 
-    // Load certificate and private key files
-    ssl_context.use_certificate_chain_file(path_to_certs + "/server.crt");
-    ssl_context.use_private_key_file(path_to_certs + "/server.key", asio::ssl::context::pem);
-    ssl_context.load_verify_file(path_to_certs + "/ca.crt");
-    app_.port(port_).ssl(std::move(ssl_context)).run();
+    // // Set up SSL/TLS
+    // ssl_context.set_options(asio::ssl::context::default_workarounds | 
+    //                         asio::ssl::context::no_sslv2 | 
+    //                         asio::ssl::context::single_dh_use);
+
+    // // Load certificate and private key files
+    // ssl_context.use_certificate_chain_file(path_to_certs + "/server.crt");
+    // ssl_context.use_private_key_file(path_to_certs + "/server.key", asio::ssl::context::pem);
+    // ssl_context.load_verify_file(path_to_certs + "/ca.crt");
+    app_.port(port_).run();
+    // app_.port(port_).ssl(std::move(ssl_context)).run();
 }
 
 bool API::is_port_in_use_() const {

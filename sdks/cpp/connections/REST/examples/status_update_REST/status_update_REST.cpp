@@ -29,75 +29,43 @@
  */
 
 /**
- * @file api.h
- * @brief Implements REST API
- * @author unknown
+ * @brief Example program to demonstrate setting up a full Catena service.
+ * @file status_update.cpp
  * @copyright Copyright © 2024 Ross Video Ltd
+ * @author John R. Naylor (john.naylor@rossvideo.com)
+ * @author John Danen (john.danen@rossvideo.com)
  */
 
-#pragma once
+// device model
+#include "device.status_update_REST.json.h" 
 
-#define CROW_ENABLE_SSL
-#include <crow.h>
+// REST
+#include <api.h>
 
 // common
+#include <utils.h>
 #include <Device.h>
 
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
-#include <string>
-
-namespace catena {
-
-/**
- * @brief REST API
- */
-class API {
-
-  using Device = catena::common::Device;
-
-  public:
-    // explicit API(uint16_t port = 443) : version_{"1.0.0"}, port_{port} {}
-    explicit API(Device &dm, uint16_t port = 443);
-    virtual ~API() = default;
-    API(const API&) = delete;
-    API& operator=(const API&) = delete;
-    API(API&&) = delete;
-    API& operator=(API&&) = delete;
-
-    /**
-     * @brief Get the API Version
-     *
-     * @return std::string
-     */
-    std::string version() const;
-
-    /**
-     * @brief run the API
-     */
-    void run();
-
-    Device &dm_;
-
-  private:
-    std::string version_;
-    uint16_t port_;
-    crow::SimpleApp app_;
-
-  private:
-  bool is_port_in_use_() const;
-};
-}  // namespace catena
-
-// flags for the API
-// flags.h
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/flags/usage.h"
+#include "absl/strings/str_format.h"
 
-// Declare flags for the API
-ABSL_DECLARE_FLAG(std::string, certs);
-ABSL_DECLARE_FLAG(uint16_t, port);
-ABSL_DECLARE_FLAG(bool, mutual_authc);
-ABSL_DECLARE_FLAG(bool, authz);
-ABSL_DECLARE_FLAG(std::string, static_root);
+#include <iostream>
+
+using namespace catena::common;
+
+// set up the command line parameters
+ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
+ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
+ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
+ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
+ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
+
+int main(int argc, char* argv[])
+{
+    catena::API api(dm);
+    std::cout << "API Version: " << api.version() << std::endl;
+    api.run();
+    return 0;
+}
