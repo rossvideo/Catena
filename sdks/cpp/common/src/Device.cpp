@@ -530,21 +530,19 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
     bool should_send = false;
 
     // First check authorization
-    if (!authz.readAuthz(param)) {
-        return false;
-    }
-
-    // Then check detail level
-    if (detail_level_ == Device_DetailLevel_NONE) {
-        should_send = false;
-    } else if (detail_level_ == Device_DetailLevel_MINIMAL) {
-        should_send = param.getDescriptor().minimalSet();
-    } else if (detail_level_ == Device_DetailLevel_FULL) {
-        should_send = true;
-    } else if (detail_level_ == Device_DetailLevel_SUBSCRIPTIONS) {
-        should_send = param.getDescriptor().minimalSet() || is_subscribed;
-    } else if (detail_level_ == Device_DetailLevel_COMMANDS) {
-        should_send = param.getDescriptor().isCommand();
+    if (authz.readAuthz(param)) {
+        // Then check detail level
+        if (detail_level_ == Device_DetailLevel_NONE) {
+            should_send = false;
+        } else if (detail_level_ == Device_DetailLevel_MINIMAL) {
+            should_send = param.getDescriptor().minimalSet();
+        } else if (detail_level_ == Device_DetailLevel_FULL) {
+            should_send = true;
+        } else if (detail_level_ == Device_DetailLevel_SUBSCRIPTIONS) {
+            should_send = param.getDescriptor().minimalSet() || is_subscribed;
+        } else if (detail_level_ == Device_DetailLevel_COMMANDS) {
+            should_send = param.getDescriptor().isCommand();
+        }
     }
 
     return should_send;
