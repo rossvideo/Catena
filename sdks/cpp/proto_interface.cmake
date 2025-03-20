@@ -99,7 +99,7 @@ function(set_up_proto_targets)
     )
 
     # install the header files
-    install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${PROTO_TARGET})
+    install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${PROTO_TARGET}/interface)
 
     # install the library
     install(TARGETS ${PROTO_TARGET}

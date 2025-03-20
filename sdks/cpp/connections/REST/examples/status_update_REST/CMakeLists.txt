@@ -36,15 +36,16 @@ target_include_directories(${TARGET}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CATENA_CPP_ROOT_DIR}/common/include
+        # $<BUILD_INTERFACE:${REST_ROOT_DIR}/include>
 )
 
 target_sources(${TARGET}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>      
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
 )
 
 target_link_libraries(${TARGET}
-    catena_connections_grpc
+    catena_connections_REST
     absl::flags_parse
 )
 
