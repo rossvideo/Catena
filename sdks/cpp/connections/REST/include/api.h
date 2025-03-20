@@ -84,6 +84,9 @@ class API {
     std::string version_;
     uint16_t port_;
     crow::SimpleApp app_;
+    bool authorizationEnabled_;
+
+    std::string getJWSToken(const crow::request& req) const;
 
     /**
      * @returns The slots that are populated by dm_.
@@ -98,8 +101,31 @@ class API {
      */
     crow::response getValue(const crow::request& req);
 
+    crow::response mulltiSetValue(const crow::request& req);
+
   private:
   bool is_port_in_use_() const;
+
+  const std::map<catena::StatusCode, int> toCrowStatus_ {
+    {catena::StatusCode::OK,                  200},
+    {catena::StatusCode::CANCELLED,           410},
+    {catena::StatusCode::UNKNOWN,             404},
+    {catena::StatusCode::INVALID_ARGUMENT,    406},
+    {catena::StatusCode::DEADLINE_EXCEEDED,   408},
+    {catena::StatusCode::NOT_FOUND,           410},
+    {catena::StatusCode::ALREADY_EXISTS,      409},
+    {catena::StatusCode::PERMISSION_DENIED,   401},
+    {catena::StatusCode::UNAUTHENTICATED,     407},
+    {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
+    {catena::StatusCode::FAILED_PRECONDITION, 412},
+    {catena::StatusCode::ABORTED,             10},  // TODO
+    {catena::StatusCode::OUT_OF_RANGE,        416},
+    {catena::StatusCode::UNIMPLEMENTED,       501},
+    {catena::StatusCode::INTERNAL,            500},
+    {catena::StatusCode::UNAVAILABLE,         503},
+    {catena::StatusCode::DATA_LOSS,           15},  // TODO
+    {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
+  };
 };
 }  // namespace catena
 

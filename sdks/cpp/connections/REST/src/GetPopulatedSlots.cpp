@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,44 +28,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @brief Example program to demonstrate setting up a full Catena service.
- * @file status_update.cpp
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
- * @author John Danen (john.danen@rossvideo.com)
- */
+// common
+#include <Tags.h>
 
-// device model
-#include "device.status_update_REST.json.h" 
+#include <interface/device.pb.h>
+#include <google/protobuf/util/json_util.h>
+#include <utils.h>
 
-// REST
 #include <api.h>
 
-// common
-#include <utils.h>
-#include <Device.h>
-
 #include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/strings/str_format.h"
 
 #include <iostream>
+#include <regex>
 
-using namespace catena::common;
+using catena::API;
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, true, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
+crow::response API::getPopulatedSlots() {
+    // Getting slot from dm_.
+    SlotList slotList;
+    slotList.add_slots(dm_.slot());
 
-int main(int argc, char* argv[])
-{
-    catena::API api(dm);
-    std::cout << "API Version: " << api.version() << std::endl;
-    api.run();
-    return 0;
+    // Convert the SlotList message to JSON
+    std::string json_output;
+    google::protobuf::util::JsonPrintOptions options;
+    options.add_whitespace = true;
+    auto status = MessageToJsonString(slotList, &json_output, options);
+
+    // Check if the conversion was successful
+    if (!status.ok()) {
+        return crow::response(500, "Failed to convert protobuf to JSON");
+    }
+
+    // Create a Crow response with JSON content type
+    crow::response res;
+    res.code = 200;
+    res.set_header("Content-Type", "application/json");
+    res.write(json_output);
+    return res;
 }

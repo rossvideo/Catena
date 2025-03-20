@@ -34,6 +34,9 @@ find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 
 set(sources
     "src/api.cpp"
+    "src/GetPopulatedSlots.cpp"
+    "src/GetValue.cpp"
+    "src/MultiSetValue.cpp"
 )
 
 add_library(${target} STATIC ${sources})
