@@ -56,10 +56,18 @@ void expandEnvVariables(std::string &str) {
 }
 
 API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm} {
+    // Flag does not really work at the moment :/
+    authorizationEnabled_ = absl::GetFlag(FLAGS_authz);
+    if (authorizationEnabled_) {
+        std::cerr<<"Authorization enabled"<<std::endl;
+    }
+
     CROW_ROUTE(app_, "/v1/GetPopulatedSlots")
     ([this]() { return this->getPopulatedSlots(); });
     CROW_ROUTE(app_, "/v1/GetValue")
     ([this](const crow::request& req) { return this->getValue(req); });
+    CROW_ROUTE(app_, "/v1/MultiSetValue").methods(crow::HTTPMethod::POST)
+    ([this](const crow::request& req) { return this->mulltiSetValue(req); });
 }
 
 std::string API::version() const {
@@ -92,71 +100,13 @@ void API::run() {
     // app_.port(port_).ssl(std::move(ssl_context)).run();
 }
 
-crow::response API::getPopulatedSlots() {
-    SlotList slotList;
-    slotList.add_slots(dm_.slot());
-
-    // Convert the SlotList message to JSON
-    std::string json_output;
-    google::protobuf::util::JsonPrintOptions options;
-    options.add_whitespace = true;
-    auto status = MessageToJsonString(slotList, &json_output, options);
-
-    // Check if the conversion was successful
-    if (!status.ok()) {
-        return crow::response(500, "Failed to convert protobuf to JSON");
+std::string API::getJWSToken(const crow::request& req) const {
+    std::string auth_header = req.get_header_value("Authorization");
+    if (!auth_header.empty() ? !auth_header.starts_with("Bearer "): true) {
+        throw catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     }
-
-    // Create a Crow response with JSON content type
-    crow::response res;
-    res.code = 200;
-    res.set_header("Content-Type", "application/json");
-    res.write(json_output);
-    return res;
-}
-
-
-crow::response API::getValue(const crow::request& req) {
-    uint32_t slot = 0;
-    std::string oid = "";
-    // Attempting to convert request body to JSON.
-    auto json_body = crow::json::load(req.body);
-    if (!json_body) {
-        return crow::response(400, "Invalid JSON");
-    }
-
-    // Extracting slot and oid from the JSON body.
-    if (json_body.has("slot")) { slot = json_body["slot"].u(); }
-    if (json_body.has("oid")) { oid = json_body["oid"].s(); }
-
-    // Getting value at oid from device.
-    catena::Value ans;
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
-    Device::LockGuard lg(dm_);
-    rc = dm_.getValue(oid, ans, catena::common::Authorizer::kAuthzDisabled);
-
-    if (rc.status == catena::StatusCode::OK) {
-        // Converting the value to JSON.
-        std::string json_output;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        auto status = MessageToJsonString(ans, &json_output, options);
-
-        // Check if the conversion was successful.
-        if (!status.ok()) {
-            return crow::response(500, "Failed to convert protobuf to JSON");
-        }
-
-        // Create and return a Crow response with JSON content type.
-        crow::response res;
-        res.code = 200;
-        res.set_header("Content-Type", "application/json");
-        res.write(json_output);
-        return res;
-
-    } else {
-        return crow::response(400, rc.what());
-    }
+    // Getting token (after "bearer") and returning as an std::string.
+    return auth_header.substr(std::string("Bearer ").length());
 }
 
 bool API::is_port_in_use_() const {
