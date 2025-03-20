@@ -85,6 +85,19 @@ class API {
     uint16_t port_;
     crow::SimpleApp app_;
 
+    /**
+     * @returns The slots that are populated by dm_.
+     */
+    crow::response getPopulatedSlots();
+    /**
+     * @brief The getValue REST call.
+     * @param req A crow::request which can be converted into JSON.
+     * JSON object should contain keys "slot" and "oid".
+     * @returns A crow::response containing the value at the end of oid or an
+     * error message if something goes wrong.
+     */
+    crow::response getValue(const crow::request& req);
+
   private:
   bool is_port_in_use_() const;
 };
