@@ -150,19 +150,52 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         class BasicParamInfoVisitor : public catena::common::ParamVisitor {
             public:
+                /**
+                 * @brief Constructor for the BasicParamInfoVisitor class
+                 * @param device The device to visit
+                 * @param authz The authorizer
+                 * @param responses The vector of responses
+                 * @param request The request
+                 */
                 BasicParamInfoVisitor(Device& device, catena::common::Authorizer& authz, 
                                     std::vector<catena::BasicParamInfoResponse>& responses,
                                     BasicParamInfoRequest& request)
                     : device_(device), authz_(authz), responses_(responses), request_(request) {}
 
+                /**
+                 * @brief Visit a parameter
+                 * @param param The parameter to visit
+                 * @param path The path of the parameter
+                 */
                 void visit(IParam* param, const std::string& path) override;
+                
+                /**
+                 * @brief Visit an array
+                 * @param param The array to visit
+                 * @param path The path of the array
+                 * @param length The length of the array
+                 */
                 void visitArray(IParam* param, const std::string& path, uint32_t length) override;
-                void visitArrayElement(IParam* param, const std::string& path, uint32_t index) override {}
 
             private:
+                /**
+                 * @brief The device to visit within the visitor
+                 */
                 Device& device_;
+
+                /**
+                 * @brief The authorizer within the visitor
+                 */
                 catena::common::Authorizer& authz_;
+
+                /**
+                 * @brief The vector of responses within the visitor
+                 */
                 std::vector<catena::BasicParamInfoResponse>& responses_;
+
+                /**
+                 * @brief The request payload within the visitor
+                 */
                 BasicParamInfoRequest& request_;
         };
 };

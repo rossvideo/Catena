@@ -101,24 +101,55 @@ public:
     static bool isWildcard(const std::string& oid);
 
 private:
-    // Visitor class for collecting subscribed OIDs
+    /**
+     * @brief Visitor class for collecting subscribed OIDs
+     */
     class SubscriptionVisitor : public catena::common::ParamVisitor {
-    public:
-        explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
-        
-        void visit(catena::common::IParam* param, const std::string& path) override {
-            oids_.push_back(path);
-        }
-        
-        void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
-        void visitArrayElement(catena::common::IParam* param, const std::string& path, uint32_t index) override {}
+        public:
+            /**
+             * @brief Constructor for the SubscriptionVisitor class
+             * @param oids The vector of subscribed OIDs
+             */
+            explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+            
+            /**
+             * @brief Visit a parameter
+             * @param param The parameter to visit
+             * @param path The path of the parameter
+             */
+            void visit(catena::common::IParam* param, const std::string& path) override {
+                oids_.push_back(path);
+            }
+            
+            /**
+             * @brief Visit an array
+             * @param param The array to visit
+             * @param path The path of the array
+             * @param length The length of the array
+             */
+            void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
 
-    private:
-        std::vector<std::string>& oids_;
+        private:
+            /**
+             * @brief The vector of subscribed OIDs within the visitor
+             */
+            std::vector<std::string>& oids_;
     };
 
+
+    /**
+     * @brief Set of unique subscriptions
+         */
     std::set<std::string> uniqueSubscriptions_; 
+
+    /**
+     * @brief Set of wildcard subscriptions
+     */
     std::set<std::string> wildcardSubscriptions_;
+
+    /**
+     * @brief Vector of all subscribed OIDs
+     */
     std::vector<std::string> allSubscribedOids_;
 
     /**

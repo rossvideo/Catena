@@ -45,22 +45,41 @@
 namespace catena {
 namespace common {
 
+/**
+ * @brief Abstract base class for parameter visitors
+ */
 class ParamVisitor {
-public:
-    virtual ~ParamVisitor() = default;
-    
-    // Called for each parameter during traversal
-    virtual void visit(IParam* param, const std::string& path) = 0;
-    
-    // Called when an array parameter is encountered
-    virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
-    
-    // Called for each array element
-    virtual void visitArrayElement(IParam* param, const std::string& path, uint32_t index) = 0;
+    public:
+        /**
+         * @brief Virtual destructor
+         */
+        virtual ~ParamVisitor() = default;
+        
+        /**
+         * @brief Visit a parameter
+         * @param param The parameter to visit
+         * @param path The path of the parameter
+         */
+        virtual void visit(IParam* param, const std::string& path) = 0;
+        
+        /**
+         * @brief Visit an array
+         * @param param The array to visit
+         * @param path The path of the array
+         * @param length The length of the array
+         */
+        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
+
 };
 
-// Helper function to traverse parameters using a visitor
-void traverseParams(IParam* param, const std::string& path, Device& device, ParamVisitor& visitor);
+    /**
+     * @brief Helper function to traverse parameters using a visitor
+     * @param param The parameter to visit
+     * @param path The path of the parameter
+     * @param device The device to visit
+     * @param visitor The visitor to use
+     */
+    void traverseParams(IParam* param, const std::string& path, Device& device, ParamVisitor& visitor);
 
 } // namespace common
 } // namespace catena 
