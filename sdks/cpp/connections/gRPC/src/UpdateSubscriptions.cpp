@@ -50,7 +50,7 @@ using catena::common::Path;
 
 int CatenaServiceImpl::UpdateSubscriptions::objectCounter_ = 0;
 
-CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::grpc::SubscriptionManager& subscriptionManager, bool ok)
+CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::common::SubscriptionManager& subscriptionManager, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish},
         subscriptionManager_{subscriptionManager} {

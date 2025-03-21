@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,14 +30,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file SubscriptionManager.h
- * @brief Centralized manager for parameter subscriptions in gRPC connections
- * @author zuhayr.sarker@rossvideo.com
- * @date 2025-03-06
- * @copyright Copyright © 2024 Ross Video Ltd
- */
-
 #include <set>
 #include <string>
 #include <vector>
@@ -47,16 +39,13 @@
 #include <ParamVisitor.h>
 
 namespace catena {
-namespace grpc {
+namespace common {
 
 /**
- * @brief Class for managing parameter subscriptions in gRPC connections
+ * @brief Class for managing parameter subscriptions
  */
 class SubscriptionManager {
 public:
-    /**
-     * @brief Constructor
-     */
     SubscriptionManager() = default;
 
     /**
@@ -65,7 +54,7 @@ public:
      * @param dm The device model to use 
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, catena::common::Device& dm);
+    bool addSubscription(const std::string& oid, Device& dm);
 
     /**
      * @brief Remove an OID subscription
@@ -79,7 +68,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
+    const std::vector<std::string>& getAllSubscribedOids(Device& dm);
 
     /**
      * @brief Get all unique subscriptions
@@ -101,63 +90,21 @@ public:
     static bool isWildcard(const std::string& oid);
 
 private:
-    /**
-     * @brief Visitor class for collecting subscribed OIDs
-     */
-    class SubscriptionVisitor : public catena::common::ParamVisitor {
+    class SubscriptionVisitor : public ParamVisitor {
         public:
-            /**
-             * @brief Constructor for the SubscriptionVisitor class
-             * @param oids The vector of subscribed OIDs
-             */
             explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
-            
-            /**
-             * @brief Visit a parameter
-             * @param param The parameter to visit
-             * @param path The path of the parameter
-             */
-            void visit(catena::common::IParam* param, const std::string& path) override {
-                oids_.push_back(path);
-            }
-            
-            /**
-             * @brief Visit an array
-             * @param param The array to visit
-             * @param path The path of the array
-             * @param length The length of the array
-             */
-            void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
-
+            void visit(IParam* param, const std::string& path) override;
+            void visitArray(IParam* param, const std::string& path, uint32_t length) override;
         private:
-            /**
-             * @brief The vector of subscribed OIDs within the visitor
-             */
             std::vector<std::string>& oids_;
     };
 
-
-    /**
-     * @brief Set of unique subscriptions
-         */
-    std::set<std::string> uniqueSubscriptions_; 
-
-    /**
-     * @brief Set of wildcard subscriptions
-     */
+    std::set<std::string> uniqueSubscriptions_;
     std::set<std::string> wildcardSubscriptions_;
-
-    /**
-     * @brief Vector of all subscribed OIDs
-     */
     std::vector<std::string> allSubscribedOids_;
 
-    /**
-     * @brief Update the combined list of all subscribed OIDs
-     * @param dm The device model to use for expanding wildcard subscriptions
-     */
-    void updateAllSubscribedOids_(catena::common::Device& dm);
+    void updateAllSubscribedOids_(Device& dm);
 };
 
-} // namespace grpc
+} // namespace common
 } // namespace catena 

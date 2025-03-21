@@ -58,7 +58,7 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @param subscriptionManager The subscription manager to use
          * @param ok Flag indicating if initialization was successful
          */
-        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::grpc::SubscriptionManager& subscriptionManager, bool ok);
+        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::common::SubscriptionManager& subscriptionManager, bool ok);
 
         /**
          * @brief Manages the steps of the UpdateSubscriptions gRPC command
@@ -156,5 +156,5 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
         /**
          * @brief Reference to the subscription manager
          */
-        catena::grpc::SubscriptionManager& subscriptionManager_;
+        catena::common::SubscriptionManager& subscriptionManager_;
 };

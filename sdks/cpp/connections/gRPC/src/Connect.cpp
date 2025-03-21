@@ -34,6 +34,7 @@
 
 // connections/gRPC
 #include <Connect.h>
+#include <SubscriptionManager.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -55,7 +56,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager)
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::common::SubscriptionManager& subscription_manager)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
