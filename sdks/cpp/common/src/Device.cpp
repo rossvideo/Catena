@@ -533,23 +533,21 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
 
     // First check authorization
     if (authz.readAuthz(param)) {
-        if (deprecated_asio) {  
+        if (deprecated_asio) {
             should_send = 
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_NONE)) ? false :
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_MINIMAL)) ? param.getDescriptor().minimalSet() :
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_FULL)) ? true :
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS)) ? param.getDescriptor().minimalSet() || is_subscribed :
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_COMMANDS)) ? param.getDescriptor().isCommand() :
-            false;
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
         } else {
             // Modern ASIO can compare enums directly
             should_send = 
-                (detail_level_ == catena::Device_DetailLevel_NONE) ? false :
-                (detail_level_ == catena::Device_DetailLevel_MINIMAL) ? param.getDescriptor().minimalSet() :
-                (detail_level_ == catena::Device_DetailLevel_FULL) ? true :
-                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS) ? param.getDescriptor().minimalSet() || is_subscribed :
-                (detail_level_ == catena::Device_DetailLevel_COMMANDS) ? param.getDescriptor().isCommand() :
-            false;
+                (detail_level_ == catena::Device_DetailLevel_NONE) ||
+                (detail_level_ == catena::Device_DetailLevel_MINIMAL && param.getDescriptor().minimalSet()) ||
+                (detail_level_ == catena::Device_DetailLevel_FULL) ||
+                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && (param.getDescriptor().minimalSet() || is_subscribed)) ||
+                (detail_level_ == catena::Device_DetailLevel_COMMANDS && param.getDescriptor().isCommand());
         }
     }
 
