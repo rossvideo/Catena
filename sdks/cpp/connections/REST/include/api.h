@@ -100,7 +100,7 @@ class API {
      * @returns A crow::response containing the value at the end of oid or an
      * error message if something goes wrong.
      */
-    crow::response getValue(const crow::request& req);
+    crow::response getValue(const crow::request& req, int slot, std::string& oid);
 
     crow::response setValue(const crow::request& req);
     crow::response multiSetValue(const crow::request& req);
