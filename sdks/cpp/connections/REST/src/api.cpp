@@ -66,9 +66,9 @@ API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm} {
     ([this]() { return this->getPopulatedSlots(); });
     CROW_ROUTE(app_, "/v1/GetValue/slot/<int>/oid/<path>")
     ([this](const crow::request& req, int slot, std::string oid) { return this->getValue(req, slot, oid); });
-    CROW_ROUTE(app_, "/v1/SetValue").methods(crow::HTTPMethod::PATCH)
+    CROW_ROUTE(app_, "/v1/SetValue").methods(crow::HTTPMethod::PUT)
     ([this](const crow::request& req) { return this->setValue(req); });
-    CROW_ROUTE(app_, "/v1/MultiSetValue").methods(crow::HTTPMethod::PATCH)
+    CROW_ROUTE(app_, "/v1/MultiSetValue").methods(crow::HTTPMethod::PUT)
     ([this](const crow::request& req) { return this->multiSetValue(req); });
 }
 
