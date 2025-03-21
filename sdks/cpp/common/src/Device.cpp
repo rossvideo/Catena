@@ -146,7 +146,7 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
      */
     try {
         catena::common::Path path(jptr);
-        if (path.back_is_index() ? path.back_as_index() == catena::common::Path::kEnd : false) {
+        if (path.back_is_index() && path.back_as_index() == catena::common::Path::kEnd) {
                 // Index is "-"
                 ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
         } else {
