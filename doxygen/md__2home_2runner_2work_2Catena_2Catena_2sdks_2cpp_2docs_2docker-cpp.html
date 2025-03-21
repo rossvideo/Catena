@@ -135,7 +135,7 @@ Steps to run</h2>
 <ol type="1">
 <li>Build Catena with <code>cmake -DDOCKER=on</code>.</li>
 <li>Navigate to the folder containing your Docker compose file.</li>
-<li>Run the file using <code>AUTHZ_SERVER=your.authorization.server REALM=realm docker-compose -f /path/to/your/file up -d</code>.</li>
+<li>Run the file using <code>AUTHZ_SERVER=your.authorization.server REALM=realm HOST=host docker-compose -f /path/to/your/file up -d</code>.</li>
 </ol>
 <p>Once your containers are created, you can check their status using <code>docker ps -a</code>. You should have one container per service as well as an additional container running Envoy Proxy.</p>
 <p>If one or more of these containers have exited, you can debug using <code>docker logs &lt;container name&gt;</code>. </p>
