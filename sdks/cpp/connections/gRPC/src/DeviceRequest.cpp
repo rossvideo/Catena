@@ -97,12 +97,41 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             {
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-                if (service->authorizationEnabled()) {                    
-                    authz_ = std::make_unique<catena::common::Authorizer>(getJWSToken());
-                    serializer_ = dm_.getComponentSerializer(*authz_, shallowCopy);
-                } else {
-                    serializer_ = dm_.getComponentSerializer(catena::common::Authorizer::kAuthzDisabled, shallowCopy);
+                dm_.detail_level(req_.detail_level());
+                
+                // Reserve space for both service subscriptions and request subscriptions
+                subscribed_oids_.clear();
+                subscribed_oids_.reserve(service_->subscriptionManager_.getAllSubscribedOids(dm_).size() + 
+                                       req_.subscribed_oids().size());
+                
+                // Add service subscriptions
+                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+                
+                // Add request subscriptions if any
+                if (!req_.subscribed_oids().empty()) {
+                    subscribed_oids_.insert(subscribed_oids_.end(), 
+                                         req_.subscribed_oids().begin(), 
+                                         req_.subscribed_oids().end());
                 }
+                
+                //Handle authorization
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    authz = sharedAuthz.get();
+                } else {
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
+
+                // If we're in SUBSCRIPTIONS mode and have no subscriptions, we'll still send minimal set
+                if (dm_.subscriptions() && subscribed_oids_.empty() && 
+                    req_.detail_level() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+                    serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
+                } else {
+                    serializer_ = dm_.getComponentSerializer(*authz, subscribed_oids_, shallowCopy);
+                }
+
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
                 status_ = CallStatus::kFinish;
