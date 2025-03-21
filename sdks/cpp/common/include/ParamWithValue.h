@@ -165,11 +165,13 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Value& value, Authorizer& authz) const override {
+        catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to read param ", catena::StatusCode::PERMISSION_DENIED);
+            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
+        } else {
+            catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
         }
-        catena::common::toProto<T>(value, &value_.get(), descriptor_, authz);
-        return catena::exception_with_status("", catena::StatusCode::OK);
+        return ans;
     }
 
     /**
@@ -179,12 +181,14 @@ class ParamWithValue : public catena::common::IParam {
      * @param clientScope the client scope
      */
     catena::exception_with_status toProto(catena::Param& param, Authorizer& authz) const override {
+        catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Not authorized to read param ", catena::StatusCode::PERMISSION_DENIED);
+            return catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
+        } else {
+            descriptor_.toProto(param, authz);        
+            catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
         }
-        descriptor_.toProto(param, authz);        
-        catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
-        return catena::exception_with_status("", catena::StatusCode::OK);
+        return ans;
     }
 
     /**
@@ -194,11 +198,13 @@ class ParamWithValue : public catena::common::IParam {
      * @param authz the authorization information
      */
     catena::exception_with_status toProto(catena::BasicParamInfoResponse& paramInfo, Authorizer& authz) const override {
+        catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            return catena::exception_with_status("Authorization failed ", catena::StatusCode::PERMISSION_DENIED);
+            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
+        } else {
+            descriptor_.toProto(*paramInfo.mutable_info(), authz);
         }
-        descriptor_.toProto(*paramInfo.mutable_info(), authz);
-        return catena::exception_with_status("", catena::StatusCode::OK);
+        return ans;
     }
 
 
@@ -210,10 +216,10 @@ class ParamWithValue : public catena::common::IParam {
     catena::exception_with_status fromProto(const catena::Value& value, Authorizer& authz) override {
         catena::exception_with_status ans{"", catena::StatusCode::OK};
         if (!authz.readAuthz(*this)) {
-            ans = catena::exception_with_status("Param does not exist ", catena::StatusCode::NOT_FOUND);
+            ans = catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
         }
         else if (!authz.writeAuthz(*this)) {
-            ans = catena::exception_with_status("Not authorized to write to param ", catena::StatusCode::PERMISSION_DENIED);
+            ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
         } else {
             catena::common::fromProto<T>(value, &value_.get(), descriptor_, authz);
         }
@@ -404,7 +410,7 @@ class ParamWithValue : public catena::common::IParam {
             status = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
             return nullptr;
         } else if (oidIndex >= descriptor_.max_length()) {
-            status = catena::exception_with_status("Array " + descriptor_.getOid() + " at maximum capacity ", catena::StatusCode::OUT_OF_RANGE);
+            status = catena::exception_with_status("Array " + descriptor_.getOid() + " at maximum capacity", catena::StatusCode::OUT_OF_RANGE);
             return nullptr;
         } else {
             value.push_back(ElemType());
@@ -425,7 +431,7 @@ class ParamWithValue : public catena::common::IParam {
     template <typename U>
     catena::exception_with_status popBack(U& value, Authorizer& authz) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
-        return catena::exception_with_status("Cannot pop generic type ", catena::StatusCode::INVALID_ARGUMENT);
+        return catena::exception_with_status("Cannot pop generic type", catena::StatusCode::INVALID_ARGUMENT);
     }
 
     /**
@@ -464,7 +470,7 @@ class ParamWithValue : public catena::common::IParam {
     template <typename U>
     std::unique_ptr<IParam> getParam_(Path& oid, U& value, Authorizer& authz, catena::exception_with_status& status) {
         // This type is not a CatenaStruct or CatenaStructArray so it has no sub-params
-        status = catena::exception_with_status("No sub-params for this generic type ", catena::StatusCode::INVALID_ARGUMENT);
+        status = catena::exception_with_status("No sub-params for this generic type", catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
 
@@ -503,7 +509,7 @@ class ParamWithValue : public catena::common::IParam {
                 return ParamWithValue<ElemType>(value[oidIndex], descriptor_).getParam(oid, authz, status);
             } else {
                 // This type is not a CatenaStructArray so it has no sub-params
-                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist ", catena::StatusCode::NOT_FOUND);
+                status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
         }
@@ -614,7 +620,7 @@ class ParamWithValue : public catena::common::IParam {
         std::string oidStr = oid.front_as_string();
         oid.pop();   
         if (catena::common::alternativeNames<U>[value.index()] != oidStr) {
-            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist ", catena::StatusCode::NOT_FOUND);
+            status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
             return nullptr;
         }
 
