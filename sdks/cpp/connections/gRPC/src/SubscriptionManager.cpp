@@ -74,8 +74,11 @@ bool SubscriptionManager::addSubscription(const std::string& oid, catena::common
             std::cout << "Failed to get base parameter for wildcard subscription: " << rc.what() << std::endl;
             return false;
         }
+        
+        //Process all child parameters of the base parameter
+        SubscriptionVisitor visitor(allSubscribedOids_);
+        catena::common::traverseParams(baseParam.get(), baseOid, dm, visitor);
 
-        processChildren_(baseOid, baseParam.get(), dm);
         return true;
     } else {
         // Non-wildcard subscription
@@ -134,23 +137,9 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
         }
         
         if (baseParam) {
-            // If we found the base parameter, add it and all its children
-            allSubscribedOids_.push_back(basePath);
-
-            // If base parameter is an array, process each element
-            if (baseParam->isArrayType()) {
-                uint32_t array_length = baseParam->size();
-                for (uint32_t i = 0; i < array_length; i++) {
-                    Path indexed_path{basePath, std::to_string(i)};
-                    auto indexed_param = dm.getParam(indexed_path.toString(), rc);
-                    if (indexed_param) {
-                        allSubscribedOids_.push_back(indexed_path.toString());
-                        processChildren_(indexed_path.toString(), indexed_param.get(), dm);
-                    }
-                }
-            } else {
-                processChildren_(basePath, baseParam.get(), dm);
-            }
+            // If we found the base parameter, use visitor to collect all paths
+            SubscriptionVisitor visitor(allSubscribedOids_);
+            catena::common::traverseParams(baseParam.get(), basePath, dm, visitor);
         } else {
             // If base parameter not found, try to find any parameters that start with this path
             std::vector<std::unique_ptr<IParam>> allParams;
@@ -164,41 +153,10 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
                 if (paramOid.find(basePath) == 0) {
                     if (paramOid.length() == basePath.length() || 
                         paramOid[basePath.length()] == '/') {
-                        allSubscribedOids_.push_back(paramOid);
-                        processChildren_(paramOid, param.get(), dm);
+                        SubscriptionVisitor visitor(allSubscribedOids_);
+                        catena::common::traverseParams(param.get(), paramOid, dm, visitor);
                     }
                 }
-            }
-        }
-    }
-}
-
-void SubscriptionManager::processChildren_(const std::string& parent_path, IParam* current_param, catena::common::Device& dm) {
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
-    const auto& descriptor = current_param->getDescriptor();
-    
-    for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
-        if (child_name.empty() || child_name[0] == '/') continue;
-        
-        Path child_path{parent_path, child_name};
-        auto sub_param = dm.getParam(child_path.toString(), rc);
-        
-        if (rc.status == catena::StatusCode::OK && sub_param) {
-            allSubscribedOids_.push_back(child_path.toString());
-
-            // If this child is an array, process its elements
-            if (sub_param->isArrayType()) {
-                uint32_t array_length = sub_param->size();
-                for (uint32_t i = 0; i < array_length; i++) {
-                    Path indexed_path{child_path.toString(), i};
-                    auto indexed_param = dm.getParam(indexed_path.toString(), rc);
-                    if (indexed_param) {
-                        allSubscribedOids_.push_back(indexed_path.toString());
-                        processChildren_(indexed_path.toString(), indexed_param.get(), dm);
-                    }
-                }
-            } else {
-                processChildren_(child_path.toString(), sub_param.get(), dm);
             }
         }
     }
