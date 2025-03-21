@@ -529,20 +529,18 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
     bool should_send = false;
 
+    //Detail level casted to ints to avoid warnings about comparing enums on deprecated ASIO versions
+    int casted_detail_level = static_cast<int>(detail_level_);
+
     // First check authorization
     if (authz.readAuthz(param)) {
-        // Then check detail level
-        if (detail_level_ == Device_DetailLevel_NONE) {
-            should_send = false;
-        } else if (detail_level_ == Device_DetailLevel_MINIMAL) {
-            should_send = param.getDescriptor().minimalSet();
-        } else if (detail_level_ == Device_DetailLevel_FULL) {
-            should_send = true;
-        } else if (detail_level_ == Device_DetailLevel_SUBSCRIPTIONS) {
-            should_send = param.getDescriptor().minimalSet() || is_subscribed;
-        } else if (detail_level_ == Device_DetailLevel_COMMANDS) {
-            should_send = param.getDescriptor().isCommand();
-        }
+            
+            should_send = 
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
     }
 
     return should_send;
