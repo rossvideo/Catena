@@ -68,7 +68,6 @@ var hierarchy =
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
     [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
-    [ "catena::common::ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", null ],
     [ "catena::common::Path", "classcatena_1_1common_1_1Path.html", null ],
     [ "catena::PeerInfo", "classcatena_1_1PeerInfo.html", null ],
     [ "catena::meta::PopFrontT< L >", "classcatena_1_1meta_1_1PopFrontT.html", null ],
