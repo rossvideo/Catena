@@ -51,10 +51,6 @@ void traverseParams(IParam* param, const std::string& path, Device& device, Para
             // Only process array elements if we're not already inside an array element
             Path current_path{path};
             if (!current_path.back_is_index()) {
-                // For each array element (0 to length-1):
-                // 1. Construct its path (parent_path/index)
-                // 2. Get the parameter for that index
-                // 3. Recursively process its children
                 for (uint32_t i = 0; i < array_length; i++) {
                     // Create path for this array element (e.g., "/params/array/0")
                     Path indexed_path{path, std::to_string(i)};
