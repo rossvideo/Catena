@@ -42,12 +42,15 @@ bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm) {
     exception_with_status rc{"", StatusCode::OK};
 
     if (isWildcard(oid)) {
+        // For wildcard subscriptions, we need to handle both the wildcard and base path
         std::string baseOid = oid.substr(0, oid.length() - 2);
         auto [_, inserted] = wildcardSubscriptions_.insert(oid);
         if (!inserted) return false;
 
+        // Add the base path to unique subscriptions to ensure we track it
         uniqueSubscriptions_.insert(baseOid);
 
+        // Get the base parameter to traverse its children
         std::unique_ptr<IParam> baseParam;
         {
             Device::LockGuard lg(dm);
@@ -59,11 +62,13 @@ bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm) {
             return false;
         }
         
+        // Use the visitor pattern to collect all child OIDs
         SubscriptionVisitor visitor(allSubscribedOids_);
         traverseParams(baseParam.get(), baseOid, dm, visitor);
 
         return true;
     } else {
+        // For non-wildcard subscriptions, just add to unique subscriptions
         auto [_, inserted] = uniqueSubscriptions_.insert(oid);
         return inserted;
     }
@@ -73,10 +78,12 @@ bool SubscriptionManager::removeSubscription(const std::string& oid) {
     if (isWildcard(oid)) {
         std::string baseOid = oid.substr(0, oid.length() - 2);
         
+        // First remove the wildcard subscription
         if (!wildcardSubscriptions_.erase(oid)) {
             return false;
         }
 
+        // Then remove any unique subscriptions that were under this wildcard path
         auto it = uniqueSubscriptions_.begin();
         while (it != uniqueSubscriptions_.end()) {
             if (it->find(baseOid) == 0) {
@@ -87,22 +94,27 @@ bool SubscriptionManager::removeSubscription(const std::string& oid) {
         }
         return true;
     } else {
+        // For non-wildcard subscriptions, just remove from unique subscriptions
         return uniqueSubscriptions_.erase(oid) > 0;
     }
 }
 
 void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
+    // Clear existing OIDs to rebuild from scratch
     allSubscribedOids_.clear();
     
+    // Add all unique subscriptions first
     allSubscribedOids_.insert(allSubscribedOids_.end(), 
                              uniqueSubscriptions_.begin(), 
                              uniqueSubscriptions_.end());
     
+    // Then process all wildcard subscriptions
     for (const auto& wildcardOid : wildcardSubscriptions_) {
         exception_with_status rc{"", StatusCode::OK};
         
         std::string basePath = wildcardOid.substr(0, wildcardOid.length() - 2);
         
+        // Try to get the base parameter first
         std::unique_ptr<IParam> baseParam;
         {
             Device::LockGuard lg(dm);
@@ -110,18 +122,22 @@ void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
         }
         
         if (baseParam) {
+            // If we found the base parameter, traverse its children
             SubscriptionVisitor visitor(allSubscribedOids_);
             traverseParams(baseParam.get(), basePath, dm, visitor);
         } else {
+            // If base parameter not found, search through all top-level params
             std::vector<std::unique_ptr<IParam>> allParams;
             {
                 Device::LockGuard lg(dm);
                 allParams = dm.getTopLevelParams(rc);
             }
             
+            // Look for parameters that match the wildcard pattern
             for (auto& param : allParams) {
                 std::string paramOid = param->getOid();
                 if (paramOid.find(basePath) == 0) {
+                    // Check if this is a direct child or deeper descendant
                     if (paramOid.length() == basePath.length() || 
                         paramOid[basePath.length()] == '/') {
                         SubscriptionVisitor visitor(allSubscribedOids_);
