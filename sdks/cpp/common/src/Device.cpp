@@ -36,7 +36,6 @@
 #include <ParamDescriptor.h>
 #include <IMenuGroup.h> 
 #include <Menu.h>
-#include <asio.hpp>
 
 #include <cassert>
 #include <sstream>
@@ -529,26 +528,19 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 
 bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
     bool should_send = false;
-    bool deprecated_asio = ASIO_VERSION < 102801; // Check detail level using int comparison for older ASIO (< 1.28.1)
+
+    //Detail level casted to ints to avoid warnings about comparing enums on deprecated ASIO versions
+    int casted_detail_level = static_cast<int>(detail_level_);
 
     // First check authorization
     if (authz.readAuthz(param)) {
-        if (deprecated_asio) {
+            
             should_send = 
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
-                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
-        } else {
-            // Modern ASIO can compare enums directly
-            should_send = 
-                (detail_level_ == catena::Device_DetailLevel_NONE) ||
-                (detail_level_ == catena::Device_DetailLevel_MINIMAL && param.getDescriptor().minimalSet()) ||
-                (detail_level_ == catena::Device_DetailLevel_FULL) ||
-                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && (param.getDescriptor().minimalSet() || is_subscribed)) ||
-                (detail_level_ == catena::Device_DetailLevel_COMMANDS && param.getDescriptor().isCommand());
-        }
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
     }
 
     return should_send;
