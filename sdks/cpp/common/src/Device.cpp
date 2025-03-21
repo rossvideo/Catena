@@ -36,6 +36,7 @@
 #include <ParamDescriptor.h>
 #include <IMenuGroup.h> 
 #include <Menu.h>
+#include <asio.hpp>
 
 #include <cassert>
 #include <sstream>
@@ -528,20 +529,27 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 
 bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
     bool should_send = false;
+    bool deprecated_asio = ASIO_VERSION < 102801; // Check detail level using int comparison for older ASIO (< 1.28.1)
 
     // First check authorization
     if (authz.readAuthz(param)) {
-        // Then check detail level
-        if (detail_level_ == Device_DetailLevel_NONE) {
-            should_send = false;
-        } else if (detail_level_ == Device_DetailLevel_MINIMAL) {
-            should_send = param.getDescriptor().minimalSet();
-        } else if (detail_level_ == Device_DetailLevel_FULL) {
-            should_send = true;
-        } else if (detail_level_ == Device_DetailLevel_SUBSCRIPTIONS) {
-            should_send = param.getDescriptor().minimalSet() || is_subscribed;
-        } else if (detail_level_ == Device_DetailLevel_COMMANDS) {
-            should_send = param.getDescriptor().isCommand();
+        if (deprecated_asio) {  
+            should_send = 
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_NONE)) ? false :
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_MINIMAL)) ? param.getDescriptor().minimalSet() :
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_FULL)) ? true :
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS)) ? param.getDescriptor().minimalSet() || is_subscribed :
+                (static_cast<int>(detail_level_) == static_cast<int>(catena::Device_DetailLevel_COMMANDS)) ? param.getDescriptor().isCommand() :
+            false;
+        } else {
+            // Modern ASIO can compare enums directly
+            should_send = 
+                (detail_level_ == catena::Device_DetailLevel_NONE) ? false :
+                (detail_level_ == catena::Device_DetailLevel_MINIMAL) ? param.getDescriptor().minimalSet() :
+                (detail_level_ == catena::Device_DetailLevel_FULL) ? true :
+                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS) ? param.getDescriptor().minimalSet() || is_subscribed :
+                (detail_level_ == catena::Device_DetailLevel_COMMANDS) ? param.getDescriptor().isCommand() :
+            false;
         }
     }
 
