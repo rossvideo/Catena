@@ -44,24 +44,18 @@
 
 using catena::API;
 
-crow::response API::getValue(const crow::request& req) {
+crow::response API::getValue(const crow::request& req, int slot, std::string& oid) {
     try {
-        // Converting JSON to GetValuePayload.
-        catena::GetValuePayload payload;
-        absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), &payload);
-        if (!status.ok()) {
-            return crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to parse MultiSetValuePayload");
-        }
         // Getting value at oid from device.
         catena::Value ans;
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         if(authorizationEnabled_) {
             catena::common::Authorizer authz{getJWSToken(req)};
             Device::LockGuard lg(dm_);
-            rc = dm_.getValue(payload.oid(), ans, authz);
+            rc = dm_.getValue(oid, ans, authz);
         } else {
             Device::LockGuard lg(dm_);
-            rc = dm_.getValue(payload.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
+            rc = dm_.getValue(oid, ans, catena::common::Authorizer::kAuthzDisabled);
         }
         // Finishing by converting to crow::response.
         if (rc.status == catena::StatusCode::OK) {
