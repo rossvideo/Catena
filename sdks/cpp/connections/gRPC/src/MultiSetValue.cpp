@@ -103,7 +103,6 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                  */
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
-                std::vector<std::string> clientScopes;
                 if (service->authorizationEnabled()) {
                     sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
                     authz = sharedAuthz.get();

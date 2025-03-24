@@ -56,6 +56,7 @@ namespace catena {
 class API {
 
   using Device = catena::common::Device;
+  using Tcp = boost::asio::ip::tcp;
 
   public:
     // explicit API(uint16_t port = 443) : version_{"1.0.0"}, port_{port} {}
@@ -81,18 +82,38 @@ class API {
     Device &dm_;
 
   private:
+    boost::asio::io_context io_context_;
+    Tcp::acceptor acceptor_;
+
     std::string version_;
     uint16_t port_;
     crow::SimpleApp app_;
     bool authorizationEnabled_;
 
+    // TODO Remove getJWSToken.
     std::string getJWSToken(const crow::request& req) const;
+    std::string getJWSToken(Tcp::socket& socket) const;
+
+    /**
+     * @brief Writes a protobuf message to socket in JSON format.
+     * @param socket The socket to write to.
+     * @param msg The protobuf message to write as JSON.
+     */
+    void write(Tcp::socket& socket, google::protobuf::Message& msg) const;
+    // Deprecated.
     crow::response finish(google::protobuf::Message& msg) const;
+    /**
+     * @brief Extracts a field from the request string extracted from the URL.
+     * @param request The request extracted from the URL (/v1/DeviceRequest).
+     * @param field The field to extract (slot, oid, etc).
+     */
+    std::string getField(std::string& request, std::string field) const;
 
     /**
      * @returns The slots that are populated by dm_.
      */
     crow::response getPopulatedSlots();
+    void deviceRequest(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
     /**
      * @brief The getValue REST call.
      * @param req A crow::request which can be converted into JSON.
@@ -105,10 +126,22 @@ class API {
     crow::response setValue(const crow::request& req);
     crow::response multiSetValue(const crow::request& req);
     crow::response multiSetValue(catena::MultiSetValuePayload& payload, const crow::request& req);
+    /**
+     * @brief Routes a request to the appropriate controller.
+     * @param method The HTTP method extracted from the URL (GET, POST, PUT).
+     * @param request The request extracted from the URL (/v1/DeviceRequest).
+     * @param socket The socket to communicate with the client with.
+     * @param authz The authorizer object containing client's scopes.
+     * @returns Nothing, errors are thrown or communicated through the socket.
+     */
+    void route(std::string& method, std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
 
   private:
   bool is_port_in_use_() const;
 
+  /**
+   * @todo clean this up.
+   */
   const std::map<catena::StatusCode, int> toCrowStatus_ {
     {catena::StatusCode::OK,                  200},
     {catena::StatusCode::CANCELLED,           410},
