@@ -69,6 +69,10 @@ void traverseParams(IParam* param, const std::string& path, Device& device, Para
     
     // Process all regular (non-array-element) children of this parameter
     const auto& descriptor = param->getDescriptor();
+    if (descriptor.getAllSubParams().empty()) {
+        return;  // No children to traverse
+    }
+    
     for (const auto& [child_name, child_desc] : descriptor.getAllSubParams()) {
         // Skip invalid child names (empty or absolute paths)
         if (child_name.empty() || child_name[0] == '/') continue;

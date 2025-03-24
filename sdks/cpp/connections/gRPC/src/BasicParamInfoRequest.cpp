@@ -110,12 +110,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         responses_.clear();  
                         // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
-                            // Create a path for the parameter and check if it's an array type
-                            Path top_level_path{top_level_param->getOid()};
-                            
                             // Add the parameter to our response list
-                            responses_.emplace_back();
-                            top_level_param->toProto(responses_.back(), *authz);
+                            addParamToResponses(top_level_param.get(), *authz);
                             // For array types, calculate and update array length
                             if (top_level_param->isArrayType()) {
                                 uint32_t array_length = top_level_param->size();
@@ -143,20 +139,21 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     if (rc.status == catena::StatusCode::OK && param) {
                         responses_.clear();
                         
+                        // Add the main parameter first 
+                        addParamToResponses(param.get(), *authz, true);
+                        
+                        // If the parameter is an array, update the array length
+                        if (param->isArrayType()) {
+                            uint32_t array_length = param->size();
+                            if (array_length > 0) {
+                                updateArrayLengths(param->getOid(), array_length);
+                            }
+                        }
+                        
+                        // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (req_.recursive()) {
-                            // Use visitor pattern to collect all parameter info recursively
                             BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
                             catena::common::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
-                        } else {
-                            // Just add the main parameter
-                            responses_.emplace_back();
-                            param->toProto(responses_.back(), *authz);
-                            if (param->isArrayType()) {
-                                uint32_t array_length = param->size();
-                                if (array_length > 0) {
-                                    updateArrayLengths(param->getOid(), array_length);
-                                }
-                            }
                         }
 
                         // Begin writing responses back to the client
@@ -248,19 +245,41 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
     }
 }
 
-// Visits a parameter and adds it to the response vector
-void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
-    if (path != request_.req_.oid_prefix()) {
+// Helper method to add a parameter to the responses
+void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz, bool skip_prefix_check) {
+    if (skip_prefix_check || param->getOid() != req_.oid_prefix()) {
         responses_.emplace_back();
+        auto& response = responses_.back();
+        response.mutable_info();
         {
-            Device::LockGuard lg(device_);
-            param->toProto(responses_.back(), authz_);
+            Device::LockGuard lg(dm_);
+            param->toProto(response, authz);
         }
     }
 }
 
+// Visits a parameter and adds it to the response vector
+void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
+    // Only add non-array parameters that aren't the top-most parameter
+    bool isTopParameter = path == request_.req_.oid_prefix();
+    bool isArray = param->isArrayType();
+    if (isTopParameter || isArray) {
+        return;
+    }
+
+    request_.addParamToResponses(param, authz_);
+}
+
 // Visits an array and updates the array length information
 void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
+    // Only add array parameters that aren't the top-most parameter
+    bool isTopParameter = path == request_.req_.oid_prefix();
+    if (isTopParameter) {
+        return;
+    }
+
+    request_.addParamToResponses(param, authz_);
+
     // Update array length information
     if (length > 0) {
         request_.updateArrayLengths(param->getOid(), length);
