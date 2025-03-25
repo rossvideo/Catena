@@ -1,16 +1,38 @@
-cmake_minimum_required(VERSION 3.10)
-project(Tests)
+cmake_minimum_required(VERSION 3.20)
 
-# Add Google Test
+set(This UnitTests)
+
 find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(../src)
 
-# Add the source directory for utils.h
-include_directories(../include)
+# set up link libs, prefer gRPC if enabled
+set(common_lib)
+if (gRPC_enabled)
+    set(common_lib catena_grpc_common)
+else()
+    if(REST_enabled)
+        set(common_lib catena_proto_common)
+    else()
+        message(FATAL_ERROR "No connection type enabled")
+    endif(REST_enabled)
+endif(gRPC_enabled)
 
 
-# Add the test executable
-add_executable(utils_test utils_test.cpp)
 
-# Link Google Test and pthread
-target_link_libraries(utils_test ${GTEST_LIBRARIES} pthread)
+set(SOURCES 
+    utils_test.cpp
+)
+
+add_executable(${This} ${SOURCES})
+
+target_link_libraries(${This} PUBLIC
+    gtest_main
+    ${GTEST_LIBRARIES}
+    ${GTEST_MAIN_LIBRARIES}
+    ${common_lib}
+)
+
+add_test(
+    NAME ${This}
+    COMMAND ${This}
+)
