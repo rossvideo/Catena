@@ -91,7 +91,6 @@ $(document).ready(function(){initNavTree('classCatenaServiceImpl_1_1BasicParamIn
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classCatenaServiceImpl_1_1BasicParamInfoRequest-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">CatenaServiceImpl::BasicParamInfoRequest Class Reference</div></div>
@@ -121,9 +120,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a26af9c5c2f2691bfadb5e6a9b9e4dfaa" id="r_a26af9c5c2f2691bfadb5e6a9b9e4dfaa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1BasicParamInfoRequest.html#a26af9c5c2f2691bfadb5e6a9b9e4dfaa">proceed</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, bool ok) override</td></tr>
 <tr class="memdesc:a26af9c5c2f2691bfadb5e6a9b9e4dfaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the steps of the <a class="el" href="classCatenaServiceImpl_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest RPC.">BasicParamInfoRequest</a> gRPC command through the state variable status. Returns the value of the parameter specified by the user.  <br /></td></tr>
 <tr class="separator:a26af9c5c2f2691bfadb5e6a9b9e4dfaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eff712043708baa5c59d690a3494cd3" id="r_a6eff712043708baa5c59d690a3494cd3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1BasicParamInfoRequest.html#a6eff712043708baa5c59d690a3494cd3">addParamToResponses</a> (<a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a> &amp;authz, bool skip_prefix_check=false)</td></tr>
-<tr class="memdesc:a6eff712043708baa5c59d690a3494cd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper method to add a parameter to the responses.  <br /></td></tr>
-<tr class="separator:a6eff712043708baa5c59d690a3494cd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
 <tr class="memitem:a5275c8b9cf83c4d42685c5f2f71bf7c9 inherit pub_methods_classCatenaServiceImpl_1_1CallData" id="r_a5275c8b9cf83c4d42685c5f2f71bf7c9"><td class="memItemLeft" align="right" valign="top">
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~CallData</b> ()</td></tr>
@@ -190,50 +186,6 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a6eff712043708baa5c59d690a3494cd3" name="a6eff712043708baa5c59d690a3494cd3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6eff712043708baa5c59d690a3494cd3">&#9670;&#160;</a></span>addParamToResponses()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *&#160;</td>
-          <td class="paramname"><em>param</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a> &amp;&#160;</td>
-          <td class="paramname"><em>authz</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>skip_prefix_check</em> = <code>false</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Helper method to add a parameter to the responses. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">param</td><td>The parameter to add </td></tr>
-    <tr><td class="paramname">authz</td><td>The authorizer </td></tr>
-    <tr><td class="paramname">skip_prefix_check</td><td>Whether to skip checking if the path matches the request prefix </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="a26af9c5c2f2691bfadb5e6a9b9e4dfaa" name="a26af9c5c2f2691bfadb5e6a9b9e4dfaa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a26af9c5c2f2691bfadb5e6a9b9e4dfaa">&#9670;&#160;</a></span>proceed()</h2>
 

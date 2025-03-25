@@ -172,9 +172,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1ParamTag.html">ParamTag</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alias for <a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> used to improve readability.  <a href="structcatena_1_1common_1_1ParamTag.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamVisitor.html">ParamVisitor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Abstract base class for parameter visitors.  <a href="classcatena_1_1common_1_1ParamVisitor.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html" title="ParamWithValue is a class that implements the IParam interface for each param type in the device mode...">ParamWithValue</a> is a class that implements the <a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> interface for each param type in the device model.  <a href="classcatena_1_1common_1_1ParamWithValue.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -235,9 +232,6 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ab9c7a727c543ccf4bcc2a926f94cd3cb" id="r_ab9c7a727c543ccf4bcc2a926f94cd3cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html#ab9c7a727c543ccf4bcc2a926f94cd3cb">traverseParams</a> (<a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *param, const std::string &amp;path, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;device, <a class="el" href="classcatena_1_1common_1_1ParamVisitor.html">ParamVisitor</a> &amp;visitor)</td></tr>
-<tr class="memdesc:ab9c7a727c543ccf4bcc2a926f94cd3cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to traverse parameters using a visitor.  <br /></td></tr>
-<tr class="separator:ab9c7a727c543ccf4bcc2a926f94cd3cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf5cbe5ba25dfe830f1a028899593c69" id="r_acf5cbe5ba25dfe830f1a028899593c69"><td class="memTemplParams" colspan="2"><a id="acf5cbe5ba25dfe830f1a028899593c69" name="acf5cbe5ba25dfe830f1a028899593c69"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:acf5cbe5ba25dfe830f1a028899593c69"><td class="memTemplItemLeft" align="right" valign="top">T &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getParamValue</b> (<a class="el" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a> *param)</td></tr>
@@ -532,57 +526,6 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><iframe scrolling="no" frameborder="0" src="namespacecatena_1_1common_a78f6e68869990f230baee7774d764623_icgraph.svg" width="198" height="60"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
-
-</div>
-</div>
-<a id="ab9c7a727c543ccf4bcc2a926f94cd3cb" name="ab9c7a727c543ccf4bcc2a926f94cd3cb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab9c7a727c543ccf4bcc2a926f94cd3cb">&#9670;&#160;</a></span>traverseParams()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::traverseParams </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *&#160;</td>
-          <td class="paramname"><em>param</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>path</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td>
-          <td class="paramname"><em>device</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ParamVisitor.html">ParamVisitor</a> &amp;&#160;</td>
-          <td class="paramname"><em>visitor</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Helper function to traverse parameters using a visitor. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">param</td><td>The parameter to visit </td></tr>
-    <tr><td class="paramname">path</td><td>The path of the parameter </td></tr>
-    <tr><td class="paramname">device</td><td>The device to visit </td></tr>
-    <tr><td class="paramname">visitor</td><td>The visitor to use </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
