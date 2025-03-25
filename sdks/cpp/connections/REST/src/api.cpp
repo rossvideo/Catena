@@ -59,7 +59,7 @@ API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm},
     acceptor_{io_context_, Tcp::endpoint(Tcp::v4(), port)} {
     // Flag does not really work at the moment :/
     // authorizationEnabled_ = absl::GetFlag(FLAGS_authz);
-    authorizationEnabled_ = true;
+    authorizationEnabled_ = false;
     if (authorizationEnabled_) {
         std::cerr<<"Authorization enabled"<<std::endl;
     }
@@ -155,22 +155,6 @@ crow::response API::finish(google::protobuf::Message& msg) const {
         res.write(json_output);
     }
     return res;
-}
-
-void API::write(Tcp::socket& socket, google::protobuf::Message& msg) const {   
-    // Converting the value to JSON.
-    std::string json_output;
-    google::protobuf::util::JsonPrintOptions options;
-    options.add_whitespace = true;
-    auto status = MessageToJsonString(msg, &json_output, options);
-
-    // Check if the conversion was successful.
-    if (!status.ok()) {
-        throw catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
-    } else {
-        std::string chunk_size = std::format("{:x}", json_output.size());
-        boost::asio::write(socket, boost::asio::buffer(chunk_size + "\r\n" + json_output + "\r\n"));
-    }
 }
 
 bool API::is_port_in_use_() const {

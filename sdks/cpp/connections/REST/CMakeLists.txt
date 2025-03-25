@@ -40,6 +40,7 @@ set(sources
     "src/MultiSetValue.cpp"
     "src/SetValue.cpp"
     "src/router.cpp"
+    "src/SocketWriter.cpp"
 )
 
 add_library(${target} STATIC ${sources})

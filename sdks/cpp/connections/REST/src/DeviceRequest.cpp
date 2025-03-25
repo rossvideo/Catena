@@ -45,8 +45,9 @@
 using catena::API;
 
 void API::deviceRequest(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz) {
-    std::string headers = "";
-    try {
+    // Creating a SocketWriter.
+    ChunkedWriter writer(socket);
+    try {        
         // Parsing request for fields.
         std::string slotStr = getField(request, "slot");
         uint32_t slot = slotStr.empty() ? 0 : std::stoi(slotStr);
@@ -59,11 +60,8 @@ void API::deviceRequest(std::string& request, Tcp::socket& socket, catena::commo
         // Getting the component serializer.
         auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
         // Write the HTTP response headers to stream.
-        headers = "HTTP/1.1 200 OK\r\n"
-                  "Content-Type: application/json\r\n"
-                  "Transfer-Encoding: chunked\r\n"
-                  "Connection: keep-alive\r\n\r\n";
-        boost::asio::write(socket, boost::asio::buffer(headers));
+        catena::exception_with_status status{"OK", catena::StatusCode::OK};
+        writer.writeHeaders(status);
         // Getting each component ans writing to the stream.
         while (serializer.hasMore()) {
             catena::DeviceComponent component{};
@@ -71,25 +69,18 @@ void API::deviceRequest(std::string& request, Tcp::socket& socket, catena::commo
             Device::LockGuard lg(dm_);
             component = serializer.getNext();
             }
-            write(socket, component);
+            writer.write(component);
         }
-    // Maybe make write error a function... will probably be used elsewhere.
-    } catch (...) { // Error, end process.
-        // Write the HTTP response headers if not already defined.
-        std::string errCode = std::to_string(toCrowStatus_.at(catena::StatusCode::UNKNOWN));
-        std::string errMsg = std::string("Unknown error");
-        if (headers.empty()) {
-            headers = "HTTP/1.1 " + errCode + " " + errMsg + "\r\n"
-                      "Content-Type: text/plain\r\n"
-                      "Transfer-Encoding: chunked\r\n"
-                      "Connection: keep-alive\r\n\r\n";
-            boost::asio::write(socket, boost::asio::buffer(headers));
-        }
-        boost::asio::write(socket, boost::asio::buffer(std::format("{:x}", errMsg.size()) + "\r\n" + errMsg + "\r\n"));
+    // ERROR: Write to stream and end call.
+    } catch (catena::exception_with_status& err) {
+        writer.write(err);
+    } catch (...) {
+        catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
+        writer.write(err);
     }
     /* 
      * POSTMAN does not like this line as they do not support chunked encoding.
      * CURL yells at you if you don't have it.
      */
-    // boost::asio::write(socket, boost::asio::buffer("0\r\n\r\n"));
+    // writer.finish();
 }

@@ -90,16 +90,99 @@ class API {
     crow::SimpleApp app_;
     bool authorizationEnabled_;
 
+    /**
+     * @brief Helper class used to write to a socket using boost.
+     */
+    class SocketWriter {
+      public:
+        /**
+         * @brief Constructs a SocketWriter.
+         * @param socket The socket to write to.
+         */
+        SocketWriter(Tcp::socket& socket) : socket_{socket} {}
+        /**
+         * @brief Writes a protobuf message to socket in JSON format.
+         * @param msg The protobuf message to write as JSON.
+         */
+        virtual void write(google::protobuf::Message& msg);
+        /**
+         * @brief Writes an error message to the socket.
+         * @param err The catena::exception_with_status.
+         */
+        virtual void write(catena::exception_with_status& err);
+        virtual ~SocketWriter() = default;
+      protected:
+        /**
+         * @brief The socket to write to.
+         */
+        Tcp::socket& socket_;
+        /**
+         * @brief Maps catena::StatusCode to HTTP status codes.
+         */
+        const std::map<catena::StatusCode, int> codeMap_ {
+          {catena::StatusCode::OK,                  200},
+          {catena::StatusCode::CANCELLED,           410},
+          {catena::StatusCode::UNKNOWN,             404},
+          {catena::StatusCode::INVALID_ARGUMENT,    406},
+          {catena::StatusCode::DEADLINE_EXCEEDED,   408},
+          {catena::StatusCode::NOT_FOUND,           410},
+          {catena::StatusCode::ALREADY_EXISTS,      409},
+          {catena::StatusCode::PERMISSION_DENIED,   401},
+          {catena::StatusCode::UNAUTHENTICATED,     407},
+          {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
+          {catena::StatusCode::FAILED_PRECONDITION, 412},
+          {catena::StatusCode::ABORTED,             10},  // TODO
+          {catena::StatusCode::OUT_OF_RANGE,        416},
+          {catena::StatusCode::UNIMPLEMENTED,       501},
+          {catena::StatusCode::INTERNAL,            500},
+          {catena::StatusCode::UNAVAILABLE,         503},
+          {catena::StatusCode::DATA_LOSS,           15},  // TODO
+          {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
+        };
+    };
+
+    /**
+     * @brief Helper class used to write to a socket using boost.
+     */
+    class ChunkedWriter : public SocketWriter {
+      public:
+      // Using parent constructor
+        using SocketWriter::SocketWriter;
+        /**
+         * @brief Writes headers to the socket in chuncked encoding format.
+         * @param status The catena::exception_with_status of the operation.
+         */
+        void writeHeaders(catena::exception_with_status& status);
+        /**
+         * @brief Writes a protobuf message to socket in JSON format.
+         * @param msg The protobuf message to write as JSON.
+         */
+        void write(google::protobuf::Message& msg) override;
+        /**
+         * @brief Writes an error message to the socket.
+         * @param err The catena::exception_with_status.
+         */
+        void write(catena::exception_with_status& err) override;
+        /**
+         * @brief Finishes the chunked writing process.
+         */
+        void finish();
+        /**
+         * @brief Getter for hasHeaders_.
+         */
+        bool hasHeaders() const { return hasHeaders_; }
+      private:
+        /**
+         * @brief Indicates whether the writer has written headers or not. 
+         */
+        bool hasHeaders_ = false;
+    };
+
+
     // TODO Remove getJWSToken.
     std::string getJWSToken(const crow::request& req) const;
     std::string getJWSToken(Tcp::socket& socket) const;
 
-    /**
-     * @brief Writes a protobuf message to socket in JSON format.
-     * @param socket The socket to write to.
-     * @param msg The protobuf message to write as JSON.
-     */
-    void write(Tcp::socket& socket, google::protobuf::Message& msg) const;
     // Deprecated.
     crow::response finish(google::protobuf::Message& msg) const;
     /**
@@ -112,7 +195,7 @@ class API {
     /**
      * @returns The slots that are populated by dm_.
      */
-    crow::response getPopulatedSlots();
+    void getPopulatedSlots(Tcp::socket& socket);
     void deviceRequest(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
     /**
      * @brief The getValue REST call.

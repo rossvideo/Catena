@@ -46,7 +46,9 @@ using catena::API;
 
 void API::route(std::string& method, std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz) {
     if (method == "GET") {          // GET methods.
-        if (request.starts_with("/v1/DeviceRequest")) {
+        if (request.starts_with("/v1/GetPopulatedSlots")) {
+            getPopulatedSlots(socket);
+        } else if (request.starts_with("/v1/DeviceRequest")) {
             deviceRequest(request, socket, authz);
         } else {
             // ERROR or unimplemented.
