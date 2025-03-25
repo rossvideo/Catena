@@ -111,4 +111,8 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @brief Unique identifier for the shutdown signal
          */
         unsigned int shutdownSignalId_;
+        /**
+         * @brief Vector to store subscribed OIDs
+         */
+        std::vector<std::string> subscribed_oids_;
 };

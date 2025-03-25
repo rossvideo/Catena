@@ -146,11 +146,9 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
      */
     try {
         catena::common::Path path(jptr);
-        if (path.back_is_index()) {
-            if (path.back_as_index() == catena::common::Path::kEnd) {
+        if (path.back_is_index() && path.back_as_index() == catena::common::Path::kEnd) {
                 // Index is "-"
                 ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
-            }
         } else {
             std::unique_ptr<IParam> param = getParam(path, ans, authz);
             // we expect this to be a parameter name
@@ -184,13 +182,13 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
     if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
-        return catena::exception_with_status("Not authorized to add language ", catena::StatusCode::PERMISSION_DENIED);
+        return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     } else {
         auto& name = language.language_pack().name();
         auto& id = language.id();
         // Making sure LanguagePack is properly formatted.
         if (name.empty() || id.empty()) {
-            return catena::exception_with_status("Invalid language pack ", catena::StatusCode::INVALID_ARGUMENT);
+            return catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
         }
         // added_packs_ here to maintain ownership in device scope.
         added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
@@ -216,7 +214,7 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
 
 std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz) const {
     if (path.empty()) {
-        status = catena::exception_with_status("Invalid json pointer ", catena::StatusCode::INVALID_ARGUMENT);
+        status = catena::exception_with_status("Invalid json pointer " + path.fqoid(), catena::StatusCode::INVALID_ARGUMENT);
         return nullptr;
     }
     if (path.front_is_string()) {
@@ -227,7 +225,7 @@ std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exc
          */
         IParam* param = getItem<common::ParamTag>(path.front_as_string());
         if (!param) {
-            status = catena::exception_with_status("Param " + path.fqoid() + " does not exist ", catena::StatusCode::NOT_FOUND);
+            status = catena::exception_with_status("Param " + path.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
             return nullptr;
         }
         if (!authz.readAuthz(*param)) {
@@ -279,7 +277,7 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
     try {
         catena::common::Path path(fqoid);
         if (path.empty()) {
-            status = catena::exception_with_status("Invalid json pointer ", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
         if (path.front_is_string()) {
@@ -292,11 +290,11 @@ std::unique_ptr<IParam> Device::getCommand(const std::string& fqoid, catena::exc
             if (path.empty()) {
                 return param->copy();
             } else {
-                status = catena::exception_with_status("sub-commands not implemented ", catena::StatusCode::UNIMPLEMENTED);
+                status = catena::exception_with_status("sub-commands not implemented", catena::StatusCode::UNIMPLEMENTED);
                 return nullptr;
             }
         } else {
-            status = catena::exception_with_status("Invalid json pointer ", catena::StatusCode::INVALID_ARGUMENT);
+            status = catena::exception_with_status("Invalid json pointer", catena::StatusCode::INVALID_ARGUMENT);
             return nullptr;
         }
     } catch (const catena::exception_with_status& why) {
@@ -450,6 +448,7 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 
     // Helper function to check if an item should be sent based on detail level and subscription
     auto shouldSendItem = [&](const std::string& oid) {
+        // For non-IParam types, just check subscription status
         return detail_level_ == catena::Device_DetailLevel_FULL || 
                (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(oid));
     };
@@ -508,14 +507,16 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         }
     }
 
-    // Send commands if authorized
-    for (const auto& [name, param] : commands_) {
-        if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
-            co_yield component;
-            component.Clear();
-            ::catena::Param* dstParam = component.mutable_command()->mutable_param();
-            param->toProto(*dstParam, authz);
-            component.mutable_command()->set_oid(name);
+    // Send commands if authorized and in COMMANDS mode
+    if (detail_level_ == catena::Device_DetailLevel_COMMANDS) {
+        for (const auto& [name, param] : commands_) {
+            if (this->shouldSendParam(*param, is_subscribed(name), authz)) {
+                co_yield component;
+                component.Clear();
+                ::catena::Param* dstParam = component.mutable_command()->mutable_param();
+                param->toProto(*dstParam, authz);
+                component.mutable_command()->set_oid(name);
+            }
         }
     }
     
@@ -524,11 +525,22 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
 }
 
 bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const {
-    bool auth_check = authz.readAuthz(param);
-    bool minimal_check = param.getDescriptor().minimalSet();
-    bool full_check = detail_level_ == DetailLevel(Device_DetailLevel_FULL);
-    bool subscription_check = detail_level_ == DetailLevel(Device_DetailLevel_SUBSCRIPTIONS) && is_subscribed;
-    
-    return auth_check && (minimal_check || full_check || subscription_check);
+    bool should_send = false;
+
+    //Detail level casted to ints to avoid warnings about comparing enums on deprecated ASIO versions
+    int casted_detail_level = static_cast<int>(detail_level_);
+
+    // First check authorization
+    if (authz.readAuthz(param)) {
+            
+            should_send = 
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_COMMANDS) && param.getDescriptor().isCommand());
+    }
+
+    return should_send;
 }
 
