@@ -26,7 +26,6 @@ set(SOURCES
 add_executable(${This} ${SOURCES})
 
 target_link_libraries(${This} PUBLIC
-    gtest_main
     ${GTEST_LIBRARIES}
     ${GTEST_MAIN_LIBRARIES}
     ${common_lib}
