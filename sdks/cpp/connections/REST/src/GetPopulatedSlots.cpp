@@ -44,10 +44,11 @@
 
 using catena::API;
 
-crow::response API::getPopulatedSlots() {
+void API::getPopulatedSlots(Tcp::socket& socket) {
     // Getting slot from dm_.
     SlotList slotList;
     slotList.add_slots(dm_.slot());
-    // Finishing by converting to crow::response.
-    return finish(slotList);
+    // Creating SocketWriter and writing response.
+    SocketWriter writer(socket);
+    writer.write(slotList);
 }
