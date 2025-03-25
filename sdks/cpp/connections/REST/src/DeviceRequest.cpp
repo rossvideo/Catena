@@ -48,19 +48,21 @@ void API::deviceRequest(std::string& request, Tcp::socket& socket, catena::commo
     // Creating a SocketWriter.
     ChunkedWriter writer(socket);
     try {        
-        // Parsing request for fields.
-        std::string slotStr = getField(request, "slot");
-        uint32_t slot = slotStr.empty() ? 0 : std::stoi(slotStr);
-        std::string language = getField(request, "language");
-        std::string detailLevel = getField(request, "detail_level");
-        // TODO subscribed oids
+        // Parsing fields
+        std::unordered_map<std::string, std::string> fields = {
+            {"subscribed_oids", ""},
+            {"detail_level", ""},
+            {"language", ""},
+            {"slot", ""}
+        };
+        parseFields(request, fields);
 
         // controls whether shallow copy or deep copy is used
         bool shallowCopy = true;
         // Getting the component serializer.
         auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
         // Write the HTTP response headers to stream.
-        catena::exception_with_status status{"OK", catena::StatusCode::OK};
+        catena::exception_with_status status{"", catena::StatusCode::OK};
         writer.writeHeaders(status);
         // Getting each component ans writing to the stream.
         while (serializer.hasMore()) {

@@ -79,6 +79,7 @@ class API {
      */
     void run();
 
+    // idk why this is public I'll fix at some point.
     Device &dm_;
 
   private:
@@ -178,37 +179,61 @@ class API {
         bool hasHeaders_ = false;
     };
 
-
-    // TODO Remove getJWSToken.
-    std::string getJWSToken(const crow::request& req) const;
-    std::string getJWSToken(Tcp::socket& socket) const;
-
-    // Deprecated.
-    crow::response finish(google::protobuf::Message& msg) const;
     /**
-     * @brief Extracts a field from the request string extracted from the URL.
-     * @param request The request extracted from the URL (/v1/DeviceRequest).
-     * @param field The field to extract (slot, oid, etc).
+     * @brief Parses fields from the request URL.
+     * @param request The request URL to extract fields from.
+     * @param fields An unordered map of fields to populate. The keys are the
+     * field names, and their values will become whatever is between any key
+     * and the next key in the map. As such, the order of these keys must match
+     * their order in the URL.
      */
-    std::string getField(std::string& request, std::string field) const;
-
+    void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
     /**
      * @returns The slots that are populated by dm_.
      */
     void getPopulatedSlots(Tcp::socket& socket);
+    /**
+     * @brief The deviceRequest REST call.
+     * @param request The request URL to extract fields from.
+     * @param socket The socket to communicate with the client with.
+     * @param authz The authorizer object containing client's scopes.
+     * 
+     * @todo Maybe also pass in JSON body for subscribed oids. Kind of a pain
+     * to put them in the URL.
+     */
     void deviceRequest(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
     /**
      * @brief The getValue REST call.
-     * @param req A crow::request which can be converted into JSON.
-     * JSON object should contain keys "slot" and "oid".
-     * @returns A crow::response containing the value at the end of oid or an
-     * error message if something goes wrong.
+     * @param request The request URL to extract fields from.
+     * @param socket The socket to communicate with the client with.
+     * @param authz The authorizer object containing client's scopes.
      */
-    crow::response getValue(const crow::request& req, int slot, std::string& oid);
-
-    crow::response setValue(const crow::request& req);
-    crow::response multiSetValue(const crow::request& req);
-    crow::response multiSetValue(catena::MultiSetValuePayload& payload, const crow::request& req);
+    void getValue(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
+    /**
+     * @brief The setValue REST call.
+     * @param jsonPayload The JSON payload containing the oid and value to set.
+     * @param socket The socket to communicate with the client with.
+     * @param authz The authorizer object containing client's scopes.
+     * 
+     * Right now it is identical to multiSetValue save for one line. Having two
+     * functions will be more justified once MultiSetValuePayload is fixed.
+     */
+    void setValue(std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz);
+    /**
+     * @brief The multiSet REST call.
+     * @param jsonPayload The JSON payload containing the oids and values to set.
+     * @param socket The socket to communicate with the client with.
+     * @param authz The authorizer object containing client's scopes.
+     */
+    void multiSetValue(std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz);
+    /**
+     * @brief Helper function for setValue calls. Tries/sets value and writes
+     * to socket.
+     * @param payload The MultiSetValuePayload.
+     * @param writer The SockerWriter created above.
+     * @param authz The authorizer object containing client's scopes.
+     */
+    void multiSetValue(catena::MultiSetValuePayload& payload, SocketWriter& writer, catena::common::Authorizer* authz);
     /**
      * @brief Routes a request to the appropriate controller.
      * @param method The HTTP method extracted from the URL (GET, POST, PUT).
@@ -217,34 +242,10 @@ class API {
      * @param authz The authorizer object containing client's scopes.
      * @returns Nothing, errors are thrown or communicated through the socket.
      */
-    void route(std::string& method, std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
+    void route(std::string& method, std::string& request, std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz);
 
   private:
   bool is_port_in_use_() const;
-
-  /**
-   * @todo clean this up.
-   */
-  const std::map<catena::StatusCode, int> toCrowStatus_ {
-    {catena::StatusCode::OK,                  200},
-    {catena::StatusCode::CANCELLED,           410},
-    {catena::StatusCode::UNKNOWN,             404},
-    {catena::StatusCode::INVALID_ARGUMENT,    406},
-    {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-    {catena::StatusCode::NOT_FOUND,           410},
-    {catena::StatusCode::ALREADY_EXISTS,      409},
-    {catena::StatusCode::PERMISSION_DENIED,   401},
-    {catena::StatusCode::UNAUTHENTICATED,     407},
-    {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-    {catena::StatusCode::FAILED_PRECONDITION, 412},
-    {catena::StatusCode::ABORTED,             10},  // TODO
-    {catena::StatusCode::OUT_OF_RANGE,        416},
-    {catena::StatusCode::UNIMPLEMENTED,       501},
-    {catena::StatusCode::INTERNAL,            500},
-    {catena::StatusCode::UNAVAILABLE,         503},
-    {catena::StatusCode::DATA_LOSS,           15},  // TODO
-    {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
-  };
 };
 }  // namespace catena
 
