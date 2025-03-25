@@ -72,10 +72,9 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief Helper method to add a parameter to the responses
          * @param param The parameter to add
-         * @param authz The authorizer
-         * @param skip_prefix_check Whether to skip checking if the path matches the request prefix
+         * @param authz The authorization object
          */
-        void addParamToResponses(IParam* param, catena::common::Authorizer& authz, bool skip_prefix_check = false);
+        void addParamToResponses(IParam* param, catena::common::Authorizer& authz);
 
     private:
         /**

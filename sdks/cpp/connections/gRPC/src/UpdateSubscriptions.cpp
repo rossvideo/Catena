@@ -76,17 +76,34 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
 
     switch (status_) {
         case CallStatus::kCreate:
+            std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kCreate state" << std::endl;
+            std::cout << "Current subscriptions before kCreate: " << std::endl;
+            for (const auto& oid : subscriptionManager_.getAllSubscribedOids(dm_)) {
+                std::cout << "  - " << oid << std::endl;
+            }
+            std::cout << "Raw request data in kCreate:" << std::endl;
+            std::cout << "Request slot: " << req_.slot() << std::endl;
+            std::cout << "Request ByteSize: " << req_.ByteSizeLong() << std::endl;
             status_ = CallStatus::kProcess;
             service_->RequestUpdateSubscriptions(&context_, &req_, &writer_, 
                         service_->cq_, service_->cq_, this);
             break;
 
         case CallStatus::kProcess:
+            std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kProcess state" << std::endl;
+            std::cout << "Current subscriptions before processing: " << std::endl;
+            for (const auto& oid : subscriptionManager_.getAllSubscribedOids(dm_)) {
+                std::cout << "  - " << oid << std::endl;
+            }
+            new UpdateSubscriptions(service_, dm_, subscriptionManager_, ok);
             context_.AsyncNotifyWhenDone(this);
             
             try {
                 // Process the subscription updates
                 std::cout << "Processing subscription updates for slot: " << req_.slot() << std::endl;
+                std::cout << "Request details in kProcess:" << std::endl;
+                std::cout << "ByteSize: " << req_.ByteSizeLong() << std::endl;
+                std::cout << "Serialized size: " << req_.SerializeAsString().size() << std::endl;
                 std::cout << "Number of OIDs to add: " << req_.added_oids_size() << std::endl;
                 std::cout << "Number of OIDs to remove: " << req_.removed_oids_size() << std::endl;
                 
@@ -113,16 +130,18 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 responses_.clear();
                 current_response_ = 0;
                 
-                // Process removed OIDs first to ensure clean state
+                // Process removed OIDs
                 for (const auto& oid : req_.removed_oids()) {
                     std::cout << "Removing subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count before removal: " 
                               << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
-                    if (!subscriptionManager_.removeSubscription(oid)) {
-                        std::cout << "Failed to remove subscription for OID: " << oid << std::endl;
-                        throw catena::exception_with_status("Failed to remove subscription for OID: " + oid, 
-                                                          catena::StatusCode::INTERNAL);
+                    
+                    catena::exception_with_status rc{"", catena::StatusCode::OK};
+                    if (!subscriptionManager_.removeSubscription(oid, dm_, rc)) {
+                        std::cout << "Failed to remove subscription: " << rc.what() << std::endl;
+                        throw rc;
                     }
+                    
                     std::cout << "Successfully removed subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count after removal: " 
                               << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
@@ -133,14 +152,24 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count before addition: " 
                               << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
-                    if (!subscriptionManager_.addSubscription(oid, dm_)) {
-                        std::cout << "Failed to add subscription for OID: " << oid << std::endl;
-                        throw catena::exception_with_status("Failed to add subscription for OID: " + oid, 
-                                                          catena::StatusCode::INTERNAL);
+                    std::cout << "Current subscriptions before adding " << oid << ":" << std::endl;
+                    for (const auto& existing : subscriptionManager_.getAllSubscribedOids(dm_)) {
+                        std::cout << "  - " << existing << std::endl;
                     }
+                    
+                    catena::exception_with_status rc{"", catena::StatusCode::OK};
+                    if (!subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                        std::cout << "Failed to add subscription: " << rc.what() << std::endl;
+                        throw rc;
+                    }
+                    
                     std::cout << "Successfully added subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count after addition: " 
                               << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
+                    std::cout << "Current subscriptions after adding " << oid << ":" << std::endl;
+                    for (const auto& existing : subscriptionManager_.getAllSubscribedOids(dm_)) {
+                        std::cout << "  - " << existing << std::endl;
+                    }
                 }
                 
                 // Now that all subscriptions are processed, send current values for all subscribed parameters
@@ -209,7 +238,6 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
             std::cout << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
             service->deregisterItem(this);
-            new UpdateSubscriptions(service_, dm_, subscriptionManager_, ok);
             break;
 
         default:

@@ -63,16 +63,19 @@ public:
      * @brief Add an OID subscription
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
+     * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, catena::common::Device& dm);
+    bool addSubscription(const std::string& oid, catena::common::Device& dm, catena::exception_with_status& rc);
 
     /**
      * @brief Remove an OID subscription
      * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*")
+     * @param dm The device model to use
+     * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid);
+    bool removeSubscription(const std::string& oid, catena::common::Device& dm, catena::exception_with_status& rc);
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
@@ -101,6 +104,16 @@ public:
     static bool isWildcard(const std::string& oid);
 
 private:
+    /**
+     * @brief Mutex for subscription data access
+     */
+    mutable std::mutex mtx_;
+
+    /**
+     * @brief Lock for protecting subscription data access
+     */
+    mutable std::unique_lock<std::mutex> subscriptionLock_{mtx_, std::defer_lock};
+
     /**
      * @brief Visitor class for collecting subscribed OIDs
      */

@@ -99,20 +99,38 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
                 dm_.detail_level(req_.detail_level());
                 
-                // Reserve space for both service subscriptions and request subscriptions
-                subscribed_oids_.clear();
-                subscribed_oids_.reserve(service_->subscriptionManager_.getAllSubscribedOids(dm_).size() + 
-                                       req_.subscribed_oids().size());
-                
-                // Add service subscriptions
+                // Get service subscriptions from the manager
                 subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
                 
-                // Add request subscriptions if any
-                if (!req_.subscribed_oids().empty()) {
-                    subscribed_oids_.insert(subscribed_oids_.end(), 
-                                         req_.subscribed_oids().begin(), 
-                                         req_.subscribed_oids().end());
+                // Remove any previous RPC subscriptions that aren't in the new request
+                for (const auto& old_oid : rpc_subscriptions_) {
+                    if (std::find(req_.subscribed_oids().begin(), req_.subscribed_oids().end(), old_oid) == 
+                        req_.subscribed_oids().end()) {
+                        catena::exception_with_status rc{"", catena::StatusCode::OK};
+                        if (!service_->subscriptionManager_.removeSubscription(old_oid, dm_, rc)) {
+                            throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
+                        }
+                    }
                 }
+                
+                // Clear and update our RPC-specific subscriptions
+                rpc_subscriptions_.clear();
+                
+                // If this request has subscriptions, add them
+                if (!req_.subscribed_oids().empty()) {
+                    // Add new subscriptions to both the manager and our tracking list
+                    for (const auto& oid : req_.subscribed_oids()) {
+                        catena::exception_with_status rc{"", catena::StatusCode::OK};
+                        if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                        } else {
+                            rpc_subscriptions_.push_back(oid);
+                        }
+                    }
+                }
+                
+                // Get final list of subscriptions for this response
+                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
                 
                 //Handle authorization
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;

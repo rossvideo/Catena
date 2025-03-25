@@ -112,7 +112,13 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          */
         unsigned int shutdownSignalId_;
         /**
-         * @brief Vector to store subscribed OIDs
+         * @brief The vector of subscribed OIDs.
          */
         std::vector<std::string> subscribed_oids_;
+
+        /**
+         * @brief The vector of RPC-specific subscriptions to track what this RPC has added.
+         */
+        std::vector<std::string> rpc_subscriptions_;
+
 };

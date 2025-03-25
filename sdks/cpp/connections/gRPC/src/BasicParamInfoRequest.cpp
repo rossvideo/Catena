@@ -140,7 +140,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         responses_.clear();
                         
                         // Add the main parameter first 
-                        addParamToResponses(param.get(), *authz, true);
+                        responses_.emplace_back();
+                        param->toProto(responses_.back(), *authz);
                         
                         // If the parameter is an array, update the array length
                         if (param->isArrayType()) {
@@ -246,16 +247,11 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
 }
 
 // Helper method to add a parameter to the responses
-void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz, bool skip_prefix_check) {
-    if (skip_prefix_check || param->getOid() != req_.oid_prefix()) {
-        responses_.emplace_back();
-        auto& response = responses_.back();
-        response.mutable_info();
-        {
-            Device::LockGuard lg(dm_);
-            param->toProto(response, authz);
-        }
-    }
+void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz) {
+    responses_.emplace_back();
+    auto& response = responses_.back();
+    response.mutable_info();
+    param->toProto(response, authz);
 }
 
 // Visits a parameter and adds it to the response vector
