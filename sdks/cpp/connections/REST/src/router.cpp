@@ -44,20 +44,28 @@
 
 using catena::API;
 
-void API::route(std::string& method, std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz) {
+void API::route(std::string& method, std::string& request, std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz) {
     if (method == "GET") {          // GET methods.
-        if (request.starts_with("/v1/GetPopulatedSlots")) {
-            getPopulatedSlots(socket);
-        } else if (request.starts_with("/v1/DeviceRequest")) {
+        if (request.starts_with("/v1/DeviceRequest")) {
             deviceRequest(request, socket, authz);
+        } else if (request.starts_with("/v1/GetPopulatedSlots")) {
+            getPopulatedSlots(socket);
+        } else if (request.starts_with("/v1/GetValue")) {
+            getValue(request, socket, authz);
         } else {
-            // ERROR or unimplemented.
+            throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
     } else if (method == "POST") {  // POST methods.
-        // unimplemented
+        throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
     } else if (method == "PUT") {   // PUT methods.
-        // unimplemented
+        if (request.starts_with("/v1/SetValue")) {
+            setValue(jsonPayload, socket, authz);
+        } else if (request.starts_with("/v1/MultiSetValue")) {
+            multiSetValue(jsonPayload, socket, authz);
+        } else {
+            throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
+        }
     } else {
-        // ERROR or unimplemented.
+        throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
     }
 }

@@ -44,12 +44,24 @@
 
 using catena::API;
 
-crow::response API::setValue(const crow::request& req) {
-    // Creating MultiSetValuePayload and converting JSON to inner ValuePayload.
-    catena::MultiSetValuePayload payload;
-    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), payload.add_values());
-    if (!status.ok()) {
-        return crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to parse SetValuePayload");
+void API::setValue(std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz) {
+    // Creating SocketWriter.
+    SocketWriter writer(socket);
+    try {
+        // Creating MultiSetValuePayload and converting to JSON.
+        catena::MultiSetValuePayload payload;
+        absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonPayload), payload.add_values());
+        if (status.ok()) {
+            multiSetValue(payload, writer, authz);
+        } else {
+            catena::exception_with_status err("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
+            writer.write(err);
+        }
+    // ERROR: Write to stream and end call.
+    } catch (catena::exception_with_status& err) {
+        writer.write(err);
+    } catch (...) {
+        catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
+        writer.write(err);
     }
-    return multiSetValue(payload, req);
 }

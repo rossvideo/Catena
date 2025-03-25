@@ -78,83 +78,93 @@ void API::run() {
 
         // When a connection has been made, detatch to handle asynchronously.
         std::thread([this, socket = std::move(socket)]() mutable {
-            // Reading the request.
-            boost::asio::streambuf buffer;
-            boost::asio::read_until(socket, buffer, "\r\n\r\n");
-            std::istream request_stream(&buffer);
-            std::string header;
-            std::getline(request_stream, header);
-            // Extracting method and request
-            std::string method = header.substr(0, header.find(" "));
-            std::string request = header.substr(header.find("/"));
+            try {
+                // Reading the headers.
+                boost::asio::streambuf buffer;
+                boost::asio::read_until(socket, buffer, "\r\n\r\n");
+                std::istream header_stream(&buffer);
 
-            // Setting up authorizer if enabled.
-            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-            catena::common::Authorizer* authz = nullptr;
-            if (authorizationEnabled_) {
-                while(std::getline(request_stream, header) && header != "\r") {
-                    try {
-                        if (header.starts_with("Authorization: Bearer ")) {
-                            std::string jwsToken = header.substr(std::string("Authorization: Bearer ").length());
-                            jwsToken.erase(jwsToken.length() - 1); // rm newline
-                            sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken);
-                            authz = sharedAuthz.get();
-                            break;
-                        }
-                    } catch (catena::exception_with_status& err) {
-                        // TODO later
+                // Extracting method and request form the first line (URL)
+                std::string header;
+                std::getline(header_stream, header);
+                std::string method = header.substr(0, header.find(" "));
+                std::string request = header.substr(header.find("/"));
+
+                // Setting up authorizer and getting contentLength (if present)
+                std::size_t contentLength = 0;
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz = nullptr;
+                if (!authorizationEnabled_) {
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
+                while(std::getline(header_stream, header) && header != "\r") {
+                    // Getting bearer token if authorization is enabled.
+                    if (authorizationEnabled_ && header.starts_with("Authorization: Bearer ")) {
+                        std::string jwsToken = header.substr(std::string("Authorization: Bearer ").length());
+                        jwsToken.erase(jwsToken.length() - 1); // rm newline
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken);
+                        authz = sharedAuthz.get();
+                    }
+                    // Getting body content-Length
+                    if (header.starts_with("Content-Length: ")) {
+                        contentLength = stoi(header.substr(std::string("Content-Length: ").length()));
                     }
                 }
-            } else {
-                authz = &catena::common::Authorizer::kAuthzDisabled;
-            }
+                /*
+                 * If there is a body, we need to handle leftover data from
+                 * above and append the rest.
+                 */
+                std::string jsonPayload = "";
+                if (contentLength > 0) {
+                    jsonPayload = std::string((std::istreambuf_iterator<char>(header_stream)), std::istreambuf_iterator<char>());
+                    if (jsonPayload.size() < contentLength) {
+                        std::size_t remainingLength = contentLength - jsonPayload.size();
+                        jsonPayload.resize(contentLength);
+                        boost::asio::read(socket, boost::asio::buffer(&jsonPayload[contentLength - remainingLength], remainingLength));
+                    }
+                }
 
-            // Routing the request based on the name.
-            route(method, request, socket, authz);
+                // Routing the request based on the name.
+                route(method, request, jsonPayload, socket, authz);
+
+            // Catching errors.
+            } catch (catena::exception_with_status& err) {
+                SocketWriter writer(socket);
+                writer.write(err);
+            } catch (...) {
+                SocketWriter writer(socket);
+                catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
+                writer.write(err);
+            }
         }).detach();
     }
 }
 
-std::string API::getJWSToken(const crow::request& req) const {
-    std::string auth_header = req.get_header_value("Authorization");
-    if (!auth_header.empty() ? !auth_header.starts_with("Bearer "): true) {
-        throw catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
-    }
-    // Getting token (after "bearer") and returning as an std::string.
-    return auth_header.substr(std::string("Bearer ").length());
-}
-
-std::string API::getField(std::string& request, std::string field) const {
-    std::string foundField = "";
-    field = "/" + field + "/";
-    std::size_t pos = request.find(field) + field.length();
-    // Extracts the value between field and the next "/"
-    if (pos != std::string::npos) {
-        foundField = request.substr(pos);
-        foundField = foundField.substr(0, foundField.find("/"));
-    }
-    return foundField;
-}
-
-crow::response API::finish(google::protobuf::Message& msg) const {
-    crow::response res;
-    
-    // Converting the value to JSON.
-    std::string json_output;
-    google::protobuf::util::JsonPrintOptions options;
-    options.add_whitespace = true;
-    auto status = MessageToJsonString(msg, &json_output, options);
-
-    // Check if the conversion was successful.
-    if (!status.ok()) {
-        res = crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to convert protobuf to JSON");
+void API::parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const {
+    if (fields.size() == 0) {
+        throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
     } else {
-        // Create and return a Crow response with JSON content type.
-        res.code = toCrowStatus_.at(catena::StatusCode::OK);
-        res.set_header("Content-Type", "application/json");
-        res.write(json_output);
+        std::string fieldName = "";
+        for (auto& [nextField, value] : fields) {
+            // If not the first iteration, find next field and get value of the current one.
+            if (fieldName != "") {
+                std::size_t end = request.find("/" + nextField + "/");
+                if (end == std::string::npos) {
+                    throw catena::exception_with_status("Could not find field " + nextField, catena::StatusCode::INVALID_ARGUMENT);
+                }
+                fields.at(fieldName) = request.substr(0, end);
+            }
+            // Update for the next iteration.
+            fieldName = nextField;
+            std::size_t start = request.find("/" + fieldName + "/") + fieldName.size() + 2;
+            if (start == std::string::npos) {
+                throw catena::exception_with_status("Could not find field " + fieldName, catena::StatusCode::INVALID_ARGUMENT);
+            }
+            request = request.substr(start);
+        }
+        // We assume the last field is until the end of the request.
+        fields.at(fieldName) = request.substr(0, request.find(" HTTP/1.1"));
     }
-    return res;
 }
 
 bool API::is_port_in_use_() const {

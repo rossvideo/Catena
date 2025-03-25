@@ -44,46 +44,42 @@
 
 using catena::API;
 
-crow::response API::multiSetValue(catena::MultiSetValuePayload& payload, const crow::request& req) {
-    try {
-        // Setting up authorizer if enabled.
-        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-        catena::common::Authorizer* authz;
-        std::vector<std::string> clientScopes;
-        if (authorizationEnabled_) {
-            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken(req));
-            authz = sharedAuthz.get();
-        } else {
-            authz = &catena::common::Authorizer::kAuthzDisabled;
-        }
-        // Locking device and setting value(s).
-        catena::exception_with_status rc{"", catena::StatusCode::OK};
-        Device::LockGuard lg(dm_);
-        // Trying and commiting the multiSetValue.
-        if (dm_.tryMultiSetValue(payload, rc, *authz)) {
-            dm_.commitMultiSetValue(payload, *authz);
-        }
-        // Finishing by converting to crow::response.
-        if (rc.status == catena::StatusCode::OK) {
-            auto ans = catena::Empty{};
-            return finish(ans);
-        } else {
-            return crow::response(toCrowStatus_.at(rc.status), rc.what());
-        }
-    // Likely authentication error, end process.
-    } catch (catena::exception_with_status& err) {
-        return crow::response(toCrowStatus_.at(err.status), err.what());
-    } catch (...) { // Error, end process.
-        return crow::response(toCrowStatus_.at(catena::StatusCode::UNKNOWN), "Unknown Error");
+void API::multiSetValue(catena::MultiSetValuePayload& payload, SocketWriter& writer, catena::common::Authorizer* authz) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // Trying and commiting the multiSetValue.
+    {
+    Device::LockGuard lg(dm_);
+    if (dm_.tryMultiSetValue(payload, rc, *authz)) {
+        rc = dm_.commitMultiSetValue(payload, *authz);
+    }
+    }
+    // Writing response.
+    if (rc.status == catena::StatusCode::OK)   {
+        catena::Empty ans = catena::Empty();
+        writer.write(ans);
+    } else {
+        writer.write(rc);
     }
 }
 
-crow::response API::multiSetValue(const crow::request& req) {
-    // Converting JSON to MultiSetValuePayload.
-    catena::MultiSetValuePayload payload;
-    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(req.body), &payload);
-    if (!status.ok()) {
-        return crow::response(toCrowStatus_.at(catena::StatusCode::INVALID_ARGUMENT), "Failed to parse MultiSetValuePayload");
+void API::multiSetValue(std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz) {
+    // Creating SocketWriter.
+    SocketWriter writer(socket);
+    try {
+        // Creating MultiSetValuePayload and converting to JSON.
+        catena::MultiSetValuePayload payload;
+        absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonPayload), &payload);
+        if (status.ok()) {
+            multiSetValue(payload, writer, authz);
+        } else {
+            catena::exception_with_status err("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
+            writer.write(err);
+        }
+    // ERROR: Write to stream and end call.
+    } catch (catena::exception_with_status& err) {
+        writer.write(err);
+    } catch (...) {
+        catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
+        writer.write(err);
     }
-    return multiSetValue(payload, req);
 }

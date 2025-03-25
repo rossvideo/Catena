@@ -44,29 +44,34 @@
 
 using catena::API;
 
-crow::response API::getValue(const crow::request& req, int slot, std::string& oid) {
+void API::getValue(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz) {
+    // Creating a SocketWriter.
+    SocketWriter writer(socket);
     try {
+        // Parsing fields
+        std::unordered_map<std::string, std::string> fields = {
+            {"oid", ""},
+            {"slot", ""}
+        };
+        parseFields(request, fields);
+        
         // Getting value at oid from device.
         catena::Value ans;
         catena::exception_with_status rc{"", catena::StatusCode::OK};
-        if(authorizationEnabled_) {
-            catena::common::Authorizer authz{getJWSToken(req)};
-            Device::LockGuard lg(dm_);
-            rc = dm_.getValue(oid, ans, authz);
-        } else {
-            Device::LockGuard lg(dm_);
-            rc = dm_.getValue(oid, ans, catena::common::Authorizer::kAuthzDisabled);
-        }
+        rc = dm_.getValue(fields.at("oid"), ans, *authz);
+
         // Finishing by converting to crow::response.
         if (rc.status == catena::StatusCode::OK) {
-            return finish(ans);
+            writer.write(ans);
         } else {
-            return crow::response(toCrowStatus_.at(rc.status), rc.what());
+            writer.write(rc);
         }
-    // Likely authentication error, end process.
+
+    // ERROR: Write to socket and end call.
     } catch (catena::exception_with_status& err) {
-        return crow::response(toCrowStatus_.at(err.status), err.what());
-    } catch (...) { // Error, end process.
-        return crow::response(toCrowStatus_.at(catena::StatusCode::UNKNOWN), "Unknown Error");
+        writer.write(err);
+    } catch (...) {
+        catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
+        writer.write(err);
     }
 }
