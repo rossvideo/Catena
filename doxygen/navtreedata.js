@@ -130,10 +130,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AddLanguage_8h.html",
-"classCatenaServiceImpl_1_1SetValue.html",
-"classcatena_1_1common_1_1IPolyglotText.html",
-"classcatena_1_1common_1_1Path.html#a8d8e5e7559aca13d6b49a1561c668c43",
-"functions_v.html"
+"classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794",
+"classcatena_1_1common_1_1IParam.html#af88f70976495a6fc8cdad0369ce29aad",
+"classcatena_1_1common_1_1Path.html#a896909eccb70304ae6ee5bb7f367c871",
+"functions_u.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

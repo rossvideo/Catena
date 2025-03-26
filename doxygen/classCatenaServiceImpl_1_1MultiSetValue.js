@@ -5,6 +5,7 @@ var classCatenaServiceImpl_1_1MultiSetValue =
     [ "create", "classCatenaServiceImpl_1_1MultiSetValue.html#a6025d380ed3a924ea98821455bc0144f", null ],
     [ "proceed", "classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794", null ],
     [ "request", "classCatenaServiceImpl_1_1MultiSetValue.html#a58566e199663d84d177068fe39bffc2e", null ],
+    [ "toMulti", "classCatenaServiceImpl_1_1MultiSetValue.html#a934471361153200d99a353e3af96ea31", null ],
     [ "dm_", "classCatenaServiceImpl_1_1MultiSetValue.html#adb1c590a5063c72c2a319455ad867e12", null ],
     [ "errorStatus_", "classCatenaServiceImpl_1_1MultiSetValue.html#a5cebdf6ab589c11ec20b067a50a74abf", null ],
     [ "objectId_", "classCatenaServiceImpl_1_1MultiSetValue.html#a9fd9481b8a039ac4ee5306b0730608b5", null ],

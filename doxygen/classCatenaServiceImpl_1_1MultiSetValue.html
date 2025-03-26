@@ -140,6 +140,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>request</b> (
 <tr class="memitem:a6025d380ed3a924ea98821455bc0144f" id="r_a6025d380ed3a924ea98821455bc0144f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a6025d380ed3a924ea98821455bc0144f">create</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
 <tr class="memdesc:a6025d380ed3a924ea98821455bc0144f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> object to serve other clients while processing.  <br /></td></tr>
 <tr class="separator:a6025d380ed3a924ea98821455bc0144f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a934471361153200d99a353e3af96ea31" id="r_a934471361153200d99a353e3af96ea31"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a934471361153200d99a353e3af96ea31">toMulti</a> ()</td></tr>
+<tr class="memdesc:a934471361153200d99a353e3af96ea31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts req_ to a MultiSetValuePayload reqs_.  <br /></td></tr>
+<tr class="separator:a934471361153200d99a353e3af96ea31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
 <tr class="memitem:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData" id="r_a665177806c242a75b96e89722d509cfc"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1CallData.html#a665177806c242a75b96e89722d509cfc">getJWSToken</a> () const</td></tr>
 <tr class="memdesc:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the server context's client metadata.  <br /></td></tr>
@@ -390,6 +393,34 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 </dl>
 
 <p>Implements <a class="el" href="classCatenaServiceImpl_1_1CallData.html#aba26342ca6c03540492ec0b1d1d8e848">CatenaServiceImpl::CallData</a>.</p>
+
+</div>
+</div>
+<a id="a934471361153200d99a353e3af96ea31" name="a934471361153200d99a353e3af96ea31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a934471361153200d99a353e3af96ea31">&#9670;&#160;</a></span>toMulti()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void CatenaServiceImpl::MultiSetValue::toMulti </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Converts req_ to a MultiSetValuePayload reqs_. </p>
+<dl class="section note"><dt>Note</dt><dd>Does nothing in <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a>. </dd></dl>
 
 </div>
 </div>
