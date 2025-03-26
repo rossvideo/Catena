@@ -42,6 +42,7 @@
 
 // common
 #include <Device.h>
+#include <IParam.h>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -56,6 +57,7 @@ namespace catena {
 class API {
 
   using Device = catena::common::Device;
+  using IParam = catena::common::IParam;
   using Tcp = boost::asio::ip::tcp;
 
   public:
@@ -234,6 +236,8 @@ class API {
      * @param authz The authorizer object containing client's scopes.
      */
     void multiSetValue(catena::MultiSetValuePayload& payload, SocketWriter& writer, catena::common::Authorizer* authz);
+    void connect(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
+    void updateResponse(bool& hasUpdate, catena::PushUpdates& res, catena::common::Authorizer* authz, const std::string& oid, const int32_t idx, const IParam* p);
     /**
      * @brief Routes a request to the appropriate controller.
      * @param method The HTTP method extracted from the URL (GET, POST, PUT).

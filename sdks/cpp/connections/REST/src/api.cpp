@@ -58,8 +58,8 @@ void expandEnvVariables(std::string &str) {
 API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm},
     acceptor_{io_context_, Tcp::endpoint(Tcp::v4(), port)} {
     // Flag does not really work at the moment :/
-    authorizationEnabled_ = absl::GetFlag(FLAGS_authz);
-    // authorizationEnabled_ = false;
+    // authorizationEnabled_ = absl::GetFlag(FLAGS_authz);
+    authorizationEnabled_ = false;
     if (authorizationEnabled_) {
         std::cerr<<"Authorization enabled"<<std::endl;
     }

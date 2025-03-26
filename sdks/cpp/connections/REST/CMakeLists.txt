@@ -39,6 +39,7 @@ set(sources
     "src/GetValue.cpp"
     "src/MultiSetValue.cpp"
     "src/SetValue.cpp"
+    "src/Connect.cpp"
     "src/router.cpp"
     "src/SocketWriter.cpp"
 )

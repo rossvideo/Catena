@@ -52,6 +52,8 @@ void API::route(std::string& method, std::string& request, std::string& jsonPayl
             getPopulatedSlots(socket);
         } else if (request.starts_with("/v1/GetValue")) {
             getValue(request, socket, authz);
+        } else if (request.starts_with("/v1/Connect")) {
+            connect(request, socket, authz);
         } else {
             throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
