@@ -283,8 +283,8 @@ message GetValuePayload {
 }
 
 message MultiSetValuePayload {
-  uint32 slot = 1;                      // Uniquely identifies the device at node scope.
-  repeated SetValue values = 2;  // The param oids and values to apply
+  uint32 slot = 1;              // Uniquely identifies the device at node scope.
+  repeated SetValue values = 2; // The param oids and values to apply
 }
 
 message UpdateSubscriptionsPayload {
