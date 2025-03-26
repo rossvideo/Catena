@@ -50,7 +50,7 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
         ans = catena::exception_with_status("Multi-set is disabled for the device in slot " + slot_, catena::StatusCode::PERMISSION_DENIED);
     } else {
         // Looping through and validating set value requests.
-        for (const catena::SetValue& setValuePayload : src.values()) {
+        for (const catena::SetValuePayload& setValuePayload : src.values()) {
             try {
                 // Getting param, or parent param if the final segment is an index.
                 Path path(setValuePayload.oid());
@@ -72,7 +72,7 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
             }
         }
         // Resetting trackers regardless of whether something went wrong or not.
-        for (const catena::SetValue& setValuePayload : src.values()) {
+        for (const catena::SetValuePayload& setValuePayload : src.values()) {
             // Creating another exception_with_status as to not overwrite ans.
             catena::exception_with_status status{"", catena::StatusCode::OK};
             // Resetting param's trackers, or parent param's if back is index.
@@ -89,7 +89,7 @@ bool Device::tryMultiSetValue (catena::MultiSetValuePayload src, catena::excepti
 catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Looping through and commiting all setValue operations.
-    for (const catena::SetValue& setValuePayload : src.values()) {
+    for (const catena::SetValuePayload& setValuePayload : src.values()) {
         try {
             // Figuring out parent param for appends and resetValidate().
             Path path(setValuePayload.oid());
@@ -128,7 +128,7 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
 catena::exception_with_status Device::setValue (const std::string& jptr, catena::Value& src, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     catena::MultiSetValuePayload setValues;
-    catena::SetValue* setValuePayload = setValues.add_values();
+    catena::SetValuePayload* setValuePayload = setValues.add_values();
     setValuePayload->set_oid(jptr);
     setValuePayload->mutable_value()->CopyFrom(src);
     if (tryMultiSetValue(setValues, ans, authz)) {

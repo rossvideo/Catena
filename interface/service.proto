@@ -43,7 +43,7 @@ service CatenaService {
 
   rpc BasicParamInfoRequest(BasicParamInfoRequestPayload) returns (stream BasicParamInfoResponse);
 
-  rpc SetValue(SetValuePayload) returns (catena.Empty);
+  rpc SetValue(SingleSetValuePayload) returns (catena.Empty);
 
   rpc GetValue(GetValuePayload) returns (Value);
 

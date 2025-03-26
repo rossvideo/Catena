@@ -80,7 +80,7 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
         /**
          * @brief The SetValuePayload recieved from request().
          */
-        catena::SetValuePayload req_;
+        catena::SingleSetValuePayload req_;
         /**
          * @brief The total # of SetValue objects.
          */
