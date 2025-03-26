@@ -73,6 +73,15 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
          */ 
         void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
         /**
+         * @brief Converts req_ to a MultiSetValuePayload reqs_.
+         */
+        void toMulti() override;
+
+        /**
+         * @brief The SetValuePayload recieved from request().
+         */
+        catena::SetValuePayload req_;
+        /**
          * @brief The total # of SetValue objects.
          */
         static int objectCounter_;

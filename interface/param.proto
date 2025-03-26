@@ -265,11 +265,15 @@ message BasicParamInfoRequestPayload {
   bool recursive = 3;
 }
 
-message SetValuePayload {
-  uint32 slot = 1;          // Uniquely identifies the device at node scope.
+message SetValue {
   string oid = 2;           // Uniquely identifies the param at device scope
   uint32 element_index = 3; // When setting single elements of array parameters, the element in the array to update
   Value value = 4;          // The value to apply
+}
+
+message SetValuePayload {
+  uint32 slot = 1;          // Uniquely identifies the device at node scope.
+  SetValue value = 2;       // The param oid and value to apply
 }
 
 message GetValuePayload {
@@ -278,7 +282,10 @@ message GetValuePayload {
   uint32 element_index = 3; // When requesting single elements of array parameters, the element in the array to get
 }
 
-message MultiSetValuePayload { repeated SetValuePayload values = 1; }
+message MultiSetValuePayload {
+  uint32 slot = 2;                      // Uniquely identifies the device at node scope.
+  repeated SetValue values = 1;  // The param oids and values to apply
+}
 
 message UpdateSubscriptionsPayload {
   uint32 slot = 1;                  // Uniquely identifies the device at node scope.

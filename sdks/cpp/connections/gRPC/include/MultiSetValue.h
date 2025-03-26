@@ -68,6 +68,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
     protected:
+        // Helper functions to allow child setValue to use proceed()
         /**
          * @brief Constructor class for child classes.
          *
@@ -91,6 +92,13 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @param ok - Flag to check if the command was successfully executed.
          */ 
         virtual void create(CatenaServiceImpl *service, Device &dm, bool ok);
+        /**
+         * @brief Converts req_ to a MultiSetValuePayload reqs_.
+         * 
+         * @note Does nothing in MultiSetValue.
+         */
+        virtual void toMulti() { return; }
+
         /**
          * @brief Name of childclass to specify gRPC in console notifications.
          */
