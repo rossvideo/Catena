@@ -68,32 +68,39 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
     protected:
-        // Helper functions to allow child setValue to use proceed()
         /**
          * @brief Constructor class for child classes.
+         *   
+         * Helper function to allow reuse of proceed().
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         * @param objectId - objectCounter_ + 1
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dm Address of the device to get the value from.
+         * @param ok Flag to check if the command was successfully executed.
+         * @param objectId objectCounter_ + 1
          */ 
         MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId);
         /**
          * @brief Requests Multi Set Value from the system and sets the
          * request to the MultiSetValuePayload.
+         *   
+         * Helper function to allow reuse of proceed().
          */
         virtual void request();
         /**
          * @brief Creates a new MultiSetValue object to serve other clients
          * while processing.
+         *   
+         * Helper function to allow reuse of proceed().
          *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
+         * @param service Pointer to the parent CatenaServiceImpl.
+         * @param dm Address of the device to get the value from.
+         * @param ok Flag to check if the command was successfully executed.
          */ 
         virtual void create(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
          * @brief Converts req_ to a MultiSetValuePayload reqs_.
+         *   
+         * Helper function to allow reuse of proceed().
          * 
          * @note Does nothing in MultiSetValue.
          */
