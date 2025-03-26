@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(This common_unit_tests)
+set(This Common_UnitTests)
 
 find_package(GTest REQUIRED)
 include_directories(../src)
@@ -22,7 +22,9 @@ endif(gRPC_enabled)
 set(SOURCES 
     utils_test.cpp
 )
-
+set(TESTS
+    utils_tests
+)
 add_executable(${This} ${SOURCES})
 
 target_link_libraries(${This} PUBLIC
