@@ -40,7 +40,7 @@ class API::Connect : public CallData, public catena::common::Connect {
         Connect(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
         void proceed() override;
     private:
-        bool isCancelled() override { return !this->socket_.is_open(); }
+        inline bool isCancelled() override { return !this->socket_.is_open(); }
 
         /**
          * @brief The total # of Connect objects.

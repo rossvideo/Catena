@@ -67,7 +67,7 @@ class Connect {
     /**
      * @brief Returns true if the call has been canceled.
      */
-    virtual bool isCancelled() = 0;
+    virtual inline bool isCancelled() = 0;
 
     /**
      * @brief Updates the response message with parameter values and handles 
