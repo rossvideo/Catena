@@ -32,6 +32,11 @@ project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+# enable testing
+enable_testing()
+
+
+
 # set up the CATENA_CPP_VERSION and CATENA_CPP_TIMESTAMP variables for use
 # in the rest of the build.
 # The format of the version string is "cpp-vX.Y.Z-0-<timestamp>"

@@ -94,6 +94,8 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
             create(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
+                // Convert to MultiSetValuePayload if not already.
+                toMulti();
                 /**
                  * Creating authorization object depending on client scopes.
                  * Shared ptr to maintain lifetime of object. Raw ptr ensures
