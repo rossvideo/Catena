@@ -41,8 +41,11 @@
 #include <crow.h>
 
 // common
-#include <Device.h>
+#include <Status.h>
+#include <vdk/signals.h>
 #include <IParam.h>
+#include <Device.h>
+#include <Authorization.h>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -236,7 +239,17 @@ class API {
      * @param authz The authorizer object containing client's scopes.
      */
     void multiSetValue(catena::MultiSetValuePayload& payload, SocketWriter& writer, catena::common::Authorizer* authz);
-    void connect(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
+
+    class CallData {
+      public:
+        virtual void proceed() = 0;
+        virtual ~CallData() {};
+      protected:
+        void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
+    };
+
+    class Connect;
+
     void updateResponse(bool& hasUpdate, catena::PushUpdates& res, catena::common::Authorizer* authz, const std::string& oid, const int32_t idx, const IParam* p);
     /**
      * @brief Routes a request to the appropriate controller.
