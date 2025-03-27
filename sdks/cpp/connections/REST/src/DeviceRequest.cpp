@@ -61,9 +61,6 @@ void API::deviceRequest(std::string& request, Tcp::socket& socket, catena::commo
         bool shallowCopy = true;
         // Getting the component serializer.
         auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
-        // Write the HTTP response headers to stream.
-        catena::exception_with_status status{"", catena::StatusCode::OK};
-        writer.writeHeaders(status);
         // Getting each component ans writing to the stream.
         while (serializer.hasMore()) {
             catena::DeviceComponent component{};

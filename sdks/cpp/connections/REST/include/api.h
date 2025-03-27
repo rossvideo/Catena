@@ -47,10 +47,16 @@
 #include <Device.h>
 #include <Authorization.h>
 
+// REST
+#include <SockerWriter.h>
+
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 
 #include <string>
+
+using catena::REST::SocketWriter;
+using catena::REST::ChunkedWriter;
 
 namespace catena {
 
@@ -97,94 +103,6 @@ class API {
     bool authorizationEnabled_;
 
     /**
-     * @brief Helper class used to write to a socket using boost.
-     */
-    class SocketWriter {
-      public:
-        /**
-         * @brief Constructs a SocketWriter.
-         * @param socket The socket to write to.
-         */
-        SocketWriter(Tcp::socket& socket) : socket_{socket} {}
-        /**
-         * @brief Writes a protobuf message to socket in JSON format.
-         * @param msg The protobuf message to write as JSON.
-         */
-        virtual void write(google::protobuf::Message& msg);
-        /**
-         * @brief Writes an error message to the socket.
-         * @param err The catena::exception_with_status.
-         */
-        virtual void write(catena::exception_with_status& err);
-        virtual ~SocketWriter() = default;
-      protected:
-        /**
-         * @brief The socket to write to.
-         */
-        Tcp::socket& socket_;
-        /**
-         * @brief Maps catena::StatusCode to HTTP status codes.
-         */
-        const std::map<catena::StatusCode, int> codeMap_ {
-          {catena::StatusCode::OK,                  200},
-          {catena::StatusCode::CANCELLED,           410},
-          {catena::StatusCode::UNKNOWN,             404},
-          {catena::StatusCode::INVALID_ARGUMENT,    406},
-          {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-          {catena::StatusCode::NOT_FOUND,           410},
-          {catena::StatusCode::ALREADY_EXISTS,      409},
-          {catena::StatusCode::PERMISSION_DENIED,   401},
-          {catena::StatusCode::UNAUTHENTICATED,     407},
-          {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-          {catena::StatusCode::FAILED_PRECONDITION, 412},
-          {catena::StatusCode::ABORTED,             10},  // TODO
-          {catena::StatusCode::OUT_OF_RANGE,        416},
-          {catena::StatusCode::UNIMPLEMENTED,       501},
-          {catena::StatusCode::INTERNAL,            500},
-          {catena::StatusCode::UNAVAILABLE,         503},
-          {catena::StatusCode::DATA_LOSS,           15},  // TODO
-          {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
-        };
-    };
-
-    /**
-     * @brief Helper class used to write to a socket using boost.
-     */
-    class ChunkedWriter : public SocketWriter {
-      public:
-      // Using parent constructor
-        using SocketWriter::SocketWriter;
-        /**
-         * @brief Writes headers to the socket in chuncked encoding format.
-         * @param status The catena::exception_with_status of the operation.
-         */
-        void writeHeaders(catena::exception_with_status& status);
-        /**
-         * @brief Writes a protobuf message to socket in JSON format.
-         * @param msg The protobuf message to write as JSON.
-         */
-        void write(google::protobuf::Message& msg) override;
-        /**
-         * @brief Writes an error message to the socket.
-         * @param err The catena::exception_with_status.
-         */
-        void write(catena::exception_with_status& err) override;
-        /**
-         * @brief Finishes the chunked writing process.
-         */
-        void finish();
-        /**
-         * @brief Getter for hasHeaders_.
-         */
-        bool hasHeaders() const { return hasHeaders_; }
-      private:
-        /**
-         * @brief Indicates whether the writer has written headers or not. 
-         */
-        bool hasHeaders_ = false;
-    };
-
-    /**
      * @brief Parses fields from the request URL.
      * @param request The request URL to extract fields from.
      * @param fields An unordered map of fields to populate. The keys are the
@@ -215,42 +133,32 @@ class API {
      */
     void getValue(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
     /**
-     * @brief The setValue REST call.
-     * @param jsonPayload The JSON payload containing the oid and value to set.
-     * @param socket The socket to communicate with the client with.
-     * @param authz The authorizer object containing client's scopes.
-     * 
-     * Right now it is identical to multiSetValue save for one line. Having two
-     * functions will be more justified once MultiSetValuePayload is fixed.
+     * @brief Returns the current time as a string including microseconds.
      */
-    void setValue(std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz);
+    static std::string timeNow();
+
     /**
-     * @brief The multiSet REST call.
-     * @param jsonPayload The JSON payload containing the oids and values to set.
-     * @param socket The socket to communicate with the client with.
-     * @param authz The authorizer object containing client's scopes.
+     * @brief CallData states.
      */
-    void multiSetValue(std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz);
-    /**
-     * @brief Helper function for setValue calls. Tries/sets value and writes
-     * to socket.
-     * @param payload The MultiSetValuePayload.
-     * @param writer The SockerWriter created above.
-     * @param authz The authorizer object containing client's scopes.
-     */
-    void multiSetValue(catena::MultiSetValuePayload& payload, SocketWriter& writer, catena::common::Authorizer* authz);
+    enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
     class CallData {
       public:
         virtual void proceed() = 0;
         virtual ~CallData() {};
       protected:
+        inline void writeConsole(std::string typeName, int objectId, CallStatus status, bool ok) const {
+          std::cout << typeName << "::proceed[" << objectId << "]: "
+                    << timeNow() << " status: "<< static_cast<int>(status)
+                    <<", ok: "<< std::boolalpha << ok << std::endl;
+        }
         void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
     };
 
     class Connect;
+    class MultiSetValue;
+    class SetValue;
 
-    void updateResponse(bool& hasUpdate, catena::PushUpdates& res, catena::common::Authorizer* authz, const std::string& oid, const int32_t idx, const IParam* p);
     /**
      * @brief Routes a request to the appropriate controller.
      * @param method The HTTP method extracted from the URL (GET, POST, PUT).

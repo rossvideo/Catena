@@ -28,24 +28,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-#include <utils.h>
-
-#include <api.h>
-
-#include "absl/flags/flag.h"
-
-#include <iostream>
-#include <regex>
-
-using catena::API;
+#include <SockerWriter.h>
+using catena::REST::SocketWriter;
+using catena::REST::ChunkedWriter;
 
 // SockerWriter
-void API::SocketWriter::write(google::protobuf::Message& msg) {
+void SocketWriter::write(google::protobuf::Message& msg) {
     // Converting the value to JSON.
     std::string jsonOutput;
     google::protobuf::util::JsonPrintOptions options;
@@ -66,7 +54,7 @@ void API::SocketWriter::write(google::protobuf::Message& msg) {
     }
 }
 
-void API::SocketWriter::write(catena::exception_with_status& err) {
+void SocketWriter::write(catena::exception_with_status& err) {
     std::string errMsg = err.what();
     std::string headers = "HTTP/1.1 " + std::to_string(codeMap_.at(err.status)) + " " + err.what() + "\r\n"
                           "Content-Type: text/plain\r\n"
@@ -76,7 +64,7 @@ void API::SocketWriter::write(catena::exception_with_status& err) {
 }
 
 // Chunked Writer
-void API::ChunkedWriter::writeHeaders(catena::exception_with_status& status) {
+void ChunkedWriter::writeHeaders(catena::exception_with_status& status) {
     // Setting type depending on if we are writing an error or not.
     std::string type;
     if (status.status == catena::StatusCode::OK) {
@@ -93,7 +81,7 @@ void API::ChunkedWriter::writeHeaders(catena::exception_with_status& status) {
     hasHeaders_ = true;
 }
 
-void API::ChunkedWriter::write(google::protobuf::Message& msg) {   
+void ChunkedWriter::write(google::protobuf::Message& msg) {   
     // Converting the value to JSON.
     std::string json_output;
     google::protobuf::util::JsonPrintOptions options;
@@ -102,6 +90,11 @@ void API::ChunkedWriter::write(google::protobuf::Message& msg) {
 
     // Writing JSON obj if conversion was successful.
     if (status.ok()) {
+        // Writing headers if we haven't already.
+        if (!hasHeaders_) {
+            catena::exception_with_status ok("", catena::StatusCode::OK);
+            writeHeaders(ok);
+        }
         std::string chunk_size = std::format("{:x}", json_output.size());
         boost::asio::write(socket_, boost::asio::buffer(chunk_size + "\r\n" + json_output + "\r\n"));
     // Error, thrown so the call knows the end the process.
@@ -110,16 +103,14 @@ void API::ChunkedWriter::write(google::protobuf::Message& msg) {
     }
 }
 
-void API::ChunkedWriter::write(catena::exception_with_status& err) {
+void ChunkedWriter::write(catena::exception_with_status& err) {
     std::string errMsg = err.what();
-    // Writing headers if we haven;t already.
-    if (!hasHeaders_) {
-        writeHeaders(err);
-    }
+    // Writing headers if we haven't already.
+    if (!hasHeaders_) { writeHeaders(err); }
     // Writing error message.
     boost::asio::write(socket_, boost::asio::buffer(std::format("{:x}", errMsg.size()) + "\r\n" + errMsg + "\r\n"));
 }
 
-void API::ChunkedWriter::finish() {
+void ChunkedWriter::finish() {
     boost::asio::write(socket_, boost::asio::buffer("0\r\n\r\n"));
 }

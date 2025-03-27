@@ -143,6 +143,21 @@ void API::run() {
     }
 }
 
+/**
+ * Returns the current time as a string including microseconds.
+ */
+std::string API::timeNow() {
+    std::stringstream ss;
+    auto now = std::chrono::system_clock::now();
+    auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto epoch = now_micros.time_since_epoch();
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
+       << micros.count() % 1000000;
+    return ss.str();
+}
+
 void API::parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const {
     if (fields.size() == 0) {
         throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);

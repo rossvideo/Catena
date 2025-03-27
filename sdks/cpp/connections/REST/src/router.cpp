@@ -37,6 +37,8 @@
 
 #include <api.h>
 #include <Connect.h>
+#include <MultiSetValue.h>
+#include <SetValue.h>
 
 #include "absl/flags/flag.h"
 
@@ -62,9 +64,9 @@ void API::route(std::string& method, std::string& request, std::string& jsonPayl
         throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
     } else if (method == "PUT") {   // PUT methods.
         if (request.starts_with("/v1/SetValue")) {
-            setValue(jsonPayload, socket, authz);
+            SetValue(jsonPayload, socket, dm_, authz);
         } else if (request.starts_with("/v1/MultiSetValue")) {
-            multiSetValue(jsonPayload, socket, authz);
+            MultiSetValue(jsonPayload, socket, dm_, authz);
         } else {
             throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }

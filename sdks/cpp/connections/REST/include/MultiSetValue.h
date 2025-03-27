@@ -29,8 +29,8 @@
  */
 
 /**
- * @file Connect.h
- * @brief Implements REST Connect RPC.
+ * @file MultiSetValue.h
+ * @brief Implements REST MultiSetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -41,93 +41,80 @@
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
 
-// common
-#include <rpc/Connect.h>
-
 // Connections/REST
 #include "api.h"
 using catena::API;
-
+ 
 /**
- * @brief The Connect REST RPC.
+ * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
  */
-class API::Connect : public CallData, public catena::common::Connect {
+class API::MultiSetValue : public CallData {
   public:
     /**
-     * @brief Constructor for the Connect RPC. Calls proceed() once
+     * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
      * initialized.
      *
-     * @param request The request URL for extracting fields.
+     * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
      * @param dm The device to get the value from.
      * @param authz The authorizer object containing the client's scopes.
      */ 
-    Connect(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
-  private:
+    MultiSetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+  protected:
     /**
-     * Connect main process
+     * @brief Constructor for child SetValue RPCs. Does not call proceed().
+     * @param jsonPayload The json body extracted from the request.
+     * @param socket The socket to write the response to.
+     * @param dm The device to get the value from.
+     * @param authz The authorizer object containing the client's scopes.
+     * @param objectId The object's unique id.
+     */
+    MultiSetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz, int objectId);
+    /**
+     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
+     * @returns True if successful.
+     */
+    virtual bool toMulti();
+    /**
+     * @brief MultiSetValue main process.
      */
     void proceed() override;
-    /**
-     * @brief Returns true if the RPC was cancelled.
-     */
-    inline bool isCancelled() override { return !this->socket_.is_open(); }
 
+    /**
+     * @brief The json body extracted from the request.
+     */
+    std::string& jsonPayload_;
     /**
      * @brief The socket to write the response to.
      */
     Tcp::socket& socket_;
     /**
+     * @brief The authorizer object containing the client's scopes.
+     */
+    catena::common::Authorizer* authz_;
+    /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SocketWriter writer_;
     /**
-     * @brief The mutex to for locking the object while writing
+     * @brief The MultiSetValuePayload extracted from jsonPayload_.
      */
-    std::mutex mtx_;
-
+    catena::MultiSetValuePayload reqs_;
     /**
-     * @brief Id of operation waiting for valueSetByClient to be emitted.
-     * Used when ending the connection.
+     * @brief The device to set values of.
      */
-    unsigned int valueSetByClientId_;
+    Device& dm_;
     /**
-     * @brief Id of operation waiting for valueSetByServer to be emitted.
-     * Used when ending the connection.
-     */
-    unsigned int valueSetByServerId_;
-    /**
-     * @brief Id of operation waiting for languageAddedPushUpdate to be
-     * emitted. Used when ending the connection.
-     */
-    unsigned int languageAddedId_;
-    /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
-     */
-    static vdk::signal<void()> shutdownSignal_;
-    /**
-     * @brief ID of the shutdown signal for the Connect object
-    */
-    unsigned int shutdownSignalId_;
-    
-    /**
-     * @brief ID of the Connect object
+     * @brief The object's unique id.
      */
     int objectId_;
+  private:
     /**
-     * @brief The total # of Connect objects.
+     * @brief Name of class to specify rpc in console notifications.
+     */
+    std::string typeName_ = "";
+    /**
+     * @brief The total # of MultiSetValue objects.
      */
     static int objectCounter_;
-
-    /**
-     * @brief Map which converts std::string to catena::DeviceDetailLevel.
-     */
-    const std::map<std::string, catena::Device_DetailLevel> dlMap_ = {
-        {"FULL", catena::Device_DetailLevel_FULL},
-        {"SUBSCRIPTIONS", catena::Device_DetailLevel_SUBSCRIPTIONS},
-        {"MINIMAL", catena::Device_DetailLevel_MINIMAL},
-        {"COMMANDS", catena::Device_DetailLevel_COMMANDS},
-        {"NONE", catena::Device_DetailLevel_NONE}
-    };
 };
