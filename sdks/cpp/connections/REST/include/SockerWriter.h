@@ -35,6 +35,8 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+#pragma once
+
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>

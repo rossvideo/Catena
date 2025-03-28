@@ -109,8 +109,13 @@ void ChunkedWriter::write(catena::exception_with_status& err) {
     if (!hasHeaders_) { writeHeaders(err); }
     // Writing error message.
     boost::asio::write(socket_, boost::asio::buffer(std::format("{:x}", errMsg.size()) + "\r\n" + errMsg + "\r\n"));
+    finish();
 }
 
 void ChunkedWriter::finish() {
-    boost::asio::write(socket_, boost::asio::buffer("0\r\n\r\n"));
+    /* 
+     * POSTMAN does not like this line as they do not support chunked encoding.
+     * CURL yells at you if you don't have it.
+     */
+    // boost::asio::write(socket_, boost::asio::buffer("0\r\n\r\n"));
 }
