@@ -102,10 +102,7 @@ class API {
     uint16_t port_;
     crow::SimpleApp app_;
     bool authorizationEnabled_;
-    /**
-     * @returns The slots that are populated by dm_.
-     */
-    void getPopulatedSlots(Tcp::socket& socket);
+
     /**
      * @brief Returns the current time as a string including microseconds.
      */
@@ -171,6 +168,7 @@ class API {
     class SetValue;
     class DeviceRequest;
     class GetValue;
+    class GetPopulatedSlots;
 
     /**
      * @brief Routes a request to the appropriate controller.

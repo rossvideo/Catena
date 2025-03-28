@@ -30,7 +30,7 @@
 
 /**
  * @file GetValue.h
- * @brief Implements REST MultiSetValue RPC.
+ * @brief Implements REST GetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -98,11 +98,11 @@ class API::GetValue : public CallData {
     std::string oid_;
 
     /**
-     * @brief The object's unique id.
+     * @brief ID of the GetValue object
      */
     int objectId_;
     /**
-     * @brief The total # of MultiSetValue objects.
+     * @brief The total # of GetValue objects.
      */
     static int objectCounter_;
 };

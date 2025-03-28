@@ -57,7 +57,7 @@ class API::MultiSetValue : public CallData {
      *
      * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
-     * @param dm The device to get the value from.
+     * @param dm The device to set the value(s) of.
      * @param authz The authorizer object containing the client's scopes.
      */ 
     MultiSetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
@@ -66,7 +66,7 @@ class API::MultiSetValue : public CallData {
      * @brief Constructor for child SetValue RPCs. Does not call proceed().
      * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
-     * @param dm The device to get the value from.
+     * @param dm The device to set the value(s) of.
      * @param authz The authorizer object containing the client's scopes.
      * @param objectId The object's unique id.
      */
@@ -102,15 +102,16 @@ class API::MultiSetValue : public CallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The MultiSetValuePayload extracted from jsonPayload_.
-     */
-    catena::MultiSetValuePayload reqs_;
-    /**
      * @brief The device to set values of.
      */
     Device& dm_;
     /**
-     * @brief The object's unique id.
+     * @brief The MultiSetValuePayload extracted from jsonPayload_.
+     */
+    catena::MultiSetValuePayload reqs_;
+
+    /**
+     * @brief ID of the (Multi)SetValue object
      */
     int objectId_;
   private:
