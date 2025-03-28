@@ -54,3 +54,5 @@ endif(REST_enabled)
 
 # make the examples
 add_subdirectory(examples)
+# make the unit tests
+add_subdirectory(tests)
