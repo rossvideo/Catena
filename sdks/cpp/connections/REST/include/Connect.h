@@ -60,8 +60,8 @@ class API::Connect : public CallData, public catena::common::Connect {
      * initialized.
      *
      * @param request The request URL for extracting fields.
-     * @param socket The socket to write the response to.
-     * @param dm The device to get the value from.
+     * @param socket The socket to write the response stream to.
+     * @param dm The device to connect to.
      * @param authz The authorizer object containing the client's scopes.
      */ 
     Connect(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
@@ -80,7 +80,7 @@ class API::Connect : public CallData, public catena::common::Connect {
     inline bool isCancelled() override { return !this->socket_.is_open(); }
 
     /**
-     * @brief The socket to write the response to.
+     * @brief The socket to write the response stream to.
      */
     Tcp::socket& socket_;
     /**
@@ -125,15 +125,4 @@ class API::Connect : public CallData, public catena::common::Connect {
      * @brief The total # of Connect objects.
      */
     static int objectCounter_;
-
-    /**
-     * @brief Map which converts std::string to catena::DeviceDetailLevel.
-     */
-    const std::map<std::string, catena::Device_DetailLevel> dlMap_ = {
-        {"FULL", catena::Device_DetailLevel_FULL},
-        {"SUBSCRIPTIONS", catena::Device_DetailLevel_SUBSCRIPTIONS},
-        {"MINIMAL", catena::Device_DetailLevel_MINIMAL},
-        {"COMMANDS", catena::Device_DetailLevel_COMMANDS},
-        {"NONE", catena::Device_DetailLevel_NONE}
-    };
 };

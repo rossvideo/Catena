@@ -41,6 +41,7 @@
 #include <SetValue.h>
 #include <DeviceRequest.h>
 #include <GetValue.h>
+#include <GetPopulatedSlots.h>
 
 #include "absl/flags/flag.h"
 
@@ -54,7 +55,7 @@ void API::route(std::string& method, std::string& request, std::string& jsonPayl
         if (request.starts_with("/v1/DeviceRequest")) {
             DeviceRequest deviceRequest(request, socket, dm_, authz);
         } else if (request.starts_with("/v1/GetPopulatedSlots")) {
-            getPopulatedSlots(socket);
+            GetPopulatedSlots getPopulatedSlots(socket, dm_);
         } else if (request.starts_with("/v1/GetValue")) {
             GetValue getValue(request, socket, dm_, authz);
         } else if (request.starts_with("/v1/Connect")) {

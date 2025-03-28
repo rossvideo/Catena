@@ -29,8 +29,8 @@
  */
 
 /**
- * @file MultiSetValue.h
- * @brief Implements REST MultiSetValue RPC.
+ * @file DeviceRequest.h
+ * @brief Implements REST DeviceRequest RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -59,8 +59,8 @@ class API::DeviceRequest : public CallData {
      * initialized.
      *
      * @param jsonPayload The json body extracted from the request.
-     * @param socket The socket to write the response to.
-     * @param dm The device to get the value from.
+     * @param socket The socket to write the response stream to.
+     * @param dm The device to get components from.
      * @param authz The authorizer object containing the client's scopes.
      */ 
     DeviceRequest(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
@@ -75,7 +75,7 @@ class API::DeviceRequest : public CallData {
     void finish() override;
     
     /**
-     * @brief The socket to write the response to.
+     * @brief The socket to write the response stream to.
      */
     Tcp::socket& socket_;
     /**
@@ -87,20 +87,20 @@ class API::DeviceRequest : public CallData {
      */
     ChunkedWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief The device to get components from.
      */
     Device& dm_;
 
     /**
-     * @brief The slot of the device to get the value from.
+     * @brief The slot of the device to get the components from.
      */
     uint32_t slot_;
     /**
-     * @brief The language to return the request in.
+     * @brief The language to return the stream in.
      */
     std::string language_;
     /**
-     * @brief The detail level to return the request in.
+     * @brief The detail level to return the stream in.
      */
     int detailLevel_;
     /**
@@ -109,11 +109,11 @@ class API::DeviceRequest : public CallData {
     std::vector<std::string> subscribedOids_;
 
     /**
-     * @brief ID of the Connect object
+     * @brief ID of the DeviceRequest object
      */
     int objectId_;
     /**
-     * @brief The total # of Connect objects.
+     * @brief The total # of DeviceRequest objects.
      */
     static int objectCounter_;
 };

@@ -29,42 +29,68 @@
  */
 
 /**
- * @file SetValue.h
- * @brief Implements REST SetValue RPC.
+ * @file GetPopulatedSlots.h
+ * @brief Implements REST GetPopulatedSlots RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#pragma once
+ #pragma once
 
-// Connections/REST
-#include "MultiSetValue.h"
-using catena::API;
-
-/**
- * @brief The SetValue REST RPC.
- */
-class API::SetValue : public MultiSetValue {
-  public:
-    /**
-     * @brief Constructor for the SetValue RPC. Calls proceed() once
-     * initialized.
-     *
-     * @param jsonPayload The json body extracted from the request.
-     * @param socket The socket to write the response to.
-     * @param dm The device to set the value of.
-     * @param authz The authorizer object containing the client's scopes.
-     */ 
-    SetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
-  private:
-    /**
-     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
-     * @returns True if successful.
-     */
-    bool toMulti() override;
-
-    /**
-     * @brief The total # of SetValue objects.
-     */
-    static int objectCounter_;
-};
+ // protobuf
+ #include <interface/device.pb.h>
+ #include <google/protobuf/util/json_util.h>
+  
+ // Connections/REST
+ #include "api.h"
+ #include "SockerWriter.h"
+ using catena::API;
+ 
+ /**
+  * @brief CallData class for the GetPopulatedSlots REST RPC.
+  */
+ class API::GetPopulatedSlots : public CallData {
+   public:
+     /**
+      * @brief Constructor for the GetPopulatedSlots RPC. Calls proceed() once
+      * initialized.
+      *
+      * @param jsonPayload The json body extracted from the request.
+      * @param socket The socket to write the response to.
+      * @param dm The device to get the value from.
+      * @param authz The authorizer object containing the client's scopes.
+      */ 
+     GetPopulatedSlots(Tcp::socket& socket, Device& dm);
+   private:
+     /**
+      * @brief GetPopulatedSlots's main process.
+      */
+     void proceed() override;
+     /**
+      * @brief Finishes the GetPopulatedSlots process.
+      */
+     void finish() override;
+ 
+     /**
+      * @brief The socket to write the response to.
+      */
+     Tcp::socket& socket_;
+     /**
+      * @brief The SocketWriter object for writing to socket_.
+      */
+     SocketWriter writer_;
+     /**
+      * @brief The device to get slot of.
+      */
+     Device& dm_;
+ 
+     /**
+      * @brief ID of the GetPopulatedSlots object
+      */
+     int objectId_;
+     /**
+      * @brief The total # of GetPopulatedSlots objects.
+      */
+     static int objectCounter_;
+ };
+ 
