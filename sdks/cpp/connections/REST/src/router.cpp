@@ -40,6 +40,7 @@
 #include <MultiSetValue.h>
 #include <SetValue.h>
 #include <DeviceRequest.h>
+#include <GetValue.h>
 
 #include "absl/flags/flag.h"
 
@@ -55,7 +56,7 @@ void API::route(std::string& method, std::string& request, std::string& jsonPayl
         } else if (request.starts_with("/v1/GetPopulatedSlots")) {
             getPopulatedSlots(socket);
         } else if (request.starts_with("/v1/GetValue")) {
-            getValue(request, socket, authz);
+            GetValue getValue(request, socket, dm_, authz);
         } else if (request.starts_with("/v1/Connect")) {
             Connect connect(request, socket, dm_, authz);
         } else {

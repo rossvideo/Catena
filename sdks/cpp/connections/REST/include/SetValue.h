@@ -29,7 +29,7 @@
  */
 
 /**
- * @file MultiSetValue.h
+ * @file SetValue.h
  * @brief Implements REST SetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd

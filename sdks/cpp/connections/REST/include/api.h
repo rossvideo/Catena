@@ -102,27 +102,10 @@ class API {
     uint16_t port_;
     crow::SimpleApp app_;
     bool authorizationEnabled_;
-
-    /**
-     * @brief Parses fields from the request URL.
-     * @param request The request URL to extract fields from.
-     * @param fields An unordered map of fields to populate. The keys are the
-     * field names, and their values will become whatever is between any key
-     * and the next key in the map. As such, the order of these keys must match
-     * their order in the URL.
-     */
-    void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
     /**
      * @returns The slots that are populated by dm_.
      */
     void getPopulatedSlots(Tcp::socket& socket);
-    /**
-     * @brief The getValue REST call.
-     * @param request The request URL to extract fields from.
-     * @param socket The socket to communicate with the client with.
-     * @param authz The authorizer object containing client's scopes.
-     */
-    void getValue(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
     /**
      * @brief Returns the current time as a string including microseconds.
      */
@@ -133,25 +116,61 @@ class API {
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
+  protected:
+    /**
+     * @brief CallData class for the REST API. Inherited by all REST classes
+     * and contains variables present in all RPCs as well as helper functions.
+     */
     class CallData {
       public:
         using DetailLevel = patterns::EnumDecorator<catena::Device_DetailLevel>;
+        /**
+         * @brief Destructor for the CallData class.
+         */
         virtual ~CallData() {};
       protected:
+        /**
+         * @brief The RPC's main process.
+         */
         virtual void proceed() = 0;
+        /**
+         * @brief Finishes the RPC.
+         */
         virtual void finish() = 0;
+        /**
+         * @brief Helper function to write status messages to the API console.
+         * 
+         * @param typeName The RPC's type (GetValue, DeviceRequest, etc.)
+         * @param objectId The unique id of the RPC.
+         * @param status The current state of the RPC (kCreate, kFinish, etc.)
+         * @param ok The status of the RPC (open or closed).
+         */
         inline void writeConsole(std::string typeName, int objectId, CallStatus status, bool ok) const {
           std::cout << typeName << "::proceed[" << objectId << "]: "
                     << timeNow() << " status: "<< static_cast<int>(status)
                     <<", ok: "<< std::boolalpha << ok << std::endl;
         }
+        /**
+         * @brief Helper function to parse fields from a request URL.
+         * 
+         * @param request The request URL to parse.
+         * @param fields A map continaing the fields to parse and an empty
+         * string to place the parsed field in.
+         * fields is order dependent. The keys must be placed in the same order
+         * in which they appear in the URL. Additionally, the last field is
+         * assumed to be until the end of the request unless specified
+         * otherwise.
+         */
         void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
     };
 
+  private:
+    //Forward declarations of CallData classes for their respective RPC
     class Connect;
     class MultiSetValue;
     class SetValue;
     class DeviceRequest;
+    class GetValue;
 
     /**
      * @brief Routes a request to the appropriate controller.
