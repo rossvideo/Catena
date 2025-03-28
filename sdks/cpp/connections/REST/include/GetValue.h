@@ -60,7 +60,7 @@ class API::GetValue : public CallData {
      * @param dm The device to get the value from.
      * @param authz The authorizer object containing the client's scopes.
      */ 
-    GetValue(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    GetValue(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
   private:
     /**
      * @brief GetValue's main process.
@@ -74,7 +74,7 @@ class API::GetValue : public CallData {
     /**
      * @brief The socket to write the response to.
      */
-    Tcp::socket& socket_;
+    tcp::socket& socket_;
     /**
      * @brief The authorizer object containing the client's scopes.
      */

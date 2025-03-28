@@ -5,7 +5,7 @@
 // Initializes the object counter for SetValue to 0.
 int API::SetValue::objectCounter_ = 0;
 
-API::SetValue::SetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
+API::SetValue::SetValue(std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
     MultiSetValue(jsonPayload, socket, dm, authz, objectCounter_++) {
     writeConsole("SetValue", objectId_, CallStatus::kCreate, socket_.is_open());
     proceed();

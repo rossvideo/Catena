@@ -37,9 +37,6 @@
 
 #pragma once
 
-#define CROW_ENABLE_SSL
-#include <crow.h>
-
 // common
 #include <Status.h>
 #include <vdk/signals.h>
@@ -51,10 +48,14 @@
 // REST
 #include <SockerWriter.h>
 
+// boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+using boost::asio::ip::tcp;
 
 #include <string>
+#include <iostream>
+#include <regex>
 
 using catena::REST::SocketWriter;
 using catena::REST::ChunkedWriter;
@@ -68,11 +69,17 @@ class API {
 
   using Device = catena::common::Device;
   using IParam = catena::common::IParam;
-  using Tcp = boost::asio::ip::tcp;
 
   public:
-    // explicit API(uint16_t port = 443) : version_{"1.0.0"}, port_{port} {}
-    explicit API(Device &dm, uint16_t port = 443);
+    /**
+     * @brief Constructor for the REST API.
+     * 
+     * @param dm The device to implement Catena services to.
+     * @param port The port to listen on. Default is 443.
+     * @param EOPath The path to the external object.
+     * @param authz Flag to enable authorization.
+     */
+    explicit API(Device &dm, std::string& EOPath, uint16_t port = 443, bool authz = false);
     virtual ~API() = default;
     API(const API&) = delete;
     API& operator=(const API&) = delete;
@@ -80,33 +87,13 @@ class API {
     API& operator=(API&&) = delete;
 
     /**
-     * @brief Get the API Version
-     *
-     * @return std::string
+     * @brief Returns the API's version.
      */
     std::string version() const;
-
     /**
-     * @brief run the API
+     * @brief Starts the API.
      */
     void run();
-
-    // idk why this is public I'll fix at some point.
-    Device &dm_;
-
-  private:
-    boost::asio::io_context io_context_;
-    Tcp::acceptor acceptor_;
-
-    std::string version_;
-    uint16_t port_;
-    crow::SimpleApp app_;
-    bool authorizationEnabled_;
-
-    /**
-     * @brief Returns the current time as a string including microseconds.
-     */
-    static std::string timeNow();
 
     /**
      * @brief CallData states.
@@ -162,14 +149,6 @@ class API {
     };
 
   private:
-    //Forward declarations of CallData classes for their respective RPC
-    class Connect;
-    class MultiSetValue;
-    class SetValue;
-    class DeviceRequest;
-    class GetValue;
-    class GetPopulatedSlots;
-
     /**
      * @brief Routes a request to the appropriate controller.
      * @param method The HTTP method extracted from the URL (GET, POST, PUT).
@@ -178,10 +157,53 @@ class API {
      * @param authz The authorizer object containing client's scopes.
      * @returns Nothing, errors are thrown or communicated through the socket.
      */
-    void route(std::string& method, std::string& request, std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz);
+    void route(std::string& method, std::string& request, std::string& jsonPayload, tcp::socket& socket, catena::common::Authorizer* authz);
+    /**
+     * @brief Returns true if port_ is already in use.
+     */
+    bool is_port_in_use_() const;
 
-  private:
-  bool is_port_in_use_() const;
+    /**
+     * @brief Provides io functionality for tcp::sockets used in RPCs.
+     */
+    boost::asio::io_context io_context_;
+    /**
+     * @brief Accepts incoming connections from the specified port.
+     */
+    tcp::acceptor acceptor_;
+    /**
+     * @brief The API's version.
+     */
+    std::string version_;
+    /**
+     * @brief The port to listen to.
+     */
+    uint16_t port_;
+    /**
+     * @brief The device to implement Catena services to
+     */
+    Device& dm_;
+    /**
+     * @brief The path to the external object
+     */
+    std::string& EOPath_;
+    /**
+     * @brief Flag to enable authorization
+     */
+    bool authorizationEnabled_;
+    /**
+     * @brief Returns the current time as a string including microseconds.
+     */
+    static std::string timeNow();
+
+    //Forward declarations of CallData classes for their respective RPC
+    class Connect;
+    class MultiSetValue;
+    class SetValue;
+    class DeviceRequest;
+    class GetValue;
+    class GetPopulatedSlots;
+
 };
 }  // namespace catena
 

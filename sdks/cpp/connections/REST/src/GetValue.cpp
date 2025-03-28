@@ -5,7 +5,7 @@
 // Initializes the object counter for GetValue to 0.
 int API::GetValue::objectCounter_ = 0;
 
-API::GetValue::GetValue(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
+API::GetValue::GetValue(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
     socket_{socket}, writer_{socket}, dm_{dm}, authz_{authz} {
     objectId_ = objectCounter_++;
     writeConsole("GetValue", objectId_, CallStatus::kCreate, socket_.is_open());

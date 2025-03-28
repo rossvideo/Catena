@@ -5,7 +5,7 @@
 // Initializes the object counter for GetPopulatedSlots to 0.
 int API::GetPopulatedSlots::objectCounter_ = 0;
 
-API::GetPopulatedSlots::GetPopulatedSlots(Tcp::socket& socket, Device& dm) :
+API::GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, Device& dm) :
     socket_{socket}, writer_{socket}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole("GetPopulatedSlots", objectId_, CallStatus::kCreate, socket_.is_open());

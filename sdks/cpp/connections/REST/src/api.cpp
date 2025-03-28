@@ -1,48 +1,9 @@
-/*
- * Copyright 2024 Ross Video Ltd
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- * contributors may be used to endorse or promote products derived from this
- * software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
 
-// common
-#include <Tags.h>
-
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-#include <utils.h>
-
+// connections/REST
 #include <api.h>
+using catena::API;
 
 #include "absl/flags/flag.h"
-
-#include <iostream>
-#include <regex>
-
-using catena::API;
 
 // expand env variables
 void expandEnvVariables(std::string &str) {
@@ -55,15 +16,13 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-API::API(Device &dm, uint16_t port) : version_{"1.0.0"}, port_{port}, dm_{dm},
-    acceptor_{io_context_, Tcp::endpoint(Tcp::v4(), port)} {
-    // Flag does not really work at the moment :/
-    // authorizationEnabled_ = absl::GetFlag(FLAGS_authz);
-    authorizationEnabled_ = false;
-    if (authorizationEnabled_) {
-        std::cerr<<"Authorization enabled"<<std::endl;
-    }
-}
+API::API(Device &dm, std::string& EOPath, uint16_t port, bool authz)
+    : version_{"1.0.0"},
+      dm_{dm},
+      EOPath_{EOPath},
+      port_{port},
+      authorizationEnabled_{authz},
+      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)} {}
 
 std::string API::version() const {
   return version_;
@@ -73,8 +32,10 @@ void API::run() {
     // TLS handled by Envoyproxy
     while (true) {
         // Waiting for a connection.
-        Tcp::socket socket(io_context_);
+        tcp::socket socket(io_context_);
         acceptor_.accept(socket);
+
+        // Should probably keep track of threads like we do in the gRPC ServiceImpl.
 
         // When a connection has been made, detatch to handle asynchronously.
         std::thread([this, socket = std::move(socket)]() mutable {
@@ -143,9 +104,6 @@ void API::run() {
     }
 }
 
-/**
- * Returns the current time as a string including microseconds.
- */
 std::string API::timeNow() {
     std::stringstream ss;
     auto now = std::chrono::system_clock::now();
@@ -188,8 +146,7 @@ void API::CallData::parseFields(std::string& request, std::unordered_map<std::st
 bool API::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
-        boost::asio::ip::tcp::acceptor acceptor(io_context, 
-                    boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_));
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));
         return false;  // Port is not in use
     } catch (const boost::system::system_error& e) {
         return true;  // Port is in use

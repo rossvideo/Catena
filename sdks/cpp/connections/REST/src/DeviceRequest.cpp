@@ -5,7 +5,7 @@
 // Initializes the object counter for Connect to 0.
 int API::DeviceRequest::objectCounter_ = 0;
 
-API::DeviceRequest::DeviceRequest(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
+API::DeviceRequest::DeviceRequest(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
     socket_{socket}, writer_{socket}, dm_{dm}, authz_{authz} {
     objectId_ = objectCounter_++;
     writeConsole("DeviceRequest", objectId_, CallStatus::kCreate, socket_.is_open());

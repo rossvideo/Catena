@@ -63,7 +63,7 @@ class API::DeviceRequest : public CallData {
      * @param dm The device to get components from.
      * @param authz The authorizer object containing the client's scopes.
      */ 
-    DeviceRequest(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    DeviceRequest(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
   private:
     /**
      * @brief DeviceRequest's main process.
@@ -77,7 +77,7 @@ class API::DeviceRequest : public CallData {
     /**
      * @brief The socket to write the response stream to.
      */
-    Tcp::socket& socket_;
+    tcp::socket& socket_;
     /**
      * @brief The authorizer object containing the client's scopes.
      */

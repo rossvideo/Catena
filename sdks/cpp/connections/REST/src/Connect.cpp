@@ -9,7 +9,7 @@ int API::Connect::objectCounter_ = 0;
 // Initializing the shutdown signal for all open connections.
 vdk::signal<void()> API::Connect::shutdownSignal_;
 
-API::Connect::Connect(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
+API::Connect::Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
     socket_{socket}, writer_(socket), catena::common::Connect(dm, authz) {
     objectId_ = objectCounter_++;
     writeConsole("Connect", objectId_, CallStatus::kCreate, socket_.is_open());
