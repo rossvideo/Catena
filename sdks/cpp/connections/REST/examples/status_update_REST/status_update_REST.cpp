@@ -64,7 +64,8 @@ ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to se
 
 int main(int argc, char* argv[])
 {
-    catena::API api(dm);
+    std::string EOPath = "";
+    catena::API api(dm, EOPath);
     std::cout << "API Version: " << api.version() << std::endl;
     api.run();
     return 0;

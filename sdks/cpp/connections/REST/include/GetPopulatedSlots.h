@@ -60,7 +60,7 @@
       * @param dm The device to get the value from.
       * @param authz The authorizer object containing the client's scopes.
       */ 
-     GetPopulatedSlots(Tcp::socket& socket, Device& dm);
+     GetPopulatedSlots(tcp::socket& socket, Device& dm);
    private:
      /**
       * @brief GetPopulatedSlots's main process.
@@ -74,7 +74,7 @@
      /**
       * @brief The socket to write the response to.
       */
-     Tcp::socket& socket_;
+     tcp::socket& socket_;
      /**
       * @brief The SocketWriter object for writing to socket_.
       */

@@ -64,7 +64,7 @@ class API::Connect : public CallData, public catena::common::Connect {
      * @param dm The device to connect to.
      * @param authz The authorizer object containing the client's scopes.
      */ 
-    Connect(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
   private:
     /**
      * Connect main process
@@ -82,7 +82,7 @@ class API::Connect : public CallData, public catena::common::Connect {
     /**
      * @brief The socket to write the response stream to.
      */
-    Tcp::socket& socket_;
+    tcp::socket& socket_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
