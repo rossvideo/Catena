@@ -29,7 +29,7 @@
  */
 
 /**
- * @file MultiSetValue.h
+ * @file GetValue.h
  * @brief Implements REST MultiSetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -40,22 +40,19 @@
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
-
-// common
-#include <utils.h>
-
+ 
 // Connections/REST
 #include "api.h"
 #include "SockerWriter.h"
 using catena::API;
 
 /**
- * @brief CallData class for the DeviceRequest REST RPC.
+ * @brief CallData class for the GetValue REST RPC.
  */
-class API::DeviceRequest : public CallData {
+class API::GetValue : public CallData {
   public:
     /**
-     * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
+     * @brief Constructor for the GetValue RPC. Calls proceed() once
      * initialized.
      *
      * @param jsonPayload The json body extracted from the request.
@@ -63,17 +60,17 @@ class API::DeviceRequest : public CallData {
      * @param dm The device to get the value from.
      * @param authz The authorizer object containing the client's scopes.
      */ 
-    DeviceRequest(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    GetValue(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
   private:
     /**
-     * @brief DeviceRequest's main process.
+     * @brief GetValue's main process.
      */
     void proceed() override;
     /**
-     * @brief Finishes the DeviceRequest process.
+     * @brief Finishes the GetValue process.
      */
     void finish() override;
-    
+
     /**
      * @brief The socket to write the response to.
      */
@@ -85,7 +82,7 @@ class API::DeviceRequest : public CallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SocketWriter writer_;
     /**
      * @brief The device to set values of.
      */
@@ -94,26 +91,18 @@ class API::DeviceRequest : public CallData {
     /**
      * @brief The slot of the device to get the value from.
      */
-    uint32_t slot_;
+    int slot_;
     /**
-     * @brief The language to return the request in.
+     * @brief The oid of the param to get the value from.
      */
-    std::string language_;
-    /**
-     * @brief The detail level to return the request in.
-     */
-    int detailLevel_;
-    /**
-     * @brief A list of the subscribed oids to return.
-     */
-    std::vector<std::string> subscribedOids_;
+    std::string oid_;
 
     /**
-     * @brief ID of the Connect object
+     * @brief The object's unique id.
      */
     int objectId_;
     /**
-     * @brief The total # of Connect objects.
+     * @brief The total # of MultiSetValue objects.
      */
     static int objectCounter_;
 };
