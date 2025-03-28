@@ -22,9 +22,7 @@ endif(gRPC_enabled)
 set(SOURCES 
     utils_test.cpp
 )
-set(TESTS
-    utils_tests
-)
+
 add_executable(${This} ${SOURCES})
 
 target_link_libraries(${This} PUBLIC
