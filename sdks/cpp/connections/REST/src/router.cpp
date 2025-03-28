@@ -39,6 +39,7 @@
 #include <Connect.h>
 #include <MultiSetValue.h>
 #include <SetValue.h>
+#include <DeviceRequest.h>
 
 #include "absl/flags/flag.h"
 
@@ -50,7 +51,7 @@ using catena::API;
 void API::route(std::string& method, std::string& request, std::string& jsonPayload, Tcp::socket& socket, catena::common::Authorizer* authz) {
     if (method == "GET") {          // GET methods.
         if (request.starts_with("/v1/DeviceRequest")) {
-            deviceRequest(request, socket, authz);
+            DeviceRequest deviceRequest(request, socket, dm_, authz);
         } else if (request.starts_with("/v1/GetPopulatedSlots")) {
             getPopulatedSlots(socket);
         } else if (request.starts_with("/v1/GetValue")) {

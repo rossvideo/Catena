@@ -11,35 +11,41 @@ vdk::signal<void()> API::Connect::shutdownSignal_;
 
 API::Connect::Connect(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
     socket_{socket}, writer_(socket), catena::common::Connect(dm, authz) {
-    
-    // Parsing fields from request URL.
-    std::unordered_map<std::string, std::string> fields = {
-        {"force_connection", ""},
-        {"user_agent", ""},
-        {"detail_level", ""},
-        {"language", ""}
-    };
-    parseFields(request, fields);
-    
-    // Assigning parsed fields to respective variables.
-    language_ = fields.at("language");
-    if (dlMap_.find(fields.at("detail_level")) != dlMap_.end()) {
-        detailLevel_ = dlMap_.at(fields.at("detail_level"));
-    } else {
-        detailLevel_ = catena::Device_DetailLevel_NONE;
-    }
-    userAgent_ = fields.at("user_agent");
-    forceConnection_ = fields.at("force_connection") == "true";
-
-    // Incrementing object coutner and writing to console.
     objectId_ = objectCounter_++;
     writeConsole("Connect", objectId_, CallStatus::kCreate, socket_.is_open());
-
-    proceed();
+    // Return code used for status.
+    catena::exception_with_status err("", catena::StatusCode::OK);
+    // Parsing fields and assigning to respective variables.
+    try {
+        std::unordered_map<std::string, std::string> fields = {
+            {"force_connection", ""},
+            {"user_agent", ""},
+            {"detail_level", ""},
+            {"language", ""}
+        };
+        parseFields(request, fields);
+        language_ = fields.at("language");
+        auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
+        if (dlMap.find(fields.at("detail_level")) != dlMap.end()) {
+            detailLevel_ = dlMap.at(fields.at("detail_level"));
+        } else {
+            detailLevel_ = catena::Device_DetailLevel_NONE;
+        }
+        userAgent_ = fields.at("user_agent");
+        forceConnection_ = fields.at("force_connection") == "true";
+    // Parse error
+    } catch (...) {
+        err = catena::exception_with_status("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
+        writer_.write(err);
+    }
+    // If no issue above, continue to proceed.
+    if (err.status == catena::StatusCode::OK) {
+        proceed();
+    }
+    finish();
 }
 
 void API::Connect::proceed() {
-    // kProcess: Connecting listeners and writing populated slots to client.
     writeConsole("Connect", objectId_, CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
     shutdownSignalId_ = shutdownSignal_.connect([this](){
@@ -82,12 +88,16 @@ void API::Connect::proceed() {
         }
         lock.unlock();
     }
+}
 
-    // kFinish: Disconnecting listeners.
-    writeConsole("Connect", objectId_, CallStatus::kFinish, socket_.is_open());
-    shutdownSignal_.disconnect(shutdownSignalId_);
-    dm_.valueSetByClient.disconnect(valueSetByClientId_);
-    dm_.valueSetByServer.disconnect(valueSetByServerId_);
-
+void API::Connect::finish() {
+    writeConsole("Connect", objectId_, CallStatus::kFinish, !socket_.is_open());
+    try {
+        shutdownSignal_.disconnect(shutdownSignalId_);
+        dm_.valueSetByClient.disconnect(valueSetByClientId_);
+        dm_.valueSetByServer.disconnect(valueSetByServerId_);
+        dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+    // Listener not yet initialized.
+    } catch (...) {}
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

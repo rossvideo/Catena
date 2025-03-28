@@ -46,6 +46,7 @@
 #include <IParam.h>
 #include <Device.h>
 #include <Authorization.h>
+#include <Enums.h>
 
 // REST
 #include <SockerWriter.h>
@@ -116,16 +117,6 @@ class API {
      */
     void getPopulatedSlots(Tcp::socket& socket);
     /**
-     * @brief The deviceRequest REST call.
-     * @param request The request URL to extract fields from.
-     * @param socket The socket to communicate with the client with.
-     * @param authz The authorizer object containing client's scopes.
-     * 
-     * @todo Maybe also pass in JSON body for subscribed oids. Kind of a pain
-     * to put them in the URL.
-     */
-    void deviceRequest(std::string& request, Tcp::socket& socket, catena::common::Authorizer* authz);
-    /**
      * @brief The getValue REST call.
      * @param request The request URL to extract fields from.
      * @param socket The socket to communicate with the client with.
@@ -144,9 +135,11 @@ class API {
 
     class CallData {
       public:
-        virtual void proceed() = 0;
+        using DetailLevel = patterns::EnumDecorator<catena::Device_DetailLevel>;
         virtual ~CallData() {};
       protected:
+        virtual void proceed() = 0;
+        virtual void finish() = 0;
         inline void writeConsole(std::string typeName, int objectId, CallStatus status, bool ok) const {
           std::cout << typeName << "::proceed[" << objectId << "]: "
                     << timeNow() << " status: "<< static_cast<int>(status)
@@ -158,6 +151,7 @@ class API {
     class Connect;
     class MultiSetValue;
     class SetValue;
+    class DeviceRequest;
 
     /**
      * @brief Routes a request to the appropriate controller.

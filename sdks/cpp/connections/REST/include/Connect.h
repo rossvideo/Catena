@@ -43,9 +43,11 @@
 
 // common
 #include <rpc/Connect.h>
+#include <utils.h>
 
 // Connections/REST
 #include "api.h"
+#include "SockerWriter.h"
 using catena::API;
 
 /**
@@ -68,6 +70,10 @@ class API::Connect : public CallData, public catena::common::Connect {
      * Connect main process
      */
     void proceed() override;
+    /**
+     * Finishes the Connect process by disconnecting listeners.
+     */
+    void finish() override;
     /**
      * @brief Returns true if the RPC was cancelled.
      */

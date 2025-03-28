@@ -59,3 +59,15 @@ void catena::subs(std::string& str, const std::string& seq, const std::string& r
     oss << str.substr(prev);  // write to the end of the input string
     str = oss.str();
 }
+
+void catena::split(std::vector<std::string>& out, const std::string& str, const std::string& delim) {
+    std::size_t prev{}, pos{};
+    while (pos != std::string::npos) {
+        prev = pos;
+        pos = str.find(delim, pos);  // locate target sequence in input
+        out.emplace_back(str.substr(prev, pos - prev));  // write what came before
+        if (pos != std::string::npos) {
+            pos += delim.size();                    // skip over the target sequence
+        }
+    }
+}

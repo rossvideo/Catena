@@ -41,85 +41,38 @@
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
 
+// common
+#include <utils.h>
+
 // Connections/REST
 #include "api.h"
 #include "SockerWriter.h"
 using catena::API;
- 
+
 /**
  * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
  */
-class API::MultiSetValue : public CallData {
+class API::DeviceRequest : public CallData {
   public:
-    /**
-     * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
-     * initialized.
-     *
-     * @param jsonPayload The json body extracted from the request.
-     * @param socket The socket to write the response to.
-     * @param dm The device to get the value from.
-     * @param authz The authorizer object containing the client's scopes.
-     */ 
-    MultiSetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
-  protected:
-    /**
-     * @brief Constructor for child SetValue RPCs. Does not call proceed().
-     * @param jsonPayload The json body extracted from the request.
-     * @param socket The socket to write the response to.
-     * @param dm The device to get the value from.
-     * @param authz The authorizer object containing the client's scopes.
-     * @param objectId The object's unique id.
-     */
-    MultiSetValue(std::string& jsonPayload, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz, int objectId);
-    /**
-     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
-     * @returns True if successful.
-     */
-    virtual bool toMulti();
-    /**
-     * @brief MultiSetValue main process.
-     */
+    DeviceRequest(std::string& request, Tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+  private:
     void proceed() override;
-    /**
-     * @brief Finishes the MultiSetValue process.
-     */
     void finish() override;
+    Tcp::socket& socket_;
+    ChunkedWriter writer_;
+    catena::common::Authorizer* authz_;
+    Device& dm_;
+    uint32_t slot_;
+    std::string language_;
+    int detailLevel_;
+    std::vector<std::string> subscribedOids_;
 
     /**
-     * @brief The json body extracted from the request.
-     */
-    std::string& jsonPayload_;
-    /**
-     * @brief The socket to write the response to.
-     */
-    Tcp::socket& socket_;
-    /**
-     * @brief The authorizer object containing the client's scopes.
-     */
-    catena::common::Authorizer* authz_;
-    /**
-     * @brief The SocketWriter object for writing to socket_.
-     */
-    SocketWriter writer_;
-    /**
-     * @brief The MultiSetValuePayload extracted from jsonPayload_.
-     */
-    catena::MultiSetValuePayload reqs_;
-    /**
-     * @brief The device to set values of.
-     */
-    Device& dm_;
-    /**
-     * @brief The object's unique id.
+     * @brief ID of the Connect object
      */
     int objectId_;
-  private:
     /**
-     * @brief Name of class to specify rpc in console notifications.
-     */
-    std::string typeName_ = "";
-    /**
-     * @brief The total # of MultiSetValue objects.
+     * @brief The total # of Connect objects.
      */
     static int objectCounter_;
 };
