@@ -70,12 +70,23 @@ class MockServerAsyncWriter {
 public:
     MOCK_METHOD(void, Write, (const catena::DeviceComponent_ComponentParam& msg, void* tag), ());
 };
-    
+class MockCatenaServiceImpl : public CatenaServiceImpl {
+    public:
+        // Mock constructor
+        MockCatenaServiceImpl(grpc::ServerCompletionQueue* cq, Device& dm, std::string& EOPath, bool authorizationEnabled)
+            : CatenaServiceImpl(cq, dm, EOPath, authorizationEnabled) {}
+
+        MOCK_METHOD(void, registerItem, (const std::string& oid), ());
+        MOCK_METHOD(bool, authorizationEnabled, (), (const));
+        MOCK_METHOD(void*, getCompletionQueue, (), (const));
+        MOCK_METHOD(void*, getServer, (), (const));
+        MOCK_METHOD(MockServerAsyncWriter*, getWriter, (), (const));
+};
 //Fixture
 class UpdateSubscriptionsTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        std::string eoPath = "/test/path";
+        eoPath = "/test/path";
         bool authEnabled = false;
 
         grpc::ServerBuilder builder;
@@ -84,7 +95,7 @@ protected:
         cq = builder.AddCompletionQueue();
  
         // Create the service instance
-        service = new CatenaServiceImpl(cq.get(), mockDevice, eoPath, authEnabled);
+        service = new MockCatenaServiceImpl(cq.get(), mockDevice, eoPath, authEnabled);
 
         // Register the service with the server
         builder.RegisterService(service);
@@ -115,12 +126,12 @@ protected:
 
         
     }
-
+    std::string eoPath;
     std::unique_ptr<grpc::ServerCompletionQueue> cq;
     std::unique_ptr<grpc::Server> server;
     MockDevice mockDevice;
     MockSubscriptionManager mockSubscriptionManager;
-    CatenaServiceImpl* service = nullptr;
+    MockCatenaServiceImpl* service = nullptr;
 };
 
 TEST_F(UpdateSubscriptionsTest, UpdateSubscriptions_Constutor) {

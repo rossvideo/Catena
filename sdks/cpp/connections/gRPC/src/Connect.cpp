@@ -58,6 +58,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+            std::cout << "Calling registerItem with: " << this << std::endl;
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process
