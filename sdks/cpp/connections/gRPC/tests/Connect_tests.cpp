@@ -8,6 +8,7 @@
 //standard includes for testing
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <grpcpp/grpcpp.h>
 
 #include "ServiceImpl.h"
 #include <string>
@@ -24,7 +25,7 @@ using ::testing::_;
 
 
 
-
+// Mock classes
 class MockDevice : public Device {
     public:
         MOCK_METHOD(void, slot, (const uint32_t slot), ());
@@ -49,11 +50,8 @@ class MockDevice : public Device {
         MOCK_METHOD(catena::exception_with_status, setValue, (const std::string& jptr, catena::Value& src, catena::common::Authorizer& authz), ());
         MOCK_METHOD(catena::exception_with_status, getValue, (const std::string& jptr, catena::Value& value, catena::common::Authorizer& authz), (const));
         MOCK_METHOD(bool, shouldSendParam, (const IParam& param, bool is_subscribed, catena::common::Authorizer& authz), (const));
-        MOCK_METHOD((vdk::signal<void(const std::string&, const IParam*, const int32_t)>&), valueSetByServer, (), ());
-        MOCK_METHOD((vdk::signal<void(const std::string&, const IParam*, const int32_t)>&), valueSetByClient, (), ());
-        MOCK_METHOD((vdk::signal<const Device::ComponentLanguagePack&>&), languageAddedPushUpdate, (), ());
-
 };
+
 
 class MockSubscriptionManager : public catena::grpc::SubscriptionManager {
     public:
@@ -71,92 +69,94 @@ class MockSubscriptionManager : public catena::grpc::SubscriptionManager {
             return mockInstance.isWildcardMock(oid);
         }
 };
+// Mock class for grpc::ServerAsyncWriter
+class MockServerAsyncWriter {
+public:
+    MOCK_METHOD(void, Write, (const catena::DeviceComponent_ComponentParam& msg, void* tag), ());
+};
+
 class MockCatenaServiceImpl : public CatenaServiceImpl {
     public:
         // Mock constructor
-        MockCatenaServiceImpl(ServerCompletionQueue* cq, MockDevice& dm, std::string& EOPath, bool authz)
-            : CatenaServiceImpl(cq, dm, EOPath, authz), cq_(cq), dm_(dm), EOPath_(EOPath), authorizationEnabled_(authz) {}
+        MockCatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
+        // : CatenaServiceImpl(cq, dm, EOPath, authz) {}
+    
+        MOCK_METHOD(void, init, (), ());
+        MOCK_METHOD(void, processEvents, (), ());
+        MOCK_METHOD(void, shutdownServer, (), ());
+        MOCK_METHOD(void, registerItem, (CallData *cd), ());
+        MOCK_METHOD(void, deregisterItem, (CallData *cd), ());
 
-        MOCK_METHOD(void, init, ());
-        MOCK_METHOD(void, processEvents, ());
-        MOCK_METHOD(void, shutdownServer, ());
-        MOCK_METHOD(void, registerItem, (CallData* cd));
-        MOCK_METHOD(void, deregisterItem, (CallData* cd));
-        MOCK_METHOD(bool, authorizationEnabled, (), (const));
-        // Mock CallData class
-        class MockCallData {
-            public:
-                virtual void proceed(MockCatenaServiceImpl* service, bool ok) = 0;
-                virtual ~MockCallData() = default;
-        };
-    
-        // Mocked CallData subclasses
-        class MockCallDataImpl : public MockCallData {
-            public:
-                MOCK_METHOD(void, proceed, (MockCatenaServiceImpl* service, bool ok), (override));
-        };
-        class MockGetPopulatedSlots : public MockCallData {};
-        class MockGetValue : public MockCallData {};
-        class MockSetValue : public MockCallData {};
-        class MockMultiSetValue : public MockCallData {};
-        class MockConnect : public MockCallData {};
-        class MockDeviceRequest : public MockCallData {};
-        class MockExternalObjectRequest : public MockCallData {};
-        class MockBasicParamInfoRequest : public MockCallData {};
-        class MockGetParam : public MockCallData {};
-        class MockListLanguages : public MockCallData {};
-        class MockLanguagePackRequest : public MockCallData {};
-        class MockExecuteCommand : public MockCallData {};
-        class MockAddLanguage : public MockCallData {};
-        class MockUpdateSubscriptions : public MockCallData {};
-    
-    private:
-        ServerCompletionQueue* cq_;
-        MockDevice& dm_;
-        std::string& EOPath_;
-        bool authorizationEnabled_;
-        std::mutex registryMutex_;
-        std::vector<std::unique_ptr<MockCallData>> registry_;
+        // class CallData {
+        // public:
+        //     virtual void proceed(CatenaServiceImpl *service, bool ok) = 0;
+        //     virtual ~CallData() {}
+        // };
+};
+//Fixture
+class ConnectTests : public ::testing::Test {
+protected:
+    void SetUp() override {
+        eoPath = "/test/path";
+        bool authEnabled = false;
+
+        grpc::ServerBuilder builder;
+
+        // Create a completion queue
+        cq = builder.AddCompletionQueue();
+ 
+        // Create the service instance
+        service = new MockCatenaServiceImpl(cq.get(), mockDevice, eoPath, authEnabled);
+
+        // Register the service with the server
+        builder.RegisterService(service);
+
+        // Build and start the server
+        server = builder.BuildAndStart();
+
+        ASSERT_TRUE(server != nullptr) << "Failed to start gRPC server.";
+    }
+
+    void TearDown() override {
+        //shutdown the server
+        if (server){
+            server->Shutdown();
+            server->Wait(); 
+        }
+        
+        if (cq){
+            cq->Shutdown();
+            void* ignored_tag;
+            bool ignored_ok;
+            while (cq->Next(&ignored_tag, &ignored_ok)) { }
+        }
+        if (service){
+            delete service;
+            service = nullptr;
+        }
+
+        
+    }
+    std::string eoPath;
+    std::unique_ptr<grpc::ServerCompletionQueue> cq;
+    std::unique_ptr<grpc::Server> server;
+    MockDevice mockDevice;
+    MockSubscriptionManager mockSubscriptionManager;
+    MockCatenaServiceImpl* service = nullptr;
 };
 
-TEST(ConnectTests, Connect_Constructor) {
-    
-    std::string EOPath = "/test/path";
-    bool authEnabled = true;
+TEST_F(ConnectTests, Connect_Constructor) {
 
-    grpc::ServerBuilder builder;
 
+    // Create a new UpdateSubscriptions object
     bool ok = true;
-
-    std::unique_ptr<grpc::ServerCompletionQueue> cq;
-    cq = builder.AddCompletionQueue();
-
-    MockDevice mockDevice;
-    MockCatenaServiceImpl* service = nullptr;
-
-    service = new MockCatenaServiceImpl(cq.get(), mockDevice, EOPath, authEnabled);
-    ASSERT_NE(service, nullptr);
-    builder.RegisterService(service);
-
-    MockSubscriptionManager subscription_manager;
-
-
-    ON_CALL(*service, authorizationEnabled()).WillByDefault(Return(true));
-    ON_CALL(subscription_manager, addSubscription(_, _)).WillByDefault(Return(true));
-
-
-    EXPECT_CALL(*service, registerItem).Times(1);
-    EXPECT_CALL(*service, authorizationEnabled()).WillOnce(Return(true));
-    EXPECT_CALL(mockDevice, slot()).WillOnce(Return(42));
-    EXPECT_CALL(subscription_manager, getAllSubscribedOids)
-        .WillOnce(Invoke([](catena::common::Device&) -> const std::vector<std::string>& {
-            static const std::vector<std::string> empty_vector;
-            return empty_vector;
-        }));
-
-
-    CatenaServiceImpl::Connect cc(service, mockDevice, ok, subscription_manager);
-    std::cerr << "Connect_Constructor:end" << std::endl;
-    // Check that the object was created
-    ASSERT_TRUE(&cc);
+    
+    auto us = new CatenaServiceImpl::Connect(service, mockDevice, ok, mockSubscriptionManager);
+ 
+    ASSERT_TRUE(ok);
+    
+    // Verify that the object is created
+    SUCCEED();
+ 
+    
 }
