@@ -50,26 +50,28 @@
 
 using catena::API;
 
-void API::route(std::string& method, std::string& request, std::string& jsonPayload, tcp::socket& socket, catena::common::Authorizer* authz) {
-    if (method == "GET") {          // GET methods.
-        if (request.starts_with("/v1/DeviceRequest")) {
+void API::route(tcp::socket& socket, SocketReader& context, catena::common::Authorizer* authz) {
+    // This is a temporary fix.
+    std::string request = std::string(context.req());
+    if (context.method() == "GET") {          // GET methods.
+        if (context.rpc().starts_with("/v1/DeviceRequest")) {
             DeviceRequest deviceRequest(request, socket, dm_, authz);
-        } else if (request.starts_with("/v1/GetPopulatedSlots")) {
+        } else if (context.rpc().starts_with("/v1/GetPopulatedSlots")) {
             GetPopulatedSlots getPopulatedSlots(socket, dm_);
-        } else if (request.starts_with("/v1/GetValue")) {
+        } else if (context.rpc().starts_with("/v1/GetValue")) {
             GetValue getValue(request, socket, dm_, authz);
-        } else if (request.starts_with("/v1/Connect")) {
+        } else if (context.rpc().starts_with("/v1/Connect")) {
             Connect connect(request, socket, dm_, authz);
         } else {
             throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }
-    } else if (method == "POST") {  // POST methods.
+    } else if (context.method() == "POST") {  // POST methods.
         throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    } else if (method == "PUT") {   // PUT methods.
-        if (request.starts_with("/v1/SetValue")) {
-            SetValue(jsonPayload, socket, dm_, authz);
-        } else if (request.starts_with("/v1/MultiSetValue")) {
-            MultiSetValue(jsonPayload, socket, dm_, authz);
+    } else if (context.method() == "PUT") {   // PUT methods.
+        if (context.rpc().starts_with("/v1/SetValue")) {
+            SetValue(context.jsonBody(), socket, dm_, authz);
+        } else if (context.rpc().starts_with("/v1/MultiSetValue")) {
+            MultiSetValue(context.jsonBody(), socket, dm_, authz);
         } else {
             throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
         }

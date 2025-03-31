@@ -46,7 +46,8 @@
 #include <Enums.h>
 
 // REST
-#include <SockerWriter.h>
+#include <SocketReader.h>
+#include <SocketWriter.h>
 
 // boost
 #include <boost/asio.hpp>
@@ -57,6 +58,7 @@ using boost::asio::ip::tcp;
 #include <iostream>
 #include <regex>
 
+using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
 using catena::REST::ChunkedWriter;
 
@@ -79,7 +81,7 @@ class API {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    explicit API(Device &dm, std::string& EOPath, uint16_t port = 443, bool authz = false);
+    explicit API(Device &dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
     virtual ~API() = default;
     API(const API&) = delete;
     API& operator=(const API&) = delete;
@@ -94,6 +96,15 @@ class API {
      * @brief Starts the API.
      */
     void run();
+    /**
+     * @todo This
+     */
+    void Shutdown() {
+      shutdown_ = true;
+      io_context_.stop();
+      acceptor_.close();
+      return;
+    };
 
     /**
      * @brief CallData states.
@@ -157,7 +168,7 @@ class API {
      * @param authz The authorizer object containing client's scopes.
      * @returns Nothing, errors are thrown or communicated through the socket.
      */
-    void route(std::string& method, std::string& request, std::string& jsonPayload, tcp::socket& socket, catena::common::Authorizer* authz);
+    void route(tcp::socket& socket, SocketReader& context, catena::common::Authorizer* authz);
     /**
      * @brief Returns true if port_ is already in use.
      */
@@ -191,6 +202,7 @@ class API {
      * @brief Flag to enable authorization
      */
     bool authorizationEnabled_;
+    bool shutdown_ = false;
     /**
      * @brief Returns the current time as a string including microseconds.
      */
