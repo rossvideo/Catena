@@ -16,80 +16,50 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-API::API(Device &dm, std::string& EOPath, uint16_t port, bool authz)
+API::API(Device &dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
-      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)} {}
+      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)} {
+
+    if (authorizationEnabled_) {
+        std::cout<<"Authorization enabled."<<std::endl;
+    }
+}
 
 std::string API::version() const {
   return version_;
 }
 
 void API::run() {
+    shutdown_ = false;
     // TLS handled by Envoyproxy
-    while (true) {
+    while (!shutdown_) {
         // Waiting for a connection.
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
+        if (shutdown_) { break;}
 
         // Should probably keep track of threads like we do in the gRPC ServiceImpl.
 
         // When a connection has been made, detatch to handle asynchronously.
         std::thread([this, socket = std::move(socket)]() mutable {
             try {
-                /*
-                 * Move all of this into router? Saves a bunch of input args.
-                 */
-                // Reading the headers.
-                boost::asio::streambuf buffer;
-                boost::asio::read_until(socket, buffer, "\r\n\r\n");
-                std::istream header_stream(&buffer);
-
-                // Extracting method and request form the first line (URL)
-                std::string header;
-                std::getline(header_stream, header);
-                std::string method = header.substr(0, header.find(" "));
-                std::string request = header.substr(header.find("/"));
-
-                // Setting up authorizer and getting contentLength (if present)
-                std::size_t contentLength = 0;
+                // Reading from the socket.
+                SocketReader context(socket, authorizationEnabled_);
+                // Setting up authorizer
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz = nullptr;
-                if (!authorizationEnabled_) {
+                if (authorizationEnabled_) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(context.jwsToken());
+                    authz = sharedAuthz.get();
+                } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                while(std::getline(header_stream, header) && header != "\r") {
-                    // Getting bearer token if authorization is enabled.
-                    if (authorizationEnabled_ && header.starts_with("Authorization: Bearer ")) {
-                        std::string jwsToken = header.substr(std::string("Authorization: Bearer ").length());
-                        jwsToken.erase(jwsToken.length() - 1); // rm newline
-                        sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken);
-                        authz = sharedAuthz.get();
-                    }
-                    // Getting body content-Length
-                    if (header.starts_with("Content-Length: ")) {
-                        contentLength = stoi(header.substr(std::string("Content-Length: ").length()));
-                    }
-                }
-                /*
-                 * If there is a body, we need to handle leftover data from
-                 * above and append the rest.
-                 */
-                std::string jsonPayload = "";
-                if (contentLength > 0) {
-                    jsonPayload = std::string((std::istreambuf_iterator<char>(header_stream)), std::istreambuf_iterator<char>());
-                    if (jsonPayload.size() < contentLength) {
-                        std::size_t remainingLength = contentLength - jsonPayload.size();
-                        jsonPayload.resize(contentLength);
-                        boost::asio::read(socket, boost::asio::buffer(&jsonPayload[contentLength - remainingLength], remainingLength));
-                    }
-                }
-
                 // Routing the request based on the name.
-                route(method, request, jsonPayload, socket, authz);
+                route(socket, context, authz);
 
             // Catching errors.
             } catch (catena::exception_with_status& err) {
@@ -102,6 +72,7 @@ void API::run() {
             }
         }).detach();
     }
+    std::cout<<"Exiting loop"<<std::endl;
 }
 
 std::string API::timeNow() {

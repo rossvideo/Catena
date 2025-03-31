@@ -5,7 +5,7 @@
 // Initializes the object counter for MultiSetValue to 0.
 int API::MultiSetValue::objectCounter_ = 0;
 
-API::MultiSetValue::MultiSetValue(std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
+API::MultiSetValue::MultiSetValue(const std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
     MultiSetValue(jsonPayload, socket, dm, authz, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole(typeName_ + "SetValue", objectId_, CallStatus::kCreate, socket_.is_open());
@@ -13,7 +13,7 @@ API::MultiSetValue::MultiSetValue(std::string& jsonPayload, tcp::socket& socket,
     finish();
 }
 
-API::MultiSetValue::MultiSetValue(std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz, int objectId) :
+API::MultiSetValue::MultiSetValue(const std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz, int objectId) :
     jsonPayload_{jsonPayload}, socket_{socket}, writer_{socket}, dm_{dm}, authz_(authz), objectId_{objectId} {}
 
 bool API::MultiSetValue::toMulti() {

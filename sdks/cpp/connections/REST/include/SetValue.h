@@ -55,7 +55,7 @@ class API::SetValue : public MultiSetValue {
      * @param dm The device to set the value of.
      * @param authz The authorizer object containing the client's scopes.
      */ 
-    SetValue(std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    SetValue(const std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
   private:
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.

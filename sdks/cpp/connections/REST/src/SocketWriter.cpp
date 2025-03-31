@@ -28,11 +28,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <SockerWriter.h>
+#include <SocketWriter.h>
 using catena::REST::SocketWriter;
 using catena::REST::ChunkedWriter;
 
-// SockerWriter
+// SocketWriter
 void SocketWriter::write(google::protobuf::Message& msg) {
     // Converting the value to JSON.
     std::string jsonOutput;
