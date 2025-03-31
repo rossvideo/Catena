@@ -56,10 +56,14 @@ CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, Device &dm, bo
 }
 
 void CatenaServiceImpl::SetValue::request() {
-    catena::SetValuePayload* req = reqs_.add_values();
-    service_->RequestSetValue(&context_, req, &responder_, service_->cq_, service_->cq_, this);
+    service_->RequestSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
 }
 
 void CatenaServiceImpl::SetValue::create(CatenaServiceImpl *service, Device &dm, bool ok) {
     new SetValue(service, dm, ok);
+}
+
+void CatenaServiceImpl::SetValue::toMulti() {
+    reqs_.set_slot(req_.slot());
+    reqs_.add_values()->CopyFrom(req_.value());
 }
