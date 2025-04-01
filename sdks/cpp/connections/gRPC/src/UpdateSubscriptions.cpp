@@ -76,46 +76,16 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
     switch (status_) {
         case CallStatus::kCreate:
             std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kCreate state" << std::endl;
-            std::cout << "Current subscriptions before kCreate: " << std::endl;
-            for (const auto& oid : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
-                std::cout << "  - " << oid << std::endl;
-            }
-            std::cout << "Raw request data in kCreate:" << std::endl;
-            std::cout << "Request slot: " << req_.slot() << std::endl;
-            std::cout << "Request ByteSize: " << req_.ByteSizeLong() << std::endl;
             status_ = CallStatus::kProcess;
             service_->RequestUpdateSubscriptions(&context_, &req_, &writer_, 
                         service_->cq_, service_->cq_, this);
             break;
 
         case CallStatus::kProcess:
-            std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kProcess state" << std::endl;
-            std::cout << "Current subscriptions before processing: " << std::endl;
-            for (const auto& oid : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
-                std::cout << "  - " << oid << std::endl;
-            }
             new UpdateSubscriptions(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             
             try {
-                // Process the subscription updates
-                std::cout << "Processing subscription updates for slot: " << req_.slot() << std::endl;
-                std::cout << "Request details in kProcess:" << std::endl;
-                std::cout << "ByteSize: " << req_.ByteSizeLong() << std::endl;
-                std::cout << "Serialized size: " << req_.SerializeAsString().size() << std::endl;
-                std::cout << "Number of OIDs to add: " << req_.added_oids_size() << std::endl;
-                std::cout << "Number of OIDs to remove: " << req_.removed_oids_size() << std::endl;
-                
-                // Print the OIDs to be added
-                for (const auto& oid : req_.added_oids()) {
-                    std::cout << "OID to add: " << oid << std::endl;
-                }
-                
-                // Print the OIDs to be removed
-                for (const auto& oid : req_.removed_oids()) {
-                    std::cout << "OID to remove: " << oid << std::endl;
-                }
-                
                 catena::common::Authorizer* authz;
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 if (service->authorizationEnabled()) {
@@ -130,52 +100,27 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 current_response_ = 0;
                 
                 // Process removed OIDs
-                for (const auto& oid : req_.removed_oids()) {
-                    std::cout << "Removing subscription for OID: " << oid << std::endl;
-                    std::cout << "Current subscription count before removal: " 
-                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
-                    
+                for (const auto& oid : req_.removed_oids()) {     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
                     if (!service_->subscriptionManager_.removeSubscription(oid, dm_, rc)) {
-                        std::cout << "Failed to remove subscription: " << rc.what() << std::endl;
-                        throw rc;
+                        throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
                     }
-                    
-                    std::cout << "Successfully removed subscription for OID: " << oid << std::endl;
-                    std::cout << "Current subscription count after removal: " 
-                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
                 }
                 
                 // Process added OIDs
                 for (const auto& oid : req_.added_oids()) {
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
-                    std::cout << "Current subscription count before addition: " 
-                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
-                    std::cout << "Current subscriptions before adding " << oid << ":" << std::endl;
-                    for (const auto& existing : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
-                        std::cout << "  - " << existing << std::endl;
-                    }
                     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
                     if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
-                        std::cout << "Failed to add subscription: " << rc.what() << std::endl;
-                        throw rc;
+                        throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                     }
                     
-                    std::cout << "Successfully added subscription for OID: " << oid << std::endl;
-                    std::cout << "Current subscription count after addition: " 
-                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
-                    std::cout << "Current subscriptions after adding " << oid << ":" << std::endl;
-                    for (const auto& existing : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
-                        std::cout << "  - " << existing << std::endl;
-                    }
                 }
                 
                 // Now that all subscriptions are processed, send current values for all subscribed parameters
-                std::cout << "Getting current subscribed parameters..." << std::endl;
                 try {
                     sendSubscribedParameters(*authz);
-                    std::cout << "Number of responses to send: " << responses_.size() << std::endl;
                 } catch (const catena::exception_with_status& e) {
                     std::cout << "Error getting subscribed parameters: " << e.what() << std::endl;
                     // Don't throw here - we still want to finish the request successfully

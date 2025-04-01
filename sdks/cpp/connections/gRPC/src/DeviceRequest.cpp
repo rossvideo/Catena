@@ -102,20 +102,6 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 // Get service subscriptions from the manager
                 subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
                 
-                // Remove any previous RPC subscriptions that aren't in the new request
-                for (const auto& old_oid : rpc_subscriptions_) {
-                    if (std::find(req_.subscribed_oids().begin(), req_.subscribed_oids().end(), old_oid) == 
-                        req_.subscribed_oids().end()) {
-                        catena::exception_with_status rc{"", catena::StatusCode::OK};
-                        if (!service_->subscriptionManager_.removeSubscription(old_oid, dm_, rc)) {
-                            throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
-                        }
-                    }
-                }
-                
-                // Clear and update our RPC-specific subscriptions
-                rpc_subscriptions_.clear();
-                
                 // If this request has subscriptions, add them
                 if (!req_.subscribed_oids().empty()) {
                     // Add new subscriptions to both the manager and our tracking list
