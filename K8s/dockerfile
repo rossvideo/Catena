@@ -1,0 +1,75 @@
+FROM library/ubuntu:24.04
+LABEL org.opencontainers.image.title="Catena SDK"
+LABEL org.opencontainers.image.description="Rossvideo Catena"
+LABEL org.opencontainers.image.version="v0.0.1-dev"
+LABEL org.opencontainers.image.vendor="Rossvideo"
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential cmake nodejs npm git libssl-dev doxygen graphviz \
+    libgtest-dev libboost-all-dev libasio-dev libgmock-dev ninja-build \
+    && npm install -g n \
+    && apt-get clean
+
+# Install gRPC
+RUN git clone -b v1.64.2 https://github.com/grpc/grpc /root/grpc \
+    && cd /root/grpc && git submodule update --recursive --init \
+    && mkdir -p /root/grpc/cmake/build \
+    && cd /root/grpc/cmake/build \
+    && cmake /root/grpc -DCMAKE_BUILD_TYPE=Release -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX=/root/.local \
+    && make -j4 install
+
+# Install jwt-cpp
+RUN git clone https://github.com/Thalhammer/jwt-cpp /root/jwt-cpp \
+    && mkdir /root/jwt-cpp/build \
+    && cd /root/jwt-cpp/build \
+    && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/root/.local /root/jwt-cpp \
+    && make && make install
+
+# Install Google Test
+RUN cd /usr/src/gtest \
+    && cmake -DCMAKE_INSTALL_PREFIX=/root/.local CMakeLists.txt \
+    && make && cp lib/*.a /usr/lib
+
+
+
+
+# Build the Docker image
+FROM library/ubuntu:24.04 AS build
+
+# Copy the build artifacts
+COPY --from=0 /root/.local /root/.local
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential cmake nodejs npm git libssl-dev doxygen graphviz \
+    libgtest-dev libboost-all-dev libasio-dev libgmock-dev ninja-build \
+    && npm install -g n \
+    && apt-get clean
+
+# Clone Catena repository
+RUN mkdir -p /root/Catena \
+    && cd /root/Catena \
+    && git init \
+    && git remote add origin https://github.com/rossvideo/Catena.git \
+    && git pull origin develop \
+    && git submodule update --init --recursive
+
+
+# Build Catena
+RUN mkdir -p /root/Catena/sdks/cpp/build \
+    && cd /root/Catena/sdks/cpp/build \
+    && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_INSTALL_PREFIX=/root/.local /root/Catena/sdks/cpp \
+    && ninja
+
+# Set the default user
+WORKDIR "/root/Catena"
+
+# ~/Catena/sdks/cpp/build/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
+
+#docker run -rm -v $(realpath ../):/root/Catena -it catena-sdk
+VOLUME ["/root/Catena"] 

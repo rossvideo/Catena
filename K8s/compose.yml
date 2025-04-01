@@ -1,0 +1,7 @@
+services:
+  catena-sdk:
+    image: catena:latest
+    volumes:
+      - ../:/root/Catena
+    stdin_open: true
+    tty: true
