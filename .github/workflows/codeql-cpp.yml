@@ -132,6 +132,12 @@ jobs:
           echo "jwt-cpp already installed, skipping build"
         fi
 
+    # Initialize git submodules
+    - name: Initialize git submodules
+      run: |
+        cd ${{ github.workspace }}
+        git submodule update --init --recursive
+
     # Cache Codegen dependencies
     - name: Cache Codegen dependencies
       uses: actions/cache@v3
