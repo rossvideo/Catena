@@ -65,6 +65,11 @@ class API::Connect : public CallData, public catena::common::Connect {
      * @param authz The authorizer object containing the client's scopes.
      */ 
     Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    /**
+     * @brief Signal emitted in the case of an error which requires the all
+     * open connections to be shut down.
+     */
+    static vdk::signal<void()> shutdownSignal_;
   private:
     /**
      * Connect main process
@@ -107,11 +112,6 @@ class API::Connect : public CallData, public catena::common::Connect {
      * emitted. Used when ending the connection.
      */
     unsigned int languageAddedId_;
-    /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
-     */
-    static vdk::signal<void()> shutdownSignal_;
     /**
      * @brief ID of the shutdown signal for the Connect object
     */

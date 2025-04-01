@@ -3,6 +3,8 @@
 #include <api.h>
 using catena::API;
 
+#include <Connect.h>
+
 #include "absl/flags/flag.h"
 
 // expand env variables
@@ -33,47 +35,42 @@ std::string API::version() const {
   return version_;
 }
 
+// Initializing the shutdown signal for all open connections.
+vdk::signal<void()> API::Connect::shutdownSignal_;
+
 void API::run() {
-    shutdown_ = false;
     // TLS handled by Envoyproxy
+    shutdown_ = false;
+
     while (!shutdown_) {
         // Waiting for a connection.
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
-        if (shutdown_) { break;}
-
-        // Should probably keep track of threads like we do in the gRPC ServiceImpl.
-
-        // When a connection has been made, detatch to handle asynchronously.
+        // Once a conections is made, handle async.
         std::thread([this, socket = std::move(socket)]() mutable {
-            try {
-                // Reading from the socket.
-                SocketReader context(socket, authorizationEnabled_);
-                // Setting up authorizer
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz = nullptr;
-                if (authorizationEnabled_) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(context.jwsToken());
-                    authz = sharedAuthz.get();
-                } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
-                }
-                // Routing the request based on the name.
-                route(socket, context, authz);
-
-            // Catching errors.
-            } catch (catena::exception_with_status& err) {
-                SocketWriter writer(socket);
-                writer.write(err);
-            } catch (...) {
-                SocketWriter writer(socket);
-                catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
-                writer.write(err);
-            }
+            // Routing socket to the appropriate RPC.
+            this->route(socket);
         }).detach();
     }
-    std::cout<<"Exiting loop"<<std::endl;
+    
+    // Shutting down active RPCs.
+    Connect::shutdownSignal_.emit(); // Shutdown active Connect RPCs.
+    io_context_.stop();
+    acceptor_.cancel();
+    acceptor_.close();
+    
+    // Wait for active RPCs to finish
+    while(activeRpcs_ > 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 }
+
+void API::Shutdown() {
+    shutdown_ = true;
+    // Sending dummy connection to run() loop.
+    tcp::socket dummySocket(io_context_);
+    dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
+};
 
 std::string API::timeNow() {
     std::stringstream ss;
@@ -87,6 +84,9 @@ std::string API::timeNow() {
     return ss.str();
 }
 
+/**
+ * @todo move to SocketReader once format is decided.
+ */
 void API::CallData::parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const {
     if (fields.size() == 0) {
         throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
