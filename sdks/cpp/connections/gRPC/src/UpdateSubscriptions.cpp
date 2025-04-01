@@ -50,10 +50,9 @@ using catena::common::Path;
 
 int CatenaServiceImpl::UpdateSubscriptions::objectCounter_ = 0;
 
-CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::grpc::SubscriptionManager& subscriptionManager, bool ok)
+CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish},
-        subscriptionManager_{subscriptionManager} {
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process
@@ -78,7 +77,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
         case CallStatus::kCreate:
             std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kCreate state" << std::endl;
             std::cout << "Current subscriptions before kCreate: " << std::endl;
-            for (const auto& oid : subscriptionManager_.getAllSubscribedOids(dm_)) {
+            for (const auto& oid : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
                 std::cout << "  - " << oid << std::endl;
             }
             std::cout << "Raw request data in kCreate:" << std::endl;
@@ -92,10 +91,10 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
         case CallStatus::kProcess:
             std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kProcess state" << std::endl;
             std::cout << "Current subscriptions before processing: " << std::endl;
-            for (const auto& oid : subscriptionManager_.getAllSubscribedOids(dm_)) {
+            for (const auto& oid : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
                 std::cout << "  - " << oid << std::endl;
             }
-            new UpdateSubscriptions(service_, dm_, subscriptionManager_, ok);
+            new UpdateSubscriptions(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             
             try {
@@ -134,40 +133,40 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 for (const auto& oid : req_.removed_oids()) {
                     std::cout << "Removing subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count before removal: " 
-                              << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
+                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
                     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
-                    if (!subscriptionManager_.removeSubscription(oid, dm_, rc)) {
+                    if (!service_->subscriptionManager_.removeSubscription(oid, dm_, rc)) {
                         std::cout << "Failed to remove subscription: " << rc.what() << std::endl;
                         throw rc;
                     }
                     
                     std::cout << "Successfully removed subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count after removal: " 
-                              << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
+                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
                 }
                 
                 // Process added OIDs
                 for (const auto& oid : req_.added_oids()) {
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count before addition: " 
-                              << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
+                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
                     std::cout << "Current subscriptions before adding " << oid << ":" << std::endl;
-                    for (const auto& existing : subscriptionManager_.getAllSubscribedOids(dm_)) {
+                    for (const auto& existing : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
                         std::cout << "  - " << existing << std::endl;
                     }
                     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
-                    if (!subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                    if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
                         std::cout << "Failed to add subscription: " << rc.what() << std::endl;
                         throw rc;
                     }
                     
                     std::cout << "Successfully added subscription for OID: " << oid << std::endl;
                     std::cout << "Current subscription count after addition: " 
-                              << subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
+                              << service_->subscriptionManager_.getAllSubscribedOids(dm_).size() << std::endl;
                     std::cout << "Current subscriptions after adding " << oid << ":" << std::endl;
-                    for (const auto& existing : subscriptionManager_.getAllSubscribedOids(dm_)) {
+                    for (const auto& existing : service_->subscriptionManager_.getAllSubscribedOids(dm_)) {
                         std::cout << "  - " << existing << std::endl;
                     }
                 }
@@ -252,7 +251,7 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
     // Get all subscribed OIDs from the manager
-    const auto& subscribedOids = subscriptionManager_.getAllSubscribedOids(dm_);
+    const auto& subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
     std::cout << "Got " << subscribedOids.size() << " subscribed OIDs" << std::endl;
     
     // Process each subscribed OID
