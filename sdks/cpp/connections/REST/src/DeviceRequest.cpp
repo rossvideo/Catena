@@ -5,8 +5,8 @@
 // Initializes the object counter for Connect to 0.
 int API::DeviceRequest::objectCounter_ = 0;
 
-API::DeviceRequest::DeviceRequest(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
-    socket_{socket}, writer_{socket}, dm_{dm}, authz_{authz} {
+API::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+    socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole("DeviceRequest", objectId_, CallStatus::kCreate, socket_.is_open());
     // Return code used for status.
@@ -19,7 +19,7 @@ API::DeviceRequest::DeviceRequest(std::string& request, tcp::socket& socket, Dev
             {"language", ""},
             {"slot", ""}
         };
-        parseFields(request, fields);
+        parseFields(context_.req_, fields);
         slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
         language_ = fields.at("language");
         auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
@@ -47,8 +47,16 @@ void API::DeviceRequest::proceed() {
     try {
         // controls whether shallow copy or deep copy is used
         bool shallowCopy = true;
+        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+        catena::common::Authorizer* authz;
+        if (context_.authorizationEnabled()) {
+            sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
+            authz = sharedAuthz.get();
+        } else {
+            authz = &catena::common::Authorizer::kAuthzDisabled;
+        }
         // Getting the component serializer.
-        auto serializer = dm_.getComponentSerializer(*authz_, shallowCopy);
+        auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
         // Getting each component ans writing to the stream.
         while (serializer.hasMore()) {
             writeConsole("DeviceRequest", objectId_, CallStatus::kWrite, socket_.is_open());

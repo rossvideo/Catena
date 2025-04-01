@@ -153,18 +153,15 @@ class API {
          */
         void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
     };
+    
+    bool authorizationEnabled() { return authorizationEnabled_; };
 
   private:
     /**
      * @brief Routes a request to the appropriate controller.
-     * @param method The HTTP method extracted from the URL (GET, POST, PUT).
-     * @param request The request extracted from the URL (/v1/DeviceRequest).
      * @param socket The socket to communicate with the client with.
-     * @param authz The authorizer object containing client's scopes.
      * @returns Nothing, errors are thrown or communicated through the socket.
      */
-    void route(tcp::socket& socket, SocketReader& context, catena::common::Authorizer* authz);
-
     void route(tcp::socket& socket);
     /**
      * @brief Returns true if port_ is already in use.

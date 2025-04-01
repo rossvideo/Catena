@@ -48,21 +48,21 @@ void API::run() {
         acceptor_.accept(socket);
         // Once a conections is made, handle async.
         std::thread([this, socket = std::move(socket)]() mutable {
-            // Routing socket to the appropriate RPC.
             this->route(socket);
         }).detach();
     }
     
     // Shutting down active RPCs.
     Connect::shutdownSignal_.emit(); // Shutdown active Connect RPCs.
-    io_context_.stop();
-    acceptor_.cancel();
-    acceptor_.close();
     
     // Wait for active RPCs to finish
     while(activeRpcs_ > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    io_context_.stop();
+    acceptor_.cancel();
+    acceptor_.close();
 }
 
 void API::Shutdown() {
