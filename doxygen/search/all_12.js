@@ -14,7 +14,7 @@ var searchData=
   ['registeritem_11',['registerItem',['../classCatenaServiceImpl.html#a5cceb267107e0837203946cde5469269',1,'CatenaServiceImpl']]],
   ['rem_12',['REM',['../ReflectionMacros_8h.html#a737eda892f12ba68de02b246e6809910',1,'ReflectionMacros.h']]],
   ['removepeer_13',['removePeer',['../classcatena_1_1PeerManager.html#a2a17dcf1482152378f302932249cbba1',1,'catena::PeerManager']]],
-  ['removesubscription_14',['removeSubscription',['../classcatena_1_1grpc_1_1SubscriptionManager.html#adbeb9e2d53e06060e47d5e3e815d284e',1,'catena::grpc::SubscriptionManager']]],
+  ['removesubscription_14',['removeSubscription',['../classcatena_1_1grpc_1_1SubscriptionManager.html#a691b47b5cc3bdc32bf5cc9edde8a7565',1,'catena::grpc::SubscriptionManager']]],
   ['reqs_5f_15',['reqs_',['../classCatenaServiceImpl_1_1MultiSetValue.html#a4cc58c0392d648403ad5a52d4f45dc09',1,'CatenaServiceImpl::MultiSetValue']]],
   ['request_16',['request',['../classCatenaServiceImpl_1_1MultiSetValue.html#a58566e199663d84d177068fe39bffc2e',1,'CatenaServiceImpl::MultiSetValue']]],
   ['required_17',['required',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md26',1,'Update node if required'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2cross__compiling.html#autotoc_md7',1,'Update node if required']]],
