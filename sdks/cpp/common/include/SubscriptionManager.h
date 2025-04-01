@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,12 +35,14 @@
  * @brief Manages parameter subscriptions for devices
  * @author john.naylor@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-02-27
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-04-02
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include <Device.h>
 #include <IParam.h>
+#include <Authorization.h>
+#include <ParamVisitor.h>
 
 #include <string>
 #include <vector>
@@ -48,6 +50,7 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 
 namespace catena {
 namespace common {
@@ -72,18 +75,20 @@ public:
      * @param oid The OID to subscribe to
      * @param dm The device model
      * @param rc Return code for error handling
+     * @param authz The authorizer to use for parameter access
      * @return true if subscription was added successfully
      */
-    bool addSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc);
+    bool addSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc, Authorizer& authz);
 
     /**
      * @brief Remove a subscription for a parameter
      * @param oid The OID to unsubscribe from
      * @param dm The device model
      * @param rc Return code for error handling
+     * @param authz The authorizer to use for parameter access
      * @return true if subscription was removed successfully
      */
-    bool removeSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc);
+    bool removeSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc, Authorizer& authz);
 
     /**
      * @brief Get all subscribed OIDs for a device
@@ -100,11 +105,85 @@ public:
      */
     bool isSubscribed(const std::string& oid, const Device& dm) const;
 
+    /**
+     * @brief Get the set of unique (non-wildcard) subscriptions
+     * @return Set of unique subscription OIDs
+     */
+    const std::set<std::string>& getUniqueSubscriptions() const;
+
+    /**
+     * @brief Get the set of wildcard subscriptions
+     * @return Set of wildcard subscription OIDs
+     */
+    const std::set<std::string>& getWildcardSubscriptions() const;
+
 private:
+    /**
+     * @brief Internal visitor class for collecting OIDs during parameter traversal
+     */
+    class SubscriptionVisitor : public ParamVisitor {
+        public:
+            /**
+             * @brief Constructor
+             * @param oids Vector to store collected OIDs
+             */
+            explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+
+            /**
+             * @brief Visit a parameter
+             * @param param The parameter to visit
+             * @param path The path to the parameter
+             */
+            void visit(IParam* param, const std::string& path) override {
+                oids_.push_back(path);
+            }
+
+            /**
+             * @brief Visit an array
+             * @param param The array to visit
+             * @param path The path to the array
+             * @param length The length of the array
+             */
+            void visitArray(IParam* param, const std::string& path, uint32_t length) override {
+                oids_.push_back(path);
+            }
+
+        private:
+            std::vector<std::string>& oids_;
+    };
+
+    /**
+     * @brief Check if an OID is a wildcard subscription
+     * @param oid The OID to check
+     * @return true if the OID ends with "/*"
+     */
+    bool isWildcard(const std::string& oid) const;
+
+    /**
+     * @brief Update the list of all subscribed OIDs
+     * @param dm The device model
+     */
+    void updateAllSubscribedOids_(const Device& dm);
+
     /**
      * @brief Map of device IDs to their subscribed OIDs
      */
     std::unordered_map<std::string, std::unordered_set<std::string>> subscriptions_;
+
+    /**
+     * @brief Set of unique (non-wildcard) subscriptions
+     */
+    std::set<std::string> uniqueSubscriptions_;
+
+    /**
+     * @brief Set of wildcard subscriptions (OIDs ending with "/*")
+     */
+    std::set<std::string> wildcardSubscriptions_;
+
+    /**
+     * @brief Vector of all subscribed OIDs (including wildcard expansions)
+     */
+    std::vector<std::string> allSubscribedOids_;
 
     /**
      * @brief Mutex to protect subscriptions_
