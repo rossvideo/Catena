@@ -48,6 +48,8 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
+
+
 /**
  * @brief Helper class used to read from a socket using boost.
  */
@@ -121,14 +123,11 @@ class SocketReader {
                 contentLength = stoi(header.substr(std::string("Content-Length: ").length()));
             }
         }
-        std::cout<<"Content-Length: "<<contentLength<<std::endl;
         // If body exists, we need to handle leftover data and append the rest.
         if (contentLength > 0) {
             jsonBody_ = std::string((std::istreambuf_iterator<char>(header_stream)), std::istreambuf_iterator<char>());
             if (jsonBody_.size() < contentLength) {
                 std::size_t remainingLength = contentLength - jsonBody_.size();
-                std::cout<<"jsonBody-Size"<<jsonBody_.size()<<std::endl;
-                std::cout<<"Remaining-Length: "<<remainingLength<<std::endl;
                 jsonBody_.resize(contentLength);
                 boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
             }

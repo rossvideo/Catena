@@ -97,14 +97,9 @@ class API {
      */
     void run();
     /**
-     * @todo This
+     * @brief Notifies the condition variable to shutdown the API.
      */
-    void Shutdown() {
-      shutdown_ = true;
-      io_context_.stop();
-      acceptor_.close();
-      return;
-    };
+    void Shutdown();
 
     /**
      * @brief CallData states.
@@ -169,6 +164,8 @@ class API {
      * @returns Nothing, errors are thrown or communicated through the socket.
      */
     void route(tcp::socket& socket, SocketReader& context, catena::common::Authorizer* authz);
+
+    void route(tcp::socket& socket);
     /**
      * @brief Returns true if port_ is already in use.
      */
@@ -202,11 +199,19 @@ class API {
      * @brief Flag to enable authorization
      */
     bool authorizationEnabled_;
+    /**
+     * @brief Flag to indicate if shutdown() has been called.
+     */
     bool shutdown_ = false;
     /**
      * @brief Returns the current time as a string including microseconds.
      */
     static std::string timeNow();
+    /**
+     * @brief Active RPC tracker.
+     */
+    uint32_t activeRpcs_ = 0;
+    std::mutex activeRpcMutex_;
 
     //Forward declarations of CallData classes for their respective RPC
     class Connect;

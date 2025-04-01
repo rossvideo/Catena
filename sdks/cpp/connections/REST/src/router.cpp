@@ -79,3 +79,42 @@ void API::route(tcp::socket& socket, SocketReader& context, catena::common::Auth
         throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
     }
 }
+
+void API::route(tcp::socket& socket) {
+    // Incrementing activeRPCs.
+    {
+    std::lock_guard<std::mutex> lock(activeRpcMutex_);
+    activeRpcs_ += 1;
+    }
+    if (!shutdown_) {
+        try {
+            // Reading from the socket.
+            SocketReader context(socket, authorizationEnabled_);
+            // Setting up authorizer
+            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+            catena::common::Authorizer* authz = nullptr;
+            if (authorizationEnabled_) {
+                sharedAuthz = std::make_shared<catena::common::Authorizer>(context.jwsToken());
+                authz = sharedAuthz.get();
+            } else {
+                authz = &catena::common::Authorizer::kAuthzDisabled;
+            }
+            // Routing the request based on the name.
+            route(socket, context, authz);
+        // Catching errors.
+        } catch (catena::exception_with_status& err) {
+            SocketWriter writer(socket);
+            writer.write(err);
+        } catch (...) {
+            SocketWriter writer(socket);
+            catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
+            writer.write(err);
+        }
+    }
+    // Decrementing activeRPCs.
+    {
+    std::lock_guard<std::mutex> lock(activeRpcMutex_);
+    activeRpcs_ -= 1;
+    std::cout << "Active RPCs remaining: " << activeRpcs_ << '\n';
+    }
+}
