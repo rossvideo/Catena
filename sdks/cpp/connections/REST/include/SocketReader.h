@@ -48,8 +48,6 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
-
-
 /**
  * @brief Helper class used to read from a socket using boost.
  */
@@ -63,7 +61,8 @@ class SocketReader {
      * @todo Make parse fields better once we actually know what format the URL
      * should be in.
      */
-    SocketReader(tcp::socket& socket, bool authz = false) {
+    SocketReader(tcp::socket& socket, bool authz = false)
+        : authorizationEnabled_(authz) {
         // Reading the headers.
         boost::asio::streambuf buffer;
         boost::asio::read_until(socket, buffer, "\r\n\r\n");
@@ -143,10 +142,6 @@ class SocketReader {
      */
     const std::string& rpc() const { return rpc_; }
     /**
-     * @brief Returns the req of the request.
-     */
-    const std::string& req() const { return req_; }
-    /**
      * @brief Returns the client's jws token.
      */
     const std::string& jwsToken() const { return jwsToken_; }
@@ -155,12 +150,17 @@ class SocketReader {
      */
     const std::string& jsonBody() const { return jsonBody_; }
 
+    /**
+     * Public for now. Fields parsing to be updated later.
+     */
+    std::string req_ = "";
+    bool authorizationEnabled() { return authorizationEnabled_; };
   private:
     std::string method_ = "";
     std::string rpc_ = "";
-    std::string req_ = "";
     std::string jwsToken_ = "";
     std::string jsonBody_ = "";
+    bool authorizationEnabled_;
 };
 
 }; // Namespace REST

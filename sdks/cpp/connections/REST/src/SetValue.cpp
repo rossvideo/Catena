@@ -5,8 +5,8 @@
 // Initializes the object counter for SetValue to 0.
 int API::SetValue::objectCounter_ = 0;
 
-API::SetValue::SetValue(const std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
-    MultiSetValue(jsonPayload, socket, dm, authz, objectCounter_++) {
+API::SetValue::SetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+    MultiSetValue(socket, context, dm, objectCounter_++) {
     writeConsole("SetValue", objectId_, CallStatus::kCreate, socket_.is_open());
     proceed();
     finish();
@@ -14,7 +14,7 @@ API::SetValue::SetValue(const std::string& jsonPayload, tcp::socket& socket, Dev
 
 bool API::SetValue::toMulti() {
     catena::SingleSetValuePayload payload;
-    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonPayload_), &payload);
+    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &payload);
     if (status.ok()) {
         reqs_.set_slot(payload.slot());
         reqs_.add_values()->CopyFrom(payload.value());

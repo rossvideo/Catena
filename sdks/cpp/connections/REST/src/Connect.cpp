@@ -6,8 +6,10 @@ using catena::API;
 // Initializes the object counter for Connect to 0.
 int API::Connect::objectCounter_ = 0;
 
-API::Connect::Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
-    socket_{socket}, writer_(socket), catena::common::Connect(dm, authz) {
+// API::Connect::Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
+//     socket_{socket}, writer_(socket), catena::common::Connect(dm, authz) {
+API::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
+    socket_{socket}, writer_(socket), catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole("Connect", objectId_, CallStatus::kCreate, socket_.is_open());
     // Return code used for status.
@@ -20,7 +22,7 @@ API::Connect::Connect(std::string& request, tcp::socket& socket, Device& dm, cat
             {"detail_level", ""},
             {"language", ""}
         };
-        parseFields(request, fields);
+        parseFields(context.req_, fields);
         language_ = fields.at("language");
         auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
         if (dlMap.find(fields.at("detail_level")) != dlMap.end()) {

@@ -55,12 +55,11 @@
       * @brief Constructor for the GetPopulatedSlots RPC. Calls proceed() once
       * initialized.
       *
-      * @param jsonPayload The json body extracted from the request.
       * @param socket The socket to write the response to.
+      * @param context The SocketReader object. Here to maintain consistency.
       * @param dm The device to get the value from.
-      * @param authz The authorizer object containing the client's scopes.
       */ 
-     GetPopulatedSlots(tcp::socket& socket, Device& dm);
+     GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
    private:
      /**
       * @brief GetPopulatedSlots's main process.

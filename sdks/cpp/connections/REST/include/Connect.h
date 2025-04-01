@@ -59,12 +59,12 @@ class API::Connect : public CallData, public catena::common::Connect {
      * @brief Constructor for the Connect RPC. Calls proceed() once
      * initialized.
      *
-     * @param request The request URL for extracting fields.
      * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
      * @param dm The device to connect to.
-     * @param authz The authorizer object containing the client's scopes.
+     * @param authz True if authorization is enabled.
      */ 
-    Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    Connect(tcp::socket& socket, SocketReader& context, Device& dm);
     /**
      * @brief Signal emitted in the case of an error which requires the all
      * open connections to be shut down.

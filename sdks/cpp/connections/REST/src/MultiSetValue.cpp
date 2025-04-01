@@ -5,19 +5,19 @@
 // Initializes the object counter for MultiSetValue to 0.
 int API::MultiSetValue::objectCounter_ = 0;
 
-API::MultiSetValue::MultiSetValue(const std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
-    MultiSetValue(jsonPayload, socket, dm, authz, objectCounter_++) {
+API::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+    MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole(typeName_ + "SetValue", objectId_, CallStatus::kCreate, socket_.is_open());
     proceed();
     finish();
 }
 
-API::MultiSetValue::MultiSetValue(const std::string& jsonPayload, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz, int objectId) :
-    jsonPayload_{jsonPayload}, socket_{socket}, writer_{socket}, dm_{dm}, authz_(authz), objectId_{objectId} {}
+API::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId) :
+    socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
 bool API::MultiSetValue::toMulti() {
-    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonPayload_), &reqs_);
+    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);
     return status.ok();
 }
 
@@ -28,11 +28,20 @@ void API::MultiSetValue::proceed() {
     try {
         // Converting to MultiSetValuePayload.
         if (toMulti()) {
+            // Setting up authorizer.
+            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+            catena::common::Authorizer* authz;
+            if (context_.authorizationEnabled()) {
+                sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
+                authz = sharedAuthz.get();
+            } else {
+                authz = &catena::common::Authorizer::kAuthzDisabled;
+            }
             // Trying and commiting the multiSetValue.
             {
             Device::LockGuard lg(dm_);
-            if (dm_.tryMultiSetValue(reqs_, rc, *authz_)) {
-                rc = dm_.commitMultiSetValue(reqs_, *authz_);
+            if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
+                rc = dm_.commitMultiSetValue(reqs_, *authz);
             }
             }
         } else {

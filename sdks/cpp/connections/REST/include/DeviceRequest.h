@@ -58,12 +58,11 @@ class API::DeviceRequest : public CallData {
      * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
      * initialized.
      *
-     * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
      * @param dm The device to get components from.
-     * @param authz The authorizer object containing the client's scopes.
      */ 
-    DeviceRequest(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
   private:
     /**
      * @brief DeviceRequest's main process.
@@ -79,9 +78,9 @@ class API::DeviceRequest : public CallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The authorizer object containing the client's scopes.
+     * @brief The SocketReader object.
      */
-    catena::common::Authorizer* authz_;
+    SocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

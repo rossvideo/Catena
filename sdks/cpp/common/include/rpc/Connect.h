@@ -60,9 +60,17 @@ class Connect {
     /**
      * @brief Constructor for the Connect class.
      * @param dm The device manager.
-     * @param authz The authorizer object containing client's scopes.
+     * @param authz true if authorization is enabled, false otherwise.
+     * @param jwsToken The client's JWS token.
      */
-    Connect(Device& dm, catena::common::Authorizer* authz) : dm_{dm}, authz_{authz} {}
+    Connect(Device& dm, bool authz, const std::string& jwsToken) : dm_{dm} {
+        if (authz) {
+            sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
+            authz_ = sharedAuthz_.get();
+        } else {
+            authz_ = &catena::common::Authorizer::kAuthzDisabled;
+        }
+    }
 
     /**
      * @brief Returns true if the call has been canceled.
@@ -180,6 +188,10 @@ class Connect {
         }
     }
 
+    /**
+     * @brief Shared ptr to maintain ownership of authorizer.
+     */
+    std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
     /**
      * @brief The authorizer object containing client's scopes.
      */

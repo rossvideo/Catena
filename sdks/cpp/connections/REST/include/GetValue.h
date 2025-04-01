@@ -55,12 +55,11 @@ class API::GetValue : public CallData {
      * @brief Constructor for the GetValue RPC. Calls proceed() once
      * initialized.
      *
-     * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
      * @param dm The device to get the value from.
-     * @param authz The authorizer object containing the client's scopes.
      */ 
-    GetValue(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz);
+    GetValue(tcp::socket& socket, SocketReader& context, Device& dm);
   private:
     /**
      * @brief GetValue's main process.
@@ -76,9 +75,9 @@ class API::GetValue : public CallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The authorizer object containing the client's scopes.
+     * @brief The SocketReader object.
      */
-    catena::common::Authorizer* authz_;
+    SocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

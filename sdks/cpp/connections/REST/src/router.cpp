@@ -50,57 +50,43 @@
 
 using catena::API;
 
-void API::route(tcp::socket& socket, SocketReader& context, catena::common::Authorizer* authz) {
-    // This is a temporary fix.
-    std::string request = std::string(context.req());
-    if (context.method() == "GET") {          // GET methods.
-        if (context.rpc().starts_with("/v1/DeviceRequest")) {
-            DeviceRequest deviceRequest(request, socket, dm_, authz);
-        } else if (context.rpc().starts_with("/v1/GetPopulatedSlots")) {
-            GetPopulatedSlots getPopulatedSlots(socket, dm_);
-        } else if (context.rpc().starts_with("/v1/GetValue")) {
-            GetValue getValue(request, socket, dm_, authz);
-        } else if (context.rpc().starts_with("/v1/Connect")) {
-            Connect connect(request, socket, dm_, authz);
-        } else {
-            throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
-        }
-    } else if (context.method() == "POST") {  // POST methods.
-        throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    } else if (context.method() == "PUT") {   // PUT methods.
-        if (context.rpc().starts_with("/v1/SetValue")) {
-            SetValue(context.jsonBody(), socket, dm_, authz);
-        } else if (context.rpc().starts_with("/v1/MultiSetValue")) {
-            MultiSetValue(context.jsonBody(), socket, dm_, authz);
-        } else {
-            throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
-        }
-    } else {
-        throw catena::exception_with_status("Request does not exist", catena::StatusCode::INVALID_ARGUMENT);
-    }
-}
-
 void API::route(tcp::socket& socket) {
     // Incrementing activeRPCs.
     {
     std::lock_guard<std::mutex> lock(activeRpcMutex_);
     activeRpcs_ += 1;
     }
+    std::cout<<"Route Start"<<std::endl;
     if (!shutdown_) {
         try {
             // Reading from the socket.
             SocketReader context(socket, authorizationEnabled_);
-            // Setting up authorizer
-            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-            catena::common::Authorizer* authz = nullptr;
-            if (authorizationEnabled_) {
-                sharedAuthz = std::make_shared<catena::common::Authorizer>(context.jwsToken());
-                authz = sharedAuthz.get();
-            } else {
-                authz = &catena::common::Authorizer::kAuthzDisabled;
+            // Routing to RPC.
+            if (context.method() == "GET") {
+                if (context.rpc() == "/v1/Connect") {
+                    Connect rpc(socket, context, dm_);
+                }
+                else if (context.rpc() == "/v1/DeviceRequest") {
+                    DeviceRequest rpc(socket, context, dm_);
+                }
+                else if (context.rpc() == "/v1/GetPopulatedSlots") {
+                    GetPopulatedSlots rpc(socket, context, dm_);
+                }
+                else if (context.rpc() == "/v1/GetValue") {
+                    GetValue rpc(socket, context, dm_);
+                }
             }
-            // Routing the request based on the name.
-            route(socket, context, authz);
+            else if (context.method() == "PUT") {
+                if (context.rpc() == "/v1/MultiSetValue") {
+                    MultiSetValue rpc(socket, context, dm_);
+                }
+                else if (context.rpc() == "/v1/SetValue") {
+                    SetValue rpc(socket, context, dm_);
+                }
+            }
+            else {
+                throw catena::exception_with_status("Method " + context.method() + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
+            }
         // Catching errors.
         } catch (catena::exception_with_status& err) {
             SocketWriter writer(socket);
@@ -111,10 +97,11 @@ void API::route(tcp::socket& socket) {
             writer.write(err);
         }
     }
+    std::cout<<"Route End"<<std::endl;
     // Decrementing activeRPCs.
     {
     std::lock_guard<std::mutex> lock(activeRpcMutex_);
     activeRpcs_ -= 1;
-    std::cout << "Active RPCs remaining: " << activeRpcs_ << '\n';
+    std::cout<<"Active RPCs remaining: "<<activeRpcs_<<std::endl;
     }
 }

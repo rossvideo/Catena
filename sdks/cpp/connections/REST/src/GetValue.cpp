@@ -5,8 +5,8 @@
 // Initializes the object counter for GetValue to 0.
 int API::GetValue::objectCounter_ = 0;
 
-API::GetValue::GetValue(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
-    socket_{socket}, writer_{socket}, dm_{dm}, authz_{authz} {
+API::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+    socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole("GetValue", objectId_, CallStatus::kCreate, socket_.is_open());
     // Return code used for status.
@@ -17,7 +17,7 @@ API::GetValue::GetValue(std::string& request, tcp::socket& socket, Device& dm, c
             {"oid", ""},
             {"slot", ""}
         };
-        parseFields(request, fields);
+        parseFields(context_.req_, fields);
         slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
         oid_ = fields.at("oid");
     // Parse error
@@ -39,7 +39,12 @@ void API::GetValue::proceed() {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         // Getting value at oid from device.
-        rc = dm_.getValue(oid_, ans, *authz_);
+        if (context_.authorizationEnabled()) {
+            catena::common::Authorizer authz(context_.jwsToken());
+            rc = dm_.getValue(oid_, ans, authz);
+        } else {
+            rc = dm_.getValue(oid_, ans, catena::common::Authorizer::kAuthzDisabled);
+        }
 
     // ERROR
     } catch (...) {
