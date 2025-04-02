@@ -1,7 +1,7 @@
 FROM library/ubuntu:24.04 AS builder
-LABEL org.opencontainers.image.title="Catena Runtime"
+LABEL org.opencontainers.image.title="Catena SDK"
 LABEL org.opencontainers.image.description="Rossvideo Catena"
-LABEL org.opencontainers.image.version="v0.0.1"
+LABEL org.opencontainers.image.version="v0.0.1-dev"
 LABEL org.opencontainers.image.vendor="Rossvideo"
 
 # Set environment variables
@@ -13,10 +13,26 @@ COPY toolchain.env /root/toolchain.env
 # Source the toolchain.env file
 RUN . /root/toolchain.env \
     && apt-get update && apt-get install -y \
-    build-essential cmake=$CMAKE_VERSION nodejs=$NODEJS_VERSION npm git=$GIT_VERSION libssl-dev=$OPENSSL_VERSION doxygen=$DOXYGEN_VERSION graphviz=$GRAPHVIZ_VERSION \
+    build-essential sudo cmake=$CMAKE_VERSION nodejs=$NODEJS_VERSION npm git=$GIT_VERSION libssl-dev=$OPENSSL_VERSION doxygen=$DOXYGEN_VERSION graphviz=$GRAPHVIZ_VERSION \
     libgtest-dev=$GTEST_VERSION libboost-all-dev=$BOOST_VERSION libasio-dev=$ASIO_VERSION libgmock-dev=$GMOCK_VERSION ninja-build=$NINJA_VERSION \
     && npm install -g n \
     && apt-get clean
+
+# make catena user make them sudoless root
+# Create catena user and add to sudo group
+RUN useradd -m -s /bin/bash catena
+RUN usermod -aG sudo catena
+RUN mkdir -p /etc/sudoers.d \
+    && echo "catena ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/catena \
+    && chmod 0440 /etc/sudoers.d/catena
+
+# Change ownership of relevant directories
+RUN chown -R catena:catena /home/catena
+RUN cp /root/toolchain.env /home/catena/toolchain.env
+RUN chown catena:catena /home/catena/toolchain.env \
+    && chmod +x /home/catena/toolchain.env
+# Switch to catena user
+USER catena
 
 # Install gRPC
 RUN . ~/toolchain.env \
@@ -37,8 +53,8 @@ RUN . ~/toolchain.env \
 
 # Install Google Test
 RUN cd /usr/src/gtest \
-    && cmake -DCMAKE_INSTALL_PREFIX=~/.local CMakeLists.txt \
-    && make && cp lib/*.a /usr/lib
+    && sudo cmake -DCMAKE_INSTALL_PREFIX=~/.local CMakeLists.txt \
+    && sudo make && sudo cp lib/*.a /usr/lib
 
 # Clone Catena repository
 RUN mkdir -p ~/Catena \
@@ -54,23 +70,14 @@ RUN mkdir -p ~/Catena/sdks/cpp/build \
     && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_INSTALL_PREFIX=~/.local ~/Catena/sdks/cpp \
     && ninja
 
-FROM library/ubuntu:24.04 AS compiled
-
-ENV DEBIAN_FRONTEND=noninteractive
-# Copy the toolchain.env file
-COPY --from=builder /root/toolchain.env /root/toolchain.env
-# Copy the build artifacts
-COPY --from=builder /root/Catena/sdks/cpp/build /root/Catena/
-
-# Install runtime dependencies
-RUN . /root/toolchain.env \
-    && apt-get update && apt-get install -y \
-    libssl-dev=$OPENSSL_VERSION libboost-all-dev=$BOOST_VERSION libasio-dev=$ASIO_VERSION \
-    && apt-get clean
-
 # Set the default user
-WORKDIR "/root/Catena"
+WORKDIR "/home/catena/Catena"
+
+# ~/Catena/sdks/cpp/build/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
+# #docker run -rm -v $(realpath ../):~/Catena -it catena-sdk
+VOLUME ["/home/catena/Catena"] 
+
 
 #healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD /root/Catena/sdks/cpp/build#common/examples/hello_world/hello_world || exit 1
+    CMD ~/Catena/sdks/cpp/build#common/examples/hello_world/hello_world || exit 1
