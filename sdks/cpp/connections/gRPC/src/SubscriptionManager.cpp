@@ -38,6 +38,7 @@
 using catena::common::Device;
 using catena::common::IParam;
 using catena::common::Path;
+using catena::common::ParamVisitor;
 
 namespace catena {
 namespace grpc {
@@ -48,7 +49,7 @@ bool SubscriptionManager::isWildcard(const std::string& oid) {
 }
 
 // Add a subscription (either unique or wildcard). Returns true if added, false if already exists
-bool SubscriptionManager::addSubscription(const std::string& oid, catena::common::Device& dm, catena::exception_with_status& rc) {
+bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, exception_with_status& rc) {
     subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
@@ -103,7 +104,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, catena::common
 }
 
 // Remove a subscription (either unique or wildcard). Returns true if removed, false if not found
-bool SubscriptionManager::removeSubscription(const std::string& oid, catena::common::Device& dm, catena::exception_with_status& rc) {
+bool SubscriptionManager::removeSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc) {
     subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
@@ -154,7 +155,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, catena::com
 }
 
 // Update the list of all subscribed OIDs by combining unique and wildcard subscriptions
-void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
+void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
     allSubscribedOids_.clear();
     
     // Add unique subscriptions
@@ -179,7 +180,7 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
         if (baseParam) {
             // If we found the base parameter, use visitor to collect all paths
             SubscriptionVisitor visitor(allSubscribedOids_);
-            catena::common::traverseParams(baseParam.get(), basePath, dm, visitor);
+            ParamVisitor::traverseParams(baseParam.get(), basePath, dm, visitor);
         } else {
             // If base parameter not found, try to find any parameters that start with this path
             std::vector<std::unique_ptr<IParam>> allParams;
@@ -194,7 +195,7 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
                     if (paramOid.length() == basePath.length() || 
                         paramOid[basePath.length()] == '/') {
                         SubscriptionVisitor visitor(allSubscribedOids_);
-                        catena::common::traverseParams(param.get(), paramOid, dm, visitor);
+                        ParamVisitor::traverseParams(param.get(), paramOid, dm, visitor);
                     }
                 }
             }
@@ -203,7 +204,7 @@ void SubscriptionManager::updateAllSubscribedOids_(catena::common::Device& dm) {
 }
 
 // Get all subscribed OIDs, including wildcard subscriptions
-const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(catena::common::Device& dm) {
+const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(Device& dm) {
     subscriptionLock_.lock();
     updateAllSubscribedOids_(dm);
     auto& result = allSubscribedOids_;

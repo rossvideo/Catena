@@ -49,6 +49,9 @@
 namespace catena {
 namespace grpc {
 
+using catena::common::Device;
+using catena::common::IParam;
+
 /**
  * @brief Class for managing parameter subscriptions in gRPC connections
  */
@@ -66,7 +69,7 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, catena::common::Device& dm, catena::exception_with_status& rc);
+    bool addSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
 
     /**
      * @brief Remove an OID subscription
@@ -75,14 +78,14 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid, catena::common::Device& dm, catena::exception_with_status& rc);
+    bool removeSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
+    const std::vector<std::string>& getAllSubscribedOids(Device& dm);
 
     /**
      * @brief Get all unique subscriptions
@@ -117,7 +120,7 @@ private:
     /**
      * @brief Visitor class for collecting subscribed OIDs
      */
-    class SubscriptionVisitor : public catena::common::ParamVisitor {
+    class SubscriptionVisitor : public catena::common::IParamVisitor {
         public:
             /**
              * @brief Constructor for the SubscriptionVisitor class
@@ -169,7 +172,7 @@ private:
      * @brief Update the combined list of all subscribed OIDs
      * @param dm The device model to use for expanding wildcard subscriptions
      */
-    void updateAllSubscribedOids_(catena::common::Device& dm);
+    void updateAllSubscribedOids_(Device& dm);
 };
 
 } // namespace grpc

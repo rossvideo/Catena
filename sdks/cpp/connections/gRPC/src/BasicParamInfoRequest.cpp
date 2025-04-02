@@ -37,6 +37,10 @@
 // type aliases
 using catena::common::ParamTag;
 using catena::common::Path;
+using catena::common::ParamVisitor;
+using catena::common::Device;
+using catena::common::IParam;
+using catena::common::Authorizer;
 
 #include <iostream>
 #include <thread>
@@ -87,13 +91,13 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
             try {
                 std::unique_ptr<IParam> param;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
+                std::shared_ptr<Authorizer> sharedAuthz;
+                Authorizer* authz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<Authorizer>(getJWSToken());
                     authz = sharedAuthz.get();
                 } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                    authz = &Authorizer::kAuthzDisabled;
                 }
 
                 // Mode 1: Get all top-level parameters
@@ -154,7 +158,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (req_.recursive()) {
                             BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            catena::common::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
+                            ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
                         }
 
                         // Begin writing responses back to the client
@@ -247,7 +251,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
 }
 
 // Helper method to add a parameter to the responses
-void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz) {
+void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, Authorizer& authz) {
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();

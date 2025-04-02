@@ -35,7 +35,7 @@ namespace catena {
 namespace common {
 
 // Traverses the parameters of a device and visits each parameter using the visitor
-void traverseParams(IParam* param, const std::string& path, Device& device, ParamVisitor& visitor) {
+void ParamVisitor::traverseParams(IParam* param, const std::string& path, Device& device, IParamVisitor& visitor) {
     if (!param) return;
 
     // First visit the current parameter itself
