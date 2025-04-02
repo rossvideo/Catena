@@ -413,8 +413,30 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         dst->add_access_scopes(scope);
     }
 
-    // If detail level is NONE, only send the above device info and return
+    // If detail level is NONE, only send device info
     if (detail_level_ == catena::Device_DetailLevel_NONE) {
+        co_return component;
+    }
+
+    // Error if trying to use SUBSCRIPTIONS mode with no subscriptions in the array
+    // Note: If subscriptions are added through an RPC anyway, this error will not be thrown.
+    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && (subscribed_oids.empty() || !subscriptions_)) {
+        throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
+    }
+
+    // Check if we have any minimal set parameters
+    bool has_minimal_set = false;
+    for (const auto& [name, param] : params_) {
+        if (param->getDescriptor().minimalSet()) {
+            has_minimal_set = true;
+            break;
+        }
+    }
+
+    // If we're in SUBSCRIPTIONS mode with no subscriptions and no minimal set params, only send device info
+    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && 
+        subscribed_oids.empty() && 
+        !has_minimal_set) {
         co_return component;
     }
 
