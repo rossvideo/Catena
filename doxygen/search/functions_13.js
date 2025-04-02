@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['unhandled_5fexception_0',['unhandled_exception',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729',1,'catena::common::Device::DeviceSerializer::promise_type']]],
-  ['unpop_1',['unpop',['../classcatena_1_1common_1_1Path.html#a25a93d0ba88442cb581c0c73a66a3a82',1,'catena::common::Path']]],
-  ['updateresponse_2',['updateresponse',['../classcatena_1_1common_1_1Connect.html#ad4111b073159dc525ff9400f7363deab',1,'catena::common::Connect::updateResponse(const std::string &amp;oid, size_t idx, const IParam *p)'],['../classcatena_1_1common_1_1Connect.html#a8d594d11276e932f2448a51f0e9d8b9a',1,'catena::common::Connect::updateResponse(const Device::ComponentLanguagePack &amp;l)']]],
-  ['updatesubscriptions_3',['UpdateSubscriptions',['../classCatenaServiceImpl_1_1UpdateSubscriptions.html#a1e95001b8a749980f46960af174ea4fe',1,'CatenaServiceImpl::UpdateSubscriptions']]]
+  ['validatesetvalue_0',['validatesetvalue',['../classcatena_1_1common_1_1IParam.html#a6426280764c8d2345d517967f51278e9',1,'catena::common::IParam::validateSetValue()'],['../classcatena_1_1common_1_1ParamWithValue.html#a9bdf6304d6242373d67b8ff0bd38b7c6',1,'catena::common::ParamWithValue::validateSetValue()']]],
+  ['value_1',['value',['../classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f',1,'catena::patterns::EnumDecorator']]],
+  ['version_2',['version',['../classcatena_1_1API.html#ada1d88f2fd12a0abbfd24882c48abbf5',1,'catena::API']]],
+  ['visit_3',['visit',['../classcatena_1_1common_1_1IParamVisitor.html#a79483a6748bdd35ca240d9766cd88add',1,'catena::common::IParamVisitor::visit()'],['../classcatena_1_1common_1_1ParamVisitor.html#a736b7bc4538cf9e3a7e7023b7aecf6fb',1,'catena::common::ParamVisitor::visit()']]],
+  ['visitarray_4',['visitarray',['../classcatena_1_1common_1_1IParamVisitor.html#a3f09be6b1bc15fd423f6ea1d985c11cf',1,'catena::common::IParamVisitor::visitArray()'],['../classcatena_1_1common_1_1ParamVisitor.html#ae302c4cc4c35b605f29226c54590288f',1,'catena::common::ParamVisitor::visitArray()']]]
 ];

@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['validatesetvalue_0',['validatesetvalue',['../classcatena_1_1common_1_1IParam.html#a6426280764c8d2345d517967f51278e9',1,'catena::common::IParam::validateSetValue()'],['../classcatena_1_1common_1_1ParamWithValue.html#a9bdf6304d6242373d67b8ff0bd38b7c6',1,'catena::common::ParamWithValue::validateSetValue()']]],
-  ['value_1',['value',['../classcatena_1_1patterns_1_1EnumDecorator.html#a5b381dd49122b46f4aca4b103c4f5c7f',1,'catena::patterns::EnumDecorator']]],
-  ['version_2',['version',['../classcatena_1_1API.html#ada1d88f2fd12a0abbfd24882c48abbf5',1,'catena::API']]]
+  ['walked_0',['walked',['../classcatena_1_1common_1_1Path.html#ac552c2e2e0b9d4d6c63035486bc3ce6a',1,'catena::common::Path']]],
+  ['writeauthz_1',['writeauthz',['../classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1',1,'catena::common::Authorizer::writeAuthz(const IParam &amp;param) const'],['../classcatena_1_1common_1_1Authorizer.html#a6da90b2e5e23b8956017f713da5696c1',1,'catena::common::Authorizer::writeAuthz(const ParamDescriptor &amp;pd) const']]]
 ];
