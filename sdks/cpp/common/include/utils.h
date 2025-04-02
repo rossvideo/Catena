@@ -55,7 +55,7 @@ void subs(std::string &str, const std::string &seq, const std::string &rep);
  * 
  * @param out   io The vector to store the new split string in.
  * @param str   in The string to split.
- * @param delin in The character to split the string at.
+ * @param delim in The character to split the string at.
  */
 void split(std::vector<std::string>& out, const std::string& str, const std::string& delim);
 
