@@ -12,6 +12,7 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     [ "IMenu.h", "IMenu_8h.html", "IMenu_8h" ],
     [ "IMenuGroup.h", "IMenuGroup_8h.html", "IMenuGroup_8h" ],
     [ "IParam.h", "IParam_8h.html", "IParam_8h" ],
+    [ "IParamVisitor.h", "IParamVisitor_8h.html", "IParamVisitor_8h" ],
     [ "IPolyglotText.h", "IPolyglotText_8h.html", "IPolyglotText_8h" ],
     [ "LanguagePack.h", "LanguagePack_8h.html", "LanguagePack_8h" ],
     [ "Menu.h", "Menu_8h.html", "Menu_8h" ],

@@ -14,6 +14,7 @@ var annotated_dup =
         [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ],
         [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ],
         [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
+        [ "IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", "classcatena_1_1common_1_1IParamVisitor" ],
         [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", null ],
         [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
         [ "LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],

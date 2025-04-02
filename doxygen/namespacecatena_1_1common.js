@@ -12,6 +12,7 @@ var namespacecatena_1_1common =
     [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ],
     [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ],
     [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
+    [ "IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", "classcatena_1_1common_1_1IParamVisitor" ],
     [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", null ],
     [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
     [ "LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
@@ -43,7 +44,6 @@ var namespacecatena_1_1common =
     [ "_findTypeIndex", "namespacecatena_1_1common.html#addddb371559a45d42994973db1a69f08", null ],
     [ "fromProto", "namespacecatena_1_1common.html#a028c90c48c39454968736c95d2c0ceb9", null ],
     [ "toProto", "namespacecatena_1_1common.html#a78f6e68869990f230baee7774d764623", null ],
-    [ "traverseParams", "namespacecatena_1_1common.html#ab9c7a727c543ccf4bcc2a926f94cd3cb", null ],
     [ "alternativeNames", "namespacecatena_1_1common.html#a50a9d30ba7a22910857f12f13ed809cc", null ],
     [ "kDefaultMaxArrayLength", "namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8", null ]
 ];
