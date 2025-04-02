@@ -87,7 +87,6 @@ void handle_signal(int sig) {
         }
     });
     t.join();
-    std::cout << "Shutdown done" << std::endl;
 }
 
 void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
@@ -162,7 +161,6 @@ void statusUpdateExample(){
                 dm.valueSetByServer.emit("/counter", &counter, 0);
             }
         }
-        std::cout << "statusUpdateExample thread exiting" << std::endl;
     });
     loop.detach();
 }
@@ -185,7 +183,6 @@ void RunRPCServer() {
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         statusUpdateExample();
         api.run();
-        std::cout << "end of catena thread exiting" << std::endl;
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
     }
@@ -196,6 +193,5 @@ int main(int argc, char* argv[]) {
     absl::ParseCommandLine(argc, argv);
     std::thread catenaRpcThread(RunRPCServer);
     catenaRpcThread.join();
-    std::cout << "catenaRPC thread exiting" << std::endl;
     return 0;
 }
