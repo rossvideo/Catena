@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -28,18 +28,37 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-openapi: '3.0.3'
-info:
-  title: Catena API
-  version: '1.0'
-servers:
-  - url: https://device.catenamedia.tv/v1
-paths:
-  /GetPopulatedSlots:
-    $ref: './paths/GetPopulatedSlots.yaml'
-  /GetValue:
-    $ref: './paths/GetValue.yaml'
-  /SetValue:
-    $ref: './paths/SetValue.yaml'
-  
-   
+get:
+  summary: Set the value of a parameter within a device model
+  operationId: SetValue
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model to get the value from
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+      example: 1
+    - name: oid
+      in: path
+      required: true
+      description: The path to the parameter with value within the device model
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+      example: "/text_box"
+    - name: value
+      in: path
+      required: true
+      description: The value to set for the parameter specified by oid
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+      example: {string_value: "Hello, world!"}
+      
+  responses:
+    "200":
+      description: Nothing
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          example: {}
