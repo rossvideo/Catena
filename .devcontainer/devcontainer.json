@@ -1,7 +1,10 @@
 {
-	"name": "Catena SDK",
-	// "image": "catena-sdk:latest",
-	"dockerComposeFile": "compose.yml",
-	"workspaceFolder": "/home/catena/Catena",
-	"service": "catena-sdk"
-}
+  "name": "Catena SDK Dev Container",
+  "image": "catena-sdk",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "postCreateCommand": "echo 'Dev container is ready!'",
+  "remoteUser": "catena",
+  "workspaceFolder": "/home/catena/Catena"
+} 
