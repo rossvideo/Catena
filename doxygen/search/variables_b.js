@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['typename_0',['typeName',['../classCatenaServiceImpl_1_1MultiSetValue.html#a069e868f31c114d8d5f02beb294a97c5',1,'CatenaServiceImpl::MultiSetValue']]]
+  ['valuesetbyclient_0',['valueSetByClient',['../classcatena_1_1common_1_1Device.html#ad0504576b2baa494010be749c94e03f4',1,'catena::common::Device']]],
+  ['valuesetbyserver_1',['valueSetByServer',['../classcatena_1_1common_1_1Device.html#aa14bba71eb227107bbae177a21c9d5a8',1,'catena::common::Device']]]
 ];
