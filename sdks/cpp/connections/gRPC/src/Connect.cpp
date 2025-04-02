@@ -214,8 +214,22 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
                 // Update if OID is subscribed or in minimal set
                 {
                     auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                    should_update = p->getDescriptor().minimalSet() || 
-                                  (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    should_update = p->getDescriptor().minimalSet();
+                    
+                    // Check for exact match or wildcard match
+                    for (const auto& subscribedOid : subscribedOids) {
+                        if (subscribedOid == oid) {
+                            should_update = true;
+                            break;
+                        }
+                        // Check for wildcard match (ends with /*)
+                        if (subscribedOid.length() >= 2 && 
+                            subscribedOid.substr(subscribedOid.length() - 2) == "/*" &&
+                            oid.find(subscribedOid.substr(0, subscribedOid.length() - 2)) == 0) {
+                            should_update = true;
+                            break;
+                        }
+                    }
                 }
                 break;
                 
