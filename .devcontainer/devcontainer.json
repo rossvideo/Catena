@@ -1,11 +1,8 @@
 {
 	"name": "Catena SDK",
-	"image": "catena-sdk:latest",
+	// "image": "catena-sdk:latest",
+	"dockerComposeFile": "compose.yml",
 	"remoteUser": "catena",
 	"workspaceFolder": "/home/catena/Catena",
-	"containerEnv": {
-		"GIT_AUTHOR_NAME": "${GIT_AUTHOR_NAME:-$(git config --get user.name)}",
-		"GIT_AUTHOR_EMAIL": "${GIT_AUTHOR_EMAIL:-$(git config --get user.email)}"
-	},
-	"postCreateCommand": "git config --global user.name \"$$GIT_AUTHOR_NAME\" && git config --global user.email \"$$GIT_AUTHOR_EMAIL\""
+
 }
