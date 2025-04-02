@@ -55,7 +55,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager)
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -96,7 +96,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new Connect(service_, dm_, ok, service_->subscriptionManager_);
+            new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){

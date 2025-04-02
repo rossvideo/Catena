@@ -116,7 +116,7 @@ void CatenaServiceImpl::init() {
     new GetValue(this, dm_, true);
     new SetValue(this, dm_, true);
     new MultiSetValue(this, dm_, true);
-    new Connect(this, dm_, true, subscriptionManager_);
+    new Connect(this, dm_, true);
     new DeviceRequest(this, dm_, true);
     new ExternalObjectRequest(this, dm_, true);
     new BasicParamInfoRequest(this, dm_, true);
@@ -125,7 +125,7 @@ void CatenaServiceImpl::init() {
     new AddLanguage(this, dm_, true);
     new ListLanguages(this, dm_, true);
     new LanguagePackRequest(this, dm_, true);
-    new UpdateSubscriptions(this, dm_, subscriptionManager_, true);
+    new UpdateSubscriptions(this, dm_, true);
 }
 
 // Initializing the shutdown signal for all open connections.
