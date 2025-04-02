@@ -114,9 +114,9 @@ Collaboration diagram for CatenaServiceImpl::UpdateSubscriptions:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad40ad4d61141fbb1c55b83485d9a3574" id="r_ad40ad4d61141fbb1c55b83485d9a3574"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html#ad40ad4d61141fbb1c55b83485d9a3574">UpdateSubscriptions</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
-<tr class="memdesc:ad40ad4d61141fbb1c55b83485d9a3574"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class of the <a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html" title="CallData class for the UpdateSubscriptions RPC.">UpdateSubscriptions</a> RPC gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html#ad007b1432389fedfc1274371e03d90b8" title="Manages the steps of the UpdateSubscriptions gRPC command through the state variable status....">proceed()</a> once initialized.  <br /></td></tr>
-<tr class="separator:ad40ad4d61141fbb1c55b83485d9a3574"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e95001b8a749980f46960af174ea4fe" id="r_a1e95001b8a749980f46960af174ea4fe"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html#a1e95001b8a749980f46960af174ea4fe">UpdateSubscriptions</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, <a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html">catena::grpc::SubscriptionManager</a> &amp;subscriptionManager, bool ok)</td></tr>
+<tr class="memdesc:a1e95001b8a749980f46960af174ea4fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class of the <a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html" title="CallData class for the UpdateSubscriptions RPC.">UpdateSubscriptions</a> RPC gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html#ad007b1432389fedfc1274371e03d90b8" title="Manages the steps of the UpdateSubscriptions gRPC command through the state variable status....">proceed()</a> once initialized.  <br /></td></tr>
+<tr class="separator:a1e95001b8a749980f46960af174ea4fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad007b1432389fedfc1274371e03d90b8" id="r_ad007b1432389fedfc1274371e03d90b8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html#ad007b1432389fedfc1274371e03d90b8">proceed</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, bool ok) override</td></tr>
 <tr class="memdesc:ad007b1432389fedfc1274371e03d90b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the steps of the <a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html" title="CallData class for the UpdateSubscriptions RPC.">UpdateSubscriptions</a> gRPC command through the state variable status. Returns the value of the parameter specified by the user.  <br /></td></tr>
 <tr class="separator:ad007b1432389fedfc1274371e03d90b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,8 +141,8 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class for the <a class="el" href="classCatenaServiceImpl_1_1UpdateSubscriptions.html" title="CallData class for the UpdateSubscriptions RPC.">UpdateSubscriptions</a> RPC. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ad40ad4d61141fbb1c55b83485d9a3574" name="ad40ad4d61141fbb1c55b83485d9a3574"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad40ad4d61141fbb1c55b83485d9a3574">&#9670;&#160;</a></span>UpdateSubscriptions()</h2>
+<a id="a1e95001b8a749980f46960af174ea4fe" name="a1e95001b8a749980f46960af174ea4fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e95001b8a749980f46960af174ea4fe">&#9670;&#160;</a></span>UpdateSubscriptions()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -158,6 +158,12 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
           <td></td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td>
           <td class="paramname"><em>dm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html">catena::grpc::SubscriptionManager</a> &amp;&#160;</td>
+          <td class="paramname"><em>subscriptionManager</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -178,6 +184,7 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
   <table class="params">
     <tr><td class="paramname">service</td><td>The <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a> instance </td></tr>
     <tr><td class="paramname">dm</td><td>The device model </td></tr>
+    <tr><td class="paramname">subscriptionManager</td><td>The subscription manager to use </td></tr>
     <tr><td class="paramname">ok</td><td>Flag indicating if initialization was successful </td></tr>
   </table>
   </dd>

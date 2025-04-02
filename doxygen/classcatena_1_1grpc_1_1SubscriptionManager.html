@@ -91,7 +91,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1grpc_1_1SubscriptionMan
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classcatena_1_1grpc_1_1SubscriptionManager-members.html">List of all members</a>  </div>
@@ -110,12 +109,12 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionManager</b> ()=default</td></tr>
 <tr class="memdesc:adde3ea0f834d9bb83fb7e02c2f157841"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
 <tr class="separator:adde3ea0f834d9bb83fb7e02c2f157841"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a787040785aa6988bd81441a95056f549" id="r_a787040785aa6988bd81441a95056f549"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a787040785aa6988bd81441a95056f549">addSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;rc)</td></tr>
-<tr class="memdesc:a787040785aa6988bd81441a95056f549"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
-<tr class="separator:a787040785aa6988bd81441a95056f549"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a691b47b5cc3bdc32bf5cc9edde8a7565" id="r_a691b47b5cc3bdc32bf5cc9edde8a7565"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a691b47b5cc3bdc32bf5cc9edde8a7565">removeSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;rc)</td></tr>
-<tr class="memdesc:a691b47b5cc3bdc32bf5cc9edde8a7565"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an OID subscription.  <br /></td></tr>
-<tr class="separator:a691b47b5cc3bdc32bf5cc9edde8a7565"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51c8f6bd6bbf4731ea6b0523033dd1d5" id="r_a51c8f6bd6bbf4731ea6b0523033dd1d5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a51c8f6bd6bbf4731ea6b0523033dd1d5">addSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm)</td></tr>
+<tr class="memdesc:a51c8f6bd6bbf4731ea6b0523033dd1d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
+<tr class="separator:a51c8f6bd6bbf4731ea6b0523033dd1d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbeb9e2d53e06060e47d5e3e815d284e" id="r_adbeb9e2d53e06060e47d5e3e815d284e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#adbeb9e2d53e06060e47d5e3e815d284e">removeSubscription</a> (const std::string &amp;oid)</td></tr>
+<tr class="memdesc:adbeb9e2d53e06060e47d5e3e815d284e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an OID subscription.  <br /></td></tr>
+<tr class="separator:adbeb9e2d53e06060e47d5e3e815d284e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ba32ef3fbff7ee40277966f36f5b977" id="r_a3ba32ef3fbff7ee40277966f36f5b977"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1grpc_1_1SubscriptionManager.html#a3ba32ef3fbff7ee40277966f36f5b977">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;dm)</td></tr>
 <tr class="memdesc:a3ba32ef3fbff7ee40277966f36f5b977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
 <tr class="separator:a3ba32ef3fbff7ee40277966f36f5b977"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,8 +134,8 @@ Static Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for managing parameter subscriptions in gRPC connections. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a787040785aa6988bd81441a95056f549" name="a787040785aa6988bd81441a95056f549"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a787040785aa6988bd81441a95056f549">&#9670;&#160;</a></span>addSubscription()</h2>
+<a id="a51c8f6bd6bbf4731ea6b0523033dd1d5" name="a51c8f6bd6bbf4731ea6b0523033dd1d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51c8f6bd6bbf4731ea6b0523033dd1d5">&#9670;&#160;</a></span>addSubscription()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -151,13 +150,7 @@ Static Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
-          <td class="paramname"><em>rc</em>&#160;</td>
+          <td class="paramname"><em>dm</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -172,7 +165,6 @@ Static Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">oid</td><td>The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*") </td></tr>
     <tr><td class="paramname">dm</td><td>The device model to use </td></tr>
-    <tr><td class="paramname">rc</td><td>The status code to return if the operation fails </td></tr>
   </table>
   </dd>
 </dl>
@@ -282,8 +274,8 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a691b47b5cc3bdc32bf5cc9edde8a7565" name="a691b47b5cc3bdc32bf5cc9edde8a7565"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a691b47b5cc3bdc32bf5cc9edde8a7565">&#9670;&#160;</a></span>removeSubscription()</h2>
+<a id="adbeb9e2d53e06060e47d5e3e815d284e" name="adbeb9e2d53e06060e47d5e3e815d284e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbeb9e2d53e06060e47d5e3e815d284e">&#9670;&#160;</a></span>removeSubscription()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -292,24 +284,8 @@ Static Public Member Functions</h2></td></tr>
           <td class="memname">bool catena::grpc::SubscriptionManager::removeSubscription </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>oid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>oid</em></td><td>)</td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">catena::common::Device</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
-          <td class="paramname"><em>rc</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -318,8 +294,6 @@ Static Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">oid</td><td>The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*") </td></tr>
-    <tr><td class="paramname">dm</td><td>The device model to use </td></tr>
-    <tr><td class="paramname">rc</td><td>The status code to return if the operation fails </td></tr>
   </table>
   </dd>
 </dl>
