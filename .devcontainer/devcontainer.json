@@ -1,8 +1,12 @@
 {
   "name": "Catena SDK Dev Container",
   "image": "catena-sdk",
-  "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      }
+    }
   },
   "postCreateCommand": "echo 'Dev container is ready!'",
   "remoteUser": "catena",
