@@ -418,9 +418,9 @@ Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const
         co_return component;
     }
 
-    // Error if trying to use SUBSCRIPTIONS mode with no subscriptions in the array
+    // Error if trying to use SUBSCRIPTIONS mode with subscriptions disabled
     // Note: If subscriptions are added through an RPC anyway, this error will not be thrown.
-    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && (subscribed_oids.empty() || !subscriptions_)) {
+    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_ && subscribed_oids.empty()) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
     }
 
