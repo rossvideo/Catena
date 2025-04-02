@@ -43,6 +43,7 @@
   
  // Connections/REST
  #include "api.h"
+ #include "SocketReader.h"
  #include "SocketWriter.h"
  using catena::API;
  
@@ -57,7 +58,7 @@
       *
       * @param socket The socket to write the response to.
       * @param context The SocketReader object. Here to maintain consistency.
-      * @param dm The device to get the value from.
+      * @param dm The device to get the slot of.
       */ 
      GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
    private:

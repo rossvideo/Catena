@@ -31,7 +31,7 @@
 /**
  * @file api.h
  * @brief Implements REST API
- * @author unknown
+ * @author Benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -54,6 +54,7 @@
 #include <boost/asio/ssl.hpp>
 using boost::asio::ip::tcp;
 
+// std
 #include <string>
 #include <iostream>
 #include <regex>
@@ -69,6 +70,7 @@ namespace catena {
  */
 class API {
 
+  // Specifying which Device and IParam to use (defaults to catena::...)
   using Device = catena::common::Device;
   using IParam = catena::common::IParam;
 
@@ -77,9 +79,9 @@ class API {
      * @brief Constructor for the REST API.
      * 
      * @param dm The device to implement Catena services to.
-     * @param port The port to listen on. Default is 443.
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
+     * @param port The port to listen on. Default is 443.
      */
     explicit API(Device &dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
     virtual ~API() = default;
@@ -91,18 +93,19 @@ class API {
     /**
      * @brief Returns the API's version.
      */
-    std::string version() const;
+    std::string version() const { return version_; }
     /**
      * @brief Starts the API.
      */
     void run();
     /**
-     * @brief Notifies the condition variable to shutdown the API.
+     * @brief Shuts down an running API. This should only be called sometime
+     * after a call to run().
      */
     void Shutdown();
 
     /**
-     * @brief CallData states.
+     * @brief CallData states for status messages.
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
@@ -150,21 +153,29 @@ class API {
          * in which they appear in the URL. Additionally, the last field is
          * assumed to be until the end of the request unless specified
          * otherwise.
+         * 
+         * @todo Update once URL format is finalized and move to SocketReader.
          */
         void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
     };
-    
+
+    /**
+     * @brief Returns true if authorization is enabled.
+     */
     bool authorizationEnabled() { return authorizationEnabled_; };
 
   private:
     /**
      * @brief Routes a request to the appropriate controller.
      * @param socket The socket to communicate with the client with.
-     * @returns Nothing, errors are thrown or communicated through the socket.
+     * @returns Nothing, communicated through the socket, at which point
+     * process ends.
      */
     void route(tcp::socket& socket);
     /**
      * @brief Returns true if port_ is already in use.
+     * 
+     * Currently unused.
      */
     bool is_port_in_use_() const;
 
@@ -205,9 +216,13 @@ class API {
      */
     static std::string timeNow();
     /**
-     * @brief Active RPC tracker.
+     * @brief Counter used to track number of active RPCs. Run() does not
+     * finish until this number is 0.
      */
     uint32_t activeRpcs_ = 0;
+    /**
+     * @brief Mutex for activeRpcs_ counter to avoid collisions.
+     */
     std::mutex activeRpcMutex_;
 
     //Forward declarations of CallData classes for their respective RPC
@@ -219,7 +234,8 @@ class API {
     class GetPopulatedSlots;
 
 };
-}  // namespace catena
+
+};  // namespace catena
 
 // flags for the API
 // flags.h

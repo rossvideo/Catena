@@ -28,14 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
-#include <utils.h>
-
+// REST
 #include <api.h>
+
+// RPCs
 #include <Connect.h>
 #include <MultiSetValue.h>
 #include <SetValue.h>
@@ -43,20 +39,9 @@
 #include <GetValue.h>
 #include <GetPopulatedSlots.h>
 
-#include "absl/flags/flag.h"
-
-#include <iostream>
-#include <regex>
-
 using catena::API;
 
 void API::route(tcp::socket& socket) {
-    // Incrementing activeRPCs.
-    {
-    std::lock_guard<std::mutex> lock(activeRpcMutex_);
-    activeRpcs_ += 1;
-    }
-    std::cout<<"Route Start"<<std::endl;
     if (!shutdown_) {
         try {
             // Reading from the socket.
@@ -96,12 +81,5 @@ void API::route(tcp::socket& socket) {
             catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
             writer.write(err);
         }
-    }
-    std::cout<<"Route End"<<std::endl;
-    // Decrementing activeRPCs.
-    {
-    std::lock_guard<std::mutex> lock(activeRpcMutex_);
-    activeRpcs_ -= 1;
-    std::cout<<"Active RPCs remaining: "<<activeRpcs_<<std::endl;
     }
 }

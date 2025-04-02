@@ -50,10 +50,9 @@ class API::SetValue : public MultiSetValue {
      * @brief Constructor for the SetValue RPC. Calls proceed() once
      * initialized.
      *
-     * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
      * @param dm The device to set the value of.
-     * @param authz The authorizer object containing the client's scopes.
      */ 
     SetValue(tcp::socket& socket, SocketReader& context, Device& dm);
   private:

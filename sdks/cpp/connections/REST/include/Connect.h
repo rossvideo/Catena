@@ -47,6 +47,7 @@
 
 // Connections/REST
 #include "api.h"
+#include "SocketReader.h"
 #include "SocketWriter.h"
 using catena::API;
 
@@ -62,7 +63,6 @@ class API::Connect : public CallData, public catena::common::Connect {
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
      * @param dm The device to connect to.
-     * @param authz True if authorization is enabled.
      */ 
     Connect(tcp::socket& socket, SocketReader& context, Device& dm);
     /**
