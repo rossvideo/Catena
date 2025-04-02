@@ -55,10 +55,9 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * gRPC. Calls proceed() once initialized.
          * @param service The CatenaServiceImpl instance
          * @param dm The device model
-         * @param subscriptionManager The subscription manager to use
          * @param ok Flag indicating if initialization was successful
          */
-        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, catena::grpc::SubscriptionManager& subscriptionManager, bool ok);
+        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, bool ok);
 
         /**
          * @brief Manages the steps of the UpdateSubscriptions gRPC command
@@ -152,9 +151,4 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @brief The writer lock.
          */
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
-
-        /**
-         * @brief Reference to the subscription manager
-         */
-        catena::grpc::SubscriptionManager& subscriptionManager_;
 };

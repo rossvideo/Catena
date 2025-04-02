@@ -44,9 +44,13 @@
 #include <memory>
 #include <Device.h>
 #include <IParam.h>
+#include <ParamVisitor.h>
 
 namespace catena {
 namespace grpc {
+
+using catena::common::Device;
+using catena::common::IParam;
 
 /**
  * @brief Class for managing parameter subscriptions in gRPC connections
@@ -62,23 +66,26 @@ public:
      * @brief Add an OID subscription
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
+     * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, catena::common::Device& dm);
+    bool addSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
 
     /**
      * @brief Remove an OID subscription
      * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*")
+     * @param dm The device model to use
+     * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid);
+    bool removeSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(catena::common::Device& dm);
+    const std::vector<std::string>& getAllSubscribedOids(Device& dm);
 
     /**
      * @brief Get all unique subscriptions
@@ -101,22 +108,71 @@ public:
 
 private:
     /**
-     * @brief Process children of a parameter recursively
-     * @param parent_path The path of the parent parameter
-     * @param current_param The current parameter to process
-     * @param dm The device model to use
+     * @brief Mutex for subscription data access
      */
-    void processChildren_(const std::string& parent_path, catena::common::IParam* current_param, catena::common::Device& dm);
+    mutable std::mutex mtx_;
 
+    /**
+     * @brief Lock for protecting subscription data access
+     */
+    mutable std::unique_lock<std::mutex> subscriptionLock_{mtx_, std::defer_lock};
+
+    /**
+     * @brief Visitor class for collecting subscribed OIDs
+     */
+    class SubscriptionVisitor : public catena::common::IParamVisitor {
+        public:
+            /**
+             * @brief Constructor for the SubscriptionVisitor class
+             * @param oids The vector of subscribed OIDs
+             */
+            explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+            
+            /**
+             * @brief Visit a parameter
+             * @param param The parameter to visit
+             * @param path The path of the parameter
+             */
+            void visit(catena::common::IParam* param, const std::string& path) override {
+                oids_.push_back(path);
+            }
+            
+            /**
+             * @brief Visit an array
+             * @param param The array to visit
+             * @param path The path of the array
+             * @param length The length of the array
+             */
+            void visitArray(catena::common::IParam* param, const std::string& path, uint32_t length) override {}
+
+        private:
+            /**
+             * @brief The vector of subscribed OIDs within the visitor
+             */
+            std::vector<std::string>& oids_;
+    };
+
+
+    /**
+     * @brief Set of unique subscriptions
+         */
     std::set<std::string> uniqueSubscriptions_; 
+
+    /**
+     * @brief Set of wildcard subscriptions
+     */
     std::set<std::string> wildcardSubscriptions_;
+
+    /**
+     * @brief Vector of all subscribed OIDs
+     */
     std::vector<std::string> allSubscribedOids_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs
      * @param dm The device model to use for expanding wildcard subscriptions
      */
-    void updateAllSubscribedOids_(catena::common::Device& dm);
+    void updateAllSubscribedOids_(Device& dm);
 };
 
 } // namespace grpc
