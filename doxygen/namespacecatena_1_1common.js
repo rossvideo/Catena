@@ -2,6 +2,7 @@ var namespacecatena_1_1common =
 [
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html", "classcatena_1_1common_1_1Authorizer" ],
     [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
+    [ "Connect", "classcatena_1_1common_1_1Connect.html", "classcatena_1_1common_1_1Connect" ],
     [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
     [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],

@@ -4,6 +4,7 @@ var annotated_dup =
       [ "common", "namespacecatena_1_1common.html", [
         [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html", "classcatena_1_1common_1_1Authorizer" ],
         [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
+        [ "Connect", "classcatena_1_1common_1_1Connect.html", "classcatena_1_1common_1_1Connect" ],
         [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
         [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
         [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
@@ -56,6 +57,11 @@ var annotated_dup =
         [ "Functory", "classcatena_1_1patterns_1_1Functory.html", "classcatena_1_1patterns_1_1Functory" ],
         [ "GenericFactory", "classcatena_1_1patterns_1_1GenericFactory.html", "classcatena_1_1patterns_1_1GenericFactory" ],
         [ "Singleton", "classcatena_1_1patterns_1_1Singleton.html", "classcatena_1_1patterns_1_1Singleton" ]
+      ] ],
+      [ "REST", null, [
+        [ "ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", "classcatena_1_1REST_1_1ChunkedWriter" ],
+        [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
+        [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ]
       ] ],
       [ "API", "classcatena_1_1API.html", "classcatena_1_1API" ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],

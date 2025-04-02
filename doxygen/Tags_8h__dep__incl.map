@@ -1,78 +1,98 @@
 <map id="/home/runner/work/Catena/Catena/sdks/cpp/common/include/Tags.h" name="/home/runner/work/Catena/Catena/sdks/cpp/common/include/Tags.h">
-<area shape="rect" id="Node000001" title="Tags to differentiate collections with the same type for template specialization." alt="" coords="794,5,989,60"/>
-<area shape="rect" id="Node000002" href="$Device_8h.html" title="Device class definition." alt="" coords="994,313,1189,368"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="918,70,1076,311,1072,314,914,73"/>
+<area shape="rect" id="Node000001" title="Tags to differentiate collections with the same type for template specialization." alt="" coords="1111,5,1306,60"/>
+<area shape="rect" id="Node000002" href="$Device_8h.html" title="Device class definition." alt="" coords="1111,313,1306,368"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1211,74,1211,313,1206,313,1206,74"/>
 <area shape="rect" id="Node000024" href="$NamedChoiceConstraint_8h.html" title="A constraint that checks if a value is within some named choices." alt="" coords="5,416,252,471"/>
-<area shape="poly" id="edge35_Node000001_Node000024" title=" " alt="" coords="820,68,731,110,569,196,410,283,174,418,172,414,408,278,566,191,729,106,818,63"/>
-<area shape="rect" id="Node000025" href="$ParamWithValue_8h.html" title="Interface for acessing parameter values." alt="" coords="1659,416,1855,471"/>
-<area shape="poly" id="edge44_Node000001_Node000025" title=" " alt="" coords="1002,33,1177,38,1381,50,1481,59,1573,71,1650,87,1708,106,1779,143,1806,162,1828,184,1847,209,1863,238,1891,313,1899,341,1897,355,1891,369,1867,398,1836,418,1833,414,1863,394,1886,367,1892,353,1893,342,1886,314,1858,240,1842,212,1824,188,1802,166,1776,147,1706,110,1649,92,1572,76,1481,64,1381,55,1177,43,1002,38"/>
+<area shape="poly" id="edge44_Node000001_Node000024" title=" " alt="" coords="1099,59,1004,82,906,111,691,190,485,277,307,358,182,418,179,414,305,353,483,272,689,185,904,105,1002,76,1097,54"/>
+<area shape="rect" id="Node000025" href="$ParamWithValue_8h.html" title="Interface for acessing parameter values." alt="" coords="2093,416,2289,471"/>
+<area shape="poly" id="edge55_Node000001_Node000025" title=" " alt="" coords="1320,34,1498,42,1708,55,1905,76,1986,89,2047,105,2132,138,2166,156,2195,177,2221,201,2243,231,2262,268,2279,313,2286,341,2279,369,2261,396,2237,418,2233,414,2257,393,2274,367,2281,341,2274,314,2257,270,2238,234,2217,205,2192,181,2163,161,2130,143,2045,111,1985,95,1904,81,1707,60,1498,47,1320,40"/>
 <area shape="rect" id="Node000026" href="$PicklistConstraint_8h.html" title="A constraint that checks if a value is in a list of strings." alt="" coords="277,416,479,471"/>
-<area shape="poly" id="edge45_Node000001_Node000026" title=" " alt="" coords="850,70,800,110,412,418,409,414,796,106,846,66"/>
+<area shape="poly" id="edge56_Node000001_Node000026" title=" " alt="" coords="1124,67,1019,110,845,194,675,281,425,418,422,414,673,276,842,189,1017,106,1122,62"/>
 <area shape="rect" id="Node000027" href="$RangeConstraint_8h.html" title="A constraint that checks if a value is within a range." alt="" coords="503,416,701,471"/>
-<area shape="poly" id="edge46_Node000001_Node000027" title=" " alt="" coords="867,73,623,417,619,414,863,70"/>
-<area shape="rect" id="Node000028" href="$ParamDescriptor_8h.html" title="Interface for accessing parameter descriptions." alt="" coords="1499,108,1695,163"/>
-<area shape="poly" id="edge36_Node000001_Node000028" title=" " alt="" coords="1003,47,1499,117,1498,123,1002,52"/>
-<area shape="rect" id="Node000003" href="$IParamVisitor_8h.html" title="Implements Catena IParamVisitor." alt="" coords="994,416,1189,471"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="1094,382,1094,416,1089,416,1089,382"/>
-<area shape="rect" id="Node000004" href="$ParamVisitor_8h.html" title="Implements Catena ParamVisitor." alt="" coords="670,519,865,573"/>
-<area shape="poly" id="edge29_Node000002_Node000004" title=" " alt="" coords="981,363,844,390,791,405,765,418,754,441,751,467,754,494,760,518,755,519,749,495,746,467,749,439,761,414,789,400,843,385,980,357"/>
-<area shape="rect" id="Node000006" href="$SubscriptionManager_8h.html" title="Centralized manager for parameter subscriptions in gRPC connections." alt="" coords="651,621,913,676"/>
-<area shape="poly" id="edge34_Node000002_Node000006" title=" " alt="" coords="1203,346,1282,354,1362,368,1429,387,1454,400,1472,414,1480,428,1481,442,1473,471,1462,506,1450,532,1432,554,1403,576,1366,593,1315,607,1187,628,1045,640,914,647,913,642,1045,635,1187,622,1314,602,1364,588,1401,571,1428,551,1445,529,1457,504,1467,470,1476,441,1475,430,1468,418,1452,404,1427,392,1360,373,1281,359,1202,351"/>
-<area shape="rect" id="Node000008" href="$ServiceImpl_8h.html" title="Implements Catena gRPC request handlers." alt="" coords="1489,724,1704,779"/>
-<area shape="poly" id="edge33_Node000002_Node000008" title=" " alt="" coords="1203,347,1286,356,1371,370,1445,389,1474,400,1495,414,1505,431,1518,461,1546,549,1593,723,1588,724,1541,550,1513,463,1501,433,1491,418,1471,405,1443,394,1370,375,1285,361,1202,352"/>
-<area shape="rect" id="Node000021" href="$LanguagePack_8h.html" title="multi language support in 2 classes: LanguagePack and LanguagePacks" alt="" coords="775,416,970,471"/>
-<area shape="poly" id="edge24_Node000002_Node000021" title=" " alt="" coords="1023,376,931,418,929,414,1021,371"/>
-<area shape="rect" id="Node000022" href="$Menu_8h.html" title="Menus support." alt="" coords="1263,416,1458,471"/>
-<area shape="poly" id="edge25_Node000002_Node000022" title=" " alt="" coords="1175,370,1291,413,1290,418,1173,375"/>
-<area shape="rect" id="Node000023" href="$MenuGroup_8h.html" title="MenuGroups support." alt="" coords="1195,519,1390,573"/>
-<area shape="poly" id="edge27_Node000002_Node000023" title=" " alt="" coords="1151,373,1203,414,1247,467,1280,517,1276,520,1243,470,1199,418,1147,378"/>
-<area shape="poly" id="edge28_Node000002_Node000024" title=" " alt="" coords="980,351,658,375,462,394,265,419,253,420,252,415,264,413,461,389,658,370,980,346"/>
-<area shape="poly" id="edge30_Node000002_Node000025" title=" " alt="" coords="1202,356,1659,425,1658,430,1202,361"/>
-<area shape="poly" id="edge31_Node000002_Node000026" title=" " alt="" coords="980,355,754,380,492,419,480,421,479,415,491,413,754,375,980,350"/>
-<area shape="poly" id="edge32_Node000002_Node000027" title=" " alt="" coords="981,366,720,419,702,422,701,417,719,413,980,361"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="995,477,853,521,851,516,993,472"/>
-<area shape="rect" id="Node000005" href="$BasicParamInfoRequest_8h_source.html" title=" " alt="" coords="107,827,388,881"/>
-<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="710,583,639,624,293,829,290,824,637,619,708,578"/>
-<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="776,587,781,621,776,622,771,587"/>
-<area shape="rect" id="Node000007" href="$Connect_8h.html" title="Implements Catena gRPC Connect." alt="" coords="412,827,627,881"/>
-<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="739,686,555,828,552,824,736,682"/>
-<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="927,665,1489,734,1489,739,926,670"/>
-<area shape="rect" id="Node000020" href="$UpdateSubscriptions_8h.html" title="Implements Catena gRPC UpdateSubscriptions." alt="" coords="651,827,913,881"/>
-<area shape="poly" id="edge23_Node000006_Node000020" title=" " alt="" coords="785,690,785,826,779,826,779,690"/>
-<area shape="poly" id="edge9_Node000008_Node000005" title=" " alt="" coords="1475,759,1271,766,1003,779,702,800,400,829,388,831,388,825,399,824,702,795,1003,774,1271,761,1475,753"/>
-<area shape="poly" id="edge10_Node000008_Node000007" title=" " alt="" coords="1476,759,1102,781,871,801,640,829,628,831,627,826,639,824,870,796,1101,775,1476,754"/>
-<area shape="rect" id="Node000009" href="$AddLanguage_8h.html" title="Implements Catena gRPC AddLanguage." alt="" coords="2280,827,2495,881"/>
-<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="1718,760,1969,785,2261,824,2280,827,2280,833,2260,829,1968,791,1717,765"/>
-<area shape="rect" id="Node000010" href="$DeviceRequest_8h.html" title="Implements Catena gRPC DeviceRequest." alt="" coords="2519,827,2744,881"/>
-<area shape="poly" id="edge11_Node000008_Node000010" title=" " alt="" coords="1718,755,2073,777,2290,797,2508,824,2519,826,2518,831,2507,829,2290,803,2072,783,1717,760"/>
-<area shape="rect" id="Node000011" href="$ExecuteCommand_8h.html" title="Implements Catena gRPC ExecuteCommand." alt="" coords="2769,827,3014,881"/>
-<area shape="poly" id="edge12_Node000008_Node000011" title=" " alt="" coords="1718,753,1917,759,2175,772,2465,793,2757,824,2769,826,2768,831,2756,829,2465,799,2175,778,1916,765,1718,758"/>
-<area shape="rect" id="Node000012" href="$ExternalObjectRequest_8h.html" title="Implements Catena gRPC ExternalObjectRequest." alt="" coords="3039,827,3315,881"/>
-<area shape="poly" id="edge13_Node000008_Node000012" title=" " alt="" coords="1718,751,1959,757,2284,769,2653,790,3026,824,3039,826,3038,831,3026,829,2653,796,2283,774,1958,762,1718,757"/>
-<area shape="rect" id="Node000013" href="$GetParam_8h.html" title="Implements Catena gRPC GetParam." alt="" coords="3339,827,3553,881"/>
-<area shape="poly" id="edge14_Node000008_Node000013" title=" " alt="" coords="1718,752,2069,761,2534,776,2992,797,3183,810,3328,824,3339,826,3338,831,3327,829,3182,815,2992,802,2533,781,2069,766,1718,758"/>
-<area shape="rect" id="Node000014" href="$GetPopulatedSlots_8h.html" title="Implements Catena gRPC GetPopulatedSlots." alt="" coords="936,827,1183,881"/>
-<area shape="poly" id="edge15_Node000008_Node000014" title=" " alt="" coords="1476,777,1196,829,1183,832,1182,826,1195,824,1475,772"/>
-<area shape="rect" id="Node000015" href="$GetValue_8h.html" title="Implements Catena gRPC GetValue." alt="" coords="1207,827,1421,881"/>
-<area shape="poly" id="edge16_Node000008_Node000015" title=" " alt="" coords="1511,786,1389,829,1387,824,1509,781"/>
-<area shape="rect" id="Node000016" href="$LanguagePackRequest_8h.html" title="Implements Catena gRPC LanguagePackRequest." alt="" coords="1445,827,1719,881"/>
-<area shape="poly" id="edge17_Node000008_Node000016" title=" " alt="" coords="1593,793,1588,827,1583,826,1588,792"/>
-<area shape="rect" id="Node000017" href="$ListLanguages_8h.html" title="Implements Catena gRPC ListLanguages." alt="" coords="1743,827,1963,881"/>
-<area shape="poly" id="edge18_Node000008_Node000017" title=" " alt="" coords="1677,781,1787,824,1785,829,1675,786"/>
-<area shape="rect" id="Node000018" href="$MultiSetValue_8h.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs." alt="" coords="1987,827,2204,881"/>
-<area shape="poly" id="edge19_Node000008_Node000018" title=" " alt="" coords="1718,773,1976,824,1987,826,1986,832,1975,829,1717,778"/>
-<area shape="rect" id="Node000019" href="$SetValue_8h.html" title="Implements Catena gRPC SetValue." alt="" coords="2061,929,2276,984"/>
-<area shape="poly" id="edge21_Node000008_Node000019" title=" " alt="" coords="1718,756,1864,766,2020,780,2150,799,2194,811,2218,825,2227,837,2230,851,2225,879,2212,907,2195,931,2190,928,2207,904,2220,878,2224,851,2222,839,2215,829,2192,816,2149,805,2019,785,1863,771,1718,761"/>
-<area shape="poly" id="edge22_Node000008_Node000020" title=" " alt="" coords="1476,766,1222,792,925,829,913,831,913,826,924,824,1221,787,1475,761"/>
-<area shape="poly" id="edge20_Node000018_Node000019" title=" " alt="" coords="2125,891,2152,928,2147,931,2120,894"/>
-<area shape="poly" id="edge26_Node000022_Node000023" title=" " alt="" coords="1337,484,1313,520,1308,517,1333,481"/>
-<area shape="poly" id="edge43_Node000028_Node000025" title=" " alt="" coords="1686,166,1736,190,1786,223,1832,263,1852,286,1868,312,1877,341,1868,369,1846,397,1818,418,1815,414,1843,393,1864,367,1872,341,1864,314,1848,290,1829,267,1783,227,1733,195,1684,171"/>
-<area shape="rect" id="Node000029" href="$Authorization_8h.html" title="Class for handling authorization information." alt="" coords="1499,211,1694,265"/>
-<area shape="poly" id="edge37_Node000028_Node000029" title=" " alt="" coords="1599,176,1599,211,1594,211,1594,176"/>
-<area shape="poly" id="edge38_Node000029_Node000002" title=" " alt="" coords="1486,264,1189,323,1188,317,1485,259"/>
-<area shape="poly" id="edge42_Node000029_Node000008" title=" " alt="" coords="1599,279,1599,723,1594,723,1594,279"/>
-<area shape="poly" id="edge39_Node000029_Node000025" title=" " alt="" coords="1608,277,1624,322,1649,366,1676,392,1706,414,1703,418,1673,397,1645,370,1619,325,1603,279"/>
-<area shape="rect" id="Node000030" href="$StructInfo_8h.html" title="Structured data serialization and deserialization to protobuf." alt="" coords="1659,313,1854,368"/>
-<area shape="poly" id="edge40_Node000029_Node000030" title=" " alt="" coords="1651,270,1716,311,1713,315,1648,275"/>
-<area shape="poly" id="edge41_Node000030_Node000025" title=" " alt="" coords="1759,382,1759,416,1754,416,1754,382"/>
+<area shape="poly" id="edge57_Node000001_Node000027" title=" " alt="" coords="1160,70,642,418,639,414,1157,65"/>
+<area shape="rect" id="Node000028" href="$common_2include_2rpc_2Connect_8h_source.html" title=" " alt="" coords="1583,416,1778,471"/>
+<area shape="poly" id="edge58_Node000001_Node000028" title=" " alt="" coords="1251,67,1652,414,1648,418,1247,71"/>
+<area shape="rect" id="Node000036" href="$ParamDescriptor_8h.html" title="Interface for accessing parameter descriptions." alt="" coords="1837,108,2033,163"/>
+<area shape="poly" id="edge45_Node000001_Node000036" title=" " alt="" coords="1320,47,1837,118,1837,123,1319,52"/>
+<area shape="rect" id="Node000003" href="$IParamVisitor_8h.html" title="Implements Catena IParamVisitor." alt="" coords="725,416,919,471"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="1099,373,920,419,919,414,1097,368"/>
+<area shape="rect" id="Node000004" href="$ParamVisitor_8h.html" title="Implements Catena ParamVisitor." alt="" coords="750,519,945,573"/>
+<area shape="poly" id="edge29_Node000002_Node000004" title=" " alt="" coords="1099,371,1043,392,990,418,972,431,960,443,933,473,879,521,876,517,929,469,956,439,969,427,987,414,1041,387,1097,366"/>
+<area shape="rect" id="Node000006" href="$SubscriptionManager_8h.html" title="Centralized manager for parameter subscriptions in gRPC connections." alt="" coords="876,621,1139,676"/>
+<area shape="poly" id="edge43_Node000002_Node000006" title=" " alt="" coords="1100,370,1064,390,1035,418,1020,442,1010,468,1000,524,1000,578,1005,621,1000,621,995,578,995,524,1005,467,1016,439,1031,414,1061,385,1097,365"/>
+<area shape="rect" id="Node000008" href="$ServiceImpl_8h.html" title="Implements Catena gRPC request handlers." alt="" coords="2024,724,2239,779"/>
+<area shape="poly" id="edge42_Node000002_Node000008" title=" " alt="" coords="1320,351,1381,361,1441,375,1491,392,1510,403,1523,414,1534,435,1537,456,1526,494,1515,532,1516,552,1526,572,1550,602,1574,623,1600,637,1627,645,1689,656,1764,673,1899,708,2024,732,2023,737,1898,713,1763,679,1688,662,1625,650,1597,642,1571,627,1546,606,1521,575,1511,553,1510,532,1521,493,1531,455,1529,437,1519,418,1506,407,1489,397,1440,380,1380,367,1319,357"/>
+<area shape="rect" id="Node000021" href="$LanguagePack_8h.html" title="multi language support in 2 classes: LanguagePack and LanguagePacks" alt="" coords="1045,416,1239,471"/>
+<area shape="poly" id="edge24_Node000002_Node000021" title=" " alt="" coords="1186,381,1162,417,1157,414,1181,378"/>
+<area shape="rect" id="Node000022" href="$Menu_8h.html" title="Menus support." alt="" coords="1314,416,1509,471"/>
+<area shape="poly" id="edge25_Node000002_Node000022" title=" " alt="" coords="1275,372,1360,414,1357,418,1272,376"/>
+<area shape="rect" id="Node000023" href="$MenuGroup_8h.html" title="MenuGroups support." alt="" coords="1209,519,1403,573"/>
+<area shape="poly" id="edge27_Node000002_Node000023" title=" " alt="" coords="1234,379,1254,415,1298,518,1294,520,1249,417,1229,381"/>
+<area shape="poly" id="edge28_Node000002_Node000024" title=" " alt="" coords="1098,349,727,372,497,392,265,419,253,420,252,415,264,413,496,387,727,367,1098,344"/>
+<area shape="poly" id="edge30_Node000002_Node000025" title=" " alt="" coords="1320,347,1639,372,2030,413,2093,422,2093,428,2030,419,1639,378,1320,352"/>
+<area shape="poly" id="edge31_Node000002_Node000026" title=" " alt="" coords="1098,352,822,376,657,395,492,419,480,421,479,415,491,413,656,389,821,370,1098,347"/>
+<area shape="poly" id="edge32_Node000002_Node000027" title=" " alt="" coords="1098,358,917,384,713,419,701,421,700,416,712,413,917,379,1098,353"/>
+<area shape="poly" id="edge33_Node000002_Node000028" title=" " alt="" coords="1320,362,1565,413,1584,417,1583,423,1564,419,1319,367"/>
+<area shape="rect" id="Node000030" href="$api_8h.html" title="Implements REST API." alt="" coords="1803,416,2017,471"/>
+<area shape="poly" id="edge35_Node000002_Node000030" title=" " alt="" coords="1320,351,1538,376,1790,413,1803,416,1802,421,1790,419,1538,381,1320,356"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="835,483,843,518,838,519,829,485"/>
+<area shape="rect" id="Node000005" href="$BasicParamInfoRequest_8h_source.html" title=" " alt="" coords="504,827,785,881"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="825,586,664,828,660,825,820,583"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="902,578,967,619,964,623,899,583"/>
+<area shape="rect" id="Node000007" href="$connections_2gRPC_2include_2Connect_8h.html" title="Implements Catena gRPC Connect." alt="" coords="1096,827,1311,881"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="1044,684,1180,824,1176,828,1040,688"/>
+<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="1153,660,2024,738,2023,743,1152,666"/>
+<area shape="rect" id="Node000020" href="$UpdateSubscriptions_8h.html" title="Implements Catena gRPC UpdateSubscriptions." alt="" coords="810,827,1071,881"/>
+<area shape="poly" id="edge23_Node000006_Node000020" title=" " alt="" coords="997,690,952,827,947,825,992,688"/>
+<area shape="poly" id="edge9_Node000008_Node000005" title=" " alt="" coords="2010,757,1784,764,1483,777,1142,798,798,829,786,831,785,826,798,824,1142,792,1483,771,1784,759,2010,752"/>
+<area shape="poly" id="edge10_Node000008_Node000007" title=" " alt="" coords="2010,762,1698,785,1511,804,1324,829,1312,831,1311,826,1323,824,1510,799,1698,780,2010,756"/>
+<area shape="rect" id="Node000009" href="$AddLanguage_8h.html" title="Implements Catena gRPC AddLanguage." alt="" coords="2169,827,2384,881"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="2182,784,2240,824,2237,829,2179,789"/>
+<area shape="rect" id="Node000010" href="$gRPC_2include_2DeviceRequest_8h.html" title="Implements Catena gRPC DeviceRequest." alt="" coords="2408,827,2633,881"/>
+<area shape="poly" id="edge11_Node000008_Node000010" title=" " alt="" coords="2246,779,2420,824,2419,829,2245,785"/>
+<area shape="rect" id="Node000011" href="$ExecuteCommand_8h.html" title="Implements Catena gRPC ExecuteCommand." alt="" coords="2658,827,2903,881"/>
+<area shape="poly" id="edge12_Node000008_Node000011" title=" " alt="" coords="2253,766,2439,792,2646,824,2658,826,2657,831,2646,829,2438,797,2252,771"/>
+<area shape="rect" id="Node000012" href="$ExternalObjectRequest_8h.html" title="Implements Catena gRPC ExternalObjectRequest." alt="" coords="2928,827,3204,881"/>
+<area shape="poly" id="edge13_Node000008_Node000012" title=" " alt="" coords="2253,759,2554,784,2916,824,2928,826,2927,831,2915,829,2554,789,2252,764"/>
+<area shape="rect" id="Node000013" href="$GetParam_8h.html" title="Implements Catena gRPC GetParam." alt="" coords="3228,827,3443,881"/>
+<area shape="poly" id="edge14_Node000008_Node000013" title=" " alt="" coords="2253,752,2439,759,2680,772,2948,793,3217,824,3228,826,3227,831,3216,829,2947,798,2679,777,2439,764,2252,758"/>
+<area shape="rect" id="Node000014" href="$gRPC_2include_2GetPopulatedSlots_8h.html" title="Implements Catena gRPC GetPopulatedSlots." alt="" coords="3467,827,3713,881"/>
+<area shape="poly" id="edge15_Node000008_Node000014" title=" " alt="" coords="2253,751,2477,757,2776,769,3115,790,3287,805,3456,824,3467,825,3466,831,3455,829,3286,811,3114,795,2776,774,2477,762,2253,757"/>
+<area shape="rect" id="Node000015" href="$gRPC_2include_2GetValue_8h.html" title="Implements Catena gRPC GetValue." alt="" coords="3737,827,3952,881"/>
+<area shape="poly" id="edge16_Node000008_Node000015" title=" " alt="" coords="2252,753,3003,778,3421,798,3594,811,3726,824,3737,826,3736,831,3726,829,3594,816,3421,804,3003,783,2252,758"/>
+<area shape="rect" id="Node000016" href="$LanguagePackRequest_8h.html" title="Implements Catena gRPC LanguagePackRequest." alt="" coords="1335,827,1608,881"/>
+<area shape="poly" id="edge17_Node000008_Node000016" title=" " alt="" coords="2010,772,1621,829,1608,831,1608,826,1620,824,2010,767"/>
+<area shape="rect" id="Node000017" href="$ListLanguages_8h.html" title="Implements Catena gRPC ListLanguages." alt="" coords="1632,827,1852,881"/>
+<area shape="poly" id="edge18_Node000008_Node000017" title=" " alt="" coords="2018,785,1844,829,1843,824,2016,779"/>
+<area shape="rect" id="Node000018" href="$gRPC_2include_2MultiSetValue_8h.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs." alt="" coords="1876,827,2093,881"/>
+<area shape="poly" id="edge19_Node000008_Node000018" title=" " alt="" coords="2083,789,2025,829,2022,824,2080,784"/>
+<area shape="rect" id="Node000019" href="$gRPC_2include_2SetValue_8h.html" title="Implements Catena gRPC SetValue." alt="" coords="1951,929,2165,984"/>
+<area shape="poly" id="edge21_Node000008_Node000019" title=" " alt="" coords="2130,793,2122,837,2108,882,2081,931,2076,928,2104,880,2117,835,2125,792"/>
+<area shape="poly" id="edge22_Node000008_Node000020" title=" " alt="" coords="2010,760,1599,782,1343,802,1085,829,1072,831,1071,826,1084,824,1342,797,1599,776,2010,754"/>
+<area shape="poly" id="edge20_Node000018_Node000019" title=" " alt="" coords="2014,891,2041,928,2037,931,2010,894"/>
+<area shape="poly" id="edge26_Node000022_Node000023" title=" " alt="" coords="1376,482,1335,521,1332,517,1372,478"/>
+<area shape="rect" id="Node000029" href="$connections_2REST_2include_2Connect_8h.html" title="Implements REST Connect RPC." alt="" coords="1535,519,1749,573"/>
+<area shape="poly" id="edge34_Node000028_Node000029" title=" " alt="" coords="1668,485,1655,520,1650,518,1663,483"/>
+<area shape="poly" id="edge36_Node000030_Node000029" title=" " alt="" coords="1828,478,1713,521,1711,516,1827,473"/>
+<area shape="rect" id="Node000031" href="$REST_2include_2DeviceRequest_8h.html" title="Implements REST DeviceRequest RPC." alt="" coords="2014,519,2238,573"/>
+<area shape="poly" id="edge37_Node000030_Node000031" title=" " alt="" coords="1980,474,2071,516,2069,521,1977,479"/>
+<area shape="rect" id="Node000032" href="$REST_2include_2GetPopulatedSlots_8h.html" title="Implements REST GetPopulatedSlots RPC." alt="" coords="2261,519,2508,573"/>
+<area shape="poly" id="edge38_Node000030_Node000032" title=" " alt="" coords="2032,468,2262,516,2260,521,2031,473"/>
+<area shape="rect" id="Node000033" href="$REST_2include_2GetValue_8h.html" title="Implements REST GetValue RPC." alt="" coords="2532,519,2747,573"/>
+<area shape="poly" id="edge39_Node000030_Node000033" title=" " alt="" coords="2032,467,2037,468,2173,484,2279,491,2385,499,2521,516,2532,518,2531,523,2520,521,2385,504,2279,497,2172,490,2036,473,2031,472"/>
+<area shape="rect" id="Node000034" href="$REST_2include_2MultiSetValue_8h.html" title="Implements REST MultiSetValue RPC." alt="" coords="1774,519,1990,573"/>
+<area shape="poly" id="edge40_Node000030_Node000034" title=" " alt="" coords="1902,485,1892,519,1887,518,1896,483"/>
+<area shape="rect" id="Node000035" href="$REST_2include_2SetValue_8h.html" title="Implements REST SetValue RPC." alt="" coords="1775,621,1989,676"/>
+<area shape="poly" id="edge41_Node000034_Node000035" title=" " alt="" coords="1885,587,1885,621,1879,621,1879,587"/>
+<area shape="poly" id="edge54_Node000036_Node000025" title=" " alt="" coords="2047,163,2105,187,2163,219,2216,260,2239,285,2258,312,2264,327,2266,340,2258,369,2243,395,2224,417,2220,414,2239,392,2253,367,2260,340,2259,328,2253,315,2234,288,2212,264,2160,223,2103,192,2045,168"/>
+<area shape="rect" id="Node000037" href="$Authorization_8h.html" title="Class for handling authorization information." alt="" coords="1838,211,2033,265"/>
+<area shape="poly" id="edge46_Node000036_Node000037" title=" " alt="" coords="1938,176,1938,211,1933,211,1933,176"/>
+<area shape="poly" id="edge47_Node000037_Node000002" title=" " alt="" coords="1825,257,1307,329,1306,323,1824,252"/>
+<area shape="poly" id="edge53_Node000037_Node000008" title=" " alt="" coords="1947,278,1961,322,1983,367,2005,392,2032,414,2056,445,2066,457,2083,468,2112,478,2146,484,2231,487,2329,482,2433,475,2536,469,2629,471,2671,476,2707,485,2738,498,2761,517,2784,548,2793,576,2791,602,2777,625,2753,645,2722,663,2640,693,2541,715,2434,731,2239,748,2239,743,2434,726,2540,710,2639,688,2720,659,2750,641,2773,622,2786,600,2788,576,2779,550,2757,521,2735,503,2705,490,2670,481,2629,476,2536,475,2433,480,2329,488,2231,492,2146,489,2110,483,2081,473,2063,461,2051,449,2028,418,2002,395,1978,369,1956,324,1942,279"/>
+<area shape="poly" id="edge48_Node000037_Node000025" title=" " alt="" coords="1960,275,1994,322,2038,366,2078,392,2121,413,2118,418,2076,397,2035,370,1990,325,1956,278"/>
+<area shape="poly" id="edge51_Node000037_Node000028" title=" " alt="" coords="1893,276,1715,418,1712,414,1890,272"/>
+<area shape="poly" id="edge52_Node000037_Node000030" title=" " alt="" coords="1933,279,1916,416,1911,415,1928,278"/>
+<area shape="rect" id="Node000038" href="$StructInfo_8h.html" title="Structured data serialization and deserialization to protobuf." alt="" coords="2049,313,2243,368"/>
+<area shape="poly" id="edge49_Node000037_Node000038" title=" " alt="" coords="2004,269,2092,311,2090,316,2001,274"/>
+<area shape="poly" id="edge50_Node000038_Node000025" title=" " alt="" coords="2166,380,2182,415,2177,417,2161,382"/>
 </map>
