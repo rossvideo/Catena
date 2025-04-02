@@ -43,6 +43,7 @@
 
 // Connections/REST
 #include "api.h"
+#include "SocketReader.h"
 #include "SocketWriter.h"
 using catena::API;
  
@@ -55,19 +56,17 @@ class API::MultiSetValue : public CallData {
      * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
      * initialized.
      *
-     * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
      * @param dm The device to set the value(s) of.
-     * @param authz The authorizer object containing the client's scopes.
      */ 
     MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm);
   protected:
     /**
      * @brief Constructor for child SetValue RPCs. Does not call proceed().
-     * @param jsonPayload The json body extracted from the request.
      * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
      * @param dm The device to set the value(s) of.
-     * @param authz The authorizer object containing the client's scopes.
      * @param objectId The object's unique id.
      */
     MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId);

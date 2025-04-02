@@ -43,6 +43,7 @@
  
 // Connections/REST
 #include "api.h"
+#include "SocketReader.h"
 #include "SocketWriter.h"
 using catena::API;
 

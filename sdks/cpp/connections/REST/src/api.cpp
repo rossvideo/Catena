@@ -31,10 +31,6 @@ API::API(Device &dm, std::string& EOPath, bool authz, uint16_t port)
     }
 }
 
-std::string API::version() const {
-  return version_;
-}
-
 // Initializing the shutdown signal for all open connections.
 vdk::signal<void()> API::Connect::shutdownSignal_;
 
@@ -46,22 +42,31 @@ void API::run() {
         // Waiting for a connection.
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
-        // Once a conections is made, handle async.
+        // Once a conections is made, increment activeRPCs and handle async.
+        {
+        std::lock_guard<std::mutex> lock(activeRpcMutex_);
+        activeRpcs_ += 1;
+        }
         std::thread([this, socket = std::move(socket)]() mutable {
+            // Routing rpc to the appropriate function.
             this->route(socket);
+            // rpc completed. Decrementing activeRPCs.
+            {
+            std::lock_guard<std::mutex> lock(activeRpcMutex_);
+            activeRpcs_ -= 1;
+            std::cout<<"Active RPCs remaining: "<<activeRpcs_<<std::endl;
+            }
         }).detach();
     }
     
-    // Shutting down active RPCs.
-    Connect::shutdownSignal_.emit(); // Shutdown active Connect RPCs.
-    
-    // Wait for active RPCs to finish
+    // shutdown_ is true. Send shutdown signal and wait for active RPCs.
+    Connect::shutdownSignal_.emit();
     while(activeRpcs_ > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
+    // Once active RPCs are done, close the acceptor and io_context.
     io_context_.stop();
-    acceptor_.cancel();
     acceptor_.close();
 }
 
@@ -84,9 +89,6 @@ std::string API::timeNow() {
     return ss.str();
 }
 
-/**
- * @todo move to SocketReader once format is decided.
- */
 void API::CallData::parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const {
     if (fields.size() == 0) {
         throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
