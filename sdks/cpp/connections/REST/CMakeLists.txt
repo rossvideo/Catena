@@ -28,7 +28,7 @@ endif(APPLE)
 set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(EXTERNAL_ROOT_DIR ${REST_ROOT_DIR}/external)
-set(CROW_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/crow)
+# set(CROW_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/crow)
 
 find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 
@@ -50,7 +50,7 @@ add_library(${target} STATIC ${sources})
 find_package(jwt-cpp CONFIG REQUIRED)
 
 include_directories(
-    ${CROW_ROOT_DIR}/include
+    # ${CROW_ROOT_DIR}/include
     ${REST_ROOT_DIR}/include
     ${Boost_INCLUDE_DIRS}
 )
@@ -58,7 +58,7 @@ include_directories(
 message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 
 # Add Crow as a submodule
-add_subdirectory(${CROW_ROOT_DIR})
+# add_subdirectory(${CROW_ROOT_DIR})
 
 target_include_directories(
     ${target}
@@ -67,8 +67,7 @@ target_include_directories(
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
 )
 
-# Link Crow and Boost.System to your target
-# todo: add jwt-cpp
+# Link Boost.System to your target
 target_link_libraries(${target}
     PUBLIC
         proto_interface
