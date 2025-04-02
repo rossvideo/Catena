@@ -41,6 +41,7 @@ set(sources
     "src/SetValue.cpp"
     "src/Connect.cpp"
     "src/router.cpp"
+    "src/SocketReader.cpp"
     "src/SocketWriter.cpp"
 )
 
