@@ -31,6 +31,13 @@
 #include <SubscriptionManager.h>
 #include <Device.h>
 #include <IParam.h>
+#include <Status.h>
+
+// Use the correct namespaces
+using catena::common::Device;
+using catena::common::IParam;
+using catena::common::Path;
+using catena::common::ParamVisitor;
 
 namespace catena {
 namespace common {
@@ -39,8 +46,9 @@ bool SubscriptionManager::isWildcard(const std::string& oid) const {
     return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
 
-bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc, Authorizer& authz) {
-    std::lock_guard<std::mutex> lock(subscriptionsMutex_);
+// Add a subscription (either unique or wildcard). Returns true if added, false if already exists
+bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, exception_with_status& rc) {
+    subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
     // Check if this is a wildcard subscription
@@ -83,8 +91,9 @@ bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, ca
     }
 }
 
-bool SubscriptionManager::removeSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc, Authorizer& authz) {
-    std::lock_guard<std::mutex> lock(subscriptionsMutex_);
+// Remove a subscription (either unique or wildcard). Returns true if removed, false if not found
+bool SubscriptionManager::removeSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc) {
+    subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
     if (isWildcard(oid)) {
@@ -149,7 +158,7 @@ void SubscriptionManager::updateAllSubscribedOids_(const Device& dm) {
         if (baseParam) {
             // If we found the base parameter, use visitor to collect all paths
             SubscriptionVisitor visitor(allSubscribedOids_);
-            traverseParams(baseParam.get(), basePath, const_cast<Device&>(dm), visitor);
+            ParamVisitor::traverseParams(baseParam.get(), basePath, dm, visitor);
         } else {
             // If base parameter not found, try to find any parameters that start with this path
             std::vector<std::unique_ptr<IParam>> allParams = dm.getTopLevelParams(rc);
@@ -160,7 +169,7 @@ void SubscriptionManager::updateAllSubscribedOids_(const Device& dm) {
                     if (paramOid.length() == basePath.length() || 
                         paramOid[basePath.length()] == '/') {
                         SubscriptionVisitor visitor(allSubscribedOids_);
-                        traverseParams(param.get(), paramOid, const_cast<Device&>(dm), visitor);
+                        ParamVisitor::traverseParams(param.get(), paramOid, dm, visitor);
                     }
                 }
             }
@@ -168,39 +177,29 @@ void SubscriptionManager::updateAllSubscribedOids_(const Device& dm) {
     }
 }
 
-std::vector<std::string> SubscriptionManager::getAllSubscribedOids(const Device& dm) const {
-    std::lock_guard<std::mutex> lock(subscriptionsMutex_);
-    const_cast<SubscriptionManager*>(this)->updateAllSubscribedOids_(dm);
-    return allSubscribedOids_;
+// Get all subscribed OIDs, including wildcard subscriptions
+const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(Device& dm) {
+    subscriptionLock_.lock();
+    updateAllSubscribedOids_(dm);
+    auto& result = allSubscribedOids_;
+    subscriptionLock_.unlock();
+    return result;
 }
 
-bool SubscriptionManager::isSubscribed(const std::string& oid, const Device& dm) const {
-    std::lock_guard<std::mutex> lock(subscriptionsMutex_);
-    
-    // Check unique subscriptions first
-    if (uniqueSubscriptions_.find(oid) != uniqueSubscriptions_.end()) {
-        return true;
-    }
-    
-    // Check wildcard subscriptions
-    for (const auto& wildcardOid : wildcardSubscriptions_) {
-        std::string basePath = wildcardOid.substr(0, wildcardOid.length() - 2);
-        if (oid.find(basePath) == 0) {
-            if (oid.length() == basePath.length() || oid[basePath.length()] == '/') {
-                return true;
-            }
-        }
-    }
-    
-    return false;
+// Get the set of unique (non-wildcard) subscriptions
+const std::set<std::string>& SubscriptionManager::getUniqueSubscriptions() {
+    subscriptionLock_.lock();
+    auto& result = uniqueSubscriptions_;
+    subscriptionLock_.unlock();
+    return result;
 }
 
-const std::set<std::string>& SubscriptionManager::getUniqueSubscriptions() const {
-    return uniqueSubscriptions_;
-}
-
-const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() const {
-    return wildcardSubscriptions_;
+// Get the set of wildcard subscriptions (OIDs ending with "/*")
+const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
+    subscriptionLock_.lock();
+    auto& result = wildcardSubscriptions_;
+    subscriptionLock_.unlock();
+    return result;
 }
 
 } // namespace common

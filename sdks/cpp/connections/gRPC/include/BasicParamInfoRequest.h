@@ -155,7 +155,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief Visitor class for collecting parameter info
          */
-        class BasicParamInfoVisitor : public catena::common::ParamVisitor {
+        class BasicParamInfoVisitor : public catena::common::IParamVisitor {
             public:
                 /**
                  * @brief Constructor for the BasicParamInfoVisitor class

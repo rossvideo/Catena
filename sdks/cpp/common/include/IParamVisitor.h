@@ -31,14 +31,14 @@
  */
 
 /**
- * @file ParamVisitor.h
- * @brief Implements Catena ParamVisitor
+ * @file IParamVisitor.h
+ * @brief Implements Catena IParamVisitor
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-04-02
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#include <IParamVisitor.h>
+#include <IParam.h>
 #include <Path.h>
 #include <Device.h>
 
@@ -46,21 +46,21 @@ namespace catena {
 namespace common {
 
 /**
- * @brief Concrete implementation of parameter visitor
+ * @brief Interface for parameter visitors
  */
-class ParamVisitor : public IParamVisitor {
+class IParamVisitor {
     public:
         /**
          * @brief Virtual destructor
          */
-        virtual ~ParamVisitor() = default;
+        virtual ~IParamVisitor() = default;
         
         /**
          * @brief Visit a parameter
          * @param param The parameter to visit
          * @param path The path of the parameter
          */
-        void visit(IParam* param, const std::string& path) override;
+        virtual void visit(IParam* param, const std::string& path) = 0;
         
         /**
          * @brief Visit an array
@@ -68,16 +68,7 @@ class ParamVisitor : public IParamVisitor {
          * @param path The path of the array
          * @param length The length of the array
          */
-        void visitArray(IParam* param, const std::string& path, uint32_t length) override;
-
-        /**
-         * @brief Helper function to traverse parameters using a visitor
-         * @param param The parameter to visit
-         * @param path The path of the parameter
-         * @param device The device to visit
-         * @param visitor The visitor to use
-         */
-        static void traverseParams(IParam* param, const std::string& path, Device& device, IParamVisitor& visitor);
+        virtual void visitArray(IParam* param, const std::string& path, uint32_t length) = 0;
 };
 
 } // namespace common
