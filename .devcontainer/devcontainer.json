@@ -2,7 +2,6 @@
 	"name": "Catena SDK",
 	// "image": "catena-sdk:latest",
 	"dockerComposeFile": "compose.yml",
-	"remoteUser": "catena",
 	"workspaceFolder": "/home/catena/Catena",
-
+	"service": "catena-sdk"
 }
