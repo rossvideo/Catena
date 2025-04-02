@@ -49,16 +49,19 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 ## Get Dev Cluster running
 ### Start the local kube cluster
 ```sh
-minikube start
+minikube start --cpus=8 --memory=8192 --disk-size=250g --driver=docker
 kubectl cluster-info
 ```
 ### Build the catena docker img
 ```sh
 cd K8s/
-# point the docker build to the cluster
-eval $(minikube docker-env)
+
 # the fist time you build it takes about 30min
 docker build -t catena:latest .
+
+# the fist time you build it takes about 3min
+minikube image load catena:latest
+kubectl apply -f catena-sdk-deployment.yaml
 
 ```
 

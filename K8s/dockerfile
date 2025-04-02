@@ -1,4 +1,4 @@
-FROM library/ubuntu:24.04
+FROM library/ubuntu:24.04 AS builder
 LABEL org.opencontainers.image.title="Catena SDK"
 LABEL org.opencontainers.image.description="Rossvideo Catena"
 LABEL org.opencontainers.image.version="v0.0.1-dev"
@@ -36,14 +36,6 @@ RUN cd /usr/src/gtest \
     && make && cp lib/*.a /usr/lib
 
 
-
-
-# Build the Docker image
-FROM library/ubuntu:24.04 AS build
-
-# Copy the build artifacts
-COPY --from=0 /root/.local /root/.local
-
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     build-essential cmake nodejs npm git libssl-dev doxygen graphviz \
@@ -59,17 +51,32 @@ RUN mkdir -p /root/Catena \
     && git pull origin develop \
     && git submodule update --init --recursive
 
-
 # Build Catena
 RUN mkdir -p /root/Catena/sdks/cpp/build \
     && cd /root/Catena/sdks/cpp/build \
     && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_INSTALL_PREFIX=/root/.local /root/Catena/sdks/cpp \
     && ninja
 
+FROM library/ubuntu:24.04 AS compiled
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libssl-dev libboost-all-dev libasio-dev \
+    && apt-get clean
+
+# Copy the build artifacts
+# COPY --from=builder /root/.local /root/.local
+COPY --from=builder /root/Catena/sdks/cpp/build /root/Catena/
+
 # Set the default user
 WORKDIR "/root/Catena"
 
 # ~/Catena/sdks/cpp/build/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
 
-#docker run -rm -v $(realpath ../):/root/Catena -it catena-sdk
-VOLUME ["/root/Catena"] 
+# #docker run -rm -v $(realpath ../):/root/Catena -it catena-sdk
+# VOLUME ["/root/Catena"] 
+
+#healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD common/examples/hello_world/hello_world || exit 1

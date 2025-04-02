@@ -16,7 +16,10 @@ spec:
         - name: catena
           image: catena:latest
           imagePullPolicy: Never
-          
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
           volumeMounts:
             - mountPath: /root/Catena
               name: catena-storage
