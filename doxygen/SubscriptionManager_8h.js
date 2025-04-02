@@ -1,4 +1,4 @@
 var SubscriptionManager_8h =
 [
-    [ "catena::grpc::SubscriptionManager", "classcatena_1_1grpc_1_1SubscriptionManager.html", "classcatena_1_1grpc_1_1SubscriptionManager" ]
+    [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", "classcatena_1_1common_1_1SubscriptionManager" ]
 ];

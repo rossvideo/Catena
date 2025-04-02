@@ -11,6 +11,5 @@ var searchData=
   ['flags_5fport_8',['FLAGS_port',['../SharedFlags_8h.html#a2235cdabc508b4a04ffedcec42736cab',1,'SharedFlags.h']]],
   ['flags_5fprivate_5fca_9',['FLAGS_private_ca',['../SharedFlags_8h.html#adf1e01bc1d40b2814869fac90b919280',1,'SharedFlags.h']]],
   ['flags_5fsecure_5fcomms_10',['FLAGS_secure_comms',['../SharedFlags_8h.html#a277318a94e2481f1823dbb70afeb9a25',1,'SharedFlags.h']]],
-  ['flags_5fstatic_5froot_11',['FLAGS_static_root',['../SharedFlags_8h.html#ac6ef4240193b83bd26238ada409335d6',1,'SharedFlags.h']]],
-  ['forceconnection_5f_12',['forceConnection_',['../classcatena_1_1common_1_1Connect.html#a4755edff6106c38156a0fcc3e00dde50',1,'catena::common::Connect']]]
+  ['flags_5fstatic_5froot_11',['FLAGS_static_root',['../SharedFlags_8h.html#ac6ef4240193b83bd26238ada409335d6',1,'SharedFlags.h']]]
 ];

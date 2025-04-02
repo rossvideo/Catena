@@ -167,9 +167,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a9034cc95074df53a45e81ee00fa754ad" id="r_a9034cc95074df53a45e81ee00fa754ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad">subs</a> (std::string &amp;str, const std::string &amp;seq, const std::string &amp;rep)</td></tr>
 <tr class="memdesc:a9034cc95074df53a45e81ee00fa754ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Substitutes all occurences of one char sequence in a string with another.  <br /></td></tr>
 <tr class="separator:a9034cc95074df53a45e81ee00fa754ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72711cdba4d85a76051ad05cd6c582fb" id="r_a72711cdba4d85a76051ad05cd6c582fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb">split</a> (std::vector&lt; std::string &gt; &amp;out, const std::string &amp;str, const std::string &amp;delim)</td></tr>
-<tr class="memdesc:a72711cdba4d85a76051ad05cd6c582fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Splits a string int a vector of strings based on a delimiter.  <br /></td></tr>
-<tr class="separator:a72711cdba4d85a76051ad05cd6c582fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3ce72179203719924c0cff74fd3f82c" id="r_aa3ce72179203719924c0cff74fd3f82c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#aa3ce72179203719924c0cff74fd3f82c">expandEnvVariables</a> (std::string &amp;str)</td></tr>
 <tr class="memdesc:aa3ce72179203719924c0cff74fd3f82c"><td class="mdescLeft">&#160;</td><td class="mdescRight">expands any environment variables in str.  <br /></td></tr>
 <tr class="separator:aa3ce72179203719924c0cff74fd3f82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -316,50 +313,6 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>string containing contents of file</dd></dl>
 <p>N.B relies on C++11 copy elision to be efficient! </p>
-
-</div>
-</div>
-<a id="a72711cdba4d85a76051ad05cd6c582fb" name="a72711cdba4d85a76051ad05cd6c582fb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a72711cdba4d85a76051ad05cd6c582fb">&#9670;&#160;</a></span>split()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::split </td>
-          <td>(</td>
-          <td class="paramtype">std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>out</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>str</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>delim</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Splits a string int a vector of strings based on a delimiter. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">out</td><td>io The vector to store the new split string in. </td></tr>
-    <tr><td class="paramname">str</td><td>in The string to split. </td></tr>
-    <tr><td class="paramname">delim</td><td>in The character to split the string at. </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

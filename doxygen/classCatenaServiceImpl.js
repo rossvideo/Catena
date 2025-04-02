@@ -30,5 +30,5 @@ var classCatenaServiceImpl =
     [ "processEvents", "classCatenaServiceImpl.html#ae915df806984a0f15798aaa9d5b46d0c", null ],
     [ "registerItem", "classCatenaServiceImpl.html#a5cceb267107e0837203946cde5469269", null ],
     [ "shutdownServer", "classCatenaServiceImpl.html#aa20fbc7c7b095cf38712a04be8ac1bee", null ],
-    [ "subscriptionManager_", "classCatenaServiceImpl.html#ae80f9b831bf7032ee1b6bb176bf06931", null ]
+    [ "subscriptionManager_", "classCatenaServiceImpl.html#a0b87d2d540b5bd08625c58b2964611ea", null ]
 ];

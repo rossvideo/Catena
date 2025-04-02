@@ -8,15 +8,6 @@ var hierarchy =
       [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
     ] ],
     [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
-    [ "catena::API::CallData", "classcatena_1_1API_1_1CallData.html", [
-      [ "catena::API::Connect", "classAPI_1_1Connect.html", null ],
-      [ "catena::API::DeviceRequest", "classAPI_1_1DeviceRequest.html", null ],
-      [ "catena::API::GetPopulatedSlots", "classAPI_1_1GetPopulatedSlots.html", null ],
-      [ "catena::API::GetValue", "classAPI_1_1GetValue.html", null ],
-      [ "catena::API::MultiSetValue", "classAPI_1_1MultiSetValue.html", [
-        [ "catena::API::SetValue", "classAPI_1_1SetValue.html", null ]
-      ] ]
-    ] ],
     [ "CatenaServiceImpl::CallData", "classCatenaServiceImpl_1_1CallData.html", [
       [ "CatenaServiceImpl::AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", null ],
       [ "CatenaServiceImpl::BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", null ],
@@ -35,9 +26,6 @@ var hierarchy =
       [ "CatenaServiceImpl::UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", null ]
     ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
-    [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
-      [ "catena::API::Connect", "classAPI_1_1Connect.html", null ]
-    ] ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::Device", "classcatena_1_1common_1_1Device.html", null ],
     [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ],
@@ -104,12 +92,8 @@ var hierarchy =
     [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
     ] ],
-    [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ],
-    [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", [
-      [ "catena::REST::ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", null ]
-    ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
-    [ "catena::grpc::SubscriptionManager", "classcatena_1_1grpc_1_1SubscriptionManager.html", null ],
+    [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", null ],
     [ "std::true_type", null, [
       [ "catena::meta::is_streamable< T, std::void_t< decltype(std::cout<< std::declval< T >())> >", "structcatena_1_1meta_1_1is__streamable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1cout_3_3_f018ad5e508e96c26725f0228af2f889.html", null ],
       [ "catena::meta::is_variant< T, std::void_t< decltype(std::get< 0 >(std::declval< T >()))> >", "structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html", null ]
