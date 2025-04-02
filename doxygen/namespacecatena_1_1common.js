@@ -2,6 +2,7 @@ var namespacecatena_1_1common =
 [
     [ "Authorizer", "classcatena_1_1common_1_1Authorizer.html", "classcatena_1_1common_1_1Authorizer" ],
     [ "CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
+    [ "Connect", "classcatena_1_1common_1_1Connect.html", "classcatena_1_1common_1_1Connect" ],
     [ "ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "Device", "classcatena_1_1common_1_1Device.html", "classcatena_1_1common_1_1Device" ],
     [ "EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
@@ -12,7 +13,6 @@ var namespacecatena_1_1common =
     [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ],
     [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ],
     [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
-    [ "IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", "classcatena_1_1common_1_1IParamVisitor" ],
     [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", null ],
     [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
     [ "LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
@@ -23,7 +23,6 @@ var namespacecatena_1_1common =
     [ "NamedChoiceConstraint", "classcatena_1_1common_1_1NamedChoiceConstraint.html", "classcatena_1_1common_1_1NamedChoiceConstraint" ],
     [ "ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", "classcatena_1_1common_1_1ParamDescriptor" ],
     [ "ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
-    [ "ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", "classcatena_1_1common_1_1ParamVisitor" ],
     [ "ParamWithValue", "classcatena_1_1common_1_1ParamWithValue.html", "classcatena_1_1common_1_1ParamWithValue" ],
     [ "Path", "classcatena_1_1common_1_1Path.html", "classcatena_1_1common_1_1Path" ],
     [ "PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", "classcatena_1_1common_1_1PicklistConstraint" ],
