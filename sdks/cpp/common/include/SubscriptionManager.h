@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,10 +32,10 @@
 
 /**
  * @file SubscriptionManager.h
- * @brief Centralized manager for parameter subscriptions in gRPC connections
+ * @brief Centralized manager for parameter subscriptions in Catena
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-03-06
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @date 2025-04-02
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #include <set>
@@ -47,13 +47,13 @@
 #include <ParamVisitor.h>
 
 namespace catena {
-namespace grpc {
+namespace common {
 
 using catena::common::Device;
 using catena::common::IParam;
 
 /**
- * @brief Class for managing parameter subscriptions in gRPC connections
+ * @brief Class for managing parameter subscriptions in Catena
  */
 class SubscriptionManager {
 public:
@@ -175,5 +175,5 @@ private:
     void updateAllSubscribedOids_(Device& dm);
 };
 
-} // namespace grpc
+} // namespace common
 } // namespace catena 
