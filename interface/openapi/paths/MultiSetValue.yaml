@@ -29,65 +29,32 @@
 #
 
 put:
-  summary: Execute a command on a device model
-  operationId: ExecuteCommand
+  summary: Set the value of multiple parameters within a device model
+  operationId: MultiSetValue
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the value from
+      description: The slot of the device model containing the parameter to set the value of
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: oid
+    - name: values
       in: path
       required: true
-      description: The oid of the command to execute
+      description: A collection of parameter oids and values to set them to
       schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "pause"
-    
-    - name: value
-      in: path
-      required: false
-      description: Optional value to pass to the command if required
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      default: {string_value: "eo://video/1"}
-    
-    - name: respond
-      in: path
-      required: false
-      description: Optional flag to supress the server's response
-      schema:
-        type: boolean
-      default: true
-    
-    - name: proceed
-      in: path
-      required: false
-      description: Optional flag indicate whether to send the response instead as the 'DataPayload' variant of the 'Value' message
-      schema:
-        type: boolean
-      default: false
-    
+        type: array
+        items:
+          $ref: "./Messages.yaml#/$defs/set_value_payload"
+      example: [{"oid": "/text_box", "value": {"string_value": "Goodbye, world!"}}]
+      
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if respond is false
+      description: Nothing
       content:
         application/json:
           schema:
-            oneOf:
-              - title: No Response
-                description: respond is false or server does not have a response for the command
-
-              - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-              
-              - $ref: "./Messages.yaml#/$defs/exception"
-
-              - title: Proceed
-                description: Used to short circuit sending payloads
-                type: boolean
-
-          example: {boolean_value: true}
+            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          example: {}

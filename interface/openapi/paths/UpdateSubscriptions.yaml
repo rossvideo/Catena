@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -28,93 +28,59 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-get:
-  summary: Gets the components of the device model plugged into the specified slot
-  operationId: DeviceRequest
+put:
+  summary: Updates a client's subscriptions, affecting the output of the Connect and DeviceRequest RPCs on detail_level SUBSCRIPTIONS.
+  operationId: UpdateSubscriptions
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to request components from
+      description: The slot of the device model containing the parameters to add/remove from client's subscriptions
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: language
+      
+    - name: added_oids
       in: path
       required: false
-      description: The langauge code specifiying what language to return device components in
-      schema:
-        type: string
-      default: en
-  
-    - name: detail_level
-      in: path
-      required: false
-      description: The level of detail to request the device in
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
-
-    - name: subscribed_oids
-      in: path
-      required: false
-      description: A list of device component oids. Only these components will be returns if detail_level = SUBSCRIPTIONS
+      description: A list of oids to add to the client's subscriptions
       schema:
         type: array
         items:
           $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
       default: []
-
+      example: ["/text_box"]
+    
+    - name: removed_oids
+      in: path
+      required: false
+      description: A list of oids to remove from the client's subscriptions
+      schema:
+        type: array
+        items:
+          $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+      default: []
+      example: ["/counter"]
+  
   responses:
     "200":
-      description: A stream of components from the specified device manager
+      description: A stream of affected parameter components
       content:
         application/json:
           schema:
-            $ref: "./Messages.yaml#/$defs/device_component"
-  
+            title: Component Param
+            description: A parameter and the slot of the device manager it was recieved from
+            type: object
+            properties:
+              slot:
+                $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+              # Problems linking param
+              param:
+                title: Parameter
+                description: Defines the type, value, constraints, UI, access modes and configuration options of a parameter.
+                type: object
+
           example:
-            - {
-                "device": {
-                  "slot": 1,
-                  "multiSetEnabled": true,
-                  "subscriptions": true,
-                  "accessScopes": [
-                    "st2138:mon",
-                    "st2138:op",
-                    "st2138:cfg",
-                    "st2138:adm"
-                  ],
-                  "defaultScope": "st2138:op"
-                }
-              }
-            - {
-                "languagePack": {
-                  "language": "en",
-                  "languagePack": {
-                    "name": "English",
-                    "words": {
-                      "greeting": "Hello",
-                      "parting": "Goodbye"
-                    }
-                  }
-                }
-              }
-            - {
-                "sharedConstraint": {
-                  "oid": "basic_slider",
-                  "constraint": {
-                    "type": "INT_RANGE",
-                    "int32Range": {
-                      "minValue": -10,
-                      "maxValue": 10,
-                      "step": 1,
-                      "displayMin": -10,
-                      "displayMax": 10
-                    }
-                  }
-                }
-              }
             - {
                 "param": {
                   "oid": "text_box",
@@ -133,4 +99,22 @@ get:
                   }
                 }
               }
-  
+            - {
+                "param": {
+                  "oid": "counter",
+                  "param": {
+                    "name": {
+                      "displayStrings": {
+                        "fr": "Compteur",
+                        "en": "Counter",
+                        "es": "Contador"
+                      }
+                    },
+                    "type": "INT32",
+                    "value": {
+                      "int32Value": 3
+                    },
+                    "minimalSet": true
+                  }
+                }
+              }
