@@ -20,11 +20,11 @@ RUN mkdir -p ~/Catena/sdks/cpp/build \
     && ninja
 
 # Set the default user
-WORKDIR "/home/catena/Catena"
+WORKDIR "/root/Catena"
 
 # ~/Catena/sdks/cpp/build/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
 # #docker run -rm -v $(realpath ../):~/Catena -it catena-sdk
-VOLUME ["/home/catena/Catena"] 
+VOLUME ["/root/Catena"] 
 
 
 #healthcheck

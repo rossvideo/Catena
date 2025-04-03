@@ -1,13 +1,6 @@
 {
   "name": "Catena SDK Dev Container",
   "dockerFile": "devcontainer.dockerfile",
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
-      }
-    }
-  },
-  "postCreateCommand": "echo 'Dev container is ready!'",
+
   "workspaceFolder": "/root/Catena"
 } 
