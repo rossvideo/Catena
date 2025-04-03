@@ -134,7 +134,7 @@ protected:
     MockCatenaServiceImpl* service = nullptr;
 };
 
-TEST_F(UpdateSubscriptionsTest, UpdateSubscriptions_Constutor) {
+TEST_F(UpdateSubscriptionsTest, UpdateSubscriptions_Constructor) {
     // Create a new UpdateSubscriptions object
     bool ok = true;
 
