@@ -41,8 +41,8 @@
  */
 
 // connections/gRPC
-#include "ServiceImpl.h"
-#include "SubscriptionManager.h"
+#include <ServiceImpl.h>
+#include <SubscriptionManager.h>
 
 /**
 * @brief CallData class for the Connect RPC

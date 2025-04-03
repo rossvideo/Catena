@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,6 @@
  */
 
 #include <SubscriptionManager.h>
-#include <iostream>
 #include <Device.h>
 #include <IParam.h>
 #include <Status.h>
@@ -41,7 +40,7 @@ using catena::common::Path;
 using catena::common::ParamVisitor;
 
 namespace catena {
-namespace grpc {
+namespace common {
 
 // Returns true if the OID ends with "/*", indicating it's a wildcard subscription
 bool SubscriptionManager::isWildcard(const std::string& oid) {
@@ -228,5 +227,5 @@ const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
     return result;
 }
 
-} // namespace grpc
+} // namespace common
 } // namespace catena 

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
  * @author john.naylor@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-02-06
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // connections/gRPC

@@ -108,7 +108,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    catena::grpc::SubscriptionManager subscriptionManager_;
+    catena::common::SubscriptionManager subscriptionManager_;
 
   /*
    * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
