@@ -20,7 +20,13 @@
 
 ## Setup
 1. be on not windows (in a wsl is ok)
-2. install docker and docker compose
+
+2. install the Dev conatiner extenshion on your host systems vscode / curser
+```sh
+code --install-extension ms-vscode-remote.remote-containers
+```
+
+3. install docker and docker compose
 ```sh
 # for ubuntu 24.04
 ## setup the certs for docker
@@ -47,7 +53,7 @@ sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 sudo service docker start
 ```
-3. install the Dev conatiner extenshion
+
 4. pull the repo
 5. ctl+shift+p `Dev Containers: Rebuild Without Cache and Reopen in Container`
 6. your good to dev now :D
