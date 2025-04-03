@@ -1,0 +1,8 @@
+services:
+  catena-toolchain: # did you set you access token for pushing to ghcr?
+  # echo "YOUR_TOKEN" | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+    build:
+      context: .
+      dockerfile: toolchain.dockerfile
+    image: ghcr.io/rossvideo/catena-toolchain:latest
+
