@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Ross Video Ltd
+# Copyright 2024 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -29,38 +29,21 @@
 #
 
 get:
-  summary: Set the value of a parameter within a device model
-  operationId: SetValue
-
+  summary: Get the languages supported by the device model
+  operationId: GetLanguages
   parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameter to set the value of
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: oid
-      in: path
-      required: true
-      description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "text_box"
-
-    - name: value
-      in: path
-      required: true
-      description: The value to set the parameter specified by oid to
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example: {string_value: "Goodbye, world!"}
-      
+  - name: slot
+    in: path
+    required: true
+    description: The slot of the device model to get the value from
+    schema:
+      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+    example: 1
   responses:
     "200":
-      description: Nothing
+      description: a list of supported language ids
       content:
         application/json:
-          schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          example: {}
+          # schema:
+            # $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
+          example: ["en", "fr", "es"]

@@ -1,0 +1,195 @@
+#
+# Copyright 2024 Ross Video Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+
+get:
+  summary: Gets the components of the device model plugged into the specified slot
+  operationId: DeviceRequest
+
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model to request components from
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
+    - name: language
+      in: path
+      required: false
+      description: The langauge code specifiying what language to return device components in
+      schema:
+        type: string
+      default: en
+  
+    - name: detail_level
+      in: path
+      required: false
+      description: The level of detail to request the device in (FULL, SUBSCRIPTIONS, MINIMAL, COMMANDS, NONE)
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
+
+    - name: subscribed_oids
+      in: path
+      required: false
+      description: A list of device component oids. Only these components will be returns if detail_level = SUBSCRIPTIONS
+      schema:
+        type: array
+        items:
+          $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+      default: []
+
+  responses:
+    "200":
+      description: A stream of components from the specified device manager
+      content:
+        application/json:
+          schema:
+            anyOf:
+              # Problems with linking device rn.
+              # - $ref: "../../../schema/catena.device_schema.json#"
+              - title: Component Param
+                description: A parameter and the slot of the device manager it was recieved from
+                type: object
+                properties: {
+                  slot: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+                  }
+                  # Problems with linking param rn.
+                  # param: {
+                  #     $ref: "../../../schema/catena.param_schema.json#"
+                  # }
+                }
+              - title: Component Menu
+                description: A menu and the slot of the device manager it was recieved from
+                type: object
+                properties: {
+                  slot: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+                  },
+                  menu: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/menu"
+                  }
+                }
+              - title: Component Constraint
+                description: A contraint and the slot of the device manager it was recieved from
+                type: object
+                properties: {
+                  slot: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+                  },
+                  constraint: {
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/constraint"
+                  }
+                }
+              - title: Component Command
+                description: A command and the slot of the device manager it was recieved from
+                type: object
+                properties: {
+                  slot: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+                  }
+                  # Problems with linking param rn.
+                  # command: {
+                  #     $ref: "../../../schema/catena.param_schema.json#"
+                  # }
+                }
+              - title: Component Language Pack
+                description: A language pack and the slot of the device manager it was recieved from
+                type: object
+                properties: {
+                  slot: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+                  },
+                  language: {
+                      $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
+                  }
+                }
+  
+          example:
+            - {
+                "device": {
+                  "slot": 1,
+                  "multiSetEnabled": true,
+                  "subscriptions": true,
+                  "accessScopes": [
+                    "st2138:mon",
+                    "st2138:op",
+                    "st2138:cfg",
+                    "st2138:adm"
+                  ],
+                  "defaultScope": "st2138:op"
+                }
+              }
+            - {
+                "languagePack": {
+                  "language": "en",
+                  "languagePack": {
+                    "name": "English",
+                    "words": {
+                      "greeting": "Hello",
+                      "parting": "Goodbye"
+                    }
+                  }
+                }
+              }
+            - {
+                "sharedConstraint": {
+                  "oid": "basic_slider",
+                  "constraint": {
+                    "type": "INT_RANGE",
+                    "int32Range": {
+                      "minValue": -10,
+                      "maxValue": 10,
+                      "step": 1,
+                      "displayMin": -10,
+                      "displayMax": 10
+                    }
+                  }
+                }
+              }
+            - {
+                "param": {
+                  "oid": "text_box",
+                  "param": {
+                    "name": {
+                      "displayStrings": {
+                        "es": "Caja de Texto",
+                        "fr": "Boîte de Texte",
+                        "en": "Text Box"
+                      }
+                    },
+                    "type": "STRING",
+                    "value": {
+                      "stringValue": "Hello, World!"
+                    }
+                  }
+                }
+              }
+  

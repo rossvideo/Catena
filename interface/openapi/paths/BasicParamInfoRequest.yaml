@@ -29,38 +29,52 @@
 #
 
 get:
-  summary: Set the value of a parameter within a device model
-  operationId: SetValue
+  summary: Gets a parameter's basic information from the device model plugged into the specified slot
+  operationId: BasicParamInfoRequest
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameter to set the value of
+      description: The slot of the device model to get the object from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: oid
+    - name: oid_prefix
       in: path
-      required: true
-      description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
+      required: false
+      description: Uniquely identifies the starting parameter relative to device.params. Specifying "" selects all top-level parameters
       schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "text_box"
+        type: string
+      default: ""
+    
+    - name: recursive
+      in: path
+      required: false
+      description: Optional flag to indicate whether to include all child parameters or not.
+      schema:
+        type: boolean
+      default: false
 
-    - name: value
-      in: path
-      required: true
-      description: The value to set the parameter specified by oid to
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example: {string_value: "Goodbye, world!"}
-      
   responses:
     "200":
-      description: Nothing
+      description: A stream of basic information from the specified parameter(s)
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          example: {}
+            title: BasicParamInfoResponse
+            type: object
+            properties:
+              oid:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+              name:
+                title: PolyGlot Text
+                description: Text that a client can display in one of multiple languages
+                type: object
+              type:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/param_type"
+              template_oid:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+          
+          # TODO
+          # example:

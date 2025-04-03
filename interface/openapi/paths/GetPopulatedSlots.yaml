@@ -31,9 +31,10 @@
 get:
   summary: Get the slots populated with a device model
   operationId: GetPopulatedSlots
+  
   responses:
     "200":
-      description: a list of populated slot ids
+      description: A list of populated slot ids
       content:
         application/json:
           schema:
