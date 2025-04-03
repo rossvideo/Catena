@@ -2,5 +2,19 @@
   "name": "Catena SDK Dev Container",
   "dockerFile": "devcontainer.dockerfile",
 
-  "workspaceFolder": "/root/Catena"
+  "workspaceFolder": "/root/Catena",
+  
+  "extensions": [
+      
+      "ms-vscode.cpptools",
+      "ms-vscode.cpptools-extension-pack",
+      "ms-vscode.cpptools-themes",
+      "ms-vscode.cmake-tools",
+      "ms-azuretools.vscode-docker",
+      "knisterpeter.vscode-github",
+      "github.vscode-github-actions",
+      "redhat.vscode-yaml"
+
+
+  ]
 } 
