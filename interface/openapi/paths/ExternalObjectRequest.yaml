@@ -54,12 +54,6 @@ get:
       content:
         application/json:
           schema:
-            title: ExternalObjectPayload
-            type: object
-            properties:
-              cachable:
-                title: Boolean
-                type: boolean
-                description: Indicates whether the object is cachable or not
-              payload:
-                $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+            $ref: "./Messages.yaml#/$defs/external_object_payload"
+      
+          #TODO: Add example

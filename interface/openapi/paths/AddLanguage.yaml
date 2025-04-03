@@ -29,65 +29,39 @@
 #
 
 put:
-  summary: Execute a command on a device model
-  operationId: ExecuteCommand
+  summary: Adds a language pack to the device model
+  operationId: AddLanguage
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the value from
+      description: The slot of the device model to add the language pack to
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: oid
+    
+    - name: LanguagePack
       in: path
       required: true
-      description: The oid of the command to execute
+      description: The language pack to add to the device model
       schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "pause"
+        $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
+      example: {"language_pack": {"words": {"greeting": "Hello", "parting": "Goodbye"}, "name": "English"}}
     
-    - name: value
+    - name: id
       in: path
-      required: false
-      description: Optional value to pass to the command if required
+      required: true
+      description: The id of the language pack to add to the device model
       schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      default: {string_value: "eo://video/1"}
-    
-    - name: respond
-      in: path
-      required: false
-      description: Optional flag to supress the server's response
-      schema:
-        type: boolean
-      default: true
-    
-    - name: proceed
-      in: path
-      required: false
-      description: Optional flag indicate whether to send the response instead as the 'DataPayload' variant of the 'Value' message
-      schema:
-        type: boolean
-      default: false
-    
+        type: string
+      default: ""
+      example: "en"
+
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if respond is false
+      description: Nothing
       content:
         application/json:
           schema:
-            oneOf:
-              - title: No Response
-                description: respond is false or server does not have a response for the command
-
-              - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-              
-              - $ref: "./Messages.yaml#/$defs/exception"
-
-              - title: Proceed
-                description: Used to short circuit sending payloads
-                type: boolean
-
-          example: {boolean_value: true}
+            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          example: {}

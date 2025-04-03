@@ -28,66 +28,69 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-put:
-  summary: Execute a command on a device model
-  operationId: ExecuteCommand
+get:
+  summary: Gets a parameter within a device model
+  operationId: GetParam
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the value from
+      description: The slot of the device model containing the parameters to add/remove from client's subscriptions
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
       in: path
       required: true
-      description: The oid of the command to execute
+      description: The path to the parameter within the device model to get
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "pause"
-    
-    - name: value
-      in: path
-      required: false
-      description: Optional value to pass to the command if required
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      default: {string_value: "eo://video/1"}
-    
-    - name: respond
-      in: path
-      required: false
-      description: Optional flag to supress the server's response
-      schema:
-        type: boolean
-      default: true
-    
-    - name: proceed
-      in: path
-      required: false
-      description: Optional flag indicate whether to send the response instead as the 'DataPayload' variant of the 'Value' message
-      schema:
-        type: boolean
-      default: false
-    
+      default: "text_box"
+
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if respond is false
+      description: The parameter specified by oid within the device model
       content:
         application/json:
           schema:
-            oneOf:
-              - title: No Response
-                description: respond is false or server does not have a response for the command
+            $ref: "./Messages.yaml#/$defs/component_param"
 
-              - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-              
-              - $ref: "./Messages.yaml#/$defs/exception"
-
-              - title: Proceed
-                description: Used to short circuit sending payloads
-                type: boolean
-
-          example: {boolean_value: true}
+          example:
+            - {
+                "slot": 1,
+                "oid": "/text_box"
+              }
+            - {
+                "oid": "text_box",
+                "param": {
+                  "oid_aliases": [],
+                  "client_hints": {},
+                  "commands": {},
+                  "params": {},
+                  "name": {
+                    "display_strings": {
+                      "en": "Text Box",
+                      "fr": "Boîte de Texte",
+                      "es": "Caja de Texto"
+                    }
+                  },
+                  "type": "STRING",
+                  "read_only": false,
+                  "widget": "",
+                  "precision": 0,
+                  "value": {
+                    "string_value": "Hello, World!"
+                  },
+                  "constraint": null,
+                  "max_length": 0,
+                  "total_length": 0,
+                  "access_scope": "",
+                  "response": false,
+                  "help": null,
+                  "import": null,
+                  "minimal_set": false,
+                  "stateless": false,
+                  "template_oid": ""
+                }
+              }

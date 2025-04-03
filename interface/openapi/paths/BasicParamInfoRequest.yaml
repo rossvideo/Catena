@@ -65,16 +65,38 @@ get:
             title: BasicParamInfoResponse
             type: object
             properties:
-              oid:
-                $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-              name:
-                title: PolyGlot Text
-                description: Text that a client can display in one of multiple languages
+              info:
+                title: BasicParamInfoRequest
                 type: object
-              type:
-                $ref: "../../../schema/catena.param_schema.json#/$defs/param_type"
-              template_oid:
-                $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+                properties:
+                  oid:
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+                  name:
+                    title: PolyGlot Text
+                    description: Text that a client can display in one of multiple languages
+                    type: object
+                  type:
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/param_type"
+                  template_oid:
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+                
+              array_length:
+                title: Integer
+                type: interger
+                description: The depth of the parameter in the searched tree.
           
-          # TODO
-          # example:
+          example: {
+            "info": {
+              "oid": "text_box",
+              "name": {
+                "display_strings": {
+                  "en": "Text Box",
+                  "fr": "Boîte de Texte",
+                  "es": "Caja de Texto"
+                }
+              },
+              "type": "STRING",
+              "template_oid": ""
+            },
+            "array_length": 0
+          }

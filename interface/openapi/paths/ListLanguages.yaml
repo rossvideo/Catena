@@ -30,20 +30,26 @@
 
 get:
   summary: Get the languages supported by the device model
-  operationId: GetLanguages
+  operationId: ListLanguages
   parameters:
-  - name: slot
-    in: path
-    required: true
-    description: The slot of the device model to get the value from
-    schema:
-      $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-    example: 1
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model to get the languages from
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
   responses:
     "200":
-      description: a list of supported language ids
+      description: A list of supported language ids
       content:
         application/json:
-          # schema:
-            # $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
+          schema:
+            title: Language List
+            description: A list of language ids
+            type: object
+            properties:
+              lanugages:
+                title: String_Array
+                type: string_array
           example: ["en", "fr", "es"]

@@ -49,11 +49,16 @@ paths:
     $ref: './paths/GetValue.yaml'
   /SetValue:
     $ref: './paths/SetValue.yaml'
-  # /MultiSetValue:
-  # /UpdateSubscriptions:
-  # /GetParam:
-  # /Connect:
-  # /AddLanguage:
+  /MultiSetValue:
+    $ref: './paths/MultiSetValue.yaml'
+  /UpdateSubscriptions:
+    $ref: './paths/UpdateSubscriptions.yaml'
+  /GetParam:
+    $ref: './paths/GetParam.yaml'
+  /Connect:
+    $ref : './paths/Connect.yaml'
+  /AddLanguage:
+    $ref: './paths/AddLanguage.yaml'
   /LanguagePackRequest:
     $ref: './paths/LanguagePackRequest.yaml'
   /ListLanguages:

@@ -35,22 +35,32 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the value from
+      description: The slot of the device model to get the language pack from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-      example: 1
+
     - name: language
       in: path
       required: true
-      description: The language code of the language to get
-      type: sting
+      description: The id of the language pack to get from the device model
+      schema:
+        type: string
       example: "en"
-      
+  
   responses:
     "200":
-      description: LanguagePack
+      description: The language pack specified by the id within the device model
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
-          example: {"language": "en", "language_pack": {"words": {"greeting": "Hello", "parting": "Goodbye"}, "name": "English"}}
+            $ref: "./Messages.yaml#/$defs/component_language_pack"
+          example: {
+              "language": "en",
+              "language_pack": {
+                "words": {
+                  "greeting": "Hello",
+                  "parting": "Goodbye"
+                },
+                "name": "English"
+              }
+            }
