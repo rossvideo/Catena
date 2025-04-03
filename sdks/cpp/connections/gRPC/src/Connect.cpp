@@ -55,7 +55,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager)
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             std::cout << "Calling registerItem with: " << this << std::endl;
@@ -97,7 +97,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new Connect(service_, dm_, ok, service_->subscriptionManager_);
+            new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             // Cancels all open connections if shutdown signal is sent.
             shutdownSignalId_ = shutdownSignal_.connect([this](){
@@ -215,8 +215,22 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
                 // Update if OID is subscribed or in minimal set
                 {
                     auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                    should_update = p->getDescriptor().minimalSet() || 
-                                  (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    should_update = p->getDescriptor().minimalSet();
+                    
+                    // Check for exact match or wildcard match
+                    for (const auto& subscribedOid : subscribedOids) {
+                        if (subscribedOid == oid) {
+                            should_update = true;
+                            break;
+                        }
+                        // Check for wildcard match (ends with /*)
+                        if (subscribedOid.length() >= 2 && 
+                            subscribedOid.substr(subscribedOid.length() - 2) == "/*" &&
+                            oid.find(subscribedOid.substr(0, subscribedOid.length() - 2)) == 0) {
+                            should_update = true;
+                            break;
+                        }
+                    }
                 }
                 break;
                 
