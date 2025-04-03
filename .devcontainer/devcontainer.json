@@ -1,6 +1,6 @@
 {
   "name": "Catena SDK Dev Container",
-  "image": "catena-sdk",
+  "dockerFile": "devcontainer.dockerfile",
   "customizations": {
     "vscode": {
       "settings": {
@@ -9,6 +9,5 @@
     }
   },
   "postCreateCommand": "echo 'Dev container is ready!'",
-  "remoteUser": "catena",
-  "workspaceFolder": "/home/catena/Catena"
+  "workspaceFolder": "/root/Catena"
 } 
