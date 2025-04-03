@@ -29,38 +29,78 @@
 #
 
 get:
-  summary: Set the value of a parameter within a device model
-  operationId: SetValue
+  summary: Execute a command on a device model
+  operationId: ExecuteCommand
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameter to set the value of
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
       in: path
       required: true
-      description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
+      description: The oid of the command to execute
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "text_box"
-
+      default: "pause"
+    
     - name: value
       in: path
-      required: true
-      description: The value to set the parameter specified by oid to
+      required: false
+      description: Optional value to pass to the command if required
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example: {string_value: "Goodbye, world!"}
-      
+      default: {string_value: "eo://video/1"}
+    
+    - name: respond
+      in: path
+      required: false
+      description: Optional flag to supress the server's response
+      schema:
+        type: boolean
+      default: true
+    
+    - name: proceed
+      in: path
+      required: false
+      description: Optional flag indicate whether to send the response instead as the 'DataPayload' variant of the 'Value' message
+      schema:
+        type: boolean
+      default: false
+    
   responses:
     "200":
-      description: Nothing
+      description: The server's response will either be a 'Value' or nothing if respond is false
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          example: {}
+            oneOf:
+              - title: No Response
+                description: respond is false or server does not have a response for the command
+
+              - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+              
+              - title: Exception
+                description: The server's response is an exception
+                type: object
+                properties:
+                  type:
+                    title: String
+                    type: string
+                  error_message:
+                    title: PolyGlot Text
+                    description: Text that a client can display in one of multiple languages
+                    type: object
+                  details:
+                    title: String
+                    type: string
+
+              - title: Proceed
+                description: Used to short circuit sending payloads
+                type: boolean
+
+          example: {boolean_value: true}

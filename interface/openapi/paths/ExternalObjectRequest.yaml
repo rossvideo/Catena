@@ -29,38 +29,37 @@
 #
 
 get:
-  summary: Set the value of a parameter within a device model
-  operationId: SetValue
+  summary: Gets an external object from the server
+  operationId: ExternalObjectRequest
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameter to set the value of
+      description: The slot of the device model to get the object from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
       in: path
       required: true
-      description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
+      description: The path to the object to request from the device model
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "text_box"
+      example: "text_box"
 
-    - name: value
-      in: path
-      required: true
-      description: The value to set the parameter specified by oid to
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example: {string_value: "Goodbye, world!"}
-      
   responses:
     "200":
-      description: Nothing
+      description: A 'DataPayload' variant of the 'Value' message and a flag indicating whether the object is cachable or not
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          example: {}
+            title: ExternalObjectPayload
+            type: object
+            properties:
+              cachable:
+                title: Boolean
+                type: boolean
+                description: Indicates whether the object is cachable or not
+              payload:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/value"

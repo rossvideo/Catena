@@ -31,24 +31,26 @@
 get:
   summary: Get the value of a parameter within a device model
   operationId: GetValue
+
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the value from
+      description: The slot of the device model containing the parameter to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-      example: 1
+
     - name: oid
       in: path
       required: true
-      description: The path to the parameter with value within the device model
+      description: The path to the parameter within the device model to get the value from. For array parameters, suffix with a valid index to only get the value at that index
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      example: "/text_box"
+      default: "text_box"
+
   responses:
     "200":
-      description: The value of the parameter specified by oid
+      description: The value of the parameter specified by oid within the device model
       content:
         application/json:
           schema:

@@ -30,37 +30,27 @@
 
 get:
   summary: Set the value of a parameter within a device model
-  operationId: SetValue
-
+  operationId: LanguagePackRequest
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameter to set the value of
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: oid
+      example: 1
+    - name: language
       in: path
       required: true
-      description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: "text_box"
-
-    - name: value
-      in: path
-      required: true
-      description: The value to set the parameter specified by oid to
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example: {string_value: "Goodbye, world!"}
+      description: The language code of the language to get
+      type: sting
+      example: "en"
       
   responses:
     "200":
-      description: Nothing
+      description: LanguagePack
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          example: {}
+            $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
+          example: {"language": "en", "language_pack": {"words": {"greeting": "Hello", "parting": "Goodbye"}, "name": "English"}}

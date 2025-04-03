@@ -35,11 +35,28 @@ info:
 servers:
   - url: https://device.catenamedia.tv/v1
 paths:
+  /DeviceRequest:
+    $ref: './paths/DeviceRequest.yaml'
   /GetPopulatedSlots:
     $ref: './paths/GetPopulatedSlots.yaml'
+  /ExecuteCommand:
+    $ref: "./paths/ExecuteCommand.yaml"
+  /ExternalObjectRequest:
+    $ref: './paths/ExternalObjectRequest.yaml'
+  /BasicParamInfoRequest:
+    $ref: './paths/BasicParamInfoRequest.yaml'
   /GetValue:
     $ref: './paths/GetValue.yaml'
   /SetValue:
     $ref: './paths/SetValue.yaml'
+  # /MultiSetValue:
+  # /UpdateSubscriptions:
+  # /GetParam:
+  # /Connect:
+  # /AddLanguage:
+  /LanguagePackRequest:
+    $ref: './paths/LanguagePackRequest.yaml'
+  /ListLanguages:
+    $ref: './paths/ListLanguages.yaml'
   
    
