@@ -28,6 +28,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# OpenAPI documentation of the BasicParamInfoRequest RPC for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
 get:
   summary: Gets a parameter's basic information from the device model plugged into the specified slot
   operationId: BasicParamInfoRequest

@@ -28,6 +28,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# OpenAPI documentation of the LanguagePackRequest RPC for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
 get:
   summary: Set the value of a parameter within a device model
   operationId: LanguagePackRequest
