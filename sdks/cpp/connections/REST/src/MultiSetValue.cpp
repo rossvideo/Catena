@@ -8,7 +8,7 @@ int API::MultiSetValue::objectCounter_ = 0;
 API::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
-    writeConsole(typeName_ + "SetValue", objectId_, CallStatus::kCreate, socket_.is_open());
+    writeConsole(CallStatus::kCreate, socket_.is_open());
     proceed();
     finish();
 }
@@ -22,7 +22,7 @@ bool API::MultiSetValue::toMulti() {
 }
 
 void API::MultiSetValue::proceed() {
-    writeConsole(typeName_ + "SetValue", objectId_, CallStatus::kProcess, socket_.is_open());
+    writeConsole(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
@@ -63,6 +63,6 @@ void API::MultiSetValue::proceed() {
 }
 
 void API::MultiSetValue::finish() {
-    writeConsole(typeName_ + "SetValue", objectId_, CallStatus::kFinish, socket_.is_open());
+    writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

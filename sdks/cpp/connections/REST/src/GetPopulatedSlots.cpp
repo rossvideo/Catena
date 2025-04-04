@@ -8,7 +8,7 @@ int API::GetPopulatedSlots::objectCounter_ = 0;
 API::GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole("GetPopulatedSlots", objectId_, CallStatus::kCreate, socket_.is_open());
+    writeConsole(CallStatus::kCreate, socket_.is_open());
     // Proceeding with the RPC.
     proceed();
     // Finishing the RPC.
@@ -16,7 +16,7 @@ API::GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& con
 }
 
 void API::GetPopulatedSlots::proceed() {
-    writeConsole("GetPopulatedSlots", objectId_, CallStatus::kProcess, socket_.is_open());
+    writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
         // Getting slot from dm_.
         SlotList slotList;
@@ -30,6 +30,6 @@ void API::GetPopulatedSlots::proceed() {
 }
 
 void API::GetPopulatedSlots::finish() {
-    writeConsole("GetPopulatedSlots", objectId_, CallStatus::kFinish, socket_.is_open());
+    writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
 }

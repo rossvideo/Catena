@@ -48,12 +48,14 @@
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
+#include "ICallData.h"
 using catena::API;
+using catena::REST::CallStatus;
 
 /**
  * @brief CallData class for the DeviceRequest REST RPC.
  */
-class API::DeviceRequest : public CallData {
+class API::DeviceRequest : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
@@ -73,6 +75,17 @@ class API::DeviceRequest : public CallData {
      * @brief Finishes the DeviceRequest process.
      */
     void finish() override;
+    /**
+     * @brief Helper function to write status messages to the API console.
+     * 
+     * @param status The current state of the RPC (kCreate, kFinish, etc.)
+     * @param ok The status of the RPC (open or closed).
+     */
+    inline void writeConsole(CallStatus status, bool ok) const override {
+      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
+    }
     
     /**
      * @brief The socket to write the response stream to.

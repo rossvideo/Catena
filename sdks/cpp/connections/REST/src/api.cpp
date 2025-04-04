@@ -89,33 +89,6 @@ std::string API::timeNow() {
     return ss.str();
 }
 
-void API::CallData::parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const {
-    if (fields.size() == 0) {
-        throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
-    } else {
-        std::string fieldName = "";
-        for (auto& [nextField, value] : fields) {
-            // If not the first iteration, find next field and get value of the current one.
-            if (fieldName != "") {
-                std::size_t end = request.find("/" + nextField + "/");
-                if (end == std::string::npos) {
-                    throw catena::exception_with_status("Could not find field " + nextField, catena::StatusCode::INVALID_ARGUMENT);
-                }
-                fields.at(fieldName) = request.substr(0, end);
-            }
-            // Update for the next iteration.
-            fieldName = nextField;
-            std::size_t start = request.find("/" + fieldName + "/") + fieldName.size() + 2;
-            if (start == std::string::npos) {
-                throw catena::exception_with_status("Could not find field " + fieldName, catena::StatusCode::INVALID_ARGUMENT);
-            }
-            request = request.substr(start);
-        }
-        // We assume the last field is until the end of the request.
-        fields.at(fieldName) = request.substr(0, request.find(" HTTP/1.1"));
-    }
-}
-
 bool API::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;

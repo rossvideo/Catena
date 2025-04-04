@@ -7,7 +7,7 @@ int API::SetValue::objectCounter_ = 0;
 
 API::SetValue::SetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
-    writeConsole("SetValue", objectId_, CallStatus::kCreate, socket_.is_open());
+    writeConsole(CallStatus::kCreate, socket_.is_open());
     proceed();
     finish();
 }

@@ -103,67 +103,11 @@ class API {
      * after a call to run().
      */
     void Shutdown();
-
-    /**
-     * @brief CallData states for status messages.
-     */
-    enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
-
-  protected:
-    /**
-     * @brief CallData class for the REST API. Inherited by all REST classes
-     * and contains variables present in all RPCs as well as helper functions.
-     */
-    class CallData {
-      public:
-        using DetailLevel = patterns::EnumDecorator<catena::Device_DetailLevel>;
-        /**
-         * @brief Destructor for the CallData class.
-         */
-        virtual ~CallData() {};
-      protected:
-        /**
-         * @brief The RPC's main process.
-         */
-        virtual void proceed() = 0;
-        /**
-         * @brief Finishes the RPC.
-         */
-        virtual void finish() = 0;
-        /**
-         * @brief Helper function to write status messages to the API console.
-         * 
-         * @param typeName The RPC's type (GetValue, DeviceRequest, etc.)
-         * @param objectId The unique id of the RPC.
-         * @param status The current state of the RPC (kCreate, kFinish, etc.)
-         * @param ok The status of the RPC (open or closed).
-         */
-        inline void writeConsole(std::string typeName, int objectId, CallStatus status, bool ok) const {
-          std::cout << typeName << "::proceed[" << objectId << "]: "
-                    << timeNow() << " status: "<< static_cast<int>(status)
-                    <<", ok: "<< std::boolalpha << ok << std::endl;
-        }
-        /**
-         * @brief Helper function to parse fields from a request URL.
-         * 
-         * @param request The request URL to parse.
-         * @param fields A map continaing the fields to parse and an empty
-         * string to place the parsed field in.
-         * fields is order dependent. The keys must be placed in the same order
-         * in which they appear in the URL. Additionally, the last field is
-         * assumed to be until the end of the request unless specified
-         * otherwise.
-         * 
-         * @todo Update once URL format is finalized and move to SocketReader.
-         */
-        void parseFields(std::string& request, std::unordered_map<std::string, std::string>& fields) const;
-    };
-
     /**
      * @brief Returns true if authorization is enabled.
      */
     bool authorizationEnabled() { return authorizationEnabled_; };
-
+    
   private:
     /**
      * @brief Routes a request to the appropriate controller.
@@ -178,6 +122,10 @@ class API {
      * Currently unused.
      */
     bool is_port_in_use_() const;
+    /**
+     * @brief Returns the current time as a string including microseconds.
+     */
+    static std::string timeNow();
 
     /**
      * @brief Provides io functionality for tcp::sockets used in RPCs.
@@ -211,10 +159,6 @@ class API {
      * @brief Flag to indicate if shutdown() has been called.
      */
     bool shutdown_ = false;
-    /**
-     * @brief Returns the current time as a string including microseconds.
-     */
-    static std::string timeNow();
     /**
      * @brief Counter used to track number of active RPCs. Run() does not
      * finish until this number is 0.

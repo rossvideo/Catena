@@ -45,12 +45,14 @@
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
+#include "ICallData.h"
 using catena::API;
+using catena::REST::CallStatus;
 
 /**
  * @brief CallData class for the GetValue REST RPC.
  */
-class API::GetValue : public CallData {
+class API::GetValue : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the GetValue RPC. Calls proceed() once
@@ -70,6 +72,17 @@ class API::GetValue : public CallData {
      * @brief Finishes the GetValue process.
      */
     void finish() override;
+    /**
+     * @brief Helper function to write status messages to the API console.
+     * 
+     * @param status The current state of the RPC (kCreate, kFinish, etc.)
+     * @param ok The status of the RPC (open or closed).
+     */
+    inline void writeConsole(CallStatus status, bool ok) const override {
+      std::cout << "GetValue::proceed[" << objectId_ << "]: "
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
+    }
 
     /**
      * @brief The socket to write the response to.
