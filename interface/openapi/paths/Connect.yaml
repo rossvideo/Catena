@@ -28,6 +28,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# OpenAPI documentation of the Connect RPC for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
 get:
   summary: Connects a client to a service for updates on value changes.
   operationId: Connect

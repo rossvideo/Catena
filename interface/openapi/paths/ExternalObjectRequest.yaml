@@ -28,6 +28,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# OpenAPI documentation of the ExternalObjectRequest RPC for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
 get:
   summary: Gets an external object from the server
   operationId: ExternalObjectRequest
@@ -55,5 +61,3 @@ get:
         application/json:
           schema:
             $ref: "./Messages.yaml#/$defs/external_object_payload"
-      
-          #TODO: Add example
