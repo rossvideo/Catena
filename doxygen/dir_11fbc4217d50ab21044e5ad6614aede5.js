@@ -2,7 +2,6 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
 [
     [ "meta", "dir_8fa2515ea4bfa2a9ccd2d0d3ecafb1ba.html", "dir_8fa2515ea4bfa2a9ccd2d0d3ecafb1ba" ],
     [ "patterns", "dir_5b456b8fa81b1260fb546678da3b8413.html", "dir_5b456b8fa81b1260fb546678da3b8413" ],
-    [ "rpc", "dir_26cfe9f11e36e6321c4917ae21a918f6.html", "dir_26cfe9f11e36e6321c4917ae21a918f6" ],
     [ "Authorization.h", "Authorization_8h.html", "Authorization_8h" ],
     [ "Device.h", "Device_8h.html", "Device_8h" ],
     [ "Enums.h", "Enums_8h.html", "Enums_8h" ],

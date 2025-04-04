@@ -1,7 +1,7 @@
 var searchData=
 [
   ['_7eauthorizer_0',['~Authorizer',['../classcatena_1_1common_1_1Authorizer.html#a09c54e470cc936a3fad2e2bef92ca384',1,'catena::common::Authorizer']]],
-  ['_7ecalldata_1',['~calldata',['../classCatenaServiceImpl_1_1CallData.html#a5275c8b9cf83c4d42685c5f2f71bf7c9',1,'CatenaServiceImpl::CallData::~CallData()'],['../classcatena_1_1API_1_1CallData.html#a5e587000ea08e14e75decab80151bd92',1,'catena::API::CallData::~CallData()']]],
+  ['_7ecalldata_1',['~CallData',['../classCatenaServiceImpl_1_1CallData.html#a5275c8b9cf83c4d42685c5f2f71bf7c9',1,'CatenaServiceImpl::CallData']]],
   ['_7edevice_2',['~Device',['../classcatena_1_1common_1_1Device.html#ab8a13b735718ebc42a2d79733f23a3f7',1,'catena::common::Device']]],
   ['_7eexternalobjectrequest_3',['~ExternalObjectRequest',['../classCatenaServiceImpl_1_1ExternalObjectRequest.html#a72ce187904b91488035a6fa31d0dd4ed',1,'CatenaServiceImpl::ExternalObjectRequest']]],
   ['_7eiparamvisitor_4',['~IParamVisitor',['../classcatena_1_1common_1_1IParamVisitor.html#a49bedc7dbec3c667dfbcf341f6c74b0c',1,'catena::common::IParamVisitor']]],

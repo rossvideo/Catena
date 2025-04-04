@@ -8,15 +8,6 @@ var hierarchy =
       [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
     ] ],
     [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
-    [ "catena::API::CallData", "classcatena_1_1API_1_1CallData.html", [
-      [ "catena::API::Connect", "classAPI_1_1Connect.html", null ],
-      [ "catena::API::DeviceRequest", "classAPI_1_1DeviceRequest.html", null ],
-      [ "catena::API::GetPopulatedSlots", "classAPI_1_1GetPopulatedSlots.html", null ],
-      [ "catena::API::GetValue", "classAPI_1_1GetValue.html", null ],
-      [ "catena::API::MultiSetValue", "classAPI_1_1MultiSetValue.html", [
-        [ "catena::API::SetValue", "classAPI_1_1SetValue.html", null ]
-      ] ]
-    ] ],
     [ "CatenaServiceImpl::CallData", "classCatenaServiceImpl_1_1CallData.html", [
       [ "CatenaServiceImpl::AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", null ],
       [ "CatenaServiceImpl::BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", null ],
@@ -35,9 +26,6 @@ var hierarchy =
       [ "CatenaServiceImpl::UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", null ]
     ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
-    [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
-      [ "catena::API::Connect", "classAPI_1_1Connect.html", null ]
-    ] ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::Device", "classcatena_1_1common_1_1Device.html", null ],
     [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ],
@@ -103,10 +91,6 @@ var hierarchy =
     ] ],
     [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
-    ] ],
-    [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ],
-    [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", [
-      [ "catena::REST::ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", null ]
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
     [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", null ],
