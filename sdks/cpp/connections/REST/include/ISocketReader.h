@@ -29,51 +29,55 @@
  */
 
 /**
- * @file SocketReader.h
- * @brief Helper class used to read from a socket using boost.
+ * @file ISocketReader.h
+ * @brief Interface for the SocketReader class.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
-
-// common
-#include <Status.h>
-
-// REST/include
-#include "ISocketReader.h"
-
+ 
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 using boost::asio::ip::tcp;
 
 #include <string>
-#include <iostream>
-
+#include <unordered_map>
+ 
 namespace catena {
 namespace REST {
-
+ 
 /**
- * @brief Helper class used to read from a socket using boost.
+ * @brief Interface for the SocketReader class.
+ * 
+ * Overriden constructor should be passed in a socket, which should then be
+ * read to populate any necessary fields.
  */
-class SocketReader : public ISocketReader {
+class ISocketReader {
   public:
+    ISocketReader() = default;
+    ISocketReader(const ISocketReader&) = default;
+    ISocketReader& operator=(const ISocketReader&) = default;
+    ISocketReader(ISocketReader&&) = default;
+    ISocketReader& operator=(ISocketReader&&) = default;
+    virtual ~ISocketReader() = default;
+
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
      * @param socket The socket to read from.
      * @param authz Flag to indicate if authorization is enabled.
      */
-    void read(tcp::socket& socket, bool authz = false) override;
+    virtual void read(tcp::socket& socket, bool authz = false) = 0;
     /**
      * @brief Returns the method of the request.
      */
-    const std::string& method() const override { return method_; }
+    virtual const std::string& method() const = 0;
     /**
      * @brief Returns the rpc of the request.
      */
-    const std::string& rpc() const override { return rpc_; }
+    virtual const std::string& rpc() const = 0;
     /**
      * @brief Parsed req_ for fields.
      * 
@@ -83,50 +87,23 @@ class SocketReader : public ISocketReader {
      * in which they appear in the URL. Additionally, the last field is
      * assumed to be until the end of the request unless specified
      * otherwise.
-     * 
-     * @todo Update once URL format is finalized.
      */
-    void fields(std::unordered_map<std::string, std::string>& fieldMap) const override;
+    virtual void fields(std::unordered_map<std::string, std::string>& fieldMap) const = 0;
     /**
      * @brief Returns the client's jws token.
      */
-    const std::string& jwsToken() const override { return jwsToken_; }
+    virtual const std::string& jwsToken() const = 0;
     /**
      * @brief Returns the json body of the request, which may be empty.
      */
-    const std::string& jsonBody() const override { return jsonBody_; }
+    virtual const std::string& jsonBody() const = 0;
 
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() const override { return authorizationEnabled_; };
-
-  private:
-    /**
-     * @brief The method of the request (GET, PUT, etc.).
-     */
-    std::string method_ = "";
-    /**
-     * @brief The rpc of the request (/v1/GetValue, etc.)
-     */
-    std::string rpc_ = "";
-    /**
-     * @brief The request string (bit after "method .../rpc_").
-     */
-    std::string req_ = "";
-    /**
-     * @brief The client's jws token (empty if authorization is disabled).
-     */
-    std::string jwsToken_ = "";
-    /**
-     * @brief The json body included with the request (empty if no body).
-     */
-    std::string jsonBody_ = "";
-    /**
-     * @brief True if authorization is enabled.
-     */
-    bool authorizationEnabled_ = false;
+    virtual bool authorizationEnabled() const = 0;
 };
-
+ 
 }; // Namespace REST
 }; // Namespace catena
+ 

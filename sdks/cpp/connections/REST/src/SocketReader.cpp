@@ -2,9 +2,9 @@
 #include <SocketReader.h>
 using catena::REST::SocketReader;
 
-SocketReader::SocketReader(tcp::socket& socket, bool authz)
-    : authorizationEnabled_(authz) {
-    
+void SocketReader::read(tcp::socket& socket, bool authz) {
+    authorizationEnabled_ = authz;
+
     // Reading the headers.
     boost::asio::streambuf buffer;
     boost::asio::read_until(socket, buffer, "\r\n\r\n");

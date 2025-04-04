@@ -45,7 +45,8 @@ void API::route(tcp::socket& socket) {
     if (!shutdown_) {
         try {
             // Reading from the socket.
-            SocketReader context(socket, authorizationEnabled_);
+            SocketReader context;
+            context.read(socket, authorizationEnabled_);
             // Routing to RPC.
             if (context.method() == "GET") {
                 if (context.rpc() == "/v1/Connect") {
