@@ -14,7 +14,7 @@ COPY toolchain.env /root/toolchain.env
 RUN . /root/toolchain.env \
     && apt-get update && apt-get install -y \
     build-essential sudo cmake=$CMAKE_VERSION nodejs=$NODEJS_VERSION npm git=$GIT_VERSION libssl-dev=$OPENSSL_VERSION doxygen=$DOXYGEN_VERSION graphviz=$GRAPHVIZ_VERSION \
-    libgtest-dev=$GTEST_VERSION libboost-all-dev=$BOOST_VERSION libasio-dev=$ASIO_VERSION libgmock-dev=$GMOCK_VERSION ninja-build=$NINJA_VERSION \
+    libgtest-dev=$GTEST_VERSION libboost-all-dev=$BOOST_VERSION libasio-dev=$ASIO_VERSION libgmock-dev=$GMOCK_VERSION ninja-build=$NINJA_VERSION gdb=$GNU_DEBUGGER_VERSION \
     && npm install -g n \
     && apt-get clean
 
