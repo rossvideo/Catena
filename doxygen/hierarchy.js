@@ -41,6 +41,20 @@ var hierarchy =
       [ "catena::meta::NthElementT< L, 0 >", "classcatena_1_1meta_1_1NthElementT_3_01L_00_010_01_4.html", null ]
     ] ],
     [ "catena::meta::FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
+    [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
+      [ "catena::API::Connect", "classAPI_1_1Connect.html", null ],
+      [ "catena::API::DeviceRequest", "classAPI_1_1DeviceRequest.html", null ],
+      [ "catena::API::GetPopulatedSlots", "classAPI_1_1GetPopulatedSlots.html", null ],
+      [ "catena::API::GetValue", "classAPI_1_1GetValue.html", null ],
+      [ "catena::API::MultiSetValue", "classAPI_1_1MultiSetValue.html", [
+        [ "catena::API::SetValue", "classAPI_1_1SetValue.html", null ]
+      ] ]
+    ] ],
+    [ "catena::common::IConnect", "classcatena_1_1common_1_1IConnect.html", [
+      [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
+        [ "catena::API::Connect", "classAPI_1_1Connect.html", null ]
+      ] ]
+    ] ],
     [ "catena::common::IConstraint", "classcatena_1_1common_1_1IConstraint.html", [
       [ "catena::common::NamedChoiceConstraint< T >", "classcatena_1_1common_1_1NamedChoiceConstraint.html", null ],
       [ "catena::common::PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", null ],
@@ -91,6 +105,10 @@ var hierarchy =
     ] ],
     [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
+    ] ],
+    [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ],
+    [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", [
+      [ "catena::REST::ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", null ]
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
     [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", null ],

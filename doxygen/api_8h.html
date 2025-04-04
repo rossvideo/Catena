@@ -93,7 +93,6 @@ $(document).ready(function(){initNavTree('api_8h.html',''); initResizable(); });
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">api.h File Reference</div></div>
 </div><!--header-->
@@ -101,16 +100,30 @@ $(document).ready(function(){initNavTree('api_8h.html',''); initResizable(); });
 
 <p>Implements REST API.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;crow.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;<a class="el" href="Status_8h_source.html">Status.h</a>&gt;</code><br />
+<code>#include &lt;vdk/signals.h&gt;</code><br />
+<code>#include &lt;<a class="el" href="IParam_8h_source.html">IParam.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Device_8h_source.html">Device.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Authorization_8h_source.html">Authorization.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Enums_8h_source.html">Enums.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="SocketReader_8h_source.html">SocketReader.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="SocketWriter_8h_source.html">SocketWriter.h</a>&gt;</code><br />
 <code>#include &lt;boost/asio.hpp&gt;</code><br />
 <code>#include &lt;boost/asio/ssl.hpp&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
+<code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;regex&gt;</code><br />
 <code>#include &quot;absl/flags/flag.h&quot;</code><br />
 <code>#include &quot;absl/flags/parse.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for api.h:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="api_8h__incl.svg" width="100%" height="404"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="api_8h__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+</div><div class="textblock"><div class="dynheader">
+This graph shows which files directly or indirectly include this file:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="api_8h__dep__incl.svg" width="100%" height="503"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 </div>
 </div>
 <p><a href="api_8h_source.html">Go to the source code of this file.</a></p>
@@ -147,7 +160,7 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements REST API. </p>
-<dl class="section author"><dt>Author</dt><dd>unknown </dd></dl>
+<dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'Ben'+'ja'+'min'+'.w'+'hit'+'te'+'n@r'+'os'+'svi'+'de'+'o.c'+'om'; return false;">Benja<span class="obfuscator">.nosp@m.</span>min.<span class="obfuscator">.nosp@m.</span>whitt<span class="obfuscator">.nosp@m.</span>en@r<span class="obfuscator">.nosp@m.</span>ossvi<span class="obfuscator">.nosp@m.</span>deo.<span class="obfuscator">.nosp@m.</span>com</a> </dd></dl>
 <dl class="section copyright"><dt>Copyright</dt><dd>Copyright © 2024 Ross Video Ltd </dd></dl>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
