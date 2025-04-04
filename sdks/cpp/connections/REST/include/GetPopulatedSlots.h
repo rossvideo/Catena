@@ -35,62 +35,75 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
- #pragma once
+#pragma once
 
- // protobuf
- #include <interface/device.pb.h>
- #include <google/protobuf/util/json_util.h>
+// protobuf
+#include <interface/device.pb.h>
+#include <google/protobuf/util/json_util.h>
   
- // Connections/REST
- #include "api.h"
- #include "SocketReader.h"
- #include "SocketWriter.h"
- using catena::API;
+// Connections/REST
+#include "api.h"
+#include "SocketReader.h"
+#include "SocketWriter.h"
+#include "ICallData.h"
+using catena::API;
+using catena::REST::CallStatus;
  
- /**
-  * @brief CallData class for the GetPopulatedSlots REST RPC.
-  */
- class API::GetPopulatedSlots : public CallData {
-   public:
-     /**
-      * @brief Constructor for the GetPopulatedSlots RPC. Calls proceed() once
-      * initialized.
-      *
-      * @param socket The socket to write the response to.
-      * @param context The SocketReader object. Here to maintain consistency.
-      * @param dm The device to get the slot of.
-      */ 
-     GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
-   private:
-     /**
-      * @brief GetPopulatedSlots's main process.
-      */
-     void proceed() override;
-     /**
-      * @brief Finishes the GetPopulatedSlots process.
-      */
-     void finish() override;
+/**
+ * @brief CallData class for the GetPopulatedSlots REST RPC.
+ */
+class API::GetPopulatedSlots : public catena::REST::ICallData {
+  public:
+    /**
+     * @brief Constructor for the GetPopulatedSlots RPC. Calls proceed() once
+     * initialized.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The SocketReader object. Here to maintain consistency.
+     * @param dm The device to get the slot of.
+     */ 
+    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
+  private:
+    /**
+     * @brief GetPopulatedSlots's main process.
+     */
+    void proceed() override;
+    /**
+     * @brief Finishes the GetPopulatedSlots process.
+     */
+    void finish() override;
+    /**
+     * @brief Helper function to write status messages to the API console.
+     * 
+     * @param status The current state of the RPC (kCreate, kFinish, etc.)
+     * @param ok The status of the RPC (open or closed).
+     */
+    inline void writeConsole(CallStatus status, bool ok) const override {
+      std::cout << "Connect::proceed[" << objectId_ << "]: "
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
+    }
  
-     /**
-      * @brief The socket to write the response to.
-      */
-     tcp::socket& socket_;
-     /**
-      * @brief The SocketWriter object for writing to socket_.
-      */
-     SocketWriter writer_;
-     /**
-      * @brief The device to get slot of.
-      */
-     Device& dm_;
+    /**
+     * @brief The socket to write the response to.
+     */
+    tcp::socket& socket_;
+    /**
+     * @brief The SocketWriter object for writing to socket_.
+     */
+    SocketWriter writer_;
+    /**
+     * @brief The device to get slot of.
+     */
+    Device& dm_;
  
-     /**
-      * @brief ID of the GetPopulatedSlots object
-      */
-     int objectId_;
-     /**
-      * @brief The total # of GetPopulatedSlots objects.
-      */
-     static int objectCounter_;
- };
+    /**
+     * @brief ID of the GetPopulatedSlots object
+     */
+    int objectId_;
+    /**
+     * @brief The total # of GetPopulatedSlots objects.
+     */
+    static int objectCounter_;
+};
  

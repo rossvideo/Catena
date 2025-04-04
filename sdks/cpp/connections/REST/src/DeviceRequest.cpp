@@ -8,7 +8,7 @@ int API::DeviceRequest::objectCounter_ = 0;
 API::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole("DeviceRequest", objectId_, CallStatus::kCreate, socket_.is_open());
+    writeConsole(CallStatus::kCreate, socket_.is_open());
     // Return code used for status.
     catena::exception_with_status err("", catena::StatusCode::OK);
     // Parsing fields and assigning to respective variables.
@@ -19,7 +19,7 @@ API::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, De
             {"language", ""},
             {"slot", ""}
         };
-        parseFields(context_.req_, fields);
+        context_.fields(fields);
         slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
         language_ = fields.at("language");
         auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
@@ -43,7 +43,7 @@ API::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, De
 }
 
 void API::DeviceRequest::proceed() {
-    writeConsole("DeviceRequest", objectId_, CallStatus::kProcess, socket_.is_open());
+    writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
         // controls whether shallow copy or deep copy is used
         bool shallowCopy = true;
@@ -59,7 +59,7 @@ void API::DeviceRequest::proceed() {
         auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
         // Getting each component ans writing to the stream.
         while (serializer.hasMore()) {
-            writeConsole("DeviceRequest", objectId_, CallStatus::kWrite, socket_.is_open());
+            writeConsole(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
             Device::LockGuard lg(dm_);
@@ -77,7 +77,7 @@ void API::DeviceRequest::proceed() {
 }
 
 void API::DeviceRequest::finish() {
-    writeConsole("DeviceRequest", objectId_, CallStatus::kFinish, socket_.is_open());
+    writeConsole(CallStatus::kFinish, socket_.is_open());
     writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
 }

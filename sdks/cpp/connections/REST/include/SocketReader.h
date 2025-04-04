@@ -37,6 +37,9 @@
 
 #pragma once
 
+// common
+#include <Status.h>
+
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -72,6 +75,19 @@ class SocketReader {
      */
     const std::string& rpc() const { return rpc_; }
     /**
+     * @brief Parsed req_ for fields.
+     * 
+     * @param fields A map continaing the fields to parse and an empty
+     * string to place the parsed field in.
+     * fields is order dependent. The keys must be placed in the same order
+     * in which they appear in the URL. Additionally, the last field is
+     * assumed to be until the end of the request unless specified
+     * otherwise.
+     * 
+     * @todo Update once URL format is finalized.
+     */
+    void fields(std::unordered_map<std::string, std::string>& fieldMap) const;
+    /**
      * @brief Returns the client's jws token.
      */
     const std::string& jwsToken() const { return jwsToken_; }
@@ -80,12 +96,6 @@ class SocketReader {
      */
     const std::string& jsonBody() const { return jsonBody_; }
 
-    /**
-     * @brief The request string (bit after "method .../rpc_").
-     * 
-     * Public for now. Fields parsing to be updated later.
-     */
-    std::string req_ = "";
     /**
      * @brief Returns true if authorization is enabled.
      */
@@ -100,6 +110,10 @@ class SocketReader {
      * @brief The rpc of the request (/v1/GetValue, etc.)
      */
     std::string rpc_ = "";
+    /**
+     * @brief The request string (bit after "method .../rpc_").
+     */
+    std::string req_ = "";
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */

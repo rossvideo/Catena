@@ -8,7 +8,7 @@ int API::GetValue::objectCounter_ = 0;
 API::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole("GetValue", objectId_, CallStatus::kCreate, socket_.is_open());
+    writeConsole(CallStatus::kCreate, socket_.is_open());
     // Return code used for status.
     catena::exception_with_status err("", catena::StatusCode::OK);
     // Parsing fields and assigning to respective variables.
@@ -17,7 +17,7 @@ API::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) 
             {"oid", ""},
             {"slot", ""}
         };
-        parseFields(context_.req_, fields);
+        context_.fields(fields);
         slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
         oid_ = fields.at("oid");
     // Parse error
@@ -34,7 +34,7 @@ API::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) 
 }
 
 void API::GetValue::proceed() {
-    writeConsole("GetValue", objectId_, CallStatus::kProcess, socket_.is_open());
+    writeConsole(CallStatus::kProcess, socket_.is_open());
     catena::Value ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
@@ -60,6 +60,6 @@ void API::GetValue::proceed() {
 }
 
 void API::GetValue::finish() {
-    writeConsole("GetValue", objectId_, CallStatus::kFinish, socket_.is_open());
+    writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetValue[" << objectId_ << "] finished\n";
 }

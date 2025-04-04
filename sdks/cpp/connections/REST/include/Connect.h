@@ -49,12 +49,14 @@
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
+#include "ICallData.h"
 using catena::API;
+using catena::REST::CallStatus;
 
 /**
  * @brief The Connect REST RPC.
  */
-class API::Connect : public CallData, public catena::common::Connect {
+class API::Connect : public catena::REST::ICallData, public catena::common::Connect {
   public:
     /**
      * @brief Constructor for the Connect RPC. Calls proceed() once
@@ -79,6 +81,17 @@ class API::Connect : public CallData, public catena::common::Connect {
      * Finishes the Connect process by disconnecting listeners.
      */
     void finish() override;
+    /**
+     * @brief Helper function to write status messages to the API console.
+     * 
+     * @param status The current state of the RPC (kCreate, kFinish, etc.)
+     * @param ok The status of the RPC (open or closed).
+     */
+    inline void writeConsole(CallStatus status, bool ok) const override {
+      std::cout << "Connect::proceed[" << objectId_ << "]: "
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
+    }
     /**
      * @brief Returns true if the RPC was cancelled.
      */

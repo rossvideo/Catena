@@ -11,7 +11,7 @@ int API::Connect::objectCounter_ = 0;
 API::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_(socket), catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
-    writeConsole("Connect", objectId_, CallStatus::kCreate, socket_.is_open());
+    writeConsole(CallStatus::kCreate, socket_.is_open());
     // Return code used for status.
     catena::exception_with_status err("", catena::StatusCode::OK);
     // Parsing fields and assigning to respective variables.
@@ -22,7 +22,7 @@ API::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
             {"detail_level", ""},
             {"language", ""}
         };
-        parseFields(context.req_, fields);
+        context.fields(fields);
         language_ = fields.at("language");
         auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
         if (dlMap.find(fields.at("detail_level")) != dlMap.end()) {
@@ -45,7 +45,7 @@ API::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
 }
 
 void API::Connect::proceed() {
-    writeConsole("Connect", objectId_, CallStatus::kProcess, socket_.is_open());
+    writeConsole(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
     shutdownSignalId_ = shutdownSignal_.connect([this](){
         this->socket_.close();
@@ -75,7 +75,7 @@ void API::Connect::proceed() {
         lock.lock();
         cv_.wait(lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
-        writeConsole("Connect", objectId_, CallStatus::kWrite, socket_.is_open());
+        writeConsole(CallStatus::kWrite, socket_.is_open());
         try {
             if (socket_.is_open()) {
                 res_.set_slot(dm_.slot());
@@ -90,7 +90,7 @@ void API::Connect::proceed() {
 }
 
 void API::Connect::finish() {
-    writeConsole("Connect", objectId_, CallStatus::kFinish, !socket_.is_open());
+    writeConsole(CallStatus::kFinish, !socket_.is_open());
     try {
         shutdownSignal_.disconnect(shutdownSignalId_);
         dm_.valueSetByClient.disconnect(valueSetByClientId_);

@@ -28,18 +28,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file Connect.h
+ * @brief Pure virtual class for Connect RPCs used to share update code.
+ * @author Ben Whitten (benjamin.whitten@rossvideo.com)
+ * @copyright Copyright (c) 2025 Ross Video
+ */
+
 #pragma once
 
 // common
 #include <Tags.h>
 #include <Enums.h>
-
-// common
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <Device.h>
 #include <Authorization.h>
+#include "IConnect.h"
 
 #include <interface/device.pb.h>
 
@@ -52,11 +58,16 @@ namespace common {
 /**
  * @brief Pure virtual class for Connect RPCs.
  * Contains functions for updating the response message with parameter values.
+ * Can only be inherited.
  * 
  * @todo Implement subscriptionManager.
  */
-class Connect {
+class Connect : public IConnect {
   protected:
+    /**
+     * @brief Constructor
+     */
+    Connect() = delete;
     /**
      * @brief Constructor for the Connect class.
      * @param dm The device manager.
@@ -71,11 +82,22 @@ class Connect {
             authz_ = &catena::common::Authorizer::kAuthzDisabled;
         }
     }
-
     /**
-     * @brief Returns true if the call has been canceled.
+     * @brief Connect does not have copy semantics
      */
-    virtual inline bool isCancelled() = 0;
+    Connect(const Connect&) = delete;
+    Connect& operator=(const Connect&) = delete;
+    /**
+     * @brief Connect does not have move semantics
+     */
+    Connect(Connect&&) = delete;
+    Connect& operator=(Connect&&) = delete;
+    /**
+     * @brief Destructor
+     */
+    ~Connect() = default;
+
+    // IConnect::IsCanceled to be defined by the derived class
 
     /**
      * @brief Updates the response message with parameter values and handles 
@@ -85,7 +107,7 @@ class Connect {
      * @param idx - The index of the value to update
      * @param p - The parameter to update
      */
-    virtual void updateResponse(const std::string& oid, size_t idx, const IParam* p) {
+    void updateResponse(const std::string& oid, size_t idx, const IParam* p) override {
         try {
             // If Connect was cancelled, notify client and end process
             if (this->isCancelled()) {
@@ -164,7 +186,7 @@ class Connect {
      * 
      * @param l The added ComponentLanguagePack emitted by device.
      */
-    virtual void updateResponse(const Device::ComponentLanguagePack& l) {
+    void updateResponse(const Device::ComponentLanguagePack& l) override {
         try {
             // If Connect was cancelled, notify client and end process.
             if (this->isCancelled()){

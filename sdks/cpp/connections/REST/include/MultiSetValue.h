@@ -45,12 +45,14 @@
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
+#include "ICallData.h"
 using catena::API;
+using catena::REST::CallStatus;
  
 /**
  * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
  */
-class API::MultiSetValue : public CallData {
+class API::MultiSetValue : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
@@ -83,6 +85,17 @@ class API::MultiSetValue : public CallData {
      * @brief Finishes the MultiSetValue process.
      */
     void finish() override;
+    /**
+     * @brief Helper function to write status messages to the API console.
+     * 
+     * @param status The current state of the RPC (kCreate, kFinish, etc.)
+     * @param ok The status of the RPC (open or closed).
+     */
+    inline void writeConsole(CallStatus status, bool ok) const override {
+      std::cout << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
+    }
 
     /**
      * @brief The socket to write the response to.
