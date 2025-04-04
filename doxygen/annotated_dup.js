@@ -60,6 +60,7 @@ var annotated_dup =
       [ "REST", null, [
         [ "ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", "classcatena_1_1REST_1_1ChunkedWriter" ],
         [ "ICallData", "classcatena_1_1REST_1_1ICallData.html", "classcatena_1_1REST_1_1ICallData" ],
+        [ "ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", "classcatena_1_1REST_1_1ISocketReader" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
         [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ]
       ] ],

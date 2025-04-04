@@ -78,6 +78,9 @@ var hierarchy =
     [ "catena::common::IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", [
       [ "catena::common::PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", null ]
     ] ],
+    [ "catena::REST::ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", [
+      [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ]
+    ] ],
     [ "catena::common::LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
     [ "catena::common::Device::LockGuard", "classcatena_1_1common_1_1Device_1_1LockGuard.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
@@ -106,7 +109,6 @@ var hierarchy =
     [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
       [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
     ] ],
-    [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ],
     [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", [
       [ "catena::REST::ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", null ]
     ] ],

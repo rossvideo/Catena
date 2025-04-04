@@ -6,6 +6,8 @@ var dir_e48bd7b024357ff76ed70b8fa8f2f2bf =
     [ "GetPopulatedSlots.h", "REST_2include_2GetPopulatedSlots_8h.html", "REST_2include_2GetPopulatedSlots_8h" ],
     [ "GetValue.h", "REST_2include_2GetValue_8h.html", "REST_2include_2GetValue_8h" ],
     [ "ICallData.h", "ICallData_8h.html", "ICallData_8h" ],
+    [ "ISocketReader.h", "ISocketReader_8h.html", "ISocketReader_8h" ],
+    [ "ISocketWriter.h", "ISocketWriter_8h_source.html", null ],
     [ "MultiSetValue.h", "REST_2include_2MultiSetValue_8h.html", "REST_2include_2MultiSetValue_8h" ],
     [ "SetValue.h", "REST_2include_2SetValue_8h.html", "REST_2include_2SetValue_8h" ],
     [ "SocketReader.h", "SocketReader_8h.html", "SocketReader_8h" ],

@@ -1,13 +1,15 @@
 <map id="catena::API::SetValue" name="catena::API::SetValue">
-<area shape="rect" id="Node000001" title="The SetValue REST RPC." alt="" coords="560,80,720,105"/>
-<area shape="rect" id="Node000002" href="$classAPI_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue REST RPCs." alt="" coords="317,80,511,105"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="524,90,560,90,560,95,524,95"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1REST_1_1ICallData.html" title="CallData interface class for the REST API RPCs." alt="" coords="19,5,194,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="186,31,294,55,372,77,371,82,293,61,185,36"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost." alt="" coords="5,55,208,80"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="222,74,317,82,317,87,221,79"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost." alt="" coords="8,104,205,129"/>
-<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="219,113,293,109,341,103,341,108,294,114,219,118"/>
-<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf." alt="" coords="15,153,199,179"/>
-<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="212,150,293,133,381,103,383,108,294,138,213,155"/>
+<area shape="rect" id="Node000001" title="The SetValue REST RPC." alt="" coords="816,80,976,105"/>
+<area shape="rect" id="Node000002" href="$classAPI_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue REST RPCs." alt="" coords="573,80,767,105"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="780,90,816,90,816,95,780,95"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1REST_1_1ICallData.html" title="CallData interface class for the REST API RPCs." alt="" coords="275,5,450,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="446,31,550,54,630,77,629,83,549,59,445,36"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost." alt="" coords="261,55,464,80"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="478,74,573,82,573,87,477,79"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class." alt="" coords="5,55,212,80"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="226,65,261,65,261,70,226,70"/>
+<area shape="rect" id="Node000006" href="$classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost." alt="" coords="264,104,461,129"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="475,114,549,110,603,103,604,108,550,115,475,120"/>
+<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf." alt="" coords="271,153,455,179"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="468,150,549,133,637,103,639,108,550,138,469,155"/>
 </map>

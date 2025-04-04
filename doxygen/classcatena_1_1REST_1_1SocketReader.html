@@ -101,47 +101,221 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1SocketReader.ht
  <a href="classcatena_1_1REST_1_1SocketReader.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="SocketReader_8h_source.html">SocketReader.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for catena::REST::SocketReader:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader__inherit__graph.svg" width="218" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
+<div class="dynheader">
+Collaboration diagram for catena::REST::SocketReader:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketReader__coll__graph.svg" width="218" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a765cdf8a019fe40dfaf11254c98fe36c" id="r_a765cdf8a019fe40dfaf11254c98fe36c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a765cdf8a019fe40dfaf11254c98fe36c">SocketReader</a> (tcp::socket &amp;socket, bool authz=false)</td></tr>
-<tr class="memdesc:a765cdf8a019fe40dfaf11254c98fe36c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a>.  <br /></td></tr>
-<tr class="separator:a765cdf8a019fe40dfaf11254c98fe36c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee553b2b7bb8c3aa6e9aa32720cb00a5" id="r_aee553b2b7bb8c3aa6e9aa32720cb00a5"><td class="memItemLeft" align="right" valign="top"><a id="aee553b2b7bb8c3aa6e9aa32720cb00a5" name="aee553b2b7bb8c3aa6e9aa32720cb00a5"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>method</b> () const</td></tr>
-<tr class="memdesc:aee553b2b7bb8c3aa6e9aa32720cb00a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the method of the request. <br /></td></tr>
-<tr class="separator:aee553b2b7bb8c3aa6e9aa32720cb00a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af32351ee41d238c29800ab2170ce6e93" id="r_af32351ee41d238c29800ab2170ce6e93"><td class="memItemLeft" align="right" valign="top"><a id="af32351ee41d238c29800ab2170ce6e93" name="af32351ee41d238c29800ab2170ce6e93"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>rpc</b> () const</td></tr>
-<tr class="memdesc:af32351ee41d238c29800ab2170ce6e93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rpc of the request. <br /></td></tr>
-<tr class="separator:af32351ee41d238c29800ab2170ce6e93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0cd974c0d4c30d04ceb7f65125a134a" id="r_af0cd974c0d4c30d04ceb7f65125a134a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#af0cd974c0d4c30d04ceb7f65125a134a">fields</a> (std::unordered_map&lt; std::string, std::string &gt; &amp;fieldMap) const</td></tr>
-<tr class="memdesc:af0cd974c0d4c30d04ceb7f65125a134a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parsed req_ for fields.  <br /></td></tr>
-<tr class="separator:af0cd974c0d4c30d04ceb7f65125a134a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a777179bb8500f03420c926de777f022f" id="r_a777179bb8500f03420c926de777f022f"><td class="memItemLeft" align="right" valign="top"><a id="a777179bb8500f03420c926de777f022f" name="a777179bb8500f03420c926de777f022f"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>jwsToken</b> () const</td></tr>
-<tr class="memdesc:a777179bb8500f03420c926de777f022f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the client's jws token. <br /></td></tr>
-<tr class="separator:a777179bb8500f03420c926de777f022f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7cb679468ae3697667a85b8ef049ba8f" id="r_a7cb679468ae3697667a85b8ef049ba8f"><td class="memItemLeft" align="right" valign="top"><a id="a7cb679468ae3697667a85b8ef049ba8f" name="a7cb679468ae3697667a85b8ef049ba8f"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>jsonBody</b> () const</td></tr>
-<tr class="memdesc:a7cb679468ae3697667a85b8ef049ba8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the json body of the request, which may be empty. <br /></td></tr>
-<tr class="separator:a7cb679468ae3697667a85b8ef049ba8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbe1536b1beb293a5c176d2b0fcd32c9" id="r_afbe1536b1beb293a5c176d2b0fcd32c9"><td class="memItemLeft" align="right" valign="top"><a id="afbe1536b1beb293a5c176d2b0fcd32c9" name="afbe1536b1beb293a5c176d2b0fcd32c9"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>authorizationEnabled</b> ()</td></tr>
-<tr class="memdesc:afbe1536b1beb293a5c176d2b0fcd32c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if authorization is enabled. <br /></td></tr>
-<tr class="separator:afbe1536b1beb293a5c176d2b0fcd32c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2bcedddfd452f6c746058477dd3258c" id="r_af2bcedddfd452f6c746058477dd3258c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#af2bcedddfd452f6c746058477dd3258c">read</a> (tcp::socket &amp;socket, bool authz=false) override</td></tr>
+<tr class="memdesc:af2bcedddfd452f6c746058477dd3258c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
+<tr class="separator:af2bcedddfd452f6c746058477dd3258c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83236f1c3ab45215d0b34d4b6a2fa16e" id="r_a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a83236f1c3ab45215d0b34d4b6a2fa16e">method</a> () const override</td></tr>
+<tr class="memdesc:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the method of the request.  <br /></td></tr>
+<tr class="separator:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5add9ae821b76fb042216d33e8596fe0" id="r_a5add9ae821b76fb042216d33e8596fe0"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a5add9ae821b76fb042216d33e8596fe0">rpc</a> () const override</td></tr>
+<tr class="memdesc:a5add9ae821b76fb042216d33e8596fe0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rpc of the request.  <br /></td></tr>
+<tr class="separator:a5add9ae821b76fb042216d33e8596fe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0a756b2ed430798d0ed7bac20577437" id="r_ac0a756b2ed430798d0ed7bac20577437"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ac0a756b2ed430798d0ed7bac20577437">fields</a> (std::unordered_map&lt; std::string, std::string &gt; &amp;fieldMap) const override</td></tr>
+<tr class="memdesc:ac0a756b2ed430798d0ed7bac20577437"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parsed req_ for fields.  <br /></td></tr>
+<tr class="separator:ac0a756b2ed430798d0ed7bac20577437"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3c78ea250b9d57087297eead2bdb7e0" id="r_ac3c78ea250b9d57087297eead2bdb7e0"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ac3c78ea250b9d57087297eead2bdb7e0">jwsToken</a> () const override</td></tr>
+<tr class="memdesc:ac3c78ea250b9d57087297eead2bdb7e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the client's jws token.  <br /></td></tr>
+<tr class="separator:ac3c78ea250b9d57087297eead2bdb7e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b4655c8cf81045dd065ec6d1dca661f" id="r_a0b4655c8cf81045dd065ec6d1dca661f"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f">jsonBody</a> () const override</td></tr>
+<tr class="memdesc:a0b4655c8cf81045dd065ec6d1dca661f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the json body of the request, which may be empty.  <br /></td></tr>
+<tr class="separator:a0b4655c8cf81045dd065ec6d1dca661f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62c9b62d7b47d7d7d709e1304c130204" id="r_a62c9b62d7b47d7d7d709e1304c130204"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204">authorizationEnabled</a> () const override</td></tr>
+<tr class="memdesc:a62c9b62d7b47d7d7d709e1304c130204"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if authorization is enabled.  <br /></td></tr>
+<tr class="separator:a62c9b62d7b47d7d7d709e1304c130204"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classcatena_1_1REST_1_1ISocketReader"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1REST_1_1ISocketReader')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">catena::REST::ISocketReader</a></td></tr>
+<tr class="memitem:a7303b75aaf4212c50164ef24037f7b8f inherit pub_methods_classcatena_1_1REST_1_1ISocketReader" id="r_a7303b75aaf4212c50164ef24037f7b8f"><td class="memItemLeft" align="right" valign="top">
+&#160;</td><td class="memItemRight" valign="bottom"><b>ISocketReader</b> (const <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;)=default</td></tr>
+<tr class="separator:a7303b75aaf4212c50164ef24037f7b8f inherit pub_methods_classcatena_1_1REST_1_1ISocketReader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a335164ca232b4574cc36fa0c25875133 inherit pub_methods_classcatena_1_1REST_1_1ISocketReader" id="r_a335164ca232b4574cc36fa0c25875133"><td class="memItemLeft" align="right" valign="top">
+<a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;)=default</td></tr>
+<tr class="separator:a335164ca232b4574cc36fa0c25875133 inherit pub_methods_classcatena_1_1REST_1_1ISocketReader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54fd070c37f0793f9e79cb02b9fbf0e1 inherit pub_methods_classcatena_1_1REST_1_1ISocketReader" id="r_a54fd070c37f0793f9e79cb02b9fbf0e1"><td class="memItemLeft" align="right" valign="top">
+&#160;</td><td class="memItemRight" valign="bottom"><b>ISocketReader</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&amp;)=default</td></tr>
+<tr class="separator:a54fd070c37f0793f9e79cb02b9fbf0e1 inherit pub_methods_classcatena_1_1REST_1_1ISocketReader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7392a7e99a6fbccbad470a0faafaac55 inherit pub_methods_classcatena_1_1REST_1_1ISocketReader" id="r_a7392a7e99a6fbccbad470a0faafaac55"><td class="memItemLeft" align="right" valign="top">
+<a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&amp;)=default</td></tr>
+<tr class="separator:a7392a7e99a6fbccbad470a0faafaac55 inherit pub_methods_classcatena_1_1REST_1_1ISocketReader"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper class used to read from a socket using boost. </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a765cdf8a019fe40dfaf11254c98fe36c" name="a765cdf8a019fe40dfaf11254c98fe36c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a765cdf8a019fe40dfaf11254c98fe36c">&#9670;&#160;</a></span>SocketReader()</h2>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a62c9b62d7b47d7d7d709e1304c130204" name="a62c9b62d7b47d7d7d709e1304c130204"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a62c9b62d7b47d7d7d709e1304c130204">&#9670;&#160;</a></span>authorizationEnabled()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">catena::REST::SocketReader::SocketReader </td>
+          <td class="memname">bool catena::REST::SocketReader::authorizationEnabled </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns true if authorization is enabled. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a0f8e7c0c63daa9870a48ce65c7e579a1">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="ac0a756b2ed430798d0ed7bac20577437" name="ac0a756b2ed430798d0ed7bac20577437"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0a756b2ed430798d0ed7bac20577437">&#9670;&#160;</a></span>fields()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::REST::SocketReader::fields </td>
+          <td>(</td>
+          <td class="paramtype">std::unordered_map&lt; std::string, std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>fieldMap</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Parsed req_ for fields. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fields</td><td>A map continaing the fields to parse and an empty string to place the parsed field in. fields is order dependent. The keys must be placed in the same order in which they appear in the URL. Additionally, the last field is assumed to be until the end of the request unless specified otherwise.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>Update once URL format is finalized. </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#aed33c3940e54fcc232581665fec23a1b">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="a0b4655c8cf81045dd065ec6d1dca661f" name="a0b4655c8cf81045dd065ec6d1dca661f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b4655c8cf81045dd065ec6d1dca661f">&#9670;&#160;</a></span>jsonBody()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; catena::REST::SocketReader::jsonBody </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the json body of the request, which may be empty. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a17a8cacd3fb5bea629bc8502b81a11d8">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="ac3c78ea250b9d57087297eead2bdb7e0" name="ac3c78ea250b9d57087297eead2bdb7e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3c78ea250b9d57087297eead2bdb7e0">&#9670;&#160;</a></span>jwsToken()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; catena::REST::SocketReader::jwsToken </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the client's jws token. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a40cce0729beee533eb49071c27bba1c2">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="a83236f1c3ab45215d0b34d4b6a2fa16e" name="a83236f1c3ab45215d0b34d4b6a2fa16e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a83236f1c3ab45215d0b34d4b6a2fa16e">&#9670;&#160;</a></span>method()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; catena::REST::SocketReader::method </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the method of the request. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="af2bcedddfd452f6c746058477dd3258c" name="af2bcedddfd452f6c746058477dd3258c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2bcedddfd452f6c746058477dd3258c">&#9670;&#160;</a></span>read()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::REST::SocketReader::read </td>
           <td>(</td>
           <td class="paramtype">tcp::socket &amp;&#160;</td>
           <td class="paramname"><em>socket</em>, </td>
@@ -158,45 +332,52 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>authorizationEnabled<
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
-<p>Constructor for <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a>. </p>
+<p>Populates variables using information read from the inputted socket. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to read from. </td></tr>
-    <tr><td class="paramname">authz</td><td>Flag to indicate if authorization is enabled.</td></tr>
+    <tr><td class="paramname">authz</td><td>Flag to indicate if authorization is enabled. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>Make parse fields better once we actually know what format the URL should be in. </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a6e3b104b6494845a0fe4dcb2df09d605">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a id="af0cd974c0d4c30d04ceb7f65125a134a" name="af0cd974c0d4c30d04ceb7f65125a134a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af0cd974c0d4c30d04ceb7f65125a134a">&#9670;&#160;</a></span>fields()</h2>
+<a id="a5add9ae821b76fb042216d33e8596fe0" name="a5add9ae821b76fb042216d33e8596fe0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5add9ae821b76fb042216d33e8596fe0">&#9670;&#160;</a></span>rpc()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void catena::REST::SocketReader::fields </td>
+          <td class="memname">const std::string &amp; catena::REST::SocketReader::rpc </td>
           <td>(</td>
-          <td class="paramtype">std::unordered_map&lt; std::string, std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>fieldMap</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
-<p>Parsed req_ for fields. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">fields</td><td>A map continaing the fields to parse and an empty string to place the parsed field in. fields is order dependent. The keys must be placed in the same order in which they appear in the URL. Additionally, the last field is assumed to be until the end of the request unless specified otherwise.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>Update once URL format is finalized. </dd></dl>
+<p>Returns the rpc of the request. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a03b8a43282a44dff090c47b96999c26e">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>

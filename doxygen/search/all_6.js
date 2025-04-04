@@ -4,7 +4,7 @@ var searchData=
   ['fake_2eh_1',['Fake.h',['../Fake_8h.html',1,'']]],
   ['fakelock_2',['FakeLock',['../structcatena_1_1common_1_1FakeLock.html',1,'catena::common']]],
   ['fieldinfo_3',['FieldInfo',['../structcatena_1_1common_1_1FieldInfo.html',1,'catena::common']]],
-  ['fields_4',['fields',['../classcatena_1_1REST_1_1SocketReader.html#af0cd974c0d4c30d04ceb7f65125a134a',1,'catena::REST::SocketReader']]],
+  ['fields_4',['fields',['../classcatena_1_1REST_1_1ISocketReader.html#aed33c3940e54fcc232581665fec23a1b',1,'catena::REST::ISocketReader::fields()'],['../classcatena_1_1REST_1_1SocketReader.html#ac0a756b2ed430798d0ed7bac20577437',1,'catena::REST::SocketReader::fields()']]],
   ['final_5fsuspend_5',['final_suspend',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#aa70a27bcc8076a7e1c6075922a13bbf2',1,'catena::common::Device::DeviceSerializer::promise_type']]],
   ['finish_6',['finish',['../classcatena_1_1REST_1_1ICallData.html#ab996fd53aed2f9ee46536cb6da16f68d',1,'catena::REST::ICallData::finish()'],['../classAPI_1_1MultiSetValue.html#aee56153a4001b396727ae0a6b34e911e',1,'catena::API::MultiSetValue::finish()'],['../classcatena_1_1REST_1_1ChunkedWriter.html#adf2a49c59b749eca67522bd0dc8e842e',1,'catena::REST::ChunkedWriter::finish()']]],
   ['flags_5fauthz_7',['FLAGS_authz',['../SharedFlags_8h.html#ac38952df3a12dcbfeb991f2f118f9928',1,'SharedFlags.h']]],
