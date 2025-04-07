@@ -22,4 +22,5 @@ cmake_minimum_required(VERSION 3.20)
 
 project(CATENA_REST_EXAMPLES C CXX)
 
-add_subdirectory("api_only")
+# add_subdirectory("api_only")
+add_subdirectory("status_update_REST")

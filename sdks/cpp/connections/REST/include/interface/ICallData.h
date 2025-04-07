@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,25 +28,63 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ServiceImpl.h>
+/**
+ * @file ICallData.h
+ * @brief Interface class for REST RPCs.
+ * @author benjamin.whitten@rossvideo.com
+ * @copyright Copyright © 2025 Ross Video Ltd
+ */
 
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-#include "absl/flags/usage.h"
-#include "absl/strings/str_format.h"
+#pragma once
 
-#include <iostream>
+// common
+#include <Enums.h>
+#include <patterns/EnumDecorator.h>
+#include <Device.h>
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
+using DetailLevel = catena::patterns::EnumDecorator<catena::Device_DetailLevel>;
 
-int main () {
-    catena::API api;
-    std::cout << "API Version: " << api.version() << std::endl;
-    api.run();
-    return 0;
-}
+// boost
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
+using boost::asio::ip::tcp;
+
+// REST
+#include "SocketReader.h"
+#include "SocketWriter.h"
+
+namespace catena {
+namespace REST {
+
+/**
+ * @brief CallData states for status messages.
+ */
+enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
+
+/**
+ * @brief CallData interface class for the REST API RPCs.
+ */
+class ICallData {
+	public:
+		virtual ~ICallData() = default;
+		/**
+		 * @brief The RPC's main process.
+		 */
+		virtual void proceed() = 0;
+		/**
+		 * @brief Finishes the RPC.
+		 */
+		virtual void finish() = 0;
+
+	protected:
+		/**
+		 * @brief Helper function to write status messages to the API console.
+		 * 
+		 * @param status The current state of the RPC (kCreate, kFinish, etc.)
+		 * @param ok The status of the RPC (open or closed).
+		 */
+		virtual inline void writeConsole(CallStatus status, bool ok) const = 0;
+};
+
+};
+};
