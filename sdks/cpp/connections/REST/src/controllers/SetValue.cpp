@@ -8,8 +8,6 @@ int CatenaServiceImpl::SetValue::objectCounter_ = 0;
 CatenaServiceImpl::SetValue::SetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    proceed();
-    finish();
 }
 
 bool CatenaServiceImpl::SetValue::toMulti() {

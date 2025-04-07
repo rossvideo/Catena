@@ -63,7 +63,6 @@ class CatenaServiceImpl::GetValue : public catena::REST::ICallData {
      * @param dm The device to get the value from.
      */ 
     GetValue(tcp::socket& socket, SocketReader& context, Device& dm);
-  private:
     /**
      * @brief GetValue's main process.
      */
@@ -72,6 +71,17 @@ class CatenaServiceImpl::GetValue : public catena::REST::ICallData {
      * @brief Finishes the GetValue process.
      */
     void finish() override;
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new GetValue(socket, context, dm);
+    }
+  private:
     /**
      * @brief Helper function to write status messages to the API console.
      * 
@@ -100,6 +110,10 @@ class CatenaServiceImpl::GetValue : public catena::REST::ICallData {
      * @brief The device to set values of.
      */
     Device& dm_;
+    /**
+     * @brief Flag indicating if the RPC is working correctly.
+     */
+    bool ok_;
 
     /**
      * @brief The slot of the device to get the value from.

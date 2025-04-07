@@ -63,6 +63,24 @@ class CatenaServiceImpl::MultiSetValue : public catena::REST::ICallData {
      * @param dm The device to set the value(s) of.
      */ 
     MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+    /**
+     * @brief MultiSetValue main process.
+     */
+    void proceed() override;
+    /**
+     * @brief Finishes the MultiSetValue process.
+     */
+    void finish() override;
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new MultiSetValue(socket, context, dm);
+    }
   protected:
     /**
      * @brief Constructor for child SetValue RPCs. Does not call proceed().
@@ -77,14 +95,6 @@ class CatenaServiceImpl::MultiSetValue : public catena::REST::ICallData {
      * @returns True if successful.
      */
     virtual bool toMulti();
-    /**
-     * @brief MultiSetValue main process.
-     */
-    void proceed() override;
-    /**
-     * @brief Finishes the MultiSetValue process.
-     */
-    void finish() override;
     /**
      * @brief Helper function to write status messages to the API console.
      * 

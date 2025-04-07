@@ -93,13 +93,6 @@ class IServiceImpl {
     
   private:
     /**
-     * @brief Routes a request to the appropriate controller.
-     * @param socket The socket to communicate with the client with.
-     * @returns Nothing, communicated through the socket, at which point
-     * process ends.
-     */
-    virtual void route(tcp::socket& socket) = 0;
-    /**
      * @brief Returns true if port_ is already in use.
      * 
      * Currently unused.

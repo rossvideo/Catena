@@ -32,7 +32,6 @@ find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 
 set(sources
     "src/ServiceImpl.cpp"
-    "src/router.cpp"
     "src/SocketReader.cpp"
     "src/SocketWriter.cpp"
     "src/controllers/Connect.cpp"

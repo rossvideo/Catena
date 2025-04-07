@@ -3,7 +3,13 @@
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
 
+// RPCs
 #include <controllers/Connect.h>
+#include <controllers/MultiSetValue.h>
+#include <controllers/SetValue.h>
+#include <controllers/DeviceRequest.h>
+#include <controllers/GetValue.h>
+#include <controllers/GetPopulatedSlots.h>
 
 #include "absl/flags/flag.h"
 
@@ -24,11 +30,20 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
-      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)} {
+      acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
+      router_{Router::getInstance()} {
 
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
+
+    // Initializing the routes for router_.
+    router_.addProduct("GET/v1/Connect",           Connect::makeOne);
+    router_.addProduct("GET/v1/DeviceRequest",     DeviceRequest::makeOne);
+    router_.addProduct("GET/v1/GetPopulatedSlots", GetPopulatedSlots::makeOne);
+    router_.addProduct("GET/v1/GetValue",          GetValue::makeOne);
+    router_.addProduct("PUT/v1/MultiSetValue",     MultiSetValue::makeOne);
+    router_.addProduct("PUT/v1/SetValue",          SetValue::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -48,8 +63,33 @@ void CatenaServiceImpl::run() {
         activeRpcs_ += 1;
         }
         std::thread([this, socket = std::move(socket)]() mutable {
-            // Routing rpc to the appropriate function.
-            this->route(socket);
+            catena::exception_with_status rc("", catena::StatusCode::OK);
+            if (!shutdown_) {
+                try {
+                    // Reading from the socket.
+                    SocketReader context;
+                    context.read(socket, authorizationEnabled_);
+                    std::string rpcKey = context.method() + context.rpc();
+                    if (router_.canMake(rpcKey)) {
+                        // Routing to RPC.
+                        std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);
+                        rpc->proceed();
+                        rpc->finish();
+                    } else {
+                        rc = catena::exception_with_status("RPC " + rpcKey + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                    }
+                // ERROR
+                } catch (...) {
+                    rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
+                }
+            } else {
+                rc = catena::exception_with_status{"Service shutdown", catena::StatusCode::CANCELLED};
+            }
+            // Writing to socket if there was an error.
+            if (rc.status != catena::StatusCode::OK) {
+                SocketWriter writer(socket);
+                writer.write(rc);
+            }
             // rpc completed. Decrementing activeRPCs.
             {
             std::lock_guard<std::mutex> lock(activeRpcMutex_);

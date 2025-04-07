@@ -68,12 +68,6 @@ class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena
      */ 
     Connect(tcp::socket& socket, SocketReader& context, Device& dm);
     /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
-     */
-    static vdk::signal<void()> shutdownSignal_;
-  private:
-    /**
      * Connect main process
      */
     void proceed() override;
@@ -81,6 +75,23 @@ class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena
      * Finishes the Connect process by disconnecting listeners.
      */
     void finish() override;
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new Connect(socket, context, dm);
+    }
+    
+    /**
+     * @brief Signal emitted in the case of an error which requires the all
+     * open connections to be shut down.
+     */
+    static vdk::signal<void()> shutdownSignal_;
+  private:
     /**
      * @brief Helper function to write status messages to the API console.
      * 
@@ -109,6 +120,10 @@ class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena
      * @brief The mutex to for locking the object while writing
      */
     std::mutex mtx_;
+    /**
+     * @brief Flag indicating if the RPC is working correctly.
+     */
+    bool ok_;
 
     /**
      * @brief Id of operation waiting for valueSetByClient to be emitted.

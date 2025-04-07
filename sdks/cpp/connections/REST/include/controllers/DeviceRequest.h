@@ -66,7 +66,6 @@ class CatenaServiceImpl::DeviceRequest : public catena::REST::ICallData {
      * @param dm The device to get components from.
      */ 
     DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
-  private:
     /**
      * @brief DeviceRequest's main process.
      */
@@ -75,6 +74,17 @@ class CatenaServiceImpl::DeviceRequest : public catena::REST::ICallData {
      * @brief Finishes the DeviceRequest process.
      */
     void finish() override;
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new DeviceRequest(socket, context, dm);
+    }
+  private:
     /**
      * @brief Helper function to write status messages to the API console.
      * 
@@ -103,6 +113,10 @@ class CatenaServiceImpl::DeviceRequest : public catena::REST::ICallData {
      * @brief The device to get components from.
      */
     Device& dm_;
+    /**
+     * @brief Flag indicating if the RPC is working correctly.
+     */
+    bool ok_;
 
     /**
      * @brief The slot of the device to get the components from.

@@ -40,6 +40,7 @@
 // common
 #include <Status.h>
 #include <vdk/signals.h>
+#include <patterns/GenericFactory.h>
 #include <IParam.h>
 #include <Device.h>
 #include <Authorization.h>
@@ -47,6 +48,7 @@
 
 // REST
 #include <interface/IServiceImpl.h>
+#include <interface/ICallData.h>
 #include <SocketReader.h>
 #include <SocketWriter.h>
 
@@ -107,13 +109,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     
   private:
     /**
-     * @brief Routes a request to the appropriate controller.
-     * @param socket The socket to communicate with the client with.
-     * @returns Nothing, communicated through the socket, at which point
-     * process ends.
-     */
-    void route(tcp::socket& socket) override;
-    /**
      * @brief Returns true if port_ is already in use.
      * 
      * Currently unused.
@@ -166,13 +161,23 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     std::mutex activeRpcMutex_;
 
-    //Forward declarations of CallData classes for their respective RPC
+    // Forward declarations of CallData classes for their respective RPC.
     class Connect;
     class MultiSetValue;
     class SetValue;
     class DeviceRequest;
     class GetValue;
     class GetPopulatedSlots;
+
+    using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
+                                                    std::string,
+                                                    tcp::socket&,
+                                                    SocketReader&,
+                                                    Device&>;
+    /**
+     * @brief Creating an ICallData factory for handling RPC routing.
+     */
+    Router& router_;
 };
 
 }; // namespace REST
