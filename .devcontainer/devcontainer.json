@@ -1,7 +1,10 @@
 {
-  "name": "Catena SDK Dev Container",
-  "dockerFile": "devcontainer.dockerfile",
-
-  "workspaceFolder": "/root/Catena",
-  
-} 
+  "name": "Catena Development Container",
+  "build": {
+      "dockerfile": "devcontainer.dockerfile",
+      "context": ".",
+  },
+  "postCreateCommand": "echo 'Development container is ready!'",
+  "runArgs": ["--env-file","devcontainer.env"],
+  "forwardPorts": [6254]
+}
