@@ -1,0 +1,35 @@
+{
+  "name": "Catena Development Container",
+  "build": {
+      "dockerfile": "devcontainer.dockerfile",
+      "context": ".",
+      "args": {
+        "USER_UID": "1000",  //export UID=$(id -u)
+        "USER_GID": "1000",  //export GID=$(id -g)
+        "USER_NAME": "${localEnv:USER}",
+        "IMAGE_TITLE": "Catena Development Container",
+        "IMAGE_DESCRIPTION": "Development container for Catena",
+        "IMAGE_VERSION": "1.0.0",
+        "IMAGE_VENDOR": "Ross Video",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CONNECTIONS": "gRPC"
+      }
+  },
+  "postCreateCommand": "echo 'Development container is ready!'",
+  "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
+  "forwardPorts": [6254],
+  "remoteUser": "${localEnv:USER}",
+  "workspaceFolder": "/home/${localEnv:USER}/Catena",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        }
+      }
+    }
+  }
+}
