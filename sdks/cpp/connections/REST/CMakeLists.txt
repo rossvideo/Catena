@@ -31,7 +31,7 @@ set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 
 set(sources
-    "src/api.cpp"
+    "src/ServiceImpl.cpp"
     "src/router.cpp"
     "src/SocketReader.cpp"
     "src/SocketWriter.cpp"

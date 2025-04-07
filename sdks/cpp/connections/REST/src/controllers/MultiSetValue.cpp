@@ -3,9 +3,9 @@
 #include <controllers/MultiSetValue.h>
 
 // Initializes the object counter for MultiSetValue to 0.
-int API::MultiSetValue::objectCounter_ = 0;
+int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
 
-API::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+CatenaServiceImpl::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -13,15 +13,15 @@ API::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, De
     finish();
 }
 
-API::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId) :
+CatenaServiceImpl::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
-bool API::MultiSetValue::toMulti() {
+bool CatenaServiceImpl::MultiSetValue::toMulti() {
     absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);
     return status.ok();
 }
 
-void API::MultiSetValue::proceed() {
+void CatenaServiceImpl::MultiSetValue::proceed() {
     writeConsole(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -62,7 +62,7 @@ void API::MultiSetValue::proceed() {
     }
 }
 
-void API::MultiSetValue::finish() {
+void CatenaServiceImpl::MultiSetValue::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

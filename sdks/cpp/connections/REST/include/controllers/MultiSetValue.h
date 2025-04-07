@@ -42,17 +42,17 @@
 #include <google/protobuf/util/json_util.h>
 
 // Connections/REST
-#include "api.h"
+#include "ServiceImpl.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-using catena::API;
+using catena::REST::CatenaServiceImpl;
 using catena::REST::CallStatus;
 
 /**
  * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
  */
-class API::MultiSetValue : public catena::REST::ICallData {
+class CatenaServiceImpl::MultiSetValue : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the MultiSetValue RPC. Calls proceed() once

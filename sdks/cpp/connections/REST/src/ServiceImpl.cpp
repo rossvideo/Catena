@@ -1,7 +1,7 @@
 
 // connections/REST
-#include <api.h>
-using catena::API;
+#include <ServiceImpl.h>
+using catena::REST::CatenaServiceImpl;
 
 #include <controllers/Connect.h>
 
@@ -18,7 +18,7 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-API::API(Device &dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
@@ -32,9 +32,9 @@ API::API(Device &dm, std::string& EOPath, bool authz, uint16_t port)
 }
 
 // Initializing the shutdown signal for all open connections.
-vdk::signal<void()> API::Connect::shutdownSignal_;
+vdk::signal<void()> CatenaServiceImpl::Connect::shutdownSignal_;
 
-void API::run() {
+void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
     shutdown_ = false;
 
@@ -70,14 +70,14 @@ void API::run() {
     acceptor_.close();
 }
 
-void API::Shutdown() {
+void CatenaServiceImpl::Shutdown() {
     shutdown_ = true;
     // Sending dummy connection to run() loop.
     tcp::socket dummySocket(io_context_);
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
 };
 
-std::string API::timeNow() {
+std::string CatenaServiceImpl::timeNow() {
     std::stringstream ss;
     auto now = std::chrono::system_clock::now();
     auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
@@ -89,7 +89,7 @@ std::string API::timeNow() {
     return ss.str();
 }
 
-bool API::is_port_in_use_() const {
+bool CatenaServiceImpl::is_port_in_use_() const {
     try {
         boost::asio::io_context io_context;
         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));

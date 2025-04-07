@@ -46,17 +46,17 @@
 #include <utils.h>
 
 // Connections/REST
-#include "api.h"
+#include "ServiceImpl.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-using catena::API;
+using catena::REST::CatenaServiceImpl;
 using catena::REST::CallStatus;
 
 /**
  * @brief The Connect REST RPC.
  */
-class API::Connect : public catena::REST::ICallData, public catena::common::Connect {
+class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena::common::Connect {
   public:
     /**
      * @brief Constructor for the Connect RPC. Calls proceed() once
