@@ -1,6 +1,5 @@
 var hierarchy =
 [
-    [ "catena::API", "classcatena_1_1API.html", null ],
     [ "catena::CatenaService::AsyncService", null, [
       [ "CatenaServiceImpl", "classCatenaServiceImpl.html", null ]
     ] ],
@@ -8,21 +7,21 @@ var hierarchy =
       [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
     ] ],
     [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
+    [ "CallData", null, [
+      [ "catena::REST::CatenaServiceImpl::AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", null ],
+      [ "catena::REST::CatenaServiceImpl::BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", null ],
+      [ "catena::REST::CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
+      [ "catena::REST::CatenaServiceImpl::DeviceRequest", "classCatenaServiceImpl_1_1DeviceRequest.html", null ],
+      [ "catena::REST::CatenaServiceImpl::ExecuteCommand", "classCatenaServiceImpl_1_1ExecuteCommand.html", null ],
+      [ "catena::REST::CatenaServiceImpl::ExternalObjectRequest", "classCatenaServiceImpl_1_1ExternalObjectRequest.html", null ],
+      [ "catena::REST::CatenaServiceImpl::GetParam", "classCatenaServiceImpl_1_1GetParam.html", null ],
+      [ "catena::REST::CatenaServiceImpl::GetPopulatedSlots", "classCatenaServiceImpl_1_1GetPopulatedSlots.html", null ],
+      [ "catena::REST::CatenaServiceImpl::GetValue", "classCatenaServiceImpl_1_1GetValue.html", null ],
+      [ "catena::REST::CatenaServiceImpl::LanguagePackRequest", "classCatenaServiceImpl_1_1LanguagePackRequest.html", null ],
+      [ "catena::REST::CatenaServiceImpl::ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", null ],
+      [ "catena::REST::CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", null ]
+    ] ],
     [ "CatenaServiceImpl::CallData", "classCatenaServiceImpl_1_1CallData.html", [
-      [ "CatenaServiceImpl::AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", null ],
-      [ "CatenaServiceImpl::BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", null ],
-      [ "CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
-      [ "CatenaServiceImpl::DeviceRequest", "classCatenaServiceImpl_1_1DeviceRequest.html", null ],
-      [ "CatenaServiceImpl::ExecuteCommand", "classCatenaServiceImpl_1_1ExecuteCommand.html", null ],
-      [ "CatenaServiceImpl::ExternalObjectRequest", "classCatenaServiceImpl_1_1ExternalObjectRequest.html", null ],
-      [ "CatenaServiceImpl::GetParam", "classCatenaServiceImpl_1_1GetParam.html", null ],
-      [ "CatenaServiceImpl::GetPopulatedSlots", "classCatenaServiceImpl_1_1GetPopulatedSlots.html", null ],
-      [ "CatenaServiceImpl::GetValue", "classCatenaServiceImpl_1_1GetValue.html", null ],
-      [ "CatenaServiceImpl::LanguagePackRequest", "classCatenaServiceImpl_1_1LanguagePackRequest.html", null ],
-      [ "CatenaServiceImpl::ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", null ],
-      [ "CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", [
-        [ "CatenaServiceImpl::SetValue", "classCatenaServiceImpl_1_1SetValue.html", null ]
-      ] ],
       [ "CatenaServiceImpl::UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", null ]
     ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
@@ -41,6 +40,18 @@ var hierarchy =
       [ "catena::meta::NthElementT< L, 0 >", "classcatena_1_1meta_1_1NthElementT_3_01L_00_010_01_4.html", null ]
     ] ],
     [ "catena::meta::FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
+    [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
+      [ "catena::REST::CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
+      [ "catena::REST::CatenaServiceImpl::DeviceRequest", "classCatenaServiceImpl_1_1DeviceRequest.html", null ],
+      [ "catena::REST::CatenaServiceImpl::GetPopulatedSlots", "classCatenaServiceImpl_1_1GetPopulatedSlots.html", null ],
+      [ "catena::REST::CatenaServiceImpl::GetValue", "classCatenaServiceImpl_1_1GetValue.html", null ],
+      [ "catena::REST::CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", null ]
+    ] ],
+    [ "catena::common::IConnect", "classcatena_1_1common_1_1IConnect.html", [
+      [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
+        [ "catena::REST::CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ]
+      ] ]
+    ] ],
     [ "catena::common::IConstraint", "classcatena_1_1common_1_1IConstraint.html", [
       [ "catena::common::NamedChoiceConstraint< T >", "classcatena_1_1common_1_1NamedChoiceConstraint.html", null ],
       [ "catena::common::PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", null ],
@@ -64,10 +75,25 @@ var hierarchy =
     [ "catena::common::IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", [
       [ "catena::common::PolyglotText", "classcatena_1_1common_1_1PolyglotText.html", null ]
     ] ],
+    [ "catena::REST::IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", [
+      [ "catena::REST::CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", null ]
+    ] ],
+    [ "catena::REST::ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", [
+      [ "catena::REST::SocketReader", "classcatena_1_1REST_1_1SocketReader.html", null ]
+    ] ],
+    [ "catena::REST::ISocketWriter", "classcatena_1_1REST_1_1ISocketWriter.html", [
+      [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", [
+        [ "catena::REST::ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", null ]
+      ] ]
+    ] ],
     [ "catena::common::LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
     [ "catena::common::Device::LockGuard", "classcatena_1_1common_1_1Device_1_1LockGuard.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
+    [ "MultiSetValue", null, [
+      [ "CatenaServiceImpl::SetValue", "classCatenaServiceImpl_1_1SetValue.html", null ],
+      [ "CatenaServiceImpl::SetValue", "classCatenaServiceImpl_1_1SetValue.html", null ]
+    ] ],
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
     [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
