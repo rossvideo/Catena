@@ -63,7 +63,6 @@ class CatenaServiceImpl::GetPopulatedSlots : public catena::REST::ICallData {
      * @param dm The device to get the slot of.
      */ 
     GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
-  private:
     /**
      * @brief GetPopulatedSlots's main process.
      */
@@ -72,6 +71,17 @@ class CatenaServiceImpl::GetPopulatedSlots : public catena::REST::ICallData {
      * @brief Finishes the GetPopulatedSlots process.
      */
     void finish() override;
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new GetPopulatedSlots(socket, context, dm);
+    }
+  private:
     /**
      * @brief Helper function to write status messages to the API console.
      * 

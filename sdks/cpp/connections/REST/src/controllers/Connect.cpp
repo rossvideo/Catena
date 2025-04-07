@@ -6,11 +6,9 @@
 int CatenaServiceImpl::Connect::objectCounter_ = 0;
 
 CatenaServiceImpl::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_(socket), catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
+    socket_{socket}, writer_{socket}, ok_{true}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Return code used for status.
-    catena::exception_with_status err("", catena::StatusCode::OK);
     // Parsing fields and assigning to respective variables.
     try {
         std::unordered_map<std::string, std::string> fields = {
@@ -31,17 +29,14 @@ CatenaServiceImpl::Connect::Connect(tcp::socket& socket, SocketReader& context, 
         forceConnection_ = fields.at("force_connection") == "true";
     // Parse error
     } catch (...) {
-        err = catena::exception_with_status("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
+        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
         writer_.write(err);
+        ok_ = false;
     }
-    // If no issue above, continue to proceed.
-    if (err.status == catena::StatusCode::OK) {
-        proceed();
-    }
-    finish();
 }
 
 void CatenaServiceImpl::Connect::proceed() {
+    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
     shutdownSignalId_ = shutdownSignal_.connect([this](){

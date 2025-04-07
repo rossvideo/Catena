@@ -67,8 +67,6 @@ enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 class ICallData {
 	public:
 		virtual ~ICallData() = default;
-
-	protected:
 		/**
 		 * @brief The RPC's main process.
 		 */
@@ -77,6 +75,8 @@ class ICallData {
 		 * @brief Finishes the RPC.
 		 */
 		virtual void finish() = 0;
+
+	protected:
 		/**
 		 * @brief Helper function to write status messages to the API console.
 		 * 

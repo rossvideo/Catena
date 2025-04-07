@@ -9,10 +9,6 @@ CatenaServiceImpl::GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, Soc
     socket_{socket}, writer_{socket}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Proceeding with the RPC.
-    proceed();
-    // Finishing the RPC.
-    finish();
 }
 
 void CatenaServiceImpl::GetPopulatedSlots::proceed() {

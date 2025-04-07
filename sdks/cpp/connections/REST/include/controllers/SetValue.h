@@ -55,6 +55,16 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
      * @param dm The device to set the value of.
      */ 
     SetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new SetValue(socket, context, dm);
+    }
   private:
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.

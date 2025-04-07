@@ -6,11 +6,9 @@
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 
 CatenaServiceImpl::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
+    socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Return code used for status.
-    catena::exception_with_status err("", catena::StatusCode::OK);
     // Parsing fields and assigning to respective variables.
     try {
         std::unordered_map<std::string, std::string> fields = {
@@ -31,18 +29,14 @@ CatenaServiceImpl::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReade
         catena::split(subscribedOids_, fields.at("subscribed_oids"), ",");
     // Parse error
     } catch (...) {
-        err = catena::exception_with_status("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
+        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
         writer_.write(err);
+        ok_ = false;
     }
-    // If no issue above, continue to proceed.
-    if (err.status == catena::StatusCode::OK) {
-        proceed();
-    }
-    // Finish the RPC.
-    finish();
 }
 
 void CatenaServiceImpl::DeviceRequest::proceed() {
+    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
         // controls whether shallow copy or deep copy is used

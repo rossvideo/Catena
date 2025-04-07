@@ -9,8 +9,6 @@ CatenaServiceImpl::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReade
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    proceed();
-    finish();
 }
 
 CatenaServiceImpl::MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId) :
