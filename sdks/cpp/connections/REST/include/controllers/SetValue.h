@@ -39,12 +39,12 @@
 
 // Connections/REST
 #include "MultiSetValue.h"
-using catena::API;
+using catena::REST::CatenaServiceImpl;
 
 /**
  * @brief The SetValue REST RPC.
  */
-class API::SetValue : public MultiSetValue {
+class CatenaServiceImpl::SetValue : public MultiSetValue {
   public:
     /**
      * @brief Constructor for the SetValue RPC. Calls proceed() once

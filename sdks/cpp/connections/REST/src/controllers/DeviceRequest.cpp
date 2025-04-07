@@ -3,9 +3,9 @@
 #include <controllers/DeviceRequest.h>
 
 // Initializes the object counter for Connect to 0.
-int API::DeviceRequest::objectCounter_ = 0;
+int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 
-API::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+CatenaServiceImpl::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -42,7 +42,7 @@ API::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, De
     finish();
 }
 
-void API::DeviceRequest::proceed() {
+void CatenaServiceImpl::DeviceRequest::proceed() {
     writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
         // controls whether shallow copy or deep copy is used
@@ -76,7 +76,7 @@ void API::DeviceRequest::proceed() {
     }
 }
 
-void API::DeviceRequest::finish() {
+void CatenaServiceImpl::DeviceRequest::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";

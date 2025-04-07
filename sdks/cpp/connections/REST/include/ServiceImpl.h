@@ -29,7 +29,7 @@
  */
 
 /**
- * @file api.h
+ * @file ServiceImpl
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
@@ -46,6 +46,7 @@
 #include <Enums.h>
 
 // REST
+#include <interface/IServiceImpl.h>
 #include <SocketReader.h>
 #include <SocketWriter.h>
 
@@ -64,11 +65,12 @@ using catena::REST::SocketWriter;
 using catena::REST::ChunkedWriter;
 
 namespace catena {
+namespace REST {
 
 /**
  * @brief REST API
  */
-class API {
+class CatenaServiceImpl : public catena::REST::IServiceImpl {
 
   // Specifying which Device and IParam to use (defaults to catena::...)
   using Device = catena::common::Device;
@@ -83,30 +85,25 @@ class API {
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
      */
-    explicit API(Device &dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
-    virtual ~API() = default;
-    API(const API&) = delete;
-    API& operator=(const API&) = delete;
-    API(API&&) = delete;
-    API& operator=(API&&) = delete;
+    explicit CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
 
     /**
      * @brief Returns the API's version.
      */
-    std::string version() const { return version_; }
+    std::string version() const override { return version_; }
     /**
      * @brief Starts the API.
      */
-    void run();
+    void run() override;
     /**
      * @brief Shuts down an running API. This should only be called sometime
      * after a call to run().
      */
-    void Shutdown();
+    void Shutdown() override;
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() { return authorizationEnabled_; };
+    bool authorizationEnabled() override { return authorizationEnabled_; };
     
   private:
     /**
@@ -115,13 +112,13 @@ class API {
      * @returns Nothing, communicated through the socket, at which point
      * process ends.
      */
-    void route(tcp::socket& socket);
+    void route(tcp::socket& socket) override;
     /**
      * @brief Returns true if port_ is already in use.
      * 
      * Currently unused.
      */
-    bool is_port_in_use_() const;
+    bool is_port_in_use_() const override;
     /**
      * @brief Returns the current time as a string including microseconds.
      */
@@ -176,10 +173,10 @@ class API {
     class DeviceRequest;
     class GetValue;
     class GetPopulatedSlots;
-
 };
 
-};  // namespace catena
+}; // namespace REST
+}; // namespace catena
 
 // flags for the API
 // flags.h

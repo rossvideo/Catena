@@ -3,9 +3,9 @@
 #include <controllers/GetValue.h>
 
 // Initializes the object counter for GetValue to 0.
-int API::GetValue::objectCounter_ = 0;
+int CatenaServiceImpl::GetValue::objectCounter_ = 0;
 
-API::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+CatenaServiceImpl::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -33,7 +33,7 @@ API::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) 
     finish();
 }
 
-void API::GetValue::proceed() {
+void CatenaServiceImpl::GetValue::proceed() {
     writeConsole(CallStatus::kProcess, socket_.is_open());
     catena::Value ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
@@ -59,7 +59,7 @@ void API::GetValue::proceed() {
     }
 }
 
-void API::GetValue::finish() {
+void CatenaServiceImpl::GetValue::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetValue[" << objectId_ << "] finished\n";
 }

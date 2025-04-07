@@ -47,7 +47,7 @@
 #include <ParamWithValue.h>
 
 // REST
-#include <api.h>
+#include <ServiceImpl.h>
 
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -75,7 +75,7 @@ ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate
 ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
 ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
 
-catena::API *globalApi = nullptr;
+catena::REST::CatenaServiceImpl *globalApi = nullptr;
 std::atomic<bool> globalLoop = true;
 
 // handle SIGINT
@@ -179,7 +179,7 @@ void RunRPCServer() {
         bool authorization = absl::GetFlag(FLAGS_authz);
         uint16_t port = absl::GetFlag(FLAGS_port);
         // Creating and running the REST service.
-        catena::API api(dm, EOPath, authorization, port);
+        catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, port);
         globalApi = &api;
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;

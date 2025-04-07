@@ -42,17 +42,17 @@
 #include <google/protobuf/util/json_util.h>
  
 // Connections/REST
-#include "api.h"
+#include "ServiceImpl.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-using catena::API;
+using catena::REST::CatenaServiceImpl;
 using catena::REST::CallStatus;
 
 /**
  * @brief CallData class for the GetValue REST RPC.
  */
-class API::GetValue : public catena::REST::ICallData {
+class CatenaServiceImpl::GetValue : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the GetValue RPC. Calls proceed() once

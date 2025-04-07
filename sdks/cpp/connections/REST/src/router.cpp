@@ -29,7 +29,7 @@
  */
 
 // REST
-#include <api.h>
+#include <ServiceImpl.h>
 
 // RPCs
 #include <controllers/Connect.h>
@@ -39,9 +39,9 @@
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
 
-using catena::API;
+using catena::REST::CatenaServiceImpl;
 
-void API::route(tcp::socket& socket) {
+void CatenaServiceImpl::route(tcp::socket& socket) {
     if (!shutdown_) {
         try {
             // Reading from the socket.

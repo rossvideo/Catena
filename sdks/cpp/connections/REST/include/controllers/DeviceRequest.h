@@ -45,17 +45,17 @@
 #include <utils.h>
 
 // Connections/REST
-#include "api.h"
+#include "ServiceImpl.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-using catena::API;
+using catena::REST::CatenaServiceImpl;
 using catena::REST::CallStatus;
 
 /**
  * @brief CallData class for the DeviceRequest REST RPC.
  */
-class API::DeviceRequest : public catena::REST::ICallData {
+class CatenaServiceImpl::DeviceRequest : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
