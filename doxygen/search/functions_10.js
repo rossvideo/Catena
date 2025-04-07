@@ -8,11 +8,11 @@ var searchData=
   ['registeritem_5',['registerItem',['../classCatenaServiceImpl.html#a5cceb267107e0837203946cde5469269',1,'CatenaServiceImpl']]],
   ['removepeer_6',['removePeer',['../classcatena_1_1PeerManager.html#a2a17dcf1482152378f302932249cbba1',1,'catena::PeerManager']]],
   ['removesubscription_7',['removeSubscription',['../classcatena_1_1common_1_1SubscriptionManager.html#a15dff1c2be6ded70a800819d1cac81f8',1,'catena::common::SubscriptionManager']]],
-  ['request_8',['request',['../classCatenaServiceImpl_1_1MultiSetValue.html#a58566e199663d84d177068fe39bffc2e',1,'CatenaServiceImpl::MultiSetValue']]],
+  ['request_8',['request',['../classCatenaServiceImpl_1_1MultiSetValue.html#a75a60a08553acb02e2c265cdc560c6d4',1,'CatenaServiceImpl::MultiSetValue']]],
   ['resetvalidate_9',['resetvalidate',['../classcatena_1_1common_1_1IParam.html#a0524a3a6faa1200e946ebdaa32db3d70',1,'catena::common::IParam::resetValidate()'],['../classcatena_1_1common_1_1ParamWithValue.html#a99130fd6880369ab0955c70522876814',1,'catena::common::ParamWithValue::resetValidate()']]],
   ['rethrow_5fif_5fexception_10',['rethrow_if_exception',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3',1,'catena::common::Device::DeviceSerializer::promise_type']]],
   ['return_5fvalue_11',['return_value',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#ab73a06963d0609c0895261a13499d5c9',1,'catena::common::Device::DeviceSerializer::promise_type']]],
   ['rewind_12',['rewind',['../classcatena_1_1common_1_1Path.html#a7bc18876ecb0d72b79dc3e3d4ccffb06',1,'catena::common::Path']]],
   ['rpc_13',['rpc',['../classcatena_1_1REST_1_1ISocketReader.html#a03b8a43282a44dff090c47b96999c26e',1,'catena::REST::ISocketReader::rpc()'],['../classcatena_1_1REST_1_1SocketReader.html#a5add9ae821b76fb042216d33e8596fe0',1,'catena::REST::SocketReader::rpc()']]],
-  ['run_14',['run',['../classcatena_1_1API.html#a9ba6af23559c9a56ebeb551f522a2192',1,'catena::API']]]
+  ['run_14',['run',['../classcatena_1_1REST_1_1IServiceImpl.html#accd0159db69e5c4fd0c41d99cb3856b2',1,'catena::REST::IServiceImpl::run()'],['../classcatena_1_1REST_1_1CatenaServiceImpl.html#a53b64ee00ea531c01e11ae45b00b00db',1,'catena::REST::CatenaServiceImpl::run()']]]
 ];

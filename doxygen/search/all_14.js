@@ -10,7 +10,7 @@ var searchData=
   ['to_20run_7',['Steps to run',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md16',1,'']]],
   ['to_20use_20the_20rest_20connection_20manager_8',['Install boost libraries if you want to use the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md27',1,'']]],
   ['todo_20list_9',['Todo List',['../todo.html',1,'']]],
-  ['tomulti_10',['tomulti',['../classAPI_1_1MultiSetValue.html#ab01210d35774c5a795b7112aedea0293',1,'catena::API::MultiSetValue::toMulti()'],['../classCatenaServiceImpl_1_1MultiSetValue.html#a934471361153200d99a353e3af96ea31',1,'CatenaServiceImpl::MultiSetValue::toMulti()']]],
+  ['tomulti_10',['tomulti',['../classCatenaServiceImpl_1_1MultiSetValue.html#acf2f1feb5f56e49c7809436aa316acea',1,'catena::REST::CatenaServiceImpl::MultiSetValue::toMulti()'],['../classCatenaServiceImpl_1_1MultiSetValue.html#a809bb3595fc994d409e25332fe482626',1,'catena::REST::CatenaServiceImpl::MultiSetValue::toMulti()']]],
   ['toolchain_20installation_11',['toolchain installation',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html',1,'Linux Toolchain Installation'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html',1,'macos Toolchain Installation']]],
   ['toolchain_20installation_20msvc_12',['Windows Toolchain Installation (MSVC)',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html',1,'']]],
   ['toolchain_20recommendations_13',['Toolchain Recommendations',['../index.html#autotoc_md1',1,'']]],
@@ -23,5 +23,5 @@ var searchData=
   ['type_20',['type',['../classcatena_1_1common_1_1ParamWithValue.html#a5d100719a0270a1b71ab5221bcda3b4e',1,'catena::common::ParamWithValue::type()'],['../classcatena_1_1common_1_1ParamDescriptor.html#a21eefbf9f878c111010b246c92ef9bd6',1,'catena::common::ParamDescriptor::type()'],['../classcatena_1_1common_1_1IParam.html#a27bcdbf5ce0f692b975c82f8f5683ee3',1,'catena::common::IParam::type()']]],
   ['typelist_21',['TypeList',['../classcatena_1_1meta_1_1TypeList.html',1,'catena::meta']]],
   ['typelist_2eh_22',['Typelist.h',['../Typelist_8h.html',1,'']]],
-  ['typename_23',['typeName',['../classCatenaServiceImpl_1_1MultiSetValue.html#a069e868f31c114d8d5f02beb294a97c5',1,'CatenaServiceImpl::MultiSetValue']]]
+  ['typename_23',['typeName',['../classCatenaServiceImpl_1_1MultiSetValue.html#a21897c84ba75248b303c105cd62e3c0e',1,'CatenaServiceImpl::MultiSetValue']]]
 ];

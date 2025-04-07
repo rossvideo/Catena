@@ -1,18 +1,6 @@
 var classCatenaServiceImpl =
 [
-    [ "AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", "classCatenaServiceImpl_1_1AddLanguage" ],
-    [ "BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", "classCatenaServiceImpl_1_1BasicParamInfoRequest" ],
     [ "CallData", "classCatenaServiceImpl_1_1CallData.html", "classCatenaServiceImpl_1_1CallData" ],
-    [ "Connect", "classCatenaServiceImpl_1_1Connect.html", "classCatenaServiceImpl_1_1Connect" ],
-    [ "DeviceRequest", "classCatenaServiceImpl_1_1DeviceRequest.html", "classCatenaServiceImpl_1_1DeviceRequest" ],
-    [ "ExecuteCommand", "classCatenaServiceImpl_1_1ExecuteCommand.html", "classCatenaServiceImpl_1_1ExecuteCommand" ],
-    [ "ExternalObjectRequest", "classCatenaServiceImpl_1_1ExternalObjectRequest.html", "classCatenaServiceImpl_1_1ExternalObjectRequest" ],
-    [ "GetParam", "classCatenaServiceImpl_1_1GetParam.html", "classCatenaServiceImpl_1_1GetParam" ],
-    [ "GetPopulatedSlots", "classCatenaServiceImpl_1_1GetPopulatedSlots.html", "classCatenaServiceImpl_1_1GetPopulatedSlots" ],
-    [ "GetValue", "classCatenaServiceImpl_1_1GetValue.html", "classCatenaServiceImpl_1_1GetValue" ],
-    [ "LanguagePackRequest", "classCatenaServiceImpl_1_1LanguagePackRequest.html", "classCatenaServiceImpl_1_1LanguagePackRequest" ],
-    [ "ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", "classCatenaServiceImpl_1_1ListLanguages" ],
-    [ "MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", "classCatenaServiceImpl_1_1MultiSetValue" ],
     [ "SetValue", "classCatenaServiceImpl_1_1SetValue.html", "classCatenaServiceImpl_1_1SetValue" ],
     [ "UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", "classCatenaServiceImpl_1_1UpdateSubscriptions" ],
     [ "CallStatus", "classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909d", [

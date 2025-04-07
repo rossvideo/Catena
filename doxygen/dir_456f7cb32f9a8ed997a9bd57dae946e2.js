@@ -15,7 +15,7 @@ var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
     [ "PeerInfo.h", "PeerInfo_8h.html", "PeerInfo_8h" ],
     [ "PeerManager.h", "PeerManager_8h.html", "PeerManager_8h" ],
     [ "ServiceCredentials.h", "ServiceCredentials_8h.html", "ServiceCredentials_8h" ],
-    [ "ServiceImpl.h", "ServiceImpl_8h.html", "ServiceImpl_8h" ],
+    [ "ServiceImpl.h", "gRPC_2include_2ServiceImpl_8h.html", "gRPC_2include_2ServiceImpl_8h" ],
     [ "SetValue.h", "gRPC_2include_2SetValue_8h.html", "gRPC_2include_2SetValue_8h" ],
     [ "SharedFlags.h", "SharedFlags_8h.html", "SharedFlags_8h" ],
     [ "UpdateSubscriptions.h", "UpdateSubscriptions_8h.html", "UpdateSubscriptions_8h" ]
