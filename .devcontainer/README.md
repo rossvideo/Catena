@@ -1,6 +1,6 @@
 # Dev Containers
 
-## file brake down
+## file break down
 
 ### docker containers
 

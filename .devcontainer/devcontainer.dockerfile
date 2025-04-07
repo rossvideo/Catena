@@ -1,9 +1,12 @@
-FROM ghcr.io/rossvideo/catena-toolchain:latest
-LABEL org.opencontainers.image.title="Catena SDK"
-LABEL org.opencontainers.image.description="Rossvideo Catena"
-LABEL org.opencontainers.image.version="v0.0.1-dev"
-LABEL org.opencontainers.image.vendor="Rossvideo"
+FROM ghcr.io/rossvideo/catena-toolchain-cpp:latest
 
+#FROM ghcr.io/rossvideo/catena-toolchain-cpp:latest
+
+# Use environment variables for labels
+LABEL org.opencontainers.image.title=$IMAGE_TITLE
+LABEL org.opencontainers.image.description=$IMAGE_DESCRIPTION
+LABEL org.opencontainers.image.version=$IMAGE_VERSION
+LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
 
 # Clone Catena repository
 RUN mkdir -p ~/Catena \
@@ -16,7 +19,7 @@ RUN mkdir -p ~/Catena \
 # Build Catena
 RUN mkdir -p ~/Catena/sdks/cpp/build \
     && cd ~/Catena/sdks/cpp/build \
-    && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_INSTALL_PREFIX=~/.local ~/Catena/sdks/cpp \
+    && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_INSTALL_PREFIX=~/.local ~/Catena/sdks/cpp \
     && ninja
 
 # Set the default user
