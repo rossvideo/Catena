@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['jsonbody_0',['jsonbody',['../classcatena_1_1REST_1_1ISocketReader.html#a17a8cacd3fb5bea629bc8502b81a11d8',1,'catena::REST::ISocketReader::jsonBody()'],['../classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f',1,'catena::REST::SocketReader::jsonBody()']]],
-  ['jwstoken_1',['jwstoken',['../classcatena_1_1REST_1_1ISocketReader.html#a40cce0729beee533eb49071c27bba1c2',1,'catena::REST::ISocketReader::jwsToken()'],['../classcatena_1_1REST_1_1SocketReader.html#ac3c78ea250b9d57087297eead2bdb7e0',1,'catena::REST::SocketReader::jwsToken()']]]
+  ['languagepack_0',['languagepack',['../classcatena_1_1common_1_1LanguagePack.html#a44ec157a8c0a85983ed8e20501f16bc4',1,'catena::common::LanguagePack::LanguagePack(const LanguagePack &amp;)=delete'],['../classcatena_1_1common_1_1LanguagePack.html#a80a5038590c1d29d2aaeae1ca97e068c',1,'catena::common::LanguagePack::LanguagePack(LanguagePack &amp;&amp;)=default'],['../classcatena_1_1common_1_1LanguagePack.html#a6867241992b3c0da45c81d62bb666b67',1,'catena::common::LanguagePack::LanguagePack(const std::string &amp;languageCode, const std::string &amp;name, ListInitializer list, Device &amp;dev)']]],
+  ['languagepackrequest_1',['LanguagePackRequest',['../classCatenaServiceImpl_1_1LanguagePackRequest.html#a3e05d4112d3f2ee771c74058aeecd294',1,'CatenaServiceImpl::LanguagePackRequest']]],
+  ['listlanguages_2',['ListLanguages',['../classCatenaServiceImpl_1_1ListLanguages.html#ae061b2ca830b76169eb93f1d90573330',1,'CatenaServiceImpl::ListLanguages']]]
 ];

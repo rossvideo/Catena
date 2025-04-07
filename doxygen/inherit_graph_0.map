@@ -1,37 +1,3 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" title=" " alt="" coords="306,365,385,390"/>
-<area shape="rect" id="Node000001" href="$classCatenaServiceImpl_1_1AddLanguage.html" title="CallData class for the ListLanguages RPC." alt="" coords="492,389,700,429"/>
-<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="399,381,492,393,491,399,398,387"/>
-<area shape="rect" id="Node000002" href="$classCatenaServiceImpl_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest RPC." alt="" coords="489,453,703,493"/>
-<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="386,394,490,439,525,451,523,456,488,444,384,398"/>
-<area shape="rect" id="Node000003" href="$classCatenaServiceImpl_1_1Connect.html" title="CallData class for the Connect RPC." alt="" coords="492,5,700,45"/>
-<area shape="poly" id="edge3_Node000000_Node000003" title=" " alt="" coords="357,351,439,178,450,142,455,112,465,84,487,55,504,43,507,48,491,59,469,87,461,113,455,143,444,180,362,354"/>
-<area shape="rect" id="Node000005" href="$classCatenaServiceImpl_1_1DeviceRequest.html" title="CallData class for the DeviceRequest RPC." alt="" coords="492,197,700,237"/>
-<area shape="poly" id="edge4_Node000000_Node000005" title=" " alt="" coords="365,352,417,300,451,271,488,247,514,235,516,240,491,252,454,276,421,304,368,356"/>
-<area shape="rect" id="Node000011" href="$classCatenaServiceImpl_1_1ExecuteCommand.html" title="CallData class for the ExecuteCommand RPC." alt="" coords="492,517,700,557"/>
-<area shape="poly" id="edge5_Node000000_Node000011" title=" " alt="" coords="368,399,421,451,454,479,491,503,516,515,514,520,488,508,451,483,417,455,365,402"/>
-<area shape="rect" id="Node000012" href="$classCatenaServiceImpl_1_1ExternalObjectRequest.html" title="CallData class for the ExternalObjectRequest RPC." alt="" coords="492,581,700,621"/>
-<area shape="poly" id="edge6_Node000000_Node000012" title=" " alt="" coords="361,401,381,438,410,483,447,528,491,567,512,579,509,584,488,572,443,532,406,486,377,441,356,404"/>
-<area shape="rect" id="Node000013" href="$classCatenaServiceImpl_1_1GetParam.html" title="CallData class for the GetParam RPC." alt="" coords="492,645,700,685"/>
-<area shape="poly" id="edge7_Node000000_Node000013" title=" " alt="" coords="357,403,373,452,401,513,440,577,464,606,491,631,509,643,506,647,488,635,460,610,436,580,396,516,369,454,351,404"/>
-<area shape="rect" id="Node000006" href="$classCatenaServiceImpl_1_1GetPopulatedSlots.html" title="CallData class for the GetPopulatedSlots RPC." alt="" coords="492,261,700,301"/>
-<area shape="poly" id="edge8_Node000000_Node000006" title=" " alt="" coords="384,356,488,311,523,299,525,304,490,316,386,361"/>
-<area shape="rect" id="Node000007" href="$classCatenaServiceImpl_1_1GetValue.html" title="CallData class for the GetValue RPC." alt="" coords="492,69,700,109"/>
-<area shape="poly" id="edge9_Node000000_Node000007" title=" " alt="" coords="355,351,416,226,453,161,488,119,506,107,509,112,491,123,458,164,421,228,360,353"/>
-<area shape="rect" id="Node000014" href="$classCatenaServiceImpl_1_1LanguagePackRequest.html" title="CallData class for the LanguagePackRequest RPC." alt="" coords="492,709,700,749"/>
-<area shape="poly" id="edge10_Node000000_Node000014" title=" " alt="" coords="354,404,367,464,392,542,411,584,433,625,460,662,491,695,508,707,505,711,488,699,455,666,428,627,406,586,387,544,362,465,348,405"/>
-<area shape="rect" id="Node000015" href="$classCatenaServiceImpl_1_1ListLanguages.html" title="CallData class for the ListLanguages RPC." alt="" coords="492,325,700,365"/>
-<area shape="poly" id="edge11_Node000000_Node000015" title=" " alt="" coords="398,368,491,356,492,361,399,373"/>
-<area shape="rect" id="Node000008" href="$classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs." alt="" coords="492,133,700,173"/>
-<area shape="poly" id="edge12_Node000000_Node000008" title=" " alt="" coords="356,351,377,314,406,268,443,223,488,183,509,171,512,176,491,188,447,226,410,272,381,316,361,353"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1REST_1_1ICallData.html" title="CallData interface class for the REST API RPCs." alt="" coords="258,141,433,166"/>
-<area shape="poly" id="edge13_Node000004_Node000003" title=" " alt="" coords="372,130,424,92,488,55,518,43,520,48,491,60,427,97,375,134"/>
-<area shape="poly" id="edge14_Node000004_Node000005" title=" " alt="" coords="410,167,518,195,516,200,409,172"/>
-<area shape="poly" id="edge15_Node000004_Node000006" title=" " alt="" coords="375,172,427,210,491,247,520,259,518,264,488,252,424,215,372,177"/>
-<area shape="poly" id="edge16_Node000004_Node000007" title=" " alt="" coords="409,135,516,107,518,112,410,140"/>
-<area shape="poly" id="edge17_Node000004_Node000008" title=" " alt="" coords="446,151,492,151,492,156,446,156"/>
-<area shape="rect" id="Node000010" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect.h." alt="" coords="5,13,201,38"/>
-<area shape="rect" id="Node000009" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="249,13,441,38"/>
-<area shape="poly" id="edge18_Node000010_Node000009" title=" " alt="" coords="215,23,249,23,249,28,215,28"/>
-<area shape="poly" id="edge19_Node000009_Node000003" title=" " alt="" coords="455,23,492,23,492,28,455,28"/>
+<area shape="rect" id="Node000000" href="$classcatena_1_1API.html" title="REST API." alt="" coords="5,5,100,31"/>
 </map>

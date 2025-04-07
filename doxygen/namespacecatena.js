@@ -3,6 +3,7 @@ var namespacecatena =
     [ "common", "namespacecatena_1_1common.html", "namespacecatena_1_1common" ],
     [ "meta", "namespacecatena_1_1meta.html", "namespacecatena_1_1meta" ],
     [ "patterns", "namespacecatena_1_1patterns.html", "namespacecatena_1_1patterns" ],
+    [ "API", "classcatena_1_1API.html", "classcatena_1_1API" ],
     [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
     [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],
     [ "PeerManager", "classcatena_1_1PeerManager.html", "classcatena_1_1PeerManager" ],
@@ -29,6 +30,5 @@ var namespacecatena =
     [ "expandEnvVariables", "namespacecatena.html#aa3ce72179203719924c0cff74fd3f82c", null ],
     [ "getServerCredentials", "namespacecatena.html#a989cc41eb5054f4902e9bf6a66334373", null ],
     [ "readFile", "namespacecatena.html#a274b596fd164b9f6c1ec6dfe8c278efc", null ],
-    [ "split", "namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb", null ],
     [ "subs", "namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad", null ]
 ];

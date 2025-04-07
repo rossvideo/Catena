@@ -119,31 +119,29 @@ $(document).ready(function(){initNavTree('Enums_8h_source.html',''); initResizab
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment">// instantiate the EnumDecorator for the Scopes_e and DetailLevel_e enums</span></div>
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="keyword">using </span>Scopes = <a class="code hl_class" href="classcatena_1_1patterns_1_1EnumDecorator.html">patterns::EnumDecorator&lt;common::Scopes_e&gt;</a>;</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1patterns_1_1EnumDecorator.html">DetailLevel</a> = <a class="code hl_class" href="classcatena_1_1patterns_1_1EnumDecorator.html">patterns::EnumDecorator&lt;catena::Device_DetailLevel&gt;</a>;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="keyword">using </span>DetailLevel = <a class="code hl_class" href="classcatena_1_1patterns_1_1EnumDecorator.html">patterns::EnumDecorator&lt;catena::Device_DetailLevel&gt;</a>;</div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>}  <span class="comment">// namespace common</span></div>
 <div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keyword">template</span> &lt;&gt;</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keyword">inline</span> <span class="keyword">const</span> common::Scopes::FwdMap common::Scopes::fwdMap_ = {</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>  {common::Scopes_e::kUndefined, <span class="stringliteral">&quot;undefined&quot;</span>},</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  {common::Scopes_e::kMonitor,   <span class="stringliteral">&quot;st2138:mon&quot;</span>},</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  {common::Scopes_e::kOperate,   <span class="stringliteral">&quot;st2138:op&quot;</span>},</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  {common::Scopes_e::kConfig,    <span class="stringliteral">&quot;st2138:cfg&quot;</span>},</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>  {common::Scopes_e::kAdmin,     <span class="stringliteral">&quot;st2138:adm&quot;</span>}</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>};</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="keyword">template</span> &lt;&gt;</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keyword">inline</span> <span class="keyword">const</span> common::DetailLevel::FwdMap common::DetailLevel::fwdMap_ = {</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>  {Device_DetailLevel_FULL,          <span class="stringliteral">&quot;FULL&quot;</span>},</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>  {Device_DetailLevel_SUBSCRIPTIONS, <span class="stringliteral">&quot;SUBSCRIPTIONS&quot;</span>},</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  {Device_DetailLevel_MINIMAL,       <span class="stringliteral">&quot;MINIMAL&quot;</span>},</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>  {Device_DetailLevel_COMMANDS,      <span class="stringliteral">&quot;COMMANDS&quot;</span>},</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>  {Device_DetailLevel_NONE,          <span class="stringliteral">&quot;NONE&quot;</span>}</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>};</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>}  <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keyword">inline</span> <span class="keyword">const</span> common::Scopes::FwdMap common::Scopes::fwdMap_ = {{common::Scopes_e::kUndefined, <span class="stringliteral">&quot;undefined&quot;</span>},</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>                                               {common::Scopes_e::kMonitor, <span class="stringliteral">&quot;st2138:mon&quot;</span>},</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>                                               {common::Scopes_e::kOperate, <span class="stringliteral">&quot;st2138:op&quot;</span>},</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>                                               {common::Scopes_e::kConfig, <span class="stringliteral">&quot;st2138:cfg&quot;</span>},</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>                                               {common::Scopes_e::kAdmin, <span class="stringliteral">&quot;st2138:adm&quot;</span>}};</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword">template</span> &lt;&gt;</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keyword">inline</span> <span class="keyword">const</span> common::DetailLevel::FwdMap common::DetailLevel::fwdMap_ = {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>  {Device_DetailLevel_FULL, <span class="stringliteral">&quot;FULL&quot;</span>},</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>  {Device_DetailLevel_SUBSCRIPTIONS, <span class="stringliteral">&quot;SUBSCRIPTIONS&quot;</span>},</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>  {Device_DetailLevel_MINIMAL, <span class="stringliteral">&quot;MINIMAL&quot;</span>},</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>  {Device_DetailLevel_COMMANDS, <span class="stringliteral">&quot;COMMANDS&quot;</span>},</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  {Device_DetailLevel_NONE, <span class="stringliteral">&quot;NONE&quot;</span>}};</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>}  <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aEnumDecorator_8h_html"><div class="ttname"><a href="EnumDecorator_8h.html">EnumDecorator.h</a></div><div class="ttdoc">Provides an enum with useful extra functionality.</div></div>
 <div class="ttc" id="aclasscatena_1_1patterns_1_1EnumDecorator_html"><div class="ttname"><a href="classcatena_1_1patterns_1_1EnumDecorator.html">catena::patterns::EnumDecorator</a></div><div class="ttdoc">Enhances default C++ enums by adding functionality for converting between enum values,...</div><div class="ttdef"><b>Definition</b> EnumDecorator.h:67</div></div>
 <div class="ttc" id="anamespacecatena_1_1common_html_a52e17ef3ce00a51e608afb060211e3a8"><div class="ttname"><a href="namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8">catena::common::Scopes_e</a></div><div class="ttdeci">Scopes_e</div><div class="ttdoc">Scopes_e is an enumeration of the different access scopes that a device supports.</div><div class="ttdef"><b>Definition</b> Enums.h:42</div></div>

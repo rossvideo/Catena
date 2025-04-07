@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.8-147: catena::REST::CatenaServiceImpl::MultiSetValue Class Reference</title>
+<title>cpp-v0.0.8-147: CatenaServiceImpl::MultiSetValue Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -95,127 +95,113 @@ $(document).ready(function(){initNavTree('classCatenaServiceImpl_1_1MultiSetValu
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classCatenaServiceImpl_1_1MultiSetValue-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">catena::REST::CatenaServiceImpl::MultiSetValue Class Reference</div></div>
+  <div class="headertitle"><div class="title">CatenaServiceImpl::MultiSetValue Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Generic CallData class for the SetValue and MultiSetValue RPCs.  
+<p>Generic <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class for the <a class="el" href="classCatenaServiceImpl_1_1SetValue.html" title="CallData class for the SetValue RPC.">SetValue</a> and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> RPCs.  
  <a href="classCatenaServiceImpl_1_1MultiSetValue.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="gRPC_2include_2MultiSetValue_8h_source.html">MultiSetValue.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="MultiSetValue_8h_source.html">MultiSetValue.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for catena::REST::CatenaServiceImpl::MultiSetValue:</div>
+Inheritance diagram for CatenaServiceImpl::MultiSetValue:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1MultiSetValue__inherit__graph.svg" width="288" height="124"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1MultiSetValue__inherit__graph.svg" width="164" height="227"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
-Collaboration diagram for catena::REST::CatenaServiceImpl::MultiSetValue:</div>
+Collaboration diagram for CatenaServiceImpl::MultiSetValue:</div>
 <div class="dyncontent">
-<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1MultiSetValue__coll__graph.svg" width="100%" height="598"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="classCatenaServiceImpl_1_1MultiSetValue__coll__graph.svg" width="100%" height="499"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aed1de1b2bc73b886779ba6efafbd7655" id="r_aed1de1b2bc73b886779ba6efafbd7655"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#aed1de1b2bc73b886779ba6efafbd7655">MultiSetValue</a> (<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
-<tr class="memdesc:aed1de1b2bc73b886779ba6efafbd7655"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the CallData class of the MultiSetValue gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a> once initialized.  <br /></td></tr>
-<tr class="separator:aed1de1b2bc73b886779ba6efafbd7655"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67c156efd6d21fd0a6807a4cf349d44c" id="r_a67c156efd6d21fd0a6807a4cf349d44c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a67c156efd6d21fd0a6807a4cf349d44c">proceed</a> (<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *service, bool ok) override</td></tr>
-<tr class="memdesc:a67c156efd6d21fd0a6807a4cf349d44c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.  <br /></td></tr>
-<tr class="separator:a67c156efd6d21fd0a6807a4cf349d44c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2a4d36f590b569da6470a1a1bac03ae" id="r_ac2a4d36f590b569da6470a1a1bac03ae"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ac2a4d36f590b569da6470a1a1bac03ae">MultiSetValue</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm)</td></tr>
-<tr class="memdesc:ac2a4d36f590b569da6470a1a1bac03ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the MultiSetValue RPC. Calls <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a> once initialized.  <br /></td></tr>
-<tr class="separator:ac2a4d36f590b569da6470a1a1bac03ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72774c3a3015d2bd4cf04fc61f4ee159" id="r_a72774c3a3015d2bd4cf04fc61f4ee159"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a72774c3a3015d2bd4cf04fc61f4ee159">MultiSetValue</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
+<tr class="memdesc:a72774c3a3015d2bd4cf04fc61f4ee159"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class of the <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794" title="Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.">proceed()</a> once initialized.  <br /></td></tr>
+<tr class="separator:a72774c3a3015d2bd4cf04fc61f4ee159"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5910a6b44b738f341d98a42452df794" id="r_ae5910a6b44b738f341d98a42452df794"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794">proceed</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, bool ok) override</td></tr>
+<tr class="memdesc:ae5910a6b44b738f341d98a42452df794"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the steps of the <a class="el" href="classCatenaServiceImpl_1_1SetValue.html" title="CallData class for the SetValue RPC.">SetValue</a> and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> gRPC commands through the state variable status.  <br /></td></tr>
+<tr class="separator:ae5910a6b44b738f341d98a42452df794"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
+<tr class="memitem:a5275c8b9cf83c4d42685c5f2f71bf7c9 inherit pub_methods_classCatenaServiceImpl_1_1CallData" id="r_a5275c8b9cf83c4d42685c5f2f71bf7c9"><td class="memItemLeft" align="right" valign="top">
+virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~CallData</b> ()</td></tr>
+<tr class="memdesc:a5275c8b9cf83c4d42685c5f2f71bf7c9 inherit pub_methods_classCatenaServiceImpl_1_1CallData"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class. <br /></td></tr>
+<tr class="separator:a5275c8b9cf83c4d42685c5f2f71bf7c9 inherit pub_methods_classCatenaServiceImpl_1_1CallData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a841cba4a7a685e5175e15ef8b7672e55" id="r_a841cba4a7a685e5175e15ef8b7672e55"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a841cba4a7a685e5175e15ef8b7672e55">MultiSetValue</a> (<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok, int objectId)</td></tr>
-<tr class="memdesc:a841cba4a7a685e5175e15ef8b7672e55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor class for child classes.  <br /></td></tr>
-<tr class="separator:a841cba4a7a685e5175e15ef8b7672e55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75a60a08553acb02e2c265cdc560c6d4" id="r_a75a60a08553acb02e2c265cdc560c6d4"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a75a60a08553acb02e2c265cdc560c6d4">request</a> ()</td></tr>
-<tr class="memdesc:a75a60a08553acb02e2c265cdc560c6d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Requests Multi Set Value from the system and sets the request to the MultiSetValuePayload.  <br /></td></tr>
-<tr class="separator:a75a60a08553acb02e2c265cdc560c6d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0606c7a0ca75a3d572889c5030f8f5e" id="r_ac0606c7a0ca75a3d572889c5030f8f5e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ac0606c7a0ca75a3d572889c5030f8f5e">create</a> (<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
-<tr class="memdesc:ac0606c7a0ca75a3d572889c5030f8f5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new MultiSetValue object to serve other clients while processing.  <br /></td></tr>
-<tr class="separator:ac0606c7a0ca75a3d572889c5030f8f5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a809bb3595fc994d409e25332fe482626" id="r_a809bb3595fc994d409e25332fe482626"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a809bb3595fc994d409e25332fe482626">toMulti</a> ()</td></tr>
-<tr class="memdesc:a809bb3595fc994d409e25332fe482626"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts req_ to a MultiSetValuePayload reqs_.  <br /></td></tr>
-<tr class="separator:a809bb3595fc994d409e25332fe482626"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf36812e433ff3acbd8bf16e734d37a3" id="r_abf36812e433ff3acbd8bf16e734d37a3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#abf36812e433ff3acbd8bf16e734d37a3">MultiSetValue</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, int objectId)</td></tr>
-<tr class="memdesc:abf36812e433ff3acbd8bf16e734d37a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for child SetValue RPCs. Does not call <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a>.  <br /></td></tr>
-<tr class="separator:abf36812e433ff3acbd8bf16e734d37a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf2f1feb5f56e49c7809436aa316acea" id="r_acf2f1feb5f56e49c7809436aa316acea"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#acf2f1feb5f56e49c7809436aa316acea">toMulti</a> ()</td></tr>
-<tr class="memdesc:acf2f1feb5f56e49c7809436aa316acea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the jsonPayload_ to MultiSetValuePayload reqs_.  <br /></td></tr>
-<tr class="separator:acf2f1feb5f56e49c7809436aa316acea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4265ca0050c9b0fc56e33a931d889e71" id="r_a4265ca0050c9b0fc56e33a931d889e71"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71">proceed</a> () override</td></tr>
-<tr class="memdesc:a4265ca0050c9b0fc56e33a931d889e71"><td class="mdescLeft">&#160;</td><td class="mdescRight">MultiSetValue main process.  <br /></td></tr>
-<tr class="separator:a4265ca0050c9b0fc56e33a931d889e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a509fe2415cf96444c34824e0160ce286" id="r_a509fe2415cf96444c34824e0160ce286"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a509fe2415cf96444c34824e0160ce286">finish</a> () override</td></tr>
-<tr class="memdesc:a509fe2415cf96444c34824e0160ce286"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the MultiSetValue process.  <br /></td></tr>
-<tr class="separator:a509fe2415cf96444c34824e0160ce286"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa896e2673c14b59e2575a2f9008268f1" id="r_aa896e2673c14b59e2575a2f9008268f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#aa896e2673c14b59e2575a2f9008268f1">writeConsole</a> (<a class="el" href="ICallData_8h.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, bool ok) const override</td></tr>
-<tr class="memdesc:aa896e2673c14b59e2575a2f9008268f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to write status messages to the API console.  <br /></td></tr>
-<tr class="separator:aa896e2673c14b59e2575a2f9008268f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae10b13562e8b71eb19cffd12c251b6ff" id="r_ae10b13562e8b71eb19cffd12c251b6ff"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae10b13562e8b71eb19cffd12c251b6ff">MultiSetValue</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok, int objectId)</td></tr>
+<tr class="memdesc:ae10b13562e8b71eb19cffd12c251b6ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor class for child classes.  <br /></td></tr>
+<tr class="separator:ae10b13562e8b71eb19cffd12c251b6ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58566e199663d84d177068fe39bffc2e" id="r_a58566e199663d84d177068fe39bffc2e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a58566e199663d84d177068fe39bffc2e">request</a> ()</td></tr>
+<tr class="memdesc:a58566e199663d84d177068fe39bffc2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Requests Multi Set Value from the system and sets the request to the MultiSetValuePayload.  <br /></td></tr>
+<tr class="separator:a58566e199663d84d177068fe39bffc2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6025d380ed3a924ea98821455bc0144f" id="r_a6025d380ed3a924ea98821455bc0144f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a6025d380ed3a924ea98821455bc0144f">create</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
+<tr class="memdesc:a6025d380ed3a924ea98821455bc0144f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> object to serve other clients while processing.  <br /></td></tr>
+<tr class="separator:a6025d380ed3a924ea98821455bc0144f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a934471361153200d99a353e3af96ea31" id="r_a934471361153200d99a353e3af96ea31"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a934471361153200d99a353e3af96ea31">toMulti</a> ()</td></tr>
+<tr class="memdesc:a934471361153200d99a353e3af96ea31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts req_ to a MultiSetValuePayload reqs_.  <br /></td></tr>
+<tr class="separator:a934471361153200d99a353e3af96ea31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
+<tr class="memitem:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData" id="r_a665177806c242a75b96e89722d509cfc"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1CallData.html#a665177806c242a75b96e89722d509cfc">getJWSToken</a> () const</td></tr>
+<tr class="memdesc:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the JWS Bearer token from the server context's client metadata.  <br /></td></tr>
+<tr class="separator:a665177806c242a75b96e89722d509cfc inherit pro_methods_classCatenaServiceImpl_1_1CallData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a21897c84ba75248b303c105cd62e3c0e" id="r_a21897c84ba75248b303c105cd62e3c0e"><td class="memItemLeft" align="right" valign="top"><a id="a21897c84ba75248b303c105cd62e3c0e" name="a21897c84ba75248b303c105cd62e3c0e"></a>
+<tr class="memitem:a069e868f31c114d8d5f02beb294a97c5" id="r_a069e868f31c114d8d5f02beb294a97c5"><td class="memItemLeft" align="right" valign="top"><a id="a069e868f31c114d8d5f02beb294a97c5" name="a069e868f31c114d8d5f02beb294a97c5"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>typeName</b></td></tr>
-<tr class="memdesc:a21897c84ba75248b303c105cd62e3c0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Name of childclass to specify gRPC in console notifications. <br /></td></tr>
-<tr class="separator:a21897c84ba75248b303c105cd62e3c0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac4469ef683d5693dd0a54085a4ce391" id="r_aac4469ef683d5693dd0a54085a4ce391"><td class="memItemLeft" align="right" valign="top"><a id="aac4469ef683d5693dd0a54085a4ce391" name="aac4469ef683d5693dd0a54085a4ce391"></a>
-<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>service_</b></td></tr>
-<tr class="memdesc:aac4469ef683d5693dd0a54085a4ce391"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parent <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="REST API.">CatenaServiceImpl</a>. <br /></td></tr>
-<tr class="separator:aac4469ef683d5693dd0a54085a4ce391"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a234746127a1d099e23be5ca5652cf8db" id="r_a234746127a1d099e23be5ca5652cf8db"><td class="memItemLeft" align="right" valign="top">catena::MultiSetValuePayload&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a234746127a1d099e23be5ca5652cf8db">reqs_</a></td></tr>
-<tr class="memdesc:a234746127a1d099e23be5ca5652cf8db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Server request as a MultiSetValuePayload if not already.  <br /></td></tr>
-<tr class="separator:a234746127a1d099e23be5ca5652cf8db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a843a02f3d81e06edf550b6e58b06e584" id="r_a843a02f3d81e06edf550b6e58b06e584"><td class="memItemLeft" align="right" valign="top"><a id="a843a02f3d81e06edf550b6e58b06e584" name="a843a02f3d81e06edf550b6e58b06e584"></a>
+<tr class="memdesc:a069e868f31c114d8d5f02beb294a97c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Name of childclass to specify gRPC in console notifications. <br /></td></tr>
+<tr class="separator:a069e868f31c114d8d5f02beb294a97c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ccba7408a60a75d96a2d947c07cab37" id="r_a3ccba7408a60a75d96a2d947c07cab37"><td class="memItemLeft" align="right" valign="top"><a id="a3ccba7408a60a75d96a2d947c07cab37" name="a3ccba7408a60a75d96a2d947c07cab37"></a>
+<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>service_</b></td></tr>
+<tr class="memdesc:a3ccba7408a60a75d96a2d947c07cab37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parent <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a>. <br /></td></tr>
+<tr class="separator:a3ccba7408a60a75d96a2d947c07cab37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cc58c0392d648403ad5a52d4f45dc09" id="r_a4cc58c0392d648403ad5a52d4f45dc09"><td class="memItemLeft" align="right" valign="top"><a id="a4cc58c0392d648403ad5a52d4f45dc09" name="a4cc58c0392d648403ad5a52d4f45dc09"></a>
+catena::MultiSetValuePayload&#160;</td><td class="memItemRight" valign="bottom"><b>reqs_</b></td></tr>
+<tr class="memdesc:a4cc58c0392d648403ad5a52d4f45dc09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Server request as a MultiSetValuePayload if not already. <br /></td></tr>
+<tr class="separator:a4cc58c0392d648403ad5a52d4f45dc09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a024fdea2c7a2d29961fde9bfccf734ba" id="r_a024fdea2c7a2d29961fde9bfccf734ba"><td class="memItemLeft" align="right" valign="top"><a id="a024fdea2c7a2d29961fde9bfccf734ba" name="a024fdea2c7a2d29961fde9bfccf734ba"></a>
 catena::Value&#160;</td><td class="memItemRight" valign="bottom"><b>res_</b></td></tr>
-<tr class="memdesc:a843a02f3d81e06edf550b6e58b06e584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Server response (UNUSED). <br /></td></tr>
-<tr class="separator:a843a02f3d81e06edf550b6e58b06e584"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ed246086555529e7c0379733517c02e" id="r_a4ed246086555529e7c0379733517c02e"><td class="memItemLeft" align="right" valign="top"><a id="a4ed246086555529e7c0379733517c02e" name="a4ed246086555529e7c0379733517c02e"></a>
+<tr class="memdesc:a024fdea2c7a2d29961fde9bfccf734ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Server response (UNUSED). <br /></td></tr>
+<tr class="separator:a024fdea2c7a2d29961fde9bfccf734ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e14c6abc7a4c3b2703632fa8ffb8bf3" id="r_a0e14c6abc7a4c3b2703632fa8ffb8bf3"><td class="memItemLeft" align="right" valign="top"><a id="a0e14c6abc7a4c3b2703632fa8ffb8bf3" name="a0e14c6abc7a4c3b2703632fa8ffb8bf3"></a>
 ServerAsyncResponseWriter&lt; catena::Empty &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>responder_</b></td></tr>
-<tr class="memdesc:a4ed246086555529e7c0379733517c02e"><td class="mdescLeft">&#160;</td><td class="mdescRight">gRPC async response writer. <br /></td></tr>
-<tr class="separator:a4ed246086555529e7c0379733517c02e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25b29962f92cd77d0b1c726e5a7cd3b9" id="r_a25b29962f92cd77d0b1c726e5a7cd3b9"><td class="memItemLeft" align="right" valign="top"><a id="a25b29962f92cd77d0b1c726e5a7cd3b9" name="a25b29962f92cd77d0b1c726e5a7cd3b9"></a>
-<a class="el" href="ICallData_8h.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><b>status_</b></td></tr>
-<tr class="memdesc:a25b29962f92cd77d0b1c726e5a7cd3b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The gRPC command's state (kCreate, kProcess, kFinish, etc.). <br /></td></tr>
-<tr class="separator:a25b29962f92cd77d0b1c726e5a7cd3b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31308f1f13b4cbed7d565206d849c530" id="r_a31308f1f13b4cbed7d565206d849c530"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a31308f1f13b4cbed7d565206d849c530">dm_</a></td></tr>
-<tr class="memdesc:a31308f1f13b4cbed7d565206d849c530"><td class="mdescLeft">&#160;</td><td class="mdescRight">The device containing the value to set.  <br /></td></tr>
-<tr class="separator:a31308f1f13b4cbed7d565206d849c530"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a385c73296baea5a07aaa778e855f7a2d" id="r_a385c73296baea5a07aaa778e855f7a2d"><td class="memItemLeft" align="right" valign="top">Status&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a385c73296baea5a07aaa778e855f7a2d">errorStatus_</a></td></tr>
-<tr class="separator:a385c73296baea5a07aaa778e855f7a2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a454f72d09095401de41ac48d9c34026a" id="r_a454f72d09095401de41ac48d9c34026a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a454f72d09095401de41ac48d9c34026a">objectId_</a></td></tr>
-<tr class="memdesc:a454f72d09095401de41ac48d9c34026a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The object's unique id.  <br /></td></tr>
-<tr class="separator:a454f72d09095401de41ac48d9c34026a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fc3cc9d8b2545f08b781062193b5e87" id="r_a1fc3cc9d8b2545f08b781062193b5e87"><td class="memItemLeft" align="right" valign="top"><a id="a1fc3cc9d8b2545f08b781062193b5e87" name="a1fc3cc9d8b2545f08b781062193b5e87"></a>
-tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_</b></td></tr>
-<tr class="memdesc:a1fc3cc9d8b2545f08b781062193b5e87"><td class="mdescLeft">&#160;</td><td class="mdescRight">The socket to write the response to. <br /></td></tr>
-<tr class="separator:a1fc3cc9d8b2545f08b781062193b5e87"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac83d2b93008ae0287d185b2601e0ba45" id="r_ac83d2b93008ae0287d185b2601e0ba45"><td class="memItemLeft" align="right" valign="top"><a id="ac83d2b93008ae0287d185b2601e0ba45" name="ac83d2b93008ae0287d185b2601e0ba45"></a>
-<a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b></td></tr>
-<tr class="memdesc:ac83d2b93008ae0287d185b2601e0ba45"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. <br /></td></tr>
-<tr class="separator:ac83d2b93008ae0287d185b2601e0ba45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fcb3417349f9402c0c4a7049553664e" id="r_a2fcb3417349f9402c0c4a7049553664e"><td class="memItemLeft" align="right" valign="top"><a id="a2fcb3417349f9402c0c4a7049553664e" name="a2fcb3417349f9402c0c4a7049553664e"></a>
-<a class="el" href="classcatena_1_1REST_1_1SocketWriter.html">SocketWriter</a>&#160;</td><td class="memItemRight" valign="bottom"><b>writer_</b></td></tr>
-<tr class="memdesc:a2fcb3417349f9402c0c4a7049553664e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost.">SocketWriter</a> object for writing to socket_. <br /></td></tr>
-<tr class="separator:a2fcb3417349f9402c0c4a7049553664e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memdesc:a0e14c6abc7a4c3b2703632fa8ffb8bf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">gRPC async response writer. <br /></td></tr>
+<tr class="separator:a0e14c6abc7a4c3b2703632fa8ffb8bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad232f477b999f736ce9e4d4ef1dda792" id="r_ad232f477b999f736ce9e4d4ef1dda792"><td class="memItemLeft" align="right" valign="top"><a id="ad232f477b999f736ce9e4d4ef1dda792" name="ad232f477b999f736ce9e4d4ef1dda792"></a>
+<a class="el" href="classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909d">CallStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><b>status_</b></td></tr>
+<tr class="memdesc:ad232f477b999f736ce9e4d4ef1dda792"><td class="mdescLeft">&#160;</td><td class="mdescRight">The gRPC command's state (kCreate, kProcess, kFinish, etc.). <br /></td></tr>
+<tr class="separator:ad232f477b999f736ce9e4d4ef1dda792"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb1c590a5063c72c2a319455ad867e12" id="r_adb1c590a5063c72c2a319455ad867e12"><td class="memItemLeft" align="right" valign="top"><a id="adb1c590a5063c72c2a319455ad867e12" name="adb1c590a5063c72c2a319455ad867e12"></a>
+<a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>dm_</b></td></tr>
+<tr class="memdesc:adb1c590a5063c72c2a319455ad867e12"><td class="mdescLeft">&#160;</td><td class="mdescRight">The device containing the value to set. <br /></td></tr>
+<tr class="separator:adb1c590a5063c72c2a319455ad867e12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cebdf6ab589c11ec20b067a50a74abf" id="r_a5cebdf6ab589c11ec20b067a50a74abf"><td class="memItemLeft" align="right" valign="top">Status&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a5cebdf6ab589c11ec20b067a50a74abf">errorStatus_</a></td></tr>
+<tr class="separator:a5cebdf6ab589c11ec20b067a50a74abf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fd9481b8a039ac4ee5306b0730608b5" id="r_a9fd9481b8a039ac4ee5306b0730608b5"><td class="memItemLeft" align="right" valign="top"><a id="a9fd9481b8a039ac4ee5306b0730608b5" name="a9fd9481b8a039ac4ee5306b0730608b5"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr>
+<tr class="memdesc:a9fd9481b8a039ac4ee5306b0730608b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The object's unique id. <br /></td></tr>
+<tr class="separator:a9fd9481b8a039ac4ee5306b0730608b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classCatenaServiceImpl_1_1CallData"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classCatenaServiceImpl_1_1CallData')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classCatenaServiceImpl_1_1CallData.html">CatenaServiceImpl::CallData</a></td></tr>
+<tr class="memitem:a752c4dc80b04fb3bd09ddb4f648e8997 inherit pro_attribs_classCatenaServiceImpl_1_1CallData" id="r_a752c4dc80b04fb3bd09ddb4f648e8997"><td class="memItemLeft" align="right" valign="top">
+ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b></td></tr>
+<tr class="memdesc:a752c4dc80b04fb3bd09ddb4f648e8997 inherit pro_attribs_classCatenaServiceImpl_1_1CallData"><td class="mdescLeft">&#160;</td><td class="mdescRight">The context of the gRPC command. <br /></td></tr>
+<tr class="separator:a752c4dc80b04fb3bd09ddb4f648e8997 inherit pro_attribs_classCatenaServiceImpl_1_1CallData"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Generic CallData class for the SetValue and MultiSetValue RPCs. </p>
-<p>Generic CallData class for the SetValue and MultiSetValue REST RPCs. </p>
+<div class="textblock"><p>Generic <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class for the <a class="el" href="classCatenaServiceImpl_1_1SetValue.html" title="CallData class for the SetValue RPC.">SetValue</a> and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> RPCs. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="aed1de1b2bc73b886779ba6efafbd7655" name="aed1de1b2bc73b886779ba6efafbd7655"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed1de1b2bc73b886779ba6efafbd7655">&#9670;&#160;</a></span>MultiSetValue() <span class="overload">[1/4]</span></h2>
+<a id="a72774c3a3015d2bd4cf04fc61f4ee159" name="a72774c3a3015d2bd4cf04fc61f4ee159"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72774c3a3015d2bd4cf04fc61f4ee159">&#9670;&#160;</a></span>MultiSetValue() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">catena::REST::CatenaServiceImpl::MultiSetValue::MultiSetValue </td>
+          <td class="memname">CatenaServiceImpl::MultiSetValue::MultiSetValue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
           <td class="paramname"><em>service</em>, </td>
         </tr>
         <tr>
@@ -238,10 +224,10 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for the CallData class of the MultiSetValue gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a> once initialized. </p>
+<p>Constructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class of the <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794" title="Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.">proceed()</a> once initialized. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">service</td><td>- Pointer to the parent <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="REST API.">CatenaServiceImpl</a>. </td></tr>
+    <tr><td class="paramname">service</td><td>- Pointer to the parent <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a>. </td></tr>
     <tr><td class="paramname">dm</td><td>- Address of the device to get the value from. </td></tr>
     <tr><td class="paramname">ok</td><td>- Flag to check if the command was successfully executed. </td></tr>
   </table>
@@ -250,8 +236,8 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 
 </div>
 </div>
-<a id="a841cba4a7a685e5175e15ef8b7672e55" name="a841cba4a7a685e5175e15ef8b7672e55"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a841cba4a7a685e5175e15ef8b7672e55">&#9670;&#160;</a></span>MultiSetValue() <span class="overload">[2/4]</span></h2>
+<a id="ae10b13562e8b71eb19cffd12c251b6ff" name="ae10b13562e8b71eb19cffd12c251b6ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae10b13562e8b71eb19cffd12c251b6ff">&#9670;&#160;</a></span>MultiSetValue() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -260,9 +246,9 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">catena::REST::CatenaServiceImpl::MultiSetValue::MultiSetValue </td>
+          <td class="memname">CatenaServiceImpl::MultiSetValue::MultiSetValue </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
           <td class="paramname"><em>service</em>, </td>
         </tr>
         <tr>
@@ -297,10 +283,10 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 </div><div class="memdoc">
 
 <p>Constructor class for child classes. </p>
-<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a>.</p>
+<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794" title="Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.">proceed()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">service</td><td>Pointer to the parent <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="REST API.">CatenaServiceImpl</a>. </td></tr>
+    <tr><td class="paramname">service</td><td>Pointer to the parent <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a>. </td></tr>
     <tr><td class="paramname">dm</td><td>Address of the device to get the value from. </td></tr>
     <tr><td class="paramname">ok</td><td>Flag to check if the command was successfully executed. </td></tr>
     <tr><td class="paramname">objectId</td><td>objectCounter_ + 1 </td></tr>
@@ -310,112 +296,9 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 
 </div>
 </div>
-<a id="ac2a4d36f590b569da6470a1a1bac03ae" name="ac2a4d36f590b569da6470a1a1bac03ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac2a4d36f590b569da6470a1a1bac03ae">&#9670;&#160;</a></span>MultiSetValue() <span class="overload">[3/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">catena::REST::CatenaServiceImpl::MultiSetValue::MultiSetValue </td>
-          <td>(</td>
-          <td class="paramtype">tcp::socket &amp;&#160;</td>
-          <td class="paramname"><em>socket</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;&#160;</td>
-          <td class="paramname"><em>context</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Constructor for the MultiSetValue RPC. Calls <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a> once initialized. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to set the value(s) of. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="abf36812e433ff3acbd8bf16e734d37a3" name="abf36812e433ff3acbd8bf16e734d37a3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf36812e433ff3acbd8bf16e734d37a3">&#9670;&#160;</a></span>MultiSetValue() <span class="overload">[4/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">catena::REST::CatenaServiceImpl::MultiSetValue::MultiSetValue </td>
-          <td>(</td>
-          <td class="paramtype">tcp::socket &amp;&#160;</td>
-          <td class="paramname"><em>socket</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;&#160;</td>
-          <td class="paramname"><em>context</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>objectId</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Constructor for child SetValue RPCs. Does not call <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a>. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to set the value(s) of. </td></tr>
-    <tr><td class="paramname">objectId</td><td>The object's unique id. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac0606c7a0ca75a3d572889c5030f8f5e" name="ac0606c7a0ca75a3d572889c5030f8f5e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac0606c7a0ca75a3d572889c5030f8f5e">&#9670;&#160;</a></span>create()</h2>
+<a id="a6025d380ed3a924ea98821455bc0144f" name="a6025d380ed3a924ea98821455bc0144f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6025d380ed3a924ea98821455bc0144f">&#9670;&#160;</a></span>create()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -424,9 +307,9 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::REST::CatenaServiceImpl::MultiSetValue::create </td>
+          <td class="memname">virtual void CatenaServiceImpl::MultiSetValue::create </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
           <td class="paramname"><em>service</em>, </td>
         </tr>
         <tr>
@@ -454,11 +337,11 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 </table>
 </div><div class="memdoc">
 
-<p>Creates a new MultiSetValue object to serve other clients while processing. </p>
-<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a>.</p>
+<p>Creates a new <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> object to serve other clients while processing. </p>
+<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794" title="Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.">proceed()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">service</td><td>Pointer to the parent <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="REST API.">CatenaServiceImpl</a>. </td></tr>
+    <tr><td class="paramname">service</td><td>Pointer to the parent <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a>. </td></tr>
     <tr><td class="paramname">dm</td><td>Address of the device to get the value from. </td></tr>
     <tr><td class="paramname">ok</td><td>Flag to check if the command was successfully executed. </td></tr>
   </table>
@@ -467,8 +350,8 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 
 </div>
 </div>
-<a id="a509fe2415cf96444c34824e0160ce286" name="a509fe2415cf96444c34824e0160ce286"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a509fe2415cf96444c34824e0160ce286">&#9670;&#160;</a></span>finish()</h2>
+<a id="ae5910a6b44b738f341d98a42452df794" name="ae5910a6b44b738f341d98a42452df794"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5910a6b44b738f341d98a42452df794">&#9670;&#160;</a></span>proceed()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -477,67 +360,9 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void catena::REST::CatenaServiceImpl::MultiSetValue::finish </td>
+          <td class="memname">void CatenaServiceImpl::MultiSetValue::proceed </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Finishes the MultiSetValue process. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#ab996fd53aed2f9ee46536cb6da16f68d">catena::REST::ICallData</a>.</p>
-
-</div>
-</div>
-<a id="a4265ca0050c9b0fc56e33a931d889e71" name="a4265ca0050c9b0fc56e33a931d889e71"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4265ca0050c9b0fc56e33a931d889e71">&#9670;&#160;</a></span>proceed() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::REST::CatenaServiceImpl::MultiSetValue::proceed </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>MultiSetValue main process. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a4672626b422b580fa4b9bad98db4205e">catena::REST::ICallData</a>.</p>
-
-</div>
-</div>
-<a id="a67c156efd6d21fd0a6807a4cf349d44c" name="a67c156efd6d21fd0a6807a4cf349d44c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a67c156efd6d21fd0a6807a4cf349d44c">&#9670;&#160;</a></span>proceed() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::REST::CatenaServiceImpl::MultiSetValue::proceed </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *&#160;</td>
           <td class="paramname"><em>service</em>, </td>
         </tr>
         <tr>
@@ -554,24 +379,26 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status. </p>
+<p>Manages the steps of the <a class="el" href="classCatenaServiceImpl_1_1SetValue.html" title="CallData class for the SetValue RPC.">SetValue</a> and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a> gRPC commands through the state variable status. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">service</td><td>- Pointer to the parent <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="REST API.">CatenaServiceImpl</a>. </td></tr>
+    <tr><td class="paramname">service</td><td>- Pointer to the parent <a class="el" href="classCatenaServiceImpl.html" title="Implements Catena gRPC request handlers.">CatenaServiceImpl</a>. </td></tr>
     <tr><td class="paramname">ok</td><td>- Flag to check if the command was successfully executed. </td></tr>
   </table>
   </dd>
 </dl>
 
+<p>Implements <a class="el" href="classCatenaServiceImpl_1_1CallData.html#aba26342ca6c03540492ec0b1d1d8e848">CatenaServiceImpl::CallData</a>.</p>
+
 </div>
 </div>
-<a id="a75a60a08553acb02e2c265cdc560c6d4" name="a75a60a08553acb02e2c265cdc560c6d4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a75a60a08553acb02e2c265cdc560c6d4">&#9670;&#160;</a></span>request()</h2>
+<a id="a58566e199663d84d177068fe39bffc2e" name="a58566e199663d84d177068fe39bffc2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58566e199663d84d177068fe39bffc2e">&#9670;&#160;</a></span>request()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -580,7 +407,7 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::REST::CatenaServiceImpl::MultiSetValue::request </td>
+          <td class="memname">virtual void CatenaServiceImpl::MultiSetValue::request </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -594,12 +421,12 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 </div><div class="memdoc">
 
 <p>Requests Multi Set Value from the system and sets the request to the MultiSetValuePayload. </p>
-<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a>. </p>
+<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794" title="Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.">proceed()</a>. </p>
 
 </div>
 </div>
-<a id="a809bb3595fc994d409e25332fe482626" name="a809bb3595fc994d409e25332fe482626"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a809bb3595fc994d409e25332fe482626">&#9670;&#160;</a></span>toMulti() <span class="overload">[1/2]</span></h2>
+<a id="a934471361153200d99a353e3af96ea31" name="a934471361153200d99a353e3af96ea31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a934471361153200d99a353e3af96ea31">&#9670;&#160;</a></span>toMulti()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -608,7 +435,7 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::REST::CatenaServiceImpl::MultiSetValue::toMulti </td>
+          <td class="memname">virtual void CatenaServiceImpl::MultiSetValue::toMulti </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -622,91 +449,14 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 </div><div class="memdoc">
 
 <p>Converts req_ to a MultiSetValuePayload reqs_. </p>
-<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71" title="MultiSetValue main process.">proceed()</a>.</p>
-<dl class="section note"><dt>Note</dt><dd>Does nothing in MultiSetValue. </dd></dl>
-
-</div>
-</div>
-<a id="acf2f1feb5f56e49c7809436aa316acea" name="acf2f1feb5f56e49c7809436aa316acea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf2f1feb5f56e49c7809436aa316acea">&#9670;&#160;</a></span>toMulti() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual bool catena::REST::CatenaServiceImpl::MultiSetValue::toMulti </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Converts the jsonPayload_ to MultiSetValuePayload reqs_. </p>
-<dl class="section return"><dt>Returns</dt><dd>True if successful. </dd></dl>
-
-</div>
-</div>
-<a id="aa896e2673c14b59e2575a2f9008268f1" name="aa896e2673c14b59e2575a2f9008268f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa896e2673c14b59e2575a2f9008268f1">&#9670;&#160;</a></span>writeConsole()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::REST::CatenaServiceImpl::MultiSetValue::writeConsole </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="ICallData_8h.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a>&#160;</td>
-          <td class="paramname"><em>status</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>ok</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Helper function to write status messages to the API console. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">status</td><td>The current state of the RPC (kCreate, kFinish, etc.) </td></tr>
-    <tr><td class="paramname">ok</td><td>The status of the RPC (open or closed). </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#aac01c64dc350b6f0f7a7bfe3a86f51e1">catena::REST::ICallData</a>.</p>
-
-<p class="reference">References <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a454f72d09095401de41ac48d9c34026a">catena::REST::CatenaServiceImpl::MultiSetValue::objectId_</a>.</p>
+<p>Helper function to allow reuse of <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#ae5910a6b44b738f341d98a42452df794" title="Manages the steps of the SetValue and MultiSetValue gRPC commands through the state variable status.">proceed()</a>.</p>
+<dl class="section note"><dt>Note</dt><dd>Does nothing in <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html" title="Generic CallData class for the SetValue and MultiSetValue RPCs.">MultiSetValue</a>. </dd></dl>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a31308f1f13b4cbed7d565206d849c530" name="a31308f1f13b4cbed7d565206d849c530"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a31308f1f13b4cbed7d565206d849c530">&#9670;&#160;</a></span>dm_</h2>
+<a id="a5cebdf6ab589c11ec20b067a50a74abf" name="a5cebdf6ab589c11ec20b067a50a74abf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cebdf6ab589c11ec20b067a50a74abf">&#9670;&#160;</a></span>errorStatus_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -715,32 +465,7 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp; catena::REST::CatenaServiceImpl::MultiSetValue::dm_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>The device containing the value to set. </p>
-<p>The device to set values of. </p>
-
-</div>
-</div>
-<a id="a385c73296baea5a07aaa778e855f7a2d" name="a385c73296baea5a07aaa778e855f7a2d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a385c73296baea5a07aaa778e855f7a2d">&#9670;&#160;</a></span>errorStatus_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">Status catena::REST::CatenaServiceImpl::MultiSetValue::errorStatus_</td>
+          <td class="memname">Status CatenaServiceImpl::MultiSetValue::errorStatus_</td>
         </tr>
       </table>
   </td>
@@ -753,66 +478,15 @@ tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_<
 
 </div>
 </div>
-<a id="a454f72d09095401de41ac48d9c34026a" name="a454f72d09095401de41ac48d9c34026a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a454f72d09095401de41ac48d9c34026a">&#9670;&#160;</a></span>objectId_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int catena::REST::CatenaServiceImpl::MultiSetValue::objectId_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>The object's unique id. </p>
-<p>ID of the (Multi)SetValue object. </p>
-
-</div>
-</div>
-<a id="a234746127a1d099e23be5ca5652cf8db" name="a234746127a1d099e23be5ca5652cf8db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a234746127a1d099e23be5ca5652cf8db">&#9670;&#160;</a></span>reqs_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">catena::MultiSetValuePayload catena::REST::CatenaServiceImpl::MultiSetValue::reqs_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Server request as a MultiSetValuePayload if not already. </p>
-<p>The MultiSetValuePayload extracted from jsonPayload_. </p>
-
-</div>
-</div>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/runner/work/Catena/Catena/sdks/cpp/connections/gRPC/include/<a class="el" href="gRPC_2include_2MultiSetValue_8h_source.html">MultiSetValue.h</a></li>
-<li>/home/runner/work/Catena/Catena/sdks/cpp/connections/REST/include/controllers/<a class="el" href="REST_2include_2controllers_2MultiSetValue_8h_source.html">MultiSetValue.h</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>/home/runner/work/Catena/Catena/sdks/cpp/connections/gRPC/include/<a class="el" href="MultiSetValue_8h_source.html">MultiSetValue.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespacecatena.html">catena</a></li><li class="navelem"><b>REST</b></li><li class="navelem"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a></li><li class="navelem"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html">MultiSetValue</a></li>
+    <li class="navelem"><a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a></li><li class="navelem"><a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html">MultiSetValue</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>

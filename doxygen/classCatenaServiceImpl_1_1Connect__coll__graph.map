@@ -1,16 +1,7 @@
-<map id="catena::REST::CatenaServiceImpl::Connect" name="catena::REST::CatenaServiceImpl::Connect">
-<area shape="rect" id="Node000001" title="CallData class for the Connect RPC." alt="" coords="91,168,299,208"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,93,84,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="79,123,161,166,159,170,77,127"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1REST_1_1ICallData.html" title="CallData interface class for the REST API RPCs." alt="" coords="108,93,283,119"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="198,132,198,168,193,168,193,132"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="307,93,499,119"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="362,126,245,170,243,165,360,121"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect.h." alt="" coords="80,5,276,31"/>
-<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="222,33,374,91,372,96,220,38"/>
-<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information." alt="" coords="300,5,507,31"/>
-<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="406,45,406,93,401,93,401,45"/>
-<area shape="poly" id="edge6_Node000006_Node000006" title=" " alt="" coords="521,10,533,18,525,25,507,28,506,23,523,20,528,18,519,15"/>
-<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf." alt="" coords="662,5,846,31"/>
-<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="694,37,451,96,449,91,693,31"/>
+<map id="CatenaServiceImpl::Connect" name="CatenaServiceImpl::Connect">
+<area shape="rect" id="Node000001" title="CallData class for the Connect RPC." alt="" coords="5,183,159,223"/>
+<area shape="rect" id="Node000002" href="$classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method." alt="" coords="5,93,159,133"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,147,85,183,79,183,79,147"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="25,5,139,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="85,44,85,93,79,93,79,44"/>
 </map>
