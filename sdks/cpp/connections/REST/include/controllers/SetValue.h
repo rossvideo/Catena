@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,66 +29,51 @@
  */
 
 /**
- * @file api.h
- * @brief Implements REST API
- * @author unknown
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @file SetValue.h
+ * @brief Implements REST SetValue RPC.
+ * @author benjamin.whitten@rossvideo.com
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
-#define CROW_ENABLE_SSL
-#include <crow.h>
-
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
-#include <string>
-
-namespace catena {
+// Connections/REST
+#include "MultiSetValue.h"
+using catena::REST::CatenaServiceImpl;
 
 /**
- * @brief REST API
+ * @brief The SetValue REST RPC.
  */
-class API {
+class CatenaServiceImpl::SetValue : public MultiSetValue {
   public:
-    explicit API(uint16_t port = 443);
-    virtual ~API() = default;
-    API(const API&) = delete;
-    API& operator=(const API&) = delete;
-    API(API&&) = delete;
-    API& operator=(API&&) = delete;
-
     /**
-     * @brief Get the API Version
+     * @brief Constructor for the SetValue RPC. Calls proceed() once
+     * initialized.
      *
-     * @return std::string
+     * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
+     * @param dm The device to set the value of.
+     */ 
+    SetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+    /**
+     * @brief Creates a new rpc object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
      */
-    std::string version() const;
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+      return new SetValue(socket, context, dm);
+    }
+  private:
+    /**
+     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
+     * @returns True if successful.
+     */
+    bool toMulti() override;
 
     /**
-     * @brief run the API
+     * @brief The total # of SetValue objects.
      */
-    void run();
-
-  private:
-    std::string version_;
-    uint16_t port_;
-    crow::SimpleApp app_;
-
-  private:
-  bool is_port_in_use_() const;
+    static int objectCounter_;
 };
-}  // namespace catena
-
-// flags for the API
-// flags.h
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-
-// Declare flags for the API
-ABSL_DECLARE_FLAG(std::string, certs);
-ABSL_DECLARE_FLAG(uint16_t, port);
-ABSL_DECLARE_FLAG(bool, mutual_authc);
-ABSL_DECLARE_FLAG(bool, authz);
-ABSL_DECLARE_FLAG(std::string, static_root);
