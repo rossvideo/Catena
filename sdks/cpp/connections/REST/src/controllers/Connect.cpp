@@ -1,6 +1,6 @@
 
 // Connections/REST
-#include <Connect.h>
+#include <controllers/Connect.h>
 using catena::API;
 
 // Initializes the object counter for Connect to 0.

@@ -1,6 +1,6 @@
 
 // connections/REST
-#include <GetPopulatedSlots.h>
+#include <controllers/GetPopulatedSlots.h>
 
 // Initializes the object counter for GetPopulatedSlots to 0.
 int API::GetPopulatedSlots::objectCounter_ = 0;

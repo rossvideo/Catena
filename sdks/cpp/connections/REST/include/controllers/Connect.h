@@ -29,8 +29,8 @@
  */
 
 /**
- * @file DeviceRequest.h
- * @brief Implements REST DeviceRequest RPC.
+ * @file Connect.h
+ * @brief Implements REST Connect RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -42,37 +42,43 @@
 #include <google/protobuf/util/json_util.h>
 
 // common
+#include <rpc/Connect.h>
 #include <utils.h>
 
 // Connections/REST
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
-#include "ICallData.h"
+#include "interface/ICallData.h"
 using catena::API;
 using catena::REST::CallStatus;
 
 /**
- * @brief CallData class for the DeviceRequest REST RPC.
+ * @brief The Connect REST RPC.
  */
-class API::DeviceRequest : public catena::REST::ICallData {
+class API::Connect : public catena::REST::ICallData, public catena::common::Connect {
   public:
     /**
-     * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
+     * @brief Constructor for the Connect RPC. Calls proceed() once
      * initialized.
      *
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
-     * @param dm The device to get components from.
+     * @param dm The device to connect to.
      */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    Connect(tcp::socket& socket, SocketReader& context, Device& dm);
+    /**
+     * @brief Signal emitted in the case of an error which requires the all
+     * open connections to be shut down.
+     */
+    static vdk::signal<void()> shutdownSignal_;
   private:
     /**
-     * @brief DeviceRequest's main process.
+     * Connect main process
      */
     void proceed() override;
     /**
-     * @brief Finishes the DeviceRequest process.
+     * Finishes the Connect process by disconnecting listeners.
      */
     void finish() override;
     /**
@@ -82,51 +88,54 @@ class API::DeviceRequest : public catena::REST::ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
-      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
+      std::cout << "Connect::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
-    
+    /**
+     * @brief Returns true if the RPC was cancelled.
+     */
+    inline bool isCancelled() override { return !this->socket_.is_open(); }
+
     /**
      * @brief The socket to write the response stream to.
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
-     */
-    SocketReader& context_;
-    /**
      * @brief The SocketWriter object for writing to socket_.
      */
     ChunkedWriter writer_;
     /**
-     * @brief The device to get components from.
+     * @brief The mutex to for locking the object while writing
      */
-    Device& dm_;
+    std::mutex mtx_;
 
     /**
-     * @brief The slot of the device to get the components from.
+     * @brief Id of operation waiting for valueSetByClient to be emitted.
+     * Used when ending the connection.
      */
-    uint32_t slot_;
+    unsigned int valueSetByClientId_;
     /**
-     * @brief The language to return the stream in.
+     * @brief Id of operation waiting for valueSetByServer to be emitted.
+     * Used when ending the connection.
      */
-    std::string language_;
+    unsigned int valueSetByServerId_;
     /**
-     * @brief The detail level to return the stream in.
+     * @brief Id of operation waiting for languageAddedPushUpdate to be
+     * emitted. Used when ending the connection.
      */
-    int detailLevel_;
+    unsigned int languageAddedId_;
     /**
-     * @brief A list of the subscribed oids to return.
-     */
-    std::vector<std::string> subscribedOids_;
-
+     * @brief ID of the shutdown signal for the Connect object
+    */
+    unsigned int shutdownSignalId_;
+    
     /**
-     * @brief ID of the DeviceRequest object
+     * @brief ID of the Connect object
      */
     int objectId_;
     /**
-     * @brief The total # of DeviceRequest objects.
+     * @brief The total # of Connect objects.
      */
     static int objectCounter_;
 };

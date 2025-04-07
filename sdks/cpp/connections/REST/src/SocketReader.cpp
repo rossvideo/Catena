@@ -3,6 +3,12 @@
 using catena::REST::SocketReader;
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
+    // Resetting variables.
+    method_ = "";
+    rpc_ = "";
+    req_ = "";
+    jwsToken_ = "";
+    jsonBody_ = "";
     authorizationEnabled_ = authz;
 
     // Reading the headers.

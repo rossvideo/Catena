@@ -37,6 +37,9 @@
 
 #pragma once
 
+// connections/REST
+#include "interface/ISocketWriter.h"
+
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -55,7 +58,7 @@ namespace REST {
 /**
  * @brief Helper class used to write to a socket using boost.
  */
-class SocketWriter {
+class SocketWriter : public ISocketWriter {
   public:
     /**
      * @brief Constructs a SocketWriter.
@@ -66,13 +69,13 @@ class SocketWriter {
      * @brief Writes a protobuf message to socket in JSON format.
      * @param msg The protobuf message to write as JSON.
      */
-    virtual void write(google::protobuf::Message& msg);
+    virtual void write(google::protobuf::Message& msg) override;
     /**
      * @brief Writes an error message to the socket.
      * @param err The catena::exception_with_status.
      */
-    virtual void write(catena::exception_with_status& err);
-    virtual ~SocketWriter() = default;
+    virtual void write(catena::exception_with_status& err) override;
+
   protected:
     /**
      * @brief The socket to write to.

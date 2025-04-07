@@ -40,8 +40,8 @@
 // common
 #include <Status.h>
 
-// REST/include
-#include "ISocketReader.h"
+// connections/REST
+#include "interface/ISocketReader.h"
 
 // boost
 #include <boost/asio.hpp>

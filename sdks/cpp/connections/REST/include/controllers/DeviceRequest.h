@@ -29,8 +29,8 @@
  */
 
 /**
- * @file GetValue.h
- * @brief Implements REST GetValue RPC.
+ * @file DeviceRequest.h
+ * @brief Implements REST DeviceRequest RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -40,36 +40,39 @@
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
- 
+
+// common
+#include <utils.h>
+
 // Connections/REST
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
-#include "ICallData.h"
+#include "interface/ICallData.h"
 using catena::API;
 using catena::REST::CallStatus;
 
 /**
- * @brief CallData class for the GetValue REST RPC.
+ * @brief CallData class for the DeviceRequest REST RPC.
  */
-class API::GetValue : public catena::REST::ICallData {
+class API::DeviceRequest : public catena::REST::ICallData {
   public:
     /**
-     * @brief Constructor for the GetValue RPC. Calls proceed() once
+     * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
      * initialized.
      *
-     * @param socket The socket to write the response to.
+     * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
-     * @param dm The device to get the value from.
+     * @param dm The device to get components from.
      */ 
-    GetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
   private:
     /**
-     * @brief GetValue's main process.
+     * @brief DeviceRequest's main process.
      */
     void proceed() override;
     /**
-     * @brief Finishes the GetValue process.
+     * @brief Finishes the DeviceRequest process.
      */
     void finish() override;
     /**
@@ -79,13 +82,13 @@ class API::GetValue : public catena::REST::ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
-      std::cout << "GetValue::proceed[" << objectId_ << "]: "
+      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
-
+    
     /**
-     * @brief The socket to write the response to.
+     * @brief The socket to write the response stream to.
      */
     tcp::socket& socket_;
     /**
@@ -95,27 +98,35 @@ class API::GetValue : public catena::REST::ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SocketWriter writer_;
+    ChunkedWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief The device to get components from.
      */
     Device& dm_;
 
     /**
-     * @brief The slot of the device to get the value from.
+     * @brief The slot of the device to get the components from.
      */
-    int slot_;
+    uint32_t slot_;
     /**
-     * @brief The oid of the param to get the value from.
+     * @brief The language to return the stream in.
      */
-    std::string oid_;
+    std::string language_;
+    /**
+     * @brief The detail level to return the stream in.
+     */
+    int detailLevel_;
+    /**
+     * @brief A list of the subscribed oids to return.
+     */
+    std::vector<std::string> subscribedOids_;
 
     /**
-     * @brief ID of the GetValue object
+     * @brief ID of the DeviceRequest object
      */
     int objectId_;
     /**
-     * @brief The total # of GetValue objects.
+     * @brief The total # of DeviceRequest objects.
      */
     static int objectCounter_;
 };

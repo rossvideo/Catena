@@ -1,6 +1,6 @@
 
 // connections/REST
-#include <GetValue.h>
+#include <controllers/GetValue.h>
 
 // Initializes the object counter for GetValue to 0.
 int API::GetValue::objectCounter_ = 0;
