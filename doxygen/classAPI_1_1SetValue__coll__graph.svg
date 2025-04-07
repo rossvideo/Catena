@@ -94,8 +94,8 @@ var sectionId = 'dynsection-1';
 <g id="edge2_Node000002_Node000003" class="edge">
 <title>Node3&#45;&gt;Node2</title>
 <g id="a_edge2_Node000002_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M329.92,-108.99C354.31,-104.07 382.59,-97.97 408,-91.5 428.29,-86.33 450.86,-79.52 468.25,-74.03"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="329.2,-105.56 320.08,-110.95 330.57,-112.43 329.2,-105.56"/>
+<path fill="none" stroke="#63b8ff" d="M327.17,-108.9C352.14,-103.67 381.6,-97.17 408,-90.5 427.61,-85.54 449.41,-79.23 466.58,-74.06"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="326.2,-105.52 317.12,-110.98 327.62,-112.38 326.2,-105.52"/>
 </a>
 </g>
 </g>
@@ -116,7 +116,7 @@ var sectionId = 'dynsection-1';
 <polygon fill="#9a32cd" stroke="#9a32cd" points="353.81,-72.94 344.14,-77.25 354.39,-79.91 353.81,-72.94"/>
 </a>
 </g>
-<text text-anchor="middle" x="385" y="-79.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> context_</text>
+<text text-anchor="middle" x="385" y="-78.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> context_</text>
 </g>
 <!-- Node5 -->
 <g id="Node000005" class="node">
@@ -158,21 +158,39 @@ var sectionId = 'dynsection-1';
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
-<g id="a_Node000007"><a xlink:href="classcatena_1_1common_1_1Device.html" target="_top" xlink:title="Implements the Device interface defined in the protobuf.">
+<g id="a_Node000007"><a xlink:href="classcatena_1_1REST_1_1ISocketWriter.html" target="_top" xlink:title="Interface for the SocketWriter classes.">
+<polygon fill="white" stroke="#666666" points="153,-56 2,-56 2,-37 153,-37 153,-56"/>
+<text text-anchor="middle" x="77.5" y="-44" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::ISocketWriter</text>
+</a>
+</g>
+</g>
+<!-- Node7&#45;&gt;Node6 -->
+<g id="edge6_Node000006_Node000007" class="edge">
+<title>Node7&#45;&gt;Node6</title>
+<g id="a_edge6_Node000006_Node000007"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M163.2,-46.5C173.47,-46.5 183.89,-46.5 193.97,-46.5"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="163,-43 153,-46.5 163,-50 163,-43"/>
+</a>
+</g>
+</g>
+<!-- Node8 -->
+<g id="Node000008" class="node">
+<title>Node8</title>
+<g id="a_Node000008"><a xlink:href="classcatena_1_1common_1_1Device.html" target="_top" xlink:title="Implements the Device interface defined in the protobuf.">
 <polygon fill="white" stroke="#666666" points="337,-19 199,-19 199,0 337,0 337,-19"/>
 <text text-anchor="middle" x="268" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Device</text>
 </a>
 </g>
 </g>
-<!-- Node7&#45;&gt;Node2 -->
-<g id="edge6_Node000002_Node000007" class="edge">
-<title>Node7&#45;&gt;Node2</title>
-<g id="a_edge6_Node000002_Node000007"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M347.04,-19.89C367.06,-23.24 388.45,-27.43 408,-32.5 431,-38.46 456.44,-47.84 474.3,-54.91"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="347.46,-16.41 337.03,-18.26 346.34,-23.32 347.46,-16.41"/>
+<!-- Node8&#45;&gt;Node2 -->
+<g id="edge7_Node000002_Node000008" class="edge">
+<title>Node8&#45;&gt;Node2</title>
+<g id="a_edge7_Node000002_Node000008"><a xlink:title=" ">
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M347.08,-19.1C367.1,-22.32 388.48,-26.41 408,-31.5 431.56,-37.64 457.57,-47.61 475.45,-54.99"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="347.49,-15.62 337.07,-17.55 346.41,-22.54 347.49,-15.62"/>
 </a>
 </g>
-<text text-anchor="middle" x="385" y="-35.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> dm_</text>
+<text text-anchor="middle" x="385" y="-34.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> dm_</text>
 </g>
 </g>
 </svg>

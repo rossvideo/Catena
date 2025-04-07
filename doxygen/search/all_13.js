@@ -17,7 +17,7 @@ var searchData=
   ['setting_20up_20and_20running_14',['Setting up and Running',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md14',1,'']]],
   ['setting_20up_20catena_20service_20s_20with_20docker_15',['Setting up Catena Service(s) with Docker',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15',1,'']]],
   ['setvalue_16',['setvalue',['../classCatenaServiceImpl_1_1SetValue.html#acbe83430f6f115201155574620829cc7',1,'CatenaServiceImpl::SetValue::SetValue()'],['../classAPI_1_1SetValue.html#a44cbbbd06a212034582e4492a89f1c9a',1,'catena::API::SetValue::SetValue()'],['../classcatena_1_1common_1_1Device.html#ab74fd94275de7ec9676e9c7b28fbbed9',1,'catena::common::Device::setValue()'],['../classCatenaServiceImpl_1_1SetValue.html',1,'CatenaServiceImpl::SetValue'],['../classAPI_1_1SetValue.html',1,'catena::API::SetValue']]],
-  ['setvalue_2eh_17',['setvalue.h',['../REST_2include_2SetValue_8h.html',1,'(Global Namespace)'],['../gRPC_2include_2SetValue_8h.html',1,'(Global Namespace)']]],
+  ['setvalue_2eh_17',['setvalue.h',['../REST_2include_2controllers_2SetValue_8h.html',1,'(Global Namespace)'],['../gRPC_2include_2SetValue_8h.html',1,'(Global Namespace)']]],
   ['sharedauthz_5f_18',['sharedAuthz_',['../classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2',1,'catena::common::Connect']]],
   ['sharedflags_2eh_19',['SharedFlags.h',['../SharedFlags_8h.html',1,'']]],
   ['shouldsendparam_20',['shouldSendParam',['../classcatena_1_1common_1_1Device.html#a8bccd839e0caec654535c2dc0bfefabb',1,'catena::common::Device']]],
