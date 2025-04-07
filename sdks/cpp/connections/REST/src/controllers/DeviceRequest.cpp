@@ -1,6 +1,6 @@
 
 // connections/REST
-#include <DeviceRequest.h>
+#include <controllers/DeviceRequest.h>
 
 // Initializes the object counter for Connect to 0.
 int API::DeviceRequest::objectCounter_ = 0;

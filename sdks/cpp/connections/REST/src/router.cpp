@@ -32,12 +32,12 @@
 #include <api.h>
 
 // RPCs
-#include <Connect.h>
-#include <MultiSetValue.h>
-#include <SetValue.h>
-#include <DeviceRequest.h>
-#include <GetValue.h>
-#include <GetPopulatedSlots.h>
+#include <controllers/Connect.h>
+#include <controllers/MultiSetValue.h>
+#include <controllers/SetValue.h>
+#include <controllers/DeviceRequest.h>
+#include <controllers/GetValue.h>
+#include <controllers/GetPopulatedSlots.h>
 
 using catena::API;
 

@@ -1,6 +1,6 @@
 
 // connections/REST
-#include <MultiSetValue.h>
+#include <controllers/MultiSetValue.h>
 
 // Initializes the object counter for MultiSetValue to 0.
 int API::MultiSetValue::objectCounter_ = 0;

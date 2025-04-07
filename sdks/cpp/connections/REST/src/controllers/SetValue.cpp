@@ -1,6 +1,6 @@
 
 // connections/REST
-#include <SetValue.h>
+#include <controllers/SetValue.h>
 
 // Initializes the object counter for SetValue to 0.
 int API::SetValue::objectCounter_ = 0;

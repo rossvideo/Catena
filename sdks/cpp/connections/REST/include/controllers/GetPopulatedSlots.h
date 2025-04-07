@@ -29,8 +29,8 @@
  */
 
 /**
- * @file Connect.h
- * @brief Implements REST Connect RPC.
+ * @file GetPopulatedSlots.h
+ * @brief Implements REST GetPopulatedSlots RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -40,45 +40,36 @@
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
-
-// common
-#include <rpc/Connect.h>
-#include <utils.h>
-
+  
 // Connections/REST
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
-#include "ICallData.h"
+#include "interface/ICallData.h"
 using catena::API;
 using catena::REST::CallStatus;
-
+ 
 /**
- * @brief The Connect REST RPC.
+ * @brief CallData class for the GetPopulatedSlots REST RPC.
  */
-class API::Connect : public catena::REST::ICallData, public catena::common::Connect {
+class API::GetPopulatedSlots : public catena::REST::ICallData {
   public:
     /**
-     * @brief Constructor for the Connect RPC. Calls proceed() once
+     * @brief Constructor for the GetPopulatedSlots RPC. Calls proceed() once
      * initialized.
      *
-     * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
-     * @param dm The device to connect to.
+     * @param socket The socket to write the response to.
+     * @param context The SocketReader object. Here to maintain consistency.
+     * @param dm The device to get the slot of.
      */ 
-    Connect(tcp::socket& socket, SocketReader& context, Device& dm);
-    /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
-     */
-    static vdk::signal<void()> shutdownSignal_;
+    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
   private:
     /**
-     * Connect main process
+     * @brief GetPopulatedSlots's main process.
      */
     void proceed() override;
     /**
-     * Finishes the Connect process by disconnecting listeners.
+     * @brief Finishes the GetPopulatedSlots process.
      */
     void finish() override;
     /**
@@ -92,50 +83,27 @@ class API::Connect : public catena::REST::ICallData, public catena::common::Conn
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
+ 
     /**
-     * @brief Returns true if the RPC was cancelled.
-     */
-    inline bool isCancelled() override { return !this->socket_.is_open(); }
-
-    /**
-     * @brief The socket to write the response stream to.
+     * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SocketWriter writer_;
     /**
-     * @brief The mutex to for locking the object while writing
+     * @brief The device to get slot of.
      */
-    std::mutex mtx_;
-
+    Device& dm_;
+ 
     /**
-     * @brief Id of operation waiting for valueSetByClient to be emitted.
-     * Used when ending the connection.
-     */
-    unsigned int valueSetByClientId_;
-    /**
-     * @brief Id of operation waiting for valueSetByServer to be emitted.
-     * Used when ending the connection.
-     */
-    unsigned int valueSetByServerId_;
-    /**
-     * @brief Id of operation waiting for languageAddedPushUpdate to be
-     * emitted. Used when ending the connection.
-     */
-    unsigned int languageAddedId_;
-    /**
-     * @brief ID of the shutdown signal for the Connect object
-    */
-    unsigned int shutdownSignalId_;
-    
-    /**
-     * @brief ID of the Connect object
+     * @brief ID of the GetPopulatedSlots object
      */
     int objectId_;
     /**
-     * @brief The total # of Connect objects.
+     * @brief The total # of GetPopulatedSlots objects.
      */
     static int objectCounter_;
 };
+ 

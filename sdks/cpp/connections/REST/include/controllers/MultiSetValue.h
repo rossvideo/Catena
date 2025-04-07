@@ -29,8 +29,8 @@
  */
 
 /**
- * @file GetPopulatedSlots.h
- * @brief Implements REST GetPopulatedSlots RPC.
+ * @file MultiSetValue.h
+ * @brief Implements REST MultiSetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -40,36 +40,49 @@
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
-  
+
 // Connections/REST
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
-#include "ICallData.h"
+#include "interface/ICallData.h"
 using catena::API;
 using catena::REST::CallStatus;
- 
+
 /**
- * @brief CallData class for the GetPopulatedSlots REST RPC.
+ * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
  */
-class API::GetPopulatedSlots : public catena::REST::ICallData {
+class API::MultiSetValue : public catena::REST::ICallData {
   public:
     /**
-     * @brief Constructor for the GetPopulatedSlots RPC. Calls proceed() once
+     * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
      * initialized.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object. Here to maintain consistency.
-     * @param dm The device to get the slot of.
+     * @param context The SocketReader object.
+     * @param dm The device to set the value(s) of.
      */ 
-    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
-  private:
+    MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+  protected:
     /**
-     * @brief GetPopulatedSlots's main process.
+     * @brief Constructor for child SetValue RPCs. Does not call proceed().
+     * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
+     * @param dm The device to set the value(s) of.
+     * @param objectId The object's unique id.
+     */
+    MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId);
+    /**
+     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
+     * @returns True if successful.
+     */
+    virtual bool toMulti();
+    /**
+     * @brief MultiSetValue main process.
      */
     void proceed() override;
     /**
-     * @brief Finishes the GetPopulatedSlots process.
+     * @brief Finishes the MultiSetValue process.
      */
     void finish() override;
     /**
@@ -79,31 +92,43 @@ class API::GetPopulatedSlots : public catena::REST::ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
-      std::cout << "Connect::proceed[" << objectId_ << "]: "
+      std::cout << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
- 
+
     /**
      * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
+     * @brief The SocketReader object.
+     */
+    SocketReader& context_;
+    /**
      * @brief The SocketWriter object for writing to socket_.
      */
     SocketWriter writer_;
     /**
-     * @brief The device to get slot of.
+     * @brief The device to set values of.
      */
     Device& dm_;
- 
     /**
-     * @brief ID of the GetPopulatedSlots object
+     * @brief The MultiSetValuePayload extracted from jsonPayload_.
+     */
+    catena::MultiSetValuePayload reqs_;
+
+    /**
+     * @brief ID of the (Multi)SetValue object
      */
     int objectId_;
+  private:
     /**
-     * @brief The total # of GetPopulatedSlots objects.
+     * @brief Name of class to specify rpc in console notifications.
+     */
+    std::string typeName_ = "";
+    /**
+     * @brief The total # of MultiSetValue objects.
      */
     static int objectCounter_;
 };
- 

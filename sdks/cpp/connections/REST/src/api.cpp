@@ -3,7 +3,7 @@
 #include <api.h>
 using catena::API;
 
-#include <Connect.h>
+#include <controllers/Connect.h>
 
 #include "absl/flags/flag.h"
 

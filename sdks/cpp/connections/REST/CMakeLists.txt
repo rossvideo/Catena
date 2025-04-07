@@ -32,15 +32,15 @@ find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
 
 set(sources
     "src/api.cpp"
-    "src/GetPopulatedSlots.cpp"
-    "src/DeviceRequest.cpp"
-    "src/GetValue.cpp"
-    "src/MultiSetValue.cpp"
-    "src/SetValue.cpp"
-    "src/Connect.cpp"
     "src/router.cpp"
     "src/SocketReader.cpp"
     "src/SocketWriter.cpp"
+    "src/controllers/Connect.cpp"
+    "src/controllers/DeviceRequest.cpp"
+    "src/controllers/GetPopulatedSlots.cpp"
+    "src/controllers/GetValue.cpp"
+    "src/controllers/MultiSetValue.cpp"
+    "src/controllers/SetValue.cpp"
 )
 
 add_library(${target} STATIC ${sources})

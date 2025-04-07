@@ -29,8 +29,8 @@
  */
 
 /**
- * @file MultiSetValue.h
- * @brief Implements REST MultiSetValue RPC.
+ * @file GetValue.h
+ * @brief Implements REST GetValue RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -40,49 +40,36 @@
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
-
+ 
 // Connections/REST
 #include "api.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
-#include "ICallData.h"
+#include "interface/ICallData.h"
 using catena::API;
 using catena::REST::CallStatus;
- 
+
 /**
- * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
+ * @brief CallData class for the GetValue REST RPC.
  */
-class API::MultiSetValue : public catena::REST::ICallData {
+class API::GetValue : public catena::REST::ICallData {
   public:
     /**
-     * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
+     * @brief Constructor for the GetValue RPC. Calls proceed() once
      * initialized.
      *
      * @param socket The socket to write the response to.
      * @param context The SocketReader object.
-     * @param dm The device to set the value(s) of.
+     * @param dm The device to get the value from.
      */ 
-    MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm);
-  protected:
+    GetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+  private:
     /**
-     * @brief Constructor for child SetValue RPCs. Does not call proceed().
-     * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
-     * @param dm The device to set the value(s) of.
-     * @param objectId The object's unique id.
-     */
-    MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId);
-    /**
-     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
-     * @returns True if successful.
-     */
-    virtual bool toMulti();
-    /**
-     * @brief MultiSetValue main process.
+     * @brief GetValue's main process.
      */
     void proceed() override;
     /**
-     * @brief Finishes the MultiSetValue process.
+     * @brief Finishes the GetValue process.
      */
     void finish() override;
     /**
@@ -92,7 +79,7 @@ class API::MultiSetValue : public catena::REST::ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
-      std::cout << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
+      std::cout << "GetValue::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
@@ -113,22 +100,22 @@ class API::MultiSetValue : public catena::REST::ICallData {
      * @brief The device to set values of.
      */
     Device& dm_;
-    /**
-     * @brief The MultiSetValuePayload extracted from jsonPayload_.
-     */
-    catena::MultiSetValuePayload reqs_;
 
     /**
-     * @brief ID of the (Multi)SetValue object
+     * @brief The slot of the device to get the value from.
+     */
+    int slot_;
+    /**
+     * @brief The oid of the param to get the value from.
+     */
+    std::string oid_;
+
+    /**
+     * @brief ID of the GetValue object
      */
     int objectId_;
-  private:
     /**
-     * @brief Name of class to specify rpc in console notifications.
-     */
-    std::string typeName_ = "";
-    /**
-     * @brief The total # of MultiSetValue objects.
+     * @brief The total # of GetValue objects.
      */
     static int objectCounter_;
 };
