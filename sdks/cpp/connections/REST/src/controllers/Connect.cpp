@@ -6,8 +6,6 @@ using catena::API;
 // Initializes the object counter for Connect to 0.
 int API::Connect::objectCounter_ = 0;
 
-// API::Connect::Connect(std::string& request, tcp::socket& socket, Device& dm, catena::common::Authorizer* authz) :
-//     socket_{socket}, writer_(socket), catena::common::Connect(dm, authz) {
 API::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_(socket), catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
