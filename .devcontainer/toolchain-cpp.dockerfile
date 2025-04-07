@@ -49,6 +49,6 @@ RUN . /root/toolchain.env \
 
 # Install Google Test
 RUN cd /usr/src/gtest \
-    && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local CMakeLists.txt \
+    && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local/.local CMakeLists.txt \
     && sudo make && sudo cp lib/*.a /usr/lib
 
