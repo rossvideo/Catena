@@ -31,5 +31,8 @@
         }
       }
     }
-  }
+  },
+  "mounts": [
+		"source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind"
+	]
 }
