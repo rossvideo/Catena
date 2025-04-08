@@ -143,10 +143,18 @@ protected:
         }
 
         if (cq) {
-            cq->Shutdown();
+            // Drain the completion queue
             void* ignored_tag;
             bool ignored_ok;
-            while (cq->Next(&ignored_tag, &ignored_ok)) { }
+            
+            // Process events until the queue is empty
+            // The Next() method will return false when there are no more events
+            while (cq->Next(&ignored_tag, &ignored_ok)) {
+                // Just consume the result
+            }
+            
+            // Now shutdown the queue
+            cq->Shutdown();
         }
         
         if (service) {
@@ -198,28 +206,22 @@ TEST_F(BasicParamInfoRequestTest, AddParamToResponses) {
     // Create a mock device
     bool ok = true;
     
+    // Set up expectations for the service
+    EXPECT_CALL(*service, registerItem(::testing::_)).Times(1);
+    EXPECT_CALL(*service, authorizationEnabled()).WillOnce(::testing::Return(false));
+    
     // Create the request
-    // CatenaServiceImpl::BasicParamInfoRequest request(service, *device, ok);
+    CatenaServiceImpl::BasicParamInfoRequest request(service, *device, ok);
     
-    // Create a mock authorizer
-    class MockAuthorizer {
-    public:
-        MOCK_METHOD(bool, readAuthz, (const IParam& param), (const));
-        MOCK_METHOD(bool, writeAuthz, (const IParam& param), (const));
-    };
-    MockAuthorizer authz;
-    
-    // Set up expectations
-    EXPECT_CALL(*param, getName()).WillOnce(testing::Return("testParam"));
-    EXPECT_CALL(*param, getPath()).WillOnce(testing::Return("/test/path"));
-    EXPECT_CALL(*param, getValue()).WillOnce(testing::Return("testValue"));
-    EXPECT_CALL(*param, isArray()).WillOnce(testing::Return(false));
+    // Set up expectations for toProto
+    EXPECT_CALL(*param, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::_))
+        .WillOnce(::testing::Return(catena::exception_with_status("", catena::StatusCode::OK)));
     
     // Call the addParamToResponses method
-    // request.addParamToResponses(param.get(), authz);
+    request.addParamToResponses(param.get(), catena::common::Authorizer::kAuthzDisabled);
     
     // Add assertions here
-    // EXPECT_TRUE(...);
+    SUCCEED();
 }
 
 // Test the updateArrayLengths method
