@@ -5,21 +5,24 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/**",
-                "${env:HOME}/.local/include"
+                "/usr/local/.local/include",
+                "/usr/local/grpc/third_party/protobuf/src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
             "cppStandard": "c++20",
             "intelliSenseMode": "linux-gcc-x64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compileCommands": "${workspaceFolder}/sdks/cpp/build/compile_commands.json"
         },
         {
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${default}",
-                "${env:HOME}/.local/include"
+                "/usr/local/.local/include",
+                "/usr/local/grpc/third_party/protobuf/src"
             ],
             "defines": [],
             "macFrameworkPath": [
@@ -27,11 +30,11 @@
             ],
             "cStandard": "c17",
             "intelliSenseMode": "macos-clang-arm64",
-            "compileCommands": "/Users/jnaylor/Projects/Catena/sdks/cpp/build/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/sdks/cpp/build/compile_commands.json",
             "compilerPath": "/usr/bin/clang++",
             "cppStandard": "c++20",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools"    
         }
     ],
     "version": 4
-}
+} 
