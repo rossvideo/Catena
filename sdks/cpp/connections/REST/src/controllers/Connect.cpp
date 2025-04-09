@@ -37,6 +37,7 @@ Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
 }
 
 void Connect::proceed() {
+void Connect::proceed() {
     if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
