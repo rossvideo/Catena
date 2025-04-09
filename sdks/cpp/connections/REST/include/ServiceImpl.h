@@ -163,7 +163,15 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @brief Mutex for activeRpcs_ counter to avoid collisions.
      */
     std::mutex activeRpcMutex_;
-
+    
+    // Forward declarations of CallData classes for their respective RPC.
+    class Connect;
+    class MultiSetValue;
+    class SetValue;
+    class DeviceRequest;
+    class GetValue;
+    class GetPopulatedSlots;
+    class BasicParamInfoRequest;
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
                                                     tcp::socket&,
