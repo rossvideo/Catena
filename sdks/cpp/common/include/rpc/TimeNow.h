@@ -29,62 +29,35 @@
  */
 
 /**
- * @file ICallData.h
- * @brief Interface class for REST RPCs.
- * @author benjamin.whitten@rossvideo.com
+ * @file TimeNow.h
+ * @brief Contains a function which returns the current time as a string.
+ * @author Unknown See grpc::ServiceImpl.h.
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
-// common
-#include <Enums.h>
-#include <patterns/EnumDecorator.h>
-#include <Device.h>
-
-using DetailLevel = catena::patterns::EnumDecorator<catena::Device_DetailLevel>;
-
-// boost
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-using boost::asio::ip::tcp;
-
-// REST
-#include "SocketReader.h"
-#include "SocketWriter.h"
+// std
+#include <string>
+#include <iostream>
 
 namespace catena {
-namespace REST {
+namespace common {
 
 /**
- * @brief CallData states for status messages.
+ * @brief Returns the current time as a string including microseconds.
  */
-enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
+inline std::string timeNow() {
+    std::stringstream ss;
+    auto now = std::chrono::system_clock::now();
+    auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto epoch = now_micros.time_since_epoch();
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
+       << micros.count() % 1000000;
+    return ss.str();
+}
 
-/**
- * @brief Interface class for the REST API RPCs.
- */
-class ICallData {
-	public:
-		virtual ~ICallData() = default;
-		/**
-		 * @brief The RPC's main process.
-		 */
-		virtual void proceed() = 0;
-		/**
-		 * @brief Finishes the RPC.
-		 */
-		virtual void finish() = 0;
-
-	protected:
-		/**
-		 * @brief Helper function to write status messages to the API console.
-		 * 
-		 * @param status The current state of the RPC (kCreate, kFinish, etc.)
-		 * @param ok The status of the RPC (open or closed).
-		 */
-		virtual inline void writeConsole(CallStatus status, bool ok) const = 0;
-};
-
-};
-};
+} // namespace common
+} // namespace catena
