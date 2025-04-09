@@ -99,20 +99,24 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
                 dm_.detail_level(req_.detail_level());
                 
-                // Reserve space for both service subscriptions and request subscriptions
-                subscribed_oids_.clear();
-                subscribed_oids_.reserve(service_->subscriptionManager_.getAllSubscribedOids(dm_).size() + 
-                                       req_.subscribed_oids().size());
-                
-                // Add service subscriptions
+                // Get service subscriptions from the manager
                 subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
                 
-                // Add request subscriptions if any
+                // If this request has subscriptions, add them
                 if (!req_.subscribed_oids().empty()) {
-                    subscribed_oids_.insert(subscribed_oids_.end(), 
-                                         req_.subscribed_oids().begin(), 
-                                         req_.subscribed_oids().end());
+                    // Add new subscriptions to both the manager and our tracking list
+                    for (const auto& oid : req_.subscribed_oids()) {
+                        catena::exception_with_status rc{"", catena::StatusCode::OK};
+                        if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                        } else {
+                            rpc_subscriptions_.push_back(oid);
+                        }
+                    }
                 }
+                
+                // Get final list of subscriptions for this response
+                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
                 
                 //Handle authorization
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;

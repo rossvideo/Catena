@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,15 +36,17 @@
  * @author john.naylor@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-02-06
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 // connections/gRPC
 #include <ServiceImpl.h>
+#include <ParamVisitor.h>
+
 
 /**
-* @brief CallData class for the BasicParamInfoRequest RPC
-*/
+ * @brief CallData class for the BasicParamInfoRequest RPC
+ */
 class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
     public:
         /**
@@ -57,11 +59,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */ 
         BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok);
 
-        // /**
-        //  * @brief Destructor for the BasicParamInfoRequest class.
-        //  */
-        // ~BasicParamInfoRequest();
-
         /**
          * @brief Manages the steps of the BasicParamInfoRequest gRPC command
          * through the state variable status. Returns the value of the
@@ -72,8 +69,14 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
 
-    private:
+        /**
+         * @brief Helper method to add a parameter to the responses
+         * @param param The parameter to add
+         * @param authz The authorization object
+         */
+        void addParamToResponses(IParam* param, catena::common::Authorizer& authz);
 
+    private:
         /**
          * @brief Updates the array lengths of the responses.
          * 
@@ -81,15 +84,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @param length - The length of the array.
          */
         void updateArrayLengths(const std::string& array_name, uint32_t length);
-
-
-        /**
-         * @brief Gets the children of the parameter.
-         * 
-         * @param param - The parameter to get the children from.
-         * @param oid - The oid of the parameter.
-         */
-       void getChildren(IParam* current_param, const std::string& current_path, catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.
@@ -136,7 +130,6 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          */
         static int objectCounter_;  
 
-
         /**
          * @brief The vector of BasicParamInfoResponse objects.
          */
@@ -155,6 +148,61 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief The writer lock.
          */
-
         std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
+        
+
+        /**
+         * @brief Visitor class for collecting parameter info
+         */
+        class BasicParamInfoVisitor : public catena::common::IParamVisitor {
+            public:
+                /**
+                 * @brief Constructor for the BasicParamInfoVisitor class
+                 * @param device The device to visit
+                 * @param authz The authorizer
+                 * @param responses The vector of responses
+                 * @param request The request
+                 */
+                BasicParamInfoVisitor(Device& device, catena::common::Authorizer& authz, 
+                                    std::vector<catena::BasicParamInfoResponse>& responses,
+                                    BasicParamInfoRequest& request)
+                    : device_(device), authz_(authz), responses_(responses), request_(request) {}
+
+                /**
+                 * @brief Visit a parameter
+                 * @param param The parameter to visit
+                 * @param path The path of the parameter
+                 */
+                void visit(IParam* param, const std::string& path) override;
+                
+                /**
+                 * @brief Visit an array
+                 * @param param The array to visit
+                 * @param path The path of the array
+                 * @param length The length of the array
+                 */
+                void visitArray(IParam* param, const std::string& path, uint32_t length) override;
+
+            private:
+                /**
+                 * @brief The device to visit within the visitor
+                 */
+                Device& device_;
+
+                /**
+                 * @brief The authorizer within the visitor
+                 */
+                catena::common::Authorizer& authz_;
+
+                /**
+                 * @brief The vector of responses within the visitor
+                 */
+                std::vector<catena::BasicParamInfoResponse>& responses_;
+
+                /**
+                 * @brief The request payload within the visitor
+                 */
+                BasicParamInfoRequest& request_;
+        };
 };

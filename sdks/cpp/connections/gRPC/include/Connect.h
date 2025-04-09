@@ -41,8 +41,8 @@
  */
 
 // connections/gRPC
-#include "ServiceImpl.h"
-#include "SubscriptionManager.h"
+#include <ServiceImpl.h>
+#include <SubscriptionManager.h>
 
 /**
 * @brief CallData class for the Connect RPC
@@ -56,9 +56,8 @@ class CatenaServiceImpl::Connect : public CallData {
          * @param service - Pointer to the parent CatenaServiceImpl.
          * @param dm - Address of the device to connect to.
          * @param ok - Flag to check if the command was successfully executed.
-         * @param subscription_manager - Reference to the subscription manager for managing subscriptions.
          */ 
-        Connect(CatenaServiceImpl *service, Device &dm, bool ok, catena::grpc::SubscriptionManager& subscription_manager);
+        Connect(CatenaServiceImpl *service, Device &dm, bool ok);
         /**
          * @brief Manages the steps of the Connect gRPC command
          * through the state variable status. Returns the value of the
