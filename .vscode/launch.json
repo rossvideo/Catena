@@ -156,7 +156,8 @@
       "args": [
         "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
         //  "--secure_comms", "tls", // Unsure if this is functional
-        "--authz"
+        "--authz",
+        "--port=6254"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/sdks/cpp/build",
