@@ -168,6 +168,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     class DeviceRequest;
     class GetValue;
     class GetPopulatedSlots;
+    class BasicParamInfoRequest;
 
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
