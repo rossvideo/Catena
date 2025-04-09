@@ -39,12 +39,18 @@
 
 // Connections/REST
 #include "MultiSetValue.h"
-using catena::REST::CatenaServiceImpl;
+
+namespace catena {
+namespace REST {
 
 /**
- * @brief The SetValue REST RPC.
+ * @brief ICallData class for the SetValue REST RPC.
  */
-class CatenaServiceImpl::SetValue : public MultiSetValue {
+class SetValue : public MultiSetValue {
+  // Specifying which Device and IParam to use (defaults to catena::...)
+  using Device = catena::common::Device;
+  using IParam = catena::common::IParam;
+
   public:
     /**
      * @brief Constructor for the SetValue RPC. Calls proceed() once
@@ -77,3 +83,6 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
      */
     static int objectCounter_;
 };
+
+}; // namespace REST
+}; // namespace catena

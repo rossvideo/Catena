@@ -11,6 +11,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
 #include <controllers/BasicParamInfoRequest.h>
+using catena::REST::Connect;
 
 #include "absl/flags/flag.h"
 
@@ -49,7 +50,7 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
 }
 
 // Initializing the shutdown signal for all open connections.
-vdk::signal<void()> CatenaServiceImpl::Connect::shutdownSignal_;
+vdk::signal<void()> Connect::shutdownSignal_;
 
 void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
@@ -123,18 +124,6 @@ void CatenaServiceImpl::Shutdown() {
     tcp::socket dummySocket(io_context_);
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
 };
-
-std::string CatenaServiceImpl::timeNow() {
-    std::stringstream ss;
-    auto now = std::chrono::system_clock::now();
-    auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-    auto epoch = now_micros.time_since_epoch();
-    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
-    auto now_c = std::chrono::system_clock::to_time_t(now);
-    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
-       << micros.count() % 1000000;
-    return ss.str();
-}
 
 bool CatenaServiceImpl::is_port_in_use_() const {
     try {

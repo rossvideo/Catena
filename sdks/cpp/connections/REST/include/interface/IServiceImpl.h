@@ -57,7 +57,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Interface class for REST ServiceImpl
+ * @brief Interface for the REST::CatenaServiceImpl class
  */
 class IServiceImpl {
 
@@ -94,8 +94,6 @@ class IServiceImpl {
   private:
     /**
      * @brief Returns true if port_ is already in use.
-     * 
-     * Currently unused.
      */
     virtual bool is_port_in_use_() const = 0;
 };
