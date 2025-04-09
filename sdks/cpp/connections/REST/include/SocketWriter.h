@@ -64,7 +64,9 @@ class SocketWriter : public ISocketWriter {
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
      */
-    SocketWriter(tcp::socket& socket) : socket_{socket} {}
+    SocketWriter(tcp::socket& socket, const std::string& origin = "") : socket_{socket} {
+      origin_ = std::string(origin);
+    }
     /**
      * @brief Writes a protobuf message to socket in JSON format.
      * @param msg The protobuf message to write as JSON.
@@ -81,6 +83,7 @@ class SocketWriter : public ISocketWriter {
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
+    std::string origin_;
     /**
      * @brief Maps catena::StatusCode to HTTP status codes.
      */

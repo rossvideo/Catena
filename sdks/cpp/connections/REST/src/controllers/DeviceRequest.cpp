@@ -6,7 +6,7 @@
 int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
 
 CatenaServiceImpl::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, ok_{true} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.

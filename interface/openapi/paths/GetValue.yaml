@@ -61,4 +61,4 @@ get:
         application/json:
           schema:
             $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          example: {string_value: "Hello, world!"}
+          example: {stringValue: "Hello, world!"}

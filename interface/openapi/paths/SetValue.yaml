@@ -39,29 +39,41 @@ put:
   operationId: SetValue
 
   parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameter to set the value of
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+    # - name: slot
+    #   in: path
+    #   required: true
+    #   description: The slot of the device model containing the parameter to set the value of
+    #   schema:
+    #     $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: oid
-      in: path
-      required: true
-      description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      example: "text_box"
+    # - name: oid
+    #   in: path
+    #   required: true
+    #   description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
+    #   schema:
+    #     $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+    #   example: "text_box"
 
-    - name: value
-      in: path
+    # - name: value
+    #   in: path
+    #   required: true
+    #   description: The value to set the parameter specified by oid to
+    #   schema:
+    #     $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+    #   example: {string_value: "Goodbye, world!"}
+
+    - singleSetValuePayload:
+      in: requestBody
       required: true
-      description: The value to set the parameter specified by oid to
+      description: A parameter's oid and a value to set it to
       schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example: {string_value: "Goodbye, world!"}
-      
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          value:
+            $ref: "./Messages.yaml#/$defs/set_value_payload"
+
   responses:
     "200":
       description: Nothing

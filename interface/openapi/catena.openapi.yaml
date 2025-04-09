@@ -40,8 +40,9 @@ info:
   version: '1.0'
 servers:
   - url: https://device.catenamedia.tv/v1
+  - url: http://localhost:443/v1
 paths:
-  /DeviceRequest:
+  /DeviceRequest/slot/{slot}/language/{language}/detail_level/{detail_level}/subscribed_oids/{subscribed_oids}:
     $ref: './paths/DeviceRequest.yaml'
   /GetPopulatedSlots:
     $ref: './paths/GetPopulatedSlots.yaml'
@@ -51,7 +52,7 @@ paths:
     $ref: './paths/ExternalObjectRequest.yaml'
   /BasicParamInfoRequest:
     $ref: './paths/BasicParamInfoRequest.yaml'
-  /GetValue:
+  /GetValue/slot/{slot}/oid/{oid}:
     $ref: './paths/GetValue.yaml'
   /SetValue:
     $ref: './paths/SetValue.yaml'
