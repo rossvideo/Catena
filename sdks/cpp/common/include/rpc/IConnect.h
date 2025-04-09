@@ -48,7 +48,7 @@ namespace catena {
 namespace common {
  
 /**
- * @brief Interface class for Connect.h
+ * @brief Interface class for Connect RPCs
  */
 class IConnect {
   protected:
