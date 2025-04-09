@@ -11,10 +11,9 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
 #include <controllers/AddLanguage.h>
+#include <controllers/BasicParamInfoRequest.h>
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
-#include <controllers/AddLanguage.h>
-#include <controllers/BasicParamInfoRequest.h>
 
 using catena::REST::Connect;
 
