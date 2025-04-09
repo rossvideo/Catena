@@ -95,6 +95,7 @@ class SocketReader : public ISocketReader {
      * @brief Returns the json body of the request, which may be empty.
      */
     const std::string& jsonBody() const override { return jsonBody_; }
+    const std::string& origin() const override { return origin_; }
 
     /**
      * @brief Returns true if authorization is enabled.
@@ -122,6 +123,7 @@ class SocketReader : public ISocketReader {
      * @brief The json body included with the request (empty if no body).
      */
     std::string jsonBody_ = "";
+    std::string origin_ = "";
     /**
      * @brief True if authorization is enabled.
      */

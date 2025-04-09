@@ -97,6 +97,7 @@ class ISocketReader {
      * @brief Returns the json body of the request, which may be empty.
      */
     virtual const std::string& jsonBody() const = 0;
+    virtual const std::string& origin() const = 0;
 
     /**
      * @brief Returns true if authorization is enabled.

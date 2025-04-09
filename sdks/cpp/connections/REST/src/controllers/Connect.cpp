@@ -6,7 +6,7 @@
 int CatenaServiceImpl::Connect::objectCounter_ = 0;
 
 CatenaServiceImpl::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket}, ok_{true}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
+    socket_{socket}, writer_{socket, context.origin()}, ok_{true}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.

@@ -16,7 +16,8 @@ void SocketWriter::write(google::protobuf::Message& msg) {
         std::string headers = "HTTP/1.1 200 OK\r\n"
                               "Content-Type: application/json\r\n"
                               "Content-Length: " + std::to_string(jsonOutput.size()) + "\r\n"
-                              "Connection: close\r\n\r\n";
+                              "Connection: close\r\n"
+                              "Access-Control-Allow-Origin: " + origin_ + "\r\n\r\n";
         boost::asio::write(socket_, boost::asio::buffer(headers + jsonOutput));
     // Error
     } else {
@@ -30,7 +31,8 @@ void SocketWriter::write(catena::exception_with_status& err) {
     std::string headers = "HTTP/1.1 " + std::to_string(codeMap_.at(err.status)) + " " + err.what() + "\r\n"
                           "Content-Type: text/plain\r\n"
                           "Content-Length: " + std::to_string(errMsg.size()) + "\r\n"
-                          "Connection: close\r\n\r\n";
+                          "Connection: close\r\n"
+                          "Access-Control-Allow-Origin: " + origin_ + "\r\n\r\n";
     boost::asio::write(socket_, boost::asio::buffer(headers + errMsg));
 }
 
@@ -47,7 +49,8 @@ void ChunkedWriter::writeHeaders(catena::exception_with_status& status) {
     std::string headers = "HTTP/1.1 " + std::to_string(codeMap_.at(status.status)) + " " + status.what() + "\r\n" +
                           "Content-Type: " + type + "\r\n" +
                           "Transfer-Encoding: chunked\r\n" +
-                          "Connection: keep-alive\r\n\r\n";
+                          "Connection: keep-alive\r\n" +
+                          "Access-Control-Allow-Origin: " + origin_ + "\r\n\r\n";
     boost::asio::write(socket_, boost::asio::buffer(headers));
     hasHeaders_ = true;
 }
