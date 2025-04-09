@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['setvalue_0',['setvalue',['../classcatena_1_1REST_1_1SetValue.html',1,'catena::REST::SetValue'],['../classCatenaServiceImpl_1_1SetValue.html',1,'CatenaServiceImpl::SetValue']]],
+  ['setvalue_0',['SetValue',['../classCatenaServiceImpl_1_1SetValue.html',1,'CatenaServiceImpl']]],
   ['singleton_1',['Singleton',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
   ['singleton_3c_20functory_3c_20k_2c_20r_2c_20ms_2e_2e_2e_20_3e_20_3e_2',['Singleton&lt; Functory&lt; K, R, Ms... &gt; &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],
   ['singleton_3c_20genericfactory_3c_20p_2c_20k_2c_20ms_2e_2e_2e_20_3e_20_3e_3',['Singleton&lt; GenericFactory&lt; P, K, Ms... &gt; &gt;',['../classcatena_1_1patterns_1_1Singleton.html',1,'catena::patterns']]],

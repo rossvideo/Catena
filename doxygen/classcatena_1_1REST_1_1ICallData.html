@@ -98,14 +98,14 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1ICallData.html'
 </div><!--header-->
 <div class="contents">
 
-<p>Interface class for the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API RPCs.  
+<p>CallData interface class for the REST API RPCs.  
  <a href="classcatena_1_1REST_1_1ICallData.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ICallData_8h_source.html">ICallData.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for catena::REST::ICallData:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1ICallData__inherit__graph.svg" width="664" height="250"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1ICallData__inherit__graph.svg" width="442" height="307"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -119,12 +119,12 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:aac01c64dc350b6f0f7a7bfe3a86f51e1" id="r_aac01c64dc350b6f0f7a7bfe3a86f51e1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ICallData.html#aac01c64dc350b6f0f7a7bfe3a86f51e1">writeConsole</a> (<a class="el" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, bool ok) const =0</td></tr>
+<tr class="memitem:aac01c64dc350b6f0f7a7bfe3a86f51e1" id="r_aac01c64dc350b6f0f7a7bfe3a86f51e1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ICallData.html#aac01c64dc350b6f0f7a7bfe3a86f51e1">writeConsole</a> (<a class="el" href="ICallData_8h.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, bool ok) const =0</td></tr>
 <tr class="memdesc:aac01c64dc350b6f0f7a7bfe3a86f51e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to write status messages to the API console.  <br /></td></tr>
 <tr class="separator:aac01c64dc350b6f0f7a7bfe3a86f51e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface class for the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API RPCs. </p>
+<div class="textblock"><p>CallData interface class for the REST API RPCs. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ab996fd53aed2f9ee46536cb6da16f68d" name="ab996fd53aed2f9ee46536cb6da16f68d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab996fd53aed2f9ee46536cb6da16f68d">&#9670;&#160;</a></span>finish()</h2>
@@ -151,7 +151,7 @@ Protected Member Functions</h2></td></tr>
 
 <p>Finishes the RPC. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1Connect.html#ae11e8460525080f9995fef01f01cc30f">catena::REST::Connect</a>, <a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html#ae0d63ccf61525867c41e6252bb76889e">catena::REST::DeviceRequest</a>, <a class="el" href="classcatena_1_1REST_1_1GetPopulatedSlots.html#ab9c77ecd06c8046809b4323593234f3e">catena::REST::GetPopulatedSlots</a>, <a class="el" href="classcatena_1_1REST_1_1GetValue.html#a6b9ad08bd560a69981b351c89ead151c">catena::REST::GetValue</a>, and <a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#ad1c4acd6720dbefe3931d8be4ed3f386">catena::REST::MultiSetValue</a>.</p>
+<p>Implemented in <a class="el" href="classCatenaServiceImpl_1_1Connect.html#a08739c2b51020808659d2424e88d6210">catena::REST::CatenaServiceImpl::Connect</a>, <a class="el" href="classCatenaServiceImpl_1_1DeviceRequest.html#a9eadcc48e435ec474f3d1ee9a784f6eb">catena::REST::CatenaServiceImpl::DeviceRequest</a>, <a class="el" href="classCatenaServiceImpl_1_1GetPopulatedSlots.html#a7be9f2118c977f0b8d97643069a64fac">catena::REST::CatenaServiceImpl::GetPopulatedSlots</a>, <a class="el" href="classCatenaServiceImpl_1_1GetValue.html#a1a9963f00a5b4010262368d2d6f32c2c">catena::REST::CatenaServiceImpl::GetValue</a>, and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a509fe2415cf96444c34824e0160ce286">catena::REST::CatenaServiceImpl::MultiSetValue</a>.</p>
 
 </div>
 </div>
@@ -180,7 +180,7 @@ Protected Member Functions</h2></td></tr>
 
 <p>The RPC's main process. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1Connect.html#aef5391b820b70cdd9666db03b85e0dc6">catena::REST::Connect</a>, <a class="el" href="classcatena_1_1REST_1_1DeviceRequest.html#a204fa7f15bb249fa6db26c94cb488b0d">catena::REST::DeviceRequest</a>, <a class="el" href="classcatena_1_1REST_1_1GetPopulatedSlots.html#a25e9e94e2a6e99dcdc77835a127db85d">catena::REST::GetPopulatedSlots</a>, <a class="el" href="classcatena_1_1REST_1_1GetValue.html#a9121874ea5a4a5a5cdd93e36b8b1ccb5">catena::REST::GetValue</a>, and <a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#aa26fed6e620381131c08323271c131f7">catena::REST::MultiSetValue</a>.</p>
+<p>Implemented in <a class="el" href="classCatenaServiceImpl_1_1Connect.html#af40865765b61252184318e20297cff55">catena::REST::CatenaServiceImpl::Connect</a>, <a class="el" href="classCatenaServiceImpl_1_1DeviceRequest.html#a98e49df417344b673e40b29967a0c5f6">catena::REST::CatenaServiceImpl::DeviceRequest</a>, <a class="el" href="classCatenaServiceImpl_1_1GetPopulatedSlots.html#a76213ae267484607f14c38b9c2dc6a01">catena::REST::CatenaServiceImpl::GetPopulatedSlots</a>, <a class="el" href="classCatenaServiceImpl_1_1GetValue.html#a09b859713a33f5171b3d41da2ec108e3">catena::REST::CatenaServiceImpl::GetValue</a>, and <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#a4265ca0050c9b0fc56e33a931d889e71">catena::REST::CatenaServiceImpl::MultiSetValue</a>.</p>
 
 </div>
 </div>
@@ -196,7 +196,7 @@ Protected Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void catena::REST::ICallData::writeConsole </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="ICallData_8h.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a>&#160;</td>
           <td class="paramname"><em>status</em>, </td>
         </tr>
         <tr>
@@ -227,7 +227,7 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#a6ecf4ac41b40b09b961f0e6edc981889">catena::REST::MultiSetValue</a>.</p>
+<p>Implemented in <a class="el" href="classCatenaServiceImpl_1_1MultiSetValue.html#aa896e2673c14b59e2575a2f9008268f1">catena::REST::CatenaServiceImpl::MultiSetValue</a>.</p>
 
 </div>
 </div>
@@ -239,7 +239,7 @@ Protected Member Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespacecatena.html">catena</a></li><li class="navelem"><a class="el" href="namespacecatena_1_1REST.html">REST</a></li><li class="navelem"><a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a></li>
+    <li class="navelem"><a class="el" href="namespacecatena.html">catena</a></li><li class="navelem"><b>REST</b></li><li class="navelem"><a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
