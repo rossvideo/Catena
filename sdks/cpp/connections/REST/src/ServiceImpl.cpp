@@ -10,6 +10,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/DeviceRequest.h>
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
+#include <controllers/BasicParamInfoRequest.h>
 #include <controllers/AddLanguage.h>
 #include <controllers/BasicParamInfoRequest.h>
 #include <controllers/LanguagePackRequest.h>
@@ -49,6 +50,7 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
     router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
     router_.addProduct("PUT/v1/SetValue",               SetValue::makeOne);
+    router_.addProduct("GET/v1/BasicParamInfoRequest", BasicParamInfoRequest::makeOne);
     router_.addProduct("PUT/v1/AddLanguage",       AddLanguage::makeOne);
     router_.addProduct("GET/v1/BasicParamInfoRequest", BasicParamInfoRequest::makeOne);
     router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
