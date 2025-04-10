@@ -99,7 +99,7 @@ void statusUpdate(){
     loop.detach();
 }
 
-void RunRPCServer() {
+void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
@@ -189,10 +189,10 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     
-    // commands should be defined before starting the RPC server 
+    // commands should be defined before starting the REST server 
     defineCommands();
     
-    std::thread catenaRpcThread(RunRPCServer);
-    catenaRpcThread.join();
+    std::thread catenaRestThread(RunRESTServer);
+    catenaRestThread.join();
     return 0;
 } 
