@@ -50,20 +50,22 @@ using DetailLevel = patterns::EnumDecorator<catena::Device_DetailLevel>;
 
 
 template <>
-inline const common::Scopes::FwdMap common::Scopes::fwdMap_ = {{common::Scopes_e::kUndefined, "undefined"},
-                                               {common::Scopes_e::kMonitor, "st2138:mon"},
-                                               {common::Scopes_e::kOperate, "st2138:op"},
-                                               {common::Scopes_e::kConfig, "st2138:cfg"},
-                                               {common::Scopes_e::kAdmin, "st2138:adm"}};
+inline const common::Scopes::FwdMap common::Scopes::fwdMap_ = {
+  {common::Scopes_e::kUndefined, "undefined"},
+  {common::Scopes_e::kMonitor,   "st2138:mon"},
+  {common::Scopes_e::kOperate,   "st2138:op"},
+  {common::Scopes_e::kConfig,    "st2138:cfg"},
+  {common::Scopes_e::kAdmin,     "st2138:adm"}
+};
 
 
 template <>
 inline const common::DetailLevel::FwdMap common::DetailLevel::fwdMap_ = {
-  {Device_DetailLevel_FULL, "FULL"},
+  {Device_DetailLevel_FULL,          "FULL"},
   {Device_DetailLevel_SUBSCRIPTIONS, "SUBSCRIPTIONS"},
-  {Device_DetailLevel_MINIMAL, "MINIMAL"},
-  {Device_DetailLevel_COMMANDS, "COMMANDS"},
-  {Device_DetailLevel_NONE, "NONE"}};
-
+  {Device_DetailLevel_MINIMAL,       "MINIMAL"},
+  {Device_DetailLevel_COMMANDS,      "COMMANDS"},
+  {Device_DetailLevel_NONE,          "NONE"}
+};
 
 }  // namespace catena

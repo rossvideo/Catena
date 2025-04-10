@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,66 +29,35 @@
  */
 
 /**
- * @file api.h
- * @brief Implements REST API
- * @author unknown
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @file TimeNow.h
+ * @brief Contains a function which returns the current time as a string.
+ * @author Unknown See grpc::ServiceImpl.h.
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
-#define CROW_ENABLE_SSL
-#include <crow.h>
-
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-
+// std
 #include <string>
+#include <iostream>
 
 namespace catena {
+namespace common {
 
 /**
- * @brief REST API
+ * @brief Returns the current time as a string including microseconds.
  */
-class API {
-  public:
-    explicit API(uint16_t port = 443);
-    virtual ~API() = default;
-    API(const API&) = delete;
-    API& operator=(const API&) = delete;
-    API(API&&) = delete;
-    API& operator=(API&&) = delete;
+inline std::string timeNow() {
+    std::stringstream ss;
+    auto now = std::chrono::system_clock::now();
+    auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto epoch = now_micros.time_since_epoch();
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
+       << micros.count() % 1000000;
+    return ss.str();
+}
 
-    /**
-     * @brief Get the API Version
-     *
-     * @return std::string
-     */
-    std::string version() const;
-
-    /**
-     * @brief run the API
-     */
-    void run();
-
-  private:
-    std::string version_;
-    uint16_t port_;
-    crow::SimpleApp app_;
-
-  private:
-  bool is_port_in_use_() const;
-};
-}  // namespace catena
-
-// flags for the API
-// flags.h
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-
-// Declare flags for the API
-ABSL_DECLARE_FLAG(std::string, certs);
-ABSL_DECLARE_FLAG(uint16_t, port);
-ABSL_DECLARE_FLAG(bool, mutual_authc);
-ABSL_DECLARE_FLAG(bool, authz);
-ABSL_DECLARE_FLAG(std::string, static_root);
+} // namespace common
+} // namespace catena

@@ -1,6 +1,6 @@
 {
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [   
       {
         "type": "cppdbg",
         "name": "Debug api_only with lldb",
@@ -87,13 +87,13 @@
         ]
     },
       {
-        "name": "Debug service with gdb",
+        "name": "Debug gRPC service with gdb",
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
-                 "--authz"
+                "--authz"
         ], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
@@ -126,6 +126,53 @@
           "--language",
           "cpp"
       ],
+    },
+    {
+      "name": "Debug Unit Tests with GDB",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/sdks/cpp/build/${input:pickTestExecutable}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/sdks/cpp/build",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          }
+      ],
+      "preLaunchTask": "",
+      "miDebuggerPath": "/usr/bin/gdb"
+    },
+    {
+      "name": "Debug REST service with GDB",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/sdks/cpp/build/connections/REST/examples/${input:pickRestService}/${input:pickRestService}",
+      "args": [
+        "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
+        //  "--secure_comms", "tls", // Unsure if this is functional
+        "--authz",
+        "--port=6254"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/sdks/cpp/build",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          }
+      ],
+      "preLaunchTask": "",
+      "miDebuggerPath": "/usr/bin/gdb"
     }
   ],
   "inputs": [
@@ -171,6 +218,27 @@
                   "common/examples/use_variants/use_variants",
                 ],
       "default": "common/examples/hello_world/hello_world"
+    },
+    {
+      "id": "pickTestExecutable",
+      "description": "Select test executable to debug",
+      "type": "pickString",
+      "options": [
+        "common/tests/common_unit_tests",
+        "connections/gRPC/tests/grpc_unit_tests",
+        "connections/REST/tests/rest_unit_tests"
+      ],
+      "default": "common/tests/common_unit_tests"
+    },
+    {
+      "id": "pickRestService",
+      "description": "Select REST service to debug",
+      "type": "pickString",
+      "options": [
+        //"api_only", // unimplemented
+        "status_update_REST"
+      ],
+      "default": "status_update_REST"
     }
   ]
 
