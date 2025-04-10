@@ -1,11 +1,12 @@
 
 // connections/REST
 #include <controllers/DeviceRequest.h>
+using catena::REST::DeviceRequest;
 
 // Initializes the object counter for Connect to 0.
-int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
+int DeviceRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -35,7 +36,7 @@ CatenaServiceImpl::DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReade
     }
 }
 
-void CatenaServiceImpl::DeviceRequest::proceed() {
+void DeviceRequest::proceed() {
     if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
@@ -70,7 +71,7 @@ void CatenaServiceImpl::DeviceRequest::proceed() {
     }
 }
 
-void CatenaServiceImpl::DeviceRequest::finish() {
+void DeviceRequest::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";

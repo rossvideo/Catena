@@ -1,11 +1,12 @@
 
 // connections/REST
 #include <controllers/Connect.h>
+using catena::REST::Connect;
 
 // Initializes the object counter for Connect to 0.
-int CatenaServiceImpl::Connect::objectCounter_ = 0;
+int Connect::objectCounter_ = 0;
 
-CatenaServiceImpl::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
+Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, ok_{true}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -35,7 +36,7 @@ CatenaServiceImpl::Connect::Connect(tcp::socket& socket, SocketReader& context, 
     }
 }
 
-void CatenaServiceImpl::Connect::proceed() {
+void Connect::proceed() {
     if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
@@ -81,7 +82,7 @@ void CatenaServiceImpl::Connect::proceed() {
     }
 }
 
-void CatenaServiceImpl::Connect::finish() {
+void Connect::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     try {
         shutdownSignal_.disconnect(shutdownSignalId_);
