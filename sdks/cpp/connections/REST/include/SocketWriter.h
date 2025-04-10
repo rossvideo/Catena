@@ -134,6 +134,8 @@ class ChunkedWriter : public SocketWriter {
   public:
     // Using parent constructor
     using SocketWriter::SocketWriter;
+    ChunkedWriter(tcp::socket& socket, const std::string& origin = "*", const std::string& userAgent = "")
+      : SocketWriter{socket, origin}, userAgent_{userAgent} {}
     /**
      * @brief Writes a protobuf message to socket in JSON format.
      * @param msg The protobuf message to write as JSON.
@@ -159,6 +161,10 @@ class ChunkedWriter : public SocketWriter {
      * @brief Indicates whether the writer has written headers or not. 
      */
     bool hasHeaders_ = false;
+    /**
+     * @brief The agent the request was sent from.
+     */
+    std::string userAgent_ = "";
 };
 
 }; // Namespace REST

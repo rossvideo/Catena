@@ -99,5 +99,7 @@ void ChunkedWriter::finish() {
      * POSTMAN does not like this line as they do not support chunked encoding.
      * CURL yells at you if you don't have it.
      */
-    // boost::asio::write(socket_, boost::asio::buffer("0\r\n\r\n"));
+    if (userAgent_.find("Postman") == std::string::npos) {
+        boost::asio::write(socket_, boost::asio::buffer("0\r\n\r\n"));
+    }
 }
