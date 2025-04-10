@@ -38,7 +38,7 @@ add_executable(${TARGET})
 include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
 generate_catena_device(
-    DEVICE_MODEL_YAML ${CMAKE_CURRENT_SOURCE_DIR}/device.status_update.yaml
+    DEVICE_MODEL_YAML ${CMAKE_CURRENT_SOURCE_DIR}/device.video_player.yaml
     TARGET ${TARGET}
 )
 
@@ -61,4 +61,4 @@ target_link_libraries(${TARGET}
 target_compile_features(${TARGET}
     PUBLIC
         cxx_std_20
-)
+) 

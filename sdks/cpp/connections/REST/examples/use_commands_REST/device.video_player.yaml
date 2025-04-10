@@ -1,0 +1,77 @@
+{
+  "slot": 1,
+  "multi_set_enabled": true,
+  "detail_level": "FULL",
+  "access_scopes": ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+  "default_scope": "st2138:op",
+  "subscriptions": true,
+  "language_packs": {},
+  "params": {
+    "dashboard_UI": {
+      "type": "STRING",
+      "minimal_set": true,
+      "oid_aliases": ["0xFF0E"],
+      "read_only": true,
+      "value": { "string_value": "eo://use_commands.grid" }
+    },
+    "state": {
+      "type": "STRING",
+      "read_only": true,
+      "value": { "string_value": "stopped" },
+      "constraint": {
+        "type": "STRING_CHOICE",
+        "string_choice": {
+          "choices": ["stopped", "playing", "paused", "rewinding", "fast_forwarding"],
+          "strict": true
+        }
+      }
+    },
+    "video_file": {
+      "type": "STRING",
+      "value": { "string_value": "eo://video/1" },
+      "constraint": {
+        "type": "STRING_CHOICE",
+        "string_choice": {
+          "choices": ["eo://video/1", "eo://video/2", "eo://video/3"],
+          "strict": true
+        }
+      }
+    },
+    "playback_speed": {
+      "type": "FLOAT32",
+      "value": { "float32_value": 0.0 },
+      "constraint": {
+        "type": "FLOAT_RANGE",
+        "float_range": {
+          "min_value": -2.0,
+          "max_value": 2.0,
+          "step": 0.25
+        }
+      },
+      "read_only": true
+    }
+  },
+  "commands": {
+    "play": {
+      "type":"EMPTY"
+    },
+    "pause": {
+      "type":"EMPTY"
+    },
+    "stop": {
+      "type":"EMPTY"
+    },
+    "rewind": {
+      "type": "EMPTY"
+    },
+    "fast_forward": {
+      "type": "EMPTY"
+    },
+    "load": {
+      "type":"STRING"
+    },
+    "eject": {
+      "type":"EMPTY"
+    }
+  }
+}
