@@ -24,3 +24,6 @@ project(CATENA_REST_EXAMPLES C CXX)
 
 # add_subdirectory("api_only")
 add_subdirectory("status_update_REST")
+add_subdirectory("use_commands_REST")
+add_subdirectory("use_menus_REST")
+add_subdirectory("structs_with_authz_REST")
