@@ -62,7 +62,7 @@ paths:
     $ref: './paths/UpdateSubscriptions.yaml'
   /GetParam:
     $ref: './paths/GetParam.yaml'
-  /Connect:
+  /Connect/language/{language}/detail_level/{detail_level}/user_agent/{user_agent}/force_connection/{force_connection}:
     $ref : './paths/Connect.yaml'
   /AddLanguage:
     $ref: './paths/AddLanguage.yaml'

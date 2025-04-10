@@ -6,7 +6,7 @@
 int CatenaServiceImpl::Connect::objectCounter_ = 0;
 
 CatenaServiceImpl::Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, ok_{true}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
+    socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, ok_{true}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
@@ -40,7 +40,7 @@ void CatenaServiceImpl::Connect::proceed() {
     writeConsole(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
     shutdownSignalId_ = shutdownSignal_.connect([this](){
-        this->socket_.close();
+        shutdown_ = true;
         this->hasUpdate_ = true;
         this->cv_.notify_one();
     });
@@ -63,13 +63,13 @@ void CatenaServiceImpl::Connect::proceed() {
 
     // kWrite: Waiting for updates to send to the client.
     std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
-    while (socket_.is_open()) {
+    while (socket_.is_open() && !shutdown_) {
         lock.lock();
         cv_.wait(lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
-        writeConsole(CallStatus::kWrite, socket_.is_open());
+        writeConsole(CallStatus::kWrite, true);
         try {
-            if (socket_.is_open()) {
+            if (socket_.is_open() && !shutdown_) {
                 res_.set_slot(dm_.slot());
                 writer_.write(res_);
             }
@@ -82,7 +82,7 @@ void CatenaServiceImpl::Connect::proceed() {
 }
 
 void CatenaServiceImpl::Connect::finish() {
-    writeConsole(CallStatus::kFinish, !socket_.is_open());
+    writeConsole(CallStatus::kFinish, socket_.is_open());
     try {
         shutdownSignal_.disconnect(shutdownSignalId_);
         dm_.valueSetByClient.disconnect(valueSetByClientId_);
@@ -90,5 +90,10 @@ void CatenaServiceImpl::Connect::finish() {
         dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
     // Listener not yet initialized.
     } catch (...) {}
+    // Finishing and closing the socket.
+    if (socket_.is_open()) {
+        writer_.finish();
+        socket_.close();
+    }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }
