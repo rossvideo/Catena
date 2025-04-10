@@ -13,6 +13,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/AddLanguage.h>
 #include <controllers/BasicParamInfoRequest.h>
 #include <controllers/LanguagePackRequest.h>
+#include <controllers/ListLanguages.h>
 using catena::REST::Connect;
 
 #include "absl/flags/flag.h"
@@ -51,6 +52,7 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("PUT/v1/AddLanguage",       AddLanguage::makeOne);
     router_.addProduct("GET/v1/BasicParamInfoRequest", BasicParamInfoRequest::makeOne);
     router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
+    router_.addProduct("GET/v1/ListLanguages",     ListLanguages::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
