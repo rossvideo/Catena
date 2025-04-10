@@ -68,6 +68,7 @@ var annotated_dup =
         [ "IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", "classcatena_1_1REST_1_1IServiceImpl" ],
         [ "ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", "classcatena_1_1REST_1_1ISocketReader" ],
         [ "ISocketWriter", "classcatena_1_1REST_1_1ISocketWriter.html", "classcatena_1_1REST_1_1ISocketWriter" ],
+        [ "ListLanguages", "classcatena_1_1REST_1_1ListLanguages.html", "classcatena_1_1REST_1_1ListLanguages" ],
         [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
         [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
