@@ -1,11 +1,12 @@
 
 // connections/REST
 #include <controllers/GetValue.h>
+using catena::REST::GetValue;
 
 // Initializes the object counter for GetValue to 0.
-int CatenaServiceImpl::GetValue::objectCounter_ = 0;
+int GetValue::objectCounter_ = 0;
 
-CatenaServiceImpl::GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -26,7 +27,7 @@ CatenaServiceImpl::GetValue::GetValue(tcp::socket& socket, SocketReader& context
     }
 }
 
-void CatenaServiceImpl::GetValue::proceed() {
+void GetValue::proceed() {
     if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     catena::Value ans;
@@ -53,7 +54,7 @@ void CatenaServiceImpl::GetValue::proceed() {
     }
 }
 
-void CatenaServiceImpl::GetValue::finish() {
+void GetValue::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetValue[" << objectId_ << "] finished\n";
 }

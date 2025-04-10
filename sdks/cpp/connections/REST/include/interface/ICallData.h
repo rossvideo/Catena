@@ -62,7 +62,7 @@ namespace REST {
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
 /**
- * @brief CallData interface class for the REST API RPCs.
+ * @brief Interface class for the REST API RPCs.
  */
 class ICallData {
 	public:

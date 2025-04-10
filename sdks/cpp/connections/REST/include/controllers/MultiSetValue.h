@@ -41,19 +41,32 @@
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
 
+// common
+#include <rpc/TimeNow.h>
+#include <Status.h>
+#include <IParam.h>
+#include <Device.h>
+#include <utils.h>
+#include <Authorization.h>
+#include <Enums.h>
+
 // Connections/REST
-#include "ServiceImpl.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-using catena::REST::CatenaServiceImpl;
-using catena::REST::CallStatus;
+
+namespace catena {
+namespace REST {
 
 /**
- * @brief Generic CallData class for the SetValue and MultiSetValue REST RPCs.
+ * @brief Generic ICallData class for the SetValue and MultiSetValue REST RPCs.
  */
-class CatenaServiceImpl::MultiSetValue : public catena::REST::ICallData {
+class MultiSetValue : public ICallData {
   public:
+    // Specifying which Device and IParam to use (defaults to catena::...)
+    using Device = catena::common::Device;
+    using IParam = catena::common::IParam;
+
     /**
      * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
      * initialized.
@@ -103,8 +116,9 @@ class CatenaServiceImpl::MultiSetValue : public catena::REST::ICallData {
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
       std::cout << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
-                << timeNow() << " status: "<< static_cast<int>(status)
-                <<", ok: "<< std::boolalpha << ok << std::endl;
+                << catena::common::timeNow() << " status: "
+                << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
+                << std::endl;
     }
 
     /**
@@ -142,3 +156,6 @@ class CatenaServiceImpl::MultiSetValue : public catena::REST::ICallData {
      */
     static int objectCounter_;
 };
+
+}; // namespace REST
+}; // namespace catena
