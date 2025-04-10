@@ -95,6 +95,9 @@ class SocketReader : public ISocketReader {
      * @brief Returns the json body of the request, which may be empty.
      */
     const std::string& jsonBody() const override { return jsonBody_; }
+    /**
+     * @brief Returns the origin of the request.
+     */
     const std::string& origin() const override { return origin_; }
 
     /**
@@ -123,6 +126,9 @@ class SocketReader : public ISocketReader {
      * @brief The json body included with the request (empty if no body).
      */
     std::string jsonBody_ = "";
+    /**
+     * @brief The origin of the request. Required for CORS headers.
+     */
     std::string origin_ = "";
     /**
      * @brief True if authorization is enabled.

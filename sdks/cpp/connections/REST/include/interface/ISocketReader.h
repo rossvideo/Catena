@@ -97,6 +97,9 @@ class ISocketReader {
      * @brief Returns the json body of the request, which may be empty.
      */
     virtual const std::string& jsonBody() const = 0;
+    /**
+     * @brief Returns the origin of the request.
+     */
     virtual const std::string& origin() const = 0;
 
     /**
