@@ -27,6 +27,7 @@ RUN . /root/toolchain.env \
     ninja-build=$NINJA_VERSION \
     gdb=$GNU_DEBUGGER_VERSION \
     valgrind=$VALGRIND_VERSION \
+    curl=$CURL_VERSION \
     && npm install -g n \
     && apt-get clean
 

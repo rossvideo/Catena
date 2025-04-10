@@ -43,21 +43,31 @@
 
 // common
 #include <rpc/Connect.h>
+#include <rpc/TimeNow.h>
+#include <Status.h>
+#include <IParam.h>
+#include <Device.h>
 #include <utils.h>
+#include <Authorization.h>
+#include <Enums.h>
 
 // Connections/REST
-#include "ServiceImpl.h"
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-using catena::REST::CatenaServiceImpl;
-using catena::REST::CallStatus;
+
+namespace catena {
+namespace REST {
 
 /**
- * @brief The Connect REST RPC.
+ * @brief ICallData class for the Connect REST RPC.
  */
-class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena::common::Connect {
+class Connect : public ICallData, public catena::common::Connect {
   public:
+    // Specifying which Device and IParam to use (defaults to catena::...)
+    using Device = catena::common::Device;
+    using IParam = catena::common::IParam;
+
     /**
      * @brief Constructor for the Connect RPC. Calls proceed() once
      * initialized.
@@ -100,8 +110,9 @@ class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
       std::cout << "Connect::proceed[" << objectId_ << "]: "
-                << timeNow() << " status: "<< static_cast<int>(status)
-                <<", ok: "<< std::boolalpha << ok << std::endl;
+                << catena::common::timeNow() << " status: "
+                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
+                << std::endl;
     }
     /**
      * @brief Returns true if the RPC was cancelled.
@@ -154,3 +165,6 @@ class CatenaServiceImpl::Connect : public catena::REST::ICallData, public catena
      */
     static int objectCounter_;
 };
+
+}; // namespace REST
+}; // namespace catena

@@ -17,7 +17,7 @@
   },
   "postCreateCommand": "echo 'Development container is ready!'",
   "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
-  "forwardPorts": [6254],
+  "forwardPorts": [6254, 8000, 8080, 443],
   "remoteUser": "${localEnv:USER}",
   "workspaceFolder": "/home/${localEnv:USER}/Catena",
   "customizations": {
@@ -32,6 +32,7 @@
       }
     }
   },
+
   "mounts": [
     // Mount the build directory as a volume first so that it doesn't sync back to the host
     "source=catena-build,target=/home/${localEnv:USER}/Catena/sdks/cpp/build,type=volume", 

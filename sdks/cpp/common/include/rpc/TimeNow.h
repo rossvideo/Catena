@@ -29,60 +29,35 @@
  */
 
 /**
- * @file IConnect.h
- * @brief Interface for Connect.h
- * @author Ben Whitten (benjamin.whitten@rossvideo.com)
- * @copyright Copyright (c) 2025 Ross Video
+ * @file TimeNow.h
+ * @brief Contains a function which returns the current time as a string.
+ * @author Unknown See grpc::ServiceImpl.h.
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
-// common
-#include <IParam.h>
-// Proto
-#include <interface/device.pb.h>
-// Std
+// std
 #include <string>
+#include <iostream>
 
 namespace catena {
 namespace common {
- 
+
 /**
- * @brief Interface class for Connect RPCs
+ * @brief Returns the current time as a string including microseconds.
  */
-class IConnect {
-  protected:
-    IConnect() = default;
-    IConnect(const IConnect&) = default;
-    IConnect& operator=(const IConnect&) = default;
-    IConnect(IConnect&&) = default;
-    IConnect& operator=(IConnect&&) = default;
-    virtual ~IConnect() = default;
+inline std::string timeNow() {
+    std::stringstream ss;
+    auto now = std::chrono::system_clock::now();
+    auto now_micros = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto epoch = now_micros.time_since_epoch();
+    auto micros = std::chrono::duration_cast<std::chrono::microseconds>(epoch);
+    auto now_c = std::chrono::system_clock::to_time_t(now);
+    ss << std::put_time(std::localtime(&now_c), "%F %T") << '.' << std::setw(6) << std::setfill('0')
+       << micros.count() % 1000000;
+    return ss.str();
+}
 
-    /**
-     * @brief Returns true if the call has been canceled.
-     */
-    virtual inline bool isCancelled() = 0;
-
-    /**
-     * @brief Updates the response message with parameter values and handles 
-     * authorization checks.
-     * 
-     * @param oid - The OID of the value to update
-     * @param idx - The index of the value to update
-     * @param p - The parameter to update
-     */
-    virtual void updateResponse(const std::string& oid, size_t idx, const IParam* p) = 0;
-    
-    /**
-     * @brief Updates the response message with a ComponentLanguagePack and
-     * handles authorization checks.
-     * 
-     * @param l The added ComponentLanguagePack emitted by device.
-     */
-    virtual void updateResponse(const catena::DeviceComponent_ComponentLanguagePack& l) = 0;
-};
- 
-}; // common
-}; // catena
- 
+} // namespace common
+} // namespace catena
