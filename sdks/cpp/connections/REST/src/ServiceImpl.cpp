@@ -10,6 +10,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/DeviceRequest.h>
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
+#include <controllers/LanguagePackRequest.h>
 using catena::REST::Connect;
 
 #include "absl/flags/flag.h"
@@ -39,12 +40,13 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     }
 
     // Initializing the routes for router_.
-    router_.addProduct("GET/v1/Connect",           Connect::makeOne);
-    router_.addProduct("GET/v1/DeviceRequest",     DeviceRequest::makeOne);
-    router_.addProduct("GET/v1/GetPopulatedSlots", GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/v1/GetValue",          GetValue::makeOne);
-    router_.addProduct("PUT/v1/MultiSetValue",     MultiSetValue::makeOne);
-    router_.addProduct("PUT/v1/SetValue",          SetValue::makeOne);
+    router_.addProduct("GET/v1/Connect",                Connect::makeOne);
+    router_.addProduct("GET/v1/DeviceRequest",          DeviceRequest::makeOne);
+    router_.addProduct("GET/v1/GetPopulatedSlots",      GetPopulatedSlots::makeOne);
+    router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
+    router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
+    router_.addProduct("PUT/v1/SetValue",               SetValue::makeOne);
+    router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
