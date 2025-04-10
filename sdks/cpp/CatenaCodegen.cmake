@@ -22,8 +22,9 @@ cmake_minimum_required(VERSION 3.20)
 
 # Function to generate Catena device source code from a device model file (JSON or YAML)
 # Arguments: 
-# . DEVICE_MODEL_JSON (Optional) location of the device model json file
-# . DEVICE_MODEL_YAML (Optional) location of the device model yaml file
+# . DEVICE_MODEL_JSON (Required) location of the device model json file
+# . DEVICE_MODEL_YAML (Required) location of the device model yaml file
+#   Note: At least ONE of DEVICE_MODEL_JSON or DEVICE_MODEL_YAML must be provided
 # . TARGET (Optional) the target to add the generated files to
 # . OUT_DIR (Optional) the directory that the generated files will be placed in, defaults to the current binary directory
 # . HDR_OUT_VAR (Optional) the variable to store the generated header file
