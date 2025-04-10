@@ -1,4 +1,4 @@
 var connections_2REST_2include_2controllers_2Connect_8h =
 [
-    [ "catena::REST::CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", "classCatenaServiceImpl_1_1Connect" ]
+    [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ]
 ];

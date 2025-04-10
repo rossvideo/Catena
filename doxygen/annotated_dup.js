@@ -57,13 +57,19 @@ var annotated_dup =
         [ "GenericFactory", "classcatena_1_1patterns_1_1GenericFactory.html", "classcatena_1_1patterns_1_1GenericFactory" ],
         [ "Singleton", "classcatena_1_1patterns_1_1Singleton.html", "classcatena_1_1patterns_1_1Singleton" ]
       ] ],
-      [ "REST", null, [
+      [ "REST", "namespacecatena_1_1REST.html", [
         [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
         [ "ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", "classcatena_1_1REST_1_1ChunkedWriter" ],
+        [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
+        [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
+        [ "GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", "classcatena_1_1REST_1_1GetPopulatedSlots" ],
+        [ "GetValue", "classcatena_1_1REST_1_1GetValue.html", "classcatena_1_1REST_1_1GetValue" ],
         [ "ICallData", "classcatena_1_1REST_1_1ICallData.html", "classcatena_1_1REST_1_1ICallData" ],
         [ "IServiceImpl", "classcatena_1_1REST_1_1IServiceImpl.html", "classcatena_1_1REST_1_1IServiceImpl" ],
         [ "ISocketReader", "classcatena_1_1REST_1_1ISocketReader.html", "classcatena_1_1REST_1_1ISocketReader" ],
         [ "ISocketWriter", "classcatena_1_1REST_1_1ISocketWriter.html", "classcatena_1_1REST_1_1ISocketWriter" ],
+        [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
+        [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
         [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ]
       ] ],

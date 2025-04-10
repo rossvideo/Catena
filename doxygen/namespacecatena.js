@@ -3,6 +3,7 @@ var namespacecatena =
     [ "common", "namespacecatena_1_1common.html", "namespacecatena_1_1common" ],
     [ "meta", "namespacecatena_1_1meta.html", "namespacecatena_1_1meta" ],
     [ "patterns", "namespacecatena_1_1patterns.html", "namespacecatena_1_1patterns" ],
+    [ "REST", "namespacecatena_1_1REST.html", "namespacecatena_1_1REST" ],
     [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
     [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],
     [ "PeerManager", "classcatena_1_1PeerManager.html", "classcatena_1_1PeerManager" ],

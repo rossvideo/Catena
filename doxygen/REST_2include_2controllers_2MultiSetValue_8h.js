@@ -1,4 +1,4 @@
 var REST_2include_2controllers_2MultiSetValue_8h =
 [
-    [ "catena::REST::CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", "classCatenaServiceImpl_1_1MultiSetValue" ]
+    [ "catena::REST::MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ]
 ];
