@@ -71,11 +71,16 @@ void CatenaServiceImpl::run() {
                     SocketReader context;
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.rpc();
-                    if (router_.canMake(rpcKey)) {
-                        // Routing to RPC.
+                    // Returning options to the client if required.
+                    if (context.method() == "OPTIONS") {
+                        SocketWriter writer(socket);
+                        writer.writeOptions();
+                    // Otherwise routing to rpc.
+                    } else if (router_.canMake(rpcKey)) {
                         std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);
                         rpc->proceed();
                         rpc->finish();
+                    // ERROR
                     } else {
                         rc = catena::exception_with_status("RPC " + rpcKey + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
                     }
