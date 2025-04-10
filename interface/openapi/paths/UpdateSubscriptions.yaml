@@ -45,28 +45,27 @@ put:
       description: The slot of the device model containing the parameters to add/remove from client's subscriptions
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-      
-    - name: added_oids
-      in: path
-      required: false
-      description: A list of oids to add to the client's subscriptions
-      schema:
-        type: array
-        items:
-          $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: []
-      example: ["/text_box"]
-    
-    - name: removed_oids
-      in: path
-      required: false
-      description: A list of oids to remove from the client's subscriptions
-      schema:
-        type: array
-        items:
-          $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: []
-      example: ["/counter"]
+
+  requestBody:
+    required: true
+    description: A list of oids to add/remove from the client's subscriptions
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            added_oids:
+              type: array
+              items:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+            removed_oids:
+              type: array
+              items:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+        example: {
+          added_oids: ["/text_box"],
+          removed_oids: ["/counter"]
+        }
   
   responses:
     "200":

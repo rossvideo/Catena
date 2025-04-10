@@ -54,14 +54,6 @@ put:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
       default: "pause"
     
-    - name: value
-      in: path
-      required: false
-      description: Optional value to pass to the command if required
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      default: {string_value: "eo://video/1"}
-    
     - name: respond
       in: path
       required: false
@@ -77,6 +69,16 @@ put:
       schema:
         type: boolean
       default: false
+    
+  requestBody:
+    required: false
+    description: Optional value to pass to the command if required
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+        example: {string_value: "eo://video/1"}
+
     
   responses:
     "200":

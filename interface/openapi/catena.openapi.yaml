@@ -46,11 +46,11 @@ paths:
     $ref: './paths/DeviceRequest.yaml'
   /GetPopulatedSlots:
     $ref: './paths/GetPopulatedSlots.yaml'
-  /ExecuteCommand:
+  /ExecuteCommand/slot/{slot}/oid/{oid}/response/{respond}/proceed/{proceed}:
     $ref: "./paths/ExecuteCommand.yaml"
-  /ExternalObjectRequest:
+  /ExternalObjectRequest/slot/{slot}/oid/{oid}:
     $ref: './paths/ExternalObjectRequest.yaml'
-  /BasicParamInfoRequest:
+  /BasicParamInfoRequest/slot/{slot}/oid_prefix/{oid_prefix}/recursive/{recursive}:
     $ref: './paths/BasicParamInfoRequest.yaml'
   /GetValue/slot/{slot}/oid/{oid}:
     $ref: './paths/GetValue.yaml'
@@ -58,15 +58,15 @@ paths:
     $ref: './paths/SetValue.yaml'
   /MultiSetValue:
     $ref: './paths/MultiSetValue.yaml'
-  /UpdateSubscriptions:
+  /UpdateSubscriptions/slot/{slot}:
     $ref: './paths/UpdateSubscriptions.yaml'
-  /GetParam:
+  /GetParam/slot/{slot}/oid/{oid}:
     $ref: './paths/GetParam.yaml'
   /Connect/language/{language}/detail_level/{detail_level}/user_agent/{user_agent}/force_connection/{force_connection}:
     $ref : './paths/Connect.yaml'
-  /AddLanguage:
+  /AddLanguage/slot/{slot}/id/{id}:
     $ref: './paths/AddLanguage.yaml'
-  /LanguagePackRequest:
+  /LanguagePackRequest/slot/{slot}/language/{language}:
     $ref: './paths/LanguagePackRequest.yaml'
-  /ListLanguages:
+  /ListLanguages/slot/{slot}:
     $ref: './paths/ListLanguages.yaml'
