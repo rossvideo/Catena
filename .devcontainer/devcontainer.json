@@ -16,7 +16,6 @@
       }
   },
   "postCreateCommand": "echo 'Development container is ready!'",
-  "postStartCommand": "cd ~/Catena/sdks/cpp/build/doxygen/html && python3 -m http.server 8000",
   "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
   "forwardPorts": [6254, 8000, 8080, 443],
   "remoteUser": "${localEnv:USER}",
