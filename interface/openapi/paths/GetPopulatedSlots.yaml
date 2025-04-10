@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Ross Video Ltd
+# Copyright 2024 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -29,44 +29,20 @@
 #
 
 #
-# OpenAPI documentation of the RPCs for the Catena REST API
+# OpenAPI documentation of the GetPopulatedSlots RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
-openapi: '3.0.3'
-info:
-  title: Catena API
-  version: '1.0'
-servers:
-  - url: https://device.catenamedia.tv/v1
-  - url: http://localhost:443/v1
-paths:
-  /DeviceRequest/slot/{slot}/language/{language}/detail_level/{detail_level}/subscribed_oids/{subscribed_oids}:
-    $ref: './paths/DeviceRequest.yaml'
-  /GetPopulatedSlots:
-    $ref: './paths/GetPopulatedSlots.yaml'
-  /ExecuteCommand/slot/{slot}/oid/{oid}/response/{respond}/proceed/{proceed}:
-    $ref: "./paths/ExecuteCommand.yaml"
-  /ExternalObjectRequest/slot/{slot}/oid/{oid}:
-    $ref: './paths/ExternalObjectRequest.yaml'
-  /BasicParamInfoRequest/slot/{slot}/oid_prefix/{oid_prefix}/recursive/{recursive}:
-    $ref: './paths/BasicParamInfoRequest.yaml'
-  /GetValue/slot/{slot}/oid/{oid}:
-    $ref: './paths/GetValue.yaml'
-  /SetValue:
-    $ref: './paths/SetValue.yaml'
-  /MultiSetValue:
-    $ref: './paths/MultiSetValue.yaml'
-  /UpdateSubscriptions/slot/{slot}:
-    $ref: './paths/UpdateSubscriptions.yaml'
-  /GetParam/slot/{slot}/oid/{oid}:
-    $ref: './paths/GetParam.yaml'
-  /Connect/language/{language}/detail_level/{detail_level}/user_agent/{user_agent}/force_connection/{force_connection}:
-    $ref : './paths/Connect.yaml'
-  /AddLanguage/slot/{slot}/id/{id}:
-    $ref: './paths/AddLanguage.yaml'
-  /LanguagePackRequest/slot/{slot}/language/{language}:
-    $ref: './paths/LanguagePackRequest.yaml'
-  /ListLanguages/slot/{slot}:
-    $ref: './paths/ListLanguages.yaml'
+get:
+  summary: Get the slots populated with a device model
+  operationId: GetPopulatedSlots
+  
+  responses:
+    "200":
+      description: A list of populated slot ids
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
+          example: [1, 2, 3]

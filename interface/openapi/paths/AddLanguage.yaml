@@ -29,44 +29,46 @@
 #
 
 #
-# OpenAPI documentation of the RPCs for the Catena REST API
+# OpenAPI documentation of the AddLanguage RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
-openapi: '3.0.3'
-info:
-  title: Catena API
-  version: '1.0'
-servers:
-  - url: https://device.catenamedia.tv/v1
-  - url: http://localhost:443/v1
-paths:
-  /DeviceRequest/slot/{slot}/language/{language}/detail_level/{detail_level}/subscribed_oids/{subscribed_oids}:
-    $ref: './paths/DeviceRequest.yaml'
-  /GetPopulatedSlots:
-    $ref: './paths/GetPopulatedSlots.yaml'
-  /ExecuteCommand/slot/{slot}/oid/{oid}/response/{respond}/proceed/{proceed}:
-    $ref: "./paths/ExecuteCommand.yaml"
-  /ExternalObjectRequest/slot/{slot}/oid/{oid}:
-    $ref: './paths/ExternalObjectRequest.yaml'
-  /BasicParamInfoRequest/slot/{slot}/oid_prefix/{oid_prefix}/recursive/{recursive}:
-    $ref: './paths/BasicParamInfoRequest.yaml'
-  /GetValue/slot/{slot}/oid/{oid}:
-    $ref: './paths/GetValue.yaml'
-  /SetValue:
-    $ref: './paths/SetValue.yaml'
-  /MultiSetValue:
-    $ref: './paths/MultiSetValue.yaml'
-  /UpdateSubscriptions/slot/{slot}:
-    $ref: './paths/UpdateSubscriptions.yaml'
-  /GetParam/slot/{slot}/oid/{oid}:
-    $ref: './paths/GetParam.yaml'
-  /Connect/language/{language}/detail_level/{detail_level}/user_agent/{user_agent}/force_connection/{force_connection}:
-    $ref : './paths/Connect.yaml'
-  /AddLanguage/slot/{slot}/id/{id}:
-    $ref: './paths/AddLanguage.yaml'
-  /LanguagePackRequest/slot/{slot}/language/{language}:
-    $ref: './paths/LanguagePackRequest.yaml'
-  /ListLanguages/slot/{slot}:
-    $ref: './paths/ListLanguages.yaml'
+put:
+  summary: Adds a language pack to a device model
+  operationId: AddLanguage
+
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model to add the language pack to
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+    
+    - name: id
+      in: path
+      required: true
+      description: The id of the language pack to add to the device model
+      schema:
+        type: string
+      default: ""
+      example: "en"
+
+  requestBody:
+    required: true
+    description: A device's slot, a parameter's oid, and a value to set it to
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
+        example: {"language_pack": {"words": {"greeting": "Hello", "parting": "Goodbye"}, "name": "English"}}
+
+  responses:
+    "200":
+      description: Nothing
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          example: {}
