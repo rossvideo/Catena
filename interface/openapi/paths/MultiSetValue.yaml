@@ -38,23 +38,46 @@ put:
   summary: Set the value of multiple parameters within a device model
   operationId: MultiSetValue
 
-  parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameter to set the value of
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+  requestBody:
+    required: true
+    description: A device's slot and a collection of parameter oids and values to set them to
+    content:
+      application/json:
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          value:
+            type: array
+            items:
+              $ref: "./Messages.yaml#/$defs/set_value_payload"
+        example: {
+            "slot": 1,
+            "values": [
+              {"oid": "/text_box", "value": {"string_value": "Goodbye, world!"}},
+              {"oid": "/counter", "value": {"int32_value": 0}}
+            ]
+          }
 
-    - name: values
-      in: requestBody
-      required: true
-      description: A collection of parameter oids and values to set them to
-      schema:
-        type: array
-        items:
-          $ref: "./Messages.yaml#/$defs/set_value_payload"
-      example: [{"oid": "/text_box", "value": {"string_value": "Goodbye, world!"}}]
+  # Commented out for now, at least while we still use json body and until URL
+  # format is finalized.
+  # parameters:
+  #   - name: slot
+  #     in: path
+  #     required: true
+  #     description: The slot of the device model containing the parameter to set the value of
+  #     schema:
+  #       $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
+  #   - name: values
+  #     in: requestBody
+  #     required: true
+  #     description: A collection of parameter oids and values to set them to
+  #     schema:
+  #       type: array
+  #       items:
+  #         $ref: "./Messages.yaml#/$defs/set_value_payload"
+  #     example: [{"oid": "/text_box", "value": {"string_value": "Goodbye, world!"}}]
       
   responses:
     "200":

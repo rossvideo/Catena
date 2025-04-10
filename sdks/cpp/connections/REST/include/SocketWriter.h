@@ -63,9 +63,13 @@ class SocketWriter : public ISocketWriter {
     /**
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
+     * @param origin The origin of the request.
      */
-    SocketWriter(tcp::socket& socket, const std::string& origin = "") : socket_{socket} {
-      origin_ = std::string(origin);
+    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket} {
+      CORS_ = "Access-Control-Allow-Origin: " + origin + "\r\n"
+              "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
+              "Access-Control-Allow-Credentials: true\r\n";
     }
     /**
      * @brief Writes a protobuf message to socket in JSON format.
@@ -77,13 +81,25 @@ class SocketWriter : public ISocketWriter {
      * @param err The catena::exception_with_status.
      */
     virtual void write(catena::exception_with_status& err) override;
+    /**
+     * @brief Writes a response to the client detaining their options.
+     * Used when method = OPTIONS.
+     */
+    void writeOptions() override;
 
   protected:
     /**
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
-    std::string origin_;
+    /**
+     * @brief CORS headers used for all responses.
+     * Access-Control-Allow-Origin,
+     * Access-Control-Allow-Methods,
+     * Access-Control-Allow-Headers
+     * Access-Control-Allow-Credentials
+     */
+    std::string CORS_;
     /**
      * @brief Maps catena::StatusCode to HTTP status codes.
      */
