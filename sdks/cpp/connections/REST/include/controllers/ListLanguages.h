@@ -67,8 +67,7 @@ class ListLanguages : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the ListLanguages RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the ListLanguages RPC.
      *
      * @param socket The socket to write the response to.
      * @param context The SocketReader object.
@@ -116,7 +115,7 @@ class ListLanguages : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief The device to list languges of.
      */
     Device& dm_;
     /**

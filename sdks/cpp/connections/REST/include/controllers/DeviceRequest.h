@@ -68,8 +68,7 @@ class DeviceRequest : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the DeviceRequest RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the DeviceRequest RPC.
      *
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
