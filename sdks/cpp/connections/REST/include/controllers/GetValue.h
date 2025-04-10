@@ -68,8 +68,7 @@ class GetValue : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the GetValue RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the GetValue RPC.
      *
      * @param socket The socket to write the response to.
      * @param context The SocketReader object.
