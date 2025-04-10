@@ -131,9 +131,9 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
     SocketReader& context_;
     
     /**
-     * @brief The SocketWriter object for writing to socket_.
+     * @brief The ChunkedWriter object for writing to socket_.
      */
-    SocketWriter writer_;
+    ChunkedWriter writer_;
     
     /**
      * @brief The device to get parameter info from.
@@ -170,6 +170,16 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
      */
     std::vector<catena::BasicParamInfoResponse> responses_;
     
+    /**
+     * @brief Mutex for thread safety when writing responses.
+     */
+    std::mutex mtx_;
+    
+    /**
+     * @brief Lock for the writer to prevent concurrent access.
+     */
+    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
     /**
      * @brief Visitor class for collecting parameter info
      */
