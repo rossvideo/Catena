@@ -1,17 +1,18 @@
 
 // connections/REST
 #include <controllers/GetPopulatedSlots.h>
+using catena::REST::GetPopulatedSlots;
 
 // Initializes the object counter for GetPopulatedSlots to 0.
-int CatenaServiceImpl::GetPopulatedSlots::objectCounter_ = 0;
+int GetPopulatedSlots::objectCounter_ = 0;
 
-CatenaServiceImpl::GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm) :
+GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
 }
 
-void CatenaServiceImpl::GetPopulatedSlots::proceed() {
+void GetPopulatedSlots::proceed() {
     writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
         // Getting slot from dm_.
@@ -25,7 +26,7 @@ void CatenaServiceImpl::GetPopulatedSlots::proceed() {
     }
 }
 
-void CatenaServiceImpl::GetPopulatedSlots::finish() {
+void GetPopulatedSlots::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
 }

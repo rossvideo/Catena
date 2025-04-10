@@ -67,10 +67,13 @@ using catena::REST::SocketWriter;
 using catena::REST::ChunkedWriter;
 
 namespace catena {
+/**
+ * @brief Namespace for classes relating to handling REST API requests.
+ */
 namespace REST {
 
 /**
- * @brief REST API
+ * @brief Implements Catena REST API request handlers.
  */
 class CatenaServiceImpl : public catena::REST::IServiceImpl {
 
@@ -114,10 +117,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * Currently unused.
      */
     bool is_port_in_use_() const override;
-    /**
-     * @brief Returns the current time as a string including microseconds.
-     */
-    static std::string timeNow();
 
     /**
      * @brief Provides io functionality for tcp::sockets used in RPCs.
@@ -160,14 +159,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @brief Mutex for activeRpcs_ counter to avoid collisions.
      */
     std::mutex activeRpcMutex_;
-
-    // Forward declarations of CallData classes for their respective RPC.
-    class Connect;
-    class MultiSetValue;
-    class SetValue;
-    class DeviceRequest;
-    class GetValue;
-    class GetPopulatedSlots;
 
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
