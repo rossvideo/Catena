@@ -54,8 +54,8 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& soc
     // Parsing fields and assigning to respective variables.
     try {
         std::unordered_map<std::string, std::string> fields = {
-            {"oid_prefix", ""},
-            {"recursive", "false"}
+            {"recursive", "false"},
+            {"oid_prefix", ""}
         };
         context_.fields(fields);
         oid_prefix_ = fields.at("oid_prefix");
@@ -69,15 +69,23 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& soc
 }
 
 void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
-    if (!ok_) { return; }
-    writeConsole(CallStatus::kProcess, socket_.is_open());
-    
+    writeConsole(CallStatus::kCreate, ok_);
+    if (!ok_) {
+        finish();
+        return;
+    }
+
+    writeConsole(CallStatus::kProcess, ok_);
+    if (!ok_) {
+        finish();
+        return;
+    }
+
     try {
         std::unique_ptr<IParam> param;
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<Authorizer> sharedAuthz;
         Authorizer* authz;
-        
         if (context_.authorizationEnabled()) {
             sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
             authz = sharedAuthz.get();
@@ -95,8 +103,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
             }
 
             if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                Device::LockGuard lg(dm_);                      
-                responses_.clear();  
+                Device::LockGuard lg(dm_);
+                responses_.clear();
                 // Process each top-level parameter
                 for (auto& top_level_param : top_level_params) {
                     // Add the parameter to our response list
@@ -107,15 +115,13 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
                         if (array_length > 0) {
                             updateArrayLengths(top_level_param->getOid(), array_length);
                         }
-                    }   
+                    }
                 }
-                
-                // Write all responses to the client
+                writer_lock_.lock();
                 for (auto& response : responses_) {
                     writer_.write(response);
                 }
-            } else {
-                throw catena::exception_with_status(rc.what(), rc.status);
+                writer_lock_.unlock();
             }
         }
         // Mode 2: Get a specific parameter and its children
@@ -147,9 +153,11 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
                 }
 
                 // Write all responses to the client
+                writer_lock_.lock();
                 for (auto& response : responses_) {
                     writer_.write(response);
                 }
+                writer_lock_.unlock();
             } else {
                 throw catena::exception_with_status(rc.what(), rc.status);
             }
