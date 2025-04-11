@@ -53,7 +53,7 @@ put:
       schema:
         type: string
       default: ""
-      example: "en"
+      example: "sv"
 
   requestBody:
     required: true
@@ -62,7 +62,7 @@ put:
       application/json:
         schema:
           $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
-        example: {"language_pack": {"words": {"greeting": "Hello", "parting": "Goodbye"}, "name": "English"}}
+        example: {"name": "Swedish", "words": {"greeting" : "Hej", "parting" : "Adjo"}}
 
   responses:
     "200":
