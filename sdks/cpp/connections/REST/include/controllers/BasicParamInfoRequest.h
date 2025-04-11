@@ -50,11 +50,13 @@
 
 // common
 #include <ParamVisitor.h>
+#include <rpc/TimeNow.h>
 
 using catena::REST::CatenaServiceImpl;
 using catena::REST::CallStatus;
 using catena::common::IParam;
 using catena::common::IParamVisitor;
+using catena::common::timeNow;
 
 /**
  * @brief CallData class for the BasicParamInfoRequest REST RPC.
