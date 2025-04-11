@@ -37,6 +37,8 @@ std::string catena::readFile(std::filesystem::path path) {
 /**
  * @brief Substitutes all occurences of one char sequence in a string with
  * another.
+ * 
+ * Times out after 1000 iterations.
  *
  * @param str in/out the string to work on
  * @param seq in sequence to match
