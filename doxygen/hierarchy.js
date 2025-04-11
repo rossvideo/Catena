@@ -41,6 +41,7 @@ var hierarchy =
     ] ],
     [ "catena::meta::FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
     [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
+      [ "catena::REST::AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", null ],
       [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
       [ "catena::REST::DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", null ],
       [ "catena::REST::GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", null ],
