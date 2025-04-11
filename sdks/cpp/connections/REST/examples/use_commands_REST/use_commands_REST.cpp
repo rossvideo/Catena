@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -29,17 +29,15 @@
  */
 
 /**
- * @brief Example program to demonstrate setting up a full Catena service with
- * the REST API.
- * @file status_update_REST.cpp
+ * @brief Example program to demonstrate using commands with the REST API.
+ * @file use_commands_REST.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
- * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
- * @author Ben Whitten (Benjamin.whitten@rossvideo.com)
+ * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  */
 
 // device model
-#include "device.status_update.yaml.h" 
+#include "device.video_player.yaml.h" 
 
 //common
 #include <utils.h>
@@ -63,8 +61,6 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
-
-#include <iostream>
 
 using namespace catena::common;
 
@@ -91,78 +87,14 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set counter to " << counter << '\n';
-}
-
-void text_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const std::string& text_box = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
-    std::cout << "*** client set text_box to " << text_box << '\n';
-}
-
-void buttonUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set button to " << button << '\n';
-}
-
-void sliderUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& slider = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set slider to " << slider << '\n';
-}
-
-void combo_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& combo_box = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set combo_box to " << combo_box << '\n';
-}
-
-void statusUpdateExample(){   
+void statusUpdate(){   
     std::thread loop([]() {
-        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
-        handlers["/counter"] = counterUpdateHandler;
-        handlers["/text_box"] = text_boxUpdateHandler;
-        handlers["/button"] = buttonUpdateHandler;
-        handlers["/slider"] = sliderUpdateHandler;
-        handlers["/combo_box"] = combo_boxUpdateHandler;
-
         // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            if (handlers.find(oid) != handlers.end()) {
-                handlers[oid](oid, p, idx);
-            }
+        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+            // all we do here is print out the oid of the parameter that was changed
+            // your biz logic would do something _even_more_ interesting!
+            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
         });
-
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-
-        // The rest is the "sending end" of the status update example
-        std::unique_ptr<IParam> param = dm.getParam("/counter", err);
-        if (param == nullptr) {
-            throw err;
-        }
-
-        // downcast the IParam to a ParamWithValue<int32_t>
-        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
-
-        while (globalLoop) {
-            // update the counter once per second, and emit the event
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            {
-                Device::LockGuard lg(dm); 
-                counter.get()++;
-                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &counter, 0);
-            }
-        }
     });
     loop.detach();
 }
@@ -185,7 +117,7 @@ void RunRESTServer() {
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
-        statusUpdateExample();
+        statusUpdate();
         
         api.run();
     } catch (std::exception &why) {
@@ -193,11 +125,74 @@ void RunRESTServer() {
     }
 }
 
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+
+    // Use an oid to get a pointer to the command you want to define
+    // In Catena, commands have IParam type
+    std::unique_ptr<IParam> playCommand = dm.getCommand("/play", err);
+    assert(playCommand != nullptr);
+
+    // Define a lambda function to be executed when the command is called
+    // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
+    playCommand->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
+        
+        // If the state parameter does not exist, return an exception
+        if (stateParam == nullptr) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details(err.what());
+            return response;
+        }
+
+        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
+        {
+            Device::LockGuard lg(dm);
+            state = "playing";
+            dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+        }
+        
+        std::cout << "video is " << state << "\n";
+        response.mutable_no_response();
+        return response;
+    });
+
+    std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
+    assert(pauseCommand != nullptr);
+    pauseCommand->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
+
+        if (stateParam == nullptr) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details(err.what());
+            return response;
+        }
+
+        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
+        {
+            Device::LockGuard lg(dm);
+            state = "paused";
+            dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+        }
+
+        std::cout << "video is " << state << "\n";
+        response.mutable_no_response();
+        return response;
+    });
+}
+
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
     
+    // commands should be defined before starting the REST server 
+    defineCommands();
+    
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     return 0;
-}
+} 
