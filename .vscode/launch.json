@@ -237,6 +237,7 @@
       "options": [
         //"api_only", // unimplemented
         "status_update_REST",
+        "status_update_REST_JSON",
         "use_commands_REST",
         "use_menus_REST",
         "structs_with_authz_REST"
