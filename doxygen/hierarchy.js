@@ -45,6 +45,7 @@ var hierarchy =
       [ "catena::REST::DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", null ],
       [ "catena::REST::GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", null ],
       [ "catena::REST::GetValue", "classcatena_1_1REST_1_1GetValue.html", null ],
+      [ "catena::REST::LanguagePackRequest", "classcatena_1_1REST_1_1LanguagePackRequest.html", null ],
       [ "catena::REST::ListLanguages", "classcatena_1_1REST_1_1ListLanguages.html", null ],
       [ "catena::REST::MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", [
         [ "catena::REST::SetValue", "classcatena_1_1REST_1_1SetValue.html", null ]
