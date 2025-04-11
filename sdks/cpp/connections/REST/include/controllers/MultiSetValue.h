@@ -68,8 +68,7 @@ class MultiSetValue : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the MultiSetValue RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the MultiSetValue RPC.
      *
      * @param socket The socket to write the response to.
      * @param context The SocketReader object.
