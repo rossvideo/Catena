@@ -10,6 +10,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/DeviceRequest.h>
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
+#include <controllers/AddLanguage.h>
 using catena::REST::Connect;
 
 #include "absl/flags/flag.h"
@@ -45,6 +46,7 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("GET/v1/GetValue",          GetValue::makeOne);
     router_.addProduct("PUT/v1/MultiSetValue",     MultiSetValue::makeOne);
     router_.addProduct("PUT/v1/SetValue",          SetValue::makeOne);
+    router_.addProduct("PUT/v1/AddLanguage",       AddLanguage::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
