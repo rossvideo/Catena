@@ -69,8 +69,7 @@ class Connect : public ICallData, public catena::common::Connect {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the Connect RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the Connect RPC.
      *
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
