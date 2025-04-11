@@ -69,8 +69,7 @@ class Connect : public ICallData, public catena::common::Connect {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the Connect RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the Connect RPC.
      *
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
@@ -155,6 +154,10 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief ID of the shutdown signal for the Connect object
     */
     unsigned int shutdownSignalId_;
+    /**
+     * @brief Flag to indicate when the shutdown signal has been recieved.
+     */
+    bool shutdown_;
     
     /**
      * @brief ID of the Connect object

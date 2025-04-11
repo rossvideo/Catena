@@ -29,44 +29,36 @@
 #
 
 #
-# OpenAPI documentation of the RPCs for the Catena REST API
+# OpenAPI documentation of the GetValue RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
-openapi: '3.0.3'
-info:
-  title: Catena API
-  version: '1.0'
-servers:
-  - url: https://device.catenamedia.tv/v1
-  - url: http://localhost:443/v1
-paths:
-  /DeviceRequest/slot/{slot}/language/{language}/detail_level/{detail_level}/subscribed_oids/{subscribed_oids}:
-    $ref: './paths/DeviceRequest.yaml'
-  /GetPopulatedSlots:
-    $ref: './paths/GetPopulatedSlots.yaml'
-  /ExecuteCommand/slot/{slot}/oid/{oid}/response/{respond}/proceed/{proceed}:
-    $ref: "./paths/ExecuteCommand.yaml"
-  /ExternalObjectRequest/slot/{slot}/oid/{oid}:
-    $ref: './paths/ExternalObjectRequest.yaml'
-  /BasicParamInfoRequest/slot/{slot}/oid_prefix/{oid_prefix}/recursive/{recursive}:
-    $ref: './paths/BasicParamInfoRequest.yaml'
-  /GetValue/slot/{slot}/oid/{oid}:
-    $ref: './paths/GetValue.yaml'
-  /SetValue:
-    $ref: './paths/SetValue.yaml'
-  /MultiSetValue:
-    $ref: './paths/MultiSetValue.yaml'
-  /UpdateSubscriptions/slot/{slot}:
-    $ref: './paths/UpdateSubscriptions.yaml'
-  /GetParam/slot/{slot}/oid/{oid}:
-    $ref: './paths/GetParam.yaml'
-  /Connect/language/{language}/detail_level/{detail_level}/user_agent/{user_agent}/force_connection/{force_connection}:
-    $ref : './paths/Connect.yaml'
-  /AddLanguage/slot/{slot}/id/{id}:
-    $ref: './paths/AddLanguage.yaml'
-  /LanguagePackRequest/slot/{slot}/language/{language}:
-    $ref: './paths/LanguagePackRequest.yaml'
-  /ListLanguages/slot/{slot}:
-    $ref: './paths/ListLanguages.yaml'
+get:
+  summary: Get the value of a parameter within a device model
+  operationId: GetValue
+
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model containing the parameter to get the value from
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
+    - name: oid
+      in: path
+      required: true
+      description: The path to the parameter within the device model to get the value from. For array parameters, suffix with a valid index to only get the value at that index
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+      default: "text_box"
+
+  responses:
+    "200":
+      description: The value of the parameter specified by oid within the device model
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          example: {stringValue: "Hello, world!"}

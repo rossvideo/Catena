@@ -39,7 +39,7 @@
  */
 
 // device model
-#include "device.status_update.yaml.h" 
+#include "device.status_update.json.h" 
 
 //common
 #include <utils.h>

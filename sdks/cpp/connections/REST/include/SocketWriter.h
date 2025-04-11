@@ -63,8 +63,14 @@ class SocketWriter : public ISocketWriter {
     /**
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
+     * @param origin The origin of the request.
      */
-    SocketWriter(tcp::socket& socket) : socket_{socket} {}
+    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket} {
+      CORS_ = "Access-Control-Allow-Origin: " + origin + "\r\n"
+              "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
+              "Access-Control-Allow-Credentials: true\r\n";
+    }
     /**
      * @brief Writes a protobuf message to socket in JSON format.
      * @param msg The protobuf message to write as JSON.
@@ -75,12 +81,25 @@ class SocketWriter : public ISocketWriter {
      * @param err The catena::exception_with_status.
      */
     virtual void write(catena::exception_with_status& err) override;
+    /**
+     * @brief Writes a response to the client detaining their options.
+     * Used when method = OPTIONS.
+     */
+    void writeOptions() override;
 
   protected:
     /**
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
+    /**
+     * @brief CORS headers used for all responses.
+     * Access-Control-Allow-Origin,
+     * Access-Control-Allow-Methods,
+     * Access-Control-Allow-Headers
+     * Access-Control-Allow-Credentials
+     */
+    std::string CORS_;
     /**
      * @brief Maps catena::StatusCode to HTTP status codes.
      */
@@ -115,6 +134,8 @@ class ChunkedWriter : public SocketWriter {
   public:
     // Using parent constructor
     using SocketWriter::SocketWriter;
+    ChunkedWriter(tcp::socket& socket, const std::string& origin = "*", const std::string& userAgent = "")
+      : SocketWriter{socket, origin}, userAgent_{userAgent} {}
     /**
      * @brief Writes a protobuf message to socket in JSON format.
      * @param msg The protobuf message to write as JSON.
@@ -140,6 +161,10 @@ class ChunkedWriter : public SocketWriter {
      * @brief Indicates whether the writer has written headers or not. 
      */
     bool hasHeaders_ = false;
+    /**
+     * @brief The agent the request was sent from.
+     */
+    std::string userAgent_ = "";
 };
 
 }; // Namespace REST

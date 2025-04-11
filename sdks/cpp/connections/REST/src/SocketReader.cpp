@@ -64,6 +64,14 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             jwsToken_.erase(jwsToken_.length() - 1);
             authz = false;
         }
+        // Getting origin
+        else if (header.starts_with("Origin: ")) {
+            origin_ = header.substr(std::string("Origin: ").length());
+        }
+        // Getting user-agent
+        else if (header.starts_with("User-Agent: ")) {
+            userAgent_ = header.substr(std::string("User-Agent: ").length());
+        }
         // Getting body content-Length
         else if (header.starts_with("Content-Length: ")) {
             contentLength = stoi(header.substr(std::string("Content-Length: ").length()));

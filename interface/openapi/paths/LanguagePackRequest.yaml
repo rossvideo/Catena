@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -28,14 +28,45 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
+#
+# OpenAPI documentation of the LanguagePackRequest RPC for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
 get:
-  summary: Get the slots populated with a device model
-  operationId: GetPopulatedSlots
+  summary: Set the value of a parameter within a device model
+  operationId: LanguagePackRequest
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model to get the language pack from
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
+    - name: language
+      in: path
+      required: true
+      description: The id of the language pack to get from the device model
+      schema:
+        type: string
+      example: "en"
+  
   responses:
     "200":
-      description: a list of populated slot ids
+      description: The language pack specified by the id within the device model
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
-          example: [1, 2, 3]
+            $ref: "./Messages.yaml#/$defs/component_language_pack"
+          example: {
+              "language": "en",
+              "language_pack": {
+                "words": {
+                  "greeting": "Hello",
+                  "parting": "Goodbye"
+                },
+                "name": "English"
+              }
+            }

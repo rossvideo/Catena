@@ -29,8 +29,8 @@
  */
 
 /**
- * @file DeviceRequest.h
- * @brief Implements REST DeviceRequest RPC.
+ * @file ListLanguagess.h
+ * @brief Implements REST ListLanguages RPC.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -40,11 +40,10 @@
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
-
+ 
 // common
 #include <rpc/TimeNow.h>
 #include <Status.h>
-#include <IParam.h>
 #include <Device.h>
 #include <utils.h>
 #include <Authorization.h>
@@ -59,28 +58,28 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the DeviceRequest REST RPC.
+ * @brief ICallData class for the ListLanguages REST RPC.
  */
-class DeviceRequest : public ICallData {
+class ListLanguages : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using Device = catena::common::Device;
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the DeviceRequest RPC.
+     * @brief Constructor for the ListLanguages RPC.
      *
-     * @param socket The socket to write the response stream to.
+     * @param socket The socket to write the response to.
      * @param context The SocketReader object.
-     * @param dm The device to get components from.
+     * @param dm The device to get the value from.
      */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    ListLanguages(tcp::socket& socket, SocketReader& context, Device& dm);
     /**
-     * @brief DeviceRequest's main process.
+     * @brief ListLanguages's main process.
      */
     void proceed() override;
     /**
-     * @brief Finishes the DeviceRequest process.
+     * @brief Finishes the ListLanguages process.
      */
     void finish() override;
     /**
@@ -91,7 +90,7 @@ class DeviceRequest : public ICallData {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
-      return new DeviceRequest(socket, context, dm);
+      return new ListLanguages(socket, context, dm);
     }
   private:
     /**
@@ -101,26 +100,22 @@ class DeviceRequest : public ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole(CallStatus status, bool ok) const override {
-      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
+      std::cout << "ListLanguages::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
-    
+
     /**
-     * @brief The socket to write the response stream to.
+     * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
-     */
-    SocketReader& context_;
-    /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SocketWriter writer_;
     /**
-     * @brief The device to get components from.
+     * @brief The device to list languges of.
      */
     Device& dm_;
     /**
@@ -129,28 +124,16 @@ class DeviceRequest : public ICallData {
     bool ok_;
 
     /**
-     * @brief The slot of the device to get the components from.
+     * @brief The slot of the device to get the value from.
      */
-    uint32_t slot_;
-    /**
-     * @brief The language to return the stream in.
-     */
-    std::string language_;
-    /**
-     * @brief The detail level to return the stream in.
-     */
-    int detailLevel_;
-    /**
-     * @brief A list of the subscribed oids to return.
-     */
-    std::vector<std::string> subscribedOids_;
+    int slot_;
 
     /**
-     * @brief ID of the DeviceRequest object
+     * @brief ID of the ListLanguages object
      */
     int objectId_;
     /**
-     * @brief The total # of DeviceRequest objects.
+     * @brief The total # of ListLanguages objects.
      */
     static int objectCounter_;
 };
