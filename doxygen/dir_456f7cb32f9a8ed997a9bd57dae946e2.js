@@ -1,6 +1,6 @@
 var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
 [
-    [ "AddLanguage.h", "AddLanguage_8h.html", "AddLanguage_8h" ],
+    [ "AddLanguage.h", "gRPC_2include_2AddLanguage_8h.html", "gRPC_2include_2AddLanguage_8h" ],
     [ "BasicParamInfoRequest.h", "BasicParamInfoRequest_8h_source.html", null ],
     [ "Connect.h", "connections_2gRPC_2include_2Connect_8h.html", "connections_2gRPC_2include_2Connect_8h" ],
     [ "DeviceRequest.h", "gRPC_2include_2DeviceRequest_8h.html", "gRPC_2include_2DeviceRequest_8h" ],
