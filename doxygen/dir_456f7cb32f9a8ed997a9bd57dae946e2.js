@@ -1,6 +1,6 @@
 var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
 [
-    [ "AddLanguage.h", "AddLanguage_8h.html", "AddLanguage_8h" ],
+    [ "AddLanguage.h", "gRPC_2include_2AddLanguage_8h.html", "gRPC_2include_2AddLanguage_8h" ],
     [ "BasicParamInfoRequest.h", "BasicParamInfoRequest_8h_source.html", null ],
     [ "Connect.h", "connections_2gRPC_2include_2Connect_8h.html", "connections_2gRPC_2include_2Connect_8h" ],
     [ "DeviceRequest.h", "gRPC_2include_2DeviceRequest_8h.html", "gRPC_2include_2DeviceRequest_8h" ],
@@ -9,7 +9,7 @@ var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
     [ "GetParam.h", "GetParam_8h.html", "GetParam_8h" ],
     [ "GetPopulatedSlots.h", "gRPC_2include_2GetPopulatedSlots_8h.html", "gRPC_2include_2GetPopulatedSlots_8h" ],
     [ "GetValue.h", "gRPC_2include_2GetValue_8h.html", "gRPC_2include_2GetValue_8h" ],
-    [ "LanguagePackRequest.h", "gRPC_2include_2LanguagePackRequest_8h.html", "gRPC_2include_2LanguagePackRequest_8h" ],
+    [ "LanguagePackRequest.h", "LanguagePackRequest_8h.html", "LanguagePackRequest_8h" ],
     [ "ListLanguages.h", "ListLanguages_8h.html", "ListLanguages_8h" ],
     [ "MultiSetValue.h", "gRPC_2include_2MultiSetValue_8h.html", "gRPC_2include_2MultiSetValue_8h" ],
     [ "PeerInfo.h", "PeerInfo_8h.html", "PeerInfo_8h" ],

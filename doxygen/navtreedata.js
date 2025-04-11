@@ -129,7 +129,7 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"AddLanguage_8h.html",
+"Authorization_8h.html",
 "classCatenaServiceImpl_1_1GetValue.html",
 "classcatena_1_1REST_1_1SocketWriter.html#ad63d815bfeb4e3ccb4ad6170048c8aa2",
 "classcatena_1_1common_1_1LanguagePack.html",
