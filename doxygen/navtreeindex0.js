@@ -1,5 +1,7 @@
 var NAVTREEINDEX0 =
 {
+"AddLanguage_8h.html":[11,0,1,0,0,0],
+"AddLanguage_8h_source.html":[11,0,1,0,0,0],
 "Authorization_8h.html":[11,0,0,0,3],
 "Authorization_8h_source.html":[11,0,0,0,3],
 "BasicParamInfoRequest_8h_source.html":[11,0,1,0,0,1],
@@ -67,8 +69,6 @@ var NAVTREEINDEX0 =
 "LanguagePackRequest_8h_source.html":[11,0,1,0,0,9],
 "LanguagePack_8h.html":[11,0,0,0,15],
 "LanguagePack_8h_source.html":[11,0,0,0,15],
-"ListLanguages_8h.html":[11,0,1,0,0,10],
-"ListLanguages_8h_source.html":[11,0,1,0,0,10],
 "MenuGroup_8h.html":[11,0,0,0,17],
 "MenuGroup_8h_source.html":[11,0,0,0,17],
 "Menu_8h.html":[11,0,0,0,16],
@@ -92,14 +92,13 @@ var NAVTREEINDEX0 =
 "PolyglotText_8h.html":[11,0,0,0,24],
 "PolyglotText_8h_source.html":[11,0,0,0,24],
 "REST_2include_2ServiceImpl_8h_source.html":[11,0,1,1,0,2],
-"REST_2include_2controllers_2AddLanguage_8h.html":[11,0,1,1,0,0,0],
-"REST_2include_2controllers_2AddLanguage_8h_source.html":[11,0,1,1,0,0,0],
-"REST_2include_2controllers_2DeviceRequest_8h.html":[11,0,1,1,0,0,2],
-"REST_2include_2controllers_2DeviceRequest_8h_source.html":[11,0,1,1,0,0,2],
-"REST_2include_2controllers_2GetPopulatedSlots_8h.html":[11,0,1,1,0,0,3],
-"REST_2include_2controllers_2GetPopulatedSlots_8h_source.html":[11,0,1,1,0,0,3],
-"REST_2include_2controllers_2GetValue_8h.html":[11,0,1,1,0,0,4],
-"REST_2include_2controllers_2GetValue_8h_source.html":[11,0,1,1,0,0,4],
+"REST_2include_2controllers_2DeviceRequest_8h.html":[11,0,1,1,0,0,1],
+"REST_2include_2controllers_2DeviceRequest_8h_source.html":[11,0,1,1,0,0,1],
+"REST_2include_2controllers_2GetPopulatedSlots_8h.html":[11,0,1,1,0,0,2],
+"REST_2include_2controllers_2GetPopulatedSlots_8h_source.html":[11,0,1,1,0,0,2],
+"REST_2include_2controllers_2GetValue_8h.html":[11,0,1,1,0,0,3],
+"REST_2include_2controllers_2GetValue_8h_source.html":[11,0,1,1,0,0,3],
+"REST_2include_2controllers_2ListLanguages_8h_source.html":[11,0,1,1,0,0,4],
 "REST_2include_2controllers_2MultiSetValue_8h.html":[11,0,1,1,0,0,5],
 "REST_2include_2controllers_2MultiSetValue_8h_source.html":[11,0,1,1,0,0,5],
 "REST_2include_2controllers_2SetValue_8h.html":[11,0,1,1,0,0,6],
@@ -249,5 +248,6 @@ var NAVTREEINDEX0 =
 "classCatenaServiceImpl_1_1GetParam.html#aee338762a3a4cfeb76179bb8559954f9":[10,0,1,7,0],
 "classCatenaServiceImpl_1_1GetPopulatedSlots.html":[10,0,1,8],
 "classCatenaServiceImpl_1_1GetPopulatedSlots.html#a818cde0900e77f73121dac3c588e9279":[10,0,1,8,1],
-"classCatenaServiceImpl_1_1GetPopulatedSlots.html#a8fac20d260e95e16e494578cb7974ec1":[10,0,1,8,0]
+"classCatenaServiceImpl_1_1GetPopulatedSlots.html#a8fac20d260e95e16e494578cb7974ec1":[10,0,1,8,0],
+"classCatenaServiceImpl_1_1GetValue.html":[10,0,1,9]
 };
