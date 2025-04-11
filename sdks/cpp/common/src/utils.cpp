@@ -43,31 +43,36 @@ std::string catena::readFile(std::filesystem::path path) {
  * @param rep in sequence to replace the match
  */
 void catena::subs(std::string& str, const std::string& seq, const std::string& rep) {
-    std::ostringstream oss;
-    std::size_t prev{}, pos{};
-    while (true) {
-        prev = pos;
-        pos = str.find(seq, pos);  // locate target sequence in input
-        if (pos == std::string::npos) {
-            // i.e. not found
-            break;  // exit loop
+    if (seq.length() > 0) { // Sanitizing input
+        std::ostringstream oss;
+        std::size_t prev = 0, pos = 0;
+        while (pos != std::string::npos) {
+            prev = pos;
+            pos = str.find(seq, pos);  // locate target sequence in input
+            // Found
+            if (pos != std::string::npos) {
+                oss << str.substr(prev, pos - prev);  // write what came before
+                oss << rep;                           // write the replacement
+                pos += seq.size();                    // skip over the target sequence
+            }
         }
-        oss << str.substr(prev, pos - prev);  // write what came before
-        oss << rep;                           // write the replacement
-        pos += seq.size();                    // skip over the target sequence
+        oss << str.substr(prev);  // write to the end of the input string
+        str = oss.str();
     }
-    oss << str.substr(prev);  // write to the end of the input string
-    str = oss.str();
 }
 
 void catena::split(std::vector<std::string>& out, const std::string& str, const std::string& delim) {
-    std::size_t prev{}, pos{};
-    while (pos != std::string::npos) {
-        prev = pos;
-        pos = str.find(delim, pos);  // locate target sequence in input
-        out.emplace_back(str.substr(prev, pos - prev));  // write what came before
-        if (pos != std::string::npos) {
-            pos += delim.size();                    // skip over the target sequence
+    std::size_t prev = 0, pos = 0;
+    out.clear();
+    if (delim.length() > 0) {
+        while (pos != std::string::npos) {
+            prev = pos;
+            pos = str.find(delim, pos);  // locate target sequence in input
+            if (pos != std::string::npos) {
+                out.emplace_back(str.substr(prev, pos - prev)); // write what came before
+                pos += delim.size();                            // skip over the target sequence
+            }
         }
     }
+    out.emplace_back(str.substr(prev));  // write to the end of the input string
 }
