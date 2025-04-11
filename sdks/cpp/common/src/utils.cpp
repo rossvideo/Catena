@@ -46,9 +46,8 @@ void catena::subs(std::string& str, const std::string& seq, const std::string& r
     if (seq.length() > 0) { // Sanitizing input
         std::ostringstream oss;
         std::size_t prev = 0, pos = 0;
-        uint32_t timeout = 0;
-        while (pos != std::string::npos && timeout < 1000) {
-            timeout += 1;
+        uint32_t timeout = 0; // Timeout counter to prevent infinite loop
+        while (pos != std::string::npos && timeout++ < 1000) {
             prev = pos;
             pos = str.find(seq, pos);  // locate target sequence in input
             // Found
@@ -65,10 +64,9 @@ void catena::subs(std::string& str, const std::string& seq, const std::string& r
 
 void catena::split(std::vector<std::string>& out, const std::string& str, const std::string& delim) {
     std::size_t prev = 0, pos = 0;
-    uint32_t timeout = 0;
+    uint32_t timeout = 0; // Timeout counter to prevent infinite loop
     out.clear();
-    if (delim.length() > 0 && timeout < 1000) {
-        timeout += 1;
+    if (delim.length() > 0 && timeout++ < 1000) {
         while (pos != std::string::npos) {
             prev = pos;
             pos = str.find(delim, pos);  // locate target sequence in input
