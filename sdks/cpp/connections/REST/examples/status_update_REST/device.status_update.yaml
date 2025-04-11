@@ -31,7 +31,7 @@ params:
     type: STRING
     name: {display_strings: {en: Text Box, es: Caja de Texto, fr: Boîte de Texte}}
     access_scope: st2138:cfg
-    value: {string_value: Hello, World!}
+    value: {string_value: "Hello, World!"}
   button:
     type: INT32
     name: {display_strings: {en: Button, es: Botón, fr: Bouton}}
