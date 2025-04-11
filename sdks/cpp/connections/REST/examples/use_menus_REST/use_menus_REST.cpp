@@ -18,7 +18,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -29,17 +29,17 @@
  */
 
 /**
- * @brief Example program to demonstrate setting up a full Catena service with
- * the REST API.
- * @file status_update_REST.cpp
+ * @brief Example program to demonstrate setting up a Catena service using menus with the REST API.
+ * @file use_menus_REST.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
- * @author Ben Whitten (Benjamin.whitten@rossvideo.com)
+ * @author Ben Mostafa (ben.mostafa@rossvideo.com)
+ * @author Zuhayr Sarker (zuhayr.sarker@rossvideo.com)
  */
 
 // device model
-#include "device.status_update.yaml.h" 
+#include "device.use_menus.yaml.h" 
 
 //common
 #include <utils.h>
@@ -63,8 +63,6 @@
 #include <chrono>
 #include <signal.h>
 #include <functional>
-
-#include <iostream>
 
 using namespace catena::common;
 
@@ -91,67 +89,25 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void counterUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& counter = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set counter to " << counter << '\n';
-}
-
-void text_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const std::string& text_box = dynamic_cast<const ParamWithValue<std::string>*>(p)->get();
-    std::cout << "*** client set text_box to " << text_box << '\n';
-}
-
-void buttonUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& button = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set button to " << button << '\n';
-}
-
-void sliderUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& slider = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set slider to " << slider << '\n';
-}
-
-void combo_boxUpdateHandler(const std::string& oid, const IParam* p, const int32_t idx) {
-    // all we do here is print out the oid of the parameter that was changed
-    // your biz logic would do something _even_more_ interesting!
-    const int32_t& combo_box = dynamic_cast<const ParamWithValue<int32_t>*>(p)->get();
-    std::cout << "*** client set combo_box to " << combo_box << '\n';
-}
-
 void statusUpdateExample(){   
     std::thread loop([]() {
-        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
-        handlers["/counter"] = counterUpdateHandler;
-        handlers["/text_box"] = text_boxUpdateHandler;
-        handlers["/button"] = buttonUpdateHandler;
-        handlers["/slider"] = sliderUpdateHandler;
-        handlers["/combo_box"] = combo_boxUpdateHandler;
-
         // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            if (handlers.find(oid) != handlers.end()) {
-                handlers[oid](oid, p, idx);
-            }
+        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+            // all we do here is print out the oid of the parameter that was changed
+            // your biz logic would do something _even_more_ interesting!
+            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
         });
 
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-
         // The rest is the "sending end" of the status update example
-        std::unique_ptr<IParam> param = dm.getParam("/counter", err);
+        IParam* param = dm.getItem<ParamTag>("counter");
         if (param == nullptr) {
-            throw err;
+            std::stringstream why;
+            why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
+            throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
         }
 
         // downcast the IParam to a ParamWithValue<int32_t>
-        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
+        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param);
 
         while (globalLoop) {
             // update the counter once per second, and emit the event
@@ -200,4 +156,4 @@ int main(int argc, char* argv[]) {
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();
     return 0;
-}
+} 

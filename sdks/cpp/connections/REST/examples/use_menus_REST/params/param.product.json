@@ -1,0 +1,44 @@
+{
+    "type": "STRUCT",
+    "params": {
+        "name": {
+            "name": {"display_strings": { "en": "Name", "es": "Nombre", "fr": "Nom" } },
+            "type":"STRING"
+        },
+        "vendor": {
+            "name": { "display_strings": { "en": "Vendor", "es": "Vendedor", "fr": "Vendeur" }  },
+            "type":"STRING"
+        },
+        "version": {
+            "name": { "display_strings": { "en": "Version", "es": "Versión", "fr": "Version" } },
+            "type":"STRING"
+        },
+        "serial_number": {
+            "name": { "display_strings": {  "en": "Serial Number", "es": "Número de serie", "fr": "Numéro de série" } },
+            "type":"STRING"
+        },
+        "catena_sdk": {
+            "name": { "display_strings": { "en": "Catena SDK",  "es": "Catena SDK", "fr": "Catena SDK" } },
+            "type":"STRING"
+        },
+        "catena_sdk_version": {
+            "name": { "display_strings": { "en": "Catena SDK Version", "es": "Versión de Catena SDK",  "fr": "Version du SDK Catena" } },
+            "type":"STRING"
+        }
+    },
+    "access_scope": "monitor",
+    "read_only": true,
+    "name": { "display_strings": { "en": "Product Information", "es": "Información del producto", "fr": "Informations sur le produit" } },
+    "value": {
+        "struct_value": {
+            "fields": {
+                "name": { "value": {  "string_value": "Use Menus Example"  }  },
+                "vendor": { "value": {  "string_value": "Free, Open Source Software" } },
+                "version": { "value": {  "string_value": "1.0.0"  } },
+                "serial_number": { "value": {  "string_value": "Not serialized"  } },
+                "catena_sdk": { "value": { "string_value": "https://github.com/rossvideo/Catena/sdks/cpp" } },
+                "catena_sdk_version": { "value": { "string_value": "will be overwritten with correct version" }  }
+            }
+        }
+    }
+}
