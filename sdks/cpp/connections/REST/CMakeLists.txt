@@ -85,4 +85,5 @@ install(TARGETS ${target}
 )
 
 add_subdirectory(examples)
-
+# make the unit tests
+add_subdirectory(tests)
