@@ -82,6 +82,7 @@ class ISocketWriter {
      * Used when method = OPTIONS.
      */
     virtual void writeOptions() = 0;
+    virtual void finish() = 0;
 };
  
 }; // Namespace REST

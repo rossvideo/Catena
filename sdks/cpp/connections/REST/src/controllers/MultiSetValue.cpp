@@ -55,7 +55,7 @@ void MultiSetValue::proceed() {
     // Writing response.
     if (rc.status == catena::StatusCode::OK) {
         catena::Empty ans = catena::Empty();
-        writer_.write(ans);
+        writer_.finish(ans);
     } else {
         writer_.write(rc);
     }

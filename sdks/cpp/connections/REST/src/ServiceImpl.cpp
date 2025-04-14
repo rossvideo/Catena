@@ -96,8 +96,6 @@ void CatenaServiceImpl::run() {
                 } catch (...) {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
-            } else {
-                rc = catena::exception_with_status{"Service shutdown", catena::StatusCode::CANCELLED};
             }
             // Writing to socket if there was an error.
             if (rc.status != catena::StatusCode::OK) {
