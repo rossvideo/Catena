@@ -47,7 +47,7 @@ using catena::common::Authorizer;
 int CatenaServiceImpl::BasicParamInfoRequest::objectCounter_ = 0;
 
 CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
+    socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     
@@ -58,7 +58,7 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& soc
             {"oid_prefix", ""}
         };
         context_.fields(fields);
-        oid_prefix_ = fields.at("oid_prefix");
+        oid_prefix_ = "/" + fields.at("oid_prefix");
         recursive_ = fields.at("recursive") == "true";
     // Parse error
     } catch (...) {
@@ -172,6 +172,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
 
 void CatenaServiceImpl::BasicParamInfoRequest::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
+    writer_.finish();
     std::cout << "BasicParamInfoRequest[" << objectId_ << "] finished\n";
 }
 

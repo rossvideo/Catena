@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
