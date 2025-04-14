@@ -59,17 +59,31 @@ class MockSocketReader : public catena::REST::ISocketReader {
 };
 
 TEST(SocketReaderTests, SocketReader_read) {
-    // Create a mock socket
+    // Creata a mock socket and send a request to it.
     boost::asio::io_context io_context;
-    tcp::socket mock_socket(io_context);
-    mock_socket.send(boost::asio::buffer("GET http://localhost:443/v1/GetValue/slot/1/oid/text_box"));
+    tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
+    tcp::socket server_socket(io_context);
 
-    // Create a mock SocketReader
-    MockSocketReader mock_reader;
+    std::thread server_thread([&]() {
+        acceptor.accept(server_socket);
+        auto request = boost::asio::buffer("GET http://localhost:443/v1/GetValue/slot/1/oid/text_box\r\n");
+        boost::asio::write(server_socket, request);
+    });
 
-    // Set up expectations
-    EXPECT_CALL(mock_reader, read(testing::_, testing::_)).Times(1);
+    tcp::socket client_socket(io_context);
+    client_socket.connect(acceptor.local_endpoint());
 
-    // Call the read method
-    mock_reader.read(mock_socket, false);
+    server_thread.join();
+
+    // Reading the headers.
+    boost::asio::streambuf buffer;
+    boost::asio::read_until(client_socket, buffer, "\r\n");
+    std::istream header_stream(&buffer);
+
+    // Getting the first line from the stream (URL).
+    std::string header;
+    std::getline(header_stream, header);
+    EXPECT_EQ(header, "GET http://localhost:443/v1/GetValue/slot/1/oid/text_box\r");
+
+    
 }
