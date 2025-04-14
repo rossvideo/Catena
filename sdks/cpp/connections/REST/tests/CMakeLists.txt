@@ -9,9 +9,11 @@ include_directories(../include)
 include_directories(${GTEST_INCLUDE_DIRS})	
 
 set(SOURCES 	
-    SocketReader_test.cpp    
+    SocketReader_test.cpp
+    SocketWriter_test.cpp    
 
     ../src/SocketReader.cpp
+    ../src/SocketWriter.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

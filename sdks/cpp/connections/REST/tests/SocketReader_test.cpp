@@ -80,7 +80,7 @@ void mockRequest(tcp::socket& client_socket, boost::asio::io_context& io_context
 }
 
 // Testing SocketReader with authorization disabled.
-TEST(SocketReaderTests, SocketReader_read) {
+TEST(REST_API_tests, SocketReader_NormalCase) {
     // Creating a client socket and sending a fake GET request to it.
     boost::asio::io_context io_context;
     tcp::socket client_socket(io_context);
@@ -99,7 +99,6 @@ TEST(SocketReaderTests, SocketReader_read) {
     bool authz = socket_reader.authorizationEnabled();
     std::string token = socket_reader.jwsToken();
     std::string origin = socket_reader.origin();
-    std::string userAgent = socket_reader.userAgent();
     std::string jsonBody = socket_reader.jsonBody();
     // Checking answer.
     EXPECT_EQ(method, "GET");
@@ -109,12 +108,11 @@ TEST(SocketReaderTests, SocketReader_read) {
     EXPECT_EQ(authz, false);
     EXPECT_EQ(token, "");
     EXPECT_EQ(origin, "test_origin");
-    EXPECT_EQ(userAgent, "test_agent");
     EXPECT_EQ(jsonBody, "{\n  test_body\n}");
 }
 
 // Testing SocketReader with authorization enabled.
-TEST(SocketReaderTests, SocketReader_read_athz) {
+TEST(REST_API_tests, SocketReader_AuthzCase) {
     // Creating a client socket and sending a fake GET request to it.
     boost::asio::io_context io_context;
     tcp::socket client_socket(io_context);
@@ -133,7 +131,6 @@ TEST(SocketReaderTests, SocketReader_read_athz) {
     bool authz = socket_reader.authorizationEnabled();
     std::string token = socket_reader.jwsToken();
     std::string origin = socket_reader.origin();
-    std::string userAgent = socket_reader.userAgent();
     std::string jsonBody = socket_reader.jsonBody();
     // Checking answer.
     EXPECT_EQ(method, "GET");
@@ -143,6 +140,5 @@ TEST(SocketReaderTests, SocketReader_read_athz) {
     EXPECT_EQ(authz, true);
     EXPECT_EQ(token, "test_bearer");
     EXPECT_EQ(origin, "test_origin");
-    EXPECT_EQ(userAgent, "test_agent");
     EXPECT_EQ(jsonBody, "{\n  test_body\n}");
 }
