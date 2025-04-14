@@ -30,8 +30,9 @@
 
 /**
  * @file Connect.h
- * @brief Implements REST Connect RPC.
+ * @brief Implements REST Connect API.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

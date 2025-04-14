@@ -46,6 +46,7 @@
 #include <Device.h>
 #include <Authorization.h>
 #include "IConnect.h"
+#include <SubscriptionManager.h>
 
 #include <interface/device.pb.h>
 
@@ -70,11 +71,17 @@ class Connect : public IConnect {
     Connect() = delete;
     /**
      * @brief Constructor for the Connect class.
-     * @param dm The device manager.
-     * @param authz true if authorization is enabled, false otherwise.
-     * @param jwsToken The client's JWS token.
+     * 
+     * @param dm The device to connect to
+     * @param authz true if authorization is enabled, false otherwise
+     * @param jwsToken The client's JWS token
+     * @param subscriptionManager The subscription manager for handling OID subscriptions
      */
-    Connect(Device& dm, bool authz, const std::string& jwsToken) : dm_{dm} {
+    Connect(Device& dm, bool authz, const std::string& jwsToken, catena::common::SubscriptionManager& subscriptionManager) : 
+        dm_{dm},
+        subscriptionManager_{subscriptionManager},
+        detailLevel_{catena::Device_DetailLevel_FULL},
+        hasUpdate_{false} {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
@@ -124,15 +131,6 @@ class Connect : public IConnect {
                     should_update = true;
                     break;
                     
-                // case catena::Device_DetailLevel_SUBSCRIPTIONS:
-                //     // Update if OID is subscribed or in minimal set
-                //     {
-                //         auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                //         should_update = p->getDescriptor().minimalSet() || 
-                //                       (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
-                //     }
-                //     break;
-                    
                 case catena::Device_DetailLevel_MINIMAL:
                     // For MINIMAL, only update if it's in the minimal set
                     should_update = p->getDescriptor().minimalSet();
@@ -143,6 +141,15 @@ class Connect : public IConnect {
                     should_update = p->getDescriptor().isCommand();
                     break;
                     
+                case catena::Device_DetailLevel_SUBSCRIPTIONS:
+                    // Update if OID is subscribed or in minimal set
+                    {
+                        auto subscribedOids = this->subscriptionManager_.getAllSubscribedOids(this->dm_);
+                        should_update = p->getDescriptor().minimalSet() || 
+                                      (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                    }
+                    break;
+                    
                 case catena::Device_DetailLevel_NONE:
                     // Don't send any updates
                     should_update = false;
@@ -150,24 +157,22 @@ class Connect : public IConnect {
                     
                 default:
                     std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
-                    // Don't send any updates
-                    should_update = false;
-                    break;
+                    return;
             }
-    
+
             if (!should_update) {
                 return;
             }
-    
+
             if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
                 return;
             }
-    
+
             this->res_.mutable_value()->set_oid(oid);
             this->res_.mutable_value()->set_element_index(idx);
             
             catena::Value* value = this->res_.mutable_value()->mutable_value();
-    
+
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             rc = p->toProto(*value, *authz_);
             //If the param conversion was successful, send the update
@@ -188,24 +193,26 @@ class Connect : public IConnect {
      */
     void updateResponse(const Device::ComponentLanguagePack& l) override {
         try {
-            // If Connect was cancelled, notify client and end process.
-            if (this->isCancelled()){
+            // If Connect was cancelled, notify client and end process
+            if (this->isCancelled()) {
                 this->hasUpdate_ = true;
                 this->cv_.notify_one();
                 return;
             }
-            // Returning if authorization is enabled and the client does not have monitor scope.
+            
+            // Returning if authorization is enabled and the client does not have monitor scope
             if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled
                 && !this->authz_->hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                 return;
             }
-            // Updating res_'s device_component and pushing update.
+            
+            // Updating res_'s device_component and pushing update
             auto pack = this->res_.mutable_device_component()->mutable_language_pack();
             pack->set_language(l.language());
             pack->mutable_language_pack()->CopyFrom(l.language_pack());
             this->hasUpdate_ = true;
             this->cv_.notify_one();
-        } catch(catena::exception_with_status& why){
+        } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
         }
     }
@@ -254,6 +261,11 @@ class Connect : public IConnect {
      * No idea what this is used for and if its even needed here.
      */
     bool forceConnection_;
+
+    /**
+     * @brief The subscription manager for handling OID subscriptions.
+     */
+    catena::common::SubscriptionManager &subscriptionManager_;
 };
 
 }; // common

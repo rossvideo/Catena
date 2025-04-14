@@ -17,7 +17,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -43,11 +43,12 @@
 // connections/gRPC
 #include <ServiceImpl.h>
 #include <SubscriptionManager.h>
+#include <rpc/Connect.h>
 
 /**
 * @brief CallData class for the Connect RPC
 */
-class CatenaServiceImpl::Connect : public CallData {
+class CatenaServiceImpl::Connect : public CallData, public catena::common::Connect {
     public:
         /**
          * @brief Constructor for the CallData class of the Connect gRPC.
@@ -67,7 +68,13 @@ class CatenaServiceImpl::Connect : public CallData {
          * @param ok - Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
-
+        /**
+         * @brief Checks if the connection has been cancelled.
+         * 
+         * @return true if the connection has been cancelled, false otherwise.
+         */
+        bool isCancelled();
+        
     private:
         /**
          * @brief Parent CatenaServiceImpl.
@@ -144,13 +151,4 @@ class CatenaServiceImpl::Connect : public CallData {
         */
         unsigned int shutdownSignalId_;
 
-        /**
-         * @brief Updates the response message with parameter values and handles 
-         * authorization checks.
-         * 
-         * @param oid - The OID of the value to update
-         * @param idx - The index of the value to update
-         * @param p - The parameter to update
-         */
-        void updateResponse(const std::string& oid, size_t idx, const IParam* p);
 };
