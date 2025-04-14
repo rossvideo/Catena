@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['valuesetbyclient_0',['valueSetByClient',['../classcatena_1_1common_1_1Device.html#ad0504576b2baa494010be749c94e03f4',1,'catena::common::Device']]],
-  ['valuesetbyserver_1',['valueSetByServer',['../classcatena_1_1common_1_1Device.html#aa14bba71eb227107bbae177a21c9d5a8',1,'catena::common::Device']]]
+  ['writer_5f_0',['writer_',['../classcatena_1_1REST_1_1MultiSetValue.html#a2a1a186a7954327117e472e981502131',1,'catena::REST::MultiSetValue']]]
 ];
