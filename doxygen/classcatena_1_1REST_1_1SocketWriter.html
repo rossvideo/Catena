@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1SocketWriter.ht
 </div><!--header-->
 <div class="contents">
 
-<p>Helper class used to write to a socket using boost.  
+<p>Helper class used to write a unary response to a socket using boost.  
  <a href="classcatena_1_1REST_1_1SocketWriter.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="SocketWriter_8h_source.html">SocketWriter.h</a>&gt;</code></p>
@@ -116,14 +116,20 @@ Collaboration diagram for catena::REST::SocketWriter:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ab76d5dd1228f6f4a8b16c8b0a13bcd9a" id="r_ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a">SocketWriter</a> (tcp::socket &amp;socket, const std::string &amp;origin=&quot;*&quot;)</td></tr>
-<tr class="memdesc:ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost.">SocketWriter</a>.  <br /></td></tr>
+<tr class="memdesc:ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a>.  <br /></td></tr>
 <tr class="separator:ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a554e66849e946ee0ea586d2deaf0326e" id="r_a554e66849e946ee0ea586d2deaf0326e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a554e66849e946ee0ea586d2deaf0326e">write</a> (google::protobuf::Message &amp;msg) override</td></tr>
-<tr class="memdesc:a554e66849e946ee0ea586d2deaf0326e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a protobuf message to socket in JSON format.  <br /></td></tr>
+<tr class="memdesc:a554e66849e946ee0ea586d2deaf0326e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds the protobuf message to the end of response in JSON format.  <br /></td></tr>
 <tr class="separator:a554e66849e946ee0ea586d2deaf0326e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad63d815bfeb4e3ccb4ad6170048c8aa2" id="r_ad63d815bfeb4e3ccb4ad6170048c8aa2"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ad63d815bfeb4e3ccb4ad6170048c8aa2">write</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err) override</td></tr>
 <tr class="memdesc:ad63d815bfeb4e3ccb4ad6170048c8aa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes an error message to the socket.  <br /></td></tr>
 <tr class="separator:ad63d815bfeb4e3ccb4ad6170048c8aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93b32178c94f55aa2080465ec0f835d2" id="r_a93b32178c94f55aa2080465ec0f835d2"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2">finish</a> () override</td></tr>
+<tr class="memdesc:a93b32178c94f55aa2080465ec0f835d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the writing process by writing response to socket.  <br /></td></tr>
+<tr class="separator:a93b32178c94f55aa2080465ec0f835d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97333fbdab0cc40d9fa86117f7eb8e07" id="r_a97333fbdab0cc40d9fa86117f7eb8e07"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a97333fbdab0cc40d9fa86117f7eb8e07">finish</a> (google::protobuf::Message &amp;msg)</td></tr>
+<tr class="memdesc:a97333fbdab0cc40d9fa86117f7eb8e07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the writing process by writing a message to the socket.  <br /></td></tr>
+<tr class="separator:a97333fbdab0cc40d9fa86117f7eb8e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb078d6a7c3b928850d10029220d8bd4" id="r_afb078d6a7c3b928850d10029220d8bd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#afb078d6a7c3b928850d10029220d8bd4">writeOptions</a> () override</td></tr>
 <tr class="memdesc:afb078d6a7c3b928850d10029220d8bd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a response to the client detaining their options. Used when method = OPTIONS.  <br /></td></tr>
 <tr class="separator:afb078d6a7c3b928850d10029220d8bd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,16 +157,24 @@ Protected Attributes</h2></td></tr>
 tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_</b></td></tr>
 <tr class="memdesc:a9a3f4e9097d019c4e9e19a5b57b9efd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The socket to write to. <br /></td></tr>
 <tr class="separator:a9a3f4e9097d019c4e9e19a5b57b9efd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88989956dc74978d1ce157a52b5587c0" id="r_a88989956dc74978d1ce157a52b5587c0"><td class="memItemLeft" align="right" valign="top"><a id="a88989956dc74978d1ce157a52b5587c0" name="a88989956dc74978d1ce157a52b5587c0"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><b>response_</b></td></tr>
+<tr class="memdesc:a88989956dc74978d1ce157a52b5587c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The response to write to the socket. <br /></td></tr>
+<tr class="separator:a88989956dc74978d1ce157a52b5587c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a602d385c33f26b422f7c4df1f7b6364f" id="r_a602d385c33f26b422f7c4df1f7b6364f"><td class="memItemLeft" align="right" valign="top"><a id="a602d385c33f26b422f7c4df1f7b6364f" name="a602d385c33f26b422f7c4df1f7b6364f"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>CORS_</b></td></tr>
 <tr class="memdesc:a602d385c33f26b422f7c4df1f7b6364f"><td class="mdescLeft">&#160;</td><td class="mdescRight">CORS headers used for all responses. Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers Access-Control-Allow-Credentials. <br /></td></tr>
 <tr class="separator:a602d385c33f26b422f7c4df1f7b6364f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fdb529f3203f233a0568422c6efd405" id="r_a9fdb529f3203f233a0568422c6efd405"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a9fdb529f3203f233a0568422c6efd405">multi_</a> = false</td></tr>
+<tr class="memdesc:a9fdb529f3203f233a0568422c6efd405"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag indicating whether the response is a multi-part response.  <br /></td></tr>
+<tr class="separator:a9fdb529f3203f233a0568422c6efd405"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab21b0624924cc222a68222f4ab906cda" id="r_ab21b0624924cc222a68222f4ab906cda"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ab21b0624924cc222a68222f4ab906cda">codeMap_</a></td></tr>
 <tr class="memdesc:ab21b0624924cc222a68222f4ab906cda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project.">catena::StatusCode</a> to HTTP status codes.  <br /></td></tr>
 <tr class="separator:ab21b0624924cc222a68222f4ab906cda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Helper class used to write to a socket using boost. </p>
+<div class="textblock"><p>Helper class used to write a unary response to a socket using boost. </p>
+<p>This writer buffers the response until a call to <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2" title="Finishes the writing process by writing response to socket.">finish()</a> is made. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab76d5dd1228f6f4a8b16c8b0a13bcd9a" name="ab76d5dd1228f6f4a8b16c8b0a13bcd9a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab76d5dd1228f6f4a8b16c8b0a13bcd9a">&#9670;&#160;</a></span>SocketWriter()</h2>
@@ -196,7 +210,7 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>CORS_</b></td>
 </table>
 </div><div class="memdoc">
 
-<p>Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost.">SocketWriter</a>. </p>
+<p>Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write to. </td></tr>
@@ -205,11 +219,64 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>CORS_</b></td>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a602d385c33f26b422f7c4df1f7b6364f">CORS_</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a602d385c33f26b422f7c4df1f7b6364f">CORS_</a>, and <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a88989956dc74978d1ce157a52b5587c0">response_</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a93b32178c94f55aa2080465ec0f835d2" name="a93b32178c94f55aa2080465ec0f835d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93b32178c94f55aa2080465ec0f835d2">&#9670;&#160;</a></span>finish() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::REST::SocketWriter::finish </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Finishes the writing process by writing response to socket. </p>
+<p>If the response is empty, it does nothing. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1b80a8d671a1aeac4454080e44160863">catena::REST::ISocketWriter</a>.</p>
+
+<p>Reimplemented in <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#abc48d457270f8c1c9a4e9acbe3303996">catena::REST::ChunkedWriter</a>.</p>
+
+</div>
+</div>
+<a id="a97333fbdab0cc40d9fa86117f7eb8e07" name="a97333fbdab0cc40d9fa86117f7eb8e07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97333fbdab0cc40d9fa86117f7eb8e07">&#9670;&#160;</a></span>finish() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::REST::SocketWriter::finish </td>
+          <td>(</td>
+          <td class="paramtype">google::protobuf::Message &amp;&#160;</td>
+          <td class="paramname"><em>msg</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Finishes the writing process by writing a message to the socket. </p>
+<p><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> exlusive function which acts as a call to <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a554e66849e946ee0ea586d2deaf0326e" title="Adds the protobuf message to the end of response in JSON format.">write()</a> then <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2" title="Finishes the writing process by writing response to socket.">finish()</a>. </p>
+
+</div>
+</div>
 <a id="ad63d815bfeb4e3ccb4ad6170048c8aa2" name="ad63d815bfeb4e3ccb4ad6170048c8aa2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad63d815bfeb4e3ccb4ad6170048c8aa2">&#9670;&#160;</a></span>write() <span class="overload">[1/2]</span></h2>
 
@@ -272,10 +339,10 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>CORS_</b></td>
 </table>
 </div><div class="memdoc">
 
-<p>Writes a protobuf message to socket in JSON format. </p>
+<p>Adds the protobuf message to the end of response in JSON format. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">msg</td><td>The protobuf message to write as JSON. </td></tr>
+    <tr><td class="paramname">msg</td><td>The protobuf message to add as JSON. </td></tr>
   </table>
   </dd>
 </dl>
@@ -375,6 +442,31 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><b>CORS_</b></td>
 <div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734">catena::UNAUTHENTICATED</a></div><div class="ttdeci">@ UNAUTHENTICATED</div><div class="ttdef"><b>Definition</b> Status.h:87</div></div>
 </div><!-- fragment -->
 <p>Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project.">catena::StatusCode</a> to HTTP status codes. </p>
+
+</div>
+</div>
+<a id="a9fdb529f3203f233a0568422c6efd405" name="a9fdb529f3203f233a0568422c6efd405"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fdb529f3203f233a0568422c6efd405">&#9670;&#160;</a></span>multi_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::REST::SocketWriter::multi_ = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Flag indicating whether the response is a multi-part response. </p>
+<p>Used to determine formatting when <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2" title="Finishes the writing process by writing response to socket.">finish()</a> is called. </p>
 
 </div>
 </div>

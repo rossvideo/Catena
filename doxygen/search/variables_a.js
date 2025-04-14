@@ -1,9 +1,7 @@
 var searchData=
 [
-  ['service_5f_0',['service_',['../classCatenaServiceImpl_1_1MultiSetValue.html#a3ccba7408a60a75d96a2d947c07cab37',1,'CatenaServiceImpl::MultiSetValue']]],
-  ['sharedauthz_5f_1',['sharedAuthz_',['../classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2',1,'catena::common::Connect']]],
-  ['shutdownsignal_5f_2',['shutdownSignal_',['../classcatena_1_1REST_1_1Connect.html#aa6c71bc5cd0c431bd3f7f9d36e2184bd',1,'catena::REST::Connect']]],
-  ['socket_5f_3',['socket_',['../classcatena_1_1REST_1_1MultiSetValue.html#a3e6d07f28f3a9b154cf5d84d34b490e6',1,'catena::REST::MultiSetValue::socket_'],['../classcatena_1_1REST_1_1SocketWriter.html#a9a3f4e9097d019c4e9e19a5b57b9efd7',1,'catena::REST::SocketWriter::socket_']]],
-  ['status_5f_4',['status_',['../classCatenaServiceImpl_1_1MultiSetValue.html#ad232f477b999f736ce9e4d4ef1dda792',1,'CatenaServiceImpl::MultiSetValue']]],
-  ['subscriptionmanager_5f_5',['subscriptionManager_',['../classCatenaServiceImpl.html#a0b87d2d540b5bd08625c58b2964611ea',1,'CatenaServiceImpl']]]
+  ['reqs_5f_0',['reqs_',['../classCatenaServiceImpl_1_1MultiSetValue.html#a4cc58c0392d648403ad5a52d4f45dc09',1,'CatenaServiceImpl::MultiSetValue::reqs_'],['../classcatena_1_1REST_1_1MultiSetValue.html#aa5dac8fba316dc5395ec25acb853696a',1,'catena::REST::MultiSetValue::reqs_']]],
+  ['res_5f_1',['res_',['../classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5',1,'catena::common::Connect::res_'],['../classCatenaServiceImpl_1_1MultiSetValue.html#a024fdea2c7a2d29961fde9bfccf734ba',1,'CatenaServiceImpl::MultiSetValue::res_']]],
+  ['responder_5f_2',['responder_',['../classCatenaServiceImpl_1_1MultiSetValue.html#a0e14c6abc7a4c3b2703632fa8ffb8bf3',1,'CatenaServiceImpl::MultiSetValue']]],
+  ['response_5f_3',['response_',['../classcatena_1_1REST_1_1SocketWriter.html#a88989956dc74978d1ce157a52b5587c0',1,'catena::REST::SocketWriter']]]
 ];

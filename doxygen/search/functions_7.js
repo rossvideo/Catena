@@ -25,6 +25,6 @@ var searchData=
   ['getsubparam_22',['getSubParam',['../classcatena_1_1common_1_1ParamDescriptor.html#a88a322427c672526be583b45537bcefd',1,'catena::common::ParamDescriptor']]],
   ['gettoplevelparams_23',['getTopLevelParams',['../classcatena_1_1common_1_1Device.html#adf02994bda482d6c5922cdb0e2c01f98',1,'catena::common::Device']]],
   ['getuniquesubscriptions_24',['getUniqueSubscriptions',['../classcatena_1_1common_1_1SubscriptionManager.html#a4d0e11f5ce6a7574d5aa8a02b86f8b9e',1,'catena::common::SubscriptionManager']]],
-  ['getvalue_25',['getvalue',['../classCatenaServiceImpl_1_1GetValue.html#a0043d655509c47a212aa8c4e72852656',1,'CatenaServiceImpl::GetValue::GetValue()'],['../classcatena_1_1REST_1_1GetValue.html#a2de610327f067bd4d51620cadeebfe82',1,'catena::REST::GetValue::GetValue()'],['../classcatena_1_1common_1_1Device.html#a32db3f74e532aa75c24f9bc68a7eccfe',1,'catena::common::Device::getValue()']]],
+  ['getvalue_25',['getvalue',['../classcatena_1_1common_1_1Device.html#a32db3f74e532aa75c24f9bc68a7eccfe',1,'catena::common::Device::getValue()'],['../classCatenaServiceImpl_1_1GetValue.html#a0043d655509c47a212aa8c4e72852656',1,'CatenaServiceImpl::GetValue::GetValue()'],['../classcatena_1_1REST_1_1GetValue.html#a2de610327f067bd4d51620cadeebfe82',1,'catena::REST::GetValue::GetValue()']]],
   ['getwildcardsubscriptions_26',['getWildcardSubscriptions',['../classcatena_1_1common_1_1SubscriptionManager.html#a3f96197fc3cf39fb6603fe32d076b7c6',1,'catena::common::SubscriptionManager']]]
 ];

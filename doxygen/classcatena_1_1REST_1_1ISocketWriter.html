@@ -97,7 +97,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1ISocketWriter.h
 </div><!--header-->
 <div class="contents">
 
-<p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost.">SocketWriter</a> classes.  
+<p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> classes.  
  <a href="classcatena_1_1REST_1_1ISocketWriter.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ISocketWriter_8h_source.html">ISocketWriter.h</a>&gt;</code></p>
@@ -134,10 +134,42 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1bd6bf0ab4ae1c91316799b405c369d2" id="r_a1bd6bf0ab4ae1c91316799b405c369d2"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1bd6bf0ab4ae1c91316799b405c369d2">writeOptions</a> ()=0</td></tr>
 <tr class="memdesc:a1bd6bf0ab4ae1c91316799b405c369d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a response to the client detaining their options. Used when method = OPTIONS.  <br /></td></tr>
 <tr class="separator:a1bd6bf0ab4ae1c91316799b405c369d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b80a8d671a1aeac4454080e44160863" id="r_a1b80a8d671a1aeac4454080e44160863"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1b80a8d671a1aeac4454080e44160863">finish</a> ()=0</td></tr>
+<tr class="memdesc:a1b80a8d671a1aeac4454080e44160863"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing process.  <br /></td></tr>
+<tr class="separator:a1b80a8d671a1aeac4454080e44160863"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write to a socket using boost.">SocketWriter</a> classes. </p>
+<div class="textblock"><p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> classes. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a1b80a8d671a1aeac4454080e44160863" name="a1b80a8d671a1aeac4454080e44160863"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b80a8d671a1aeac4454080e44160863">&#9670;&#160;</a></span>finish()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::REST::ISocketWriter::finish </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Finishes writing process. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#abc48d457270f8c1c9a4e9acbe3303996">catena::REST::ChunkedWriter</a>.</p>
+
+</div>
+</div>
 <a id="a2e7c58859d3af2ea1571a8d81066091f" name="a2e7c58859d3af2ea1571a8d81066091f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2e7c58859d3af2ea1571a8d81066091f">&#9670;&#160;</a></span>write() <span class="overload">[1/2]</span></h2>
 
