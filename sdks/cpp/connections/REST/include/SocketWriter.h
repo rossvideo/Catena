@@ -56,7 +56,9 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Helper class used to write to a socket using boost.
+ * @brief Helper class used to write a unary response to a socket using boost.
+ * 
+ * This writer buffers the response until a call to finish() is made.
  */
 class SocketWriter : public ISocketWriter {
   public:
@@ -70,10 +72,11 @@ class SocketWriter : public ISocketWriter {
               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
               "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
               "Access-Control-Allow-Credentials: true\r\n";
+      response_ = "";
     }
     /**
-     * @brief Writes a protobuf message to socket in JSON format.
-     * @param msg The protobuf message to write as JSON.
+     * @brief Adds the protobuf message to the end of response in JSON format.
+     * @param msg The protobuf message to add as JSON.
      */
     virtual void write(google::protobuf::Message& msg) override;
     /**
@@ -81,6 +84,19 @@ class SocketWriter : public ISocketWriter {
      * @param err The catena::exception_with_status.
      */
     virtual void write(catena::exception_with_status& err) override;
+    /**
+     * @brief Finishes the writing process by writing response to socket.
+     * 
+     * If the response is empty, it does nothing.
+     */
+    virtual void finish() override;
+    /**
+     * @brief Finishes the writing process by writing a message to the socket.
+     * 
+     * SocketWriter exlusive function which acts as a call to write() then
+     * finish().
+     */
+    void finish(google::protobuf::Message& msg);
     /**
      * @brief Writes a response to the client detaining their options.
      * Used when method = OPTIONS.
@@ -93,6 +109,10 @@ class SocketWriter : public ISocketWriter {
      */
     tcp::socket& socket_;
     /**
+     * @brief The response to write to the socket.
+     */
+    std::string response_;
+    /**
      * @brief CORS headers used for all responses.
      * Access-Control-Allow-Origin,
      * Access-Control-Allow-Methods,
@@ -100,6 +120,12 @@ class SocketWriter : public ISocketWriter {
      * Access-Control-Allow-Credentials
      */
     std::string CORS_;
+    /**
+     * @brief Flag indicating whether the response is a multi-part response.
+     * 
+     * Used to determine formatting when finish() is called.
+     */
+    bool multi_ = false;
     /**
      * @brief Maps catena::StatusCode to HTTP status codes.
      */
@@ -149,7 +175,7 @@ class ChunkedWriter : public SocketWriter {
     /**
      * @brief Finishes the chunked writing process.
      */
-    void finish();
+    void finish() override;
 
   private:
     /**
