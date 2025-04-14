@@ -75,7 +75,7 @@ get:
     "200":
       description: A stream of components from the specified device manager
       content:
-        application/json:
+        text/event-stream:
           schema:
             $ref: "./Messages.yaml#/$defs/device_component"
   

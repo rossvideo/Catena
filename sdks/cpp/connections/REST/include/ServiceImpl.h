@@ -64,7 +64,7 @@ using boost::asio::ip::tcp;
 
 using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
-using catena::REST::ChunkedWriter;
+using catena::REST::SSEWriter;
 
 namespace catena {
 /**
@@ -111,6 +111,10 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     bool authorizationEnabled() override { return authorizationEnabled_; };
     
   private:
+    /**
+     * @brief Writes a client's options to the socket.
+     */
+    void writeOptions(tcp::socket& socket, const std::string& origin);
     /**
      * @brief Returns true if port_ is already in use.
      * 

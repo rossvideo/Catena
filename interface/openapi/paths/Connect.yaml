@@ -74,7 +74,7 @@ get:
     "200":
       description: A stream of push updates from the server
       content:
-        application/json:
+        text/event-stream:
           schema:
             title: PushUpdates
             description: An update from the server
