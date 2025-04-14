@@ -129,6 +129,17 @@ class DeviceRequest : public ICallData {
     std::vector<std::string> subscribedOids_;
 
     /**
+     * @brief A list of the subscriptions from the current request.
+     */
+    std::vector<std::string> requestSubscriptions_;
+
+    /**
+     * @brief Serializer for device.
+     * Can't create serializer until we have client scopes
+     */
+    std::optional<Device::DeviceSerializer> serializer_ = std::nullopt;
+
+    /**
      * @brief ID of the DeviceRequest object
      */
     int objectId_;
