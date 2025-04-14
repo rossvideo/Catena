@@ -84,6 +84,8 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             std::size_t remainingLength = contentLength - jsonBody_.size();
             jsonBody_.resize(contentLength);
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
+        } else if (jsonBody_.size() > contentLength) {
+            jsonBody_.resize(contentLength);
         }
     }
 }
