@@ -39,6 +39,7 @@
 
 // common
 #include <Status.h>
+#include <SubscriptionManager.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -108,6 +109,16 @@ class SocketReader : public ISocketReader {
      * @brief Returns true if authorization is enabled.
      */
     bool authorizationEnabled() const override { return authorizationEnabled_; };
+
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::common::SubscriptionManager subscriptionManager_;
+
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::SubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
 
   private:
     /**

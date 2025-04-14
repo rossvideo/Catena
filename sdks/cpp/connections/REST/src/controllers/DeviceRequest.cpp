@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <controllers/DeviceRequest.h>
 using catena::REST::DeviceRequest;
@@ -27,7 +26,13 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device&
         } else {
             detailLevel_ = catena::Device_DetailLevel_NONE;
         }
-        catena::split(subscribedOids_, fields.at("subscribed_oids"), ",");
+        catena::split(requestSubscriptions_, fields.at("subscribed_oids"), ",");
+        // Add leading slash to OIDs if missing
+        for (auto& oid : requestSubscriptions_) {
+            if (!oid.empty() && oid[0] != '/') {
+                oid = "/" + oid;
+            }
+        }
     // Parse error
     } catch (...) {
         catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
@@ -50,15 +55,43 @@ void DeviceRequest::proceed() {
         } else {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
-        // Getting the component serializer.
-        auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
-        // Getting each component ans writing to the stream.
-        while (serializer.hasMore()) {
+
+        // Get service subscriptions from the manager
+        auto& subscriptionManager = context_.getSubscriptionManager();
+        subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
+        
+        // If this request has subscriptions, add them
+        if (!requestSubscriptions_.empty()) {
+            // Add new subscriptions to both the manager and our tracking list
+            for (const auto& oid : requestSubscriptions_) {
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
+                if (!subscriptionManager.addSubscription(oid, dm_, rc)) {
+                    throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                }
+            }
+        }
+
+        // Get final list of subscriptions for this response
+        subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
+
+        // Set the detail level on the device
+        dm_.detail_level(detailLevel_);
+
+        // If we're in SUBSCRIPTIONS mode and have no subscriptions, we'll still send minimal set
+        if (dm_.subscriptions() && subscribedOids_.empty() && 
+            detailLevel_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+            serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
+        } else {
+            serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
+        }
+
+        // Getting each component and writing to the stream.
+        while (serializer_->hasMore()) {
             writeConsole(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
-            Device::LockGuard lg(dm_);
-            component = serializer.getNext();
+                Device::LockGuard lg(dm_);
+                component = serializer_->getNext();
             }
             writer_.write(component);
         }
@@ -66,7 +99,7 @@ void DeviceRequest::proceed() {
     } catch (catena::exception_with_status& err) {
         writer_.write(err);
     } catch (...) {
-        catena::exception_with_status err{"Unknown errror", catena::StatusCode::UNKNOWN};
+        catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
         writer_.write(err);
     }
 }
