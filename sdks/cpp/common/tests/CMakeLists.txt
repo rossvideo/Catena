@@ -32,6 +32,6 @@ target_link_libraries(${This} PUBLIC
 )
 
 add_test(
-    NAME ${This}
+    NAME common_unit_tests
     COMMAND ${This}
 )

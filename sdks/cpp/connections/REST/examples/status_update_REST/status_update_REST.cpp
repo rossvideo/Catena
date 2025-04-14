@@ -15,10 +15,10 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -35,11 +35,11 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author John R. Naylor (john.naylor@rossvideo.com)
  * @author John Danen (john.danen@rossvideo.com)
- * @author Ben Whitte (Benjamin.whitten@rossvideo.com)
+ * @author Ben Whitten (Benjamin.whitten@rossvideo.com)
  */
 
 // device model
-#include "device.status_update_REST.json.h" 
+#include "device.status_update.yaml.h" 
 
 //common
 #include <utils.h>
@@ -167,7 +167,7 @@ void statusUpdateExample(){
     loop.detach();
 }
 
-void RunRPCServer() {
+void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
@@ -175,15 +175,18 @@ void RunRPCServer() {
 
     try {
         // Getting flags.
-        std::string EOPath = "";
+        std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authorization = absl::GetFlag(FLAGS_authz);
         uint16_t port = absl::GetFlag(FLAGS_port);
+        
         // Creating and running the REST service.
         catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, port);
         globalApi = &api;
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
+        
         statusUpdateExample();
+        
         api.run();
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
@@ -193,7 +196,8 @@ void RunRPCServer() {
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
-    std::thread catenaRpcThread(RunRPCServer);
-    catenaRpcThread.join();
+    
+    std::thread catenaRestThread(RunRESTServer);
+    catenaRestThread.join();
     return 0;
 }
