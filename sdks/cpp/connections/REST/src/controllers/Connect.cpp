@@ -6,7 +6,7 @@ using catena::REST::Connect;
 int Connect::objectCounter_ = 0;
 
 Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, ok_{true}, shutdown_{false}, 
+    socket_{socket}, writer_{socket}, dm_{dm}, ok_{true}, shutdown_{false}, 
     catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken(), context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());

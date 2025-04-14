@@ -128,6 +128,10 @@ class Connect : public ICallData, public catena::common::Connect {
      */
     ChunkedWriter writer_;
     /**
+     * @brief The device to connect to.
+     */
+    Device& dm_;
+    /**
      * @brief The mutex to for locking the object while writing
      */
     std::mutex mtx_;
