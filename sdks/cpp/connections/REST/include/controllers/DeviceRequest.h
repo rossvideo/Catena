@@ -53,6 +53,7 @@
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
+#include "ServiceImpl.h"
 
 namespace catena {
 namespace REST {
@@ -72,7 +73,7 @@ class DeviceRequest : public ICallData {
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
      * @param dm The device to get components from.
-     */ 
+     */
     DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
     /**
      * @brief DeviceRequest's main process.

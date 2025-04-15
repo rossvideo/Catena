@@ -1,6 +1,13 @@
-
 #include <SocketReader.h>
+#include "ServiceImpl.h"
 using catena::REST::SocketReader;
+
+namespace catena {
+namespace REST {
+
+SocketReader::SocketReader(CatenaServiceImpl& service) 
+    : subscriptionManager_(service.getSubscriptionManager()),
+      service_(&service) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
@@ -87,8 +94,38 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
         }
     }
-    // Setting detail level to none if not set.
-    if (detailLevel_ == -1) {
-        detailLevel_ = catena::Device_DetailLevel_NONE;
+}
+
+void SocketReader::fields(std::unordered_map<std::string, std::string>& fieldMap) const {
+    std::string request = req_;
+    if (fieldMap.size() == 0) {
+        throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
+    } else {
+        // Split the request into parts
+        std::vector<std::string> parts;
+        size_t start = 0;
+        size_t end = request.find('/');
+        while (end != std::string::npos) {
+            parts.push_back(request.substr(start, end - start));
+            start = end + 1;
+            end = request.find('/', start);
+        }
+        if (start < request.size()) {
+            parts.push_back(request.substr(start));
+        }
+
+        // Process each field in order
+        for (size_t i = 0; i < parts.size(); i += 2) {
+            if (i + 1 >= parts.size()) break;
+            std::string fieldName = parts[i];
+            std::string fieldValue = parts[i + 1];
+            
+            if (fieldMap.find(fieldName) != fieldMap.end()) {
+                fieldMap[fieldName] = fieldValue;
+            }
+        }
     }
 }
+
+} // namespace REST
+} // namespace catena
