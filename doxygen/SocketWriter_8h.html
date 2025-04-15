@@ -92,8 +92,7 @@ $(document).ready(function(){initNavTree('SocketWriter_8h.html',''); initResizab
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#namespaces">Namespaces</a>  </div>
   <div class="headertitle"><div class="title">SocketWriter.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -106,7 +105,6 @@ $(document).ready(function(){initNavTree('SocketWriter_8h.html',''); initResizab
 <code>#include &lt;interface/device.pb.h&gt;</code><br />
 <code>#include &lt;google/protobuf/util/json_util.h&gt;</code><br />
 <code>#include &lt;<a class="el" href="Status_8h_source.html">Status.h</a>&gt;</code><br />
-<code>#include &lt;<a class="el" href="utils_8h_source.html">utils.h</a>&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for SocketWriter.h:</div>
 <div class="dyncontent">
@@ -125,8 +123,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html">catena::REST::SocketWriter</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper class used to write a unary response to a socket using boost.  <a href="classcatena_1_1REST_1_1SocketWriter.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SSEWriter.html">catena::REST::SSEWriter</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper class to write Server Sent Events to a socket using boost.  <a href="classcatena_1_1REST_1_1SSEWriter.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html">catena::REST::ChunkedWriter</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper class used to write to a socket using boost.  <a href="classcatena_1_1REST_1_1ChunkedWriter.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
@@ -137,12 +135,6 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespacecatena_1_1REST" id="r_namespacecatena_1_1REST"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html">catena::REST</a></td></tr>
 <tr class="memdesc:namespacecatena_1_1REST"><td class="mdescLeft">&#160;</td><td class="mdescRight">Namespace for classes relating to handling <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API requests. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:aba0562bbaa4c24aabbd2f3a79cbc5db2" id="r_aba0562bbaa4c24aabbd2f3a79cbc5db2"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html#aba0562bbaa4c24aabbd2f3a79cbc5db2">catena::REST::codeMap_</a></td></tr>
-<tr class="memdesc:aba0562bbaa4c24aabbd2f3a79cbc5db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project.">catena::StatusCode</a> to HTTP status codes.  <br /></td></tr>
-<tr class="separator:aba0562bbaa4c24aabbd2f3a79cbc5db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper class used to write to a socket using boost. </p>

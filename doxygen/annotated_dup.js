@@ -60,6 +60,7 @@ var annotated_dup =
       [ "REST", "namespacecatena_1_1REST.html", [
         [ "AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", "classcatena_1_1REST_1_1AddLanguage" ],
         [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
+        [ "ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", "classcatena_1_1REST_1_1ChunkedWriter" ],
         [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
         [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
         [ "GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", "classcatena_1_1REST_1_1GetPopulatedSlots" ],
@@ -73,8 +74,7 @@ var annotated_dup =
         [ "MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", "classcatena_1_1REST_1_1MultiSetValue" ],
         [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
-        [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],
-        [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ]
+        [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ]
       ] ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
       [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],

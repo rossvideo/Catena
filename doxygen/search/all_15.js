@@ -13,8 +13,9 @@ var searchData=
   ['updatesubscriptions_10',['updatesubscriptions',['../classCatenaServiceImpl_1_1UpdateSubscriptions.html#ad40ad4d61141fbb1c55b83485d9a3574',1,'CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions()'],['../classCatenaServiceImpl_1_1UpdateSubscriptions.html',1,'CatenaServiceImpl::UpdateSubscriptions']]],
   ['updatesubscriptions_2eh_11',['UpdateSubscriptions.h',['../UpdateSubscriptions_8h.html',1,'']]],
   ['use_20the_20rest_20connection_20manager_12',['Install boost libraries if you want to use the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md27',1,'']]],
-  ['useragent_5f_13',['userAgent_',['../classcatena_1_1common_1_1Connect.html#af65f3d8646574a41942a3f68106a8a2f',1,'catena::common::Connect']]],
-  ['using_20docker_20with_20the_20catena_20c_20sdk_14',['Using Docker With The Catena C++ SDK',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html',1,'']]],
-  ['using_20the_20rest_20connection_20manager_15',['Install boost if using the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md47',1,'']]],
-  ['utils_2eh_16',['utils.h',['../utils_8h.html',1,'']]]
+  ['useragent_13',['useragent',['../classcatena_1_1REST_1_1SocketReader.html#a9752ce6af69c4c5fc245acdebaa9ffcd',1,'catena::REST::SocketReader::userAgent()'],['../classcatena_1_1REST_1_1ISocketReader.html#a5b9ce4d09899fa5601a60160f1d8d982',1,'catena::REST::ISocketReader::userAgent()']]],
+  ['useragent_5f_14',['userAgent_',['../classcatena_1_1common_1_1Connect.html#af65f3d8646574a41942a3f68106a8a2f',1,'catena::common::Connect']]],
+  ['using_20docker_20with_20the_20catena_20c_20sdk_15',['Using Docker With The Catena C++ SDK',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html',1,'']]],
+  ['using_20the_20rest_20connection_20manager_16',['Install boost if using the REST connection manager',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2windows__toolchain.html#autotoc_md47',1,'']]],
+  ['utils_2eh_17',['utils.h',['../utils_8h.html',1,'']]]
 ];

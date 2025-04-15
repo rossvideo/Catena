@@ -12,11 +12,10 @@ var searchData=
   ['singleton_9',['singleton',['../classcatena_1_1patterns_1_1Singleton.html#ae2a6eca0412770b641759d2b7960c4e8',1,'catena::patterns::Singleton::Singleton(const Singleton &amp;)=delete'],['../classcatena_1_1patterns_1_1Singleton.html#a93935ffb59aa07556717760769adbe91',1,'catena::patterns::Singleton::Singleton(Singleton &amp;&amp;)=delete'],['../classcatena_1_1patterns_1_1Singleton.html#a3e19a6ea253df88afe0e36a98dece839',1,'catena::patterns::Singleton::Singleton()=default']]],
   ['size_10',['size',['../classcatena_1_1common_1_1IParam.html#a357881202bece2996171fae807517637',1,'catena::common::IParam::size()'],['../classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da',1,'catena::common::ParamWithValue::size()'],['../classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097',1,'catena::common::Path::size()']]],
   ['slot_11',['slot',['../classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce',1,'catena::common::Device::slot(const uint32_t slot)'],['../classcatena_1_1common_1_1Device.html#adae63c83dfa563977613dbf8440c45be',1,'catena::common::Device::slot() const']]],
-  ['socketwriter_12',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a',1,'catena::REST::SocketWriter']]],
+  ['socketwriter_12',['socketwriter',['../classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a',1,'catena::REST::SocketWriter::SocketWriter()'],['../classcatena_1_1REST_1_1ChunkedWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a',1,'catena::REST::ChunkedWriter::SocketWriter()']]],
   ['split_13',['split',['../namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb',1,'catena']]],
-  ['ssewriter_14',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html#a149db75604725f4a1d99592d5311d49a',1,'catena::REST::SSEWriter']]],
-  ['stream_5fif_5fpossible_15',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
-  ['subs_16',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
-  ['subscriptionmanager_17',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b',1,'catena::common::SubscriptionManager']]],
-  ['subscriptions_18',['subscriptions',['../classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1',1,'catena::common::Device']]]
+  ['stream_5fif_5fpossible_14',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
+  ['subs_15',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
+  ['subscriptionmanager_16',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b',1,'catena::common::SubscriptionManager']]],
+  ['subscriptions_17',['subscriptions',['../classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1',1,'catena::common::Device']]]
 ];

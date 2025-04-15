@@ -92,6 +92,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1SocketWriter.ht
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classcatena_1_1REST_1_1SocketWriter-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::REST::SocketWriter Class Reference</div></div>
 </div><!--header-->
@@ -104,7 +105,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1SocketWriter.ht
 <div class="dynheader">
 Inheritance diagram for catena::REST::SocketWriter:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketWriter__inherit__graph.svg" width="212" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1SocketWriter__inherit__graph.svg" width="222" height="183"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
 Collaboration diagram for catena::REST::SocketWriter:</div>
@@ -129,6 +130,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a97333fbdab0cc40d9fa86117f7eb8e07" id="r_a97333fbdab0cc40d9fa86117f7eb8e07"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a97333fbdab0cc40d9fa86117f7eb8e07">finish</a> (google::protobuf::Message &amp;msg)</td></tr>
 <tr class="memdesc:a97333fbdab0cc40d9fa86117f7eb8e07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the writing process by writing a message to the socket.  <br /></td></tr>
 <tr class="separator:a97333fbdab0cc40d9fa86117f7eb8e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb078d6a7c3b928850d10029220d8bd4" id="r_afb078d6a7c3b928850d10029220d8bd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#afb078d6a7c3b928850d10029220d8bd4">writeOptions</a> () override</td></tr>
+<tr class="memdesc:afb078d6a7c3b928850d10029220d8bd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a response to the client detaining their options. Used when method = OPTIONS.  <br /></td></tr>
+<tr class="separator:afb078d6a7c3b928850d10029220d8bd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcatena_1_1REST_1_1ISocketWriter"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1REST_1_1ISocketWriter')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">catena::REST::ISocketWriter</a></td></tr>
 <tr class="memitem:a69830f9da3cd89430fec17d1e66576eb inherit pub_methods_classcatena_1_1REST_1_1ISocketWriter" id="r_a69830f9da3cd89430fec17d1e66576eb"><td class="memItemLeft" align="right" valign="top">
 &#160;</td><td class="memItemRight" valign="bottom"><b>ISocketWriter</b> ()=default</td></tr>
@@ -146,6 +150,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a609ed37959b60b07b3eb06bd78af5381 inherit pub_methods_classcatena_1_1REST_1_1ISocketWriter" id="r_a609ed37959b60b07b3eb06bd78af5381"><td class="memItemLeft" align="right" valign="top">
 <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">ISocketWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">ISocketWriter</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a609ed37959b60b07b3eb06bd78af5381 inherit pub_methods_classcatena_1_1REST_1_1ISocketWriter"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a9a3f4e9097d019c4e9e19a5b57b9efd7" id="r_a9a3f4e9097d019c4e9e19a5b57b9efd7"><td class="memItemLeft" align="right" valign="top"><a id="a9a3f4e9097d019c4e9e19a5b57b9efd7" name="a9a3f4e9097d019c4e9e19a5b57b9efd7"></a>
+tcp::socket &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>socket_</b></td></tr>
+<tr class="memdesc:a9a3f4e9097d019c4e9e19a5b57b9efd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The socket to write to. <br /></td></tr>
+<tr class="separator:a9a3f4e9097d019c4e9e19a5b57b9efd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88989956dc74978d1ce157a52b5587c0" id="r_a88989956dc74978d1ce157a52b5587c0"><td class="memItemLeft" align="right" valign="top"><a id="a88989956dc74978d1ce157a52b5587c0" name="a88989956dc74978d1ce157a52b5587c0"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><b>response_</b></td></tr>
+<tr class="memdesc:a88989956dc74978d1ce157a52b5587c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">The response to write to the socket. <br /></td></tr>
+<tr class="separator:a88989956dc74978d1ce157a52b5587c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a602d385c33f26b422f7c4df1f7b6364f" id="r_a602d385c33f26b422f7c4df1f7b6364f"><td class="memItemLeft" align="right" valign="top"><a id="a602d385c33f26b422f7c4df1f7b6364f" name="a602d385c33f26b422f7c4df1f7b6364f"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><b>CORS_</b></td></tr>
+<tr class="memdesc:a602d385c33f26b422f7c4df1f7b6364f"><td class="mdescLeft">&#160;</td><td class="mdescRight">CORS headers used for all responses. Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers Access-Control-Allow-Credentials. <br /></td></tr>
+<tr class="separator:a602d385c33f26b422f7c4df1f7b6364f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fdb529f3203f233a0568422c6efd405" id="r_a9fdb529f3203f233a0568422c6efd405"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a9fdb529f3203f233a0568422c6efd405">multi_</a> = false</td></tr>
+<tr class="memdesc:a9fdb529f3203f233a0568422c6efd405"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag indicating whether the response is a multi-part response.  <br /></td></tr>
+<tr class="separator:a9fdb529f3203f233a0568422c6efd405"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab21b0624924cc222a68222f4ab906cda" id="r_ab21b0624924cc222a68222f4ab906cda"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ab21b0624924cc222a68222f4ab906cda">codeMap_</a></td></tr>
+<tr class="memdesc:ab21b0624924cc222a68222f4ab906cda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project.">catena::StatusCode</a> to HTTP status codes.  <br /></td></tr>
+<tr class="separator:ab21b0624924cc222a68222f4ab906cda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper class used to write a unary response to a socket using boost. </p>
@@ -194,6 +219,8 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
+<p class="reference">References <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a602d385c33f26b422f7c4df1f7b6364f">CORS_</a>, and <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a88989956dc74978d1ce157a52b5587c0">response_</a>.</p>
+
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -224,6 +251,8 @@ Public Member Functions</h2></td></tr>
 <p>If the response is empty, it does nothing. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1b80a8d671a1aeac4454080e44160863">catena::REST::ISocketWriter</a>.</p>
+
+<p>Reimplemented in <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#abc48d457270f8c1c9a4e9acbe3303996">catena::REST::ChunkedWriter</a>.</p>
 
 </div>
 </div>
@@ -282,6 +311,8 @@ Public Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a2e7c58859d3af2ea1571a8d81066091f">catena::REST::ISocketWriter</a>.</p>
 
+<p>Reimplemented in <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#af6b3e38d70e090ec33368710cf7ab6c7">catena::REST::ChunkedWriter</a>.</p>
+
 </div>
 </div>
 <a id="a554e66849e946ee0ea586d2deaf0326e" name="a554e66849e946ee0ea586d2deaf0326e"></a>
@@ -317,6 +348,125 @@ Public Member Functions</h2></td></tr>
 </dl>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a21167be973c4d8b7b14da99dc3203213">catena::REST::ISocketWriter</a>.</p>
+
+<p>Reimplemented in <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#a43b4105f66f354103ba76be5e5ac8e75">catena::REST::ChunkedWriter</a>.</p>
+
+</div>
+</div>
+<a id="afb078d6a7c3b928850d10029220d8bd4" name="afb078d6a7c3b928850d10029220d8bd4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb078d6a7c3b928850d10029220d8bd4">&#9670;&#160;</a></span>writeOptions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::REST::SocketWriter::writeOptions </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writes a response to the client detaining their options. Used when method = OPTIONS. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1bd6bf0ab4ae1c91316799b405c369d2">catena::REST::ISocketWriter</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="ab21b0624924cc222a68222f4ab906cda" name="ab21b0624924cc222a68222f4ab906cda"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab21b0624924cc222a68222f4ab906cda">&#9670;&#160;</a></span>codeMap_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::map&lt;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, int&gt; catena::REST::SocketWriter::codeMap_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">{</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>,                  200},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a09a0c7607585f76475b04e3ba9ed3b7f">catena::StatusCode::CANCELLED</a>,           410},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9">catena::StatusCode::UNKNOWN</a>,             404},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::StatusCode::INVALID_ARGUMENT</a>,    406},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a42ac065963ecd3a595bbe04eff7582e0">catena::StatusCode::DEADLINE_EXCEEDED</a>,   408},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a58e5d3cd8ce1ec9e3fd5b46c3ed166ac">catena::StatusCode::NOT_FOUND</a>,           410},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940">catena::StatusCode::ALREADY_EXISTS</a>,      409},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::StatusCode::PERMISSION_DENIED</a>,   401},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734">catena::StatusCode::UNAUTHENTICATED</a>,     407},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64fd6888fcfd5d773add33e104f2c6f0">catena::StatusCode::RESOURCE_EXHAUSTED</a>,  8},   </div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a11fffa5ea8ff6e830077e1ecb751b6ff">catena::StatusCode::FAILED_PRECONDITION</a>, 412},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548">catena::StatusCode::ABORTED</a>,             10},  </div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::StatusCode::OUT_OF_RANGE</a>,        416},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f">catena::StatusCode::UNIMPLEMENTED</a>,       501},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ac5ccebadad020a75cb223bf56f77a3c7">catena::StatusCode::INTERNAL</a>,            500},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e">catena::StatusCode::UNAVAILABLE</a>,         503},</div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551">catena::StatusCode::DATA_LOSS</a>,           15},  </div>
+<div class="line">    {<a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f">catena::StatusCode::DO_NOT_USE</a>,          -1},  </div>
+<div class="line">    }</div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a09a0c7607585f76475b04e3ba9ed3b7f"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a09a0c7607585f76475b04e3ba9ed3b7f">catena::CANCELLED</a></div><div class="ttdeci">@ CANCELLED</div><div class="ttdoc">The operation was cancelled (typically by the caller).</div><div class="ttdef"><b>Definition</b> Status.h:50</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a11fffa5ea8ff6e830077e1ecb751b6ff"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a11fffa5ea8ff6e830077e1ecb751b6ff">catena::FAILED_PRECONDITION</a></div><div class="ttdeci">@ FAILED_PRECONDITION</div><div class="ttdef"><b>Definition</b> Status.h:111</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a324df925b76a9e2014feef284c1d7945">catena::OUT_OF_RANGE</a></div><div class="ttdeci">@ OUT_OF_RANGE</div><div class="ttdef"><b>Definition</b> Status.h:133</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e">catena::UNAVAILABLE</a></div><div class="ttdeci">@ UNAVAILABLE</div><div class="ttdef"><b>Definition</b> Status.h:153</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940">catena::ALREADY_EXISTS</a></div><div class="ttdeci">@ ALREADY_EXISTS</div><div class="ttdef"><b>Definition</b> Status.h:76</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a></div><div class="ttdeci">@ OK</div><div class="ttdoc">Not an error; returned on success.</div><div class="ttdef"><b>Definition</b> Status.h:47</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a42ac065963ecd3a595bbe04eff7582e0"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a42ac065963ecd3a595bbe04eff7582e0">catena::DEADLINE_EXCEEDED</a></div><div class="ttdeci">@ DEADLINE_EXCEEDED</div><div class="ttdef"><b>Definition</b> Status.h:69</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a58e5d3cd8ce1ec9e3fd5b46c3ed166ac"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a58e5d3cd8ce1ec9e3fd5b46c3ed166ac">catena::NOT_FOUND</a></div><div class="ttdeci">@ NOT_FOUND</div><div class="ttdoc">Some requested entity (e.g., file or directory) was not found.</div><div class="ttdef"><b>Definition</b> Status.h:72</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64f74f4db3f30834d9c20a90a8dc40e9">catena::UNKNOWN</a></div><div class="ttdeci">@ UNKNOWN</div><div class="ttdef"><b>Definition</b> Status.h:56</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a64fd6888fcfd5d773add33e104f2c6f0"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a64fd6888fcfd5d773add33e104f2c6f0">catena::RESOURCE_EXHAUSTED</a></div><div class="ttdeci">@ RESOURCE_EXHAUSTED</div><div class="ttdef"><b>Definition</b> Status.h:91</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f">catena::DO_NOT_USE</a></div><div class="ttdeci">@ DO_NOT_USE</div><div class="ttdoc">Force users to include a default branch:</div><div class="ttdef"><b>Definition</b> Status.h:159</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6f38e6fade54bc708b875c87d4ccb38f">catena::UNIMPLEMENTED</a></div><div class="ttdeci">@ UNIMPLEMENTED</div><div class="ttdoc">Operation is not implemented or not supported/enabled in this service.</div><div class="ttdef"><b>Definition</b> Status.h:136</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548">catena::ABORTED</a></div><div class="ttdeci">@ ABORTED</div><div class="ttdef"><b>Definition</b> Status.h:118</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551">catena::DATA_LOSS</a></div><div class="ttdeci">@ DATA_LOSS</div><div class="ttdoc">Unrecoverable data loss or corruption.</div><div class="ttdef"><b>Definition</b> Status.h:156</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85ac5ccebadad020a75cb223bf56f77a3c7"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ac5ccebadad020a75cb223bf56f77a3c7">catena::INTERNAL</a></div><div class="ttdeci">@ INTERNAL</div><div class="ttdef"><b>Definition</b> Status.h:140</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ad1b5f6c215be9637e2cd1a34acef6454">catena::INVALID_ARGUMENT</a></div><div class="ttdeci">@ INVALID_ARGUMENT</div><div class="ttdef"><b>Definition</b> Status.h:62</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ade1d7d4fd21e79ff2045feeb9425d923">catena::PERMISSION_DENIED</a></div><div class="ttdeci">@ PERMISSION_DENIED</div><div class="ttdef"><b>Definition</b> Status.h:83</div></div>
+<div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af18664e91a646f1caacab6e8797b4734">catena::UNAUTHENTICATED</a></div><div class="ttdeci">@ UNAUTHENTICATED</div><div class="ttdef"><b>Definition</b> Status.h:87</div></div>
+</div><!-- fragment -->
+<p>Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project.">catena::StatusCode</a> to HTTP status codes. </p>
+
+</div>
+</div>
+<a id="a9fdb529f3203f233a0568422c6efd405" name="a9fdb529f3203f233a0568422c6efd405"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fdb529f3203f233a0568422c6efd405">&#9670;&#160;</a></span>multi_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool catena::REST::SocketWriter::multi_ = false</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Flag indicating whether the response is a multi-part response. </p>
+<p>Used to determine formatting when <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2" title="Finishes the writing process by writing response to socket.">finish()</a> is called. </p>
 
 </div>
 </div>
