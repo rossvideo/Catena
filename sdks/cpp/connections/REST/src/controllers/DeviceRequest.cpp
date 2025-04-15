@@ -6,7 +6,8 @@ using catena::REST::DeviceRequest;
 int DeviceRequest::objectCounter_ = 0;
 
 DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, ok_{true} {
+    socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, 
+    service_{*context.getService()}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
@@ -21,16 +22,26 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device&
         slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
         language_ = fields.at("language");
         auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
-        if (dlMap.find(fields.at("detail_level")) != dlMap.end()) {
-            detailLevel_ = dlMap.at(fields.at("detail_level"));
+        std::string detailLevelStr = fields.at("detail_level");
+        if (!detailLevelStr.empty() && dlMap.find(detailLevelStr) != dlMap.end()) {
+            detailLevel_ = dlMap.at(detailLevelStr);
         } else {
             detailLevel_ = catena::Device_DetailLevel_NONE;
         }
-        catena::split(requestSubscriptions_, fields.at("subscribed_oids"), ",");
-        // Add leading slash to OIDs if missing
-        for (auto& oid : requestSubscriptions_) {
-            if (!oid.empty() && oid[0] != '/') {
-                oid = "/" + oid;
+        // Split and filter out empty values
+        std::string subscribedOids = fields.at("subscribed_oids");
+        /** TODO:
+          * %7B%7D is the URL-encoded version of {}
+          * It is unclear whether we should proceed with just simple CSV or JSON
+          * This needs to be updated when the format is decided upon.
+          */
+        if (!subscribedOids.empty() && subscribedOids != "{}" && subscribedOids != "%7B%7D") {
+            catena::split(requestSubscriptions_, subscribedOids, ",");
+            // Add leading slash to OIDs if missing
+            for (auto& oid : requestSubscriptions_) {
+                if (!oid.empty() && oid[0] != '/') {
+                    oid = "/" + oid;
+                }
             }
         }
     // Parse error
@@ -57,6 +68,10 @@ void DeviceRequest::proceed() {
         }
 
         // Get service subscriptions from the manager
+        auto* service = context_.getService();
+        if (!service) {
+            throw catena::exception_with_status("Service not available", catena::StatusCode::INTERNAL);
+        }
         auto& subscriptionManager = context_.getSubscriptionManager();
         subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
         
@@ -77,10 +92,13 @@ void DeviceRequest::proceed() {
         // Set the detail level on the device
         dm_.detail_level(detailLevel_);
 
-        // If we're in SUBSCRIPTIONS mode and have no subscriptions, we'll still send minimal set
-        if (dm_.subscriptions() && subscribedOids_.empty() && 
-            detailLevel_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-            serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
+        // If we're in SUBSCRIPTIONS mode, we'll send minimal set if no subscriptions
+        if (detailLevel_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+            if (subscribedOids_.empty()) {
+                serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
+            } else {
+                serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
+            }
         } else {
             serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
         }
