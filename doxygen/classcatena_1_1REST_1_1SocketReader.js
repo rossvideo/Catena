@@ -1,7 +1,10 @@
 var classcatena_1_1REST_1_1SocketReader =
 [
+    [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html#a9fea2a7580a729b18d2dffe951fb4ba6", null ],
     [ "authorizationEnabled", "classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204", null ],
     [ "fields", "classcatena_1_1REST_1_1SocketReader.html#ac0a756b2ed430798d0ed7bac20577437", null ],
+    [ "getService", "classcatena_1_1REST_1_1SocketReader.html#a1597552dd8cbee1c1fd4d3b1f550b522", null ],
+    [ "getSubscriptionManager", "classcatena_1_1REST_1_1SocketReader.html#a59518bcb303ca47ad05454fc98c48bba", null ],
     [ "jsonBody", "classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f", null ],
     [ "jwsToken", "classcatena_1_1REST_1_1SocketReader.html#ac3c78ea250b9d57087297eead2bdb7e0", null ],
     [ "method", "classcatena_1_1REST_1_1SocketReader.html#a83236f1c3ab45215d0b34d4b6a2fa16e", null ],
