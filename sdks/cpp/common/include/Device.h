@@ -55,6 +55,9 @@
 #include <IMenu.h>
 #include <IMenuGroup.h>
 
+// Interface
+#include "interface/IDevice.h"
+
 // protobuf interface
 #include <interface/device.pb.h>
 
@@ -77,7 +80,7 @@ constexpr uint32_t kDefaultMaxArrayLength{1024};
 /**
  * @brief Implements the Device interface defined in the protobuf
  */
-class Device {
+class Device : public IDevice {
   public:
     /**
      * @brief LockGuard is a helper class to lock and unlock the device mutex
@@ -122,42 +125,42 @@ class Device {
      * @brief set the slot number of the device
      * @param slot the slot number of the device
      */
-    inline void slot(const uint32_t slot) { slot_ = slot; }
+    inline void slot(const uint32_t slot) override { slot_ = slot; }
 
     /**
      * @brief get the slot number of the device
      * @return slot number
      */
-    inline uint32_t slot() const { return slot_; }
+    inline uint32_t slot() const override { return slot_; }
 
     /**
      * @brief set the detail level of the device
      * @param detail_level the detail level of the device
      */
-    inline void detail_level(const DetailLevel_e detail_level) { detail_level_ = detail_level; }
+    inline void detail_level(const DetailLevel_e detail_level) override { detail_level_ = detail_level; }
 
     /**
      * @brief get the detail level of the device
      * @return DetailLevel_e
      */
-    inline DetailLevel_e detail_level() const { return detail_level_; }
+    inline DetailLevel_e detail_level() const override { return detail_level_; }
 
-    inline const std::string& getDefaultScope() const { return default_scope_; }
+    inline const std::string& getDefaultScope() const override { return default_scope_; }
 
     /**
      * @brief Check if subscriptions are enabled for this device
      * @return true if subscriptions are enabled, false otherwise
      */
-    inline bool subscriptions() const { return subscriptions_; }
+    inline bool subscriptions() const override { return subscriptions_; }
 
     /**
      * @return The default max length for this device's array params.
      */
-    inline uint32_t default_max_length() const {return default_max_length_;}
+    inline uint32_t default_max_length() const override {return default_max_length_;}
     /**
      * @return The default total length for this device's string array params.
      */
-    inline uint32_t default_total_length() const {return default_total_length_;}
+    inline uint32_t default_total_length() const override {return default_total_length_;}
 
     /**
      * @brief Sets the default_max_length_ for this device's array params.
@@ -165,7 +168,7 @@ class Device {
      * kDefaultMaxArrayLength.
      * @param default_max_length The value to set default_max_length_ to.
      */
-    void set_default_max_length(const uint32_t default_max_length) {
+    void set_default_max_length(const uint32_t default_max_length) override {
       default_max_length_ = default_max_length > 0 ? default_max_length : kDefaultMaxArrayLength;
     }
     /**
@@ -174,7 +177,7 @@ class Device {
      * kDefaultMaxArrayLength.
      * @param default_total_length The value to set default_total_length_ to.
      */
-    void set_default_total_length(const uint32_t default_total_length) {
+    void set_default_total_length(const uint32_t default_total_length) override {
       default_total_length_ = default_total_length > 0 ? default_total_length : kDefaultMaxArrayLength;
     }
 
@@ -189,19 +192,19 @@ class Device {
      * that the device is not modified while this method is running. This class provides
      * a LockGuard helper class to make this easier.
      */
-    void toProto(::catena::Device& dst, Authorizer& authz, bool shallow = true) const;
+    void toProto(::catena::Device& dst, Authorizer& authz, bool shallow = true) const override;
 
     /**
      * @brief Create a protobuf representation of the language packs.
      * @param packs the protobuf representation of the language packs.
      */
-    void toProto(::catena::LanguagePacks& packs) const;
+    void toProto(::catena::LanguagePacks& packs) const override;
 
     /**
      * @brief Create a protobuf representation of the language list.
      * @param list the protobuf representation of the language list.
      */
-    void toProto(::catena::LanguageList& list) const;
+    void toProto(::catena::LanguageList& list) const override;
 
     using ComponentLanguagePack = catena::DeviceComponent_ComponentLanguagePack;
 
@@ -215,7 +218,7 @@ class Device {
      * Intention is for the AddLanguage RPCs / API calls to be serviced by this
      * method.
      */
-    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled);
+    catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Finds and returns a language pack based on languageId.ABORTED
@@ -223,11 +226,13 @@ class Device {
      * @param pack Output var containing the found LanguagePack.
      * @return exception_with_status containing the status of the operation.
      */
-    catena::exception_with_status getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const;
+    catena::exception_with_status getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const override;
 
     /**
-     * @brief DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents
-     * This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.
+     * @brief DeviceSerializer is a coroutine that serializes the device into a
+     * stream of DeviceComponents
+     * This struct manages the state and lifetime of the coroutine. It also
+     * provides the interface for resuming the coroutine.
      */
     class DeviceSerializer {
       public:
@@ -412,7 +417,7 @@ class Device {
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+    std::unique_ptr<IParam> getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief get a parameter by oid with authorization
@@ -423,7 +428,7 @@ class Device {
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
-    std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+    std::unique_ptr<IParam> getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const override;
     
     /**
      * @brief get all top level parameters
@@ -431,7 +436,7 @@ class Device {
      * @param authz the authorizer object
      * @return a vector of unique pointers to the parameters
      */
-    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+    std::vector<std::unique_ptr<IParam>> getTopLevelParams(catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const override;
 
 
     /**
@@ -442,7 +447,7 @@ class Device {
      * @return a unique pointer to the command, or nullptr if it does not exist
      * @todo add authorization checking
      */
-    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+    std::unique_ptr<IParam> getCommand(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief Validates each payload in a multiSetValuePayload without commit
@@ -452,7 +457,7 @@ class Device {
      * @param authz The Authorizer to test with.
      * @returns true if the call is valid.
      */
-    bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz = Authorizer::kAuthzDisabled);
+    bool tryMultiSetValue (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz = Authorizer::kAuthzDisabled) override;
     
     /**
      * @brief Sets the values of a device's parameter's using a
@@ -463,7 +468,7 @@ class Device {
      * @param authz The Authroizer with the client's scopes.
      * @returns an exception_with_status with status set OK if successful.
      */
-    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz);
+    catena::exception_with_status commitMultiSetValue (catena::MultiSetValuePayload src, Authorizer& authz) override;
 
     /**
      * @brief deserialize a protobuf value object into the parameter value
@@ -478,7 +483,7 @@ class Device {
      * and commitMultiSetValue().
      * It remains to support the old way of setting values.
      */
-    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, Authorizer& authz = Authorizer::kAuthzDisabled);
+    catena::exception_with_status setValue (const std::string& jptr, catena::Value& src, Authorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief serialize the parameter value to protobuf
@@ -488,7 +493,7 @@ class Device {
      * @return an exception_with_status with status set OK if successful, otherwise an error.
      * Intention is to for GetValue RPCs / API calls to be serviced by this method.
      */
-    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const;
+    catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
      * @brief check if a parameter should be sent based on detail level and authorization
@@ -497,7 +502,7 @@ class Device {
      * @param authz the authorizer object
      * @return true if the parameter should be sent, false otherwise
      */
-    bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const;
+    bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const override;
 
   public:
     /**
@@ -505,7 +510,7 @@ class Device {
      * Intended recipient is the business logic.
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
-    
+
     /**
      * @brief signal emitted when a language pack is added to the device.
      * Intended recipient is the business logic.
