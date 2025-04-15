@@ -32,6 +32,7 @@
  * @file ServiceImpl
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
@@ -62,15 +63,13 @@ using boost::asio::ip::tcp;
 #include <iostream>
 #include <regex>
 
-using catena::REST::SocketReader;
-using catena::REST::SocketWriter;
-using catena::REST::ChunkedWriter;
-
 namespace catena {
 /**
  * @brief Namespace for classes relating to handling REST API requests.
  */
 namespace REST {
+
+class SocketReader;  // Forward declaration
 
 /**
  * @brief Implements Catena REST API request handlers.
@@ -110,7 +109,17 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     bool authorizationEnabled() override { return authorizationEnabled_; };
     
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::SubscriptionManager& getSubscriptionManager() { return subscriptionManager_; }
+
   private:
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::common::SubscriptionManager subscriptionManager_;
+
     /**
      * @brief Returns true if port_ is already in use.
      * 

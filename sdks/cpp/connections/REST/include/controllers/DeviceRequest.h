@@ -32,6 +32,7 @@
  * @file DeviceRequest.h
  * @brief Implements REST DeviceRequest RPC.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -54,6 +55,7 @@
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
+#include "ServiceImpl.h"
 
 namespace catena {
 namespace REST {
@@ -73,7 +75,7 @@ class DeviceRequest : public ICallData {
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
      * @param dm The device to get components from.
-     */ 
+     */
     DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
     /**
      * @brief DeviceRequest's main process.
@@ -124,7 +126,11 @@ class DeviceRequest : public ICallData {
      */
     Device& dm_;
     /**
-     * @brief Flag indicating if the RPC is working correctly.
+     * @brief The service instance
+     */
+    CatenaServiceImpl& service_;
+    /**
+     * @brief Flag to indicate if the request is valid
      */
     bool ok_;
 
