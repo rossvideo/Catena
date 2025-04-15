@@ -1,6 +1,13 @@
-
 #include <SocketReader.h>
+#include "ServiceImpl.h"
 using catena::REST::SocketReader;
+
+namespace catena {
+namespace REST {
+
+SocketReader::SocketReader(CatenaServiceImpl& service) 
+    : subscriptionManager_(service.getSubscriptionManager()),
+      service_(&service) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.

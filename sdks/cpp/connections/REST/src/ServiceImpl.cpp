@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
@@ -88,7 +87,7 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context;
+                    SocketReader context(*this);
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.service();
                     // Returning options to the client if required.

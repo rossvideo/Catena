@@ -36,7 +36,10 @@
  */
 
 #pragma once
- 
+
+// common
+#include <SubscriptionManager.h>
+
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -114,6 +117,11 @@ class ISocketReader {
      * @brief Returns true if authorization is enabled.
      */
     virtual bool authorizationEnabled() const = 0;
+
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    virtual catena::common::SubscriptionManager& getSubscriptionManager() = 0;
 };
  
 }; // Namespace REST
