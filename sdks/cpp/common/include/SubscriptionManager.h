@@ -42,14 +42,14 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <Device.h>
+#include <IDevice.h>
 #include <IParam.h>
 #include <ParamVisitor.h>
 
 namespace catena {
 namespace common {
 
-using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 
 /**
@@ -69,7 +69,7 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
+    bool addSubscription(const std::string& oid, IDevice* dm, exception_with_status& rc);
 
     /**
      * @brief Remove an OID subscription
@@ -78,14 +78,14 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
+    bool removeSubscription(const std::string& oid, IDevice* dm, exception_with_status& rc);
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(Device& dm);
+    const std::vector<std::string>& getAllSubscribedOids(IDevice* dm);
 
     /**
      * @brief Get all unique subscriptions
@@ -172,7 +172,7 @@ private:
      * @brief Update the combined list of all subscribed OIDs
      * @param dm The device model to use for expanding wildcard subscriptions
      */
-    void updateAllSubscribedOids_(Device& dm);
+    void updateAllSubscribedOids_(IDevice* dm);
 };
 
 } // namespace common

@@ -112,20 +112,20 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std:
  */
 void CatenaServiceImpl::init() {
     
-    new GetPopulatedSlots(this, dm_, true);
-    new GetValue(this, dm_, true);
-    new SetValue(this, dm_, true);
-    new MultiSetValue(this, dm_, true);
-    new Connect(this, dm_, true);
-    new DeviceRequest(this, dm_, true);
-    new ExternalObjectRequest(this, dm_, true);
-    new BasicParamInfoRequest(this, dm_, true);
-    new GetParam(this, dm_, true);
-    new ExecuteCommand(this, dm_, true);
-    new AddLanguage(this, dm_, true);
-    new ListLanguages(this, dm_, true);
-    new LanguagePackRequest(this, dm_, true);
-    new UpdateSubscriptions(this, dm_, true);
+    new GetPopulatedSlots(this, &dm_, true);
+    new GetValue(this, &dm_, true);
+    new SetValue(this, &dm_, true);
+    new MultiSetValue(this, &dm_, true);
+    new Connect(this, &dm_, true);
+    new DeviceRequest(this, &dm_, true);
+    new ExternalObjectRequest(this, &dm_, true);
+    new BasicParamInfoRequest(this, &dm_, true);
+    new GetParam(this, &dm_, true);
+    new ExecuteCommand(this, &dm_, true);
+    new AddLanguage(this, &dm_, true);
+    new ListLanguages(this, &dm_, true);
+    new LanguagePackRequest(this, &dm_, true);
+    new UpdateSubscriptions(this, &dm_, true);
 }
 
 // Initializing the shutdown signal for all open connections.

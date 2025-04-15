@@ -53,7 +53,7 @@ using catena::common::Authorizer;
 
 int CatenaServiceImpl::BasicParamInfoRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImpl *service, IDevice* dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -105,12 +105,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
                     {
-                    Device::LockGuard lg(&dm_);
-                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                    Device::LockGuard lg(dm_);
+                    top_level_params = dm_->getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        Device::LockGuard lg(&dm_);                      
+                        Device::LockGuard lg(dm_);                      
                         responses_.clear();  
                         // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
@@ -136,8 +136,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 // Mode 2: Get a specific parameter and its children
                 } else if (!req_.oid_prefix().empty()) { 
                     {
-                    Device::LockGuard lg(&dm_);
-                    param = dm_.getParam(req_.oid_prefix(), rc, *authz);
+                    Device::LockGuard lg(dm_);
+                    param = dm_->getParam(req_.oid_prefix(), rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && param) {

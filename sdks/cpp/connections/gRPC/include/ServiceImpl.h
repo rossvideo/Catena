@@ -45,6 +45,7 @@
 #include <vdk/signals.h>
 #include <IParam.h>
 #include <Device.h>
+#include <IDevice.h>
 #include <Authorization.h>
 
 // gRPC interface
@@ -64,6 +65,7 @@ using grpc::Status;
 using grpc::ServerCompletionQueue;
 
 using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 
 /**

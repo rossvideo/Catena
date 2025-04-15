@@ -55,7 +55,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice* dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             std::cout << "Calling registerItem with: " << this << std::endl;
@@ -106,17 +106,17 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 this->cv_.notify_one();
             });
             // Waiting for a value set by server to be sent to execute code.
-            valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+            valueSetByServerId_ = dm_->valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse(oid, idx, p);
             });
 
             // Waiting for a value set by client to be sent to execute code.
-            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+            valueSetByClientId_ = dm_->valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse(oid, idx, p);
             });
 
             // Waiting for a language to be added to execute code.
-            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+            languageAddedId_ = dm_->languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
                 try {
                     // If Connect was cancelled, notify client and end process.
                     if (this->context_.IsCancelled()){
@@ -146,7 +146,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             {
                 status_ = CallStatus::kWrite;
                 catena::PushUpdates populatedSlots;
-                populatedSlots.set_slot(dm_.slot());
+                populatedSlots.set_slot(dm_->slot());
                 writer_.Write(populatedSlots, this);
             }
             break;
@@ -167,7 +167,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
-                res_.set_slot(dm_.slot());
+                res_.set_slot(dm_->slot());
                 writer_.Write(res_, this);
             }
             lock.unlock();
@@ -178,9 +178,9 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
             shutdownSignal_.disconnect(shutdownSignalId_);
-            dm_.valueSetByClient.disconnect(valueSetByClientId_);
-            dm_.valueSetByServer.disconnect(valueSetByServerId_);
-            dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+            dm_->valueSetByClient.disconnect(valueSetByClientId_);
+            dm_->valueSetByServer.disconnect(valueSetByServerId_);
+            dm_->languageAddedPushUpdate.disconnect(languageAddedId_);
             service->deregisterItem(this);
             break;
         // default: Error, end process.

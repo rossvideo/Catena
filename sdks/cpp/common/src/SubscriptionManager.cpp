@@ -29,12 +29,12 @@
  */
 
 #include <SubscriptionManager.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <IParam.h>
 #include <Status.h>
 
 // Use the correct namespaces
-using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 using catena::common::Path;
 using catena::common::ParamVisitor;
@@ -48,7 +48,7 @@ bool SubscriptionManager::isWildcard(const std::string& oid) {
 }
 
 // Add a subscription (either unique or wildcard). Returns true if added, false if already exists
-bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, exception_with_status& rc) {
+bool SubscriptionManager::addSubscription(const std::string& oid, IDevice* dm, exception_with_status& rc) {
     subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
@@ -72,8 +72,8 @@ bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, ex
         // Get the base parameter
         std::unique_ptr<IParam> baseParam;
         {
-            catena::common::Device::LockGuard lg(&dm);
-            baseParam = dm.getParam(baseOid, rc);
+            catena::common::IDevice::LockGuard lg(dm);
+            baseParam = dm->getParam(baseOid, rc);
         }
         
         if (!baseParam) {
@@ -103,7 +103,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, ex
 }
 
 // Remove a subscription (either unique or wildcard). Returns true if removed, false if not found
-bool SubscriptionManager::removeSubscription(const std::string& oid, Device& dm, catena::exception_with_status& rc) {
+bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice* dm, catena::exception_with_status& rc) {
     subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
@@ -154,7 +154,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, Device& dm,
 }
 
 // Update the list of all subscribed OIDs by combining unique and wildcard subscriptions
-void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
+void SubscriptionManager::updateAllSubscribedOids_(IDevice* dm) {
     allSubscribedOids_.clear();
     
     // Add unique subscriptions
@@ -172,8 +172,8 @@ void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
         // First try to get the base parameter
         std::unique_ptr<IParam> baseParam;
         {
-            catena::common::Device::LockGuard lg(&dm);
-            baseParam = dm.getParam(basePath, rc);
+            catena::common::IDevice::LockGuard lg(dm);
+            baseParam = dm->getParam(basePath, rc);
         }
         
         if (baseParam) {
@@ -184,8 +184,8 @@ void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
             // If base parameter not found, try to find any parameters that start with this path
             std::vector<std::unique_ptr<IParam>> allParams;
             {
-                catena::common::Device::LockGuard lg(&dm);
-                allParams = dm.getTopLevelParams(rc);
+                catena::common::IDevice::LockGuard lg(dm);
+                allParams = dm->getTopLevelParams(rc);
             }
             
             for (auto& param : allParams) {
@@ -203,7 +203,7 @@ void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
 }
 
 // Get all subscribed OIDs, including wildcard subscriptions
-const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(Device& dm) {
+const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(IDevice* dm) {
     subscriptionLock_.lock();
     updateAllSubscribedOids_(dm);
     auto& result = allSubscribedOids_;

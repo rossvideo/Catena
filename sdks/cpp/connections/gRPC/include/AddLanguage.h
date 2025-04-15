@@ -54,7 +54,7 @@ class CatenaServiceImpl::AddLanguage : public CallData {
          * @param dm Address of the device to get the value from.
          * @param ok Flag to check if the command was successfully executed.
          */ 
-        AddLanguage(CatenaServiceImpl *service, Device &dm, bool ok);
+        AddLanguage(CatenaServiceImpl *service, IDevice* dm, bool ok);
         /**
          * @brief Manages the steps of the AddLanguage gRPC commands through
          * the state variable status.
@@ -87,7 +87,7 @@ class CatenaServiceImpl::AddLanguage : public CallData {
         /**
          * @brief The device to add the LanguagePack to.
          */
-        Device &dm_;
+        IDevice* dm_;
         /**
          * @brief The object's unique id.
          */

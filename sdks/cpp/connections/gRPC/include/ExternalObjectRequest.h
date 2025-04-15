@@ -56,7 +56,7 @@ class CatenaServiceImpl::ExternalObjectRequest : public CallData {
          * @param dm the device for which the request is made
          * @param ok flag to check if request is successful 
          */
-        ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        ExternalObjectRequest(CatenaServiceImpl *service, IDevice* dm, bool ok);
         /**
          * @brief Destrutor for ExternalObjectRequest, although it isn't used.
          */
@@ -90,7 +90,7 @@ class CatenaServiceImpl::ExternalObjectRequest : public CallData {
         /**
          * @brief Reference to the device to which the request is made
          */
-        Device &dm_;
+        IDevice* dm_;
         /**
          * @brief Unique identifier for command object
          */

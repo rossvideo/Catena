@@ -51,6 +51,7 @@
 #include <string>
 #include <vector>
 #include <coroutine>
+#include <mutex>
 
 namespace catena {
 namespace common {
