@@ -32,6 +32,7 @@
  * @file DeviceRequest.h
  * @brief Implements REST DeviceRequest RPC.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 

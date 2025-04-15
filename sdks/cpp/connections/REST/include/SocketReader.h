@@ -32,6 +32,7 @@
  * @file SocketReader.h
  * @brief Helper class used to read from a socket using boost.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
