@@ -79,6 +79,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
 
   // Specifying which Device and IParam to use (defaults to catena::...)
   using Device = catena::common::Device;
+  using IDevice = catena::common::IDevice;
   using IParam = catena::common::IParam;
 
   public:
@@ -164,7 +165,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
                                                     std::string,
                                                     tcp::socket&,
                                                     SocketReader&,
-                                                    Device&>;
+                                                    IDevice*>;
     /**
      * @brief Creating an ICallData factory for handling RPC routing.
      */

@@ -43,6 +43,7 @@
 #include <IParam.h>
 #include <ILanguagePack.h>
 #include <Status.h>
+#include <vdk/signals.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
@@ -59,6 +60,19 @@ namespace common {
  */
 class IDevice {
   public:
+    /**
+     * @brief LockGuard is a helper class to lock and unlock the device mutex
+     */
+    class LockGuard {
+      public:
+        LockGuard(IDevice* dm) : dm_(dm) { dm_->mutex_.lock(); }
+        ~LockGuard() { dm_->mutex_.unlock(); }
+
+      private:
+        IDevice* dm_;
+    };
+    friend class LockGuard;
+
     /**
      * @brief convenience type aliases to types of objects contained in the
      * device
@@ -432,6 +446,28 @@ class IDevice {
      * @return true if the parameter should be sent, false otherwise
      */
     virtual bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const = 0;
+
+    /**
+     * @brief signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
+
+    /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ComponentLanguagePack&)> languageAddedPushUpdate;
+
+    /**
+     * @brief signal emitted when a value is set by the server, or business
+     * logic.
+     * Intended recipient is the connection manager.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
+
+  private:
+    mutable std::mutex mutex_;
 };
 
 }  // namespace common

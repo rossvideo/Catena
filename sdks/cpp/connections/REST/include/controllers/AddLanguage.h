@@ -44,7 +44,7 @@
 // common
 #include <rpc/TimeNow.h>
 #include <Status.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
 #include <Enums.h>
@@ -63,7 +63,7 @@ namespace REST {
 class AddLanguage : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
-    using Device = catena::common::Device;
+    using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
@@ -73,7 +73,7 @@ class AddLanguage : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to add the language pack to.
      */ 
-    AddLanguage(tcp::socket& socket, SocketReader& context, Device& dm);
+    AddLanguage(tcp::socket& socket, SocketReader& context, IDevice* dm);
     /**
      * @brief AddLanguage's main process.
      */
@@ -89,7 +89,7 @@ class AddLanguage : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
       return new AddLanguage(socket, context, dm);
     }
   private:
@@ -121,7 +121,7 @@ class AddLanguage : public ICallData {
     /**
      * @brief The device to add the language pack to.
      */
-    Device& dm_;
+    IDevice* dm_;
     /**
      * @brief Flag indicating if the RPC is working correctly.
      */

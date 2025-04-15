@@ -47,7 +47,6 @@
 #include <Authorization.h>
 #include <Path.h>
 #include <Enums.h>
-#include <vdk/signals.h>
 #include <IParam.h>
 #include <ILanguagePack.h>
 #include <Tags.h>  
@@ -85,15 +84,15 @@ class Device : public IDevice {
     /**
      * @brief LockGuard is a helper class to lock and unlock the device mutex
      */
-    class LockGuard {
-      public:
-        LockGuard(Device& dm) : dm_(dm) { dm_.mutex_.lock(); }
-        ~LockGuard() { dm_.mutex_.unlock(); }
+    // class LockGuard {
+    //   public:
+    //     LockGuard(Device& dm) : dm_(dm) { dm_.mutex_.lock(); }
+    //     ~LockGuard() { dm_.mutex_.unlock(); }
 
-      private:
-        Device& dm_;
-    };
-    friend class LockGuard;
+    //   private:
+    //     Device& dm_;
+    // };
+    // friend class LockGuard;
 
     /**
      * @brief convenience type aliases to types of objects contained in the
@@ -394,26 +393,6 @@ class Device : public IDevice {
      */
     bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const override;
 
-  public:
-    /**
-     * @brief signal emitted when a value is set by the client.
-     * Intended recipient is the business logic.
-     */
-    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
-
-    /**
-     * @brief signal emitted when a language pack is added to the device.
-     * Intended recipient is the business logic.
-     */
-    vdk::signal<void(const ComponentLanguagePack&)> languageAddedPushUpdate;
-
-    /**
-     * @brief signal emitted when a value is set by the server, or business
-     * logic.
-     * Intended recipient is the connection manager.
-     */
-    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
-
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
@@ -431,7 +410,7 @@ class Device : public IDevice {
     uint32_t default_max_length_ = 0;
     uint32_t default_total_length_ = 0;
 
-    mutable std::mutex mutex_;
+    // mutable std::mutex mutex_;
 };
 }  // namespace common
 }  // namespace catena

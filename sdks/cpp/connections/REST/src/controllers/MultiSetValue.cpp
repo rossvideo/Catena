@@ -6,13 +6,13 @@ using catena::REST::MultiSetValue;
 // Initializes the object counter for MultiSetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice* dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole(CallStatus::kCreate, socket_.is_open());
 }
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId) :
+MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice* dm, int objectId) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
 bool MultiSetValue::toMulti() {
@@ -38,9 +38,9 @@ void MultiSetValue::proceed() {
             }
             // Trying and commiting the multiSetValue.
             {
-            Device::LockGuard lg(dm_);
-            if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
-                rc = dm_.commitMultiSetValue(reqs_, *authz);
+            IDevice::LockGuard lg(dm_);
+            if (dm_->tryMultiSetValue(reqs_, rc, *authz)) {
+                rc = dm_->commitMultiSetValue(reqs_, *authz);
             }
             }
         } else {

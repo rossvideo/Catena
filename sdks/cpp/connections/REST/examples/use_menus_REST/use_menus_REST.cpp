@@ -113,7 +113,7 @@ void statusUpdateExample(){
             // update the counter once per second, and emit the event
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {
-                Device::LockGuard lg(dm); 
+                Device::LockGuard lg(&dm); 
                 counter.get()++;
                 std::cout << counter.getOid() << " set to " << counter.get() << '\n';
                 dm.valueSetByServer.emit("/counter", &counter, 0);

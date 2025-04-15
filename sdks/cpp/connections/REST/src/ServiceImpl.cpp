@@ -85,7 +85,7 @@ void CatenaServiceImpl::run() {
                         writer.writeOptions();
                     // Otherwise routing to rpc.
                     } else if (router_.canMake(rpcKey)) {
-                        std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);
+                        std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, &dm_);
                         rpc->proceed();
                         rpc->finish();
                     // ERROR

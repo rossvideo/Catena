@@ -72,7 +72,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, Device& dm, ex
         // Get the base parameter
         std::unique_ptr<IParam> baseParam;
         {
-            catena::common::Device::LockGuard lg(dm);
+            catena::common::Device::LockGuard lg(&dm);
             baseParam = dm.getParam(baseOid, rc);
         }
         
@@ -172,7 +172,7 @@ void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
         // First try to get the base parameter
         std::unique_ptr<IParam> baseParam;
         {
-            catena::common::Device::LockGuard lg(dm);
+            catena::common::Device::LockGuard lg(&dm);
             baseParam = dm.getParam(basePath, rc);
         }
         
@@ -184,7 +184,7 @@ void SubscriptionManager::updateAllSubscribedOids_(Device& dm) {
             // If base parameter not found, try to find any parameters that start with this path
             std::vector<std::unique_ptr<IParam>> allParams;
             {
-                catena::common::Device::LockGuard lg(dm);
+                catena::common::Device::LockGuard lg(&dm);
                 allParams = dm.getTopLevelParams(rc);
             }
             

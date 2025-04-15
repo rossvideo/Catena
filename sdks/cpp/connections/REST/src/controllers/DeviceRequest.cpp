@@ -6,7 +6,7 @@ using catena::REST::DeviceRequest;
 // Initializes the object counter for Connect to 0.
 int DeviceRequest::objectCounter_ = 0;
 
-DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice* dm) :
     socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -51,13 +51,13 @@ void DeviceRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
         // Getting the component serializer.
-        auto serializer = dm_.getComponentSerializer(*authz, shallowCopy);
+        auto serializer = dm_->getComponentSerializer(*authz, shallowCopy);
         // Getting each component ans writing to the stream.
         while (serializer.hasMore()) {
             writeConsole(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
-            Device::LockGuard lg(dm_);
+            IDevice::LockGuard lg(dm_);
             component = serializer.getNext();
             }
             writer_.write(component);

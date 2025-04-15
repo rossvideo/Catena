@@ -46,7 +46,7 @@ using namespace use_templates;
 #include <iostream>
 int main() {
     // lock the model
-    Device::LockGuard lg(dm);
+    Device::LockGuard lg(&dm);
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> ip;
 

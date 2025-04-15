@@ -6,7 +6,7 @@ using catena::REST::Connect;
 // Initializes the object counter for Connect to 0.
 int Connect::objectCounter_ = 0;
 
-Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
+Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice* dm) :
     socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, ok_{true}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -46,20 +46,20 @@ void Connect::proceed() {
         this->cv_.notify_one();
     });
     // Waiting for a value set by server to be sent to execute code.
-    valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+    valueSetByServerId_ = dm_->valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
         updateResponse(oid, idx, p);
     });
     // Waiting for a value set by client to be sent to execute code.
-    valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+    valueSetByClientId_ = dm_->valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
         updateResponse(oid, idx, p);
     });
     // Waiting for a language to be added to execute code.
-    languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+    languageAddedId_ = dm_->languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
         updateResponse(l);
     });
     // send client an empty update with slot of the device
     catena::PushUpdates populatedSlots;
-    populatedSlots.set_slot(dm_.slot());
+    populatedSlots.set_slot(dm_->slot());
     writer_.write(populatedSlots);
 
     // kWrite: Waiting for updates to send to the client.
@@ -71,7 +71,7 @@ void Connect::proceed() {
         writeConsole(CallStatus::kWrite, true);
         try {
             if (socket_.is_open() && !shutdown_) {
-                res_.set_slot(dm_.slot());
+                res_.set_slot(dm_->slot());
                 writer_.write(res_);
             }
         // A little scuffed but I have no idea how else to detect disconnect.
@@ -86,9 +86,9 @@ void Connect::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     try {
         shutdownSignal_.disconnect(shutdownSignalId_);
-        dm_.valueSetByClient.disconnect(valueSetByClientId_);
-        dm_.valueSetByServer.disconnect(valueSetByServerId_);
-        dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+        dm_->valueSetByClient.disconnect(valueSetByClientId_);
+        dm_->valueSetByServer.disconnect(valueSetByServerId_);
+        dm_->languageAddedPushUpdate.disconnect(languageAddedId_);
     // Listener not yet initialized.
     } catch (...) {}
     // Finishing and closing the socket.

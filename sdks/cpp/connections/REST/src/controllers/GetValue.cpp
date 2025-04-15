@@ -6,7 +6,7 @@ using catena::REST::GetValue;
 // Initializes the object counter for GetValue to 0.
 int GetValue::objectCounter_ = 0;
 
-GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+GetValue::GetValue(tcp::socket& socket, SocketReader& context, IDevice* dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -36,9 +36,9 @@ void GetValue::proceed() {
         // Getting value at oid from device.
         if (context_.authorizationEnabled()) {
             catena::common::Authorizer authz(context_.jwsToken());
-            rc = dm_.getValue(oid_, ans, authz);
+            rc = dm_->getValue(oid_, ans, authz);
         } else {
-            rc = dm_.getValue(oid_, ans, catena::common::Authorizer::kAuthzDisabled);
+            rc = dm_->getValue(oid_, ans, catena::common::Authorizer::kAuthzDisabled);
         }
 
     // ERROR
