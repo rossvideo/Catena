@@ -1,6 +1,13 @@
-
 #include <SocketReader.h>
+#include "ServiceImpl.h"
 using catena::REST::SocketReader;
+
+namespace catena {
+namespace REST {
+
+SocketReader::SocketReader(CatenaServiceImpl& service) 
+    : subscriptionManager_(service.getSubscriptionManager()),
+      service_(&service) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
@@ -90,25 +97,31 @@ void SocketReader::fields(std::unordered_map<std::string, std::string>& fieldMap
     if (fieldMap.size() == 0) {
         throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
     } else {
-        std::string fieldName = "";
-        for (auto& [nextField, value] : fieldMap) {
-            // If not the first iteration, find next field and get value of the current one.
-            if (fieldName != "") {
-                std::size_t end = request.find("/" + nextField + "/");
-                if (end == std::string::npos) {
-                    throw catena::exception_with_status("Could not find field " + nextField, catena::StatusCode::INVALID_ARGUMENT);
-                }
-                fieldMap.at(fieldName) = request.substr(0, end);
-            }
-            // Update for the next iteration.
-            fieldName = nextField;
-            std::size_t start = request.find("/" + fieldName + "/") + fieldName.size() + 2;
-            if (start == std::string::npos) {
-                throw catena::exception_with_status("Could not find field " + fieldName, catena::StatusCode::INVALID_ARGUMENT);
-            }
-            request = request.substr(start);
+        // Split the request into parts
+        std::vector<std::string> parts;
+        size_t start = 0;
+        size_t end = request.find('/');
+        while (end != std::string::npos) {
+            parts.push_back(request.substr(start, end - start));
+            start = end + 1;
+            end = request.find('/', start);
         }
-        // We assume the last field is until the end of the request.
-        fieldMap.at(fieldName) = request.substr(0, request.find(" HTTP/1.1"));
+        if (start < request.size()) {
+            parts.push_back(request.substr(start));
+        }
+
+        // Process each field in order
+        for (size_t i = 0; i < parts.size(); i += 2) {
+            if (i + 1 >= parts.size()) break;
+            std::string fieldName = parts[i];
+            std::string fieldValue = parts[i + 1];
+            
+            if (fieldMap.find(fieldName) != fieldMap.end()) {
+                fieldMap[fieldName] = fieldValue;
+            }
+        }
     }
 }
+
+} // namespace REST
+} // namespace catena
