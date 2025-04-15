@@ -32,6 +32,7 @@
  * @file SocketReader.h
  * @brief Helper class used to read from a socket using boost.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -39,6 +40,7 @@
 
 // common
 #include <Status.h>
+#include <SubscriptionManager.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -54,11 +56,18 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
+class CatenaServiceImpl;  // Forward declaration
+
 /**
  * @brief Helper class used to read from a socket using boost.
  */
 class SocketReader : public ISocketReader {
   public:
+    /**
+     * @brief Constructor that takes a reference to the service
+     */
+    explicit SocketReader(CatenaServiceImpl& service);
+
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -109,7 +118,27 @@ class SocketReader : public ISocketReader {
      */
     bool authorizationEnabled() const override { return authorizationEnabled_; };
 
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::SubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
+
+    /**
+     * @brief Returns a pointer to the service instance
+     */
+    CatenaServiceImpl* getService() const { return service_; }
+
   private:
+    /**
+     * @brief Reference to the service's subscription manager
+     */
+    catena::common::SubscriptionManager& subscriptionManager_;
+
+    /**
+     * @brief Pointer to the service instance
+     */
+    CatenaServiceImpl* service_;
+
     /**
      * @brief The method of the request (GET, PUT, etc.).
      */
