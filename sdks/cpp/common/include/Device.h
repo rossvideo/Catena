@@ -56,7 +56,7 @@
 #include <IMenuGroup.h>
 
 // Interface
-#include "interface/IDevice.h"
+#include <IDevice.h>
 
 // protobuf interface
 #include <interface/device.pb.h>
