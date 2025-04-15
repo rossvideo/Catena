@@ -96,7 +96,8 @@ class Device : public IDevice {
     friend class LockGuard;
 
     /**
-     * @brief convenience type aliases to types of objects contained in the device
+     * @brief convenience type aliases to types of objects contained in the
+     * device
      */
     using DetailLevel_e = catena::Device_DetailLevel;
 
@@ -184,13 +185,14 @@ class Device : public IDevice {
     /**
      * @brief Create a protobuf representation of the device.
      * @param dst the protobuf representation of the device.
-     * @param shallow if true, only the top-level info is copied, params, commands etc 
-     * are not copied. Design intent is to permit large models to stream their parameters
-     * instead of sending a huge device model in one big lump.
+     * @param shallow if true, only the top-level info is copied, params,
+     * commands etc are not copied. Design intent is to permit large models to
+     * stream their parameters instead of sending a huge device model in one
+     * big lump.
      * 
-     * N.B. This method is not thread-safe. It is the caller's responsibility to ensure
-     * that the device is not modified while this method is running. This class provides
-     * a LockGuard helper class to make this easier.
+     * N.B. This method is not thread-safe. It is the caller's responsibility
+     * to ensure that the device is not modified while this method is running.
+     * This class provides a LockGuard helper class to make this easier.
      */
     void toProto(::catena::Device& dst, Authorizer& authz, bool shallow = true) const override;
 
@@ -221,7 +223,7 @@ class Device : public IDevice {
     catena::exception_with_status addLanguage (catena::AddLanguagePayload& language, Authorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
-     * @brief Finds and returns a language pack based on languageId.ABORTED
+     * @brief Finds and returns a language pack based on languageId.
      * @param languageId The language id of the language pack e.g. "en"
      * @param pack Output var containing the found LanguagePack.
      * @return exception_with_status containing the status of the operation.
@@ -229,144 +231,23 @@ class Device : public IDevice {
     catena::exception_with_status getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const override;
 
     /**
-     * @brief DeviceSerializer is a coroutine that serializes the device into a
-     * stream of DeviceComponents
-     * This struct manages the state and lifetime of the coroutine. It also
-     * provides the interface for resuming the coroutine.
-     */
-    class DeviceSerializer {
-      public:
-        struct promise_type; // forward declaration
-
-      private:
-        /**
-         * The coroutine handle is a pointer to the coroutine state
-         * 
-         * The coroutine handle provides the following operations:
-         * resume() - resumes the coroutine from where it was suspended
-         * destroy() - destroys the coroutine
-         * done() - returns true if the coroutine has completed (i.e. co_return has been called)
-         */
-        using handle_type = std::coroutine_handle<promise_type>;
-        handle_type handle_;
-
-      public:
-        /** 
-         * @brief Defines the execution behaviour of the coroutine
-         * 
-         * Coroutine types are required to contain a promise_type struct that defines some special
-         * member functions that the compiler will call when the coroutine is created, destroyed,
-         * or resumed.
-         */
-        struct promise_type {
-
-            /**
-             * get_return_object() is called when the coroutine is created (i.e. when getComponentSerializer() 
-             * is called). It creates the handle for the coroutine and returns the DeviceSerializer object.
-             */
-            inline DeviceSerializer get_return_object() { 
-              return DeviceSerializer(handle_type::from_promise(*this)); 
-            }
-
-            /**
-             * initial_suspend() is called when the coroutine is created. It returns a std::suspend_always awaitable
-             * so that the coroutine will be immediately suspended. This means the first component will not be created
-             * until getNext() is called.
-             */
-            inline std::suspend_always initial_suspend() { return {}; }
-
-            /** 
-             * final_suspend() is called when the coroutine is completed. It returns a std::suspend_always awaitable
-             * causing the coroutine to be suspended before it destroys itself. The coroutine will be destroyed when
-             * the device serializer destructor is called.
-             */
-            inline std::suspend_always final_suspend() noexcept { return {}; }
-
-            /**
-             * yield_value() is called when the coroutine reaches a co_yield statement. It stores the yielded
-             * DeviceComponent then suspends the coroutine.
-             */
-            inline std::suspend_always yield_value(catena::DeviceComponent& component) { 
-              deviceMessage = component;
-              return {}; 
-            }
-
-            /**
-             * return_value() is called when the coroutine reaches a co_return statement. It stores the returned
-             * DeviceComponent. The coroutine is then set as done.
-             */
-            inline void return_value(catena::DeviceComponent component) { this->deviceMessage = component; }
-
-            /**
-             * unhandled_exception() is called if an exception is thrown in the coroutine. It stores the exception
-             * so that it can be rethrown by the function that resumed the coroutine.
-             */
-            inline void unhandled_exception() {
-              exception_ = std::current_exception();
-            }
-
-            /**
-             * rethrow_if_exception() is not called by the compiler but instead is called by the function that
-             * resumes the coroutine. It rethrows the exception that was caught by unhandled_exception().
-             */
-            inline void rethrow_if_exception() {
-              if (exception_) std::rethrow_exception(exception_);
-            }
-
-            catena::DeviceComponent deviceMessage{};
-            std::exception_ptr exception_; 
-        };
-
-        DeviceSerializer(handle_type h) : handle_(h) {}
-
-        DeviceSerializer(const DeviceSerializer&) = delete;
-        DeviceSerializer& operator=(const DeviceSerializer&) = delete;
-
-        DeviceSerializer(DeviceSerializer&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
-        DeviceSerializer& operator=(DeviceSerializer&& other) { 
-          if (this != &other) {
-            if (handle_) handle_.destroy();
-            handle_ = other.handle_; 
-            other.handle_ = nullptr; 
-          }
-          return *this; 
-        } 
-        
-        ~DeviceSerializer() { 
-          if (handle_) handle_.destroy();  
-        }
-
-        /**
-         * @brief returns true if there are more DeviceComponents to be serialized
-         */
-        inline bool hasMore() const { return handle_ && !handle_.done(); }
-
-        /**
-         * @brief get the next DeviceComponent to be serialized.
-         * @return the next DeviceComponent
-         * 
-         * If the coroutine is done and there are no more components to serialize then
-         * an empty DeviceComponent is returned.
-         */
-        catena::DeviceComponent getNext();
-    };
-
-    /**
      * @brief get a serializer for the device
      * @param clientScopes the scopes of the client
-     * @param shallow if true, the device will be returned in parts, otherwise the whole device will be returned in one message
+     * @param shallow if true, the device will be returned in parts, otherwise
+     * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    DeviceSerializer getComponentSerializer(Authorizer& authz, bool shallow = false) const;
+    DeviceSerializer getComponentSerializer(Authorizer& authz, bool shallow = false) const override;
 
     /**
      * @brief get a serializer for the device
      * @param clientScopes the scopes of the client
      * @param subscribed_oids the oids of the subscribed parameters
-     * @param shallow if true, the device will be returned in parts, otherwise the whole device will be returned in one message
+     * @param shallow if true, the device will be returned in parts, otherwise
+     * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const;
+    DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const override;
 
     /**
      * @brief add an item to one of the collections owned by the device
@@ -412,8 +293,10 @@ class Device : public IDevice {
      * @brief get a parameter by oid with authorization
      * @param fqoid the fully qualified oid of the parameter
      * @param authz The Authorizer to test read permission with.
-     * @param status will contain an error message if the parameter does not exist
-     * @return a unique pointer to the parameter, or nullptr if it does not exist
+     * @param status will contain an error message if the parameter does not
+     * exist
+     * @return a unique pointer to the parameter, or nullptr if it does not
+     * exist
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
@@ -423,8 +306,10 @@ class Device : public IDevice {
      * @brief get a parameter by oid with authorization
      * @param path the full path to the parameter
      * @param authz The Authorizer to test read permission with.
-     * @param status will contain an error message if the parameter does not exist
-     * @return a unique pointer to the parameter, or nullptr if it does not exist
+     * @param status will contain an error message if the parameter does not
+     * exist
+     * @return a unique pointer to the parameter, or nullptr if it does not
+     * exist
      * 
      * gets a parameter if it exists and the client is authorized to read it.
      */
@@ -443,7 +328,8 @@ class Device : public IDevice {
      * @brief get a command by oid
      * @param fqoid the fully qualified oid of the command
      * @param authz the authorizer object
-     * @param status will contain an error message if the command does not exist
+     * @param status will contain an error message if the command does not
+     * exist
      * @return a unique pointer to the command, or nullptr if it does not exist
      * @todo add authorization checking
      */
@@ -490,15 +376,19 @@ class Device : public IDevice {
      * @param jptr json pointer to the part of the device model to serialize.
      * @param dst the protobuf value to serialize to.
      * @param authz The Authorizer to test read permission with.
-     * @return an exception_with_status with status set OK if successful, otherwise an error.
-     * Intention is to for GetValue RPCs / API calls to be serviced by this method.
+     * @return an exception_with_status with status set OK if successful,
+     * otherwise an error.
+     * Intention is to for GetValue RPCs / API calls to be serviced by this
+     * method.
      */
     catena::exception_with_status getValue (const std::string& jptr, catena::Value& value, Authorizer& authz = Authorizer::kAuthzDisabled) const override;
 
     /**
-     * @brief check if a parameter should be sent based on detail level and authorization
+     * @brief check if a parameter should be sent based on detail level and
+     * authorization
      * @param param the parameter to check
-     * @param is_subscribed true if the parameter is subscribed, false otherwise
+     * @param is_subscribed true if the parameter is subscribed, false
+     * otherwise
      * @param authz the authorizer object
      * @return true if the parameter should be sent, false otherwise
      */
@@ -518,7 +408,8 @@ class Device : public IDevice {
     vdk::signal<void(const ComponentLanguagePack&)> languageAddedPushUpdate;
 
     /**
-     * @brief signal emitted when a value is set by the server, or business logic.
+     * @brief signal emitted when a value is set by the server, or business
+     * logic.
      * Intended recipient is the connection manager.
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
