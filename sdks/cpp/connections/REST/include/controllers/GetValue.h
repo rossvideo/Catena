@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -74,7 +74,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the value from.
      */ 
-    GetValue(tcp::socket& socket, SocketReader& context, Device& dm);
+    GetValue(tcp::socket& socket, ISocketReader& context, Device& dm);
     /**
      * @brief GetValue's main process.
      */
@@ -90,7 +90,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
       return new GetValue(socket, context, dm);
     }
   private:
@@ -114,7 +114,7 @@ class GetValue : public ICallData {
     /**
      * @brief The SocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

@@ -6,7 +6,7 @@ using catena::REST::AddLanguage;
 // Initializes the object counter for AddLanguage to 0.
 int AddLanguage::objectCounter_ = 0;
 
-AddLanguage::AddLanguage(tcp::socket& socket, SocketReader& context, Device& dm) :
+AddLanguage::AddLanguage(tcp::socket& socket, ISocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());

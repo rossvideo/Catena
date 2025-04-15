@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -71,10 +71,10 @@ class DeviceRequest : public ICallData {
      * @brief Constructor for the DeviceRequest RPC.
      *
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to get components from.
      */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    DeviceRequest(tcp::socket& socket, ISocketReader& context, Device& dm);
     /**
      * @brief DeviceRequest's main process.
      */
@@ -87,10 +87,10 @@ class DeviceRequest : public ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
       return new DeviceRequest(socket, context, dm);
     }
   private:
@@ -112,9 +112,9 @@ class DeviceRequest : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

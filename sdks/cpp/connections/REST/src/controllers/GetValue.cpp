@@ -6,7 +6,7 @@ using catena::REST::GetValue;
 // Initializes the object counter for GetValue to 0.
 int GetValue::objectCounter_ = 0;
 
-GetValue::GetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+GetValue::GetValue(tcp::socket& socket, ISocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());

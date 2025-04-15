@@ -6,7 +6,7 @@ using catena::REST::LanguagePackRequest;
 // Initializes the object counter for LanguagePackRequest to 0.
 int LanguagePackRequest::objectCounter_ = 0;
 
-LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, ISocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket, context.origin()}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());

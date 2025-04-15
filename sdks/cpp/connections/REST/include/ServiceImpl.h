@@ -163,7 +163,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
                                                     tcp::socket&,
-                                                    SocketReader&,
+                                                    ISocketReader&,
                                                     Device&>;
     /**
      * @brief Creating an ICallData factory for handling RPC routing.

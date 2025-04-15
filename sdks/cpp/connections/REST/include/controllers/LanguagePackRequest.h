@@ -50,7 +50,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -70,10 +70,10 @@ class LanguagePackRequest : public ICallData {
      * @brief Constructor for the LanguagePackRequest RPC.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to get the value from.
      */ 
-    LanguagePackRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    LanguagePackRequest(tcp::socket& socket, ISocketReader& context, Device& dm);
     /**
      * @brief LanguagePackRequest's main process.
      */
@@ -86,10 +86,10 @@ class LanguagePackRequest : public ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
       return new LanguagePackRequest(socket, context, dm);
     }
   private:

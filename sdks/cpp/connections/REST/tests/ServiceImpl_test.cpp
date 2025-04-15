@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,59 +29,29 @@
  */
 
 /**
- * @file SetValue.h
- * @brief Implements REST SetValue RPC.
+ * @brief This file is for testing the ServiceImpl.cpp file.
  * @author benjamin.whitten@rossvideo.com
+ * @date 25/04/15
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#pragma once
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <tuple>
 
-// Connections/REST
-#include "MultiSetValue.h"
+// protobuf
+#include <interface/device.pb.h>
+#include <google/protobuf/util/json_util.h>
 
-namespace catena {
-namespace REST {
+#include <Status.h>
 
-/**
- * @brief ICallData class for the SetValue REST RPC.
- */
-class SetValue : public MultiSetValue {
-  // Specifying which Device and IParam to use (defaults to catena::...)
-  using Device = catena::common::Device;
-  using IParam = catena::common::IParam;
+namespace fs = std::filesystem;
 
-  public:
-    /**
-     * @brief Constructor for the SetValue RPC.
-     *
-     * @param socket The socket to write the response to.
-     * @param context The ISocketReader object.
-     * @param dm The device to set the value of.
-     */ 
-    SetValue(tcp::socket& socket, ISocketReader& context, Device& dm);
-    /**
-     * @brief Creates a new rpc object for use with GenericFactory.
-     * 
-     * @param socket The socket to write the response stream to.
-     * @param context The ISocketReader object.
-     * @param dm The device to connect to.
-     */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
-      return new SetValue(socket, context, dm);
-    }
-  private:
-    /**
-     * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
-     * @returns True if successful.
-     */
-    bool toMulti() override;
+#include "ServiceImpl.h"
 
-    /**
-     * @brief The total # of SetValue objects.
-     */
-    static int objectCounter_;
-};
+TEST(REST_API_tests, ServiceImpl_test) {
 
-}; // namespace REST
-}; // namespace catena
+}

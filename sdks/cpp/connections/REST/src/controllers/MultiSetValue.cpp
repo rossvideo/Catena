@@ -6,13 +6,13 @@ using catena::REST::MultiSetValue;
 // Initializes the object counter for MultiSetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, Device& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole(CallStatus::kCreate, socket_.is_open());
 }
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device& dm, int objectId) :
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, Device& dm, int objectId) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
 bool MultiSetValue::toMulti() {

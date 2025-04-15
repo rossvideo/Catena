@@ -6,7 +6,7 @@ using catena::REST::DeviceRequest;
 // Initializes the object counter for Connect to 0.
 int DeviceRequest::objectCounter_ = 0;
 
-DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, Device& dm) :
     socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, ok_{true} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());

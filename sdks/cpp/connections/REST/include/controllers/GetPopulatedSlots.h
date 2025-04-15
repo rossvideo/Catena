@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
  
@@ -71,10 +71,10 @@ class GetPopulatedSlots : public ICallData {
      * @brief Constructor for the GetPopulatedSlots RPC.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object. Here to maintain consistency.
+     * @param context The ISocketReader object. Here to maintain consistency.
      * @param dm The device to get the slot of.
      */ 
-    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
+    GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, Device& dm);
     /**
      * @brief GetPopulatedSlots's main process.
      */
@@ -87,10 +87,10 @@ class GetPopulatedSlots : public ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
       return new GetPopulatedSlots(socket, context, dm);
     }
   private:
