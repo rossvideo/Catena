@@ -58,7 +58,7 @@ TEST(REST_API_tests, SocketWriter_NormalWrite) {
     acceptor.accept(server_socket);
     catena::Empty ans = catena::Empty();
     catena::REST::SocketWriter writer(server_socket);
-    writer.write(ans);
+    writer.finish(ans);
     // Reading and checking the response from the server socket.
     boost::asio::streambuf buffer;
     boost::asio::read_until(client_socket, buffer, "\r\n\r\n");

@@ -46,6 +46,7 @@ TEST(utils_tests, ReadFile_FileNotFound) {
     EXPECT_THROW(catena::readFile(test_path), std::filesystem::filesystem_error);
 }
 
+// SUBS TESTS
 
 TEST(utils_tests, Subs_NormalCase) {
     std::string str = "hello world, world!";
@@ -71,9 +72,43 @@ TEST(utils_tests, Subs_ReplaceWithEmpty) {
     EXPECT_EQ(str, " bbb ");
 }
 
-// TEST(utils_tests, Subs_EmptySearchString) {
-//     std::string str = "hello world";
-//     FAIL(); // This is an ifinite loop
-//     catena::subs(str, "", "bar");
-//     EXPECT_EQ(str, "hello world"); // No changes should be made
-// }
+TEST(utils_tests, Subs_EmptySearchString) {
+    std::string str = "hello world";
+    catena::subs(str, "", "bar");
+    EXPECT_EQ(str, "hello world"); // No changes should be made
+}
+
+
+// SPLIT TESTS
+
+TEST(utils_tests, Split_NormalCase) {
+    std::vector<std::string> out;
+    std::string str = "comma,seperated,values";
+    std::vector<std::string> ans = {"comma", "seperated", "values"};
+    catena::split(out, str, ",");
+    EXPECT_EQ(out, ans);
+}
+
+TEST(utils_tests, Split_NoMatch) {
+    std::vector<std::string> out;
+    std::string str = "comma,seperated,values";
+    std::vector<std::string> ans = {"comma,seperated,values"};
+    catena::split(out, str, " ");
+    EXPECT_EQ(out, ans);
+}
+
+TEST(utils_tests, Split_EmptyDelim) {
+    std::vector<std::string> out;
+    std::string str = "comma,seperated,values";
+    std::vector<std::string> ans = {"comma,seperated,values"};
+    catena::split(out, str, "");
+    EXPECT_EQ(out, ans);
+}
+
+TEST(utils_tests, Split_OverwriteVector) {
+    std::vector<std::string> out = {"some", "initial", "values"};
+    std::string str = "comma,seperated,values";
+    std::vector<std::string> ans = {"comma", "seperated", "values"};
+    catena::split(out, str, ",");
+    EXPECT_EQ(out, ans);
+}

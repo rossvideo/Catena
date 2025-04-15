@@ -101,8 +101,11 @@ void CatenaServiceImpl::run() {
             }
             // Writing to socket if there was an error.
             if (rc.status != catena::StatusCode::OK) {
-                SocketWriter writer(socket);
-                writer.write(rc);
+                // Try ensures that we don't fail to decrement active RPCs.
+                try {
+                    SocketWriter writer(socket);
+                    writer.write(rc);
+                } catch (...) {}
             }
             // rpc completed. Decrementing activeRPCs.
             {
