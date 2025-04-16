@@ -88,7 +88,7 @@ class ISocketReader {
      * assumed to be until the end of the request unless specified
      * otherwise.
      */
-    virtual void fields(std::unordered_map<std::string, std::string>& fieldMap) const = 0;
+    virtual const std::string& fields(const std::string& key) const = 0;
     /**
      * @brief Returns the client's jws token.
      */
@@ -105,6 +105,7 @@ class ISocketReader {
      * @brief Returns the agent used to send the request.
      */
     virtual const std::string& userAgent() const = 0;
+    virtual uint32_t slot() const = 0;
 
     /**
      * @brief Returns true if authorization is enabled.

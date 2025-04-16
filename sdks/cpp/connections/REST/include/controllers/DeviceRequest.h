@@ -129,14 +129,6 @@ class DeviceRequest : public ICallData {
     bool ok_;
 
     /**
-     * @brief The slot of the device to get the components from.
-     */
-    uint32_t slot_;
-    /**
-     * @brief The language to return the stream in.
-     */
-    std::string language_;
-    /**
      * @brief The detail level to return the stream in.
      */
     int detailLevel_;

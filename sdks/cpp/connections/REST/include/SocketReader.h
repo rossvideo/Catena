@@ -46,7 +46,9 @@
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/url.hpp>
 using boost::asio::ip::tcp;
+using namespace boost::urls;
 
 #include <string>
 #include <iostream>
@@ -86,7 +88,13 @@ class SocketReader : public ISocketReader {
      * 
      * @todo Update once URL format is finalized.
      */
-    void fields(std::unordered_map<std::string, std::string>& fieldMap) const override;
+    const std::string& fields(const std::string& key) const override {
+      if (fields_.find(key) != fields_.end()) {
+        return fields_.at(key);
+      } else {
+        return fieldNotFound;
+      }
+    }
     /**
      * @brief Returns the client's jws token.
      */
@@ -103,6 +111,7 @@ class SocketReader : public ISocketReader {
      * @brief Returns the agent used to send the request.
      */
     const std::string& userAgent() const override { return userAgent_; }
+    uint32_t slot() const override { return slot_; };
 
     /**
      * @brief Returns true if authorization is enabled.
@@ -138,6 +147,13 @@ class SocketReader : public ISocketReader {
      * @brief The agent the request was sent from.
      */
     std::string userAgent_ = "";
+    /**
+     * @brief 
+     */
+    uint32_t slot_;
+    std::string fieldNotFound = "";
+
+    std::unordered_map<std::string, std::string> fields_;
     /**
      * @brief True if authorization is enabled.
      */

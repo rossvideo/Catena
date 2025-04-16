@@ -12,22 +12,15 @@ Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     try {
-        std::unordered_map<std::string, std::string> fields = {
-            {"force_connection", ""},
-            {"user_agent", ""},
-            {"detail_level", ""},
-            {"language", ""}
-        };
-        context.fields(fields);
-        language_ = fields.at("language");
+        language_ = context.fields("language");
         auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
-        if (dlMap.find(fields.at("detail_level")) != dlMap.end()) {
-            detailLevel_ = dlMap.at(fields.at("detail_level"));
+        if (dlMap.find(context.fields("detail_level")) != dlMap.end()) {
+            detailLevel_ = dlMap.at(context.fields("detail_level"));
         } else {
             detailLevel_ = catena::Device_DetailLevel_NONE;
         }
-        userAgent_ = fields.at("user_agent");
-        forceConnection_ = fields.at("force_connection") == "true";
+        userAgent_ = context.fields("user_agent");
+        forceConnection_ = context.fields("force_connection") == "true";
     // Parse error
     } catch (...) {
         catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);

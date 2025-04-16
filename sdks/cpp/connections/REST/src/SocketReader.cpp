@@ -16,42 +16,26 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     boost::asio::read_until(socket, buffer, "\r\n\r\n");
     std::istream header_stream(&buffer);
 
-    // Getting the first line from the stream (URL).
+    // Getting the first line from the stream (URL), splitting, and parsing.
     std::string header;
     std::getline(header_stream, header);
-    // For loops used for (probably negligible) performance boost.
-    // Parsing URL for method_.
-    std::size_t i = 0;
-    for (; i < header.length(); i += 1) {
-        if (header[i] == ' ') { break; }
-        method_ += header[i];
+    std::string url, httpVersion;
+    std::istringstream(header) >> method_ >> url >> httpVersion;
+    url_view u(url);
+
+    // Extracting rpc_ and slot_ from the url (ex: v1/GetValue/{slot}).
+    std::string path = u.path();
+    std::size_t pos = path.find_last_of('/');
+    rpc_ = path.substr(0, pos);
+    try {
+        slot_ = std::stoi(path.substr(pos + 1));
+    } catch (...) {
+        throw catena::exception_with_status("Invalid slot", catena::StatusCode::INVALID_ARGUMENT);
     }
-    // Parsing URL for rpc_.
-    bool started = false;
-    uint16_t slashNum = 0;
-    for (; i < header.length(); i += 1) {
-        if (started) {
-            if (header[i] == '/') {
-                slashNum += 1;
-            }
-            if (slashNum == 3 || header[i] == ' ') {
-                i += 1;
-                break;
-            }
-            rpc_ += header[i];
-        } else {
-            if (header[i] == '/') {
-                started = true;
-                i -= 1;
-            }
-        }
-    }
-    // Parse fields until " http/..."
-    for (; i < header.length(); i += 1) {
-        if (header[i] == ' ') {
-            break;
-        }
-        req_ += header[i];
+
+    // Parsing query parameters.
+    for (auto element : u.encoded_params()) {
+        fields_[(std::string)element.key] = element.value;
     }
     
     // Looping through headers to retrieve JWS token and json body len.
@@ -85,33 +69,5 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             jsonBody_.resize(contentLength);
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
         }
-    }
-}
-
-void SocketReader::fields(std::unordered_map<std::string, std::string>& fieldMap) const {
-    std::string request = req_;
-    if (fieldMap.size() == 0) {
-        throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
-    } else {
-        std::string fieldName = "";
-        for (auto& [nextField, value] : fieldMap) {
-            // If not the first iteration, find next field and get value of the current one.
-            if (fieldName != "") {
-                std::size_t end = request.find("/" + nextField + "/");
-                if (end == std::string::npos) {
-                    throw catena::exception_with_status("Could not find field " + nextField, catena::StatusCode::INVALID_ARGUMENT);
-                }
-                fieldMap.at(fieldName) = request.substr(0, end);
-            }
-            // Update for the next iteration.
-            fieldName = nextField;
-            std::size_t start = request.find("/" + fieldName + "/") + fieldName.size() + 2;
-            if (start == std::string::npos) {
-                throw catena::exception_with_status("Could not find field " + fieldName, catena::StatusCode::INVALID_ARGUMENT);
-            }
-            request = request.substr(start);
-        }
-        // We assume the last field is until the end of the request.
-        fieldMap.at(fieldName) = request.substr(0, request.find(" HTTP/1.1"));
     }
 }
