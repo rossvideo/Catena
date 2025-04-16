@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1ISocketWriter.h
 <div class="dynheader">
 Inheritance diagram for catena::REST::ISocketWriter:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1ISocketWriter__inherit__graph.svg" width="222" height="183"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1ISocketWriter__inherit__graph.svg" width="411" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -131,9 +131,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2e7c58859d3af2ea1571a8d81066091f" id="r_a2e7c58859d3af2ea1571a8d81066091f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a2e7c58859d3af2ea1571a8d81066091f">write</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err)=0</td></tr>
 <tr class="memdesc:a2e7c58859d3af2ea1571a8d81066091f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes an error message to the socket.  <br /></td></tr>
 <tr class="separator:a2e7c58859d3af2ea1571a8d81066091f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bd6bf0ab4ae1c91316799b405c369d2" id="r_a1bd6bf0ab4ae1c91316799b405c369d2"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1bd6bf0ab4ae1c91316799b405c369d2">writeOptions</a> ()=0</td></tr>
-<tr class="memdesc:a1bd6bf0ab4ae1c91316799b405c369d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a response to the client detaining their options. Used when method = OPTIONS.  <br /></td></tr>
-<tr class="separator:a1bd6bf0ab4ae1c91316799b405c369d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b80a8d671a1aeac4454080e44160863" id="r_a1b80a8d671a1aeac4454080e44160863"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1b80a8d671a1aeac4454080e44160863">finish</a> ()=0</td></tr>
 <tr class="memdesc:a1b80a8d671a1aeac4454080e44160863"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing process.  <br /></td></tr>
 <tr class="separator:a1b80a8d671a1aeac4454080e44160863"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,7 +163,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Finishes writing process. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#abc48d457270f8c1c9a4e9acbe3303996">catena::REST::ChunkedWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a4efc1ab69a62d9b89bc34c32d1bf4a45">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
@@ -202,7 +199,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ad63d815bfeb4e3ccb4ad6170048c8aa2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#af6b3e38d70e090ec33368710cf7ab6c7">catena::REST::ChunkedWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ad63d815bfeb4e3ccb4ad6170048c8aa2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#aeba94fa327ba30ef3d336c30f16320eb">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
@@ -238,36 +235,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a554e66849e946ee0ea586d2deaf0326e">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1ChunkedWriter.html#a43b4105f66f354103ba76be5e5ac8e75">catena::REST::ChunkedWriter</a>.</p>
-
-</div>
-</div>
-<a id="a1bd6bf0ab4ae1c91316799b405c369d2" name="a1bd6bf0ab4ae1c91316799b405c369d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1bd6bf0ab4ae1c91316799b405c369d2">&#9670;&#160;</a></span>writeOptions()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::REST::ISocketWriter::writeOptions </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Writes a response to the client detaining their options. Used when method = OPTIONS. </p>
-
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#afb078d6a7c3b928850d10029220d8bd4">catena::REST::SocketWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a554e66849e946ee0ea586d2deaf0326e">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a1563491b348dd9c5dffa5c831c8b0cfd">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>

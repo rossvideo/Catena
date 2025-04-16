@@ -2,7 +2,6 @@ var namespacecatena_1_1REST =
 [
     [ "AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", "classcatena_1_1REST_1_1AddLanguage" ],
     [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
-    [ "ChunkedWriter", "classcatena_1_1REST_1_1ChunkedWriter.html", "classcatena_1_1REST_1_1ChunkedWriter" ],
     [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
     [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
     [ "GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", "classcatena_1_1REST_1_1GetPopulatedSlots" ],
@@ -17,6 +16,7 @@ var namespacecatena_1_1REST =
     [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
     [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
     [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],
+    [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ],
     [ "CallStatus", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009", [
       [ "kCreate", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009ab9bd4b7bbc4fbe61cec6edd5bad6496d", null ],
       [ "kProcess", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a3fc05876acd3bdfabc21ceefddf8846c", null ],
@@ -24,5 +24,6 @@ var namespacecatena_1_1REST =
       [ "kWrite", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009ad3ac0ba447a9859ad2db8e498056429f", null ],
       [ "kPostWrite", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a89585777c1d2b1f969669074947a3de4", null ],
       [ "kFinish", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a8941714ff8251a03708025c060c46556", null ]
-    ] ]
+    ] ],
+    [ "codeMap_", "namespacecatena_1_1REST.html#aba0562bbaa4c24aabbd2f3a79cbc5db2", null ]
 ];
