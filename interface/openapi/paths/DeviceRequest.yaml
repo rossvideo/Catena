@@ -46,30 +46,30 @@ get:
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: language
-      in: path
+    - name: Language
+      in: header
       required: false
       description: The langauge code specifiying what language to return device components in
       schema:
         type: string
       default: en
   
-    - name: detail_level
-      in: path
+    - name: Detail-Level
+      in: header
       required: false
       description: The level of detail to request the device in
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
 
-    - name: subscribed_oids
-      in: path
-      required: false
-      description: A list of device component oids. Only these components will be returns if detail_level = SUBSCRIPTIONS
-      schema:
-        type: array
-        items:
-          $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-      default: []
+    # - name: subscribed_oids
+    #   in: path
+    #   required: false
+    #   description: A list of device component oids. Only these components will be returns if detail_level = SUBSCRIPTIONS
+    #   schema:
+    #     type: array
+    #     items:
+    #       $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+    #   default: []
 
   responses:
     "200":

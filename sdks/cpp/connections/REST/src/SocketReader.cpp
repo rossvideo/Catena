@@ -26,12 +26,16 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
 
     // Extracting service_ and slot_ from the url (ex: v1/GetValue/{slot}).
     std::string path = u.path();
-    std::size_t pos = path.find_last_of('/');
-    service_ = path.substr(0, pos);
-    try {
-        slot_ = std::stoi(path.substr(pos + 1));
-    } catch (...) {
-        throw catena::exception_with_status("Invalid slot", catena::StatusCode::INVALID_ARGUMENT);
+    if (u.segments().size() <= 2) {
+        service_ = path;
+    } else {
+        std::size_t pos = path.find_last_of('/');
+        service_ = path.substr(0, pos);
+        try {
+            slot_ = std::stoi(path.substr(pos + 1));
+        } catch (...) {
+            throw catena::exception_with_status("Invalid slot", catena::StatusCode::INVALID_ARGUMENT);
+        }
     }
 
     // Parsing query parameters.

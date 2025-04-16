@@ -42,7 +42,7 @@ servers:
   - url: https://device.catenamedia.tv/v1
   - url: http://localhost:443/v1
 paths:
-  /DeviceRequest/slot/{slot}/language/{language}/detail_level/{detail_level}/subscribed_oids/{subscribed_oids}:
+  /DeviceRequest/{slot}:
     $ref: './paths/DeviceRequest.yaml'
   /GetPopulatedSlots:
     $ref: './paths/GetPopulatedSlots.yaml'
@@ -52,7 +52,7 @@ paths:
     $ref: './paths/ExternalObjectRequest.yaml'
   /BasicParamInfoRequest/slot/{slot}/oid_prefix/{oid_prefix}/recursive/{recursive}:
     $ref: './paths/BasicParamInfoRequest.yaml'
-  /GetValue/slot/{slot}/oid/{oid}:
+  /GetValue/{slot}:
     $ref: './paths/GetValue.yaml'
   /SetValue:
     $ref: './paths/SetValue.yaml'

@@ -47,7 +47,7 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
-      in: path
+      in: query
       required: true
       description: The path to the parameter within the device model to get the value from. For array parameters, suffix with a valid index to only get the value at that index
       schema:
