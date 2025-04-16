@@ -101,10 +101,6 @@ class ISocketReader {
      * @brief Returns the origin of the request.
      */
     virtual const std::string& origin() const = 0;
-    /**
-     * @brief Returns the agent used to send the request.
-     */
-    virtual const std::string& userAgent() const = 0;
     virtual uint32_t slot() const = 0;
 
     /**

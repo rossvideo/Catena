@@ -107,10 +107,6 @@ class SocketReader : public ISocketReader {
      * @brief Returns the origin of the request.
      */
     const std::string& origin() const override { return origin_; }
-    /**
-     * @brief Returns the agent used to send the request.
-     */
-    const std::string& userAgent() const override { return userAgent_; }
     uint32_t slot() const override { return slot_; };
 
     /**
@@ -143,10 +139,7 @@ class SocketReader : public ISocketReader {
      * @brief The origin of the request. Required for CORS headers.
      */
     std::string origin_ = "";
-    /**
-     * @brief The agent the request was sent from.
-     */
-    std::string userAgent_ = "";
+
     /**
      * @brief 
      */
