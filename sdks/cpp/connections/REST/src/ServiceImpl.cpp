@@ -10,12 +10,20 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
 #include <controllers/AddLanguage.h>
-#include <controllers/BasicParamInfoRequest.h>
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
+#include <controllers/BasicParamInfoRequest.h>
 
 using catena::REST::Connect;
-
+using catena::REST::DeviceRequest;
+using catena::REST::GetPopulatedSlots;
+using catena::REST::GetValue;
+using catena::REST::MultiSetValue;
+using catena::REST::SetValue;
+using catena::REST::LanguagePackRequest;
+using catena::REST::ListLanguages;
+using catena::REST::AddLanguage;
+using catena::REST::BasicParamInfoRequest;
 
 #include "absl/flags/flag.h"
 
@@ -42,7 +50,9 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
+}
 
+void CatenaServiceImpl::initializeRoutes() {
     // Initializing the routes for router_.
     router_.addProduct("GET/v1/Connect",                Connect::makeOne);
     router_.addProduct("GET/v1/DeviceRequest",          DeviceRequest::makeOne);
@@ -53,7 +63,6 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
     router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
     router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
-    router_.addProduct("PUT/v1/AddLanguage",       AddLanguage::makeOne);
     router_.addProduct("GET/v1/BasicParamInfoRequest",  BasicParamInfoRequest::makeOne);
 }
 
@@ -75,6 +84,7 @@ void CatenaServiceImpl::writeOptions(tcp::socket& socket, const std::string& ori
 void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
     shutdown_ = false;
+    initializeRoutes();
 
     while (!shutdown_) {
         // Waiting for a connection.

@@ -1,4 +1,3 @@
-
 // connections/REST
 #include <controllers/Connect.h>
 using catena::REST::Connect;
@@ -36,7 +35,6 @@ Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
     }
 }
 
-void Connect::proceed() {
 void Connect::proceed() {
     if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());

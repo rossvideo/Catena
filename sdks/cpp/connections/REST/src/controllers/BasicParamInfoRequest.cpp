@@ -30,6 +30,7 @@
 
 // connections/REST
 #include <controllers/BasicParamInfoRequest.h>
+using catena::REST::BasicParamInfoRequest;
 
 // common
 #include <Tags.h>
@@ -39,15 +40,14 @@
 using catena::common::ParamTag;
 using catena::common::Path;
 using catena::common::ParamVisitor;
-using catena::common::Device;
 using catena::common::IParam;
 using catena::common::Authorizer;
 
 // Initializes the object counter for BasicParamInfoRequest to 0.
-int CatenaServiceImpl::BasicParamInfoRequest::objectCounter_ = 0;
+int BasicParamInfoRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin(), context.userAgent()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
+BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::Device& dm) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     
@@ -68,7 +68,7 @@ CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& soc
     }
 }
 
-void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
+void BasicParamInfoRequest::proceed() {
     writeConsole(CallStatus::kCreate, ok_);
     if (!ok_) {
         finish();
@@ -98,12 +98,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
             std::vector<std::unique_ptr<IParam>> top_level_params;
 
             {
-                Device::LockGuard lg(dm_);
+                catena::common::Device::LockGuard lg(dm_);
                 top_level_params = dm_.getTopLevelParams(rc, *authz);
             }
 
             if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                Device::LockGuard lg(dm_);
+                catena::common::Device::LockGuard lg(dm_);
                 responses_.clear();
                 // Process each top-level parameter
                 for (auto& top_level_param : top_level_params) {
@@ -127,7 +127,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
         // Mode 2: Get a specific parameter and its children
         else if (!oid_prefix_.empty()) { 
             {
-                Device::LockGuard lg(dm_);
+                catena::common::Device::LockGuard lg(dm_);
                 param = dm_.getParam(oid_prefix_, rc, *authz);
             }
 
@@ -170,14 +170,14 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed() {
     }
 }
 
-void CatenaServiceImpl::BasicParamInfoRequest::finish() {
+void BasicParamInfoRequest::finish() {
     writeConsole(CallStatus::kFinish, socket_.is_open());
     writer_.finish();
     std::cout << "BasicParamInfoRequest[" << objectId_ << "] finished\n";
 }
 
 // Helper method to add a parameter to the responses
-void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz) {
+void BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz) {
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();
@@ -185,7 +185,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param
 }
 
 // Updates the array_length field in the protobuf responses
-void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
+void BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             // Only update if the OID exactly matches the array name
@@ -197,7 +197,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::str
 }
 
 // Visits a parameter and adds it to the response vector
-void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
+void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
     // Only add non-array parameters that aren't the top-most parameter
     bool isTopParameter = path == request_.oid_prefix_;
     bool isArray = param->isArrayType();
@@ -209,7 +209,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IPar
 }
 
 // Visits an array and updates the array length information
-void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
+void BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
     // Only add array parameters that aren't the top-most parameter
     bool isTopParameter = path == request_.oid_prefix_;
     if (isTopParameter) {

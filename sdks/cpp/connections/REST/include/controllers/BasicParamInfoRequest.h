@@ -47,6 +47,7 @@
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
+#include <Device.h>
 
 // common
 #include <ParamVisitor.h>
@@ -54,14 +55,22 @@
 
 using catena::REST::CatenaServiceImpl;
 using catena::REST::CallStatus;
+using catena::common::ParamTag;
+using catena::common::Path;
+using catena::common::ParamVisitor;
+using catena::common::Device;
 using catena::common::IParam;
-using catena::common::IParamVisitor;
+using catena::common::Authorizer;
 using catena::common::timeNow;
+using catena::common::IParamVisitor;
+
+namespace catena {
+namespace REST {
 
 /**
  * @brief CallData class for the BasicParamInfoRequest REST RPC.
  */
-class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData {
+class BasicParamInfoRequest : public catena::REST::ICallData {
   public:
     /**
      * @brief Constructor for the BasicParamInfoRequest RPC. Calls proceed() once
@@ -71,7 +80,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
      * @param context The SocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::Device& dm);
     
     /**
      * @brief BasicParamInfoRequest's main process.
@@ -90,7 +99,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, catena::common::Device& dm) {
       return new BasicParamInfoRequest(socket, context, dm);
     }
     
@@ -133,14 +142,14 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
     SocketReader& context_;
     
     /**
-     * @brief The ChunkedWriter object for writing to socket_.
+     * @brief The SSEWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SSEWriter writer_;
     
     /**
      * @brief The device to get parameter info from.
      */
-    Device& dm_;
+    catena::common::Device& dm_;
     
     /**
      * @brief Flag indicating if the RPC is working correctly.
@@ -185,7 +194,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
     /**
      * @brief Visitor class for collecting parameter info
      */
-    class BasicParamInfoVisitor : public IParamVisitor {
+    class BasicParamInfoVisitor : public catena::common::IParamVisitor {
         public:
             /**
              * @brief Constructor for the BasicParamInfoVisitor class
@@ -194,7 +203,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
              * @param responses The vector of responses
              * @param request The request
              */
-            BasicParamInfoVisitor(Device& device, catena::common::Authorizer& authz, 
+            BasicParamInfoVisitor(catena::common::Device& device, catena::common::Authorizer& authz,
                                 std::vector<catena::BasicParamInfoResponse>& responses,
                                 BasicParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
@@ -218,7 +227,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
             /**
              * @brief The device to visit within the visitor
              */
-            Device& device_;
+            catena::common::Device& device_;
 
             /**
              * @brief The authorizer within the visitor
@@ -235,4 +244,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public catena::REST::ICallData 
              */
             BasicParamInfoRequest& request_;
     };
-}; 
+};
+
+}; // namespace REST
+}; // namespace catena 
