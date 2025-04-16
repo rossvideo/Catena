@@ -49,7 +49,6 @@
 #include <Device.h>
 #include <utils.h>
 #include <Authorization.h>
-#include <Enums.h>
 
 // Connections/REST
 #include "SocketReader.h"
@@ -130,10 +129,6 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief The mutex to for locking the object while writing
      */
     std::mutex mtx_;
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
 
     /**
      * @brief Id of operation waiting for valueSetByClient to be emitted.

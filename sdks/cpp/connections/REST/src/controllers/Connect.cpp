@@ -7,30 +7,16 @@ using catena::REST::Connect;
 int Connect::objectCounter_ = 0;
 
 Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, ok_{true}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
+    socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
-    try {
-        language_ = context.fields("language");
-        auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
-        if (dlMap.find(context.fields("detail_level")) != dlMap.end()) {
-            detailLevel_ = dlMap.at(context.fields("detail_level"));
-        } else {
-            detailLevel_ = catena::Device_DetailLevel_NONE;
-        }
-        userAgent_ = context.fields("user_agent");
-        forceConnection_ = context.fields("force_connection") == "true";
-    // Parse error
-    } catch (...) {
-        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
-        ok_ = false;
-    }
+    detailLevel_ = context.detailLevel();
+    userAgent_ = context.fields("user_agent");
+    forceConnection_ = context.fields("force_connection") == "true";
 }
 
 void Connect::proceed() {
-    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
     shutdownSignalId_ = shutdownSignal_.connect([this](){

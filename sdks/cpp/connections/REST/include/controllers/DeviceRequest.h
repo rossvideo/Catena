@@ -48,7 +48,6 @@
 #include <Device.h>
 #include <utils.h>
 #include <Authorization.h>
-#include <Enums.h>
 
 // Connections/REST
 #include "SocketReader.h"
@@ -123,15 +122,7 @@ class DeviceRequest : public ICallData {
      * @brief The device to get components from.
      */
     Device& dm_;
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
 
-    /**
-     * @brief The detail level to return the stream in.
-     */
-    int detailLevel_;
     /**
      * @brief A list of the subscribed oids to return.
      */

@@ -5,11 +5,11 @@ using catena::REST::SocketReader;
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
     method_ = "";
-    rpc_ = "";
-    req_ = "";
+    service_ = "";
     jwsToken_ = "";
     origin_ = "";
     jsonBody_ = "";
+    detailLevel_ = -1;
     authorizationEnabled_ = authz;
 
     // Reading the headers.
@@ -24,10 +24,10 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     std::istringstream(header) >> method_ >> url >> httpVersion;
     url_view u(url);
 
-    // Extracting rpc_ and slot_ from the url (ex: v1/GetValue/{slot}).
+    // Extracting service_ and slot_ from the url (ex: v1/GetValue/{slot}).
     std::string path = u.path();
     std::size_t pos = path.find_last_of('/');
-    rpc_ = path.substr(0, pos);
+    service_ = path.substr(0, pos);
     try {
         slot_ = std::stoi(path.substr(pos + 1));
     } catch (...) {
@@ -53,6 +53,20 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
         else if (origin_.empty() && header.starts_with("Origin: ")) {
             origin_ = header.substr(std::string("Origin: ").length());
         }
+        // Getting language
+        else if (language_.empty() && header.starts_with("Language: ")) {
+            language_ = header.substr(std::string("Language: ").length());
+            language_.erase(language_.length() - 1); // Removing newline.
+        }
+        // Getting detail level
+        else if (detailLevel_ == -1 && header.starts_with("Detail-Level: ")) {
+            std::string dl = header.substr(std::string("Detail-Level: ").length());
+            dl.erase(dl.length() - 1); // Removing newline.
+            auto& dlMap = catena::common::DetailLevel().getReverseMap(); // Reverse detail level map.
+            if (dlMap.find(dl) != dlMap.end()) {
+                detailLevel_ = dlMap.at(dl);
+            }
+        }
         // Getting body content-Length
         else if (contentLength == 0 && header.starts_with("Content-Length: ")) {
             contentLength = stoi(header.substr(std::string("Content-Length: ").length()));
@@ -66,5 +80,9 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             jsonBody_.resize(contentLength);
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
         }
+    }
+    // Setting detail level to none if not set.
+    if (detailLevel_ == -1) {
+        detailLevel_ = catena::Device_DetailLevel_NONE;
     }
 }
