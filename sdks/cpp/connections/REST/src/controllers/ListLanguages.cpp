@@ -7,26 +7,12 @@ using catena::REST::ListLanguages;
 int ListLanguages::objectCounter_ = 0;
 
 ListLanguages::ListLanguages(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket}, dm_{dm}, ok_{true} {
+    socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Parsing fields and assigning to respective variables.
-    try {
-        std::unordered_map<std::string, std::string> fields = {
-            {"slot", ""}
-        };
-        context.fields(fields);
-        slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
-    // Parse error
-    } catch (...) {
-        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
-        ok_ = false;
-    }
 }
 
 void ListLanguages::proceed() {
-    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
 
     // Getting language list from the device.

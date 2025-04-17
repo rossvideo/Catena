@@ -47,7 +47,7 @@ put:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
     
     - name: id
-      in: path
+      in: query
       required: true
       description: The id of the language pack to add to the device model
       schema:

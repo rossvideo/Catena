@@ -7,36 +7,20 @@ using catena::REST::AddLanguage;
 int AddLanguage::objectCounter_ = 0;
 
 AddLanguage::AddLanguage(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Parsing fields and assigning to respective variables.
-    try {
-        std::unordered_map<std::string, std::string> fields = {
-            {"id", ""},
-            {"slot", ""}
-        };
-        context.fields(fields);
-        slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
-        id_ = fields.at("id");
-    // Parse error
-    } catch (...) {
-        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
-        ok_ = false;
-    }
 }
 
 void AddLanguage::proceed() {
-    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         // Constructing the AddLanguagePayload
         catena::AddLanguagePayload payload;
-        payload.set_slot(slot_);
-        payload.set_id(id_);
+        payload.set_slot(context_.slot());
+        payload.set_id(context_.fields("id"));
         absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), payload.mutable_language_pack());
         // Adding to device
         if (status.ok()) {

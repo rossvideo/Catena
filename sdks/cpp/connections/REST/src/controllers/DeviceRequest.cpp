@@ -7,37 +7,12 @@ using catena::REST::DeviceRequest;
 int DeviceRequest::objectCounter_ = 0;
 
 DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Parsing fields and assigning to respective variables.
-    try {
-        std::unordered_map<std::string, std::string> fields = {
-            {"subscribed_oids", ""},
-            {"detail_level", ""},
-            {"language", ""},
-            {"slot", ""}
-        };
-        context_.fields(fields);
-        slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
-        language_ = fields.at("language");
-        auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
-        if (dlMap.find(fields.at("detail_level")) != dlMap.end()) {
-            detailLevel_ = dlMap.at(fields.at("detail_level"));
-        } else {
-            detailLevel_ = catena::Device_DetailLevel_NONE;
-        }
-        catena::split(subscribedOids_, fields.at("subscribed_oids"), ",");
-    // Parse error
-    } catch (...) {
-        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
-        ok_ = false;
-    }
 }
 
 void DeviceRequest::proceed() {
-    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
     try {
         // controls whether shallow copy or deep copy is used

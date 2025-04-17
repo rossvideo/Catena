@@ -39,6 +39,7 @@
 
 // common
 #include <Status.h>
+#include <Enums.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -46,7 +47,9 @@
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/url.hpp>
 using boost::asio::ip::tcp;
+using namespace boost::urls;
 
 #include <string>
 #include <iostream>
@@ -73,32 +76,44 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns the rpc of the request.
      */
-    const std::string& rpc() const override { return rpc_; }
+    const std::string& service() const override { return service_; }
     /**
-     * @brief Parsed req_ for fields.
-     * 
-     * @param fields A map continaing the fields to parse and an empty
-     * string to place the parsed field in.
-     * fields is order dependent. The keys must be placed in the same order
-     * in which they appear in the URL. Additionally, the last field is
-     * assumed to be until the end of the request unless specified
-     * otherwise.
-     * 
-     * @todo Update once URL format is finalized.
+     * @brief Returns the slot of the device to make the API call on.
      */
-    void fields(std::unordered_map<std::string, std::string>& fieldMap) const override;
+    uint32_t slot() const override { return slot_; };
+    /**
+     * @brief Returns the field "key" queried from the URL, or an empty sting
+     * if it does not exist.
+     * 
+     * @param key The name of the field to retrieve.
+     */
+    const std::string& fields(const std::string& key) const override {
+      if (fields_.find(key) != fields_.end()) {
+        return fields_.at(key);
+      } else {
+        return fieldNotFound;
+      }
+    }
     /**
      * @brief Returns the client's jws token.
      */
     const std::string& jwsToken() const override { return jwsToken_; }
     /**
-     * @brief Returns the json body of the request, which may be empty.
-     */
-    const std::string& jsonBody() const override { return jsonBody_; }
-    /**
      * @brief Returns the origin of the request.
      */
     const std::string& origin() const override { return origin_; }
+    /**
+     * @brief Returns the language to return the resposne in.
+     */
+    const std::string& language() const override { return language_; };
+    /**
+     * @brief Returns the detail level to return the response in.
+     */
+    int detailLevel() const override { return detailLevel_; };
+    /**
+     * @brief Returns the json body of the request, which may be empty.
+     */
+    const std::string& jsonBody() const override { return jsonBody_; }
 
     /**
      * @brief Returns true if authorization is enabled.
@@ -113,11 +128,11 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The rpc of the request (/v1/GetValue, etc.)
      */
-    std::string rpc_ = "";
+    std::string service_ = "";
     /**
-     * @brief The request string (bit after "method .../rpc_").
+     * @brief The slot of the device to make the API call on.
      */
-    std::string req_ = "";
+    uint32_t slot_;
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */
@@ -130,6 +145,23 @@ class SocketReader : public ISocketReader {
      * @brief The origin of the request. Required for CORS headers.
      */
     std::string origin_ = "";
+    /**
+     * @brief The language to return the response in.
+     */
+    std::string language_ = "";
+    /**
+     * @brief The detail level to return the response in.
+     */
+    int detailLevel_ = -1;
+    /**
+     * @brief A map of fields queried from the URL.
+     */
+    std::unordered_map<std::string, std::string> fields_;
+    /**
+     * @brief An empty string var to return if the field is not found.
+     * Exists to avoid scope issues.
+     */
+    std::string fieldNotFound = "";
     /**
      * @brief True if authorization is enabled.
      */

@@ -28,7 +28,7 @@ endif(APPLE)
 set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
+find_package(Boost 1.81 REQUIRED COMPONENTS system date_time url)
 
 set(sources
     "src/ServiceImpl.cpp"
@@ -68,6 +68,7 @@ target_link_libraries(${target}
     PUBLIC
         proto_interface
         Boost::system
+        Boost::url
         jwt-cpp::jwt-cpp
         catena_proto_common
         absl::flags_parse

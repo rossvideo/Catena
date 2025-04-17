@@ -42,12 +42,13 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to add/remove from client's subscriptions
+      description: The slot of the device model containing the parameters to 
+        add/remove from client's subscriptions
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
-      in: path
+      in: query
       required: true
       description: The path to the parameter within the device model to get
       schema:
