@@ -69,7 +69,7 @@ get:
         The response is a sequence of JSON objects, each containing information about a single parameter.
         Each object in the stream has the following structure:
       content:
-        application/x-ndjson:
+        application/json:
           schema:
             title: BasicParamInfoResponse
             type: array
