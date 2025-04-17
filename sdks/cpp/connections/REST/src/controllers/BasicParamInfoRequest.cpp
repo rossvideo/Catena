@@ -58,7 +58,13 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& 
             {"oid_prefix", ""}
         };
         context_.fields(fields);
-        oid_prefix_ = "/" + fields.at("oid_prefix");
+        // Handle URL-encoded empty values
+        std::string oid_prefix_value = fields.at("oid_prefix");
+        if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
+            oid_prefix_ = "";
+        } else {
+            oid_prefix_ = "/" + oid_prefix_value;
+        }
         recursive_ = fields.at("recursive") == "true";
     // Parse error
     } catch (...) {
