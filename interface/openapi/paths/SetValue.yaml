@@ -38,6 +38,15 @@ put:
   summary: Set the value of a parameter within a device model
   operationId: SetValue
 
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model containing the parameter to set
+        the value of
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
   requestBody:
     required: true
     description: A device's slot, a parameter's oid, and a value to set it to

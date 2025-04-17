@@ -42,21 +42,25 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameter to get the value from
+      description: The slot of the device model containing the parameter to get
+        the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
       in: query
       required: true
-      description: The path to the parameter within the device model to get the value from. For array parameters, suffix with a valid index to only get the value at that index
+      description: The path to the parameter within the device model to get the
+        value from. For array parameters, suffix with a valid index to only get
+        the value at that index
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
       default: "text_box"
 
   responses:
     "200":
-      description: The value of the parameter specified by oid within the device model
+      description: The value of the parameter specified by oid within the
+        device model
       content:
         application/json:
           schema:

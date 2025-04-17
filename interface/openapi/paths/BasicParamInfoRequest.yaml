@@ -35,7 +35,8 @@
 #
 
 get:
-  summary: Gets a parameter's basic information from the device model plugged into the specified slot
+  summary: Gets a parameter's basic information from the device model plugged
+    into the specified slot
   operationId: BasicParamInfoRequest
 
   parameters:
@@ -47,17 +48,19 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid_prefix
-      in: path
+      in: query
       required: false
-      description: Uniquely identifies the starting parameter relative to device.params. Specifying "" selects all top-level parameters
+      description: Uniquely identifies the starting parameter relative to
+        device.params. Specifying "" selects all top-level parameters
       schema:
         type: string
       default: ""
     
     - name: recursive
-      in: path
+      in: query
       required: false
-      description: Optional flag to indicate whether to include all child parameters or not.
+      description: Optional flag to indicate whether to include all child 
+        parameters or not.
       schema:
         type: boolean
       default: false
@@ -79,7 +82,8 @@ get:
                     $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
                   name:
                     title: PolyGlot Text
-                    description: Text that a client can display in one of multiple languages
+                    description: Text that a client can display in one of 
+                      multiple languages
                     type: object
                   type:
                     $ref: "../../../schema/catena.param_schema.json#/$defs/param_type"

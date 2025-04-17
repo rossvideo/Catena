@@ -38,9 +38,19 @@ put:
   summary: Set the value of multiple parameters within a device model
   operationId: MultiSetValue
 
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model containing the parameters to
+        set the values of
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
   requestBody:
     required: true
-    description: A device's slot and a collection of parameter oids and values to set them to
+    description: A device's slot and a collection of parameter oids and values
+      to set them to
     content:
       application/json:
         type: object

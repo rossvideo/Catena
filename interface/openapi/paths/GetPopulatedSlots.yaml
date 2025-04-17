@@ -45,4 +45,4 @@ get:
         application/json:
           schema:
             $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
-          example: [1, 2, 3]
+          example: {"slots": [1, 2, 3]}

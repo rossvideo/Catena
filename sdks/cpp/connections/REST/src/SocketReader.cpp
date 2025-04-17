@@ -25,17 +25,19 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     url_view u(url);
 
     // Extracting service_ and slot_ from the url (ex: v1/GetValue/{slot}).
+    // Slot is not needed for GetPopulatedSlots and Connect.
     std::string path = u.path();
-    if (u.segments().size() <= 2) {
-        service_ = path;
-    } else {
-        std::size_t pos = path.find_last_of('/');
-        service_ = path.substr(0, pos);
-        try {
+    try {
+        if (path.find("Connect") != std::string::npos ||
+            path.find("GetPopulatedSlots") != std::string::npos) {
+            service_ = path;
+        } else {
+            std::size_t pos = path.find_last_of('/');
+            service_ = path.substr(0, pos);
             slot_ = std::stoi(path.substr(pos + 1));
-        } catch (...) {
-            throw catena::exception_with_status("Invalid slot", catena::StatusCode::INVALID_ARGUMENT);
         }
+    } catch (...) {
+        throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);
     }
 
     // Parsing query parameters.
