@@ -97,6 +97,18 @@ class SocketWriter : public ISocketWriter {
      * finish().
      */
     void finish(google::protobuf::Message& msg);
+    /**
+     * @brief Writes a response to the client detaining their options.
+     * Used when method = OPTIONS.
+     */
+    void writeOptions() override;
+    /**
+     * @brief Finishes the writing process by writing a message to the socket.
+     * 
+     * SocketWriter exlusive function which acts as a call to write() then
+     * finish().
+     */
+    virtual void finishWithStatus(int status_code) override;
 
   private:
     /**

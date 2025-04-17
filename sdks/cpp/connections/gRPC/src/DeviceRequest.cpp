@@ -108,7 +108,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                     for (const auto& oid : req_.subscribed_oids()) {
                         catena::exception_with_status rc{"", catena::StatusCode::OK};
                         if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
-                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                            continue; // Skip if subscription fails to add
                         } else {
                             rpc_subscriptions_.push_back(oid);
                         }

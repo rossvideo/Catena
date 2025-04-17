@@ -73,13 +73,17 @@ void DeviceRequest::proceed() {
         auto& subscriptionManager = context_.getSubscriptionManager();
         subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
         
+        // Track if any subscriptions throw an error
+        bool subscriptionError = false;
+        
         // If this request has subscriptions, add them
         if (!requestSubscriptions_.empty()) {
             // Add new subscriptions to both the manager and our tracking list
             for (const auto& oid : requestSubscriptions_) {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 if (!subscriptionManager.addSubscription(oid, dm_, rc)) {
-                    throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                    subscriptionError = true;
+                    continue; // Skip if subscription fails to add
                 }
             }
         }
@@ -110,6 +114,15 @@ void DeviceRequest::proceed() {
                 component = serializer_->getNext();
             }
             writer_.write(component);
+        }
+
+        // If some subscriptions failed, set status code to 202
+        if (subscriptionError) {
+            catena::exception_with_status status("Some subscriptions failed", catena::StatusCode::OK);
+            writer_.write(status);
+            writer_.finishWithStatus(202);
+        } else {
+            writer_.finish();
         }
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {

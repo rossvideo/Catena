@@ -81,6 +81,11 @@ class ISocketWriter {
      * @brief Finishes writing process.
      */
     virtual void finish() = 0;
+    /**
+     * @brief Finishes writing process with a specific status code.
+     * @param status_code The HTTP status code to use.
+     */
+    virtual void finishWithStatus(int status_code) = 0;
 };
  
 }; // Namespace REST

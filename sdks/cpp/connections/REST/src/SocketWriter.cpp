@@ -1,4 +1,3 @@
-
 #include <SocketWriter.h>
 using catena::REST::SocketWriter;
 using catena::REST::ChunkedWriter;
@@ -83,7 +82,7 @@ void ChunkedWriter::writeHeaders(catena::exception_with_status& status) {
     // Setting type depending on if we are writing an error or not.
     std::string type;
     if (status.status == catena::StatusCode::OK) {
-        type = "application/json";
+        type = "text/event-stream";
     } else {
         type = "text/plain";
     }
@@ -111,8 +110,10 @@ void ChunkedWriter::write(google::protobuf::Message& msg) {
             catena::exception_with_status ok("", catena::StatusCode::OK);
             writeHeaders(ok);
         }
-        std::string chunk_size = std::format("{:x}", json_output.size());
-        boost::asio::write(socket_, boost::asio::buffer(chunk_size + "\r\n" + json_output + "\r\n"));
+        // Format as SSE event
+        std::string event = "data: " + json_output + "\n\n";
+        std::string chunk_size = std::format("{:x}", event.size());
+        boost::asio::write(socket_, boost::asio::buffer(chunk_size + "\r\n" + event + "\r\n"));
     // Error, thrown so the call knows the end the process.
     } else {
         throw catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
@@ -120,11 +121,14 @@ void ChunkedWriter::write(google::protobuf::Message& msg) {
 }
 
 void ChunkedWriter::write(catena::exception_with_status& err) {
-    std::string errMsg = err.what();
     // Writing headers if we haven't already.
     if (!hasHeaders_) { writeHeaders(err); }
-    // Writing error message.
-    boost::asio::write(socket_, boost::asio::buffer(std::format("{:x}", errMsg.size()) + "\r\n" + errMsg + "\r\n"));
+    // Writing error message as SSE event
+    std::string errMsg = err.what();
+    if (!errMsg.empty()) {
+        std::string event = "data: " + errMsg + "\n\n";
+        boost::asio::write(socket_, boost::asio::buffer(std::format("{:x}", event.size()) + "\r\n" + event + "\r\n"));
+    }
     finish();
 }
 
