@@ -10,6 +10,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     jwsToken_ = "";
     origin_ = "";
     jsonBody_ = "";
+    user_agent_ = "";
     authorizationEnabled_ = authz;
 
     // Reading the headers.
@@ -68,6 +69,14 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
         // Getting origin
         else if (origin_.empty() && header.starts_with("Origin: ")) {
             origin_ = header.substr(std::string("Origin: ").length());
+        }
+        // Getting User-Agent
+        else if (user_agent_.empty() && header.starts_with("User-Agent: ")) {
+            user_agent_ = header.substr(std::string("User-Agent: ").length());
+            // Removing newline
+            if (!user_agent_.empty() && user_agent_.back() == '\r') {
+                user_agent_.pop_back();
+            }
         }
         // Getting body content-Length
         else if (contentLength == 0 && header.starts_with("Content-Length: ")) {

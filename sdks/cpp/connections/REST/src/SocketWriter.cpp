@@ -9,9 +9,14 @@ void SocketWriter::write(google::protobuf::Message& msg) {
     std::string jsonOutput;
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
+    options.preserve_proto_field_names = true;
     auto status = MessageToJsonString(msg, &jsonOutput, options);
     // Adding JSON obj to response_ if conversion was successful.
     if (status.ok()) {
+        // Only remove newlines for Postman
+        if (user_agent_.find("PostmanRuntime") != std::string::npos) {
+            catena::subs(jsonOutput, "\n", "");
+        }
         if (response_.empty()) {
             response_ = jsonOutput;
         } else {
@@ -63,10 +68,8 @@ void SocketWriter::finish(google::protobuf::Message& msg) {
     finish();
 }
 
-
-
-SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin)
-    : socket_{socket} {
+SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const std::string& user_agent)
+    : socket_{socket}, user_agent_{user_agent} {
     // Writing the headers.
     std::string headers = "HTTP/1.1 200\r\n"
                           "Content-Type: text/event-stream\r\n"
@@ -83,13 +86,17 @@ void SSEWriter::write(google::protobuf::Message& msg) {
     std::string json_output;
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
+    options.preserve_proto_field_names = true;
     auto status = MessageToJsonString(msg, &json_output, options);
 
     // Writing JSON obj if conversion was successful.
     if (status.ok()) {
-        catena::subs(json_output, "\n", "");
+        // Only remove newlines for Postman
+        if (user_agent_.find("PostmanRuntime") != std::string::npos) {
+            catena::subs(json_output, "\n", "");
+        }
         boost::asio::write(socket_, boost::asio::buffer("data: " + json_output + "\n\n"));
-    // Error, writting error to the client.
+    // Error, writing error to the client.
     } else {
         catena::exception_with_status err("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
         write(err);

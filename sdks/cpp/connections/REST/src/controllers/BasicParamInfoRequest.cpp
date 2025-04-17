@@ -47,7 +47,7 @@ using catena::common::Authorizer;
 int BasicParamInfoRequest::objectCounter_ = 0;
 
 BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
+    socket_{socket}, writer_{socket, context.origin(), context.user_agent()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     

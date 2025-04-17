@@ -105,6 +105,8 @@ class SocketReader : public ISocketReader {
      */
     bool authorizationEnabled() const override { return authorizationEnabled_; };
 
+    const std::string& user_agent() const { return user_agent_; }
+
   private:
     /**
      * @brief The method of the request (GET, PUT, etc.).
@@ -134,6 +136,7 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
+    std::string user_agent_ = "";
 };
 
 }; // Namespace REST

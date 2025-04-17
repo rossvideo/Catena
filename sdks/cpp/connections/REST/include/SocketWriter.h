@@ -67,13 +67,14 @@ class SocketWriter : public ISocketWriter {
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
+     * @param user_agent The user agent of the request.
      */
-    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket} {
-      CORS_ = "Access-Control-Allow-Origin: " + origin + "\r\n"
-              "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
-              "Access-Control-Allow-Credentials: true\r\n";
-    }
+    SocketWriter(tcp::socket& socket, const std::string& origin = "*", const std::string& user_agent = "")
+        : socket_{socket}, CORS_{"Access-Control-Allow-Origin: " + origin + "\r\n"
+                                "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                                "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
+                                "Access-Control-Allow-Credentials: true\r\n"},
+          user_agent_{user_agent} {}
     /**
      * @brief Adds the protobuf message to the end of response in JSON format.
      * @param msg The protobuf message to add as JSON.
@@ -110,7 +111,7 @@ class SocketWriter : public ISocketWriter {
      * Access-Control-Allow-Headers
      * Access-Control-Allow-Credentials
      */
-    std::string CORS_;
+    const std::string CORS_;
     /**
      * @brief The response to write to the socket.
      */
@@ -121,6 +122,10 @@ class SocketWriter : public ISocketWriter {
      * Used to determine formatting when finish() is called.
      */
     bool multi_ = false;
+    /**
+     * @brief The user agent of the request.
+     */
+    std::string user_agent_;
 };
 
 /**
@@ -132,8 +137,9 @@ class SSEWriter : public ISocketWriter {
      * @brief Constructor for SSEWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
+     * @param user_agent The user agent of the request.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin = "*");
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*", const std::string& user_agent = "");
     /**
      * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.
@@ -156,6 +162,10 @@ class SSEWriter : public ISocketWriter {
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
+    /**
+     * @brief The user agent of the request.
+     */
+    std::string user_agent_;
 };
 
 /**
