@@ -174,20 +174,17 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2LanguagePa
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    }</div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    tcp::socket&amp; socket_;</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    SocketWriter writer_;</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    Device&amp; dm_;</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keywordtype">bool</span> ok_;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    SocketReader&amp; context_;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    SocketWriter writer_;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    Device&amp; dm_;</div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordtype">int</span> slot_;</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    std::string language_;</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span> </div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>};</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>};</div>
 </div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>}; <span class="comment">// namespace REST</span></div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>}; <span class="comment">// namespace REST</span></div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>}; <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aAuthorization_8h_html"><div class="ttname"><a href="Authorization_8h.html">Authorization.h</a></div><div class="ttdoc">Class for handling authorization information.</div></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aEnums_8h_html"><div class="ttname"><a href="Enums_8h.html">Enums.h</a></div><div class="ttdoc">tools for using EnumDecorators.</div></div>
@@ -202,7 +199,7 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2LanguagePa
 <div class="ttc" id="aclasscatena_1_1REST_1_1LanguagePackRequest_html_a3c7bd125990ac94dceefb30cdf32123d"><div class="ttname"><a href="classcatena_1_1REST_1_1LanguagePackRequest.html#a3c7bd125990ac94dceefb30cdf32123d">catena::REST::LanguagePackRequest::proceed</a></div><div class="ttdeci">void proceed() override</div><div class="ttdoc">LanguagePackRequest's main process.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1LanguagePackRequest_html_af0e2eadf158922cfd8a0a7919269047f"><div class="ttname"><a href="classcatena_1_1REST_1_1LanguagePackRequest.html#af0e2eadf158922cfd8a0a7919269047f">catena::REST::LanguagePackRequest::finish</a></div><div class="ttdeci">void finish() override</div><div class="ttdoc">Finishes the LanguagePackRequest process.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1LanguagePackRequest_html_af947145f72c02431fe02b4f938422a59"><div class="ttname"><a href="classcatena_1_1REST_1_1LanguagePackRequest.html#af947145f72c02431fe02b4f938422a59">catena::REST::LanguagePackRequest::LanguagePackRequest</a></div><div class="ttdeci">LanguagePackRequest(tcp::socket &amp;socket, SocketReader &amp;context, Device &amp;dm)</div><div class="ttdoc">Constructor for the LanguagePackRequest RPC.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1SocketReader_html"><div class="ttname"><a href="classcatena_1_1REST_1_1SocketReader.html">catena::REST::SocketReader</a></div><div class="ttdoc">Helper class used to read from a socket using boost.</div><div class="ttdef"><b>Definition</b> SocketReader.h:60</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1SocketReader_html"><div class="ttname"><a href="classcatena_1_1REST_1_1SocketReader.html">catena::REST::SocketReader</a></div><div class="ttdoc">Helper class used to read from a socket using boost.</div><div class="ttdef"><b>Definition</b> SocketReader.h:63</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1Device_html"><div class="ttname"><a href="classcatena_1_1common_1_1Device.html">catena::common::Device</a></div><div class="ttdoc">Implements the Device interface defined in the protobuf.</div><div class="ttdef"><b>Definition</b> Device.h:80</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IParam_html"><div class="ttname"><a href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></div><div class="ttdoc">IParam is the interface for business logic and connection logic to interact with parameters.</div><div class="ttdef"><b>Definition</b> IParam.h:50</div></div>
 <div class="ttc" id="anamespacecatena_1_1REST_html_a58c70401164afb6c66bd561a88da4009"><div class="ttname"><a href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">catena::REST::CallStatus</a></div><div class="ttdeci">CallStatus</div><div class="ttdoc">CallData states for status messages.</div><div class="ttdef"><b>Definition</b> ICallData.h:62</div></div>
