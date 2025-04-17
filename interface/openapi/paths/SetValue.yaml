@@ -49,7 +49,7 @@ put:
 
   requestBody:
     required: true
-    description: A device's slot, a parameter's oid, and a value to set it to
+    description: A parameter's oid and the value to set it to
     content:
       application/json:
         type: object
@@ -58,33 +58,7 @@ put:
             $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
           value:
             $ref: "./Messages.yaml#/$defs/set_value_payload"
-        example: {"slot": 1, "value": {"oid": "/text_box", "value":{"string_value": "Goodbye, world!"}}}
-
-  # Commented out for now, at least while we still use json body and until URL
-  # format is finalized.
-  # parameters:
-    # - name: slot
-    #   in: path
-    #   required: true
-    #   description: The slot of the device model containing the parameter to set the value of
-    #   schema:
-    #     $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    # - name: oid
-    #   in: path
-    #   required: true
-    #   description: The path to the parameter within the device model to set the value of. For array parameters, suffix with a valid index to only set the value at that index, or with '-' to append to the end
-    #   schema:
-    #     $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-    #   example: "text_box"
-
-    # - name: value
-    #   in: path
-    #   required: true
-    #   description: The value to set the parameter specified by oid to
-    #   schema:
-    #     $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-    #   example: {string_value: "Goodbye, world!"}
+        example: {"oid": "/text_box", "value":{"string_value": "Goodbye, world!"}}
 
   responses:
     "200":

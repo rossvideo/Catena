@@ -12,11 +12,7 @@ SetValue::SetValue(tcp::socket& socket, SocketReader& context, Device& dm) :
 }
 
 bool SetValue::toMulti() {
-    catena::SingleSetValuePayload payload;
-    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &payload);
-    if (status.ok()) {
-        reqs_.set_slot(payload.slot());
-        reqs_.add_values()->CopyFrom(payload.value());
-    }
+    reqs_.set_slot(context_.slot());
+    absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), reqs_.add_values());
     return status.ok();
 }
