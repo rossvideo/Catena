@@ -125,7 +125,7 @@ class Connect : public ICallData, public catena::common::Connect {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SSEWriter writer_;
     /**
      * @brief The mutex to for locking the object while writing
      */

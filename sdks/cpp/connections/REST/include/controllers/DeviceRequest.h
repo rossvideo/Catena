@@ -118,7 +118,7 @@ class DeviceRequest : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SSEWriter writer_;
     /**
      * @brief The device to get components from.
      */
