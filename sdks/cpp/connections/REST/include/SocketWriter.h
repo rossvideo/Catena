@@ -98,15 +98,8 @@ class SocketWriter : public ISocketWriter {
      */
     void finish(google::protobuf::Message& msg);
     /**
-     * @brief Writes a response to the client detaining their options.
-     * Used when method = OPTIONS.
-     */
-    void writeOptions() override;
-    /**
-     * @brief Finishes the writing process by writing a message to the socket.
-     * 
-     * SocketWriter exlusive function which acts as a call to write() then
-     * finish().
+     * @brief Finishes the writing process by writing a message to the socket with a given status code.
+     * @param status_code The HTTP status code to use for the response.
      */
     virtual void finishWithStatus(int status_code) override;
 
@@ -133,6 +126,28 @@ class SocketWriter : public ISocketWriter {
      * Used to determine formatting when finish() is called.
      */
     bool multi_ = false;
+    /**
+     * @brief Maps catena::StatusCode to HTTP status codes.
+     */
+    const std::map<catena::StatusCode, int> codeMap_ {
+      {catena::StatusCode::OK,                  200},
+      {catena::StatusCode::CANCELLED,           410},
+      {catena::StatusCode::UNKNOWN,             404},
+      {catena::StatusCode::INVALID_ARGUMENT,    406},
+      {catena::StatusCode::DEADLINE_EXCEEDED,   408},
+      {catena::StatusCode::NOT_FOUND,           410},
+      {catena::StatusCode::ALREADY_EXISTS,      409},
+      {catena::StatusCode::PERMISSION_DENIED,   401},
+      {catena::StatusCode::UNAUTHENTICATED,     407},
+      {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
+      {catena::StatusCode::FAILED_PRECONDITION, 412},
+      {catena::StatusCode::ABORTED,             10},  // TODO
+      {catena::StatusCode::OUT_OF_RANGE,        416},
+      {catena::StatusCode::UNIMPLEMENTED,       501},
+      {catena::StatusCode::INTERNAL,            500},
+      {catena::StatusCode::UNAVAILABLE,         503},
+      {catena::StatusCode::DATA_LOSS,           15},  // TODO
+    };
 };
 
 /**
@@ -144,54 +159,73 @@ class SSEWriter : public ISocketWriter {
      * @brief Constructor for SSEWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
+     * @param status_code The HTTP status code to use for the response.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin = "*");
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*", int status_code = 200);
     /**
      * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.
      */
-    void write(google::protobuf::Message& msg) override;
+    virtual void write(google::protobuf::Message& msg) override;
     /**
      * @brief Writes an error message to the socket as an SSE.
      * @param err The catena::exception_with_status.
      */
-    void write(catena::exception_with_status& err) override;
+    virtual void write(catena::exception_with_status& err) override;
     /**
      * @brief Finishes the writing process.
      * 
      * Does nothing in SSE.
      */
-    void finish() override {}
+    virtual void finish() override {}
+    /**
+     * @brief Finishes the writing process by writing a message to the socket with a given status code.
+     * @param status_code The HTTP status code to use for the response.
+     */
+    virtual void finishWithStatus(int status_code) override;
 
   private:
     /**
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
-};
-
-/**
- * @brief Maps catena::StatusCode to HTTP status codes.
- */
-const std::map<catena::StatusCode, int> codeMap_ {
-  {catena::StatusCode::OK,                  200},
-  {catena::StatusCode::CANCELLED,           410},
-  {catena::StatusCode::UNKNOWN,             404},
-  {catena::StatusCode::INVALID_ARGUMENT,    406},
-  {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-  {catena::StatusCode::NOT_FOUND,           410},
-  {catena::StatusCode::ALREADY_EXISTS,      409},
-  {catena::StatusCode::PERMISSION_DENIED,   401},
-  {catena::StatusCode::UNAUTHENTICATED,     407},
-  {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-  {catena::StatusCode::FAILED_PRECONDITION, 412},
-  {catena::StatusCode::ABORTED,             10},  // TODO
-  {catena::StatusCode::OUT_OF_RANGE,        416},
-  {catena::StatusCode::UNIMPLEMENTED,       501},
-  {catena::StatusCode::INTERNAL,            500},
-  {catena::StatusCode::UNAVAILABLE,         503},
-  {catena::StatusCode::DATA_LOSS,           15},  // TODO
-  {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
+    /**
+     * @brief CORS headers used for all responses.
+     * Access-Control-Allow-Origin,
+     * Access-Control-Allow-Methods,
+     * Access-Control-Allow-Headers
+     * Access-Control-Allow-Credentials
+     */
+    std::string CORS_;
+    /**
+     * @brief Flag indicating whether the response is a multi-part response.
+     * 
+     * Used to determine formatting when finish() is called.
+     */
+    bool hasHeaders_ = false;
+    /**
+     * @brief Maps catena::StatusCode to HTTP status codes.
+     */
+    const std::map<catena::StatusCode, int> codeMap_ {
+      {catena::StatusCode::OK,                  200},
+      {catena::StatusCode::CANCELLED,           410},
+      {catena::StatusCode::UNKNOWN,             404},
+      {catena::StatusCode::INVALID_ARGUMENT,    406},
+      {catena::StatusCode::DEADLINE_EXCEEDED,   408},
+      {catena::StatusCode::NOT_FOUND,           410},
+      {catena::StatusCode::ALREADY_EXISTS,      409},
+      {catena::StatusCode::PERMISSION_DENIED,   401},
+      {catena::StatusCode::UNAUTHENTICATED,     407},
+      {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
+      {catena::StatusCode::FAILED_PRECONDITION, 412},
+      {catena::StatusCode::ABORTED,             10},  // TODO
+      {catena::StatusCode::OUT_OF_RANGE,        416},
+      {catena::StatusCode::UNIMPLEMENTED,       501},
+      {catena::StatusCode::INTERNAL,            500},
+      {catena::StatusCode::UNAVAILABLE,         503},
+      {catena::StatusCode::DATA_LOSS,           15},  // TODO
+      {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
+    };
 };
 
 }; // Namespace REST
