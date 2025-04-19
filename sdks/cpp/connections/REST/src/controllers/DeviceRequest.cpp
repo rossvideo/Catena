@@ -6,7 +6,12 @@ using catena::REST::DeviceRequest;
 int DeviceRequest::objectCounter_ = 0;
 
 DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
+<<<<<<< HEAD
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+=======
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, 
+    service_{*context.getService()}, ok_{true} {
+>>>>>>> 0d2d7bee (Functioning, although I'm not sure if proceed works)
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
 }
