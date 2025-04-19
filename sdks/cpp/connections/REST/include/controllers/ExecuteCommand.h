@@ -39,13 +39,13 @@
 
 // connections/REST
 #include <interface/ICallData.h> 
-#include <ICallData.h>
 #include <SocketReader.h>
 #include <SocketWriter.h>
 
 // common
 #include <Device.h>
 #include <IParam.h>
+#include <rpc/TimeNow.h>
 
 // boost
 #include <boost/asio.hpp>
@@ -59,8 +59,8 @@ using catena::common::Device;
 
 class ExecuteCommand : public ICallData {
   public:
-    static std::unique_ptr<ICallData> makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
-        return std::make_unique<ExecuteCommand>(socket, context, dm);
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+        return new ExecuteCommand(socket, context, dm);
     }
 
     ExecuteCommand(tcp::socket& socket, SocketReader& context, Device& dm);
@@ -78,6 +78,19 @@ class ExecuteCommand : public ICallData {
     catena::ExecuteCommandPayload req_;
     int slot_;
     std::string oid_;
+
+    /**
+     * @brief Helper function to write status messages to the API console.
+     * 
+     * @param status The current state of the RPC (kCreate, kFinish, etc.)
+     * @param ok The status of the RPC (open or closed).
+     */
+    inline void writeConsole(CallStatus status, bool ok) const override {
+        std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
+                  << catena::common::timeNow() << " status: "
+                  << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
+                  << std::endl;
+    }
 };
 
 } // namespace REST
