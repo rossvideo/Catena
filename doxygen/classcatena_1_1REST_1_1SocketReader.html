@@ -125,7 +125,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the method of the request.  <br /></td></tr>
 <tr class="separator:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3921e71d30efe16c287a51e3f8c32c92" id="r_a3921e71d30efe16c287a51e3f8c32c92"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a3921e71d30efe16c287a51e3f8c32c92">service</a> () const override</td></tr>
-<tr class="memdesc:a3921e71d30efe16c287a51e3f8c32c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rpc of the request.  <br /></td></tr>
+<tr class="memdesc:a3921e71d30efe16c287a51e3f8c32c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the service of the request.  <br /></td></tr>
 <tr class="separator:a3921e71d30efe16c287a51e3f8c32c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa77a5dcf3caf0ae527fa88e73dc3fdf1" id="r_aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1">slot</a> () const override</td></tr>
 <tr class="memdesc:aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the slot of the device to make the API call on.  <br /></td></tr>
@@ -142,9 +142,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a59e5e35b9b9d421e186252caf9bd552b" id="r_a59e5e35b9b9d421e186252caf9bd552b"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a59e5e35b9b9d421e186252caf9bd552b">language</a> () const override</td></tr>
 <tr class="memdesc:a59e5e35b9b9d421e186252caf9bd552b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the language to return the resposne in.  <br /></td></tr>
 <tr class="separator:a59e5e35b9b9d421e186252caf9bd552b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e3d1c4cc6ca88dc9e0f4ab07e525f42" id="r_a0e3d1c4cc6ca88dc9e0f4ab07e525f42"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0e3d1c4cc6ca88dc9e0f4ab07e525f42">detailLevel</a> () const override</td></tr>
-<tr class="memdesc:a0e3d1c4cc6ca88dc9e0f4ab07e525f42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the detail level to return the response in.  <br /></td></tr>
-<tr class="separator:a0e3d1c4cc6ca88dc9e0f4ab07e525f42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f2402b9309f2c6cc1f3895b3efe29aa" id="r_a7f2402b9309f2c6cc1f3895b3efe29aa"><td class="memItemLeft" align="right" valign="top">catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a7f2402b9309f2c6cc1f3895b3efe29aa">detailLevel</a> () const override</td></tr>
+<tr class="memdesc:a7f2402b9309f2c6cc1f3895b3efe29aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the detail level to return the response in.  <br /></td></tr>
+<tr class="separator:a7f2402b9309f2c6cc1f3895b3efe29aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b4655c8cf81045dd065ec6d1dca661f" id="r_a0b4655c8cf81045dd065ec6d1dca661f"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f">jsonBody</a> () const override</td></tr>
 <tr class="memdesc:a0b4655c8cf81045dd065ec6d1dca661f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the json body of the request, which may be empty.  <br /></td></tr>
 <tr class="separator:a0b4655c8cf81045dd065ec6d1dca661f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -204,8 +204,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a0e3d1c4cc6ca88dc9e0f4ab07e525f42" name="a0e3d1c4cc6ca88dc9e0f4ab07e525f42"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e3d1c4cc6ca88dc9e0f4ab07e525f42">&#9670;&#160;</a></span>detailLevel()</h2>
+<a id="a7f2402b9309f2c6cc1f3895b3efe29aa" name="a7f2402b9309f2c6cc1f3895b3efe29aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f2402b9309f2c6cc1f3895b3efe29aa">&#9670;&#160;</a></span>detailLevel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -214,7 +214,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int catena::REST::SocketReader::detailLevel </td>
+          <td class="memname">catena::Device_DetailLevel catena::REST::SocketReader::detailLevel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -229,7 +229,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Returns the detail level to return the response in. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#aa1c2e63fb182f1e2ecdb437ec427d122">catena::REST::ISocketReader</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a73e5c7392324c163c6053c62594738dd">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
@@ -513,7 +513,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Returns the rpc of the request. </p>
+<p>Returns the service of the request. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a7cbf5596db249a0a47ea22171a4c3e80">catena::REST::ISocketReader</a>.</p>
 
