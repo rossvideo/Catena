@@ -25,5 +25,5 @@ var namespacecatena_1_1REST =
       [ "kPostWrite", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a89585777c1d2b1f969669074947a3de4", null ],
       [ "kFinish", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a8941714ff8251a03708025c060c46556", null ]
     ] ],
-    [ "codeMap_", "namespacecatena_1_1REST.html#aba0562bbaa4c24aabbd2f3a79cbc5db2", null ]
+    [ "kStatusCodeMap", "namespacecatena_1_1REST.html#a707381b679a43d09ebc40f13001a2811", null ]
 ];
