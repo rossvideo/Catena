@@ -12,13 +12,12 @@ var searchData=
   ['shutdownserver_9',['shutdownServer',['../classCatenaServiceImpl.html#aa20fbc7c7b095cf38712a04be8ac1bee',1,'CatenaServiceImpl']]],
   ['singleton_10',['singleton',['../classcatena_1_1patterns_1_1Singleton.html#a93935ffb59aa07556717760769adbe91',1,'catena::patterns::Singleton::Singleton(Singleton &amp;&amp;)=delete'],['../classcatena_1_1patterns_1_1Singleton.html#a3e19a6ea253df88afe0e36a98dece839',1,'catena::patterns::Singleton::Singleton()=default'],['../classcatena_1_1patterns_1_1Singleton.html#ae2a6eca0412770b641759d2b7960c4e8',1,'catena::patterns::Singleton::Singleton(const Singleton &amp;)=delete']]],
   ['size_11',['size',['../classcatena_1_1common_1_1IParam.html#a357881202bece2996171fae807517637',1,'catena::common::IParam::size()'],['../classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da',1,'catena::common::ParamWithValue::size()'],['../classcatena_1_1common_1_1Path.html#ad2487342bef5315cb4413e25d95c8097',1,'catena::common::Path::size()']]],
-  ['slot_12',['slot',['../classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1',1,'catena::REST::SocketReader::slot()'],['../classcatena_1_1REST_1_1ISocketReader.html#a7e0b91f0e2cf951eca9e3018ede398c0',1,'catena::REST::ISocketReader::slot()'],['../classcatena_1_1common_1_1Device.html#adae63c83dfa563977613dbf8440c45be',1,'catena::common::Device::slot() const'],['../classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce',1,'catena::common::Device::slot(const uint32_t slot)']]],
-  ['socketreader_13',['SocketReader',['../classcatena_1_1REST_1_1SocketReader.html#a9fea2a7580a729b18d2dffe951fb4ba6',1,'catena::REST::SocketReader']]],
-  ['socketwriter_14',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a',1,'catena::REST::SocketWriter']]],
-  ['split_15',['split',['../namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb',1,'catena']]],
-  ['ssewriter_16',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html#ab16bb40babd959fd6edf5327cb73b35e',1,'catena::REST::SSEWriter']]],
-  ['stream_5fif_5fpossible_17',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
-  ['subs_18',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
-  ['subscriptionmanager_19',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b',1,'catena::common::SubscriptionManager']]],
-  ['subscriptions_20',['subscriptions',['../classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1',1,'catena::common::Device']]]
+  ['slot_12',['slot',['../classcatena_1_1REST_1_1ISocketReader.html#a7e0b91f0e2cf951eca9e3018ede398c0',1,'catena::REST::ISocketReader::slot()'],['../classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1',1,'catena::REST::SocketReader::slot()'],['../classcatena_1_1common_1_1Device.html#adae63c83dfa563977613dbf8440c45be',1,'catena::common::Device::slot() const'],['../classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce',1,'catena::common::Device::slot(const uint32_t slot)']]],
+  ['socketwriter_13',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a',1,'catena::REST::SocketWriter']]],
+  ['split_14',['split',['../namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb',1,'catena']]],
+  ['ssewriter_15',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html#a149db75604725f4a1d99592d5311d49a',1,'catena::REST::SSEWriter']]],
+  ['stream_5fif_5fpossible_16',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
+  ['subs_17',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
+  ['subscriptionmanager_18',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b',1,'catena::common::SubscriptionManager']]],
+  ['subscriptions_19',['subscriptions',['../classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1',1,'catena::common::Device']]]
 ];
