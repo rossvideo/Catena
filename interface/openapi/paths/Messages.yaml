@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -67,12 +67,33 @@ $defs:
     description: The Device model broken into smaller pieces
     type: object
     oneOf:
-      # Problems linking device
       - title: Device
         description: Defines the properties of a device manager
         type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          detail_level:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
+          multi_set_enabled:
+            type: boolean
+          subscriptions:
+            type: boolean
+          access_scopes:
+            type: array
+            items:
+              type: string
+          default_scope:
+            type: string
 
-      - $ref: "#/$defs/component_param"
+      - title: Component Param
+        description: A parameter and the slot of the device manager it was recieved from
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          param:
+            $ref: "../../../schema/catena.param_schema.json#"
 
       - title: Component Menu
         description: A menu and the slot of the device manager it was recieved from
@@ -81,10 +102,25 @@ $defs:
           slot:
             $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
           menu:
-            $ref: "../../../schema/catena.device_schema.json#/$defs/menu"
+            type: object
+            properties:
+              name:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/polyglot_text"
+              param_oids:
+                $ref: "../../../schema/catena.device_schema.json#/$defs/oids_list"
+              command_oids:
+                $ref: "../../../schema/catena.device_schema.json#/$defs/oids_list"
+              hidden:
+                type: boolean
+                default: false
+              disabled:
+                type: boolean
+                default: false
+              client_hints:
+                $ref: "../../../schema/catena.param_schema.json#/$defs/client_hints"
 
       - title: Component Constraint
-        description: A contraint and the slot of the device manager it was recieved from
+        description: A constraint and the slot of the device manager it was recieved from
         type: object
         properties:
           slot:
@@ -98,13 +134,19 @@ $defs:
         properties:
           slot:
             $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-          # Problems linking param
           param:
-            title: Parameter
-            description: Defines the type, value, constraints, UI, access modes and configuration options of a parameter.
-            type: object
+            $ref: "../../../schema/catena.param_schema.json#"
 
-      - $ref: "#/$defs/component_language_pack"
+      - title: Component Language Pack
+        description: A language pack and the slot of the device manager it was recieved from
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          language:
+            type: string
+          language_pack:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
   
   exception:
     title: Exception
@@ -114,11 +156,8 @@ $defs:
       type:
         title: String
         type: string
-      # Problems linking PolyGlotText
       error_message:
-        title: PolyGlot Text
-        description: Text that a client can display in one of multiple languages
-        type: object
+        $ref: "../../../schema/catena.param_schema.json#/$defs/polyglot_text"
       details:
         title: String
         type: string
