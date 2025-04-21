@@ -1,0 +1,217 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+language_packs: {}
+
+params:
+  audio_meter:
+    type: STRUCT
+    name: {display_strings: {en: Audio Meter}}
+    params:
+      audio_level:
+        type: FLOAT32
+        name: {display_strings: {en: Audio Level}}
+        access_scope: st2138:mon
+
+  audio_meter_list:
+    type: STRUCT_ARRAY
+    name: {display_strings: {en: Audio Meter List}}
+    template_oid: /audio_meter
+    
+    value:
+      struct_array_values:
+        struct_values:
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}

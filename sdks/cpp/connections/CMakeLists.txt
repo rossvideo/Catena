@@ -34,3 +34,5 @@ endif()
 if (DOCKER)
   add_subdirectory("docker")
 endif()
+
+add_subdirectory("catena_workshop")
