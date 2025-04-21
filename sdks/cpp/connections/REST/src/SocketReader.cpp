@@ -12,11 +12,11 @@ SocketReader::SocketReader(CatenaServiceImpl& service)
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
     method_ = "";
-    service_ = "";
+    restService_ = "";
     jwsToken_ = "";
     origin_ = "";
     jsonBody_ = "";
-    detailLevel_ = -1;
+    detailLevel_ = catena::Device_DetailLevel_NONE;
     authorizationEnabled_ = authz;
 
     // Reading the headers.
@@ -37,10 +37,10 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     try {
         if (path.find("Connect") != std::string::npos ||
             path.find("GetPopulatedSlots") != std::string::npos) {
-            service_ = path;
+            restService_ = path;
         } else {
             std::size_t pos = path.find_last_of('/');
-            service_ = path.substr(0, pos);
+            restService_ = path.substr(0, pos);
             slot_ = std::stoi(path.substr(pos + 1));
         }
     } catch (...) {
@@ -92,37 +92,6 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             std::size_t remainingLength = contentLength - jsonBody_.size();
             jsonBody_.resize(contentLength);
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
-        }
-    }
-}
-
-void SocketReader::fields(std::unordered_map<std::string, std::string>& fieldMap) const {
-    std::string request = req_;
-    if (fieldMap.size() == 0) {
-        throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
-    } else {
-        // Split the request into parts
-        std::vector<std::string> parts;
-        size_t start = 0;
-        size_t end = request.find('/');
-        while (end != std::string::npos) {
-            parts.push_back(request.substr(start, end - start));
-            start = end + 1;
-            end = request.find('/', start);
-        }
-        if (start < request.size()) {
-            parts.push_back(request.substr(start));
-        }
-
-        // Process each field in order
-        for (size_t i = 0; i < parts.size(); i += 2) {
-            if (i + 1 >= parts.size()) break;
-            std::string fieldName = parts[i];
-            std::string fieldValue = parts[i + 1];
-            
-            if (fieldMap.find(fieldName) != fieldMap.end()) {
-                fieldMap[fieldName] = fieldValue;
-            }
         }
     }
 }

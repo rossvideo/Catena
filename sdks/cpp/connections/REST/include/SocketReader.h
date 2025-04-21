@@ -83,9 +83,9 @@ class SocketReader : public ISocketReader {
      */
     const std::string& method() const override { return method_; }
     /**
-     * @brief Returns the rpc of the request.
+     * @brief Returns the service of the request.
      */
-    const std::string& service() const override { return service_; }
+    const std::string& service() const override { return restService_; }
     /**
      * @brief Returns the slot of the device to make the API call on.
      */
@@ -118,7 +118,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns the detail level to return the response in.
      */
-    int detailLevel() const override { return detailLevel_; };
+    catena::Device_DetailLevel detailLevel() const override { return detailLevel_; };
     /**
      * @brief Returns the json body of the request, which may be empty.
      */
@@ -155,9 +155,9 @@ class SocketReader : public ISocketReader {
      */
     std::string method_ = "";
     /**
-     * @brief The rpc of the request (/v1/GetValue, etc.)
+     * @brief The REST service path of the request (/v1/GetValue, etc.)
      */
-    std::string service_ = "";
+    std::string restService_ = "";
     /**
      * @brief The slot of the device to make the API call on.
      */
@@ -181,7 +181,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The detail level to return the response in.
      */
-    int detailLevel_ = -1;
+    catena::Device_DetailLevel detailLevel_ = catena::Device_DetailLevel_UNSET;
     /**
      * @brief A map of fields queried from the URL.
      */

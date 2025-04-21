@@ -6,29 +6,13 @@ using catena::REST::DeviceRequest;
 int DeviceRequest::objectCounter_ = 0;
 
 DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, service_{*context.getService()}, ok_{true} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     try {
-        std::unordered_map<std::string, std::string> fields = {
-            {"subscribed_oids", ""},
-            {"detail_level", ""},
-            {"language", ""},
-            {"slot", ""}
-        };
-        context_.fields(fields);
-        slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
-        language_ = fields.at("language");
-        auto& dlMap = DetailLevel().getReverseMap(); // Reverse detail level map.
-        std::string detailLevelStr = fields.at("detail_level");
-        if (!detailLevelStr.empty() && dlMap.find(detailLevelStr) != dlMap.end()) {
-            detailLevel_ = dlMap.at(detailLevelStr);
-        } else {
-            detailLevel_ = catena::Device_DetailLevel_NONE;
-        }
         // Split and filter out empty values
-        std::string subscribedOids = fields.at("subscribed_oids");
+        std::string subscribedOids = context_.fields("subscribed_oids");
         /** TODO:
           * %7B%7D is the URL-encoded version of {}
           * It is unclear whether we should proceed with just simple CSV or JSON
@@ -47,7 +31,6 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, Device&
     } catch (...) {
         catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
         writer_.write(err);
-        ok_ = false;
     }
 }
 
@@ -105,10 +88,10 @@ void DeviceRequest::proceed() {
         subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
 
         // Set the detail level on the device
-        dm_.detail_level(detailLevel_);
+        dm_.detail_level(context_.detailLevel());
 
         // If we're in SUBSCRIPTIONS mode, we'll send minimal set if no subscriptions
-        if (detailLevel_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+        if (context_.detailLevel() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
             if (subscribedOids_.empty()) {
                 serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
             } else {
