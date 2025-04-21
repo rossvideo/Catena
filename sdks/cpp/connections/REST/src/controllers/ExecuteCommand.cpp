@@ -13,88 +13,50 @@ using catena::common::IParam;
 int ExecuteCommand::objectCounter_ = 0;
 
 ExecuteCommand::ExecuteCommand(tcp::socket& socket, SocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     
     try {
-        // First try to get the fields
-        std::unordered_map<std::string, std::string> fields = {
-            {"oid", ""},
-            {"slot", ""},
-            {"response", ""},
-            {"proceed", ""}
-        };
-        
-        context.fields(fields);
-        
-        // Parse slot number
-        try {
-            slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
-        } catch (const std::exception& e) {
-            throw catena::exception_with_status("Failed to parse slot number: " + std::string(e.what()), catena::StatusCode::INVALID_ARGUMENT);
-        }
-        
-        oid_ = "/" + fields.at("oid");
-        
         // Initialize the request
-        req_.set_slot(slot_);
-        req_.set_oid(oid_);
-        req_.set_respond(fields.at("response") == "true"); 
-        req_.set_proceed(fields.at("proceed") == "true"); 
+        req_.set_slot(context_.slot());
+        req_.set_oid("/" + context_.fields("oid"));
+        req_.set_respond(context_.fields("respond") == "true");
+        req_.set_proceed(context_.fields("proceed") == "true");
 
         // Parse JSON body if present
-        if (!context.jsonBody().empty()) {
+        if (!context_.jsonBody().empty()) {
             catena::ExecuteCommandPayload json_payload;
             auto status = google::protobuf::util::JsonStringToMessage(
-                absl::string_view(context.jsonBody()), 
+                absl::string_view(context_.jsonBody()), 
                 &json_payload
             );
             
-            if (status.ok()) {
-                if (json_payload.has_value()) {
-                    *req_.mutable_value() = json_payload.value();
-                }
+            if (status.ok() && json_payload.has_value()) {
+                *req_.mutable_value() = json_payload.value();
             } else {
-                throw catena::exception_with_status("Failed to parse JSON body: " + std::string(status.message()), catena::StatusCode::INVALID_ARGUMENT);
+                throw catena::exception_with_status("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
             }
         }
-
-    } catch (const catena::exception_with_status& e) {
-        writer_.write(const_cast<catena::exception_with_status&>(e));
-        ok_ = false;
-    } catch (const std::exception& e) {
-        catena::exception_with_status err("Failed to parse fields: " + std::string(e.what()), catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
-        ok_ = false;
     } catch (...) {
-        catena::exception_with_status err("Failed to parse fields: unknown error", catena::StatusCode::INVALID_ARGUMENT);
+        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
         writer_.write(err);
-        ok_ = false;
     }
 }
 
 void ExecuteCommand::proceed() {
-    if (!ok_) { return; }
     writeConsole(CallStatus::kProcess, socket_.is_open());
 
-    catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         // Get the command and execute it
         std::unique_ptr<IParam> command = nullptr;
-        try {
-            if (context_.authorizationEnabled()) {
-                catena::common::Authorizer authz{context_.jwsToken()};
-                command = dm_.getCommand(oid_, rc, authz);
-            } else {
-                command = dm_.getCommand(oid_, rc, catena::common::Authorizer::kAuthzDisabled);
-            }
-        } catch (catena::exception_with_status& err) {
-            // Likely authentication error, end process
-            if (req_.respond()) {
-                writer_.write(err);
-            }
-            return;
+        catena::exception_with_status rc("", catena::StatusCode::OK);
+        
+        if (context_.authorizationEnabled()) {
+            catena::common::Authorizer authz{context_.jwsToken()};
+            command = dm_.getCommand(req_.oid(), rc, authz);
+        } else {
+            command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
         }
 
         // If the command is not found, return an error

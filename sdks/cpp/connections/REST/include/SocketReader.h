@@ -137,7 +137,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns a pointer to the service instance
      */
-    CatenaServiceImpl* getService() const { return service_; }
+    CatenaServiceImpl* getService() const { return restService_; }
 
   private:
     /**
@@ -148,7 +148,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Pointer to the service instance
      */
-    CatenaServiceImpl* service_;
+    CatenaServiceImpl* restService_;
 
     /**
      * @brief The method of the request (GET, PUT, etc.).

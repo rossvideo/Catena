@@ -7,7 +7,7 @@ namespace REST {
 
 SocketReader::SocketReader(CatenaServiceImpl& service) 
     : subscriptionManager_(service.getSubscriptionManager()),
-      service_(&service) {}
+      restService_(&service) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
@@ -99,3 +99,6 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
         detailLevel_ = catena::Device_DetailLevel_NONE;
     }
 }
+
+}//namespace REST
+}//namespace catena
