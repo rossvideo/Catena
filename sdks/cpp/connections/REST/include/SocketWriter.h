@@ -57,6 +57,30 @@ namespace catena {
 namespace REST {
 
 /**
+ * @brief Maps catena::StatusCode to HTTP status codes.
+ */
+const std::map<catena::StatusCode, int> kStatusCodeMap {
+    {catena::StatusCode::OK,                  200},
+    {catena::StatusCode::CANCELLED,           410},
+    {catena::StatusCode::UNKNOWN,             404},
+    {catena::StatusCode::INVALID_ARGUMENT,    406},
+    {catena::StatusCode::DEADLINE_EXCEEDED,   408},
+    {catena::StatusCode::NOT_FOUND,           410},
+    {catena::StatusCode::ALREADY_EXISTS,      409},
+    {catena::StatusCode::PERMISSION_DENIED,   401},
+    {catena::StatusCode::UNAUTHENTICATED,     407},
+    {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
+    {catena::StatusCode::FAILED_PRECONDITION, 412},
+    {catena::StatusCode::ABORTED,             10},  // TODO
+    {catena::StatusCode::OUT_OF_RANGE,        416},
+    {catena::StatusCode::UNIMPLEMENTED,       501},
+    {catena::StatusCode::INTERNAL,            500},
+    {catena::StatusCode::UNAVAILABLE,         503},
+    {catena::StatusCode::DATA_LOSS,           15},  // TODO
+    {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
+};
+
+/**
  * @brief Helper class used to write a unary response to a socket using boost.
  * 
  * This writer buffers the response until a call to finish() is made.
@@ -129,25 +153,7 @@ class SocketWriter : public ISocketWriter {
     /**
      * @brief Maps catena::StatusCode to HTTP status codes.
      */
-    const std::map<catena::StatusCode, int> codeMap_ {
-      {catena::StatusCode::OK,                  200},
-      {catena::StatusCode::CANCELLED,           410},
-      {catena::StatusCode::UNKNOWN,             404},
-      {catena::StatusCode::INVALID_ARGUMENT,    406},
-      {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-      {catena::StatusCode::NOT_FOUND,           410},
-      {catena::StatusCode::ALREADY_EXISTS,      409},
-      {catena::StatusCode::PERMISSION_DENIED,   401},
-      {catena::StatusCode::UNAUTHENTICATED,     407},
-      {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-      {catena::StatusCode::FAILED_PRECONDITION, 412},
-      {catena::StatusCode::ABORTED,             10},  // TODO
-      {catena::StatusCode::OUT_OF_RANGE,        416},
-      {catena::StatusCode::UNIMPLEMENTED,       501},
-      {catena::StatusCode::INTERNAL,            500},
-      {catena::StatusCode::UNAVAILABLE,         503},
-      {catena::StatusCode::DATA_LOSS,           15},  // TODO
-    };
+    const std::map<catena::StatusCode, int>& codeMap_ = kStatusCodeMap;
 };
 
 /**
@@ -206,26 +212,7 @@ class SSEWriter : public ISocketWriter {
     /**
      * @brief Maps catena::StatusCode to HTTP status codes.
      */
-    const std::map<catena::StatusCode, int> codeMap_ {
-      {catena::StatusCode::OK,                  200},
-      {catena::StatusCode::CANCELLED,           410},
-      {catena::StatusCode::UNKNOWN,             404},
-      {catena::StatusCode::INVALID_ARGUMENT,    406},
-      {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-      {catena::StatusCode::NOT_FOUND,           410},
-      {catena::StatusCode::ALREADY_EXISTS,      409},
-      {catena::StatusCode::PERMISSION_DENIED,   401},
-      {catena::StatusCode::UNAUTHENTICATED,     407},
-      {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-      {catena::StatusCode::FAILED_PRECONDITION, 412},
-      {catena::StatusCode::ABORTED,             10},  // TODO
-      {catena::StatusCode::OUT_OF_RANGE,        416},
-      {catena::StatusCode::UNIMPLEMENTED,       501},
-      {catena::StatusCode::INTERNAL,            500},
-      {catena::StatusCode::UNAVAILABLE,         503},
-      {catena::StatusCode::DATA_LOSS,           15},  // TODO
-      {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
-    };
+    const std::map<catena::StatusCode, int>& codeMap_ = kStatusCodeMap;
 };
 
 }; // Namespace REST

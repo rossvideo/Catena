@@ -16,7 +16,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     jwsToken_ = "";
     origin_ = "";
     jsonBody_ = "";
-    detailLevel_ = catena::Device_DetailLevel_NONE;
+    detailLevel_ = catena::Device_DetailLevel_UNSET;
     authorizationEnabled_ = authz;
 
     // Reading the headers.
@@ -72,7 +72,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             language_.erase(language_.length() - 1); // Removing newline.
         }
         // Getting detail level
-        else if (detailLevel_ == -1 && header.starts_with("Detail-Level: ")) {
+        else if (detailLevel_ == catena::Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
             std::string dl = header.substr(std::string("Detail-Level: ").length());
             dl.erase(dl.length() - 1); // Removing newline.
             auto& dlMap = catena::common::DetailLevel().getReverseMap(); // Reverse detail level map.
