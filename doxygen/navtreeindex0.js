@@ -150,7 +150,6 @@ var NAVTREEINDEX0 =
 "SocketReader_8h.html":[11,0,1,1,0,3],
 "SocketReader_8h_source.html":[11,0,1,1,0,3],
 "SocketWriter_8h.html":[11,0,1,1,0,4],
-"SocketWriter_8h.html#aba0562bbaa4c24aabbd2f3a79cbc5db2":[11,0,1,1,0,4,2],
 "SocketWriter_8h_source.html":[11,0,1,1,0,4],
 "Status_8h.html":[11,0,0,0,27],
 "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85":[11,0,0,0,27,2],
@@ -249,5 +248,6 @@ var NAVTREEINDEX0 =
 "classCatenaServiceImpl_1_1GetParam.html#aee338762a3a4cfeb76179bb8559954f9":[10,0,1,7,0],
 "classCatenaServiceImpl_1_1GetPopulatedSlots.html":[10,0,1,8],
 "classCatenaServiceImpl_1_1GetPopulatedSlots.html#a818cde0900e77f73121dac3c588e9279":[10,0,1,8,1],
-"classCatenaServiceImpl_1_1GetPopulatedSlots.html#a8fac20d260e95e16e494578cb7974ec1":[10,0,1,8,0]
+"classCatenaServiceImpl_1_1GetPopulatedSlots.html#a8fac20d260e95e16e494578cb7974ec1":[10,0,1,8,0],
+"classCatenaServiceImpl_1_1GetValue.html":[10,0,1,9]
 };
