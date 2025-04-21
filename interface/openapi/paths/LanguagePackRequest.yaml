@@ -46,7 +46,7 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: language
-      in: path
+      in: query
       required: true
       description: The id of the language pack to get from the device model
       schema:

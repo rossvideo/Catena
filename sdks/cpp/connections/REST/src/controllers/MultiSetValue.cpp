@@ -17,6 +17,7 @@ MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, Device&
 
 bool MultiSetValue::toMulti() {
     absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);
+    reqs_.set_slot(context_.slot());
     return status.ok();
 }
 

@@ -47,7 +47,7 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
-      in: path
+      in: query
       required: true
       description: The path to the object to request from the device model
       schema:
@@ -56,7 +56,8 @@ get:
 
   responses:
     "200":
-      description: A 'DataPayload' variant of the 'Value' message and a flag indicating whether the object is cachable or not
+      description: A 'DataPayload' variant of the 'Value' message and a flag 
+        indicating whether the object is cachable or not
       content:
         application/json:
           schema:

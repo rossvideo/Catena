@@ -63,8 +63,8 @@ void CatenaServiceImpl::writeOptions(tcp::socket& socket, const std::string& ori
     std::string headers = "HTTP/1.1 204 No Content\r\n"
                           "Access-Control-Allow-Origin: " + origin + "\r\n"
                           "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                          "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
-                          "Access-Control-Allow-Credentials: true\r\n";
+                          "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+                          "Access-Control-Allow-Credentials: true\r\n"
                           "Content-Length: 0\r\n\r\n";
     boost::asio::write(socket, boost::asio::buffer(headers));
     return;
@@ -90,7 +90,7 @@ void CatenaServiceImpl::run() {
                     // Reading from the socket.
                     SocketReader context;
                     context.read(socket, authorizationEnabled_);
-                    std::string rpcKey = context.method() + context.rpc();
+                    std::string rpcKey = context.method() + context.service();
                     // Returning options to the client if required.
                     if (context.method() == "OPTIONS") {
                         writeOptions(socket, context.origin());
