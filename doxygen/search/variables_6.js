@@ -4,6 +4,5 @@ var searchData=
   ['kdefaultmaxarraylength_1',['kDefaultMaxArrayLength',['../namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8',1,'catena::common']]],
   ['kend_2',['kEnd',['../classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e',1,'catena::common::Path']]],
   ['kerror_3',['kError',['../classcatena_1_1common_1_1Path.html#aa4da601b74fb1e2aca3d6e05c34f143e',1,'catena::common::Path']]],
-  ['knone_4',['kNone',['../classcatena_1_1common_1_1Path.html#a258dd91d9e35ac7dd2afebf01b6325f1',1,'catena::common::Path']]],
-  ['kstatuscodemap_5',['kStatusCodeMap',['../namespacecatena_1_1REST.html#a707381b679a43d09ebc40f13001a2811',1,'catena::REST']]]
+  ['knone_4',['kNone',['../classcatena_1_1common_1_1Path.html#a258dd91d9e35ac7dd2afebf01b6325f1',1,'catena::common::Path']]]
 ];

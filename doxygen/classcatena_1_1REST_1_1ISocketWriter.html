@@ -134,9 +134,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1b80a8d671a1aeac4454080e44160863" id="r_a1b80a8d671a1aeac4454080e44160863"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a1b80a8d671a1aeac4454080e44160863">finish</a> ()=0</td></tr>
 <tr class="memdesc:a1b80a8d671a1aeac4454080e44160863"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing process.  <br /></td></tr>
 <tr class="separator:a1b80a8d671a1aeac4454080e44160863"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a583a5b80ae3b3aab41e0e740424ef4b5" id="r_a583a5b80ae3b3aab41e0e740424ef4b5"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a583a5b80ae3b3aab41e0e740424ef4b5">finishWithStatus</a> (int status_code)=0</td></tr>
-<tr class="memdesc:a583a5b80ae3b3aab41e0e740424ef4b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing process with a specific status code.  <br /></td></tr>
-<tr class="separator:a583a5b80ae3b3aab41e0e740424ef4b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> classes. </p>
@@ -166,43 +163,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Finishes writing process. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a3d2d425aeaa553b36344f9a5a0ac7742">catena::REST::SSEWriter</a>.</p>
-
-</div>
-</div>
-<a id="a583a5b80ae3b3aab41e0e740424ef4b5" name="a583a5b80ae3b3aab41e0e740424ef4b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a583a5b80ae3b3aab41e0e740424ef4b5">&#9670;&#160;</a></span>finishWithStatus()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void catena::REST::ISocketWriter::finishWithStatus </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>status_code</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Finishes writing process with a specific status code. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">status_code</td><td>The HTTP status code to use. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a0f7dab69e6c4b2d3f90a9765816f17dc">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a05a8cdcbf32d89d8e872c5083d167af4">catena::REST::SSEWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a93b32178c94f55aa2080465ec0f835d2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a4efc1ab69a62d9b89bc34c32d1bf4a45">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
@@ -238,7 +199,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ad63d815bfeb4e3ccb4ad6170048c8aa2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a10d97e38ead228cabc5d459ec38d4279">catena::REST::SSEWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ad63d815bfeb4e3ccb4ad6170048c8aa2">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#aeba94fa327ba30ef3d336c30f16320eb">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
@@ -274,7 +235,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a554e66849e946ee0ea586d2deaf0326e">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a5fa45b9487fd52d8a099de6c5f1374d7">catena::REST::SSEWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a554e66849e946ee0ea586d2deaf0326e">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a1563491b348dd9c5dffa5c831c8b0cfd">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
