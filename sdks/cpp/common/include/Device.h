@@ -82,25 +82,11 @@ constexpr uint32_t kDefaultMaxArrayLength{1024};
 class Device : public IDevice {
   public:
     /**
-     * @brief LockGuard is a helper class to lock and unlock the device mutex
-     */
-    // class LockGuard {
-    //   public:
-    //     LockGuard(Device& dm) : dm_(dm) { dm_.mutex_.lock(); }
-    //     ~LockGuard() { dm_.mutex_.unlock(); }
-
-    //   private:
-    //     Device& dm_;
-    // };
-    // friend class LockGuard;
-
-    /**
      * @brief convenience type aliases to types of objects contained in the
      * device
      */
     using DetailLevel_e = catena::Device_DetailLevel;
 
-  public:
     /**
      * @brief Construct a new Device object
      */
@@ -410,7 +396,7 @@ class Device : public IDevice {
     uint32_t default_max_length_ = 0;
     uint32_t default_total_length_ = 0;
 
-    // mutable std::mutex mutex_;
+    mutable std::mutex mutex_;
 };
 }  // namespace common
 }  // namespace catena
