@@ -26,14 +26,14 @@ void DeviceRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
         // Getting the component serializer.
-        auto serializer = dm_->getComponentSerializer(*authz, shallowCopy);
+        std::unique_ptr<IDevice::IDeviceSerializer> serializer = dm_->getComponentSerializer(*authz, shallowCopy);
         // Getting each component ans writing to the stream.
-        while (serializer.hasMore()) {
+        while (serializer->hasMore()) {
             writeConsole(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
             IDevice::LockGuard lg(dm_);
-            component = serializer.getNext();
+            component = serializer->getNext();
             }
             writer_.write(component);
         }

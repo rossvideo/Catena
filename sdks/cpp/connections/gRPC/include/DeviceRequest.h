@@ -89,7 +89,7 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @brief Serializer for device.
          * Can't create serializer until we have client scopes
          */
-        std::optional<Device::DeviceSerializer> serializer_ = std::nullopt;
+        std::unique_ptr<Device::IDeviceSerializer> serializer_ = nullptr;
         /**
          * @brief Represents the current status of the call within the state
          * machine (kCreate, kProcess, kFinish, etc.)

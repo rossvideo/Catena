@@ -199,23 +199,7 @@ class IDevice {
      * This struct manages the state and lifetime of the coroutine. It also
      * provides the interface for resuming the coroutine.
      */
-    class DeviceSerializer {
-      public:
-        struct promise_type; // forward declaration
-
-      private:
-        /**
-         * The coroutine handle is a pointer to the coroutine state
-         * 
-         * The coroutine handle provides the following operations:
-         * resume() - resumes the coroutine from where it was suspended
-         * destroy() - destroys the coroutine
-         * done() - returns true if the coroutine has completed (i.e. co_return
-         * has been called)
-         */
-        using handle_type = std::coroutine_handle<promise_type>;
-        handle_type handle_;
-
+    class IDeviceSerializer {
       public:
         /** 
          * @brief Defines the execution behaviour of the coroutine
@@ -224,96 +208,23 @@ class IDevice {
          * defines some special member functions that the compiler will call
          * when the coroutine is created, destroyed, or resumed.
          */
-        struct promise_type {
 
-            /**
-             * @brief Called when the coroutine is created (i.e. when
-             * getComponentSerializer() is called). It creates the handle for
-             * the coroutine and returns the DeviceSerializer object.
-             */
-            inline DeviceSerializer get_return_object() { 
-              return DeviceSerializer(handle_type::from_promise(*this)); 
-            }
+        IDeviceSerializer() = default;
+        // IDeviceSerializer(handle_type h) : handle_(h) {}
 
-            /**
-             * @brief Called when the coroutine is created. It returns a
-             * std::suspend_always awaitable so that the coroutine will be
-             * immediately suspended. This means the first component will not
-             * be created until getNext() is called.
-             */
-            inline std::suspend_always initial_suspend() { return {}; }
+        IDeviceSerializer(const IDeviceSerializer&) = delete;
+        IDeviceSerializer& operator=(const IDeviceSerializer&) = delete;
 
-            /** 
-             * @brief Called when the coroutine is completed. It returns a
-             * std::suspend_always awaitable causing the coroutine to be
-             * suspended before it destroys itself. The coroutine will be
-             * destroyed when the device serializer destructor is called.
-             */
-            inline std::suspend_always final_suspend() noexcept { return {}; }
-
-            /**
-             * @brief Called when the coroutine reaches a co_yield statement.
-             * It stores the yielded DeviceComponent then suspends the
-             * coroutine.
-             */
-            inline std::suspend_always yield_value(catena::DeviceComponent& component) { 
-              deviceMessage = component;
-              return {}; 
-            }
-
-            /**
-             * @brief Called when the coroutine reaches a co_return statement.
-             * It stores the returned DeviceComponent. The coroutine is then
-             * set as done.
-             */
-            inline void return_value(catena::DeviceComponent component) { this->deviceMessage = component; }
-
-            /**
-             * @brief Called if an exception is thrown in the coroutine. It
-             * stores the exception so that it can be rethrown by the function
-             * that resumed the coroutine.
-             */
-            inline void unhandled_exception() {
-              exception_ = std::current_exception();
-            }
-
-            /**
-             * @brief Not called by the compiler but instead is called by the
-             * function that resumes the coroutine. It rethrows the exception
-             * that was caught by unhandled_exception().
-             */
-            inline void rethrow_if_exception() {
-              if (exception_) std::rethrow_exception(exception_);
-            }
-
-            catena::DeviceComponent deviceMessage{};
-            std::exception_ptr exception_; 
-        };
-
-        DeviceSerializer(handle_type h) : handle_(h) {}
-
-        DeviceSerializer(const DeviceSerializer&) = delete;
-        DeviceSerializer& operator=(const DeviceSerializer&) = delete;
-
-        DeviceSerializer(DeviceSerializer&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
-        DeviceSerializer& operator=(DeviceSerializer&& other) { 
-          if (this != &other) {
-            if (handle_) handle_.destroy();
-            handle_ = other.handle_; 
-            other.handle_ = nullptr; 
-          }
-          return *this; 
-        } 
+        // IDeviceSerializer(IDeviceSerializer&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
+        // IDeviceSerializer& operator=(IDeviceSerializer&& other);
         
-        ~DeviceSerializer() { 
-          if (handle_) handle_.destroy();  
-        }
+        ~IDeviceSerializer() = default;
 
         /**
          * @brief returns true if there are more DeviceComponents to be
          * serialized
          */
-        inline bool hasMore() const { return handle_ && !handle_.done(); }
+        virtual inline bool hasMore() const = 0;
 
         /**
          * @brief get the next DeviceComponent to be serialized.
@@ -322,7 +233,7 @@ class IDevice {
          * If the coroutine is done and there are no more components to
          * serialize then an empty DeviceComponent is returned.
          */
-        catena::DeviceComponent getNext();
+        virtual catena::DeviceComponent getNext() = 0;
     };
 
     /**
@@ -332,7 +243,7 @@ class IDevice {
      * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    virtual DeviceSerializer getComponentSerializer(Authorizer& authz, bool shallow = false) const = 0;
+    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, bool shallow = false) const = 0;
 
     /**
      * @brief get a serializer for the device
@@ -342,7 +253,7 @@ class IDevice {
      * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    virtual DeviceSerializer getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const = 0;
+    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const = 0;
 
     /**
      * @brief get a parameter by oid with authorization
