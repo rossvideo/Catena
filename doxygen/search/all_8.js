@@ -6,7 +6,7 @@ var searchData=
   ['has_5ftemplate_5foid_3',['has_template_oid',['../classcatena_1_1common_1_1ParamDescriptor.html#a66ecd99a0574d3d765a918c1997bf173',1,'catena::common::ParamDescriptor']]],
   ['has_5fwriter_4',['has_writer',['../classcatena_1_1PeerInfo.html#a39a34e8560fbcf01cc070b529e440a40',1,'catena::PeerInfo']]],
   ['hasauthz_5',['hasAuthz',['../classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957',1,'catena::common::Authorizer']]],
-  ['hasmore_6',['hasMore',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#ae6d00e431c45be6d66a51292deacd41d',1,'catena::common::Device::DeviceSerializer']]],
+  ['hasmore_6',['hasmore',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#af684414d5b70a6b7bf6c28653054fc54',1,'catena::common::Device::DeviceSerializer::hasMore()'],['../classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#ab35a715a8c265585c50d51e4e7aed7fd',1,'catena::common::IDevice::IDeviceSerializer::hasMore()']]],
   ['haspeer_7',['hasPeer',['../classcatena_1_1PeerManager.html#a44846c511a729bd43bc9eba69dfade26',1,'catena::PeerManager']]],
   ['hasupdate_5f_8',['hasUpdate_',['../classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c',1,'catena::common::Connect']]],
   ['homebrew_9',['Install homebrew',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'']]]

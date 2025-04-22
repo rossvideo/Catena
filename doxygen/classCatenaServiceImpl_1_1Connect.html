@@ -114,9 +114,9 @@ Collaboration diagram for CatenaServiceImpl::Connect:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aa0c9451ff134f2576f7864759c55722d" id="r_aa0c9451ff134f2576f7864759c55722d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1Connect.html#aa0c9451ff134f2576f7864759c55722d">Connect</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dm, bool ok)</td></tr>
-<tr class="memdesc:aa0c9451ff134f2576f7864759c55722d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class of the <a class="el" href="classCatenaServiceImpl_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1Connect.html#a95c583820c122364f1d07dba2c589e34" title="Manages the steps of the Connect gRPC command through the state variable status. Returns the value of...">proceed()</a> once initialized.  <br /></td></tr>
-<tr class="separator:aa0c9451ff134f2576f7864759c55722d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62599299ec49dc470b08892fbd29df85" id="r_a62599299ec49dc470b08892fbd29df85"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1Connect.html#a62599299ec49dc470b08892fbd29df85">Connect</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> *dm, bool ok)</td></tr>
+<tr class="memdesc:a62599299ec49dc470b08892fbd29df85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class of the <a class="el" href="classCatenaServiceImpl_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> gRPC. Calls <a class="el" href="classCatenaServiceImpl_1_1Connect.html#a95c583820c122364f1d07dba2c589e34" title="Manages the steps of the Connect gRPC command through the state variable status. Returns the value of...">proceed()</a> once initialized.  <br /></td></tr>
+<tr class="separator:a62599299ec49dc470b08892fbd29df85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95c583820c122364f1d07dba2c589e34" id="r_a95c583820c122364f1d07dba2c589e34"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl_1_1Connect.html#a95c583820c122364f1d07dba2c589e34">proceed</a> (<a class="el" href="classCatenaServiceImpl.html">CatenaServiceImpl</a> *service, bool ok) override</td></tr>
 <tr class="memdesc:a95c583820c122364f1d07dba2c589e34"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages the steps of the <a class="el" href="classCatenaServiceImpl_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> gRPC command through the state variable status. Returns the value of the parameter specified by the user.  <br /></td></tr>
 <tr class="separator:a95c583820c122364f1d07dba2c589e34"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,8 +141,8 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method.">CallData</a> class for the <a class="el" href="classCatenaServiceImpl_1_1Connect.html" title="CallData class for the Connect RPC.">Connect</a> RPC. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="aa0c9451ff134f2576f7864759c55722d" name="aa0c9451ff134f2576f7864759c55722d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa0c9451ff134f2576f7864759c55722d">&#9670;&#160;</a></span>Connect()</h2>
+<a id="a62599299ec49dc470b08892fbd29df85" name="a62599299ec49dc470b08892fbd29df85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a62599299ec49dc470b08892fbd29df85">&#9670;&#160;</a></span>Connect()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -156,7 +156,7 @@ ServerContext&#160;</td><td class="memItemRight" valign="bottom"><b>context_</b>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> *&#160;</td>
           <td class="paramname"><em>dm</em>, </td>
         </tr>
         <tr>

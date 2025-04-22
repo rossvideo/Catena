@@ -12,6 +12,7 @@ var annotated_dup =
         [ "FieldInfo", "structcatena_1_1common_1_1FieldInfo.html", null ],
         [ "IConnect", "classcatena_1_1common_1_1IConnect.html", "classcatena_1_1common_1_1IConnect" ],
         [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],
+        [ "IDevice", "classcatena_1_1common_1_1IDevice.html", "classcatena_1_1common_1_1IDevice" ],
         [ "ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", "classcatena_1_1common_1_1ILanguagePack" ],
         [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ],
         [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ],
@@ -59,7 +60,6 @@ var annotated_dup =
       ] ],
       [ "REST", "namespacecatena_1_1REST.html", [
         [ "AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", "classcatena_1_1REST_1_1AddLanguage" ],
-        [ "BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", "classcatena_1_1REST_1_1BasicParamInfoRequest" ],
         [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
         [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
         [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
