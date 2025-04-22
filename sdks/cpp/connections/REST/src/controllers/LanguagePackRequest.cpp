@@ -19,8 +19,8 @@ void LanguagePackRequest::proceed() {
     catena::DeviceComponent_ComponentLanguagePack ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        Device::LockGuard lg(dm_);
-        rc = dm_.getLanguagePack(context_.fields("language"), ans);
+        IDevice::LockGuard lg(dm_);
+        rc = dm_->getLanguagePack(context_.fields("language"), ans);
     // ERROR
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
