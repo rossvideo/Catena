@@ -30,9 +30,9 @@
 
 /**
  * @file BasicParamInfoRequest.h
- * @brief Implements REST BasicParamInfoRequest RPC.
+ * @brief Implements REST BasicParamInfoRequest controller.
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-04-09
+ * @date 2025-04-22
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
