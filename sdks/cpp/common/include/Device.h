@@ -127,10 +127,12 @@ class Device : public IDevice {
 
     /**
      * @brief get the detail level of the device
-     * @return DetailLevel_e
+     * @return DetailLevel_
      */
     inline DetailLevel_e detail_level() const override { return detail_level_; }
-
+    /**
+     * @brief Returns the device's default scope.
+     */
     inline const std::string& getDefaultScope() const override { return default_scope_; }
 
     /**
@@ -349,22 +351,32 @@ class Device : public IDevice {
 
     /**
      * @brief get a serializer for the device
-     * @param clientScopes the scopes of the client
+     * @param authz the authorizer object containing the scopes of the client
      * @param shallow if true, the device will be returned in parts, otherwise
      * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
     std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, bool shallow = false) const override;
-
     /**
      * @brief get a serializer for the device
+     * @param clientScopes the scopes of the client
+     * @param shallow if true, the device will be returned in parts, otherwise
+     * the whole device will be returned in one message
+     * @param subscribed_oids the oids of the subscribed parameters
+     * @return a DeviceSerializer object
+     */
+    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const override;
+    /**
+     * @brief This is a helper function for the shared IDevice function
+     * getComponentSerializer to return a DeviceSerializer object. It can be
+     * used on its own if calling from a Device object.
+     * 
      * @param clientScopes the scopes of the client
      * @param subscribed_oids the oids of the subscribed parameters
      * @param shallow if true, the device will be returned in parts, otherwise
      * the whole device will be returned in one message
-     * @return a DeviceSerializer object
+     * @param subscribed_oids the oids of the subscribed parameters
      */
-    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const override;
     DeviceSerializer getDeviceSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const;
     /**
      * @brief add an item to one of the collections owned by the device

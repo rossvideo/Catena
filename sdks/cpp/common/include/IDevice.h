@@ -109,10 +109,12 @@ class IDevice {
 
     /**
      * @brief get the detail level of the device
-     * @return DetailLevel_e
+     * @return DetailLevel_
      */
     virtual inline DetailLevel_e detail_level() const = 0;
-
+    /**
+     * @brief Returns the device's default scope.
+     */
     virtual inline const std::string& getDefaultScope() const = 0;
 
     /**
@@ -198,25 +200,18 @@ class IDevice {
      * stream of DeviceComponents
      * This struct manages the state and lifetime of the coroutine. It also
      * provides the interface for resuming the coroutine.
+     * 
+     * Coroutine types are required to contain a promise_type struct that
+     * defines some special member functions that the compiler will call
+     * when the coroutine is created, destroyed, or resumed. This promise_type
+     * struct must be defined in the inherited class.
      */
     class IDeviceSerializer {
       public:
-        /** 
-         * @brief Defines the execution behaviour of the coroutine
-         * 
-         * Coroutine types are required to contain a promise_type struct that
-         * defines some special member functions that the compiler will call
-         * when the coroutine is created, destroyed, or resumed.
-         */
-
         IDeviceSerializer() = default;
-        // IDeviceSerializer(handle_type h) : handle_(h) {}
 
         IDeviceSerializer(const IDeviceSerializer&) = delete;
         IDeviceSerializer& operator=(const IDeviceSerializer&) = delete;
-
-        // IDeviceSerializer(IDeviceSerializer&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
-        // IDeviceSerializer& operator=(IDeviceSerializer&& other);
         
         ~IDeviceSerializer() = default;
 
