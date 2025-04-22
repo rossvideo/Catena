@@ -53,16 +53,10 @@
 #include <ParamVisitor.h>
 #include <rpc/TimeNow.h>
 
-using catena::REST::CatenaServiceImpl;
-using catena::REST::CallStatus;
-using catena::common::ParamTag;
-using catena::common::Path;
-using catena::common::ParamVisitor;
-using catena::common::Device;
+// Forward declarations
 using catena::common::IParam;
-using catena::common::Authorizer;
-using catena::common::timeNow;
 using catena::common::IParamVisitor;
+using catena::common::timeNow;
 
 namespace catena {
 namespace REST {
