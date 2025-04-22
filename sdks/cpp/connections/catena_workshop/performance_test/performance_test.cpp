@@ -91,6 +91,27 @@ void handle_signal(int sig) {
     t.join();
 }
 
+void deviceSetup() {
+    // Setting up device's audio meters.
+    std::string jsonBody =  "\"value\": {"
+                                "\"struct_variant_value\": {"
+                                    "\"fields\": {"
+                                        "\"audio_level\": {"
+                                            "\"value\": {\"float32_value\": 0}"
+                                        "}"
+                                    "}"
+                                "}"
+                            "}";
+    for (int i = 0; i < 63; i++) {
+        catena::Value val;
+        absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonBody), &val);
+        {
+            Device::LockGuard lg(dm); 
+            dm.setValue("/audio_meter_list/-", val);
+        }
+    }
+}
+
 // Updates the 64 audio meters 20 times per second.
 void performanceTest(){
     for (int i = 0; i < 64; i ++) {
@@ -172,6 +193,8 @@ int main(int argc, char* argv[]) {
     // Getting flags.
     std::string EOPath = absl::GetFlag(FLAGS_static_root);
     bool authorization = absl::GetFlag(FLAGS_authz);
+
+    deviceSetup();
     
     // Running servers.
     std::thread catenaRestThread(RunRESTServer, authorization, EOPath);
