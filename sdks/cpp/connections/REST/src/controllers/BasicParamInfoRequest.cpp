@@ -94,7 +94,7 @@ void BasicParamInfoRequest::proceed() {
             authz = &Authorizer::kAuthzDisabled;
         }
 
-        // Mode 1: Get all top-level parameters
+        // Mode 1: Get all top-level parameters without recursion
         if (oid_prefix_.empty() && !recursive_) {
             std::vector<std::unique_ptr<IParam>> top_level_params;
 
@@ -120,7 +120,7 @@ void BasicParamInfoRequest::proceed() {
                 }
                 writer_lock_.lock();
                 for (auto& response : responses_) {
-                    writer_.write(dynamic_cast<google::protobuf::Message&>(response));
+                    writer_.write(response);
                 }
                 writer_lock_.unlock();
             }
@@ -156,11 +156,45 @@ void BasicParamInfoRequest::proceed() {
                 // Write all responses to the client
                 writer_lock_.lock();
                 for (auto& response : responses_) {
-                    writer_.write(dynamic_cast<google::protobuf::Message&>(response));
+                    writer_.write(response);
                 }
                 writer_lock_.unlock();
             } else {
                 throw catena::exception_with_status(rc.what(), rc.status);
+            }
+        }
+        // Mode 3: Get all top-level parameters with recursion
+        else if (oid_prefix_.empty() && recursive_) {
+            std::vector<std::unique_ptr<IParam>> top_level_params;
+
+            {
+                catena::common::Device::LockGuard lg(dm_);
+                top_level_params = dm_.getTopLevelParams(rc, *authz);
+            }
+
+            if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
+                catena::common::Device::LockGuard lg(dm_);
+                responses_.clear();
+                // Process each top-level parameter recursively
+                for (auto& top_level_param : top_level_params) {
+                    // Add the parameter to our response list
+                    addParamToResponses(top_level_param.get(), *authz);
+                    // For array types, calculate and update array length
+                    if (top_level_param->isArrayType()) {
+                        uint32_t array_length = top_level_param->size();
+                        if (array_length > 0) {
+                            updateArrayLengths(top_level_param->getOid(), array_length);
+                        }
+                    }
+                    // Recursively traverse all children of the top-level parameter
+                    BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
+                    ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
+                }
+                writer_lock_.lock();
+                for (auto& response : responses_) {
+                    writer_.write(response);
+                }
+                writer_lock_.unlock();
             }
         }
     } catch (catena::exception_with_status& err) {
