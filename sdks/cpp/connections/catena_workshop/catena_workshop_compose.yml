@@ -1,24 +1,24 @@
-#
+# 
 # Copyright 2025 Ross Video Ltd
-#
+# 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-#
+# 
 # 1. Redistributions of source code must retain the above copyright notice,
 # this list of conditions and the following disclaimer.
-#
+# 
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 # this list of conditions and the following disclaimer in the documentation
 # and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its contributors
-# may be used to endorse or promote products derived from this software without
-# specific prior written permission.
-#
+# 
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+# 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
 # LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
 # CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 # SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -29,15 +29,28 @@
 #
 
 #
-# cmake build file for Catena workshop performance comparison.
+# Compose the docker image for the performance test.
 #
 
-cmake_minimum_required(VERSION 3.20)
+version: '3.8'  # Docker Compose file format version
 
-project(CATENA_WORKSHOP C CXX)
+networks:
+  catena_network: # Public network for client to communicate with gateway.
+    name: catena_network
+    driver: bridge
 
-add_subdirectory("performance_test")
-
-if (DOCKER)
-    make_image(catena_performance_test ${CATENA_CPP_ROOT_DIR} "base.hash;catena_performance_test")
-endif()
+# Setting up the envoyproxy container.
+services:
+  status_update:
+    image: catena_status_update
+    container_name: catena_status_update
+    networks:
+      - catena_network # Only connected to the prv network.
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports: # Mapping ports from host to container.
+      - 6254:6254 # gRPC
+      - 443:443   # REST
