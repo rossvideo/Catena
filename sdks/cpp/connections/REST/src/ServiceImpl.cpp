@@ -58,18 +58,6 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
 // Initializing the shutdown signal for all open connections.
 vdk::signal<void()> Connect::shutdownSignal_;
 
-void CatenaServiceImpl::writeOptions(tcp::socket& socket, const std::string& origin) {
-    // Writes a response to the client detailing their options for PUT methods.
-    std::string headers = "HTTP/1.1 204 No Content\r\n"
-                          "Access-Control-Allow-Origin: " + origin + "\r\n"
-                          "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                          "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                          "Access-Control-Allow-Credentials: true\r\n"
-                          "Content-Length: 0\r\n\r\n";
-    boost::asio::write(socket, boost::asio::buffer(headers));
-    return;
-}
-
 void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
     shutdown_ = false;
@@ -91,9 +79,10 @@ void CatenaServiceImpl::run() {
                     SocketReader context;
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.service();
-                    // Returning options to the client if required.
+                    // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        writeOptions(socket, context.origin());
+                        catena::exception_with_status rc("", catena::StatusCode::OK);
+                        SocketWriter(socket, context.origin()).write(rc);
                     // Otherwise routing to rpc.
                     } else if (router_.canMake(rpcKey)) {
                         std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);

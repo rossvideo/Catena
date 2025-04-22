@@ -71,7 +71,7 @@ class SocketWriter : public ISocketWriter {
     SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket} {
       CORS_ = "Access-Control-Allow-Origin: " + origin + "\r\n"
               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
+              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
               "Access-Control-Allow-Credentials: true\r\n";
     }
     /**
