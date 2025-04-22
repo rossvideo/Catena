@@ -55,6 +55,7 @@ target_sources(${TARGET}
 
 target_link_libraries(${TARGET}
     catena_connections_REST
+    catena_connections_grpc    
     absl::flags_parse
 )
 

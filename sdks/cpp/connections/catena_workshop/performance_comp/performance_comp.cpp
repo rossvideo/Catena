@@ -37,7 +37,16 @@
 #include <ParamWithValue.h>
 
 // REST
-#include <ServiceImpl.h>
+#include "../../REST/include/ServiceImpl.h"
+
+// gRPC
+#include <SharedFlags.h>
+#include "../../gRPC/include/ServiceImpl.h"
+#include <ServiceCredentials.h>
+
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -57,14 +66,9 @@
 #include <iostream>
 
 using namespace catena::common;
+using grpc::Server;
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
-
+Server *globalServer = nullptr;
 catena::REST::CatenaServiceImpl *globalApi = nullptr;
 std::atomic<bool> globalLoop = true;
 
@@ -73,14 +77,21 @@ void handle_signal(int sig) {
     std::thread t([sig]() {
         std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
         globalLoop = false;
+        // Shutting down REST
         if (globalApi != nullptr) {
             globalApi->Shutdown();
             globalApi = nullptr;
+        }
+        // Shutting down gRPC
+        if (globalServer != nullptr) {
+            globalServer->Shutdown();
+            globalServer = nullptr;
         }
     });
     t.join();
 }
 
+// Updates the 64 audio meters 20 times per second.
 void performanceTest(){
     for (int i = 0; i < 64; i ++) {
         std::thread loop([i = std::move(i)]() {
@@ -90,7 +101,7 @@ void performanceTest(){
                 catena::Value val;
                 val.set_float32_value(counter++);
                 // update the counter once per second, and emit the event
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 {
                     Device::LockGuard lg(dm); 
                     dm.setValue(oid, val);
@@ -101,27 +112,49 @@ void performanceTest(){
     }
 }
 
-void RunRESTServer() {
-    // install signal handlers
-    signal(SIGINT, handle_signal);
-    signal(SIGTERM, handle_signal);
-    signal(SIGKILL, handle_signal);
-
+// REST logic.
+void RunRESTServer(bool authorization, std::string EOPath) {
     try {
-        // Getting flags.
-        std::string EOPath = absl::GetFlag(FLAGS_static_root);
-        bool authorization = absl::GetFlag(FLAGS_authz);
-        uint16_t port = absl::GetFlag(FLAGS_port);
-        
         // Creating and running the REST service.
-        catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, port);
+        catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, 443);
         globalApi = &api;
         std::cout << "API Version: " << api.version() << std::endl;
-        std::cout << "REST on 0.0.0.0:" << port << std::endl;
-        
-        performanceTest();
-        
+        std::cout << "REST on 0.0.0.0:443" << std::endl;        
         api.run();
+    } catch (std::exception &why) {
+        std::cerr << "Problem: " << why.what() << '\n';
+    }
+}
+
+// gRPC logic.
+void RunGRPCServer(bool authorization, std::string EOPath) {
+    try {
+        std::string addr = absl::StrFormat("0.0.0.0:6254");
+
+        grpc::ServerBuilder builder;
+        // set some grpc options
+        grpc::EnableDefaultHealthCheckService(true);
+
+        builder.AddListeningPort(addr, catena::getServerCredentials());
+        std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
+        CatenaServiceImpl service(cq.get(), dm, EOPath, authorization);
+
+        builder.RegisterService(&service);
+
+        std::unique_ptr<Server> server(builder.BuildAndStart());
+        std::cout << "gRPC on " << addr << std::endl;    
+
+        globalServer = server.get();
+
+        service.init();
+        std::thread cq_thread([&]() { service.processEvents(); });
+
+        // wait for the server to shutdown and tidy up
+        server->Wait();
+
+        cq->Shutdown();
+        cq_thread.join();
+
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
     }
@@ -130,8 +163,23 @@ void RunRESTServer() {
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
+
+    // install signal handlers
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+    signal(SIGKILL, handle_signal);
+
+    // Getting flags.
+    std::string EOPath = absl::GetFlag(FLAGS_static_root);
+    bool authorization = absl::GetFlag(FLAGS_authz);
     
-    std::thread catenaRestThread(RunRESTServer);
+    // Running servers.
+    std::thread catenaRestThread(RunRESTServer, authorization, EOPath);
+    std::thread catenaGRPCThread(RunGRPCServer, authorization, EOPath);
+    performanceTest();
+
+    // Shutdown
     catenaRestThread.join();
+    catenaGRPCThread.join();
     return 0;
 }
