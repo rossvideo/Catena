@@ -27,8 +27,6 @@ void DeviceRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
                
-        // Track if any subscriptions throw an error
-        bool subscriptionError = false;
         auto& subscriptionManager = context_.getSubscriptionManager(); 
         subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
 
@@ -56,13 +54,8 @@ void DeviceRequest::proceed() {
             }
             writer_.write(component);
         }
-
-        // If some subscriptions failed, set status code to 202
-        if (subscriptionError) {
-            //writer_.finishWithStatus(202); // Unimplemented
-        } else {
-            writer_.finish();
-        }
+        writer_.finish();
+        
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {
         writer_.write(err);
