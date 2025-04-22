@@ -1,6 +1,7 @@
 var namespacecatena_1_1REST =
 [
     [ "AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", "classcatena_1_1REST_1_1AddLanguage" ],
+    [ "BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", "classcatena_1_1REST_1_1BasicParamInfoRequest" ],
     [ "CatenaServiceImpl", "classcatena_1_1REST_1_1CatenaServiceImpl.html", "classcatena_1_1REST_1_1CatenaServiceImpl" ],
     [ "Connect", "classcatena_1_1REST_1_1Connect.html", "classcatena_1_1REST_1_1Connect" ],
     [ "DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", "classcatena_1_1REST_1_1DeviceRequest" ],
