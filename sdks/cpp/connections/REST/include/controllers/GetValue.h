@@ -123,19 +123,6 @@ class GetValue : public ICallData {
      * @brief The device to set values of.
      */
     IDevice* dm_;
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
-
-    /**
-     * @brief The slot of the device to get the value from.
-     */
-    int slot_;
-    /**
-     * @brief The oid of the param to get the value from.
-     */
-    std::string oid_;
 
     /**
      * @brief ID of the GetValue object

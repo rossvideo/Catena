@@ -47,7 +47,7 @@ put:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
-      in: path
+      in: query
       required: true
       description: The oid of the command to execute
       schema:
@@ -55,7 +55,7 @@ put:
       default: "pause"
     
     - name: respond
-      in: path
+      in: query
       required: false
       description: Optional flag to supress the server's response
       schema:
@@ -63,9 +63,10 @@ put:
       default: true
     
     - name: proceed
-      in: path
+      in: query
       required: false
-      description: Optional flag indicate whether to send the response instead as the 'DataPayload' variant of the 'Value' message
+      description: Optional flag indicate whether to send the response instead
+         as the 'DataPayload' variant of the 'Value' message
       schema:
         type: boolean
       default: false
@@ -82,13 +83,15 @@ put:
     
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if respond is false
+      description: The server's response will either be a 'Value' or nothing if 
+        'respond' is false
       content:
         application/json:
           schema:
             oneOf:
               - title: No Response
-                description: respond is false or server does not have a response for the command
+                description: respond is false or server does not have a 
+                  response for the command
 
               - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
               

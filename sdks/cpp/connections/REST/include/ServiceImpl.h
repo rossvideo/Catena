@@ -113,10 +113,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     
   private:
     /**
-     * @brief Writes a client's options to the socket.
-     */
-    void writeOptions(tcp::socket& socket, const std::string& origin);
-    /**
      * @brief Returns true if port_ is already in use.
      * 
      * Currently unused.

@@ -122,19 +122,6 @@ class AddLanguage : public ICallData {
      * @brief The device to add the language pack to.
      */
     IDevice* dm_;
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
-
-    /**
-     * @brief The slot of the device to add the language pack to.
-     */
-    int slot_;
-    /**
-     * @brief The language id of the added language (en, fr, etc.).
-     */
-    std::string id_;
 
     /**
      * @brief ID of the AddLanguage object
