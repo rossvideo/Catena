@@ -5,6 +5,7 @@ using catena::REST::CatenaServiceImpl;
 
 // RPCs
 #include <controllers/Connect.h>
+#include <controllers/GetParam.h>
 #include <controllers/MultiSetValue.h>
 #include <controllers/SetValue.h>
 #include <controllers/DeviceRequest.h>
@@ -50,6 +51,7 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
     router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
     router_.addProduct("PUT/v1/SetValue",               SetValue::makeOne);
+    router_.addProduct("GET/v1/GetParam",               GetParam::makeOne);
     router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
     router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
     router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
