@@ -42,6 +42,9 @@
 #include <boost/asio/ssl.hpp>
 using boost::asio::ip::tcp;
 
+//common
+#include <SubscriptionManager.h>
+
 #include <string>
 #include <unordered_map>
  
@@ -104,7 +107,7 @@ class ISocketReader {
     /**
      * @brief Returns the detail level to return the response in.
      */
-    virtual int detailLevel() const = 0;
+    virtual catena::Device_DetailLevel detailLevel() const = 0;
     /**
      * @brief Returns the json body of the request, which may be empty.
      */
@@ -114,6 +117,11 @@ class ISocketReader {
      * @brief Returns true if authorization is enabled.
      */
     virtual bool authorizationEnabled() const = 0;
+
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    virtual catena::common::SubscriptionManager& getSubscriptionManager() = 0;
 };
  
 }; // Namespace REST

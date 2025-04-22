@@ -32,6 +32,7 @@
  * @file SocketReader.h
  * @brief Helper class used to read from a socket using boost.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -40,6 +41,7 @@
 // common
 #include <Status.h>
 #include <Enums.h>
+#include <SubscriptionManager.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -57,11 +59,19 @@ using namespace boost::urls;
 namespace catena {
 namespace REST {
 
+// Forward declaration
+class CatenaServiceImpl;
+
 /**
  * @brief Helper class used to read from a socket using boost.
  */
 class SocketReader : public ISocketReader {
   public:
+    /**
+     * @brief Constructor for the SocketReader class.
+     * @param service The CatenaServiceImpl object.
+     */
+    SocketReader(CatenaServiceImpl& service);
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -74,9 +84,9 @@ class SocketReader : public ISocketReader {
      */
     const std::string& method() const override { return method_; }
     /**
-     * @brief Returns the rpc of the request.
+     * @brief Returns the REST endpoint of the request (/v1/GetValue, etc.)
      */
-    const std::string& service() const override { return service_; }
+    const std::string& service() const override { return endpoint_; }
     /**
      * @brief Returns the slot of the device to make the API call on.
      */
@@ -109,11 +119,15 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns the detail level to return the response in.
      */
-    int detailLevel() const override { return detailLevel_; };
+    catena::Device_DetailLevel detailLevel() const override { return detailLevel_; };
     /**
      * @brief Returns the json body of the request, which may be empty.
      */
     const std::string& jsonBody() const override { return jsonBody_; }
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::SubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
 
     /**
      * @brief Returns true if authorization is enabled.
@@ -126,9 +140,9 @@ class SocketReader : public ISocketReader {
      */
     std::string method_ = "";
     /**
-     * @brief The rpc of the request (/v1/GetValue, etc.)
+     * @brief The REST endpoint being accessed (/v1/GetValue, etc.)
      */
-    std::string service_ = "";
+    std::string endpoint_ = "";
     /**
      * @brief The slot of the device to make the API call on.
      */
@@ -150,9 +164,13 @@ class SocketReader : public ISocketReader {
      */
     std::string language_ = "";
     /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::common::SubscriptionManager& subscriptionManager_;
+    /**
      * @brief The detail level to return the response in.
      */
-    int detailLevel_ = -1;
+    catena::Device_DetailLevel detailLevel_ = Device_DetailLevel_UNSET;
     /**
      * @brief A map of fields queried from the URL.
      */
@@ -166,6 +184,10 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
+    /**
+     * @brief The CatenaServiceImpl object.
+     */
+    CatenaServiceImpl* service_ = nullptr;
 };
 
 }; // Namespace REST
