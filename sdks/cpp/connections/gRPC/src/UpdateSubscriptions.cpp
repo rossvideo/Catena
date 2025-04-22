@@ -204,7 +204,7 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
         std::cout << "Processing subscribed OID: " << oid << std::endl;
         std::unique_ptr<IParam> param;
         {
-            Device::LockGuard lg(dm_);
+            IDevice::LockGuard lg(dm_);
             param = dm_->getParam(oid, rc);
         }
         

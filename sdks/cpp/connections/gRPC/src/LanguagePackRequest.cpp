@@ -67,7 +67,7 @@ void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service,
             context_.AsyncNotifyWhenDone(this);
             try { // Getting and returning the requested language.
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                Device::LockGuard lg(dm_);
+                IDevice::LockGuard lg(dm_);
                 catena::DeviceComponent_ComponentLanguagePack ans;
                 rc = dm_->getLanguagePack(req_.language(), ans);
                 status_ = CallStatus::kFinish;

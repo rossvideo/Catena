@@ -116,7 +116,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
 
             // Waiting for a language to be added to execute code.
-            languageAddedId_ = dm_->languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+            languageAddedId_ = dm_->languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
                 try {
                     // If Connect was cancelled, notify client and end process.
                     if (this->context_.IsCancelled()){
