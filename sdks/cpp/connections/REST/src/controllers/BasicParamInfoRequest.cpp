@@ -234,7 +234,7 @@ void BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, ui
 // Visits a parameter and adds it to the response vector
 void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
     // Only add non-array parameters that aren't the top-most parameter
-    bool isTopParameter = path == request_.oid_prefix_;
+    bool isTopParameter = path == request_.oid_prefix_ || path == "/" + param->getOid();
     bool isArray = param->isArrayType();
     if (isTopParameter || isArray) {
         return;
@@ -246,7 +246,7 @@ void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const st
 // Visits an array and updates the array length information
 void BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
     // Only add array parameters that aren't the top-most parameter
-    bool isTopParameter = path == request_.oid_prefix_;
+    bool isTopParameter = path == request_.oid_prefix_ || path == "/" + param->getOid();
     if (isTopParameter) {
         return;
     }
