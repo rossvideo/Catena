@@ -95,9 +95,9 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
         }
     }
-    // Setting detail level to UNSET if not set.
+    // Setting detail level to NONE if not set.
     if (detailLevel_ == Device_DetailLevel_UNSET) {
-        detailLevel_ = catena::Device_DetailLevel_UNSET;
+        detailLevel_ = catena::Device_DetailLevel_NONE;
     }
 }
 

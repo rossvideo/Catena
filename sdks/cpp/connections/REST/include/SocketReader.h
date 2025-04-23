@@ -170,7 +170,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The detail level to return the response in.
      */
-    catena::Device_DetailLevel detailLevel_ = Device_DetailLevel_UNSET;
+    catena::Device_DetailLevel detailLevel_;
     /**
      * @brief A map of fields queried from the URL.
      */
