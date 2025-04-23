@@ -94,6 +94,8 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1Device.html',
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classcatena_1_1common_1_1Device-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::Device Class Reference</div></div>
 </div><!--header-->
@@ -103,21 +105,14 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1Device.html',
  <a href="classcatena_1_1common_1_1Device.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="Device_8h_source.html">Device.h</a>&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for catena::common::Device:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device__inherit__graph.svg" width="199" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
-<div class="dynheader">
-Collaboration diagram for catena::common::Device:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device__coll__graph.svg" width="199" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  <a href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device_1_1LockGuard.html">LockGuard</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1Device_1_1LockGuard.html" title="LockGuard is a helper class to lock and unlock the device mutex.">LockGuard</a> is a helper class to lock and unlock the device mutex.  <a href="classcatena_1_1common_1_1Device_1_1LockGuard.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
@@ -129,14 +124,6 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>DetailLevel_e</b> = 
 <tr class="memitem:af5359d2fb0ab164b87406666bb1feced" id="r_af5359d2fb0ab164b87406666bb1feced"><td class="memItemLeft" align="right" valign="top"><a id="af5359d2fb0ab164b87406666bb1feced" name="af5359d2fb0ab164b87406666bb1feced"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>ComponentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
 <tr class="separator:af5359d2fb0ab164b87406666bb1feced"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
-<tr class="memitem:a4da29ef35ad7e6d0f8bcf000ce078097 inherit pub_types_classcatena_1_1common_1_1IDevice" id="r_a4da29ef35ad7e6d0f8bcf000ce078097"><td class="memItemLeft" align="right" valign="top">
-using&#160;</td><td class="memItemRight" valign="bottom"><b>DetailLevel_e</b> = catena::Device_DetailLevel</td></tr>
-<tr class="memdesc:a4da29ef35ad7e6d0f8bcf000ce078097 inherit pub_types_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">convenience type aliases to types of objects contained in the device <br /></td></tr>
-<tr class="separator:a4da29ef35ad7e6d0f8bcf000ce078097 inherit pub_types_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39dde8c6f1fcc91a7a72d92b3e3ef3e7 inherit pub_types_classcatena_1_1common_1_1IDevice" id="r_a39dde8c6f1fcc91a7a72d92b3e3ef3e7"><td class="memItemLeft" align="right" valign="top">
-using&#160;</td><td class="memItemRight" valign="bottom"><b>ComponentLanguagePack</b> = catena::DeviceComponent_ComponentLanguagePack</td></tr>
-<tr class="separator:a39dde8c6f1fcc91a7a72d92b3e3ef3e7 inherit pub_types_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -145,145 +132,129 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a1c593cfc0f994c7fa52623d378e89551"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. <br /></td></tr>
 <tr class="separator:a1c593cfc0f994c7fa52623d378e89551"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f84a75a974d56afcfe317ed29503f25" id="r_a8f84a75a974d56afcfe317ed29503f25"><td class="memItemLeft" align="right" valign="top"><a id="a8f84a75a974d56afcfe317ed29503f25" name="a8f84a75a974d56afcfe317ed29503f25"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Device</b> (uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#a40b1e5cfa1d5b61d9d8ae914cde30818">slot</a>, Device_DetailLevel <a class="el" href="classcatena_1_1common_1_1Device.html#af6e255366e3ee77a6fdd573e1669e956">detail_level</a>, std::vector&lt; std::string &gt; access_scopes, std::string default_scope, bool multi_set_enabled, bool <a class="el" href="classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff">subscriptions</a>)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Device</b> (uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce">slot</a>, Device_DetailLevel <a class="el" href="classcatena_1_1common_1_1Device.html#afac4a50555098efffe58dce175cc3f80">detail_level</a>, std::vector&lt; std::string &gt; access_scopes, std::string default_scope, bool multi_set_enabled, bool <a class="el" href="classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1">subscriptions</a>)</td></tr>
 <tr class="memdesc:a8f84a75a974d56afcfe317ed29503f25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. <br /></td></tr>
 <tr class="separator:a8f84a75a974d56afcfe317ed29503f25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8a13b735718ebc42a2d79733f23a3f7" id="r_ab8a13b735718ebc42a2d79733f23a3f7"><td class="memItemLeft" align="right" valign="top"><a id="ab8a13b735718ebc42a2d79733f23a3f7" name="ab8a13b735718ebc42a2d79733f23a3f7"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=default</td></tr>
 <tr class="memdesc:ab8a13b735718ebc42a2d79733f23a3f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. <br /></td></tr>
 <tr class="separator:ab8a13b735718ebc42a2d79733f23a3f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40b1e5cfa1d5b61d9d8ae914cde30818" id="r_a40b1e5cfa1d5b61d9d8ae914cde30818"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a40b1e5cfa1d5b61d9d8ae914cde30818">slot</a> (const uint32_t slot) override</td></tr>
-<tr class="memdesc:a40b1e5cfa1d5b61d9d8ae914cde30818"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the slot number of the device  <br /></td></tr>
-<tr class="separator:a40b1e5cfa1d5b61d9d8ae914cde30818"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7658a6d3922612c9e4f38b7f847d89a" id="r_af7658a6d3922612c9e4f38b7f847d89a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af7658a6d3922612c9e4f38b7f847d89a">slot</a> () const override</td></tr>
-<tr class="memdesc:af7658a6d3922612c9e4f38b7f847d89a"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the slot number of the device  <br /></td></tr>
-<tr class="separator:af7658a6d3922612c9e4f38b7f847d89a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afca445ccc7d023e325c408afc852f9a1" id="r_afca445ccc7d023e325c408afc852f9a1"><td class="memItemLeft" align="right" valign="top">std::mutex &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#afca445ccc7d023e325c408afc852f9a1">mutex</a> () override</td></tr>
-<tr class="memdesc:afca445ccc7d023e325c408afc852f9a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the device's mutex.  <br /></td></tr>
-<tr class="separator:afca445ccc7d023e325c408afc852f9a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af6e255366e3ee77a6fdd573e1669e956" id="r_af6e255366e3ee77a6fdd573e1669e956"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af6e255366e3ee77a6fdd573e1669e956">detail_level</a> (const <a class="el" href="classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511">DetailLevel_e</a> detail_level) override</td></tr>
-<tr class="memdesc:af6e255366e3ee77a6fdd573e1669e956"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the detail level of the device  <br /></td></tr>
-<tr class="separator:af6e255366e3ee77a6fdd573e1669e956"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a482a7209981bcba1a97a190cbb4a98d9" id="r_a482a7209981bcba1a97a190cbb4a98d9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511">DetailLevel_e</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a482a7209981bcba1a97a190cbb4a98d9">detail_level</a> () const override</td></tr>
-<tr class="memdesc:a482a7209981bcba1a97a190cbb4a98d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the detail level of the device  <br /></td></tr>
-<tr class="separator:a482a7209981bcba1a97a190cbb4a98d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab52d0101133233dcdb54d381675a24e9" id="r_ab52d0101133233dcdb54d381675a24e9"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ab52d0101133233dcdb54d381675a24e9">getDefaultScope</a> () const override</td></tr>
-<tr class="memdesc:ab52d0101133233dcdb54d381675a24e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the device's default scope.  <br /></td></tr>
-<tr class="separator:ab52d0101133233dcdb54d381675a24e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc0eb46301cab4a128ff88b7543918ff" id="r_acc0eb46301cab4a128ff88b7543918ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff">subscriptions</a> () const override</td></tr>
-<tr class="memdesc:acc0eb46301cab4a128ff88b7543918ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if subscriptions are enabled for this device.  <br /></td></tr>
-<tr class="separator:acc0eb46301cab4a128ff88b7543918ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20af39d8281641989a7be59ad2e69cff" id="r_a20af39d8281641989a7be59ad2e69cff"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a20af39d8281641989a7be59ad2e69cff">default_max_length</a> () const override</td></tr>
-<tr class="separator:a20af39d8281641989a7be59ad2e69cff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35f3faa9889a712105ae111fd374227b" id="r_a35f3faa9889a712105ae111fd374227b"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a35f3faa9889a712105ae111fd374227b">default_total_length</a> () const override</td></tr>
-<tr class="separator:a35f3faa9889a712105ae111fd374227b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae159a884fae051a65a541193da5a8391" id="r_ae159a884fae051a65a541193da5a8391"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae159a884fae051a65a541193da5a8391">set_default_max_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#a20af39d8281641989a7be59ad2e69cff">default_max_length</a>) override</td></tr>
-<tr class="memdesc:ae159a884fae051a65a541193da5a8391"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_max_length_ for this device's array params. If default_max_length &lt;= 0, then it reverts default_max_length_ to kDefaultMaxArrayLength.  <br /></td></tr>
-<tr class="separator:ae159a884fae051a65a541193da5a8391"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8d0f934f834a1bf8871ea5cecd70e64c" id="r_a8d0f934f834a1bf8871ea5cecd70e64c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8d0f934f834a1bf8871ea5cecd70e64c">set_default_total_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#a35f3faa9889a712105ae111fd374227b">default_total_length</a>) override</td></tr>
-<tr class="memdesc:a8d0f934f834a1bf8871ea5cecd70e64c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_total_length_ for this device's array params. If default_total_length &lt;= 0, then it reverts default_total_length_ to kDefaultMaxArrayLength.  <br /></td></tr>
-<tr class="separator:a8d0f934f834a1bf8871ea5cecd70e64c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5e6638e51d977c9a0d058c0fb1ba0a6" id="r_ac5e6638e51d977c9a0d058c0fb1ba0a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac5e6638e51d977c9a0d058c0fb1ba0a6">toProto</a> (::catena::Device &amp;dst, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=true) const override</td></tr>
-<tr class="memdesc:ac5e6638e51d977c9a0d058c0fb1ba0a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
-<tr class="separator:ac5e6638e51d977c9a0d058c0fb1ba0a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7afe28941fdea189389b0ca5f865676" id="r_ad7afe28941fdea189389b0ca5f865676"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ad7afe28941fdea189389b0ca5f865676">toProto</a> (::catena::LanguagePacks &amp;packs) const override</td></tr>
-<tr class="memdesc:ad7afe28941fdea189389b0ca5f865676"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language packs.  <br /></td></tr>
-<tr class="separator:ad7afe28941fdea189389b0ca5f865676"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb230ca33a5959d587e1bc194a5ea775" id="r_adb230ca33a5959d587e1bc194a5ea775"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adb230ca33a5959d587e1bc194a5ea775">toProto</a> (::catena::LanguageList &amp;list) const override</td></tr>
-<tr class="memdesc:adb230ca33a5959d587e1bc194a5ea775"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language list.  <br /></td></tr>
-<tr class="separator:adb230ca33a5959d587e1bc194a5ea775"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af15d6bed42fc196d4e46c3aa8de39b73" id="r_af15d6bed42fc196d4e46c3aa8de39b73"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af15d6bed42fc196d4e46c3aa8de39b73">addLanguage</a> (catena::AddLanguagePayload &amp;language, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:af15d6bed42fc196d4e46c3aa8de39b73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a language pack to the device. Requires client to have admin:w scope.  <br /></td></tr>
-<tr class="separator:af15d6bed42fc196d4e46c3aa8de39b73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf56f7bf11b8ab6ad93d04cd91ca0bdf" id="r_adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adf56f7bf11b8ab6ad93d04cd91ca0bdf">getLanguagePack</a> (const std::string &amp;languageId, ComponentLanguagePack &amp;pack) const override</td></tr>
-<tr class="memdesc:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.  <br /></td></tr>
-<tr class="separator:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf5ab667c7654abd79976f342f429779" id="r_aaf5ab667c7654abd79976f342f429779"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aaf5ab667c7654abd79976f342f429779">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=false) const override</td></tr>
-<tr class="memdesc:aaf5ab667c7654abd79976f342f429779"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
-<tr class="separator:aaf5ab667c7654abd79976f342f429779"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2c1463e0a84a3c1775a992823ca6268" id="r_ae2c1463e0a84a3c1775a992823ca6268"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae2c1463e0a84a3c1775a992823ca6268">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::vector&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const override</td></tr>
-<tr class="memdesc:ae2c1463e0a84a3c1775a992823ca6268"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
-<tr class="separator:ae2c1463e0a84a3c1775a992823ca6268"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22b190b644039d6d4e3b71ae379bdd35" id="r_a22b190b644039d6d4e3b71ae379bdd35"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a22b190b644039d6d4e3b71ae379bdd35">getDeviceSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::vector&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const</td></tr>
-<tr class="memdesc:a22b190b644039d6d4e3b71ae379bdd35"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object.  <br /></td></tr>
-<tr class="separator:a22b190b644039d6d4e3b71ae379bdd35"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d2603a512258a9650f6f2d44e9d57ea" id="r_a5d2603a512258a9650f6f2d44e9d57ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a5d2603a512258a9650f6f2d44e9d57ea">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *item) override</td></tr>
-<tr class="memdesc:a5d2603a512258a9650f6f2d44e9d57ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for parameters and commands.  <br /></td></tr>
-<tr class="separator:a5d2603a512258a9650f6f2d44e9d57ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed9cdca4901c4e5eee7a046bd238187a" id="r_aed9cdca4901c4e5eee7a046bd238187a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aed9cdca4901c4e5eee7a046bd238187a">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IConstraint.html">IConstraint</a> *item) override</td></tr>
-<tr class="memdesc:aed9cdca4901c4e5eee7a046bd238187a"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for constraints.  <br /></td></tr>
-<tr class="separator:aed9cdca4901c4e5eee7a046bd238187a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8873a29b302809ea433ed7a33fb03309" id="r_a8873a29b302809ea433ed7a33fb03309"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8873a29b302809ea433ed7a33fb03309">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IMenuGroup.html">IMenuGroup</a> *item) override</td></tr>
-<tr class="memdesc:a8873a29b302809ea433ed7a33fb03309"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for menu groups.  <br /></td></tr>
-<tr class="separator:a8873a29b302809ea433ed7a33fb03309"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac95140f43201a58c2960d9c14c973594" id="r_ac95140f43201a58c2960d9c14c973594"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ac95140f43201a58c2960d9c14c973594">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *item) override</td></tr>
-<tr class="memdesc:ac95140f43201a58c2960d9c14c973594"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device Overload for language packs.  <br /></td></tr>
-<tr class="separator:ac95140f43201a58c2960d9c14c973594"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a20bc93f8e38ca7ce122ba26efb8da8ce" id="r_a20bc93f8e38ca7ce122ba26efb8da8ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce">slot</a> (const uint32_t slot)</td></tr>
+<tr class="memdesc:a20bc93f8e38ca7ce122ba26efb8da8ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the slot number of the device  <br /></td></tr>
+<tr class="separator:a20bc93f8e38ca7ce122ba26efb8da8ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adae63c83dfa563977613dbf8440c45be" id="r_adae63c83dfa563977613dbf8440c45be"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adae63c83dfa563977613dbf8440c45be">slot</a> () const</td></tr>
+<tr class="memdesc:adae63c83dfa563977613dbf8440c45be"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the slot number of the device  <br /></td></tr>
+<tr class="separator:adae63c83dfa563977613dbf8440c45be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afac4a50555098efffe58dce175cc3f80" id="r_afac4a50555098efffe58dce175cc3f80"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#afac4a50555098efffe58dce175cc3f80">detail_level</a> (const <a class="el" href="classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511">DetailLevel_e</a> detail_level)</td></tr>
+<tr class="memdesc:afac4a50555098efffe58dce175cc3f80"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the detail level of the device  <br /></td></tr>
+<tr class="separator:afac4a50555098efffe58dce175cc3f80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66425dc05003aa1125b6ba3f72a592ec" id="r_a66425dc05003aa1125b6ba3f72a592ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511">DetailLevel_e</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a66425dc05003aa1125b6ba3f72a592ec">detail_level</a> () const</td></tr>
+<tr class="memdesc:a66425dc05003aa1125b6ba3f72a592ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the detail level of the device  <br /></td></tr>
+<tr class="separator:a66425dc05003aa1125b6ba3f72a592ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9819af598c0adf088c53486b3496fa78" id="r_a9819af598c0adf088c53486b3496fa78"><td class="memItemLeft" align="right" valign="top"><a id="a9819af598c0adf088c53486b3496fa78" name="a9819af598c0adf088c53486b3496fa78"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getDefaultScope</b> () const</td></tr>
+<tr class="separator:a9819af598c0adf088c53486b3496fa78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99d7cbc16f0a9c0aee97439e59acc2d1" id="r_a99d7cbc16f0a9c0aee97439e59acc2d1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a99d7cbc16f0a9c0aee97439e59acc2d1">subscriptions</a> () const</td></tr>
+<tr class="memdesc:a99d7cbc16f0a9c0aee97439e59acc2d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if subscriptions are enabled for this device.  <br /></td></tr>
+<tr class="separator:a99d7cbc16f0a9c0aee97439e59acc2d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa85ab6721433ef36ce655f89ba585e4f" id="r_aa85ab6721433ef36ce655f89ba585e4f"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa85ab6721433ef36ce655f89ba585e4f">default_max_length</a> () const</td></tr>
+<tr class="separator:aa85ab6721433ef36ce655f89ba585e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bd6efe6dffae5bf81bdbdaf03def925" id="r_a1bd6efe6dffae5bf81bdbdaf03def925"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a1bd6efe6dffae5bf81bdbdaf03def925">default_total_length</a> () const</td></tr>
+<tr class="separator:a1bd6efe6dffae5bf81bdbdaf03def925"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a322059e8a223311f6ccdef3230af50e2" id="r_a322059e8a223311f6ccdef3230af50e2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a322059e8a223311f6ccdef3230af50e2">set_default_max_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#aa85ab6721433ef36ce655f89ba585e4f">default_max_length</a>)</td></tr>
+<tr class="memdesc:a322059e8a223311f6ccdef3230af50e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_max_length_ for this device's array params. If default_max_length &lt;= 0, then it reverts default_max_length_ to kDefaultMaxArrayLength.  <br /></td></tr>
+<tr class="separator:a322059e8a223311f6ccdef3230af50e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27002f3af198ed3c6faf7854696b0c9f" id="r_a27002f3af198ed3c6faf7854696b0c9f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a27002f3af198ed3c6faf7854696b0c9f">set_default_total_length</a> (const uint32_t <a class="el" href="classcatena_1_1common_1_1Device.html#a1bd6efe6dffae5bf81bdbdaf03def925">default_total_length</a>)</td></tr>
+<tr class="memdesc:a27002f3af198ed3c6faf7854696b0c9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the default_total_length_ for this device's array params. If default_total_length &lt;= 0, then it reverts default_total_length_ to kDefaultMaxArrayLength.  <br /></td></tr>
+<tr class="separator:a27002f3af198ed3c6faf7854696b0c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8768802e0083f71ed71e7bc20997f0d3" id="r_a8768802e0083f71ed71e7bc20997f0d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8768802e0083f71ed71e7bc20997f0d3">toProto</a> (::catena::Device &amp;dst, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=true) const</td></tr>
+<tr class="memdesc:a8768802e0083f71ed71e7bc20997f0d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the device.  <br /></td></tr>
+<tr class="separator:a8768802e0083f71ed71e7bc20997f0d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7420ac96f72817f5ad4fbf3c5d747a8a" id="r_a7420ac96f72817f5ad4fbf3c5d747a8a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a7420ac96f72817f5ad4fbf3c5d747a8a">toProto</a> (::catena::LanguagePacks &amp;packs) const</td></tr>
+<tr class="memdesc:a7420ac96f72817f5ad4fbf3c5d747a8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language packs.  <br /></td></tr>
+<tr class="separator:a7420ac96f72817f5ad4fbf3c5d747a8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15505cc94e033ba2ef4b42ab7ebfcafa" id="r_a15505cc94e033ba2ef4b42ab7ebfcafa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a15505cc94e033ba2ef4b42ab7ebfcafa">toProto</a> (::catena::LanguageList &amp;list) const</td></tr>
+<tr class="memdesc:a15505cc94e033ba2ef4b42ab7ebfcafa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a protobuf representation of the language list.  <br /></td></tr>
+<tr class="separator:a15505cc94e033ba2ef4b42ab7ebfcafa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0022553b326b6efc7783d91fed3430ed" id="r_a0022553b326b6efc7783d91fed3430ed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0022553b326b6efc7783d91fed3430ed">addLanguage</a> (catena::AddLanguagePayload &amp;language, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
+<tr class="memdesc:a0022553b326b6efc7783d91fed3430ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a language pack to the device. Requires client to have admin:w scope.  <br /></td></tr>
+<tr class="separator:a0022553b326b6efc7783d91fed3430ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04e4079d482e27e91cd0288e6be6d3ad" id="r_a04e4079d482e27e91cd0288e6be6d3ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a04e4079d482e27e91cd0288e6be6d3ad">getLanguagePack</a> (const std::string &amp;languageId, ComponentLanguagePack &amp;pack) const</td></tr>
+<tr class="memdesc:a04e4079d482e27e91cd0288e6be6d3ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.ABORTED.  <br /></td></tr>
+<tr class="separator:a04e4079d482e27e91cd0288e6be6d3ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e73c0ea5e4684a7b62846e3858bd098" id="r_a0e73c0ea5e4684a7b62846e3858bd098"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a0e73c0ea5e4684a7b62846e3858bd098">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=false) const</td></tr>
+<tr class="memdesc:a0e73c0ea5e4684a7b62846e3858bd098"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
+<tr class="separator:a0e73c0ea5e4684a7b62846e3858bd098"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab73fce35ed7c79c9e6d30aa3704cb13" id="r_aab73fce35ed7c79c9e6d30aa3704cb13"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aab73fce35ed7c79c9e6d30aa3704cb13">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::vector&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const</td></tr>
+<tr class="memdesc:aab73fce35ed7c79c9e6d30aa3704cb13"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
+<tr class="separator:aab73fce35ed7c79c9e6d30aa3704cb13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a507ad02cfa93ab05d32df27e6b5b7c66" id="r_a507ad02cfa93ab05d32df27e6b5b7c66"><td class="memTemplParams" colspan="2">template&lt;typename TAG &gt; </td></tr>
+<tr class="memitem:a507ad02cfa93ab05d32df27e6b5b7c66"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a507ad02cfa93ab05d32df27e6b5b7c66">addItem</a> (const std::string &amp;key, typename TAG::type *item)</td></tr>
+<tr class="memdesc:a507ad02cfa93ab05d32df27e6b5b7c66"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device  <br /></td></tr>
+<tr class="separator:a507ad02cfa93ab05d32df27e6b5b7c66"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d9cf30564eb05af4aecafb88457e020" id="r_a9d9cf30564eb05af4aecafb88457e020"><td class="memTemplParams" colspan="2">template&lt;typename TAG &gt; </td></tr>
 <tr class="memitem:a9d9cf30564eb05af4aecafb88457e020"><td class="memTemplItemLeft" align="right" valign="top">TAG::type *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a9d9cf30564eb05af4aecafb88457e020">getItem</a> (const std::string &amp;key) const</td></tr>
 <tr class="memdesc:a9d9cf30564eb05af4aecafb88457e020"><td class="mdescLeft">&#160;</td><td class="mdescRight">gets an item from one of the collections owned by the device  <br /></td></tr>
 <tr class="separator:a9d9cf30564eb05af4aecafb88457e020"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b73e46646b2472e2e5e9f645b47a327" id="r_a8b73e46646b2472e2e5e9f645b47a327"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8b73e46646b2472e2e5e9f645b47a327">getParam</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:a8b73e46646b2472e2e5e9f645b47a327"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
-<tr class="separator:a8b73e46646b2472e2e5e9f645b47a327"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a458d34c0689273ee0b07819a4c075f7f" id="r_a458d34c0689273ee0b07819a4c075f7f"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a458d34c0689273ee0b07819a4c075f7f">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> &amp;path, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:a458d34c0689273ee0b07819a4c075f7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
-<tr class="separator:a458d34c0689273ee0b07819a4c075f7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a811b91c8189eac1ba945956129e3b8d7" id="r_a811b91c8189eac1ba945956129e3b8d7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a811b91c8189eac1ba945956129e3b8d7">getTopLevelParams</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:a811b91c8189eac1ba945956129e3b8d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">get all top level parameters  <br /></td></tr>
-<tr class="separator:a811b91c8189eac1ba945956129e3b8d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8bd07b2ced46650127f0bb2e238c1b9" id="r_ad8bd07b2ced46650127f0bb2e238c1b9"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ad8bd07b2ced46650127f0bb2e238c1b9">getCommand</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:ad8bd07b2ced46650127f0bb2e238c1b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a command by oid  <br /></td></tr>
-<tr class="separator:ad8bd07b2ced46650127f0bb2e238c1b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21129c2d45cec86ec0f0fab0ff40ca7d" id="r_a21129c2d45cec86ec0f0fab0ff40ca7d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a21129c2d45cec86ec0f0fab0ff40ca7d">tryMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:a21129c2d45cec86ec0f0fab0ff40ca7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates each payload in a multiSetValuePayload without commit changes to param value_s.  <br /></td></tr>
-<tr class="separator:a21129c2d45cec86ec0f0fab0ff40ca7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2cfee44fa62bad649407133c88fc7cf" id="r_aa2cfee44fa62bad649407133c88fc7cf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa2cfee44fa62bad649407133c88fc7cf">commitMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) override</td></tr>
-<tr class="memdesc:aa2cfee44fa62bad649407133c88fc7cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the values of a device's parameter's using a MultiSetValuePayload. This function assumes that tryMultiSetValue is called at some point beforehand to validate the call.  <br /></td></tr>
-<tr class="separator:aa2cfee44fa62bad649407133c88fc7cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03b2f75d6eba9d6fc1bcad9bed272c4d" id="r_a03b2f75d6eba9d6fc1bcad9bed272c4d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a03b2f75d6eba9d6fc1bcad9bed272c4d">setValue</a> (const std::string &amp;jptr, catena::Value &amp;src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
-<tr class="memdesc:a03b2f75d6eba9d6fc1bcad9bed272c4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize a protobuf value object into the parameter value pointed to by jptr.  <br /></td></tr>
-<tr class="separator:a03b2f75d6eba9d6fc1bcad9bed272c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd8593ef03bc63539bd551abee1b5537" id="r_abd8593ef03bc63539bd551abee1b5537"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#abd8593ef03bc63539bd551abee1b5537">getValue</a> (const std::string &amp;jptr, catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const override</td></tr>
-<tr class="memdesc:abd8593ef03bc63539bd551abee1b5537"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
-<tr class="separator:abd8593ef03bc63539bd551abee1b5537"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a766e4d7496590f163280af23e1206718" id="r_a766e4d7496590f163280af23e1206718"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a766e4d7496590f163280af23e1206718">shouldSendParam</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param, bool is_subscribed, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:a766e4d7496590f163280af23e1206718"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a parameter should be sent based on detail level and authorization  <br /></td></tr>
-<tr class="separator:a766e4d7496590f163280af23e1206718"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
-<tr class="memitem:ac71fc03628cf95184ea9f4c0bd761a65 inherit pub_methods_classcatena_1_1common_1_1IDevice" id="r_ac71fc03628cf95184ea9f4c0bd761a65"><td class="memItemLeft" align="right" valign="top">
-&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> ()=default</td></tr>
-<tr class="memdesc:ac71fc03628cf95184ea9f4c0bd761a65 inherit pub_methods_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. <br /></td></tr>
-<tr class="separator:ac71fc03628cf95184ea9f4c0bd761a65 inherit pub_methods_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abebb94b11714c5df3cd66dd0783d4dc5 inherit pub_methods_classcatena_1_1common_1_1IDevice" id="r_abebb94b11714c5df3cd66dd0783d4dc5"><td class="memItemLeft" align="right" valign="top">
-virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=default</td></tr>
-<tr class="memdesc:abebb94b11714c5df3cd66dd0783d4dc5 inherit pub_methods_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. <br /></td></tr>
-<tr class="separator:abebb94b11714c5df3cd66dd0783d4dc5 inherit pub_methods_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af92ac546623c8f1d682daa0ec97d9baf" id="r_af92ac546623c8f1d682daa0ec97d9baf"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af92ac546623c8f1d682daa0ec97d9baf">getParam</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
+<tr class="memdesc:af92ac546623c8f1d682daa0ec97d9baf"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
+<tr class="separator:af92ac546623c8f1d682daa0ec97d9baf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3aec551fa6c4fd84282f8548bac70200" id="r_a3aec551fa6c4fd84282f8548bac70200"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a3aec551fa6c4fd84282f8548bac70200">getParam</a> (<a class="el" href="classcatena_1_1common_1_1Path.html">catena::common::Path</a> &amp;path, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
+<tr class="memdesc:a3aec551fa6c4fd84282f8548bac70200"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
+<tr class="separator:a3aec551fa6c4fd84282f8548bac70200"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf02994bda482d6c5922cdb0e2c01f98" id="r_adf02994bda482d6c5922cdb0e2c01f98"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adf02994bda482d6c5922cdb0e2c01f98">getTopLevelParams</a> (<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
+<tr class="memdesc:adf02994bda482d6c5922cdb0e2c01f98"><td class="mdescLeft">&#160;</td><td class="mdescRight">get all top level parameters  <br /></td></tr>
+<tr class="separator:adf02994bda482d6c5922cdb0e2c01f98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa466b51717cbb177efca567264be36c2" id="r_aa466b51717cbb177efca567264be36c2"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aa466b51717cbb177efca567264be36c2">getCommand</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
+<tr class="memdesc:aa466b51717cbb177efca567264be36c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a command by oid  <br /></td></tr>
+<tr class="separator:aa466b51717cbb177efca567264be36c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a298f41f304847aab8083f00e38c8e271" id="r_a298f41f304847aab8083f00e38c8e271"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a298f41f304847aab8083f00e38c8e271">tryMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;ans, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
+<tr class="memdesc:a298f41f304847aab8083f00e38c8e271"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validates each payload in a multiSetValuePayload without commit changes to param value_s.  <br /></td></tr>
+<tr class="separator:a298f41f304847aab8083f00e38c8e271"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbcbbfb460564ba4bd2e55ed10414723" id="r_adbcbbfb460564ba4bd2e55ed10414723"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adbcbbfb460564ba4bd2e55ed10414723">commitMultiSetValue</a> (catena::MultiSetValuePayload src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz)</td></tr>
+<tr class="memdesc:adbcbbfb460564ba4bd2e55ed10414723"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the values of a device's parameter's using a MultiSetValuePayload. This function assumes that tryMultiSetValue is called at some point beforehand to validate the call.  <br /></td></tr>
+<tr class="separator:adbcbbfb460564ba4bd2e55ed10414723"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab74fd94275de7ec9676e9c7b28fbbed9" id="r_ab74fd94275de7ec9676e9c7b28fbbed9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ab74fd94275de7ec9676e9c7b28fbbed9">setValue</a> (const std::string &amp;jptr, catena::Value &amp;src, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>)</td></tr>
+<tr class="memdesc:ab74fd94275de7ec9676e9c7b28fbbed9"><td class="mdescLeft">&#160;</td><td class="mdescRight">deserialize a protobuf value object into the parameter value pointed to by jptr.  <br /></td></tr>
+<tr class="separator:ab74fd94275de7ec9676e9c7b28fbbed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32db3f74e532aa75c24f9bc68a7eccfe" id="r_a32db3f74e532aa75c24f9bc68a7eccfe"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a32db3f74e532aa75c24f9bc68a7eccfe">getValue</a> (const std::string &amp;jptr, catena::Value &amp;value, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const</td></tr>
+<tr class="memdesc:a32db3f74e532aa75c24f9bc68a7eccfe"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize the parameter value to protobuf  <br /></td></tr>
+<tr class="separator:a32db3f74e532aa75c24f9bc68a7eccfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bccd839e0caec654535c2dc0bfefabb" id="r_a8bccd839e0caec654535c2dc0bfefabb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a8bccd839e0caec654535c2dc0bfefabb">shouldSendParam</a> (const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &amp;param, bool is_subscribed, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const</td></tr>
+<tr class="memdesc:a8bccd839e0caec654535c2dc0bfefabb"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if a parameter should be sent based on detail level and authorization  <br /></td></tr>
+<tr class="separator:a8bccd839e0caec654535c2dc0bfefabb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pub_attribs_classcatena_1_1common_1_1IDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classcatena_1_1common_1_1IDevice')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
-<tr class="memitem:a5883fe4192ce2646f2322598e0b670f9 inherit pub_attribs_classcatena_1_1common_1_1IDevice" id="r_a5883fe4192ce2646f2322598e0b670f9"><td class="memItemLeft" align="right" valign="top">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ad0504576b2baa494010be749c94e03f4" id="r_ad0504576b2baa494010be749c94e03f4"><td class="memItemLeft" align="right" valign="top"><a id="ad0504576b2baa494010be749c94e03f4" name="ad0504576b2baa494010be749c94e03f4"></a>
 vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *, const int32_t)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByClient</b></td></tr>
-<tr class="memdesc:a5883fe4192ce2646f2322598e0b670f9 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the client. Intended recipient is the business logic. <br /></td></tr>
-<tr class="separator:a5883fe4192ce2646f2322598e0b670f9 inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cde56145c5a266af663e44ef3837f6f inherit pub_attribs_classcatena_1_1common_1_1IDevice" id="r_a8cde56145c5a266af663e44ef3837f6f"><td class="memItemLeft" align="right" valign="top">
+<tr class="memdesc:ad0504576b2baa494010be749c94e03f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the client. Intended recipient is the business logic. <br /></td></tr>
+<tr class="separator:ad0504576b2baa494010be749c94e03f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab58ea380d9e882422358d5bc998d3c91" id="r_ab58ea380d9e882422358d5bc998d3c91"><td class="memItemLeft" align="right" valign="top"><a id="ab58ea380d9e882422358d5bc998d3c91" name="ab58ea380d9e882422358d5bc998d3c91"></a>
 vdk::signal&lt; void(const ComponentLanguagePack &amp;)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>languageAddedPushUpdate</b></td></tr>
-<tr class="memdesc:a8cde56145c5a266af663e44ef3837f6f inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a language pack is added to the device. Intended recipient is the business logic. <br /></td></tr>
-<tr class="separator:a8cde56145c5a266af663e44ef3837f6f inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a465b1d568c090e5486e2dfce6b00b35f inherit pub_attribs_classcatena_1_1common_1_1IDevice" id="r_a465b1d568c090e5486e2dfce6b00b35f"><td class="memItemLeft" align="right" valign="top">
+<tr class="memdesc:ab58ea380d9e882422358d5bc998d3c91"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a language pack is added to the device. Intended recipient is the business logic. <br /></td></tr>
+<tr class="separator:ab58ea380d9e882422358d5bc998d3c91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa14bba71eb227107bbae177a21c9d5a8" id="r_aa14bba71eb227107bbae177a21c9d5a8"><td class="memItemLeft" align="right" valign="top"><a id="aa14bba71eb227107bbae177a21c9d5a8" name="aa14bba71eb227107bbae177a21c9d5a8"></a>
 vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *, const int32_t)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByServer</b></td></tr>
-<tr class="memdesc:a465b1d568c090e5486e2dfce6b00b35f inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. <br /></td></tr>
-<tr class="separator:a465b1d568c090e5486e2dfce6b00b35f inherit pub_attribs_classcatena_1_1common_1_1IDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memdesc:aa14bba71eb227107bbae177a21c9d5a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. <br /></td></tr>
+<tr class="separator:aa14bba71eb227107bbae177a21c9d5a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:ad5a5349b7bf4fc3606898ce0595cbf61" id="r_ad5a5349b7bf4fc3606898ce0595cbf61"><td class="memItemLeft" align="right" valign="top"><a id="ad5a5349b7bf4fc3606898ce0595cbf61" name="ad5a5349b7bf4fc3606898ce0595cbf61"></a>
+class&#160;</td><td class="memItemRight" valign="bottom"><b>LockGuard</b></td></tr>
+<tr class="separator:ad5a5349b7bf4fc3606898ce0595cbf61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements the <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> interface defined in the protobuf. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="aed9cdca4901c4e5eee7a046bd238187a" name="aed9cdca4901c4e5eee7a046bd238187a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed9cdca4901c4e5eee7a046bd238187a">&#9670;&#160;</a></span>addItem() <span class="overload">[1/4]</span></h2>
+<a id="a507ad02cfa93ab05d32df27e6b5b7c66" name="a507ad02cfa93ab05d32df27e6b5b7c66"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a507ad02cfa93ab05d32df27e6b5b7c66">&#9670;&#160;</a></span>addItem()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;typename TAG &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -297,7 +268,7 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConstraint.html">IConstraint</a> *&#160;</td>
+          <td class="paramtype">typename TAG::type *&#160;</td>
           <td class="paramname"><em>item</em>&#160;</td>
         </tr>
         <tr>
@@ -308,12 +279,18 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>add an item to one of the collections owned by the device. Overload for constraints. </p>
+<p>add an item to one of the collections owned by the device </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">TAG</td><td>identifies the collection to which the item will be added </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">key</td><td>item's unique key </td></tr>
@@ -321,167 +298,19 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
   </table>
   </dd>
 </dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a920052e325112f24cea8686d8d30b45c">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="ac95140f43201a58c2960d9c14c973594" name="ac95140f43201a58c2960d9c14c973594"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac95140f43201a58c2960d9c14c973594">&#9670;&#160;</a></span>addItem() <span class="overload">[2/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::addItem </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>key</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *&#160;</td>
-          <td class="paramname"><em>item</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>add an item to one of the collections owned by the device Overload for language packs. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
-    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ae401f1411a74a5a3eea3a5bc7b895467">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="a8873a29b302809ea433ed7a33fb03309" name="a8873a29b302809ea433ed7a33fb03309"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8873a29b302809ea433ed7a33fb03309">&#9670;&#160;</a></span>addItem() <span class="overload">[3/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::addItem </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>key</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html">IMenuGroup</a> *&#160;</td>
-          <td class="paramname"><em>item</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>add an item to one of the collections owned by the device. Overload for menu groups. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
-    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a7b81cc24bb22768348f4324389450a99">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="a5d2603a512258a9650f6f2d44e9d57ea" name="a5d2603a512258a9650f6f2d44e9d57ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5d2603a512258a9650f6f2d44e9d57ea">&#9670;&#160;</a></span>addItem() <span class="overload">[4/4]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::addItem </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>key</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *&#160;</td>
-          <td class="paramname"><em>item</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>add an item to one of the collections owned by the device. Overload for parameters and commands. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
-    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a25d3dd8acc104af89a99e88f33f6c01d">catena::common::IDevice</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParam.html#ad8e8b3d2e2ea7ad8a6bc60af426b5e3e">catena::common::IParam::getDescriptor()</a>, and <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a6ca1484257859b619af0472163bd11d2">catena::common::ParamDescriptor::isCommand()</a>.</p>
 <div class="dynheader">
-Here is the call graph for this function:</div>
+Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a5d2603a512258a9650f6f2d44e9d57ea_cgraph.svg" width="490" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a507ad02cfa93ab05d32df27e6b5b7c66_icgraph.svg" width="498" height="307"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="af15d6bed42fc196d4e46c3aa8de39b73" name="af15d6bed42fc196d4e46c3aa8de39b73"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af15d6bed42fc196d4e46c3aa8de39b73">&#9670;&#160;</a></span>addLanguage()</h2>
+<a id="a0022553b326b6efc7783d91fed3430ed" name="a0022553b326b6efc7783d91fed3430ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0022553b326b6efc7783d91fed3430ed">&#9670;&#160;</a></span>addLanguage()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::addLanguage </td>
@@ -501,11 +330,6 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Adds a language pack to the device. Requires client to have admin:w scope. </p>
@@ -518,18 +342,13 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>An <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is for the AddLanguage RPCs / API calls to be serviced by this method. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ac4b696a3becfd9f2d2f267e52258733a">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="aa2cfee44fa62bad649407133c88fc7cf" name="aa2cfee44fa62bad649407133c88fc7cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa2cfee44fa62bad649407133c88fc7cf">&#9670;&#160;</a></span>commitMultiSetValue()</h2>
+<a id="adbcbbfb460564ba4bd2e55ed10414723" name="adbcbbfb460564ba4bd2e55ed10414723"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adbcbbfb460564ba4bd2e55ed10414723">&#9670;&#160;</a></span>commitMultiSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::commitMultiSetValue </td>
@@ -549,11 +368,6 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Sets the values of a device's parameter's using a MultiSetValuePayload. This function assumes that tryMultiSetValue is called at some point beforehand to validate the call. </p>
@@ -566,12 +380,10 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a704a4e34685ed75fada9dabb188a29aa">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="a20af39d8281641989a7be59ad2e69cff" name="a20af39d8281641989a7be59ad2e69cff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a20af39d8281641989a7be59ad2e69cff">&#9670;&#160;</a></span>default_max_length()</h2>
+<a id="aa85ab6721433ef36ce655f89ba585e4f" name="aa85ab6721433ef36ce655f89ba585e4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa85ab6721433ef36ce655f89ba585e4f">&#9670;&#160;</a></span>default_max_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -588,23 +400,21 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>The default max length for this device's array params. </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a9517a43b5794942e40c6f832443d8533">catena::common::IDevice</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a20af39d8281641989a7be59ad2e69cff_icgraph.svg" width="430" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_aa85ab6721433ef36ce655f89ba585e4f_icgraph.svg" width="430" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a35f3faa9889a712105ae111fd374227b" name="a35f3faa9889a712105ae111fd374227b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a35f3faa9889a712105ae111fd374227b">&#9670;&#160;</a></span>default_total_length()</h2>
+<a id="a1bd6efe6dffae5bf81bdbdaf03def925" name="a1bd6efe6dffae5bf81bdbdaf03def925"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1bd6efe6dffae5bf81bdbdaf03def925">&#9670;&#160;</a></span>default_total_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -621,23 +431,21 @@ Here is the caller graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>The default total length for this device's string array params. </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#af0932dc3bb5bb73dda7db8679b00a831">catena::common::IDevice</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a35f3faa9889a712105ae111fd374227b_icgraph.svg" width="431" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a1bd6efe6dffae5bf81bdbdaf03def925_icgraph.svg" width="431" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a482a7209981bcba1a97a190cbb4a98d9" name="a482a7209981bcba1a97a190cbb4a98d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a482a7209981bcba1a97a190cbb4a98d9">&#9670;&#160;</a></span>detail_level() <span class="overload">[1/2]</span></h2>
+<a id="a66425dc05003aa1125b6ba3f72a592ec" name="a66425dc05003aa1125b6ba3f72a592ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66425dc05003aa1125b6ba3f72a592ec">&#9670;&#160;</a></span>detail_level() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -654,20 +462,18 @@ Here is the caller graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>get the detail level of the device </p>
-<dl class="section return"><dt>Returns</dt><dd>DetailLevel_ </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a01f4337f08896e3add24fdf57ec6afb3">catena::common::IDevice</a>.</p>
+<dl class="section return"><dt>Returns</dt><dd>DetailLevel_e </dd></dl>
 
 </div>
 </div>
-<a id="af6e255366e3ee77a6fdd573e1669e956" name="af6e255366e3ee77a6fdd573e1669e956"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af6e255366e3ee77a6fdd573e1669e956">&#9670;&#160;</a></span>detail_level() <span class="overload">[2/2]</span></h2>
+<a id="afac4a50555098efffe58dce175cc3f80" name="afac4a50555098efffe58dce175cc3f80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afac4a50555098efffe58dce175cc3f80">&#9670;&#160;</a></span>detail_level() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -685,7 +491,7 @@ Here is the caller graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -698,30 +504,25 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#afb60030c822f844ea26021c88e561e87">catena::common::IDevice</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#af6e255366e3ee77a6fdd573e1669e956">detail_level()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#afac4a50555098efffe58dce175cc3f80">detail_level()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_af6e255366e3ee77a6fdd573e1669e956_cgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_afac4a50555098efffe58dce175cc3f80_cgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_af6e255366e3ee77a6fdd573e1669e956_icgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_afac4a50555098efffe58dce175cc3f80_icgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="ad8bd07b2ced46650127f0bb2e238c1b9" name="ad8bd07b2ced46650127f0bb2e238c1b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad8bd07b2ced46650127f0bb2e238c1b9">&#9670;&#160;</a></span>getCommand()</h2>
+<a id="aa466b51717cbb177efca567264be36c2" name="aa466b51717cbb177efca567264be36c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa466b51717cbb177efca567264be36c2">&#9670;&#160;</a></span>getCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; catena::common::Device::getCommand </td>
@@ -747,11 +548,6 @@ Here is the caller graph for this function:</div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>get a command by oid </p>
@@ -766,21 +562,16 @@ Here is the caller graph for this function:</div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the command, or nullptr if it does not exist </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>add authorization checking </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#accf44b99feeb6eb71ea40c2e151890a5">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="aaf5ab667c7654abd79976f342f429779" name="aaf5ab667c7654abd79976f342f429779"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf5ab667c7654abd79976f342f429779">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[1/2]</span></h2>
+<a id="a0e73c0ea5e4684a7b62846e3858bd098" name="a0e73c0ea5e4684a7b62846e3858bd098"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e73c0ea5e4684a7b62846e3858bd098">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt; catena::common::Device::getComponentSerializer </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a> catena::common::Device::getComponentSerializer </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>, </td>
@@ -797,65 +588,6 @@ Here is the caller graph for this function:</div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get a serializer for the device </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">authz</td><td>the authorizer object containing the scopes of the client </td></tr>
-    <tr><td class="paramname">shallow</td><td>if true, the device will be returned in parts, otherwise the whole device will be returned in one message </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a9dda7d427d095d9f4d7fc46a57664d58">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="ae2c1463e0a84a3c1775a992823ca6268" name="ae2c1463e0a84a3c1775a992823ca6268"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae2c1463e0a84a3c1775a992823ca6268">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt; catena::common::Device::getComponentSerializer </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
-          <td class="paramname"><em>authz</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>subscribed_oids</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>shallow</em> = <code>false</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>get a serializer for the device </p>
@@ -863,53 +595,21 @@ Here is the caller graph for this function:</div>
   <table class="params">
     <tr><td class="paramname">clientScopes</td><td>the scopes of the client </td></tr>
     <tr><td class="paramname">shallow</td><td>if true, the device will be returned in parts, otherwise the whole device will be returned in one message </td></tr>
-    <tr><td class="paramname">subscribed_oids</td><td>the oids of the subscribed parameters </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a82e51780a6d970d757179ddd3bc637ff">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="ab52d0101133233dcdb54d381675a24e9" name="ab52d0101133233dcdb54d381675a24e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab52d0101133233dcdb54d381675a24e9">&#9670;&#160;</a></span>getDefaultScope()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::string &amp; catena::common::Device::getDefaultScope </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns the device's default scope. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a35c2f0ae42226e16579d8b54214d368b">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="a22b190b644039d6d4e3b71ae379bdd35" name="a22b190b644039d6d4e3b71ae379bdd35"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22b190b644039d6d4e3b71ae379bdd35">&#9670;&#160;</a></span>getDeviceSerializer()</h2>
+<a id="aab73fce35ed7c79c9e6d30aa3704cb13" name="aab73fce35ed7c79c9e6d30aa3704cb13"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab73fce35ed7c79c9e6d30aa3704cb13">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a> catena::common::Device::getDeviceSerializer </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a> catena::common::Device::getComponentSerializer </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
           <td class="paramname"><em>authz</em>, </td>
@@ -934,16 +634,16 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. </p>
+<p>get a serializer for the device </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">clientScopes</td><td>the scopes of the client </td></tr>
     <tr><td class="paramname">subscribed_oids</td><td>the oids of the subscribed parameters </td></tr>
     <tr><td class="paramname">shallow</td><td>if true, the device will be returned in parts, otherwise the whole device will be returned in one message </td></tr>
-    <tr><td class="paramname">subscribed_oids</td><td>the oids of the subscribed parameters </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object </dd></dl>
 
 </div>
 </div>
@@ -980,14 +680,11 @@ template&lt;typename TAG &gt; </div>
 
 </div>
 </div>
-<a id="adf56f7bf11b8ab6ad93d04cd91ca0bdf" name="adf56f7bf11b8ab6ad93d04cd91ca0bdf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf56f7bf11b8ab6ad93d04cd91ca0bdf">&#9670;&#160;</a></span>getLanguagePack()</h2>
+<a id="a04e4079d482e27e91cd0288e6be6d3ad" name="a04e4079d482e27e91cd0288e6be6d3ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a04e4079d482e27e91cd0288e6be6d3ad">&#9670;&#160;</a></span>getLanguagePack()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::getLanguagePack </td>
@@ -1007,14 +704,9 @@ template&lt;typename TAG &gt; </div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
-<p>Finds and returns a language pack based on languageId. </p>
+<p>Finds and returns a language pack based on languageId.ABORTED. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">languageId</td><td>The language id of the language pack e.g. "en" </td></tr>
@@ -1024,18 +716,13 @@ template&lt;typename TAG &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> containing the status of the operation. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ad6c4856988084e9f0b71b9fca4cb1c63">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="a458d34c0689273ee0b07819a4c075f7f" name="a458d34c0689273ee0b07819a4c075f7f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a458d34c0689273ee0b07819a4c075f7f">&#9670;&#160;</a></span>getParam() <span class="overload">[1/2]</span></h2>
+<a id="a3aec551fa6c4fd84282f8548bac70200" name="a3aec551fa6c4fd84282f8548bac70200"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3aec551fa6c4fd84282f8548bac70200">&#9670;&#160;</a></span>getParam() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; catena::common::Device::getParam </td>
@@ -1061,11 +748,6 @@ template&lt;typename TAG &gt; </div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>get a parameter by oid with authorization </p>
@@ -1080,18 +762,13 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the parameter, or nullptr if it does not exist</dd></dl>
 <p>gets a parameter if it exists and the client is authorized to read it. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a758a5060fde67304ed1a371318d38432">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="a8b73e46646b2472e2e5e9f645b47a327" name="a8b73e46646b2472e2e5e9f645b47a327"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b73e46646b2472e2e5e9f645b47a327">&#9670;&#160;</a></span>getParam() <span class="overload">[2/2]</span></h2>
+<a id="af92ac546623c8f1d682daa0ec97d9baf" name="af92ac546623c8f1d682daa0ec97d9baf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af92ac546623c8f1d682daa0ec97d9baf">&#9670;&#160;</a></span>getParam() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; catena::common::Device::getParam </td>
@@ -1117,11 +794,6 @@ template&lt;typename TAG &gt; </div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>get a parameter by oid with authorization </p>
@@ -1136,18 +808,13 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the parameter, or nullptr if it does not exist</dd></dl>
 <p>gets a parameter if it exists and the client is authorized to read it. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ab32c92e2d64e1797dd4f20289d822158">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="a811b91c8189eac1ba945956129e3b8d7" name="a811b91c8189eac1ba945956129e3b8d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a811b91c8189eac1ba945956129e3b8d7">&#9670;&#160;</a></span>getTopLevelParams()</h2>
+<a id="adf02994bda482d6c5922cdb0e2c01f98" name="adf02994bda482d6c5922cdb0e2c01f98"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf02994bda482d6c5922cdb0e2c01f98">&#9670;&#160;</a></span>getTopLevelParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt; &gt; catena::common::Device::getTopLevelParams </td>
@@ -1167,11 +834,6 @@ template&lt;typename TAG &gt; </div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>get all top level parameters </p>
@@ -1184,18 +846,13 @@ template&lt;typename TAG &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a vector of unique pointers to the parameters </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a01f5486b4a592d4592585ed218e4f11d">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="abd8593ef03bc63539bd551abee1b5537" name="abd8593ef03bc63539bd551abee1b5537"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abd8593ef03bc63539bd551abee1b5537">&#9670;&#160;</a></span>getValue()</h2>
+<a id="a32db3f74e532aa75c24f9bc68a7eccfe" name="a32db3f74e532aa75c24f9bc68a7eccfe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32db3f74e532aa75c24f9bc68a7eccfe">&#9670;&#160;</a></span>getValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::getValue </td>
@@ -1221,11 +878,6 @@ template&lt;typename TAG &gt; </div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>serialize the parameter value to protobuf </p>
@@ -1239,41 +891,10 @@ template&lt;typename TAG &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#afc52e8ece30cd01b428c6a14c855b5d3">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="afca445ccc7d023e325c408afc852f9a1" name="afca445ccc7d023e325c408afc852f9a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afca445ccc7d023e325c408afc852f9a1">&#9670;&#160;</a></span>mutex()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::mutex &amp; catena::common::Device::mutex </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns the device's mutex. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#adaa519c4733f2b22d84d313e0965de28">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="ae159a884fae051a65a541193da5a8391" name="ae159a884fae051a65a541193da5a8391"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae159a884fae051a65a541193da5a8391">&#9670;&#160;</a></span>set_default_max_length()</h2>
+<a id="a322059e8a223311f6ccdef3230af50e2" name="a322059e8a223311f6ccdef3230af50e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a322059e8a223311f6ccdef3230af50e2">&#9670;&#160;</a></span>set_default_max_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1291,7 +912,7 @@ template&lt;typename TAG &gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -1304,19 +925,17 @@ template&lt;typename TAG &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a08a3075dc712800ffe3044b5dc80240b">catena::common::IDevice</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#a20af39d8281641989a7be59ad2e69cff">default_max_length()</a>, and <a class="el" href="namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8">catena::common::kDefaultMaxArrayLength</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#aa85ab6721433ef36ce655f89ba585e4f">default_max_length()</a>, and <a class="el" href="namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8">catena::common::kDefaultMaxArrayLength</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_ae159a884fae051a65a541193da5a8391_cgraph.svg" width="430" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a322059e8a223311f6ccdef3230af50e2_cgraph.svg" width="430" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a8d0f934f834a1bf8871ea5cecd70e64c" name="a8d0f934f834a1bf8871ea5cecd70e64c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8d0f934f834a1bf8871ea5cecd70e64c">&#9670;&#160;</a></span>set_default_total_length()</h2>
+<a id="a27002f3af198ed3c6faf7854696b0c9f" name="a27002f3af198ed3c6faf7854696b0c9f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27002f3af198ed3c6faf7854696b0c9f">&#9670;&#160;</a></span>set_default_total_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1334,7 +953,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -1347,25 +966,20 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a45c1d87171f95fa1bdb8fbf0d2e81387">catena::common::IDevice</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#a35f3faa9889a712105ae111fd374227b">default_total_length()</a>, and <a class="el" href="namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8">catena::common::kDefaultMaxArrayLength</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#a1bd6efe6dffae5bf81bdbdaf03def925">default_total_length()</a>, and <a class="el" href="namespacecatena_1_1common.html#a04d8e05178c122255bb9676c064c15a8">catena::common::kDefaultMaxArrayLength</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a8d0f934f834a1bf8871ea5cecd70e64c_cgraph.svg" width="431" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a27002f3af198ed3c6faf7854696b0c9f_cgraph.svg" width="431" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="a03b2f75d6eba9d6fc1bcad9bed272c4d" name="a03b2f75d6eba9d6fc1bcad9bed272c4d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a03b2f75d6eba9d6fc1bcad9bed272c4d">&#9670;&#160;</a></span>setValue()</h2>
+<a id="ab74fd94275de7ec9676e9c7b28fbbed9" name="ab74fd94275de7ec9676e9c7b28fbbed9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab74fd94275de7ec9676e9c7b28fbbed9">&#9670;&#160;</a></span>setValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> catena::common::Device::setValue </td>
@@ -1391,11 +1005,6 @@ Here is the call graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>deserialize a protobuf value object into the parameter value pointed to by jptr. </p>
@@ -1408,20 +1017,15 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error.</dd></dl>
-<p>This method essentially redirects the input values to <a class="el" href="classcatena_1_1common_1_1Device.html#a21129c2d45cec86ec0f0fab0ff40ca7d" title="Validates each payload in a multiSetValuePayload without commit changes to param value_s.">tryMultiSetValue()</a> and <a class="el" href="classcatena_1_1common_1_1Device.html#aa2cfee44fa62bad649407133c88fc7cf" title="Sets the values of a device&#39;s parameter&#39;s using a MultiSetValuePayload. This function assumes that tr...">commitMultiSetValue()</a>. It remains to support the old way of setting values. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ae77aa1916647939e782e1e7a9d6cd9c1">catena::common::IDevice</a>.</p>
+<p>This method essentially redirects the input values to <a class="el" href="classcatena_1_1common_1_1Device.html#a298f41f304847aab8083f00e38c8e271" title="Validates each payload in a multiSetValuePayload without commit changes to param value_s.">tryMultiSetValue()</a> and <a class="el" href="classcatena_1_1common_1_1Device.html#adbcbbfb460564ba4bd2e55ed10414723" title="Sets the values of a device&#39;s parameter&#39;s using a MultiSetValuePayload. This function assumes that tr...">commitMultiSetValue()</a>. It remains to support the old way of setting values. </p>
 
 </div>
 </div>
-<a id="a766e4d7496590f163280af23e1206718" name="a766e4d7496590f163280af23e1206718"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a766e4d7496590f163280af23e1206718">&#9670;&#160;</a></span>shouldSendParam()</h2>
+<a id="a8bccd839e0caec654535c2dc0bfefabb" name="a8bccd839e0caec654535c2dc0bfefabb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8bccd839e0caec654535c2dc0bfefabb">&#9670;&#160;</a></span>shouldSendParam()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">bool catena::common::Device::shouldSendParam </td>
@@ -1447,11 +1051,6 @@ Here is the call graph for this function:</div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>check if a parameter should be sent based on detail level and authorization </p>
@@ -1465,12 +1064,10 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the parameter should be sent, false otherwise </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#af36964314a102e8d8a16931979f4c6d9">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="af7658a6d3922612c9e4f38b7f847d89a" name="af7658a6d3922612c9e4f38b7f847d89a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af7658a6d3922612c9e4f38b7f847d89a">&#9670;&#160;</a></span>slot() <span class="overload">[1/2]</span></h2>
+<a id="adae63c83dfa563977613dbf8440c45be" name="adae63c83dfa563977613dbf8440c45be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adae63c83dfa563977613dbf8440c45be">&#9670;&#160;</a></span>slot() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1487,7 +1084,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -1495,12 +1092,10 @@ Here is the call graph for this function:</div>
 <p>get the slot number of the device </p>
 <dl class="section return"><dt>Returns</dt><dd>slot number </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a948505161c842187c0f2757cfaaedbc8">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="a40b1e5cfa1d5b61d9d8ae914cde30818" name="a40b1e5cfa1d5b61d9d8ae914cde30818"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a40b1e5cfa1d5b61d9d8ae914cde30818">&#9670;&#160;</a></span>slot() <span class="overload">[2/2]</span></h2>
+<a id="a20bc93f8e38ca7ce122ba26efb8da8ce" name="a20bc93f8e38ca7ce122ba26efb8da8ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a20bc93f8e38ca7ce122ba26efb8da8ce">&#9670;&#160;</a></span>slot() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1518,7 +1113,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -1531,24 +1126,22 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a8a423c8e235ff92bb86d23a4584956ff">catena::common::IDevice</a>.</p>
-
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#a40b1e5cfa1d5b61d9d8ae914cde30818">slot()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Device.html#a20bc93f8e38ca7ce122ba26efb8da8ce">slot()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a40b1e5cfa1d5b61d9d8ae914cde30818_cgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a20bc93f8e38ca7ce122ba26efb8da8ce_cgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a40b1e5cfa1d5b61d9d8ae914cde30818_icgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Device_a20bc93f8e38ca7ce122ba26efb8da8ce_icgraph.svg" width="195" height="75"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
-<a id="acc0eb46301cab4a128ff88b7543918ff" name="acc0eb46301cab4a128ff88b7543918ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acc0eb46301cab4a128ff88b7543918ff">&#9670;&#160;</a></span>subscriptions()</h2>
+<a id="a99d7cbc16f0a9c0aee97439e59acc2d1" name="a99d7cbc16f0a9c0aee97439e59acc2d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99d7cbc16f0a9c0aee97439e59acc2d1">&#9670;&#160;</a></span>subscriptions()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1565,7 +1158,7 @@ Here is the caller graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -1573,18 +1166,13 @@ Here is the caller graph for this function:</div>
 <p>Check if subscriptions are enabled for this device. </p>
 <dl class="section return"><dt>Returns</dt><dd>true if subscriptions are enabled, false otherwise </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ac454e174a9eec56c688eddff4a9029d8">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="ac5e6638e51d977c9a0d058c0fb1ba0a6" name="ac5e6638e51d977c9a0d058c0fb1ba0a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5e6638e51d977c9a0d058c0fb1ba0a6">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
+<a id="a8768802e0083f71ed71e7bc20997f0d3" name="a8768802e0083f71ed71e7bc20997f0d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8768802e0083f71ed71e7bc20997f0d3">&#9670;&#160;</a></span>toProto() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void catena::common::Device::toProto </td>
@@ -1610,11 +1198,6 @@ Here is the caller graph for this function:</div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create a protobuf representation of the device. </p>
@@ -1625,20 +1208,15 @@ Here is the caller graph for this function:</div>
   </table>
   </dd>
 </dl>
-<p>N.B. This method is not thread-safe. It is the caller's responsibility to ensure that the device is not modified while this method is running. This class provides a LockGuard helper class to make this easier. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a1415587e6e966386507c825b3014bc6a">catena::common::IDevice</a>.</p>
+<p>N.B. This method is not thread-safe. It is the caller's responsibility to ensure that the device is not modified while this method is running. This class provides a <a class="el" href="classcatena_1_1common_1_1Device_1_1LockGuard.html" title="LockGuard is a helper class to lock and unlock the device mutex.">LockGuard</a> helper class to make this easier. </p>
 
 </div>
 </div>
-<a id="adb230ca33a5959d587e1bc194a5ea775" name="adb230ca33a5959d587e1bc194a5ea775"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adb230ca33a5959d587e1bc194a5ea775">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
+<a id="a15505cc94e033ba2ef4b42ab7ebfcafa" name="a15505cc94e033ba2ef4b42ab7ebfcafa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15505cc94e033ba2ef4b42ab7ebfcafa">&#9670;&#160;</a></span>toProto() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void catena::common::Device::toProto </td>
@@ -1648,11 +1226,6 @@ Here is the caller graph for this function:</div>
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create a protobuf representation of the language list. </p>
@@ -1663,18 +1236,13 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a20b966db2c4deee23e2da500be62fe4e">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="ad7afe28941fdea189389b0ca5f865676" name="ad7afe28941fdea189389b0ca5f865676"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad7afe28941fdea189389b0ca5f865676">&#9670;&#160;</a></span>toProto() <span class="overload">[3/3]</span></h2>
+<a id="a7420ac96f72817f5ad4fbf3c5d747a8a" name="a7420ac96f72817f5ad4fbf3c5d747a8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7420ac96f72817f5ad4fbf3c5d747a8a">&#9670;&#160;</a></span>toProto() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void catena::common::Device::toProto </td>
@@ -1684,11 +1252,6 @@ Here is the caller graph for this function:</div>
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create a protobuf representation of the language packs. </p>
@@ -1699,18 +1262,13 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a87aeb86d17cd61768f1868531d70d607">catena::common::IDevice</a>.</p>
-
 </div>
 </div>
-<a id="a21129c2d45cec86ec0f0fab0ff40ca7d" name="a21129c2d45cec86ec0f0fab0ff40ca7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a21129c2d45cec86ec0f0fab0ff40ca7d">&#9670;&#160;</a></span>tryMultiSetValue()</h2>
+<a id="a298f41f304847aab8083f00e38c8e271" name="a298f41f304847aab8083f00e38c8e271"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a298f41f304847aab8083f00e38c8e271">&#9670;&#160;</a></span>tryMultiSetValue()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">bool catena::common::Device::tryMultiSetValue </td>
@@ -1736,11 +1294,6 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Validates each payload in a multiSetValuePayload without commit changes to param value_s. </p>
@@ -1753,8 +1306,6 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the call is valid. </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91">catena::common::IDevice</a>.</p>
 
 </div>
 </div>

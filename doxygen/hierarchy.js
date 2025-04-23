@@ -26,6 +26,8 @@ var hierarchy =
     ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
+    [ "catena::common::Device", "classcatena_1_1common_1_1Device.html", null ],
+    [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ],
     [ "catena::common::EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
     [ "catena::patterns::EnumDecorator< E >", "classcatena_1_1patterns_1_1EnumDecorator.html", null ],
     [ "catena::common::FakeLock", "structcatena_1_1common_1_1FakeLock.html", null ],
@@ -60,12 +62,6 @@ var hierarchy =
       [ "catena::common::PicklistConstraint", "classcatena_1_1common_1_1PicklistConstraint.html", null ],
       [ "catena::common::RangeConstraint< T >", "classcatena_1_1common_1_1RangeConstraint.html", null ]
     ] ],
-    [ "catena::common::IDevice", "classcatena_1_1common_1_1IDevice.html", [
-      [ "catena::common::Device", "classcatena_1_1common_1_1Device.html", null ]
-    ] ],
-    [ "catena::common::IDevice::IDeviceSerializer", "classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html", [
-      [ "catena::common::Device::DeviceSerializer", "classcatena_1_1common_1_1Device_1_1DeviceSerializer.html", null ]
-    ] ],
     [ "catena::common::ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", [
       [ "catena::common::LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", null ]
     ] ],
@@ -95,6 +91,7 @@ var hierarchy =
       [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", null ]
     ] ],
     [ "catena::common::LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
+    [ "catena::common::Device::LockGuard", "classcatena_1_1common_1_1Device_1_1LockGuard.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
