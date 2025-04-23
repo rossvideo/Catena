@@ -189,7 +189,7 @@ void RunRPCServer(std::string addr)
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);
-        CatenaServiceImpl service(cq.get(), &dm, EOPath, authz);
+        CatenaServiceImpl service(cq.get(), dm, EOPath, authz);
 
         // Updating device's default max array length.
         dm.set_default_max_length(absl::GetFlag(FLAGS_default_max_array_size));

@@ -56,7 +56,7 @@ class CatenaServiceImpl::GetPopulatedSlots : public CallData{
          * @param dm - Address of the device to get the populated slots of.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        GetPopulatedSlots(CatenaServiceImpl *service, IDevice* dm, bool ok);
+        GetPopulatedSlots(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
         * @brief Manages the steps of the GetPopulatedSlots gRPC command
         * through the state variable status. Returns the number of populated
@@ -91,7 +91,7 @@ class CatenaServiceImpl::GetPopulatedSlots : public CallData{
         /**
          * @brief The device to get the populated slots of.
          */
-        IDevice* dm_;
+        IDevice& dm_;
         /**
          * @brief The object's unique id.
          */

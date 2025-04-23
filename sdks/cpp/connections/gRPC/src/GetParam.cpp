@@ -52,7 +52,7 @@ int CatenaServiceImpl::GetParam::objectCounter_ = 0;
  * then starts the process.
  */
 
-CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, IDevice* dm, bool ok)
+CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -112,7 +112,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
                 // Getting the param.
-                std::unique_ptr<IParam> param = dm_->getParam(req_.oid(), rc, *authz);
+                std::unique_ptr<IParam> param = dm_.getParam(req_.oid(), rc, *authz);
                 // If everything was successful, writing to the client.
                 if (rc.status == catena::StatusCode::OK && param) {
                     catena::DeviceComponent_ComponentParam response;

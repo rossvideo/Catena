@@ -54,7 +54,7 @@ class CatenaServiceImpl::ListLanguages : public CallData {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        ListLanguages(CatenaServiceImpl *service, IDevice* dm, bool ok);
+        ListLanguages(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Manages the steps of the ListLanguages gRPC command through
          * the state variable status.
@@ -83,7 +83,7 @@ class CatenaServiceImpl::ListLanguages : public CallData {
         /**
          * @brief The device containing the languages to list.
          */
-        IDevice* dm_;
+        IDevice& dm_;
         /**
          * @brief The object's unique id.
          */

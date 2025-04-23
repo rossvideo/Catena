@@ -58,7 +58,7 @@ class CatenaServiceImpl::GetParam : public CallData {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        GetParam(CatenaServiceImpl *service, IDevice* dm, bool ok);
+        GetParam(CatenaServiceImpl *service, IDevice& dm, bool ok);
 
         /**
          * @brief Manages the steps of the GetParam gRPC command
@@ -105,7 +105,7 @@ class CatenaServiceImpl::GetParam : public CallData {
         /**
          * @brief The device to get the value from.
          */
-        IDevice* dm_;
+        IDevice& dm_;
 
         /**
          * @brief The object's unique id.

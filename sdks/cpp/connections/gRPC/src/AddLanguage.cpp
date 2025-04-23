@@ -34,7 +34,7 @@
 // Initializes the object counter for AddLanguage to 0.
 int CatenaServiceImpl::AddLanguage::objectCounter_ = 0;
 
-CatenaServiceImpl::AddLanguage::AddLanguage(CatenaServiceImpl *service, IDevice* dm, bool ok)
+CatenaServiceImpl::AddLanguage::AddLanguage(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
@@ -72,11 +72,11 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
                     catena::common::Authorizer authz{getJWSToken()};
-                    IDevice::LockGuard lg(dm_);
-                    rc = dm_->addLanguage(req_, authz);
+                    IDevice::LockGuard lg(&dm_);
+                    rc = dm_.addLanguage(req_, authz);
                 } else {
-                    IDevice::LockGuard lg(dm_);
-                    rc = dm_->addLanguage(req_, catena::common::Authorizer::kAuthzDisabled);
+                    IDevice::LockGuard lg(&dm_);
+                    rc = dm_.addLanguage(req_, catena::common::Authorizer::kAuthzDisabled);
                 }
                 status_ = CallStatus::kFinish;
                 if (rc.status == catena::StatusCode::OK) {

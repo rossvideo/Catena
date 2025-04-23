@@ -48,14 +48,14 @@ using catena::common::Path;
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
 
-CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDevice* dm, bool ok)
+CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "MultiSetValue";
     service->registerItem(this);
     proceed(service, ok);
 }
 
-CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDevice* dm, bool ok, int objectId)
+CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDevice& dm, bool ok, int objectId)
     : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
@@ -63,7 +63,7 @@ void CatenaServiceImpl::MultiSetValue::request() {
     service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
 }
 
-void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, IDevice* dm, bool ok) {
+void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, IDevice& dm, bool ok) {
     new MultiSetValue(service, dm, ok);
 }
 
@@ -111,10 +111,10 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                 }
                 // Locking device and setting value(s).
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                IDevice::LockGuard lg(dm_);
+                IDevice::LockGuard lg(&dm_);
                 // Trying and commiting the multiSetValue.
-                if (dm_->tryMultiSetValue(reqs_, rc, *authz)) {
-                    dm_->commitMultiSetValue(reqs_, *authz);
+                if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
+                    dm_.commitMultiSetValue(reqs_, *authz);
                 }
                 if (rc.status == catena::StatusCode::OK) {
                     status_ = CallStatus::kFinish;

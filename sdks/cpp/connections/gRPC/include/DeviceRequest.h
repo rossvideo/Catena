@@ -55,7 +55,7 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @param dm the device for which the request is made
          * @param ok flag to check if request is successful 
          */
-        DeviceRequest(CatenaServiceImpl *service, IDevice* dm, bool ok);
+        DeviceRequest(CatenaServiceImpl *service, IDevice& dm, bool ok);
          /**
          * @brief Manages gRPC request through a state machine
          *
@@ -98,7 +98,7 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
         /**
          * @brief Reference to the device to which the request is made
          */
-        IDevice* dm_;
+        IDevice& dm_;
         /**
          * @brief Unique identifier for device request object
          */

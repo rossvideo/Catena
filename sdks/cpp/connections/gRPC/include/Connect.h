@@ -57,7 +57,7 @@ class CatenaServiceImpl::Connect : public CallData {
          * @param dm - Address of the device to connect to.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        Connect(CatenaServiceImpl *service, IDevice* dm, bool ok);
+        Connect(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Manages the steps of the Connect gRPC command
          * through the state variable status. Returns the value of the
@@ -92,7 +92,7 @@ class CatenaServiceImpl::Connect : public CallData {
         /**
          * @brief The device to connect to.
          */
-        IDevice* dm_;
+        IDevice& dm_;
         /**
          * @brief The mutex to for locking the object while writing
          */

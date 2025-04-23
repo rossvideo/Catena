@@ -77,7 +77,7 @@ class ParamVisitor : public IParamVisitor {
          * @param device The device to visit
          * @param visitor The visitor to use
          */
-        static void traverseParams(IParam* param, const std::string& path, IDevice* device, IParamVisitor& visitor);
+        static void traverseParams(IParam* param, const std::string& path, IDevice& device, IParamVisitor& visitor);
 };
 
 } // namespace common

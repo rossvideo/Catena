@@ -54,7 +54,7 @@ class CatenaServiceImpl::LanguagePackRequest : public CallData {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        LanguagePackRequest(CatenaServiceImpl *service, IDevice* dm, bool ok);
+        LanguagePackRequest(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Manages the steps of the LanguagePackRequest command through
          * the state variable status.
@@ -83,7 +83,7 @@ class CatenaServiceImpl::LanguagePackRequest : public CallData {
         /**
          * @brief The device containing the language we are requesting.
          */
-        IDevice* dm_;
+        IDevice& dm_;
         /**
          * @brief The object's unique id.
          */

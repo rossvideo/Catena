@@ -52,7 +52,7 @@ int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, IDevice* dm, bool ok)
+CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -97,7 +97,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
             {
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-                dm_->detail_level(req_.detail_level());
+                dm_.detail_level(req_.detail_level());
                 
                 // Get service subscriptions from the manager
                 subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
@@ -129,11 +129,11 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 }
 
                 // If we're in SUBSCRIPTIONS mode and have no subscriptions, we'll still send minimal set
-                if (dm_->subscriptions() && subscribed_oids_.empty() && 
+                if (dm_.subscriptions() && subscribed_oids_.empty() && 
                     req_.detail_level() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                    serializer_ = dm_->getComponentSerializer(*authz, shallowCopy);
+                    serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
                 } else {
-                    serializer_ = dm_->getComponentSerializer(*authz, subscribed_oids_, shallowCopy);
+                    serializer_ = dm_.getComponentSerializer(*authz, subscribed_oids_, shallowCopy);
                 }
 
             // Likely authentication error, end process.
@@ -164,7 +164,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 try {     
                     catena::DeviceComponent component{};
                     {
-                        IDevice::LockGuard lg(dm_);
+                        IDevice::LockGuard lg(&dm_);
                         component = serializer_->getNext();
                     }
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;

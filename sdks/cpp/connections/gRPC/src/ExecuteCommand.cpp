@@ -52,7 +52,7 @@ int CatenaServiceImpl::ExecuteCommand::objectCounter_ = 0;
  * Constructor which initializes and registers the current ExecuteCommand
  * object, then starts the process
  */
-CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, IDevice* dm, bool ok)
+CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, stream_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -112,9 +112,9 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
             try {
                 if (service_->authorizationEnabled()) {
                     catena::common::Authorizer authz{getJWSToken()};
-                    command = dm_->getCommand(req_.oid(), rc, authz);
+                    command = dm_.getCommand(req_.oid(), rc, authz);
                 } else {
-                    command = dm_->getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                    command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
                 }
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
