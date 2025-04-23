@@ -169,6 +169,45 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     } else {
                         throw catena::exception_with_status(rc.what(), rc.status);
                     }
+
+                // Mode 3: Get ALL parameters recursively
+                } else if (req_.oid_prefix().empty() && req_.recursive()) {
+                    std::vector<std::unique_ptr<IParam>> top_level_params;
+
+                    {
+                    Device::LockGuard lg(dm_);
+                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                    }
+
+                    if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
+                        Device::LockGuard lg(dm_);                      
+                        responses_.clear();  
+                        // Process each top-level parameter recursively
+                        for (auto& top_level_param : top_level_params) {
+                            // Add the parameter to our response list
+                            addParamToResponses(top_level_param.get(), *authz);
+                            // For array types, calculate and update array length
+                            if (top_level_param->isArrayType()) {
+                                uint32_t array_length = top_level_param->size();
+                                if (array_length > 0) {
+                                    updateArrayLengths(top_level_param->getOid(), array_length);
+                                }
+                            }
+                            
+                            // Collect all parameter info recursively through visitor pattern
+                            BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
+                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
+                        }
+                        
+                        // Begin writing responses back to the client
+                        writer_lock_.lock();
+                        status_ = CallStatus::kWrite;
+                        writer_.Write(responses_[0], this);  //Write the first response
+                        writer_lock_.unlock();
+                        break;  
+                    } else {
+                        throw catena::exception_with_status(rc.what(), rc.status);
+                    }
                 }
 
             } catch (catena::exception_with_status& err) {
@@ -260,7 +299,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param
 // Visits a parameter and adds it to the response vector
 void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
     // Only add non-array parameters that aren't the top-most parameter
-    bool isTopParameter = path == request_.req_.oid_prefix();
+    bool isTopParameter = path == request_.req_.oid_prefix() || path == "/" + param->getOid();
     bool isArray = param->isArrayType();
     if (isTopParameter || isArray) {
         return;
@@ -272,7 +311,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IPar
 // Visits an array and updates the array length information
 void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
     // Only add array parameters that aren't the top-most parameter
-    bool isTopParameter = path == request_.req_.oid_prefix();
+    bool isTopParameter = path == request_.req_.oid_prefix() || path == "/" + param->getOid();
     if (isTopParameter) {
         return;
     }
