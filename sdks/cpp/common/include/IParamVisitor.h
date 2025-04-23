@@ -40,7 +40,7 @@
 
 #include <IParam.h>
 #include <Path.h>
-#include <Device.h>
+#include <IDevice.h>
 
 namespace catena {
 namespace common {

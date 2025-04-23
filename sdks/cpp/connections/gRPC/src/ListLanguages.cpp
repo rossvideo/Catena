@@ -34,7 +34,7 @@
 // Initializes the object counter for SetValue to 0.
 int CatenaServiceImpl::ListLanguages::objectCounter_ = 0;
 
-CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
@@ -66,7 +66,7 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
             new ListLanguages(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try { // Getting and returning languages.
-                Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 catena::LanguageList ans;
                 dm_.toProto(ans);
                 status_ = CallStatus::kFinish;

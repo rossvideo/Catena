@@ -45,7 +45,7 @@
 #include <rpc/TimeNow.h>
 #include <Status.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
 
@@ -63,7 +63,7 @@ namespace REST {
 class DeviceRequest : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
-    using Device = catena::common::Device;
+    using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
@@ -73,7 +73,7 @@ class DeviceRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get components from.
      */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief DeviceRequest's main process.
      */
@@ -89,7 +89,7 @@ class DeviceRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new DeviceRequest(socket, context, dm);
     }
   private:
@@ -121,7 +121,7 @@ class DeviceRequest : public ICallData {
     /**
      * @brief The device to get components from.
      */
-    Device& dm_;
+    IDevice& dm_;
 
     /**
      * @brief A list of the subscribed oids to return.

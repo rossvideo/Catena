@@ -52,7 +52,7 @@ int CatenaServiceImpl::GetParam::objectCounter_ = 0;
  * then starts the process.
  */
 
-CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);

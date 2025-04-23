@@ -44,7 +44,7 @@
 #include <Tags.h>
 #include <Path.h>
 #include <ParamDescriptor.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
 #include <Authorization.h>
@@ -76,13 +76,13 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
-        Device &dev,
+        IDevice& dev,
         bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
         if (isCommand) {
-            dev.addItem<common::CommandTag>(descriptor.getOid(), this);
+            dev.addItem(descriptor.getOid(), this);
         } else {
-            dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+            dev.addItem(descriptor.getOid(), this);
         }
         initializeTracker(value_.get());
     }

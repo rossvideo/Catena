@@ -44,7 +44,7 @@
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <Authorization.h>
 
 // gRPC interface
@@ -63,7 +63,7 @@ using grpc::ServerAsyncResponseWriter;
 using grpc::Status;
 using grpc::ServerCompletionQueue;
 
-using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 
 /**
@@ -87,7 +87,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
+    CatenaServiceImpl(ServerCompletionQueue* cq, IDevice& dm, std::string& EOPath, bool authz);
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -164,7 +164,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
     /**
      * @brief The device to implement Catena services to
      */
-    Device &dm_;
+    IDevice& dm_;
     /**
      * @brief The path to the external object
      */

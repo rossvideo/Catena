@@ -14,6 +14,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/AddLanguage.h>
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
+#include <controllers/BasicParamInfoRequest.h>
 
 using catena::REST::Connect;
 
@@ -30,7 +31,7 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
@@ -38,7 +39,6 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()} {
-
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
@@ -55,6 +55,7 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
     router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
     router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
+    router_.addProduct("GET/v1/BasicParamInfoRequest",  BasicParamInfoRequest::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.

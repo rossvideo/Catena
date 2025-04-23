@@ -58,7 +58,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+        MultiSetValue(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Manages the steps of the SetValue and MultiSetValue gRPC
          * commands through the state variable status.
@@ -78,7 +78,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @param ok Flag to check if the command was successfully executed.
          * @param objectId objectCounter_ + 1
          */ 
-        MultiSetValue(CatenaServiceImpl *service, Device &dm, bool ok, int objectId);
+        MultiSetValue(CatenaServiceImpl *service, IDevice& dm, bool ok, int objectId);
         /**
          * @brief Requests Multi Set Value from the system and sets the
          * request to the MultiSetValuePayload.
@@ -96,7 +96,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @param dm Address of the device to get the value from.
          * @param ok Flag to check if the command was successfully executed.
          */ 
-        virtual void create(CatenaServiceImpl *service, Device &dm, bool ok);
+        virtual void create(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Converts req_ to a MultiSetValuePayload reqs_.
          *   
@@ -133,7 +133,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
         /**
          * @brief The device containing the value to set.
          */
-        Device &dm_;
+        IDevice& dm_;
         /**
          * The status of the transaction for use in responder.finish functions.
          */

@@ -6,7 +6,7 @@ using catena::REST::Connect;
 // Initializes the object counter for Connect to 0.
 int Connect::objectCounter_ = 0;
 
-Connect::Connect(tcp::socket& socket, SocketReader& context, Device& dm) :
+Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -33,7 +33,7 @@ void Connect::proceed() {
         updateResponse(oid, idx, p);
     });
     // Waiting for a language to be added to execute code.
-    languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+    languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
         updateResponse(l);
     });
     // send client an empty update with slot of the device

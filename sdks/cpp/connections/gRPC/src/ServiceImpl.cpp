@@ -99,7 +99,7 @@ std::string CatenaServiceImpl::timeNow() {
 }
 
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, Device &dm, std::string& EOPath, bool authz)
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std::string& EOPath, bool authz)
         : catena::CatenaService::AsyncService{}, 
           cq_{cq}, 
           dm_{dm}, 

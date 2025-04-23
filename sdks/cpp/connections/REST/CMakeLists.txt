@@ -44,6 +44,7 @@ set(sources
     "src/controllers/AddLanguage.cpp"
     "src/controllers/LanguagePackRequest.cpp"
     "src/controllers/ListLanguages.cpp"
+    "src/controllers/BasicParamInfoRequest.cpp"
 )
 
 add_library(${target} STATIC ${sources})
