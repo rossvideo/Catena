@@ -52,7 +52,7 @@ int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current
  * ExternalObjectRequest object, then starts the process
  */
-CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);

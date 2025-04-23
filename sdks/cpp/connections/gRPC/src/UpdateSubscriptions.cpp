@@ -50,7 +50,7 @@ using catena::common::Path;
 
 int CatenaServiceImpl::UpdateSubscriptions::objectCounter_ = 0;
 
-CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -204,7 +204,7 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
         std::cout << "Processing subscribed OID: " << oid << std::endl;
         std::unique_ptr<IParam> param;
         {
-            Device::LockGuard lg(dm_);
+            std::lock_guard lg(dm_.mutex());
             param = dm_.getParam(oid, rc);
         }
         
