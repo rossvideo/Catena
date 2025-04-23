@@ -47,7 +47,7 @@
 #include "SocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
-#include <Device.h>
+#include <IDevice.h>
 
 // common
 #include <ParamVisitor.h>
@@ -74,7 +74,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::Device& dm);
+    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::IDevice& dm);
     
     /**
      * @brief BasicParamInfoRequest's main process.
@@ -93,7 +93,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, catena::common::Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, catena::common::IDevice& dm) {
       return new BasicParamInfoRequest(socket, context, dm);
     }
     
@@ -143,7 +143,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     /**
      * @brief The device to get parameter info from.
      */
-    catena::common::Device& dm_;
+    catena::common::IDevice& dm_;
     
     /**
      * @brief Flag indicating if the RPC is working correctly.
@@ -197,7 +197,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
              * @param responses The vector of responses
              * @param request The request
              */
-            BasicParamInfoVisitor(catena::common::Device& device, catena::common::Authorizer& authz,
+            BasicParamInfoVisitor(catena::common::IDevice& device, catena::common::Authorizer& authz,
                                 std::vector<catena::BasicParamInfoResponse>& responses,
                                 BasicParamInfoRequest& request)
                 : device_(device), authz_(authz), responses_(responses), request_(request) {}
@@ -221,7 +221,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
             /**
              * @brief The device to visit within the visitor
              */
-            catena::common::Device& device_;
+            catena::common::IDevice& device_;
 
             /**
              * @brief The authorizer within the visitor
