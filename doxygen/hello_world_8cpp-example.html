@@ -155,11 +155,11 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">    <span class="comment">// for the shortest possible time - production code wouldn&#39;t output</span></div>
 <div class="line">    <span class="comment">// to std::out with the lock asserted, c) avoid deadlock by nesting calls</span></div>
 <div class="line">    <span class="comment">// to Device methods that try to lock the mutex.</span></div>
-<div class="line">    <a id="_a0" name="_a0"></a><a class="code hl_class" href="classcatena_1_1common_1_1Device_1_1LockGuard.html">Device::LockGuard</a> lg(dm); </div>
+<div class="line">    std::lock_guard lg(dm.mutex());</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// err will be passed to each getParam call, and if the call fails</span></div>
 <div class="line">    <span class="comment">// the exception_with_status object will be populated with the error</span></div>
-<div class="line">    <a id="_a1" name="_a1"></a><a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> err{<span class="stringliteral">&quot;&quot;</span>, <a id="a2" name="a2"></a><a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>};</div>
+<div class="line">    <a id="_a0" name="_a0"></a><a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> err{<span class="stringliteral">&quot;&quot;</span>, <a id="a1" name="a1"></a><a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>};</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// because we designed the device model, we know it contains a parameter, hello</span></div>
 <div class="line">    <span class="comment">// and we also know its value type - std::string</span></div>
@@ -170,10 +170,10 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
 <div class="line">    }</div>
-<div class="line">    <span class="keyword">auto</span>&amp; helloParam = *<span class="keyword">dynamic_cast&lt;</span><a id="_a3" name="_a3"></a><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::string&gt;</a>*<span class="keyword">&gt;</span>(ip.get());</div>
+<div class="line">    <span class="keyword">auto</span>&amp; helloParam = *<span class="keyword">dynamic_cast&lt;</span><a id="_a2" name="_a2"></a><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::string&gt;</a>*<span class="keyword">&gt;</span>(ip.get());</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// With the Param object we can get a reference to the parameter&#39;s value object</span></div>
-<div class="line">    std::string&amp; helloValue = helloParam.<a id="a4" name="a4"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
+<div class="line">    std::string&amp; helloValue = helloParam.<a id="a3" name="a3"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// and then read it, directly - which is simple and should be performant</span></div>
 <div class="line">    <span class="comment">// The assertion of the lock, above is essential to thread safety because</span></div>
@@ -186,7 +186,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">    std::cout &lt;&lt; helloValue &lt;&lt; std::endl;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Example with a parameter of type int</span></div>
-<div class="line">    ip = dm.<a id="a5" name="a5"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/count&quot;</span>, err);</div>
+<div class="line">    ip = dm.<a id="a4" name="a4"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">getParam</a>(<span class="stringliteral">&quot;/count&quot;</span>, err);</div>
 <div class="line">    <span class="keywordflow">if</span> (ip == <span class="keyword">nullptr</span>){</div>
 <div class="line">        std::cerr &lt;&lt; <span class="stringliteral">&quot;Error: &quot;</span> &lt;&lt; err.what() &lt;&lt; std::endl;</div>
 <div class="line">        <span class="keywordflow">return</span> EXIT_FAILURE;</div>
@@ -259,7 +259,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">    }</div>
 <div class="line">    <span class="keyword">auto</span>&amp; physical_constantsParam = *<span class="keyword">dynamic_cast&lt;</span><a class="code hl_class" href="classcatena_1_1common_1_1ParamWithValue.html">ParamWithValue&lt;std::vector&lt;float&gt;</a><span class="keyword">&gt;</span>*&gt;(ip.get());</div>
 <div class="line">    std::vector&lt;float&gt;&amp; physical_constantsValue = physical_constantsParam.<a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">get</a>();</div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;physical constants &quot;</span> &lt;&lt; (physical_constantsValue.<a id="a6" name="a6"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">size</a>() == 0 ? <span class="stringliteral">&quot;is empty&quot;</span> : <span class="stringliteral">&quot;is not empty&quot;</span>) &lt;&lt; std::endl;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;physical constants &quot;</span> &lt;&lt; (physical_constantsValue.<a id="a5" name="a5"></a><a class="code hl_function" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">size</a>() == 0 ? <span class="stringliteral">&quot;is empty&quot;</span> : <span class="stringliteral">&quot;is not empty&quot;</span>) &lt;&lt; std::endl;</div>
 <div class="line">    physical_constantsValue.push_back(3.14159);</div>
 <div class="line">    physical_constantsValue.push_back(2.71828);</div>
 <div class="line">    physical_constantsValue.push_back(1.61803);</div>
@@ -296,7 +296,6 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="ttc" id="aParamDescriptor_8h_html"><div class="ttname"><a href="ParamDescriptor_8h.html">ParamDescriptor.h</a></div><div class="ttdoc">Interface for accessing parameter descriptions.</div></div>
 <div class="ttc" id="aParamWithValue_8h_html"><div class="ttname"><a href="ParamWithValue_8h.html">ParamWithValue.h</a></div><div class="ttdoc">Interface for acessing parameter values.</div></div>
 <div class="ttc" id="aTags_8h_html"><div class="ttname"><a href="Tags_8h.html">Tags.h</a></div><div class="ttdoc">Tags to differentiate collections with the same type for template specialization.</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1Device_1_1LockGuard_html"><div class="ttname"><a href="classcatena_1_1common_1_1Device_1_1LockGuard.html">catena::common::Device::LockGuard</a></div><div class="ttdoc">LockGuard is a helper class to lock and unlock the device mutex.</div><div class="ttdef"><b>Definition</b> Device.h:85</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1ParamWithValue_html"><div class="ttname"><a href="classcatena_1_1common_1_1ParamWithValue.html">catena::common::ParamWithValue</a></div><div class="ttdoc">ParamWithValue is a class that implements the IParam interface for each param type in the device mode...</div><div class="ttdef"><b>Definition</b> ParamWithValue.h:67</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1ParamWithValue_html_a0bedb3aa28dd3e2ee0f3ca0daf585cd6"><div class="ttname"><a href="classcatena_1_1common_1_1ParamWithValue.html#a0bedb3aa28dd3e2ee0f3ca0daf585cd6">catena::common::ParamWithValue::getParam</a></div><div class="ttdeci">std::unique_ptr&lt; IParam &gt; getParam(Path &amp;oid, Authorizer &amp;authz, catena::exception_with_status &amp;status) override</div><div class="ttdoc">get a child parameter by name</div><div class="ttdef"><b>Definition</b> ParamWithValue.h:283</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1ParamWithValue_html_a380b12a09281e8ad4ee415b2257c655c"><div class="ttname"><a href="classcatena_1_1common_1_1ParamWithValue.html#a380b12a09281e8ad4ee415b2257c655c">catena::common::ParamWithValue::get</a></div><div class="ttdeci">T &amp; get()</div><div class="ttdoc">get the value of the parameter</div><div class="ttdef"><b>Definition</b> ParamWithValue.h:267</div></div>

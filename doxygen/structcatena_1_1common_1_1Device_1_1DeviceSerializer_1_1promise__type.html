@@ -105,19 +105,33 @@ $(document).ready(function(){initNavTree('structcatena_1_1common_1_1Device_1_1De
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5c0d5feabe987fd42eaa2a8d420443bc" id="r_a5c0d5feabe987fd42eaa2a8d420443bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a5c0d5feabe987fd42eaa2a8d420443bc">get_return_object</a> ()</td></tr>
+<tr class="memitem:a5c0d5feabe987fd42eaa2a8d420443bc" id="r_a5c0d5feabe987fd42eaa2a8d420443bc"><td class="memItemLeft" align="right" valign="top"><a id="a5c0d5feabe987fd42eaa2a8d420443bc" name="a5c0d5feabe987fd42eaa2a8d420443bc"></a>
+<a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_return_object</b> ()</td></tr>
+<tr class="memdesc:a5c0d5feabe987fd42eaa2a8d420443bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the coroutine is created (i.e. when <a class="el" href="classcatena_1_1common_1_1Device.html#aaf5ab667c7654abd79976f342f429779" title="get a serializer for the device">getComponentSerializer()</a> is called). It creates the handle for the coroutine and returns the <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. <br /></td></tr>
 <tr class="separator:a5c0d5feabe987fd42eaa2a8d420443bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a167543a006ad9001a8f5bed5c1fd57b0" id="r_a167543a006ad9001a8f5bed5c1fd57b0"><td class="memItemLeft" align="right" valign="top">std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0">initial_suspend</a> ()</td></tr>
+<tr class="memitem:a167543a006ad9001a8f5bed5c1fd57b0" id="r_a167543a006ad9001a8f5bed5c1fd57b0"><td class="memItemLeft" align="right" valign="top"><a id="a167543a006ad9001a8f5bed5c1fd57b0" name="a167543a006ad9001a8f5bed5c1fd57b0"></a>
+std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>initial_suspend</b> ()</td></tr>
+<tr class="memdesc:a167543a006ad9001a8f5bed5c1fd57b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the coroutine is created. It returns a std::suspend_always awaitable so that the coroutine will be immediately suspended. This means the first component will not be created until <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a697c5d2f2a26800e2926381aff68b11d" title="get the next DeviceComponent to be serialized.">getNext()</a> is called. <br /></td></tr>
 <tr class="separator:a167543a006ad9001a8f5bed5c1fd57b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa70a27bcc8076a7e1c6075922a13bbf2" id="r_aa70a27bcc8076a7e1c6075922a13bbf2"><td class="memItemLeft" align="right" valign="top">std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#aa70a27bcc8076a7e1c6075922a13bbf2">final_suspend</a> () noexcept</td></tr>
+<tr class="memitem:aa70a27bcc8076a7e1c6075922a13bbf2" id="r_aa70a27bcc8076a7e1c6075922a13bbf2"><td class="memItemLeft" align="right" valign="top"><a id="aa70a27bcc8076a7e1c6075922a13bbf2" name="aa70a27bcc8076a7e1c6075922a13bbf2"></a>
+std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>final_suspend</b> () noexcept</td></tr>
+<tr class="memdesc:aa70a27bcc8076a7e1c6075922a13bbf2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the coroutine is completed. It returns a std::suspend_always awaitable causing the coroutine to be suspended before it destroys itself. The coroutine will be destroyed when the device serializer destructor is called. <br /></td></tr>
 <tr class="separator:aa70a27bcc8076a7e1c6075922a13bbf2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe74b859a902428ccdd761a8ffc9c601" id="r_afe74b859a902428ccdd761a8ffc9c601"><td class="memItemLeft" align="right" valign="top">std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#afe74b859a902428ccdd761a8ffc9c601">yield_value</a> (catena::DeviceComponent &amp;component)</td></tr>
+<tr class="memitem:afe74b859a902428ccdd761a8ffc9c601" id="r_afe74b859a902428ccdd761a8ffc9c601"><td class="memItemLeft" align="right" valign="top"><a id="afe74b859a902428ccdd761a8ffc9c601" name="afe74b859a902428ccdd761a8ffc9c601"></a>
+std::suspend_always&#160;</td><td class="memItemRight" valign="bottom"><b>yield_value</b> (catena::DeviceComponent &amp;component)</td></tr>
+<tr class="memdesc:afe74b859a902428ccdd761a8ffc9c601"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the coroutine reaches a co_yield statement. It stores the yielded DeviceComponent then suspends the coroutine. <br /></td></tr>
 <tr class="separator:afe74b859a902428ccdd761a8ffc9c601"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab73a06963d0609c0895261a13499d5c9" id="r_ab73a06963d0609c0895261a13499d5c9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#ab73a06963d0609c0895261a13499d5c9">return_value</a> (catena::DeviceComponent component)</td></tr>
+<tr class="memitem:ab73a06963d0609c0895261a13499d5c9" id="r_ab73a06963d0609c0895261a13499d5c9"><td class="memItemLeft" align="right" valign="top"><a id="ab73a06963d0609c0895261a13499d5c9" name="ab73a06963d0609c0895261a13499d5c9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>return_value</b> (catena::DeviceComponent component)</td></tr>
+<tr class="memdesc:ab73a06963d0609c0895261a13499d5c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the coroutine reaches a co_return statement. It stores the returned DeviceComponent. The coroutine is then set as done. <br /></td></tr>
 <tr class="separator:ab73a06963d0609c0895261a13499d5c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7fd6ffdcb1292ce82df205603f56d729" id="r_a7fd6ffdcb1292ce82df205603f56d729"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729">unhandled_exception</a> ()</td></tr>
+<tr class="memitem:a7fd6ffdcb1292ce82df205603f56d729" id="r_a7fd6ffdcb1292ce82df205603f56d729"><td class="memItemLeft" align="right" valign="top"><a id="a7fd6ffdcb1292ce82df205603f56d729" name="a7fd6ffdcb1292ce82df205603f56d729"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>unhandled_exception</b> ()</td></tr>
+<tr class="memdesc:a7fd6ffdcb1292ce82df205603f56d729"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called if an exception is thrown in the coroutine. It stores the exception so that it can be rethrown by the function that resumed the coroutine. <br /></td></tr>
 <tr class="separator:a7fd6ffdcb1292ce82df205603f56d729"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a928c7a442bcc3227e97920eb5a746fc3" id="r_a928c7a442bcc3227e97920eb5a746fc3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3">rethrow_if_exception</a> ()</td></tr>
+<tr class="memitem:a928c7a442bcc3227e97920eb5a746fc3" id="r_a928c7a442bcc3227e97920eb5a746fc3"><td class="memItemLeft" align="right" valign="top"><a id="a928c7a442bcc3227e97920eb5a746fc3" name="a928c7a442bcc3227e97920eb5a746fc3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>rethrow_if_exception</b> ()</td></tr>
+<tr class="memdesc:a928c7a442bcc3227e97920eb5a746fc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Not called by the compiler but instead is called by the function that resumes the coroutine. It rethrows the exception that was caught by <a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729" title="Called if an exception is thrown in the coroutine. It stores the exception so that it can be rethrown...">unhandled_exception()</a>. <br /></td></tr>
 <tr class="separator:a928c7a442bcc3227e97920eb5a746fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
@@ -132,192 +146,7 @@ std::exception_ptr&#160;</td><td class="memItemRight" valign="bottom"><b>excepti
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Defines the execution behaviour of the coroutine. </p>
 <p>Coroutine types are required to contain a <a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html" title="Defines the execution behaviour of the coroutine.">promise_type</a> struct that defines some special member functions that the compiler will call when the coroutine is created, destroyed, or resumed. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="aa70a27bcc8076a7e1c6075922a13bbf2" name="aa70a27bcc8076a7e1c6075922a13bbf2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa70a27bcc8076a7e1c6075922a13bbf2">&#9670;&#160;</a></span>final_suspend()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::suspend_always catena::common::Device::DeviceSerializer::promise_type::final_suspend </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#aa70a27bcc8076a7e1c6075922a13bbf2">final_suspend()</a> is called when the coroutine is completed. It returns a std::suspend_always awaitable causing the coroutine to be suspended before it destroys itself. The coroutine will be destroyed when the device serializer destructor is called. </p>
-
-</div>
-</div>
-<a id="a5c0d5feabe987fd42eaa2a8d420443bc" name="a5c0d5feabe987fd42eaa2a8d420443bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c0d5feabe987fd42eaa2a8d420443bc">&#9670;&#160;</a></span>get_return_object()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a> catena::common::Device::DeviceSerializer::promise_type::get_return_object </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a5c0d5feabe987fd42eaa2a8d420443bc">get_return_object()</a> is called when the coroutine is created (i.e. when <a class="el" href="classcatena_1_1common_1_1Device.html#a0e73c0ea5e4684a7b62846e3858bd098" title="get a serializer for the device">getComponentSerializer()</a> is called). It creates the handle for the coroutine and returns the <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. </p>
-
-</div>
-</div>
-<a id="a167543a006ad9001a8f5bed5c1fd57b0" name="a167543a006ad9001a8f5bed5c1fd57b0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a167543a006ad9001a8f5bed5c1fd57b0">&#9670;&#160;</a></span>initial_suspend()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::suspend_always catena::common::Device::DeviceSerializer::promise_type::initial_suspend </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0">initial_suspend()</a> is called when the coroutine is created. It returns a std::suspend_always awaitable so that the coroutine will be immediately suspended. This means the first component will not be created until <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#a95895d20834a8e8124e15b848d9b21c5" title="get the next DeviceComponent to be serialized.">getNext()</a> is called. </p>
-
-</div>
-</div>
-<a id="a928c7a442bcc3227e97920eb5a746fc3" name="a928c7a442bcc3227e97920eb5a746fc3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a928c7a442bcc3227e97920eb5a746fc3">&#9670;&#160;</a></span>rethrow_if_exception()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::DeviceSerializer::promise_type::rethrow_if_exception </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a928c7a442bcc3227e97920eb5a746fc3">rethrow_if_exception()</a> is not called by the compiler but instead is called by the function that resumes the coroutine. It rethrows the exception that was caught by <a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729">unhandled_exception()</a>. </p>
-
-</div>
-</div>
-<a id="ab73a06963d0609c0895261a13499d5c9" name="ab73a06963d0609c0895261a13499d5c9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab73a06963d0609c0895261a13499d5c9">&#9670;&#160;</a></span>return_value()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::DeviceSerializer::promise_type::return_value </td>
-          <td>(</td>
-          <td class="paramtype">catena::DeviceComponent&#160;</td>
-          <td class="paramname"><em>component</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#ab73a06963d0609c0895261a13499d5c9">return_value()</a> is called when the coroutine reaches a co_return statement. It stores the returned DeviceComponent. The coroutine is then set as done. </p>
-
-</div>
-</div>
-<a id="a7fd6ffdcb1292ce82df205603f56d729" name="a7fd6ffdcb1292ce82df205603f56d729"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7fd6ffdcb1292ce82df205603f56d729">&#9670;&#160;</a></span>unhandled_exception()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::Device::DeviceSerializer::promise_type::unhandled_exception </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a7fd6ffdcb1292ce82df205603f56d729">unhandled_exception()</a> is called if an exception is thrown in the coroutine. It stores the exception so that it can be rethrown by the function that resumed the coroutine. </p>
-
-</div>
-</div>
-<a id="afe74b859a902428ccdd761a8ffc9c601" name="afe74b859a902428ccdd761a8ffc9c601"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afe74b859a902428ccdd761a8ffc9c601">&#9670;&#160;</a></span>yield_value()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::suspend_always catena::common::Device::DeviceSerializer::promise_type::yield_value </td>
-          <td>(</td>
-          <td class="paramtype">catena::DeviceComponent &amp;&#160;</td>
-          <td class="paramname"><em>component</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p><a class="el" href="structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#afe74b859a902428ccdd761a8ffc9c601">yield_value()</a> is called when the coroutine reaches a co_yield statement. It stores the yielded DeviceComponent then suspends the coroutine. </p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>/home/runner/work/Catena/Catena/sdks/cpp/common/include/<a class="el" href="Device_8h_source.html">Device.h</a></li>
 </ul>
 </div><!-- contents -->

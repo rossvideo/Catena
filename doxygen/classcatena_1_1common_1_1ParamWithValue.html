@@ -133,10 +133,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>Path</b> = <a class=
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a62863951ede871efd1fd190e136023f5" id="r_a62863951ede871efd1fd190e136023f5"><td class="memItemLeft" align="right" valign="top"><a id="a62863951ede871efd1fd190e136023f5" name="a62863951ede871efd1fd190e136023f5"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ParamWithValue</b> (T &amp;value, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;descriptor, <a class="el" href="classcatena_1_1common_1_1Device.html">Device</a> &amp;dev, bool isCommand)</td></tr>
-<tr class="memdesc:a62863951ede871efd1fd190e136023f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html" title="ParamWithValue is a class that implements the IParam interface for each param type in the device mode...">ParamWithValue</a> object and add it to the device. <br /></td></tr>
-<tr class="separator:a62863951ede871efd1fd190e136023f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a878dd433f1ad8f7ac67aeae60e40a5cc" id="r_a878dd433f1ad8f7ac67aeae60e40a5cc"><td class="memItemLeft" align="right" valign="top"><a id="a878dd433f1ad8f7ac67aeae60e40a5cc" name="a878dd433f1ad8f7ac67aeae60e40a5cc"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ParamWithValue</b> (T &amp;value, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;descriptor, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dev, bool isCommand)</td></tr>
+<tr class="memdesc:a878dd433f1ad8f7ac67aeae60e40a5cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html" title="ParamWithValue is a class that implements the IParam interface for each param type in the device mode...">ParamWithValue</a> object and add it to the device. <br /></td></tr>
+<tr class="separator:a878dd433f1ad8f7ac67aeae60e40a5cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc197a8843f5b5a367c462d77a9e7437" id="r_abc197a8843f5b5a367c462d77a9e7437"><td class="memItemLeft" align="right" valign="top"><a id="abc197a8843f5b5a367c462d77a9e7437" name="abc197a8843f5b5a367c462d77a9e7437"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ParamWithValue</b> (T &amp;value, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;descriptor)</td></tr>
 <tr class="memdesc:abc197a8843f5b5a367c462d77a9e7437"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html" title="ParamWithValue is a class that implements the IParam interface for each param type in the device mode...">ParamWithValue</a> object without adding it to device. <br /></td></tr>
@@ -267,7 +267,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addParam</b> (const s
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;typename T&gt;<br />
 class catena::common::ParamWithValue&lt; T &gt;</div><p><a class="el" href="classcatena_1_1common_1_1ParamWithValue.html" title="ParamWithValue is a class that implements the IParam interface for each param type in the device mode...">ParamWithValue</a> is a class that implements the <a class="el" href="classcatena_1_1common_1_1IParam.html" title="IParam is the interface for business logic and connection logic to interact with parameters.">IParam</a> interface for each param type in the device model. </p>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="hello_world_8cpp-example.html#_a3">hello_world.cpp</a>.</dd>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="hello_world_8cpp-example.html#_a2">hello_world.cpp</a>.</dd>
 </dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a0c6724805626ce8495919b5a3a34d435" name="a0c6724805626ce8495919b5a3a34d435"></a>
@@ -659,7 +659,7 @@ template&lt;typename T &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>a unique pointer to the child parameter, or nullptr if it does not exist </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a0f5bce117d7916d355140211602d55ea">catena::common::IParam</a>.</p>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="hello_world_8cpp-example.html#a5">hello_world.cpp</a>.</dd>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="hello_world_8cpp-example.html#a4">hello_world.cpp</a>.</dd>
 </dl>
 
 </div>
@@ -968,7 +968,7 @@ template&lt;typename T &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>The size of the array parameter, or 0 if the parameter is not an array. </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IParam.html#a357881202bece2996171fae807517637">catena::common::IParam</a>.</p>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="hello_world_8cpp-example.html#a6">hello_world.cpp</a>.</dd>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="hello_world_8cpp-example.html#a5">hello_world.cpp</a>.</dd>
 </dl>
 
 <p class="reference">References <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#aad918685bdc22bfb09674276e43b23da">catena::common::ParamWithValue&lt; T &gt;::size()</a>.</p>

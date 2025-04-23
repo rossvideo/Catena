@@ -90,26 +90,61 @@ $(document).ready(function(){initNavTree('IDevice_8h.html',''); initResizable();
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#namespaces">Namespaces</a>  </div>
   <div class="headertitle"><div class="title">IDevice.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
 <p>Interface for device.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &lt;<a class="el" href="Authorization_8h_source.html">Authorization.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Path_8h_source.html">Path.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="IParam_8h_source.html">IParam.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="ILanguagePack_8h_source.html">ILanguagePack.h</a>&gt;</code><br />
+<code>#include &lt;<a class="el" href="Status_8h_source.html">Status.h</a>&gt;</code><br />
+<code>#include &lt;vdk/signals.h&gt;</code><br />
+<code>#include &lt;interface/device.pb.h&gt;</code><br />
+<code>#include &lt;string&gt;</code><br />
+<code>#include &lt;vector&gt;</code><br />
+<code>#include &lt;coroutine&gt;</code><br />
+<code>#include &lt;mutex&gt;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for IDevice.h:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="IDevice_8h__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+</div><div class="textblock"><div class="dynheader">
+This graph shows which files directly or indirectly include this file:</div>
+<div class="dyncontent">
+<div class="center"><div class="zoom"><iframe scrolling="no" frameborder="0" src="IDevice_8h__dep__incl.svg" width="100%" height="600"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div></div>
+</div>
+</div>
 <p><a href="IDevice_8h_source.html">Go to the source code of this file.</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>.  <a href="classcatena_1_1common_1_1IDevice.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">catena::common::IDevice::IDeviceSerializer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  <a href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
+Namespaces</h2></td></tr>
+<tr class="memitem:namespacecatena" id="r_namespacecatena"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html">catena</a></td></tr>
+<tr class="memdesc:namespacecatena"><td class="mdescLeft">&#160;</td><td class="mdescRight">top level namespace for Catena. Functionality at this scope includes the protoc generated classes. Most everything else is in child namespaces such as common, meta, etc. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:namespacecatena_1_1common" id="r_namespacecatena_1_1common"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html">catena::common</a></td></tr>
+<tr class="memdesc:namespacecatena_1_1common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functionality that can be shared between the different connection management types. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for device. </p>
-<p>Copyright 2024 Ross Video Ltd</p>
-<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
-<ol type="1">
-<li>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</li>
-<li>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</li>
-<li>Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.</li>
-</ol>
-<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
-<dl class="section author"><dt>Author</dt><dd></dd></dl>
-<dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2024 Ross Video </dd></dl>
+<dl class="section author"><dt>Author</dt><dd><a href="#" onclick="location.href='mai'+'lto:'+'ben'+'ja'+'min'+'.w'+'hit'+'te'+'n@r'+'os'+'svi'+'de'+'o.c'+'om'; return false;">benja<span class="obfuscator">.nosp@m.</span>min.<span class="obfuscator">.nosp@m.</span>whitt<span class="obfuscator">.nosp@m.</span>en@r<span class="obfuscator">.nosp@m.</span>ossvi<span class="obfuscator">.nosp@m.</span>deo.<span class="obfuscator">.nosp@m.</span>com</a> </dd></dl>
+<dl class="section copyright"><dt>Copyright</dt><dd>Copyright (c) 2025 Ross Video </dd></dl>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
