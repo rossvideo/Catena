@@ -66,11 +66,11 @@ class IDevice {
      */
     class LockGuard {
       public:
-        LockGuard(IDevice* dm) : dm_(dm) { dm_->mutex_.lock(); }
-        ~LockGuard() { dm_->mutex_.unlock(); }
+        LockGuard(IDevice& dm) : dm_(dm) { dm_.mutex_.lock(); }
+        ~LockGuard() { dm_.mutex_.unlock(); }
 
       private:
-        IDevice* dm_;
+        IDevice& dm_;
     };
     friend class LockGuard;
 

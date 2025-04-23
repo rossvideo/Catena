@@ -19,7 +19,7 @@ void ListLanguages::proceed() {
     catena::LanguageList ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        IDevice::LockGuard lg(&dm_);
+        IDevice::LockGuard lg(dm_);
         dm_.toProto(ans);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

@@ -71,7 +71,7 @@ int main () {
     // for the shortest possible time - production code wouldn't output
     // to std::out with the lock asserted, c) avoid deadlock by nesting calls
     // to Device methods that try to lock the mutex.
-    Device::LockGuard lg(&dm); 
+    Device::LockGuard lg(dm); 
 
     // err will be passed to each getParam call, and if the call fails
     // the exception_with_status object will be populated with the error

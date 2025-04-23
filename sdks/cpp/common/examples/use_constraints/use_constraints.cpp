@@ -65,7 +65,7 @@ using catena::common::getParamValue;
 
 int main() {
     // lock the model
-    Device::LockGuard lg(&dm);
+    Device::LockGuard lg(dm);
 
     catena::exception_with_status err{"", catena::StatusCode::OK};
     catena::Value value;
