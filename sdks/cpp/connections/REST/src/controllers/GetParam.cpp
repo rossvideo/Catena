@@ -16,7 +16,6 @@ void GetParam::proceed() {
     writeConsole(CallStatus::kProcess, socket_.is_open());
 
     catena::DeviceComponent_ComponentParam ans;
-    std::unique_ptr<IParam> param = nullptr;
     catena::exception_with_status rc("", catena::StatusCode::OK);
 
     try {
@@ -31,7 +30,7 @@ void GetParam::proceed() {
         }
         // Locking device and getting the param.
         std::lock_guard lg(dm_.mutex());
-        param = dm_.getParam("/" + context_.fields("oid"), rc, *authz);
+        std::unique_ptr<IParam> param = dm_.getParam("/" + context_.fields("oid"), rc, *authz);
         if (rc.status == catena::StatusCode::OK && param) {
             ans.set_oid(param->getOid());
             param->toProto(*ans.mutable_param(), *authz);
