@@ -188,6 +188,18 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:a82e51780a6d970d757179ddd3bc637ff" id="r_a82e51780a6d970d757179ddd3bc637ff"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a82e51780a6d970d757179ddd3bc637ff">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::vector&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const =0</td></tr>
 <tr class="memdesc:a82e51780a6d970d757179ddd3bc637ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
 <tr class="separator:a82e51780a6d970d757179ddd3bc637ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25d3dd8acc104af89a99e88f33f6c01d" id="r_a25d3dd8acc104af89a99e88f33f6c01d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a25d3dd8acc104af89a99e88f33f6c01d">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *item)=0</td></tr>
+<tr class="memdesc:a25d3dd8acc104af89a99e88f33f6c01d"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for parameters and commands.  <br /></td></tr>
+<tr class="separator:a25d3dd8acc104af89a99e88f33f6c01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a920052e325112f24cea8686d8d30b45c" id="r_a920052e325112f24cea8686d8d30b45c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a920052e325112f24cea8686d8d30b45c">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IConstraint.html">IConstraint</a> *item)=0</td></tr>
+<tr class="memdesc:a920052e325112f24cea8686d8d30b45c"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for constraints.  <br /></td></tr>
+<tr class="separator:a920052e325112f24cea8686d8d30b45c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b81cc24bb22768348f4324389450a99" id="r_a7b81cc24bb22768348f4324389450a99"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a7b81cc24bb22768348f4324389450a99">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IMenuGroup.html">IMenuGroup</a> *item)=0</td></tr>
+<tr class="memdesc:a7b81cc24bb22768348f4324389450a99"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for menu groups.  <br /></td></tr>
+<tr class="separator:a7b81cc24bb22768348f4324389450a99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae401f1411a74a5a3eea3a5bc7b895467" id="r_ae401f1411a74a5a3eea3a5bc7b895467"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#ae401f1411a74a5a3eea3a5bc7b895467">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *item)=0</td></tr>
+<tr class="memdesc:ae401f1411a74a5a3eea3a5bc7b895467"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device Overload for language packs.  <br /></td></tr>
+<tr class="separator:ae401f1411a74a5a3eea3a5bc7b895467"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab32c92e2d64e1797dd4f20289d822158" id="r_ab32c92e2d64e1797dd4f20289d822158"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#ab32c92e2d64e1797dd4f20289d822158">getParam</a> (const std::string &amp;fqoid, <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;status, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) const =0</td></tr>
 <tr class="memdesc:ab32c92e2d64e1797dd4f20289d822158"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a parameter by oid with authorization  <br /></td></tr>
 <tr class="separator:ab32c92e2d64e1797dd4f20289d822158"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -234,6 +246,199 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a920052e325112f24cea8686d8d30b45c" name="a920052e325112f24cea8686d8d30b45c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a920052e325112f24cea8686d8d30b45c">&#9670;&#160;</a></span>addItem() <span class="overload">[1/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::common::IDevice::addItem </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IConstraint.html">IConstraint</a> *&#160;</td>
+          <td class="paramname"><em>item</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>add an item to one of the collections owned by the device. Overload for constraints. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
+    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#aed9cdca4901c4e5eee7a046bd238187a">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="ae401f1411a74a5a3eea3a5bc7b895467" name="ae401f1411a74a5a3eea3a5bc7b895467"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae401f1411a74a5a3eea3a5bc7b895467">&#9670;&#160;</a></span>addItem() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::common::IDevice::addItem </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *&#160;</td>
+          <td class="paramname"><em>item</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>add an item to one of the collections owned by the device Overload for language packs. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
+    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ac95140f43201a58c2960d9c14c973594">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="a7b81cc24bb22768348f4324389450a99" name="a7b81cc24bb22768348f4324389450a99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7b81cc24bb22768348f4324389450a99">&#9670;&#160;</a></span>addItem() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::common::IDevice::addItem </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IMenuGroup.html">IMenuGroup</a> *&#160;</td>
+          <td class="paramname"><em>item</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>add an item to one of the collections owned by the device. Overload for menu groups. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
+    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a8873a29b302809ea433ed7a33fb03309">catena::common::Device</a>.</p>
+
+</div>
+</div>
+<a id="a25d3dd8acc104af89a99e88f33f6c01d" name="a25d3dd8acc104af89a99e88f33f6c01d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25d3dd8acc104af89a99e88f33f6c01d">&#9670;&#160;</a></span>addItem() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::common::IDevice::addItem </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *&#160;</td>
+          <td class="paramname"><em>item</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>add an item to one of the collections owned by the device. Overload for parameters and commands. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>item's unique key </td></tr>
+    <tr><td class="paramname">item</td><td>the item to be added </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a5d2603a512258a9650f6f2d44e9d57ea">catena::common::Device</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IDevice_a25d3dd8acc104af89a99e88f33f6c01d_icgraph.svg" width="502" height="307"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
+
+</div>
+</div>
 <a id="ac4b696a3becfd9f2d2f267e52258733a" name="ac4b696a3becfd9f2d2f267e52258733a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac4b696a3becfd9f2d2f267e52258733a">&#9670;&#160;</a></span>addLanguage()</h2>
 

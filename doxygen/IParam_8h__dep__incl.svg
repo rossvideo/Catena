@@ -46,7 +46,7 @@
   </g>
 </defs>
 <script type="application/ecmascript">
-var viewWidth = 3788;
+var viewWidth = 3599;
 var viewHeight = 753;
 var sectionId = 'dynsection-1';
 </script>
@@ -58,10 +58,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000001" class="node">
 <title>Node1</title>
 <g id="a_Node000001"><a xlink:title="Interface for parameters.">
-<polygon fill="#999999" stroke="#666666" points="2017.38,-745 1871.38,-745 1871.38,-704 2017.38,-704 2017.38,-745"/>
-<text text-anchor="start" x="1879.38" y="-733" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1879.38" y="-722" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="1944.38" y="-711" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IParam.h</text>
+<polygon fill="#999999" stroke="#666666" points="2425,-745 2279,-745 2279,-704 2425,-704 2425,-745"/>
+<text text-anchor="start" x="2287" y="-733" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2287" y="-722" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2352" y="-711" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IParam.h</text>
 </a>
 </g>
 </g>
@@ -69,10 +69,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000002" class="node">
 <title>Node2</title>
 <g id="a_Node000002"><a xlink:href="Authorization_8h.html" target="_top" xlink:title="Class for handling authorization information.">
-<polygon fill="white" stroke="#666666" points="1788.38,-591 1642.38,-591 1642.38,-550 1788.38,-550 1788.38,-591"/>
-<text text-anchor="start" x="1650.38" y="-579" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1650.38" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="1715.38" y="-557" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Authorization.h</text>
+<polygon fill="white" stroke="#666666" points="2508,-591 2362,-591 2362,-550 2508,-550 2508,-591"/>
+<text text-anchor="start" x="2370" y="-579" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2370" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2435" y="-557" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Authorization.h</text>
 </a>
 </g>
 </g>
@@ -80,8 +80,8 @@ var sectionId = 'dynsection-1';
 <g id="edge1_Node000001_Node000002" class="edge">
 <title>Node1&#45;&gt;Node2</title>
 <g id="a_edge1_Node000001_Node000002"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1906.54,-698.39C1861.27,-668.34 1786.43,-618.66 1745.09,-591.23"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1904.64,-701.33 1914.91,-703.94 1908.51,-695.49 1904.64,-701.33"/>
+<path fill="none" stroke="#63b8ff" d="M2352.88,-693.59C2354.63,-673.57 2359.24,-647.28 2371,-627 2379.19,-612.88 2392.31,-600.57 2404.54,-591.15"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2349.38,-693.49 2352.19,-703.7 2356.36,-693.96 2349.38,-693.49"/>
 </a>
 </g>
 </g>
@@ -89,10 +89,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000003" class="node">
 <title>Node3</title>
 <g id="a_Node000003"><a xlink:href="Device_8h.html" target="_top" xlink:title="Device class definition.">
-<polygon fill="white" stroke="#666666" points="1084.38,-437 938.38,-437 938.38,-396 1084.38,-396 1084.38,-437"/>
-<text text-anchor="start" x="946.38" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="946.38" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="1011.38" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Device.h</text>
+<polygon fill="white" stroke="#666666" points="1177,-437 1031,-437 1031,-396 1177,-396 1177,-437"/>
+<text text-anchor="start" x="1039" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1039" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="1104" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Device.h</text>
 </a>
 </g>
 </g>
@@ -100,329 +100,329 @@ var sectionId = 'dynsection-1';
 <g id="edge75_Node000001_Node000003" class="edge">
 <title>Node1&#45;&gt;Node3</title>
 <g id="a_edge75_Node000001_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1860.93,-721.64C1648.46,-716.47 1098.41,-700.11 1022.38,-668 916.72,-623.39 787.07,-566.57 853.38,-473 872.71,-445.72 906.55,-431.75 937.98,-424.64"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.01,-725.15 1871.09,-721.89 1861.18,-718.15 1861.01,-725.15"/>
+<path fill="none" stroke="#63b8ff" d="M2268.66,-719.77C2023.61,-707.18 1311.86,-658.7 1139,-514 1116.04,-494.78 1108.14,-459.23 1105.43,-437.06"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.76,-723.27 2278.92,-720.29 2269.11,-716.28 2268.76,-723.27"/>
+</a>
+</g>
+</g>
+<!-- Node4 -->
+<g id="Node000004" class="node">
+<title>Node4</title>
+<g id="a_Node000004"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for device.">
+<polygon fill="white" stroke="#666666" points="2026,-514 1880,-514 1880,-473 2026,-473 2026,-514"/>
+<text text-anchor="start" x="1888" y="-502" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1888" y="-491" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="1953" y="-480" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IDevice.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node4 -->
+<g id="edge76_Node000001_Node000004" class="edge">
+<title>Node1&#45;&gt;Node4</title>
+<g id="a_edge76_Node000001_Node000004"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2309.18,-698.92C2229.48,-653.18 2059.88,-555.84 1987.22,-514.14"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2307.57,-702.03 2317.98,-703.98 2311.05,-695.96 2307.57,-702.03"/>
+</a>
+</g>
+</g>
+<!-- Node5 -->
+<g id="Node000005" class="node">
+<title>Node5</title>
+<g id="a_Node000005"><a xlink:href="IParamVisitor_8h.html" target="_top" xlink:title="Implements Catena IParamVisitor.">
+<polygon fill="white" stroke="#666666" points="2367,-437 2221,-437 2221,-396 2367,-396 2367,-437"/>
+<text text-anchor="start" x="2229" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2229" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2294" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IParamVisitor.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node5 -->
+<g id="edge77_Node000001_Node000005" class="edge">
+<title>Node1&#45;&gt;Node5</title>
+<g id="a_edge77_Node000001_Node000005"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2346.4,-693.97C2334.66,-631.99 2307.69,-489.73 2297.76,-437.34"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2342.98,-694.72 2348.28,-703.89 2349.86,-693.42 2342.98,-694.72"/>
 </a>
 </g>
 </g>
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
-<g id="a_Node000007"><a xlink:href="NamedChoiceConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within some named choices.">
-<polygon fill="white" stroke="#666666" points="215.88,-360 30.88,-360 30.88,-319 215.88,-319 215.88,-360"/>
-<text text-anchor="start" x="38.88" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="38.88" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="123.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/NamedChoiceConstraint.h</text>
+<g id="a_Node000007"><a xlink:href="SubscriptionManager_8h.html" target="_top" xlink:title="Centralized manager for parameter subscriptions in Catena.">
+<polygon fill="white" stroke="#666666" points="379.5,-272 210.5,-272 210.5,-231 379.5,-231 379.5,-272"/>
+<text text-anchor="start" x="218.5" y="-260" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="218.5" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="295" y="-238" font-family="Helvetica,sans-Serif" font-size="10.00">/include/SubscriptionManager.h</text>
 </a>
 </g>
 </g>
 <!-- Node1&#45;&gt;Node7 -->
-<g id="edge78_Node000001_Node000007" class="edge">
+<g id="edge85_Node000001_Node000007" class="edge">
 <title>Node1&#45;&gt;Node7</title>
-<g id="a_edge78_Node000001_Node000007"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1861.05,-723.65C1553.57,-723.78 493.18,-720.41 351.38,-668 286.86,-644.15 230.38,-640.29 230.38,-571.5 230.38,-571.5 230.38,-571.5 230.38,-492.5 230.38,-436.35 180.94,-386.31 149.28,-360.01"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.23,-727.15 1871.23,-723.64 1861.23,-720.15 1861.23,-727.15"/>
-</a>
-</g>
-</g>
-<!-- Node8 -->
-<g id="Node000008" class="node">
-<title>Node8</title>
-<g id="a_Node000008"><a xlink:href="ParamWithValue_8h.html" target="_top" xlink:title="Interface for acessing parameter values.">
-<polygon fill="white" stroke="#666666" points="589.88,-360 442.88,-360 442.88,-319 589.88,-319 589.88,-360"/>
-<text text-anchor="start" x="450.88" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="450.88" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="516.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamWithValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node8 -->
-<g id="edge82_Node000001_Node000008" class="edge">
-<title>Node1&#45;&gt;Node8</title>
-<g id="a_edge82_Node000001_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1860.92,-722.6C1572.8,-718.38 637.38,-695.18 637.38,-571.5 637.38,-571.5 637.38,-571.5 637.38,-492.5 637.38,-434.49 582.75,-385.81 546.91,-360.12"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.26,-726.1 1871.31,-722.74 1861.36,-719.1 1861.26,-726.1"/>
+<g id="a_edge85_Node000001_Node000007"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.49,-723.64C1902.35,-723.95 453.54,-721.74 374,-668 335.24,-641.81 332,-618.28 332,-571.5 332,-571.5 332,-571.5 332,-415.5 332,-362.69 313.3,-302.58 302.49,-272.25"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.75,-727.14 2278.75,-723.63 2268.74,-720.14 2268.75,-727.14"/>
 </a>
 </g>
 </g>
 <!-- Node9 -->
 <g id="Node000009" class="node">
 <title>Node9</title>
-<g id="a_Node000009"><a xlink:href="PicklistConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is in a list of strings.">
-<polygon fill="white" stroke="#666666" points="386.38,-360 234.38,-360 234.38,-319 386.38,-319 386.38,-360"/>
-<text text-anchor="start" x="242.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="242.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="310.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/PicklistConstraint.h</text>
+<g id="a_Node000009"><a xlink:href="gRPC_2include_2ServiceImpl_8h.html" target="_top" xlink:title="Implements Catena gRPC request handlers.">
+<polygon fill="white" stroke="#666666" points="1304.5,-195 1143.5,-195 1143.5,-154 1304.5,-154 1304.5,-195"/>
+<text text-anchor="start" x="1151.5" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1151.5" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1224" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ServiceImpl.h</text>
 </a>
 </g>
 </g>
 <!-- Node1&#45;&gt;Node9 -->
-<g id="edge83_Node000001_Node000009" class="edge">
+<g id="edge98_Node000001_Node000009" class="edge">
 <title>Node1&#45;&gt;Node9</title>
-<g id="a_edge83_Node000001_Node000009"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1860.8,-721.91C1622.63,-717.04 943.52,-700.61 723.38,-668 551.01,-642.47 343.38,-745.75 343.38,-571.5 343.38,-571.5 343.38,-571.5 343.38,-492.5 343.38,-444.16 327.24,-389.11 317.54,-360.36"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.05,-725.42 1871.12,-722.12 1861.2,-718.42 1861.05,-725.42"/>
-</a>
-</g>
-</g>
-<!-- Node10 -->
-<g id="Node000010" class="node">
-<title>Node10</title>
-<g id="a_Node000010"><a xlink:href="RangeConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within a range.">
-<polygon fill="white" stroke="#666666" points="1160.38,-360 1012.38,-360 1012.38,-319 1160.38,-319 1160.38,-360"/>
-<text text-anchor="start" x="1020.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1020.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="1086.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/RangeConstraint.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node10 -->
-<g id="edge84_Node000001_Node000010" class="edge">
-<title>Node1&#45;&gt;Node10</title>
-<g id="a_edge84_Node000001_Node000010"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1861.13,-721.34C1681.03,-716.08 1266.97,-700.56 1212.38,-668 1168.59,-641.89 1150.38,-622.48 1150.38,-571.5 1150.38,-571.5 1150.38,-571.5 1150.38,-492.5 1150.38,-441.53 1119.43,-387.96 1100.58,-360.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.25,-724.85 1871.35,-721.64 1861.46,-717.85 1861.25,-724.85"/>
-</a>
-</g>
-</g>
-<!-- Node12 -->
-<g id="Node000012" class="node">
-<title>Node12</title>
-<g id="a_Node000012"><a xlink:href="REST_2include_2ServiceImpl_8h_source.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="#666666" points="2154.88,-277.5 1993.88,-277.5 1993.88,-236.5 2154.88,-236.5 2154.88,-277.5"/>
-<text text-anchor="start" x="2001.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2001.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2074.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/ServiceImpl.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node12 -->
-<g id="edge89_Node000001_Node000012" class="edge">
-<title>Node1&#45;&gt;Node12</title>
-<g id="a_edge89_Node000001_Node000012"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2025.14,-700.41C2083.96,-678.08 2153.38,-637.69 2153.38,-571.5 2153.38,-571.5 2153.38,-571.5 2153.38,-492.5 2153.38,-408.94 2107.77,-316.99 2085.86,-277.63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2023.61,-697.24 2015.43,-703.98 2026.02,-703.82 2023.61,-697.24"/>
-</a>
-</g>
-</g>
-<!-- Node14 -->
-<g id="Node000014" class="node">
-<title>Node14</title>
-<g id="a_Node000014"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements REST Connect RPC.">
-<polygon fill="white" stroke="#666666" points="2724.88,-277.5 2535.88,-277.5 2535.88,-236.5 2724.88,-236.5 2724.88,-277.5"/>
-<text text-anchor="start" x="2543.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2543.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2630.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/Connect.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node14 -->
-<g id="edge90_Node000001_Node000014" class="edge">
-<title>Node1&#45;&gt;Node14</title>
-<g id="a_edge90_Node000001_Node000014"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.61,-720.96C2177.04,-715.62 2484.67,-700.93 2586.38,-668 2665.74,-642.3 2747.38,-654.92 2747.38,-571.5 2747.38,-571.5 2747.38,-571.5 2747.38,-492.5 2747.38,-448.79 2745.64,-436.16 2728.38,-396 2708.42,-349.57 2671.04,-303.23 2648.66,-277.83"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.44,-717.46 2017.56,-721.31 2027.68,-724.46 2027.44,-717.46"/>
-</a>
-</g>
-</g>
-<!-- Node15 -->
-<g id="Node000015" class="node">
-<title>Node15</title>
-<g id="a_Node000015"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements REST DeviceRequest RPC.">
-<polygon fill="white" stroke="#666666" points="1276.88,-277.5 1053.88,-277.5 1053.88,-236.5 1276.88,-236.5 1276.88,-277.5"/>
-<text text-anchor="start" x="1061.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1061.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1165.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/DeviceRequest.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node15 -->
-<g id="edge91_Node000001_Node000015" class="edge">
-<title>Node1&#45;&gt;Node15</title>
-<g id="a_edge91_Node000001_Node000015"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1861.07,-723.23C1671.93,-720.36 1226.38,-699.98 1226.38,-571.5 1226.38,-571.5 1226.38,-571.5 1226.38,-492.5 1226.38,-414.65 1228.43,-392.35 1202.38,-319 1197.11,-304.18 1187.96,-289.05 1180.08,-277.57"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.2,-726.73 1871.25,-723.37 1861.3,-719.73 1861.2,-726.73"/>
-</a>
-</g>
-</g>
-<!-- Node16 -->
-<g id="Node000016" class="node">
-<title>Node16</title>
-<g id="a_Node000016"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements REST GetPopulatedSlots RPC.">
-<polygon fill="white" stroke="#666666" points="1035.38,-283 829.38,-283 829.38,-231 1035.38,-231 1035.38,-283"/>
-<text text-anchor="start" x="837.38" y="-271" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="837.38" y="-260" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="start" x="837.38" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetPopulated</text>
-<text text-anchor="middle" x="932.38" y="-238" font-family="Helvetica,sans-Serif" font-size="10.00">Slots.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node16 -->
-<g id="edge92_Node000001_Node000016" class="edge">
-<title>Node1&#45;&gt;Node16</title>
-<g id="a_edge92_Node000001_Node000016"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1861.09,-723.86C1668.94,-723.83 1207.38,-718.45 1160.38,-668 1054.6,-554.48 1264.44,-441.63 1169.38,-319 1164.92,-313.25 1097.36,-296.18 1035.51,-281.56"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.14,-727.36 1871.14,-723.86 1861.14,-720.36 1861.14,-727.36"/>
-</a>
-</g>
-</g>
-<!-- Node17 -->
-<g id="Node000017" class="node">
-<title>Node17</title>
-<g id="a_Node000017"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements REST GetValue RPC.">
-<polygon fill="white" stroke="#666666" points="2367.38,-277.5 2173.38,-277.5 2173.38,-236.5 2367.38,-236.5 2367.38,-277.5"/>
-<text text-anchor="start" x="2181.38" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2181.38" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2270.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node17 -->
-<g id="edge93_Node000001_Node000017" class="edge">
-<title>Node1&#45;&gt;Node17</title>
-<g id="a_edge93_Node000001_Node000017"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.62,-716.71C2175.67,-702.33 2469.38,-662.34 2469.38,-571.5 2469.38,-571.5 2469.38,-571.5 2469.38,-415.5 2469.38,-365.69 2449.78,-351.9 2412.38,-319 2391.53,-300.66 2364.32,-287.18 2339.31,-277.62"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.27,-713.23 2017.65,-717.66 2027.94,-720.2 2027.27,-713.23"/>
-</a>
-</g>
-</g>
-<!-- Node20 -->
-<g id="Node000020" class="node">
-<title>Node20</title>
-<g id="a_Node000020"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue RPC.">
-<polygon fill="white" stroke="#666666" points="557.88,-277.5 340.88,-277.5 340.88,-236.5 557.88,-236.5 557.88,-277.5"/>
-<text text-anchor="start" x="348.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="348.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="449.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/MultiSetValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node20 -->
-<g id="edge94_Node000001_Node000020" class="edge">
-<title>Node1&#45;&gt;Node20</title>
-<g id="a_edge94_Node000001_Node000020"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1861.09,-722.42C1542.29,-718.05 409.56,-700.38 251.38,-668 135.51,-644.28 3.38,-689.77 3.38,-571.5 3.38,-571.5 3.38,-571.5 3.38,-415.5 3.38,-371.87 -10.13,-349.18 21.38,-319 65.85,-276.39 229.22,-263.34 340.75,-259.47"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.13,-725.92 1871.18,-722.56 1861.23,-718.92 1861.13,-725.92"/>
-</a>
-</g>
-</g>
-<!-- Node22 -->
-<g id="Node000022" class="node">
-<title>Node22</title>
-<g id="a_Node000022"><a xlink:href="IServiceImpl_8h.html" target="_top" xlink:title="Implements REST API.">
-<polygon fill="white" stroke="#666666" points="1964.38,-360 1762.38,-360 1762.38,-319 1964.38,-319 1964.38,-360"/>
-<text text-anchor="start" x="1770.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1770.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1863.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/interface/IServiceImpl.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node22 -->
-<g id="edge95_Node000001_Node000022" class="edge">
-<title>Node1&#45;&gt;Node22</title>
-<g id="a_edge95_Node000001_Node000022"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1944.38,-693.8C1944.38,-663.16 1944.38,-613.99 1944.38,-571.5 1944.38,-571.5 1944.38,-571.5 1944.38,-492.5 1944.38,-439.87 1906.09,-387.76 1882.16,-360.34"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1940.88,-693.82 1944.38,-703.82 1947.88,-693.82 1940.88,-693.82"/>
-</a>
-</g>
-</g>
-<!-- Node23 -->
-<g id="Node000023" class="node">
-<title>Node23</title>
-<g id="a_Node000023"><a xlink:href="IDevice_8h.html" target="_top" xlink:title="Interface for device.">
-<polygon fill="white" stroke="#666666" points="2118.38,-514 1972.38,-514 1972.38,-473 2118.38,-473 2118.38,-514"/>
-<text text-anchor="start" x="1980.38" y="-502" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1980.38" y="-491" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="2045.38" y="-480" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IDevice.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node23 -->
-<g id="edge76_Node000001_Node000023" class="edge">
-<title>Node1&#45;&gt;Node23</title>
-<g id="a_edge76_Node000001_Node000023"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1957.11,-694.62C1977.94,-647.39 2018.77,-554.83 2036.64,-514.3"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1953.82,-693.41 1952.99,-703.98 1960.22,-696.24 1953.82,-693.41"/>
-</a>
-</g>
-</g>
-<!-- Node24 -->
-<g id="Node000024" class="node">
-<title>Node24</title>
-<g id="a_Node000024"><a xlink:href="IParamVisitor_8h.html" target="_top" xlink:title="Implements Catena IParamVisitor.">
-<polygon fill="white" stroke="#666666" points="2403.38,-437 2257.38,-437 2257.38,-396 2403.38,-396 2403.38,-437"/>
-<text text-anchor="start" x="2265.38" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2265.38" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="2330.38" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/IParamVisitor.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node24 -->
-<g id="edge77_Node000001_Node000024" class="edge">
-<title>Node1&#45;&gt;Node24</title>
-<g id="a_edge77_Node000001_Node000024"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.59,-717.55C2072.4,-710.9 2126.67,-697 2167.38,-668 2253.38,-606.74 2305.65,-484.58 2323.47,-437.06"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.02,-714.09 2017.6,-718.93 2027.98,-721.03 2027.02,-714.09"/>
+<g id="a_edge98_Node000001_Node000009"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.72,-723.59C1909.33,-723.65 505.93,-720.51 429,-668 390.51,-641.73 388,-618.1 388,-571.5 388,-571.5 388,-571.5 388,-492.5 388,-446.57 390.99,-426.87 425,-396 632.13,-208.02 985.34,-178.38 1143.4,-175"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.79,-727.09 2278.79,-723.58 2268.79,-720.09 2268.79,-727.09"/>
 </a>
 </g>
 </g>
 <!-- Node26 -->
 <g id="Node000026" class="node">
 <title>Node26</title>
-<g id="a_Node000026"><a xlink:href="SubscriptionManager_8h.html" target="_top" xlink:title="Centralized manager for parameter subscriptions in Catena.">
-<polygon fill="white" stroke="#666666" points="2981.88,-277.5 2812.88,-277.5 2812.88,-236.5 2981.88,-236.5 2981.88,-277.5"/>
-<text text-anchor="start" x="2820.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2820.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="2897.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/SubscriptionManager.h</text>
+<g id="a_Node000026"><a xlink:href="NamedChoiceConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within some named choices.">
+<polygon fill="white" stroke="#666666" points="676.5,-437 491.5,-437 491.5,-396 676.5,-396 676.5,-437"/>
+<text text-anchor="start" x="499.5" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="499.5" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="584" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/NamedChoiceConstraint.h</text>
 </a>
 </g>
 </g>
 <!-- Node1&#45;&gt;Node26 -->
-<g id="edge85_Node000001_Node000026" class="edge">
+<g id="edge78_Node000001_Node000026" class="edge">
 <title>Node1&#45;&gt;Node26</title>
-<g id="a_edge85_Node000001_Node000026"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.77,-723.58C2231.29,-723.02 2741.07,-716.71 2799.38,-668 2833.29,-639.67 2823.38,-615.7 2823.38,-571.5 2823.38,-571.5 2823.38,-571.5 2823.38,-415.5 2823.38,-361.72 2859.15,-306.59 2880.95,-277.98"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.72,-720.08 2017.73,-723.61 2027.73,-727.08 2027.72,-720.08"/>
+<g id="a_edge78_Node000001_Node000026"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.69,-723.62C2032.98,-723.32 1364.68,-717.97 1152,-668 936.66,-617.4 701.5,-486.91 616.73,-437.16"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.91,-727.12 2278.91,-723.63 2268.92,-720.12 2268.91,-727.12"/>
+</a>
+</g>
+</g>
+<!-- Node27 -->
+<g id="Node000027" class="node">
+<title>Node27</title>
+<g id="a_Node000027"><a xlink:href="ParamWithValue_8h.html" target="_top" xlink:title="Interface for acessing parameter values.">
+<polygon fill="white" stroke="#666666" points="2760.5,-437 2613.5,-437 2613.5,-396 2760.5,-396 2760.5,-437"/>
+<text text-anchor="start" x="2621.5" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2621.5" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2687" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamWithValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node27 -->
+<g id="edge82_Node000001_Node000027" class="edge">
+<title>Node1&#45;&gt;Node27</title>
+<g id="a_edge82_Node000001_Node000027"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.32,-704.9C2467.7,-696.01 2504.52,-683.8 2536,-668 2587.4,-642.2 2598.52,-630.83 2640,-591 2671.69,-560.57 2687.39,-555.44 2702,-514 2711.02,-488.42 2702.91,-457.12 2695.55,-437.24"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2434.17,-701.58 2425.42,-707.55 2435.98,-708.34 2434.17,-701.58"/>
 </a>
 </g>
 </g>
 <!-- Node28 -->
 <g id="Node000028" class="node">
 <title>Node28</title>
-<g id="a_Node000028"><a xlink:href="gRPC_2include_2ServiceImpl_8h.html" target="_top" xlink:title="Implements Catena gRPC request handlers.">
-<polygon fill="white" stroke="#666666" points="2587.88,-195 2426.88,-195 2426.88,-154 2587.88,-154 2587.88,-195"/>
-<text text-anchor="start" x="2434.88" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2434.88" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2507.38" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ServiceImpl.h</text>
+<g id="a_Node000028"><a xlink:href="PicklistConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is in a list of strings.">
+<polygon fill="white" stroke="#666666" points="847,-437 695,-437 695,-396 847,-396 847,-437"/>
+<text text-anchor="start" x="703" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="703" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="771" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/PicklistConstraint.h</text>
 </a>
 </g>
 </g>
 <!-- Node1&#45;&gt;Node28 -->
-<g id="edge98_Node000001_Node000028" class="edge">
+<g id="edge83_Node000001_Node000028" class="edge">
 <title>Node1&#45;&gt;Node28</title>
-<g id="a_edge98_Node000001_Node000028"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.52,-723.33C2192.07,-721.99 2553.2,-713.74 2667.38,-668 2730.27,-642.8 2785.38,-639.25 2785.38,-571.5 2785.38,-571.5 2785.38,-571.5 2785.38,-338.5 2785.38,-285.62 2775.37,-264.41 2734.38,-231 2693.33,-197.55 2635.15,-183.78 2587.96,-178.32"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.42,-719.83 2017.45,-723.41 2027.47,-726.83 2027.42,-719.83"/>
+<g id="a_edge83_Node000001_Node000028"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.7,-723.46C2050.26,-722.66 1464.92,-715.99 1278,-668 1082.58,-617.83 874.2,-486.79 799.59,-437.04"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.81,-726.96 2278.82,-723.49 2268.84,-719.96 2268.81,-726.96"/>
+</a>
+</g>
+</g>
+<!-- Node29 -->
+<g id="Node000029" class="node">
+<title>Node29</title>
+<g id="a_Node000029"><a xlink:href="RangeConstraint_8h.html" target="_top" xlink:title="A constraint that checks if a value is within a range.">
+<polygon fill="white" stroke="#666666" points="1013,-437 865,-437 865,-396 1013,-396 1013,-437"/>
+<text text-anchor="start" x="873" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="873" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="939" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/RangeConstraint.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node29 -->
+<g id="edge84_Node000001_Node000029" class="edge">
+<title>Node1&#45;&gt;Node29</title>
+<g id="a_edge84_Node000001_Node000029"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.79,-720.79C2077.28,-714.16 1609.87,-695.61 1455,-668 1337.61,-647.07 1305.85,-641.86 1198,-591 1104.75,-547.02 1006.86,-472.42 962.88,-437.13"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.69,-724.29 2278.81,-721.14 2268.93,-717.29 2268.69,-724.29"/>
+</a>
+</g>
+</g>
+<!-- Node30 -->
+<g id="Node000030" class="node">
+<title>Node30</title>
+<g id="a_Node000030"><a xlink:href="common_2include_2rpc_2Connect_8h.html" target="_top" xlink:title="Pure virtual class for Connect RPCs used to share update code.">
+<polygon fill="white" stroke="#666666" points="3077,-437 2931,-437 2931,-396 3077,-396 3077,-437"/>
+<text text-anchor="start" x="2939" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2939" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="3004" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/rpc/Connect.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node30 -->
+<g id="edge86_Node000001_Node000030" class="edge">
+<title>Node1&#45;&gt;Node30</title>
+<g id="a_edge86_Node000001_Node000030"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.23,-721.3C2591.65,-716.37 2917.24,-702.11 2955,-668 2989.2,-637.11 3000.17,-491.05 3003.08,-437.36"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2435.06,-717.8 2425.17,-721.61 2435.28,-724.8 2435.06,-717.8"/>
+</a>
+</g>
+</g>
+<!-- Node31 -->
+<g id="Node000031" class="node">
+<title>Node31</title>
+<g id="a_Node000031"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements REST Connect RPC.">
+<polygon fill="white" stroke="#666666" points="3071.5,-354.5 2882.5,-354.5 2882.5,-313.5 3071.5,-313.5 3071.5,-354.5"/>
+<text text-anchor="start" x="2890.5" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2890.5" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2977" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/Connect.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node31 -->
+<g id="edge90_Node000001_Node000031" class="edge">
+<title>Node1&#45;&gt;Node31</title>
+<g id="a_edge90_Node000001_Node000031"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.03,-721.34C2591.05,-716.51 2922.11,-702.46 3031,-668 3095.39,-647.62 3128.46,-649.62 3162,-591 3199.69,-525.12 3134.48,-447.06 3086,-396 3069.35,-378.47 3046.53,-364.63 3026.07,-354.61"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2434.9,-717.84 2425.01,-721.64 2435.11,-724.84 2434.9,-717.84"/>
+</a>
+</g>
+</g>
+<!-- Node33 -->
+<g id="Node000033" class="node">
+<title>Node33</title>
+<g id="a_Node000033"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements REST DeviceRequest RPC.">
+<polygon fill="white" stroke="#666666" points="1051.5,-354.5 828.5,-354.5 828.5,-313.5 1051.5,-313.5 1051.5,-354.5"/>
+<text text-anchor="start" x="836.5" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="836.5" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="940" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/DeviceRequest.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node33 -->
+<g id="edge91_Node000001_Node000033" class="edge">
+<title>Node1&#45;&gt;Node33</title>
+<g id="a_edge91_Node000001_Node000033"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.74,-723.5C1914.16,-723.19 544.64,-718.7 469,-668 430,-641.86 426,-618.45 426,-571.5 426,-571.5 426,-571.5 426,-492.5 426,-447.45 422.34,-424.77 457,-396 511.79,-350.52 703.71,-338.48 828.5,-335.57"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.93,-727 2278.93,-723.51 2268.93,-720 2268.93,-727"/>
+</a>
+</g>
+</g>
+<!-- Node34 -->
+<g id="Node000034" class="node">
+<title>Node34</title>
+<g id="a_Node000034"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements REST GetPopulatedSlots RPC.">
+<polygon fill="white" stroke="#666666" points="2591,-360 2385,-360 2385,-308 2591,-308 2591,-360"/>
+<text text-anchor="start" x="2393" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2393" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="start" x="2393" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetPopulated</text>
+<text text-anchor="middle" x="2488" y="-315" font-family="Helvetica,sans-Serif" font-size="10.00">Slots.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node34 -->
+<g id="edge92_Node000001_Node000034" class="edge">
+<title>Node1&#45;&gt;Node34</title>
+<g id="a_edge92_Node000001_Node000034"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.29,-712.9C2480.69,-704.84 2536.87,-691.07 2583,-668 2700.89,-609.05 2733.63,-563.98 2769,-437 2773.89,-419.45 2780.44,-410.19 2769,-396 2763.16,-388.76 2668.93,-369.28 2591.18,-354.27"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2434.45,-709.49 2425.18,-714.63 2435.63,-716.39 2434.45,-709.49"/>
+</a>
+</g>
+</g>
+<!-- Node35 -->
+<g id="Node000035" class="node">
+<title>Node35</title>
+<g id="a_Node000035"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements REST GetValue RPC.">
+<polygon fill="white" stroke="#666666" points="1264,-354.5 1070,-354.5 1070,-313.5 1264,-313.5 1264,-354.5"/>
+<text text-anchor="start" x="1078" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1078" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1167" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node35 -->
+<g id="edge93_Node000001_Node000035" class="edge">
+<title>Node1&#45;&gt;Node35</title>
+<g id="a_edge93_Node000001_Node000035"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2268.75,-723.88C2057.92,-724 1486.1,-719.16 1013,-668 766.7,-641.37 464,-819.24 464,-571.5 464,-571.5 464,-571.5 464,-492.5 464,-448.87 449.32,-424.91 482,-396 530.19,-353.36 996.34,-369.35 1060,-360 1069.91,-358.54 1080.25,-356.63 1090.44,-354.52"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2268.81,-727.38 2278.81,-723.87 2268.81,-720.38 2268.81,-727.38"/>
+</a>
+</g>
+</g>
+<!-- Node38 -->
+<g id="Node000038" class="node">
+<title>Node38</title>
+<g id="a_Node000038"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue RPC.">
+<polygon fill="white" stroke="#666666" points="2864.5,-354.5 2647.5,-354.5 2647.5,-313.5 2864.5,-313.5 2864.5,-354.5"/>
+<text text-anchor="start" x="2655.5" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2655.5" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2756" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/MultiSetValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node38 -->
+<g id="edge94_Node000001_Node000038" class="edge">
+<title>Node1&#45;&gt;Node38</title>
+<g id="a_edge94_Node000001_Node000038"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.47,-717.99C2493.26,-711.59 2570.68,-697.79 2633,-668 2681.11,-645 2691.62,-632.58 2725,-591 2771.19,-533.47 2776.77,-510.07 2787,-437 2789.53,-418.95 2791.24,-413.72 2787,-396 2783.49,-381.33 2775.83,-366.2 2769,-354.68"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2434.86,-714.53 2425.28,-719.06 2435.59,-721.49 2434.86,-714.53"/>
+</a>
+</g>
+</g>
+<!-- Node41 -->
+<g id="Node000041" class="node">
+<title>Node41</title>
+<g id="a_Node000041"><a xlink:href="REST_2include_2ServiceImpl_8h_source.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="#666666" points="3301.5,-354.5 3140.5,-354.5 3140.5,-313.5 3301.5,-313.5 3301.5,-354.5"/>
+<text text-anchor="start" x="3148.5" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3148.5" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="3221" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/ServiceImpl.h</text>
+</a>
+</g>
+</g>
+<!-- Node1&#45;&gt;Node41 -->
+<g id="edge89_Node000001_Node000041" class="edge">
+<title>Node1&#45;&gt;Node41</title>
+<g id="a_edge89_Node000001_Node000041"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.23,-722.84C2623.94,-720.6 3079.27,-710.78 3226,-668 3311.27,-643.14 3401,-660.32 3401,-571.5 3401,-571.5 3401,-571.5 3401,-492.5 3401,-448.79 3410.21,-429.39 3382,-396 3361.74,-372.03 3331.02,-357.46 3301.82,-348.61"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2435.05,-719.34 2425.09,-722.96 2435.13,-726.34 2435.05,-719.34"/>
 </a>
 </g>
 </g>
 <!-- Node42 -->
 <g id="Node000042" class="node">
 <title>Node42</title>
-<g id="a_Node000042"><a xlink:href="common_2include_2rpc_2Connect_8h.html" target="_top" xlink:title="Pure virtual class for Connect RPCs used to share update code.">
-<polygon fill="white" stroke="#666666" points="2719.38,-437 2573.38,-437 2573.38,-396 2719.38,-396 2719.38,-437"/>
-<text text-anchor="start" x="2581.38" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2581.38" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="2646.38" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/rpc/Connect.h</text>
+<g id="a_Node000042"><a xlink:href="IServiceImpl_8h.html" target="_top" xlink:title="Implements REST API.">
+<polygon fill="white" stroke="#666666" points="3373,-437 3171,-437 3171,-396 3373,-396 3373,-437"/>
+<text text-anchor="start" x="3179" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3179" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="3272" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/interface/IServiceImpl.h</text>
 </a>
 </g>
 </g>
 <!-- Node1&#45;&gt;Node42 -->
-<g id="edge86_Node000001_Node000042" class="edge">
+<g id="edge95_Node000001_Node000042" class="edge">
 <title>Node1&#45;&gt;Node42</title>
-<g id="a_edge86_Node000001_Node000042"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.61,-719.92C2164.71,-713.3 2431.78,-697.06 2521.38,-668 2585.62,-647.16 2618.84,-649.62 2652.38,-591 2680.59,-541.69 2664,-470.93 2653.29,-437.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.38,-716.43 2017.56,-720.4 2027.72,-723.42 2027.38,-716.43"/>
+<g id="a_edge95_Node000001_Node000042"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2435.45,-723.3C2636.68,-722.08 3136.38,-714.36 3195,-668 3267.8,-610.42 3273.47,-485.54 3272.77,-437.18"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2435.21,-719.8 2425.23,-723.36 2435.25,-726.8 2435.21,-719.8"/>
 </a>
 </g>
 </g>
@@ -430,10 +430,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000044" class="node">
 <title>Node44</title>
 <g id="a_Node000044"><a xlink:href="ParamDescriptor_8h.html" target="_top" xlink:title="Interface for accessing parameter descriptions.">
-<polygon fill="white" stroke="#666666" points="1788.88,-668 1641.88,-668 1641.88,-627 1788.88,-627 1788.88,-668"/>
-<text text-anchor="start" x="1649.88" y="-656" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1649.88" y="-645" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="1715.38" y="-634" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamDescriptor.h</text>
+<polygon fill="white" stroke="#666666" points="2527.5,-668 2380.5,-668 2380.5,-627 2527.5,-627 2527.5,-668"/>
+<text text-anchor="start" x="2388.5" y="-656" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2388.5" y="-645" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2454" y="-634" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamDescriptor.h</text>
 </a>
 </g>
 </g>
@@ -441,8 +441,8 @@ var sectionId = 'dynsection-1';
 <g id="edge79_Node000001_Node000044" class="edge">
 <title>Node1&#45;&gt;Node44</title>
 <g id="a_edge79_Node000001_Node000044"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1875.1,-700.81C1843.18,-690.36 1805.68,-678.08 1775.04,-668.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1874.21,-704.2 1884.81,-703.99 1876.39,-697.55 1874.21,-704.2"/>
+<path fill="none" stroke="#63b8ff" d="M2386.93,-697.82C2400.12,-688.11 2414.92,-677.24 2427.25,-668.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2384.52,-695.25 2378.53,-703.99 2388.66,-700.89 2384.52,-695.25"/>
 </a>
 </g>
 </g>
@@ -450,10 +450,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000045" class="node">
 <title>Node45</title>
 <g id="a_Node000045"><a xlink:href="IConnect_8h.html" target="_top" xlink:title="Interface for Connect.h.">
-<polygon fill="white" stroke="#666666" points="2643.38,-591 2497.38,-591 2497.38,-550 2643.38,-550 2643.38,-591"/>
-<text text-anchor="start" x="2505.38" y="-579" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2505.38" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="2570.38" y="-557" font-family="Helvetica,sans-Serif" font-size="10.00">/include/rpc/IConnect.h</text>
+<polygon fill="white" stroke="#666666" points="3153,-591 3007,-591 3007,-550 3153,-550 3153,-591"/>
+<text text-anchor="start" x="3015" y="-579" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3015" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="3080" y="-557" font-family="Helvetica,sans-Serif" font-size="10.00">/include/rpc/IConnect.h</text>
 </a>
 </g>
 </g>
@@ -461,8 +461,8 @@ var sectionId = 'dynsection-1';
 <g id="edge87_Node000001_Node000045" class="edge">
 <title>Node1&#45;&gt;Node45</title>
 <g id="a_edge87_Node000001_Node000045"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.87,-722.15C2158.88,-718.84 2405.79,-707.4 2483.38,-668 2517.37,-650.74 2544.39,-614.21 2558.84,-591.38"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.4,-718.66 2017.49,-722.4 2027.57,-725.66 2027.4,-718.66"/>
+<path fill="none" stroke="#63b8ff" d="M2435.39,-723.78C2586.14,-723.07 2897.26,-715.64 2993,-668 3027.33,-650.92 3054.43,-613.97 3068.76,-591.07"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2435.24,-720.28 2425.26,-723.82 2435.27,-727.28 2435.24,-720.28"/>
 </a>
 </g>
 </g>
@@ -470,10 +470,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000046" class="node">
 <title>Node46</title>
 <g id="a_Node000046"><a xlink:href="PeerInfo_8h.html" target="_top" xlink:title="Holds information about connected Peers.">
-<polygon fill="white" stroke="#666666" points="3012.88,-668 2851.88,-668 2851.88,-627 3012.88,-627 3012.88,-668"/>
-<text text-anchor="start" x="2859.88" y="-656" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2859.88" y="-645" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2932.38" y="-634" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/PeerInfo.h</text>
+<polygon fill="white" stroke="#666666" points="3590.5,-668 3429.5,-668 3429.5,-627 3590.5,-627 3590.5,-668"/>
+<text text-anchor="start" x="3437.5" y="-656" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3437.5" y="-645" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="3510" y="-634" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/PeerInfo.h</text>
 </a>
 </g>
 </g>
@@ -481,8 +481,8 @@ var sectionId = 'dynsection-1';
 <g id="edge96_Node000001_Node000046" class="edge">
 <title>Node1&#45;&gt;Node46</title>
 <g id="a_edge96_Node000001_Node000046"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2027.79,-722.22C2186.22,-718.92 2541.31,-707.39 2837.38,-668 2842.05,-667.38 2846.84,-666.66 2851.66,-665.87"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2027.56,-718.72 2017.64,-722.42 2027.71,-725.72 2027.56,-718.72"/>
+<path fill="none" stroke="#63b8ff" d="M2435.33,-723.4C2615.06,-722.24 3052.23,-714.43 3415,-668 3419.68,-667.4 3424.47,-666.7 3429.29,-665.93"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2435.13,-719.9 2425.16,-723.46 2435.18,-726.9 2435.13,-719.9"/>
 </a>
 </g>
 </g>
@@ -490,159 +490,159 @@ var sectionId = 'dynsection-1';
 <g id="edge2_Node000002_Node000003" class="edge">
 <title>Node2&#45;&gt;Node3</title>
 <g id="a_edge2_Node000002_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1632.17,-566.21C1538.18,-560.96 1381.25,-547.6 1250.38,-514 1177.34,-495.25 1096.91,-459.38 1050.46,-437.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1632.02,-569.7 1642.19,-566.75 1632.39,-562.71 1632.02,-569.7"/>
+<path fill="none" stroke="#63b8ff" d="M2351.78,-569.49C2090.14,-568.95 1295.31,-563.21 1191,-514 1156.32,-497.64 1129.33,-460.45 1115.12,-437.31"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2351.97,-572.99 2361.98,-569.51 2351.99,-565.99 2351.97,-572.99"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node8 -->
-<g id="edge61_Node000002_Node000008" class="edge">
-<title>Node2&#45;&gt;Node8</title>
-<g id="a_edge61_Node000002_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1632.32,-567.94C1518.5,-564.37 1308.23,-552.63 1133.38,-514 1079.98,-502.21 1069.38,-489.91 1017.38,-473 964.02,-455.65 945.67,-463.8 896.38,-437 871.73,-423.6 873.92,-407.61 848.38,-396 748.59,-350.63 712.18,-379.87 604.38,-360 599.76,-359.15 595.02,-358.23 590.24,-357.27"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1632.26,-571.44 1642.36,-568.24 1632.47,-564.45 1632.26,-571.44"/>
+<!-- Node2&#45;&gt;Node4 -->
+<g id="edge3_Node000002_Node000004" class="edge">
+<title>Node2&#45;&gt;Node4</title>
+<g id="a_edge3_Node000002_Node000004"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2351.7,-556.54C2259.89,-542.25 2113.63,-519.49 2026.1,-505.87"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2351.38,-560.03 2361.79,-558.11 2352.45,-553.11 2351.38,-560.03"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node12 -->
-<g id="edge65_Node000002_Node000012" class="edge">
-<title>Node2&#45;&gt;Node12</title>
-<g id="a_edge65_Node000002_Node000012"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1737.98,-541.84C1769.45,-504.74 1829.67,-438.61 1892.38,-396 1924.96,-373.86 1940.96,-382.38 1973.38,-360 2007.62,-336.35 2040.17,-300.15 2058.66,-277.84"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1735.1,-539.83 1731.35,-549.74 1740.46,-544.33 1735.1,-539.83"/>
+<!-- Node2&#45;&gt;Node9 -->
+<g id="edge74_Node000002_Node000009" class="edge">
+<title>Node2&#45;&gt;Node9</title>
+<g id="a_edge74_Node000002_Node000009"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2449.61,-540.96C2460.27,-521.15 2475.67,-494.56 2492,-473 2544.91,-403.13 2658.93,-372.88 2600,-308 2512.56,-211.74 1586.78,-183.5 1304.95,-177.1"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2446.5,-539.34 2444.91,-549.81 2452.69,-542.62 2446.5,-539.34"/>
 </a>
 </g>
 </g>
-<!-- Node13 -->
-<g id="Node000013" class="node">
-<title>Node13</title>
-<g id="a_Node000013"><a xlink:href="REST_2include_2controllers_2AddLanguage_8h.html" target="_top" xlink:title="Implements REST AddLanguage RPC.">
-<polygon fill="white" stroke="#666666" points="1746.88,-277.5 1531.88,-277.5 1531.88,-236.5 1746.88,-236.5 1746.88,-277.5"/>
-<text text-anchor="start" x="1539.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1539.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1639.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/AddLanguage.h</text>
+<!-- Node2&#45;&gt;Node27 -->
+<g id="edge61_Node000002_Node000027" class="edge">
+<title>Node2&#45;&gt;Node27</title>
+<g id="a_edge61_Node000002_Node000027"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2518.07,-557.22C2571.99,-547.67 2635.86,-532.88 2656,-514 2677.44,-493.9 2684.1,-458.96 2686.14,-437.09"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2517.38,-553.78 2508.13,-558.94 2518.58,-560.68 2517.38,-553.78"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node13 -->
-<g id="edge66_Node000002_Node000013" class="edge">
-<title>Node2&#45;&gt;Node13</title>
-<g id="a_edge66_Node000002_Node000013"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1714.72,-539.7C1712.83,-491.76 1705.51,-395.18 1677.38,-319 1671.89,-304.14 1662.49,-289.01 1654.42,-277.53"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1711.24,-540.11 1715.07,-549.99 1718.23,-539.87 1711.24,-540.11"/>
+<!-- Node2&#45;&gt;Node30 -->
+<g id="edge64_Node000002_Node000030" class="edge">
+<title>Node2&#45;&gt;Node30</title>
+<g id="a_edge64_Node000002_Node000030"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2518.76,-564C2594.39,-557.37 2708.05,-543.23 2803,-514 2865.15,-494.87 2932.29,-459.29 2971.11,-437.09"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2518.01,-560.55 2508.35,-564.89 2518.61,-567.53 2518.01,-560.55"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node14 -->
-<g id="edge67_Node000002_Node000014" class="edge">
-<title>Node2&#45;&gt;Node14</title>
-<g id="a_edge67_Node000002_Node000014"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1798.92,-569.82C1952.06,-569.21 2271.02,-562 2369.38,-514 2391.7,-503.1 2386.39,-486.29 2407.38,-473 2452.26,-444.57 2479.56,-469.78 2521.38,-437 2576.5,-393.79 2610.35,-314.35 2623.76,-277.6"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1798.62,-566.33 1788.64,-569.86 1798.65,-573.33 1798.62,-566.33"/>
+<!-- Node2&#45;&gt;Node31 -->
+<g id="edge67_Node000002_Node000031" class="edge">
+<title>Node2&#45;&gt;Node31</title>
+<g id="a_edge67_Node000002_Node000031"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2518.53,-563.52C2578.98,-556.88 2661.56,-542.98 2729,-514 2777.54,-493.14 2900.47,-396.55 2952.81,-354.57"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2517.85,-560.07 2508.27,-564.6 2518.58,-567.03 2517.85,-560.07"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node15 -->
-<g id="edge68_Node000002_Node000015" class="edge">
-<title>Node2&#45;&gt;Node15</title>
-<g id="a_edge68_Node000002_Node000015"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1632.59,-548.44C1603.86,-539.64 1571.96,-528.12 1544.38,-514 1413.9,-447.19 1402.28,-397.34 1278.38,-319 1254.63,-303.99 1226.89,-288.98 1204.83,-277.6"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1631.62,-551.81 1642.2,-551.33 1633.63,-545.1 1631.62,-551.81"/>
+<!-- Node32 -->
+<g id="Node000032" class="node">
+<title>Node32</title>
+<g id="a_Node000032"><a xlink:href="REST_2include_2controllers_2AddLanguage_8h.html" target="_top" xlink:title="Implements REST AddLanguage RPC.">
+<polygon fill="white" stroke="#666666" points="1801.5,-354.5 1586.5,-354.5 1586.5,-313.5 1801.5,-313.5 1801.5,-354.5"/>
+<text text-anchor="start" x="1594.5" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1594.5" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1694" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/AddLanguage.h</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node16 -->
-<g id="edge69_Node000002_Node000016" class="edge">
-<title>Node2&#45;&gt;Node16</title>
-<g id="a_edge69_Node000002_Node000016"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1632.14,-558.95C1583.94,-550.79 1522.98,-536.91 1472.38,-514 1337.52,-452.96 1337.3,-379.88 1202.38,-319 1200.36,-318.09 1111.03,-297.98 1035.68,-281.09"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1631.79,-562.44 1642.22,-560.6 1632.92,-555.53 1631.79,-562.44"/>
+<!-- Node2&#45;&gt;Node32 -->
+<g id="edge66_Node000002_Node000032" class="edge">
+<title>Node2&#45;&gt;Node32</title>
+<g id="a_edge66_Node000002_Node000032"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2351.82,-563.39C2141.77,-547.09 1603.14,-499.51 1554,-437 1542.74,-422.67 1544.01,-411.24 1554,-396 1566.57,-376.82 1586.63,-363.63 1607.68,-354.58"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2351.63,-566.89 2361.87,-564.17 2352.17,-559.91 2351.63,-566.89"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node17 -->
-<g id="edge70_Node000002_Node000017" class="edge">
-<title>Node2&#45;&gt;Node17</title>
-<g id="a_edge70_Node000002_Node000017"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1753.05,-543.94C1824.15,-496.3 1983.78,-392.16 2126.38,-319 2156.45,-303.57 2191.33,-288.72 2219.23,-277.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1750.78,-541.25 1744.43,-549.74 1754.68,-547.07 1750.78,-541.25"/>
+<!-- Node2&#45;&gt;Node33 -->
+<g id="edge68_Node000002_Node000033" class="edge">
+<title>Node2&#45;&gt;Node33</title>
+<g id="a_edge68_Node000002_Node000033"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2351.63,-570C2133.72,-570.52 1551.38,-566.8 1367,-514 1299.11,-494.56 1284.66,-479.15 1228,-437 1207.07,-421.43 1208.79,-408.69 1186,-396 1171.9,-388.14 1093.13,-369.25 1028.46,-354.55"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2351.73,-573.5 2361.72,-569.97 2351.71,-566.5 2351.73,-573.5"/>
 </a>
 </g>
 </g>
-<!-- Node18 -->
-<g id="Node000018" class="node">
-<title>Node18</title>
-<g id="a_Node000018"><a xlink:href="REST_2include_2controllers_2LanguagePackRequest_8h.html" target="_top" xlink:title="Implements REST LanguagePackRequest RPC.">
-<polygon fill="white" stroke="#666666" points="1975.38,-283 1765.38,-283 1765.38,-231 1975.38,-231 1975.38,-283"/>
-<text text-anchor="start" x="1773.38" y="-271" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1773.38" y="-260" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="start" x="1773.38" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/LanguagePack</text>
-<text text-anchor="middle" x="1870.38" y="-238" font-family="Helvetica,sans-Serif" font-size="10.00">Request.h</text>
+<!-- Node2&#45;&gt;Node34 -->
+<g id="edge69_Node000002_Node000034" class="edge">
+<title>Node2&#45;&gt;Node34</title>
+<g id="a_edge69_Node000002_Node000034"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2441.63,-540.15C2452.13,-493.71 2472.39,-404.06 2482.29,-360.29"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2438.22,-539.38 2439.43,-549.91 2445.05,-540.93 2438.22,-539.38"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node18 -->
-<g id="edge71_Node000002_Node000018" class="edge">
-<title>Node2&#45;&gt;Node18</title>
-<g id="a_edge71_Node000002_Node000018"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1718.34,-539.97C1724.83,-477.61 1740.69,-336.76 1753.38,-319 1764.3,-303.72 1780.22,-291.96 1796.83,-283.05"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1714.86,-539.66 1717.32,-549.96 1721.82,-540.37 1714.86,-539.66"/>
+<!-- Node2&#45;&gt;Node35 -->
+<g id="edge70_Node000002_Node000035" class="edge">
+<title>Node2&#45;&gt;Node35</title>
+<g id="a_edge70_Node000002_Node000035"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2351.51,-569.77C2196.56,-569.04 1854.47,-561.57 1571,-514 1443.72,-492.64 1405.58,-496.41 1291,-437 1249.18,-415.31 1208.53,-377.81 1185.74,-354.82"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2351.87,-573.28 2361.89,-569.81 2351.9,-566.28 2351.87,-573.28"/>
 </a>
 </g>
 </g>
-<!-- Node19 -->
-<g id="Node000019" class="node">
-<title>Node19</title>
-<g id="a_Node000019"><a xlink:href="REST_2include_2controllers_2ListLanguages_8h_source.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="#666666" points="1513.88,-277.5 1294.88,-277.5 1294.88,-236.5 1513.88,-236.5 1513.88,-277.5"/>
-<text text-anchor="start" x="1302.88" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1302.88" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1404.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/ListLanguages.h</text>
+<!-- Node36 -->
+<g id="Node000036" class="node">
+<title>Node36</title>
+<g id="a_Node000036"><a xlink:href="REST_2include_2controllers_2LanguagePackRequest_8h.html" target="_top" xlink:title="Implements REST LanguagePackRequest RPC.">
+<polygon fill="white" stroke="#666666" points="1568,-360 1358,-360 1358,-308 1568,-308 1568,-360"/>
+<text text-anchor="start" x="1366" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1366" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="start" x="1366" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/LanguagePack</text>
+<text text-anchor="middle" x="1463" y="-315" font-family="Helvetica,sans-Serif" font-size="10.00">Request.h</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node19 -->
-<g id="edge72_Node000002_Node000019" class="edge">
-<title>Node2&#45;&gt;Node19</title>
-<g id="a_edge72_Node000002_Node000019"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1663.38,-545.35C1598.73,-512.61 1489.68,-447.96 1430.38,-360 1413.42,-334.85 1407.52,-299.43 1405.47,-277.63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1662.08,-548.61 1672.59,-549.95 1665.2,-542.35 1662.08,-548.61"/>
+<!-- Node2&#45;&gt;Node36 -->
+<g id="edge71_Node000002_Node000036" class="edge">
+<title>Node2&#45;&gt;Node36</title>
+<g id="a_edge71_Node000002_Node000036"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2351.92,-569.82C2175.45,-569.52 1768.91,-563.3 1641,-514 1564.32,-484.45 1504.48,-402.16 1477.94,-360.24"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2351.93,-573.32 2361.94,-569.83 2351.94,-566.32 2351.93,-573.32"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node20 -->
-<g id="edge73_Node000002_Node000020" class="edge">
-<title>Node2&#45;&gt;Node20</title>
-<g id="a_edge73_Node000002_Node000020"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1632.31,-567.19C1446.18,-561.51 1000.52,-545.04 853.38,-514 658.84,-472.97 547.22,-523 433.38,-360 416.24,-335.46 428.27,-299.53 438.7,-277.51"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1632.21,-570.68 1642.31,-567.49 1632.42,-563.69 1632.21,-570.68"/>
+<!-- Node37 -->
+<g id="Node000037" class="node">
+<title>Node37</title>
+<g id="a_Node000037"><a xlink:href="REST_2include_2controllers_2ListLanguages_8h_source.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="#666666" points="2038.5,-354.5 1819.5,-354.5 1819.5,-313.5 2038.5,-313.5 2038.5,-354.5"/>
+<text text-anchor="start" x="1827.5" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1827.5" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1929" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/ListLanguages.h</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node23 -->
-<g id="edge24_Node000002_Node000023" class="edge">
-<title>Node2&#45;&gt;Node23</title>
-<g id="a_edge24_Node000002_Node000023"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1798.42,-550.63C1851.95,-538.46 1920.91,-522.79 1972.34,-511.1"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1797.59,-547.23 1788.61,-552.86 1799.14,-554.05 1797.59,-547.23"/>
+<!-- Node2&#45;&gt;Node37 -->
+<g id="edge72_Node000002_Node000037" class="edge">
+<title>Node2&#45;&gt;Node37</title>
+<g id="a_edge72_Node000002_Node000037"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2434.13,-539.75C2431.23,-500.17 2419.76,-431.11 2376,-396 2318.81,-350.11 2120.41,-371.55 2048,-360 2037.99,-358.4 2027.56,-356.53 2017.2,-354.53"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2430.64,-540.07 2434.73,-549.85 2437.63,-539.66 2430.64,-540.07"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node28 -->
-<g id="edge74_Node000002_Node000028" class="edge">
-<title>Node2&#45;&gt;Node28</title>
-<g id="a_edge74_Node000002_Node000028"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1798.55,-563.36C1962.25,-549.76 2318.5,-512.18 2412.38,-437 2489.67,-375.1 2504.09,-244.65 2506.77,-195.13"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1798.21,-559.88 1788.53,-564.19 1798.78,-566.86 1798.21,-559.88"/>
+<!-- Node2&#45;&gt;Node38 -->
+<g id="edge73_Node000002_Node000038" class="edge">
+<title>Node2&#45;&gt;Node38</title>
+<g id="a_edge73_Node000002_Node000038"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2518.32,-561.35C2567.96,-553.98 2631.02,-540.07 2682,-514 2727.97,-490.49 2747.8,-484.08 2769,-437 2781.02,-410.31 2772.31,-375.95 2764.49,-354.71"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2517.67,-557.91 2508.26,-562.79 2518.65,-564.84 2517.67,-557.91"/>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node42 -->
-<g id="edge64_Node000002_Node000042" class="edge">
-<title>Node2&#45;&gt;Node42</title>
-<g id="a_edge64_Node000002_Node000042"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1798.68,-565.98C1956.6,-558.79 2293.89,-540.8 2407.38,-514 2481.19,-496.57 2562.04,-459.92 2608.24,-437.14"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1798.37,-562.49 1788.54,-566.44 1798.69,-569.49 1798.37,-562.49"/>
+<!-- Node2&#45;&gt;Node41 -->
+<g id="edge65_Node000002_Node000041" class="edge">
+<title>Node2&#45;&gt;Node41</title>
+<g id="a_edge65_Node000002_Node000041"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2518.38,-567.6C2647.41,-561.46 2899.96,-536.51 3086,-437 3129.52,-413.72 3174.06,-377.07 3199.54,-354.62"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2518.01,-564.11 2508.17,-568.06 2518.32,-571.1 2518.01,-564.11"/>
 </a>
 </g>
 </g>
@@ -650,10 +650,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000043" class="node">
 <title>Node43</title>
 <g id="a_Node000043"><a xlink:href="StructInfo_8h.html" target="_top" xlink:title="Structured data serialization and deserialization to protobuf.">
-<polygon fill="white" stroke="#666666" points="1008.38,-514 862.38,-514 862.38,-473 1008.38,-473 1008.38,-514"/>
-<text text-anchor="start" x="870.38" y="-502" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="870.38" y="-491" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="935.38" y="-480" font-family="Helvetica,sans-Serif" font-size="10.00">/include/StructInfo.h</text>
+<polygon fill="white" stroke="#666666" points="2647,-514 2501,-514 2501,-473 2647,-473 2647,-514"/>
+<text text-anchor="start" x="2509" y="-502" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2509" y="-491" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2574" y="-480" font-family="Helvetica,sans-Serif" font-size="10.00">/include/StructInfo.h</text>
 </a>
 </g>
 </g>
@@ -661,750 +661,750 @@ var sectionId = 'dynsection-1';
 <g id="edge62_Node000002_Node000043" class="edge">
 <title>Node2&#45;&gt;Node43</title>
 <g id="a_edge62_Node000002_Node000043"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1631.79,-564.3C1507.09,-556.13 1265.09,-538.61 1060.38,-514 1043.58,-511.98 1025.59,-509.41 1008.62,-506.81"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1631.82,-567.81 1642.02,-564.97 1632.27,-560.83 1631.82,-567.81"/>
+<path fill="none" stroke="#63b8ff" d="M2480.05,-545.19C2498.65,-535.15 2519.94,-523.67 2537.54,-514.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2478.3,-542.16 2471.16,-549.99 2481.62,-548.32 2478.3,-542.16"/>
 </a>
 </g>
 </g>
-<!-- Node4 -->
-<g id="Node000004" class="node">
-<title>Node4</title>
-<g id="a_Node000004"><a xlink:href="LanguagePack_8h.html" target="_top" xlink:title="multi language support in 2 classes: LanguagePack and LanguagePacks">
-<polygon fill="white" stroke="#666666" points="830.38,-360 684.38,-360 684.38,-319 830.38,-319 830.38,-360"/>
-<text text-anchor="start" x="692.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="692.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="757.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/LanguagePack.h</text>
+<!-- Node4&#45;&gt;Node3 -->
+<g id="edge4_Node000004_Node000003" class="edge">
+<title>Node4&#45;&gt;Node3</title>
+<g id="a_edge4_Node000004_Node000003"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.6,-486.79C1740.38,-477.71 1484.04,-458.75 1267,-437 1237.65,-434.06 1205.39,-430.31 1177.37,-426.88"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.6,-490.3 1879.82,-487.5 1870.09,-483.31 1869.6,-490.3"/>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node4 -->
-<g id="edge3_Node000003_Node000004" class="edge">
-<title>Node3&#45;&gt;Node4</title>
-<g id="a_edge3_Node000003_Node000004"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M935.45,-393.08C899.85,-382.57 857.84,-370.16 823.56,-360.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="934.72,-396.52 945.3,-395.99 936.7,-389.8 934.72,-396.52"/>
-</a>
-</g>
-</g>
-<!-- Node5 -->
-<g id="Node000005" class="node">
-<title>Node5</title>
-<g id="a_Node000005"><a xlink:href="Menu_8h.html" target="_top" xlink:title="Menus support.">
-<polygon fill="white" stroke="#666666" points="994.38,-360 848.38,-360 848.38,-319 994.38,-319 994.38,-360"/>
-<text text-anchor="start" x="856.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="856.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="921.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Menu.h</text>
-</a>
-</g>
-</g>
-<!-- Node3&#45;&gt;Node5 -->
-<g id="edge4_Node000003_Node000005" class="edge">
-<title>Node3&#45;&gt;Node5</title>
-<g id="a_edge4_Node000003_Node000005"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M979.99,-389.35C968.45,-379.73 955.59,-369.01 944.86,-360.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="977.81,-392.08 987.73,-395.79 982.29,-386.7 977.81,-392.08"/>
+<!-- Node4&#45;&gt;Node5 -->
+<g id="edge5_Node000004_Node000005" class="edge">
+<title>Node4&#45;&gt;Node5</title>
+<g id="a_edge5_Node000004_Node000005"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.15,-474.45C2085.76,-463.65 2150,-449.62 2207,-437 2211.53,-436 2216.2,-434.96 2220.91,-433.91"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2035.13,-471.09 2026.11,-476.63 2036.62,-477.93 2035.13,-471.09"/>
 </a>
 </g>
 </g>
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="MenuGroup_8h.html" target="_top" xlink:title="MenuGroups support.">
-<polygon fill="white" stroke="#666666" points="778.38,-277.5 632.38,-277.5 632.38,-236.5 778.38,-236.5 778.38,-277.5"/>
-<text text-anchor="start" x="640.38" y="-265.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="640.38" y="-254.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="705.38" y="-243.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/MenuGroup.h</text>
+<g id="a_Node000006"><a xlink:href="ParamVisitor_8h.html" target="_top" xlink:title="Implements Catena ParamVisitor.">
+<polygon fill="white" stroke="#666666" points="2367,-354.5 2221,-354.5 2221,-313.5 2367,-313.5 2367,-354.5"/>
+<text text-anchor="start" x="2229" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2229" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2294" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamVisitor.h</text>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node6 -->
-<g id="edge6_Node000003_Node000006" class="edge">
-<title>Node3&#45;&gt;Node6</title>
-<g id="a_edge6_Node000003_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M928.26,-396.73C926.95,-396.48 925.66,-396.24 924.38,-396 869.39,-385.88 711.97,-402.27 675.38,-360 655.08,-336.56 674.34,-299.95 689.98,-277.56"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="927.87,-400.22 938.36,-398.71 929.22,-393.35 927.87,-400.22"/>
+<!-- Node4&#45;&gt;Node6 -->
+<g id="edge32_Node000004_Node000006" class="edge">
+<title>Node4&#45;&gt;Node6</title>
+<g id="a_edge32_Node000004_Node000006"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.15,-483.19C2079.54,-475.56 2132.16,-461.78 2174,-437 2195.38,-424.34 2193.51,-412.6 2212,-396 2228.64,-381.07 2248.76,-366.06 2264.91,-354.66"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2035.47,-479.75 2026.19,-484.86 2036.63,-486.66 2035.47,-479.75"/>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node7 -->
-<g id="edge7_Node000003_Node000007" class="edge">
-<title>Node3&#45;&gt;Node7</title>
-<g id="a_edge7_Node000003_Node000007"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M928.14,-412.86C784.32,-407.58 480.21,-393.24 225.38,-360 222.34,-359.6 219.25,-359.17 216.14,-358.72"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="928.09,-416.36 938.21,-413.23 928.35,-409.37 928.09,-416.36"/>
+<!-- Node4&#45;&gt;Node7 -->
+<g id="edge36_Node000004_Node000007" class="edge">
+<title>Node4&#45;&gt;Node7</title>
+<g id="a_edge36_Node000004_Node000007"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.54,-489.24C1740.47,-483.28 1498.98,-468.27 1419,-437 1365.77,-416.19 1357.39,-399.41 1316,-360 1294.28,-339.32 1299.76,-321.54 1273,-308 1194.42,-268.25 602.78,-256.49 379.74,-253.45"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.62,-492.74 1879.77,-489.7 1869.94,-485.75 1869.62,-492.74"/>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node8 -->
-<g id="edge8_Node000003_Node000008" class="edge">
-<title>Node3&#45;&gt;Node8</title>
-<g id="a_edge8_Node000003_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M928.26,-402.44C914.28,-400.27 899.92,-398.06 886.38,-396 778,-379.55 750.76,-376.38 642.38,-360 625.41,-357.44 607.17,-354.64 589.98,-351.98"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="927.93,-405.93 938.35,-404 929.01,-399.01 927.93,-405.93"/>
+<!-- Node4&#45;&gt;Node9 -->
+<g id="edge60_Node000004_Node000009" class="edge">
+<title>Node4&#45;&gt;Node9</title>
+<g id="a_edge60_Node000004_Node000009"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.88,-490.77C1778.03,-486.91 1626.62,-474.78 1502,-437 1465.57,-425.96 1377.6,-385.12 1349,-360 1334.36,-347.14 1265.32,-240.22 1236.59,-195.28"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.82,-494.27 1879.95,-491.17 1870.1,-487.27 1869.82,-494.27"/>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node9 -->
-<g id="edge9_Node000003_Node000009" class="edge">
-<title>Node3&#45;&gt;Node9</title>
-<g id="a_edge9_Node000003_Node000009"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M927.96,-409.11C815.45,-400.12 608.9,-382.32 433.38,-360 418.15,-358.06 401.91,-355.7 386.38,-353.3"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="927.98,-412.62 938.22,-409.93 928.53,-405.64 927.98,-412.62"/>
+<!-- Node23 -->
+<g id="Node000023" class="node">
+<title>Node23</title>
+<g id="a_Node000023"><a xlink:href="LanguagePack_8h.html" target="_top" xlink:title="multi language support in 2 classes: LanguagePack and LanguagePacks">
+<polygon fill="white" stroke="#666666" points="1721,-437 1575,-437 1575,-396 1721,-396 1721,-437"/>
+<text text-anchor="start" x="1583" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1583" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="1648" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/LanguagePack.h</text>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node10 -->
-<g id="edge10_Node000003_Node000010" class="edge">
-<title>Node3&#45;&gt;Node10</title>
-<g id="a_edge10_Node000003_Node000010"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1038.36,-388.51C1047.76,-379.11 1058.12,-368.76 1066.8,-360.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1035.68,-386.25 1031.08,-395.79 1040.63,-391.2 1035.68,-386.25"/>
+<!-- Node4&#45;&gt;Node23 -->
+<g id="edge27_Node000004_Node000023" class="edge">
+<title>Node4&#45;&gt;Node23</title>
+<g id="a_edge27_Node000004_Node000023"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1870.19,-472.14C1823.67,-460.7 1766.12,-446.55 1721.25,-435.51"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.4,-475.55 1879.94,-474.54 1871.07,-468.75 1869.4,-475.55"/>
 </a>
 </g>
 </g>
-<!-- Node11 -->
-<g id="Node000011" class="node">
-<title>Node11</title>
-<g id="a_Node000011"><a xlink:href="ICallData_8h.html" target="_top" xlink:title="Interface class for REST RPCs.">
-<polygon fill="white" stroke="#666666" points="1668.38,-360 1482.38,-360 1482.38,-319 1668.38,-319 1668.38,-360"/>
-<text text-anchor="start" x="1490.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1490.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1575.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/interface/ICallData.h</text>
+<!-- Node24 -->
+<g id="Node000024" class="node">
+<title>Node24</title>
+<g id="a_Node000024"><a xlink:href="Menu_8h.html" target="_top" xlink:title="Menus support.">
+<polygon fill="white" stroke="#666666" points="2165,-437 2019,-437 2019,-396 2165,-396 2165,-437"/>
+<text text-anchor="start" x="2027" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2027" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2092" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/include/Menu.h</text>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node11 -->
-<g id="edge11_Node000003_Node000011" class="edge">
-<title>Node3&#45;&gt;Node11</title>
-<g id="a_edge11_Node000003_Node000011"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1094.62,-404.43C1198.12,-390.67 1374.28,-367.24 1482.2,-352.89"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1093.98,-400.98 1084.53,-405.77 1094.91,-407.92 1093.98,-400.98"/>
-</a>
-</g>
-</g>
-<!-- Node3&#45;&gt;Node22 -->
-<g id="edge22_Node000003_Node000022" class="edge">
-<title>Node3&#45;&gt;Node22</title>
-<g id="a_edge22_Node000003_Node000022"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1094.83,-409.12C1221.01,-399.34 1467.9,-379.71 1677.38,-360 1704.85,-357.42 1734.59,-354.4 1762.05,-351.52"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1094.54,-405.63 1084.84,-409.89 1095.08,-412.61 1094.54,-405.63"/>
-</a>
-</g>
-</g>
-<!-- Node5&#45;&gt;Node6 -->
-<g id="edge5_Node000005_Node000006" class="edge">
-<title>Node5&#45;&gt;Node6</title>
-<g id="a_edge5_Node000005_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M859.09,-315.29C827.01,-303.33 788.33,-288.92 757.8,-277.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="858.22,-318.7 868.81,-318.91 860.66,-312.14 858.22,-318.7"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node12 -->
-<g id="edge12_Node000011_Node000012" class="edge">
-<title>Node11&#45;&gt;Node12</title>
-<g id="a_edge12_Node000011_Node000012"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1678.49,-326.13C1779.98,-313.67 1927.74,-294.65 1984.38,-283 1992,-281.43 1999.93,-279.57 2007.78,-277.59"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1678.01,-322.67 1668.51,-327.36 1678.86,-329.61 1678.01,-322.67"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node13 -->
-<g id="edge13_Node000011_Node000013" class="edge">
-<title>Node11&#45;&gt;Node13</title>
-<g id="a_edge13_Node000011_Node000013"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1597.54,-310.62C1606.17,-299.76 1615.86,-287.58 1623.74,-277.67"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1594.68,-308.6 1591.2,-318.6 1600.16,-312.95 1594.68,-308.6"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node14 -->
-<g id="edge14_Node000011_Node000014" class="edge">
-<title>Node11&#45;&gt;Node14</title>
-<g id="a_edge14_Node000011_Node000014"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1678.62,-326.28C1703.1,-323.63 1729.14,-321.03 1753.38,-319 2029.76,-295.89 2099.87,-304.59 2376.38,-283 2429.17,-278.88 2488.02,-273.16 2535.77,-268.23"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1678.15,-322.81 1668.59,-327.37 1678.91,-329.77 1678.15,-322.81"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node15 -->
-<g id="edge15_Node000011_Node000015" class="edge">
-<title>Node11&#45;&gt;Node15</title>
-<g id="a_edge15_Node000011_Node000015"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1472.41,-319.22C1416.95,-308.73 1347.38,-295.39 1285.38,-283 1276.61,-281.25 1267.49,-279.4 1258.37,-277.53"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1471.77,-322.66 1482.25,-321.08 1473.07,-315.78 1471.77,-322.66"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node16 -->
-<g id="edge16_Node000011_Node000016" class="edge">
-<title>Node11&#45;&gt;Node16</title>
-<g id="a_edge16_Node000011_Node000016"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1472.04,-327.43C1446.04,-324.66 1418.18,-321.71 1392.38,-319 1237.73,-302.76 1197.85,-307.98 1044.38,-283 1041.43,-282.52 1038.44,-282.01 1035.43,-281.48"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1471.97,-330.95 1482.29,-328.52 1472.71,-323.98 1471.97,-330.95"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node17 -->
-<g id="edge17_Node000011_Node000017" class="edge">
-<title>Node11&#45;&gt;Node17</title>
-<g id="a_edge17_Node000011_Node000017"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1678.66,-326.8C1703.15,-324.13 1729.18,-321.39 1753.38,-319 1935.86,-301.01 1983.34,-312.12 2164.38,-283 2173.8,-281.48 2183.64,-279.59 2193.35,-277.53"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1678.2,-323.33 1668.64,-327.9 1678.96,-330.29 1678.2,-323.33"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node18 -->
-<g id="edge18_Node000011_Node000018" class="edge">
-<title>Node11&#45;&gt;Node18</title>
-<g id="a_edge18_Node000011_Node000018"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1657.09,-316.2C1694.81,-305.91 1739.74,-293.65 1778.62,-283.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1655.89,-312.9 1647.16,-318.91 1657.73,-319.65 1655.89,-312.9"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node19 -->
-<g id="edge19_Node000011_Node000019" class="edge">
-<title>Node11&#45;&gt;Node19</title>
-<g id="a_edge19_Node000011_Node000019"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1524.23,-314.42C1499.27,-302.67 1469.63,-288.72 1446.07,-277.63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1523.01,-317.71 1533.54,-318.81 1525.99,-311.38 1523.01,-317.71"/>
-</a>
-</g>
-</g>
-<!-- Node11&#45;&gt;Node20 -->
-<g id="edge20_Node000011_Node000020" class="edge">
-<title>Node11&#45;&gt;Node20</title>
-<g id="a_edge20_Node000011_Node000020"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1472.12,-333.59C1260.84,-323.35 785.45,-299.34 623.38,-283 602.27,-280.87 579.8,-278.06 558.26,-275.09"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1472.13,-337.09 1482.29,-334.08 1472.47,-330.1 1472.13,-337.09"/>
-</a>
-</g>
-</g>
-<!-- Node21 -->
-<g id="Node000021" class="node">
-<title>Node21</title>
-<g id="a_Node000021"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue RPC.">
-<polygon fill="white" stroke="#666666" points="545.38,-195 353.38,-195 353.38,-154 545.38,-154 545.38,-195"/>
-<text text-anchor="start" x="361.38" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="361.38" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="449.38" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/SetValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node20&#45;&gt;Node21 -->
-<g id="edge21_Node000020_Node000021" class="edge">
-<title>Node20&#45;&gt;Node21</title>
-<g id="a_edge21_Node000020_Node000021"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M449.38,-225.87C449.38,-215.6 449.38,-204.4 449.38,-195.17"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="445.88,-226.1 449.38,-236.1 452.88,-226.1 445.88,-226.1"/>
-</a>
-</g>
-</g>
-<!-- Node22&#45;&gt;Node12 -->
-<g id="edge23_Node000022_Node000012" class="edge">
-<title>Node22&#45;&gt;Node12</title>
-<g id="a_edge23_Node000022_Node000012"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1924.22,-315.29C1955.56,-303.33 1993.34,-288.92 2023.17,-277.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1922.82,-312.08 1914.72,-318.91 1925.31,-318.62 1922.82,-312.08"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node3 -->
-<g id="edge25_Node000023_Node000003" class="edge">
-<title>Node23&#45;&gt;Node3</title>
-<g id="a_edge25_Node000023_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1962.24,-486.47C1765.03,-472.17 1271.47,-436.37 1084.61,-422.81"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1962.03,-489.96 1972.26,-487.2 1962.53,-482.98 1962.03,-489.96"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node13 -->
-<g id="edge52_Node000023_Node000013" class="edge">
-<title>Node23&#45;&gt;Node13</title>
-<g id="a_edge52_Node000023_Node000013"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2037,-463.25C2023.7,-418.85 1996.84,-337.62 1973.38,-319 1896.8,-258.22 1852.43,-301.22 1756.38,-283 1747.4,-281.3 1738.05,-279.44 1728.72,-277.53"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2033.67,-464.31 2039.86,-472.91 2040.38,-462.33 2033.67,-464.31"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node14 -->
-<g id="edge53_Node000023_Node000014" class="edge">
-<title>Node23&#45;&gt;Node14</title>
-<g id="a_edge53_Node000023_Node000014"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2072.85,-465.59C2081.99,-456.56 2092.17,-446.4 2101.38,-437 2160.01,-377.16 2170.85,-350.76 2248.38,-319 2299.02,-298.25 2440.04,-279.19 2535.82,-268.09"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2070.14,-463.35 2065.48,-472.86 2075.05,-468.33 2070.14,-463.35"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node15 -->
-<g id="edge54_Node000023_Node000015" class="edge">
-<title>Node23&#45;&gt;Node15</title>
-<g id="a_edge54_Node000023_Node000015"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1962.3,-474.74C1911.49,-463.87 1845.17,-449.66 1786.38,-437 1628.12,-402.93 1571.01,-440.18 1430.38,-360 1408.79,-347.69 1413.65,-331.84 1392.38,-319 1369.49,-305.19 1310.59,-289.54 1258.52,-277.55"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1961.73,-478.2 1972.24,-476.87 1963.2,-471.35 1961.73,-478.2"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node16 -->
-<g id="edge55_Node000023_Node000016" class="edge">
-<title>Node23&#45;&gt;Node16</title>
-<g id="a_edge55_Node000023_Node000016"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1962.2,-491.93C1855.24,-489.39 1664.53,-478.72 1507.38,-437 1381.98,-403.71 1364.36,-357.2 1240.38,-319 1155.73,-292.92 1131.17,-300.65 1044.38,-283 1041.45,-282.4 1038.48,-281.79 1035.48,-281.17"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1962.22,-495.43 1972.29,-492.15 1962.37,-488.43 1962.22,-495.43"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node17 -->
-<g id="edge56_Node000023_Node000017" class="edge">
-<title>Node23&#45;&gt;Node17</title>
-<g id="a_edge56_Node000023_Node000017"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2059.59,-463.94C2079.47,-426.44 2118.78,-360.51 2168.38,-319 2187.52,-302.98 2211.36,-288.47 2231.17,-277.63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2056.48,-462.34 2054.96,-472.83 2062.68,-465.58 2056.48,-462.34"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node18 -->
-<g id="edge57_Node000023_Node000018" class="edge">
-<title>Node23&#45;&gt;Node18</title>
-<g id="a_edge57_Node000023_Node000018"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2046.39,-462.61C2046.1,-425 2040.16,-360.34 2006.38,-319 1993.77,-303.57 1976.44,-291.9 1958.37,-283.13"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2042.89,-462.89 2046.34,-472.91 2049.89,-462.93 2042.89,-462.89"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node19 -->
-<g id="edge58_Node000023_Node000019" class="edge">
-<title>Node23&#45;&gt;Node19</title>
-<g id="a_edge58_Node000023_Node000019"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1993.59,-468.95C1942.12,-446.57 1860.39,-413.77 1786.38,-396 1650.22,-363.32 1593.1,-432.63 1473.38,-360 1441.94,-340.93 1421.6,-301.44 1411.63,-277.58"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1992.28,-472.19 2002.84,-473 1995.09,-465.78 1992.28,-472.19"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node20 -->
-<g id="edge59_Node000023_Node000020" class="edge">
-<title>Node23&#45;&gt;Node20</title>
-<g id="a_edge59_Node000023_Node000020"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1961.81,-491.69C1718.74,-488.87 1023.28,-477.33 929.38,-437 905.11,-426.58 910.03,-407.74 886.38,-396 796.45,-351.36 757.29,-395.5 663.38,-360 631.43,-347.92 628.74,-334.64 598.38,-319 567.81,-303.26 532.22,-288.56 503.49,-277.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1961.96,-495.19 1972,-491.81 1962.04,-488.19 1961.96,-495.19"/>
-</a>
-</g>
-</g>
-<!-- Node23&#45;&gt;Node24 -->
-<g id="edge26_Node000023_Node000024" class="edge">
-<title>Node23&#45;&gt;Node24</title>
-<g id="a_edge26_Node000023_Node000024"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2128.3,-470.68C2169.04,-459.96 2217.69,-447.15 2257.05,-436.8"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2127.18,-467.35 2118.4,-473.28 2128.96,-474.12 2127.18,-467.35"/>
+<!-- Node4&#45;&gt;Node24 -->
+<g id="edge28_Node000004_Node000024" class="edge">
+<title>Node4&#45;&gt;Node24</title>
+<g id="a_edge28_Node000004_Node000024"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1998.05,-468.19C2016.65,-458.15 2037.94,-446.67 2055.54,-437.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1996.3,-465.16 1989.16,-472.99 1999.62,-471.32 1996.3,-465.16"/>
 </a>
 </g>
 </g>
 <!-- Node25 -->
 <g id="Node000025" class="node">
 <title>Node25</title>
-<g id="a_Node000025"><a xlink:href="ParamVisitor_8h.html" target="_top" xlink:title="Implements Catena ParamVisitor.">
-<polygon fill="white" stroke="#666666" points="2403.38,-360 2257.38,-360 2257.38,-319 2403.38,-319 2403.38,-360"/>
-<text text-anchor="start" x="2265.38" y="-348" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2265.38" y="-337" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
-<text text-anchor="middle" x="2330.38" y="-326" font-family="Helvetica,sans-Serif" font-size="10.00">/include/ParamVisitor.h</text>
+<g id="a_Node000025"><a xlink:href="MenuGroup_8h.html" target="_top" xlink:title="MenuGroups support.">
+<polygon fill="white" stroke="#666666" points="2203,-354.5 2057,-354.5 2057,-313.5 2203,-313.5 2203,-354.5"/>
+<text text-anchor="start" x="2065" y="-342.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2065" y="-331.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/common</text>
+<text text-anchor="middle" x="2130" y="-320.5" font-family="Helvetica,sans-Serif" font-size="10.00">/include/MenuGroup.h</text>
 </a>
 </g>
 </g>
-<!-- Node23&#45;&gt;Node25 -->
-<g id="edge48_Node000023_Node000025" class="edge">
-<title>Node23&#45;&gt;Node25</title>
-<g id="a_edge48_Node000023_Node000025"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2087.01,-467.84C2121.16,-447.85 2170.96,-419.29 2215.38,-396 2239.23,-383.49 2266.35,-370.35 2288.25,-360"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2085.1,-464.9 2078.24,-472.98 2088.64,-470.94 2085.1,-464.9"/>
+<!-- Node4&#45;&gt;Node25 -->
+<g id="edge30_Node000004_Node000025" class="edge">
+<title>Node4&#45;&gt;Node25</title>
+<g id="a_edge30_Node000004_Node000025"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1964.77,-463.58C1974.43,-442.7 1989.79,-414.97 2010,-396 2028.83,-378.33 2053.76,-364.54 2076.02,-354.59"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1961.48,-462.36 1960.61,-472.92 1967.88,-465.2 1961.48,-462.36"/>
 </a>
 </g>
 </g>
-<!-- Node23&#45;&gt;Node26 -->
-<g id="edge49_Node000023_Node000026" class="edge">
-<title>Node23&#45;&gt;Node26</title>
-<g id="a_edge49_Node000023_Node000026"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2129,-484.75C2204.03,-476.65 2316.71,-461.61 2412.38,-437 2579.7,-393.95 2769.62,-314.43 2853.54,-277.63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2128.25,-481.31 2118.67,-485.85 2128.99,-488.27 2128.25,-481.31"/>
+<!-- Node4&#45;&gt;Node26 -->
+<g id="edge31_Node000004_Node000026" class="edge">
+<title>Node4&#45;&gt;Node26</title>
+<g id="a_edge31_Node000004_Node000026"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.56,-493.02C1666.35,-493.38 1129.87,-488.87 686,-437 682.96,-436.64 679.87,-436.25 676.75,-435.82"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.87,-496.52 1879.86,-493 1869.85,-489.52 1869.87,-496.52"/>
 </a>
 </g>
 </g>
-<!-- Node23&#45;&gt;Node28 -->
-<g id="edge60_Node000023_Node000028" class="edge">
-<title>Node23&#45;&gt;Node28</title>
-<g id="a_edge60_Node000023_Node000028"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2118.95,-469.54C2143.29,-460.74 2170.09,-449.71 2193.38,-437 2220.14,-422.39 2220.64,-408.66 2248.38,-396 2316.26,-365 2353.23,-405.5 2412.38,-360 2467.78,-317.38 2493.77,-233.4 2503.11,-195.22"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2117.65,-466.28 2109.39,-472.92 2119.99,-472.88 2117.65,-466.28"/>
+<!-- Node4&#45;&gt;Node27 -->
+<g id="edge33_Node000004_Node000027" class="edge">
+<title>Node4&#45;&gt;Node27</title>
+<g id="a_edge33_Node000004_Node000027"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.14,-486.57C2153.4,-477.82 2373.93,-459.99 2561,-437 2578.03,-434.91 2596.29,-432.29 2613.49,-429.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2035.87,-483.08 2026.16,-487.31 2036.39,-490.06 2035.87,-483.08"/>
 </a>
 </g>
 </g>
-<!-- Node23&#45;&gt;Node42 -->
-<g id="edge50_Node000023_Node000042" class="edge">
-<title>Node23&#45;&gt;Node42</title>
-<g id="a_edge50_Node000023_Node000042"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2128.55,-482.12C2246.64,-467.38 2461.03,-440.63 2573.32,-426.62"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2127.96,-478.67 2118.47,-483.38 2128.83,-485.61 2127.96,-478.67"/>
+<!-- Node4&#45;&gt;Node28 -->
+<g id="edge34_Node000004_Node000028" class="edge">
+<title>Node4&#45;&gt;Node28</title>
+<g id="a_edge34_Node000004_Node000028"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.59,-493.24C1685.64,-493.78 1231.62,-489.18 856,-437 853.15,-436.6 850.26,-436.16 847.34,-435.68"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.75,-496.74 1879.73,-493.2 1869.72,-489.74 1869.75,-496.74"/>
 </a>
 </g>
 </g>
-<!-- Node24&#45;&gt;Node25 -->
-<g id="edge27_Node000024_Node000025" class="edge">
-<title>Node24&#45;&gt;Node25</title>
-<g id="a_edge27_Node000024_Node000025"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2330.38,-385.69C2330.38,-377.08 2330.38,-367.9 2330.38,-360.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2326.88,-385.79 2330.38,-395.79 2333.88,-385.79 2326.88,-385.79"/>
+<!-- Node4&#45;&gt;Node29 -->
+<g id="edge35_Node000004_Node000029" class="edge">
+<title>Node4&#45;&gt;Node29</title>
+<g id="a_edge35_Node000004_Node000029"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.37,-492.3C1705.76,-490.85 1332.22,-482.35 1022,-437 1019.07,-436.57 1016.09,-436.09 1013.09,-435.57"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.81,-495.8 1879.84,-492.38 1869.87,-488.8 1869.81,-495.8"/>
 </a>
 </g>
 </g>
-<!-- Node25&#45;&gt;Node26 -->
-<g id="edge28_Node000025_Node000026" class="edge">
-<title>Node25&#45;&gt;Node26</title>
-<g id="a_edge28_Node000025_Node000026"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2413.63,-327.45C2495.36,-316.51 2623.52,-299.12 2734.38,-283 2759.87,-279.29 2787.59,-275.1 2812.81,-271.23"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2412.86,-324.02 2403.41,-328.82 2413.78,-330.96 2412.86,-324.02"/>
+<!-- Node4&#45;&gt;Node30 -->
+<g id="edge37_Node000004_Node000030" class="edge">
+<title>Node4&#45;&gt;Node30</title>
+<g id="a_edge37_Node000004_Node000030"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.52,-487.23C2184.27,-477.82 2501.44,-457.2 2769,-437 2823.29,-432.9 2884.6,-427.8 2930.98,-423.84"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2035.93,-483.76 2026.17,-487.89 2036.37,-490.75 2035.93,-483.76"/>
 </a>
 </g>
 </g>
-<!-- Node30 -->
-<g id="Node000030" class="node">
-<title>Node30</title>
-<g id="a_Node000030"><a xlink:href="BasicParamInfoRequest_8h_source.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="#666666" points="1404.88,-118 1193.88,-118 1193.88,-77 1404.88,-77 1404.88,-118"/>
-<text text-anchor="start" x="1201.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1201.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1299.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/BasicParamInfoRequest.h</text>
+<!-- Node4&#45;&gt;Node31 -->
+<g id="edge40_Node000004_Node000031" class="edge">
+<title>Node4&#45;&gt;Node31</title>
+<g id="a_edge40_Node000004_Node000031"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.48,-490.12C2142.95,-485.67 2332.2,-472.97 2490,-437 2542.5,-425.03 2551.69,-408.74 2604,-396 2721.62,-367.35 2755.01,-382.31 2874,-360 2882.59,-358.39 2891.54,-356.52 2900.42,-354.53"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2036.29,-486.63 2026.44,-490.53 2036.57,-493.62 2036.29,-486.63"/>
 </a>
 </g>
 </g>
-<!-- Node25&#45;&gt;Node30 -->
-<g id="edge47_Node000025_Node000030" class="edge">
-<title>Node25&#45;&gt;Node30</title>
-<g id="a_edge47_Node000025_Node000030"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2356.85,-311.44C2376.63,-287.95 2396.98,-254.17 2376.38,-231 2233.17,-70.01 1626.64,-148.73 1413.38,-118 1410.59,-117.6 1407.77,-117.18 1404.93,-116.76"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2354.2,-309.16 2350.23,-318.99 2359.46,-313.78 2354.2,-309.16"/>
+<!-- Node4&#45;&gt;Node32 -->
+<g id="edge39_Node000004_Node000032" class="edge">
+<title>Node4&#45;&gt;Node32</title>
+<g id="a_edge39_Node000004_Node000032"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.56,-492.77C1767.78,-491.12 1604.47,-481.38 1566,-437 1554.06,-423.23 1556.27,-411.41 1566,-396 1578.02,-376.95 1597.8,-363.73 1618.26,-354.6"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.78,-496.28 1879.83,-492.92 1869.88,-489.28 1869.78,-496.28"/>
 </a>
 </g>
 </g>
-<!-- Node27 -->
-<g id="Node000027" class="node">
-<title>Node27</title>
-<g id="a_Node000027"><a xlink:href="connections_2gRPC_2include_2Connect_8h.html" target="_top" xlink:title="Implements Catena gRPC Connect.">
-<polygon fill="white" stroke="#666666" points="3779.88,-118 3618.88,-118 3618.88,-77 3779.88,-77 3779.88,-118"/>
-<text text-anchor="start" x="3626.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="3626.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3699.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/Connect.h</text>
+<!-- Node4&#45;&gt;Node33 -->
+<g id="edge41_Node000004_Node000033" class="edge">
+<title>Node4&#45;&gt;Node33</title>
+<g id="a_edge41_Node000004_Node000033"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.59,-489.7C1717.34,-483.9 1400.39,-468.39 1295,-437 1258.22,-426.05 1254.99,-409.34 1219,-396 1210.01,-392.67 1109.94,-371.07 1032.19,-354.51"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.69,-493.21 1879.82,-490.09 1869.96,-486.21 1869.69,-493.21"/>
 </a>
 </g>
 </g>
-<!-- Node26&#45;&gt;Node27 -->
-<g id="edge29_Node000026_Node000027" class="edge">
-<title>Node26&#45;&gt;Node27</title>
-<g id="a_edge29_Node000026_Node000027"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2992.14,-238.49C3057,-226.44 3144.93,-209.97 3222.38,-195 3394.56,-161.71 3437.67,-153.68 3609.38,-118 3612.35,-117.38 3615.38,-116.75 3618.44,-116.1"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2991.13,-235.12 2981.94,-240.39 2992.41,-242 2991.13,-235.12"/>
+<!-- Node4&#45;&gt;Node34 -->
+<g id="edge42_Node000004_Node000034" class="edge">
+<title>Node4&#45;&gt;Node34</title>
+<g id="a_edge42_Node000004_Node000034"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.28,-487.49C2141.9,-480.13 2317.34,-464.23 2376,-437 2413.93,-419.39 2447.95,-384.31 2468.28,-360.25"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2036.02,-484 2026.29,-488.18 2036.5,-490.99 2036.02,-484"/>
 </a>
 </g>
 </g>
-<!-- Node26&#45;&gt;Node28 -->
-<g id="edge30_Node000026_Node000028" class="edge">
-<title>Node26&#45;&gt;Node28</title>
-<g id="a_edge30_Node000026_Node000028"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2812.85,-234.09C2808.3,-233.02 2803.79,-231.98 2799.38,-231 2728.23,-215.18 2646.7,-199.92 2587.9,-189.42"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2812.31,-237.56 2822.85,-236.48 2813.94,-230.75 2812.31,-237.56"/>
+<!-- Node4&#45;&gt;Node35 -->
+<g id="edge43_Node000004_Node000035" class="edge">
+<title>Node4&#45;&gt;Node35</title>
+<g id="a_edge43_Node000004_Node000035"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.87,-491.14C1725.72,-487.75 1435.89,-476.14 1343,-437 1317.15,-426.1 1318.53,-411.28 1295,-396 1270.12,-379.85 1240.3,-365.39 1215.71,-354.6"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.91,-494.64 1879.99,-491.37 1870.07,-487.64 1869.91,-494.64"/>
 </a>
 </g>
 </g>
-<!-- Node41 -->
-<g id="Node000041" class="node">
-<title>Node41</title>
-<g id="a_Node000041"><a xlink:href="UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements Catena gRPC UpdateSubscriptions.">
-<polygon fill="white" stroke="#666666" points="3600.38,-118 3404.38,-118 3404.38,-77 3600.38,-77 3600.38,-118"/>
-<text text-anchor="start" x="3412.38" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="3412.38" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3502.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/UpdateSubscriptions.h</text>
+<!-- Node4&#45;&gt;Node36 -->
+<g id="edge44_Node000004_Node000036" class="edge">
+<title>Node4&#45;&gt;Node36</title>
+<g id="a_edge44_Node000004_Node000036"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1869.61,-487.65C1769.11,-480.66 1607.09,-465.34 1554,-437 1520.71,-419.23 1493.67,-384.19 1477.96,-360.18"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1869.53,-491.16 1879.74,-488.35 1870,-484.17 1869.53,-491.16"/>
 </a>
 </g>
 </g>
-<!-- Node26&#45;&gt;Node41 -->
-<g id="edge46_Node000026_Node000041" class="edge">
-<title>Node26&#45;&gt;Node41</title>
-<g id="a_edge46_Node000026_Node000041"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2982.25,-233.91C3100.85,-203.03 3314.3,-147.46 3427.37,-118.03"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2981.27,-230.54 2972.47,-236.45 2983.03,-237.32 2981.27,-230.54"/>
+<!-- Node4&#45;&gt;Node37 -->
+<g id="edge45_Node000004_Node000037" class="edge">
+<title>Node4&#45;&gt;Node37</title>
+<g id="a_edge45_Node000004_Node000037"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1948.49,-462.89C1943.67,-431.29 1936.18,-382.13 1932.03,-354.88"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1945.04,-463.51 1950.01,-472.87 1951.96,-462.46 1945.04,-463.51"/>
 </a>
 </g>
 </g>
-<!-- Node28&#45;&gt;Node27 -->
-<g id="edge33_Node000028_Node000027" class="edge">
-<title>Node28&#45;&gt;Node27</title>
-<g id="a_edge33_Node000028_Node000027"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2598.15,-173.92C2787.16,-173.69 3236.44,-167.46 3609.38,-118 3612.39,-117.6 3615.45,-117.15 3618.53,-116.67"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2597.98,-170.42 2587.98,-173.92 2597.98,-177.42 2597.98,-170.42"/>
-</a>
-</g>
-</g>
-<!-- Node29 -->
-<g id="Node000029" class="node">
-<title>Node29</title>
-<g id="a_Node000029"><a xlink:href="gRPC_2include_2AddLanguage_8h.html" target="_top" xlink:title="Implements Catena gRPC AddLanguage.">
-<polygon fill="white" stroke="#666666" points="2209.88,-118 2048.88,-118 2048.88,-77 2209.88,-77 2209.88,-118"/>
-<text text-anchor="start" x="2056.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2056.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2129.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/AddLanguage.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node29 -->
-<g id="edge31_Node000028_Node000029" class="edge">
-<title>Node28&#45;&gt;Node29</title>
-<g id="a_edge31_Node000028_Node000029"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2416.57,-155.4C2414.15,-154.93 2411.75,-154.46 2409.38,-154 2325.01,-137.61 2303.6,-135.1 2219.38,-118 2216.4,-117.4 2213.37,-116.77 2210.31,-116.14"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2416.15,-158.88 2426.63,-157.37 2417.49,-152.02 2416.15,-158.88"/>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node30 -->
-<g id="edge32_Node000028_Node000030" class="edge">
-<title>Node28&#45;&gt;Node30</title>
-<g id="a_edge32_Node000028_Node000030"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2416.65,-154.92C2414.2,-154.59 2411.77,-154.28 2409.38,-154 1969.41,-102.61 1853.99,-163.44 1413.38,-118 1410.58,-117.71 1407.75,-117.4 1404.89,-117.06"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2416.38,-158.42 2426.79,-156.4 2417.4,-151.49 2416.38,-158.42"/>
-</a>
-</g>
-</g>
-<!-- Node31 -->
-<g id="Node000031" class="node">
-<title>Node31</title>
-<g id="a_Node000031"><a xlink:href="gRPC_2include_2DeviceRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC DeviceRequest.">
-<polygon fill="white" stroke="#666666" points="2396.88,-118 2227.88,-118 2227.88,-77 2396.88,-77 2396.88,-118"/>
-<text text-anchor="start" x="2235.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2235.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2312.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/DeviceRequest.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node31 -->
-<g id="edge34_Node000028_Node000031" class="edge">
-<title>Node28&#45;&gt;Node31</title>
-<g id="a_edge34_Node000028_Node000031"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2446.97,-150.27C2420.11,-139.94 2388.83,-127.9 2363.19,-118.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2446.06,-153.67 2456.65,-153.99 2448.57,-147.13 2446.06,-153.67"/>
-</a>
-</g>
-</g>
-<!-- Node32 -->
-<g id="Node000032" class="node">
-<title>Node32</title>
-<g id="a_Node000032"><a xlink:href="ExecuteCommand_8h.html" target="_top" xlink:title="Implements Catena gRPC ExecuteCommand.">
-<polygon fill="white" stroke="#666666" points="2599.38,-118 2415.38,-118 2415.38,-77 2599.38,-77 2599.38,-118"/>
-<text text-anchor="start" x="2423.38" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2423.38" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2507.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ExecuteCommand.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node32 -->
-<g id="edge35_Node000028_Node000032" class="edge">
-<title>Node28&#45;&gt;Node32</title>
-<g id="a_edge35_Node000028_Node000032"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2507.38,-143.69C2507.38,-135.08 2507.38,-125.9 2507.38,-118.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2503.88,-143.79 2507.38,-153.79 2510.88,-143.79 2503.88,-143.79"/>
-</a>
-</g>
-</g>
-<!-- Node33 -->
-<g id="Node000033" class="node">
-<title>Node33</title>
-<g id="a_Node000033"><a xlink:href="ExternalObjectRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC ExternalObjectRequest.">
-<polygon fill="white" stroke="#666666" points="2824.88,-118 2617.88,-118 2617.88,-77 2824.88,-77 2824.88,-118"/>
-<text text-anchor="start" x="2625.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2625.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2721.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ExternalObjectRequest.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node33 -->
-<g id="edge36_Node000028_Node000033" class="edge">
-<title>Node28&#45;&gt;Node33</title>
-<g id="a_edge36_Node000028_Node000033"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2572.5,-150.67C2602.24,-140.25 2637.11,-128.03 2665.62,-118.04"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2571.32,-147.38 2563.04,-153.99 2573.64,-153.99 2571.32,-147.38"/>
-</a>
-</g>
-</g>
-<!-- Node34 -->
-<g id="Node000034" class="node">
-<title>Node34</title>
-<g id="a_Node000034"><a xlink:href="GetParam_8h.html" target="_top" xlink:title="Implements Catena gRPC GetParam.">
-<polygon fill="white" stroke="#666666" points="3003.88,-118 2842.88,-118 2842.88,-77 3003.88,-77 3003.88,-118"/>
-<text text-anchor="start" x="2850.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2850.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2923.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/GetParam.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node34 -->
-<g id="edge37_Node000028_Node000034" class="edge">
-<title>Node28&#45;&gt;Node34</title>
-<g id="a_edge37_Node000028_Node000034"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2598.12,-159.29C2663.86,-148.7 2754.8,-133.46 2834.38,-118 2837.02,-117.49 2839.7,-116.96 2842.4,-116.41"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2597.52,-155.84 2588.2,-160.88 2598.63,-162.75 2597.52,-155.84"/>
-</a>
-</g>
-</g>
-<!-- Node35 -->
-<g id="Node000035" class="node">
-<title>Node35</title>
-<g id="a_Node000035"><a xlink:href="gRPC_2include_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements Catena gRPC GetPopulatedSlots.">
-<polygon fill="white" stroke="#666666" points="3206.88,-118 3021.88,-118 3021.88,-77 3206.88,-77 3206.88,-118"/>
-<text text-anchor="start" x="3029.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="3029.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3114.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/GetPopulatedSlots.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node35 -->
-<g id="edge38_Node000028_Node000035" class="edge">
-<title>Node28&#45;&gt;Node35</title>
-<g id="a_edge38_Node000028_Node000035"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2598.48,-165.76C2700.01,-156.61 2868.91,-139.83 3013.38,-118 3016.11,-117.59 3018.89,-117.15 3021.69,-116.7"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2597.91,-162.3 2588.26,-166.68 2598.54,-169.27 2597.91,-162.3"/>
-</a>
-</g>
-</g>
-<!-- Node36 -->
-<g id="Node000036" class="node">
-<title>Node36</title>
-<g id="a_Node000036"><a xlink:href="gRPC_2include_2GetValue_8h.html" target="_top" xlink:title="Implements Catena gRPC GetValue.">
-<polygon fill="white" stroke="#666666" points="3385.88,-118 3224.88,-118 3224.88,-77 3385.88,-77 3385.88,-118"/>
-<text text-anchor="start" x="3232.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="3232.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3305.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/GetValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node36 -->
-<g id="edge39_Node000028_Node000036" class="edge">
-<title>Node28&#45;&gt;Node36</title>
-<g id="a_edge39_Node000028_Node000036"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2598.38,-170.38C2733.74,-164.84 2995.86,-150.63 3216.38,-118 3219.04,-117.61 3221.74,-117.18 3224.46,-116.72"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2597.91,-166.9 2588.06,-170.8 2598.19,-173.89 2597.91,-166.9"/>
-</a>
-</g>
-</g>
-<!-- Node37 -->
-<g id="Node000037" class="node">
-<title>Node37</title>
-<g id="a_Node000037"><a xlink:href="gRPC_2include_2LanguagePackRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC LanguagePackRequest.">
-<polygon fill="white" stroke="#666666" points="1627.88,-118 1422.88,-118 1422.88,-77 1627.88,-77 1627.88,-118"/>
-<text text-anchor="start" x="1430.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1430.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1525.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/LanguagePackRequest.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node37 -->
-<g id="edge40_Node000028_Node000037" class="edge">
-<title>Node28&#45;&gt;Node37</title>
-<g id="a_edge40_Node000028_Node000037"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2416.64,-154.95C2414.2,-154.61 2411.77,-154.29 2409.38,-154 2067.98,-112.32 1978.22,-155.83 1636.38,-118 1633.65,-117.7 1630.9,-117.37 1628.12,-117.02"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2416.37,-158.45 2426.78,-156.47 2417.41,-151.53 2416.37,-158.45"/>
-</a>
-</g>
-</g>
-<!-- Node38 -->
-<g id="Node000038" class="node">
-<title>Node38</title>
-<g id="a_Node000038"><a xlink:href="gRPC_2include_2ListLanguages_8h.html" target="_top" xlink:title="Implements Catena gRPC ListLanguages.">
-<polygon fill="white" stroke="#666666" points="1810.88,-118 1645.88,-118 1645.88,-77 1810.88,-77 1810.88,-118"/>
-<text text-anchor="start" x="1653.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1653.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1728.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ListLanguages.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node38 -->
-<g id="edge41_Node000028_Node000038" class="edge">
-<title>Node28&#45;&gt;Node38</title>
-<g id="a_edge41_Node000028_Node000038"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2416.64,-155C2414.2,-154.64 2411.77,-154.31 2409.38,-154 2148.84,-120.29 2079.66,-153.62 1819.38,-118 1816.65,-117.63 1813.89,-117.22 1811.11,-116.78"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2416.35,-158.49 2426.77,-156.56 2417.42,-151.58 2416.35,-158.49"/>
-</a>
-</g>
-</g>
-<!-- Node39 -->
-<g id="Node000039" class="node">
-<title>Node39</title>
-<g id="a_Node000039"><a xlink:href="gRPC_2include_2MultiSetValue_8h.html" target="_top" xlink:title="Generic CallData class for the SetValue and MultiSetValue RPCs.">
-<polygon fill="white" stroke="#666666" points="1991.88,-118 1828.88,-118 1828.88,-77 1991.88,-77 1991.88,-118"/>
-<text text-anchor="start" x="1836.88" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1836.88" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1910.38" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/MultiSetValue.h</text>
-</a>
-</g>
-</g>
-<!-- Node28&#45;&gt;Node39 -->
-<g id="edge42_Node000028_Node000039" class="edge">
-<title>Node28&#45;&gt;Node39</title>
-<g id="a_edge42_Node000028_Node000039"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2416.63,-155.09C2414.19,-154.71 2411.77,-154.34 2409.38,-154 2231.38,-128.42 2184.32,-143.94 2006.38,-118 2001.66,-117.31 1996.83,-116.54 1991.97,-115.72"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2416.31,-158.58 2426.74,-156.74 2417.44,-151.67 2416.31,-158.58"/>
+<!-- Node4&#45;&gt;Node38 -->
+<g id="edge46_Node000004_Node000038" class="edge">
+<title>Node4&#45;&gt;Node38</title>
+<g id="a_edge46_Node000004_Node000038"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.15,-488.29C2130.14,-482.22 2287.22,-468.12 2419,-437 2471.4,-424.63 2481.66,-412.23 2533,-396 2581.03,-380.82 2635.56,-365.86 2678.68,-354.56"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2035.9,-484.8 2026.14,-488.92 2036.34,-491.79 2035.9,-484.8"/>
 </a>
 </g>
 </g>
 <!-- Node40 -->
 <g id="Node000040" class="node">
 <title>Node40</title>
-<g id="a_Node000040"><a xlink:href="gRPC_2include_2SetValue_8h.html" target="_top" xlink:title="Implements Catena gRPC SetValue.">
-<polygon fill="white" stroke="#666666" points="2045.88,-41 1884.88,-41 1884.88,0 2045.88,0 2045.88,-41"/>
-<text text-anchor="start" x="1892.88" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1892.88" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1965.38" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/SetValue.h</text>
+<g id="a_Node000040"><a xlink:href="ICallData_8h.html" target="_top" xlink:title="Interface class for REST RPCs.">
+<polygon fill="white" stroke="#666666" points="1925,-437 1739,-437 1739,-396 1925,-396 1925,-437"/>
+<text text-anchor="start" x="1747" y="-425" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1747" y="-414" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1832" y="-403" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/interface/ICallData.h</text>
 </a>
 </g>
 </g>
-<!-- Node28&#45;&gt;Node40 -->
-<g id="edge44_Node000028_Node000040" class="edge">
-<title>Node28&#45;&gt;Node40</title>
-<g id="a_edge44_Node000028_Node000040"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2416.62,-155.11C2414.18,-154.73 2411.77,-154.35 2409.38,-154 2327.65,-141.92 2111.6,-158.1 2039.38,-118 2023.13,-108.98 1994.25,-66.75 1977.78,-41.24"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2416.29,-158.61 2426.73,-156.79 2417.44,-151.7 2416.29,-158.61"/>
+<!-- Node4&#45;&gt;Node40 -->
+<g id="edge48_Node000004_Node000040" class="edge">
+<title>Node4&#45;&gt;Node40</title>
+<g id="a_edge48_Node000004_Node000040"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1912.9,-467.64C1896.92,-457.74 1878.78,-446.5 1863.74,-437.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1911.18,-470.7 1921.52,-472.99 1914.87,-464.75 1911.18,-470.7"/>
 </a>
 </g>
 </g>
-<!-- Node28&#45;&gt;Node41 -->
-<g id="edge45_Node000028_Node000041" class="edge">
-<title>Node28&#45;&gt;Node41</title>
-<g id="a_edge45_Node000028_Node000041"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2598.52,-171.35C2759.76,-166.74 3105.62,-153.33 3395.38,-118 3398.28,-117.65 3401.23,-117.26 3404.2,-116.86"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2598.07,-167.86 2588.17,-171.64 2598.27,-174.85 2598.07,-167.86"/>
+<!-- Node4&#45;&gt;Node42 -->
+<g id="edge58_Node000004_Node000042" class="edge">
+<title>Node4&#45;&gt;Node42</title>
+<g id="a_edge58_Node000004_Node000042"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2036.39,-490C2224.07,-484.03 2693.87,-467.14 3086,-437 3113.52,-434.89 3143.27,-432.03 3170.73,-429.15"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2036.21,-486.5 2026.32,-490.32 2036.43,-493.5 2036.21,-486.5"/>
 </a>
 </g>
 </g>
-<!-- Node39&#45;&gt;Node40 -->
-<g id="edge43_Node000039_Node000040" class="edge">
-<title>Node39&#45;&gt;Node40</title>
-<g id="a_edge43_Node000039_Node000040"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1930.78,-68.67C1937.51,-59.5 1944.84,-49.5 1951.02,-41.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1927.92,-66.66 1924.83,-76.79 1933.56,-70.8 1927.92,-66.66"/>
+<!-- Node5&#45;&gt;Node6 -->
+<g id="edge6_Node000005_Node000006" class="edge">
+<title>Node5&#45;&gt;Node6</title>
+<g id="a_edge6_Node000005_Node000006"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2294,-385.37C2294,-375.1 2294,-363.9 2294,-354.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2290.5,-385.6 2294,-395.6 2297.5,-385.6 2290.5,-385.6"/>
 </a>
 </g>
 </g>
-<!-- Node42&#45;&gt;Node14 -->
-<g id="edge51_Node000042_Node000014" class="edge">
-<title>Node42&#45;&gt;Node14</title>
-<g id="a_edge51_Node000042_Node000014"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2643.37,-385.89C2640.16,-354.29 2635.16,-305.13 2632.4,-277.88"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2639.89,-386.28 2644.38,-395.87 2646.85,-385.57 2639.89,-386.28"/>
+<!-- Node6&#45;&gt;Node7 -->
+<g id="edge7_Node000006_Node000007" class="edge">
+<title>Node6&#45;&gt;Node7</title>
+<g id="a_edge7_Node000006_Node000007"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2226.61,-310.91C2221.7,-309.78 2216.8,-308.79 2212,-308 2029.95,-278.17 726.37,-258.39 379.56,-253.62"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2226.12,-314.39 2236.67,-313.41 2227.81,-307.6 2226.12,-314.39"/>
 </a>
 </g>
 </g>
-<!-- Node43&#45;&gt;Node8 -->
-<g id="edge63_Node000043_Node000008" class="edge">
-<title>Node43&#45;&gt;Node8</title>
-<g id="a_edge63_Node000043_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M898.59,-466.92C885.7,-457.71 871.24,-447.1 858.38,-437 836.31,-419.67 835.76,-407.95 810.38,-396 726.28,-356.42 695.55,-378.06 604.38,-360 599.77,-359.09 595.04,-358.12 590.27,-357.13"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="896.62,-469.82 906.8,-472.75 900.68,-464.11 896.62,-469.82"/>
+<!-- Node11 -->
+<g id="Node000011" class="node">
+<title>Node11</title>
+<g id="a_Node000011"><a xlink:href="BasicParamInfoRequest_8h_source.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="#666666" points="2585.5,-118 2374.5,-118 2374.5,-77 2585.5,-77 2585.5,-118"/>
+<text text-anchor="start" x="2382.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2382.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2480" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/BasicParamInfoRequest.h</text>
+</a>
+</g>
+</g>
+<!-- Node6&#45;&gt;Node11 -->
+<g id="edge26_Node000006_Node000011" class="edge">
+<title>Node6&#45;&gt;Node11</title>
+<g id="a_edge26_Node000006_Node000011"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2315.95,-305.33C2353.99,-257.37 2431.27,-159.94 2464.38,-118.2"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2313.01,-303.4 2309.54,-313.41 2318.49,-307.75 2313.01,-303.4"/>
+</a>
+</g>
+</g>
+<!-- Node8 -->
+<g id="Node000008" class="node">
+<title>Node8</title>
+<g id="a_Node000008"><a xlink:href="connections_2gRPC_2include_2Connect_8h.html" target="_top" xlink:title="Implements Catena gRPC Connect.">
+<polygon fill="white" stroke="#666666" points="375.5,-118 214.5,-118 214.5,-77 375.5,-77 375.5,-118"/>
+<text text-anchor="start" x="222.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="222.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="295" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/Connect.h</text>
+</a>
+</g>
+</g>
+<!-- Node7&#45;&gt;Node8 -->
+<g id="edge8_Node000007_Node000008" class="edge">
+<title>Node7&#45;&gt;Node8</title>
+<g id="a_edge8_Node000007_Node000008"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M295,-220.58C295,-190.36 295,-144.53 295,-118.47"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="291.5,-220.94 295,-230.94 298.5,-220.94 291.5,-220.94"/>
+</a>
+</g>
+</g>
+<!-- Node7&#45;&gt;Node9 -->
+<g id="edge9_Node000007_Node000009" class="edge">
+<title>Node7&#45;&gt;Node9</title>
+<g id="a_edge9_Node000007_Node000009"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M389.69,-231.45C390.8,-231.29 391.9,-231.15 393,-231 666.78,-194.77 994.61,-181.71 1143.44,-177.41"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="388.99,-228.02 379.61,-232.95 390.02,-234.94 388.99,-228.02"/>
+</a>
+</g>
+</g>
+<!-- Node22 -->
+<g id="Node000022" class="node">
+<title>Node22</title>
+<g id="a_Node000022"><a xlink:href="UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements Catena gRPC UpdateSubscriptions.">
+<polygon fill="white" stroke="#666666" points="196,-118 0,-118 0,-77 196,-77 196,-118"/>
+<text text-anchor="start" x="8" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="8" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="98" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/UpdateSubscriptions.h</text>
+</a>
+</g>
+</g>
+<!-- Node7&#45;&gt;Node22 -->
+<g id="edge25_Node000007_Node000022" class="edge">
+<title>Node7&#45;&gt;Node22</title>
+<g id="a_edge25_Node000007_Node000022"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M261.72,-224.82C222.71,-194.72 158.9,-145.49 123.57,-118.23"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="259.59,-227.6 269.65,-230.94 263.87,-222.06 259.59,-227.6"/>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node8 -->
+<g id="edge12_Node000009_Node000008" class="edge">
+<title>Node9&#45;&gt;Node8</title>
+<g id="a_edge12_Node000009_Node000008"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1132.99,-171.94C978.34,-168.3 654.71,-156.38 384,-118 381.34,-117.62 378.64,-117.21 375.91,-116.77"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1133.3,-175.45 1143.38,-172.18 1133.46,-168.45 1133.3,-175.45"/>
+</a>
+</g>
+</g>
+<!-- Node10 -->
+<g id="Node000010" class="node">
+<title>Node10</title>
+<g id="a_Node000010"><a xlink:href="gRPC_2include_2AddLanguage_8h.html" target="_top" xlink:title="Implements Catena gRPC AddLanguage.">
+<polygon fill="white" stroke="#666666" points="1359.5,-118 1198.5,-118 1198.5,-77 1359.5,-77 1359.5,-118"/>
+<text text-anchor="start" x="1206.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1206.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1279" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/AddLanguage.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node10 -->
+<g id="edge10_Node000009_Node000010" class="edge">
+<title>Node9&#45;&gt;Node10</title>
+<g id="a_edge10_Node000009_Node000010"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1244.41,-145.67C1251.13,-136.5 1258.47,-126.5 1264.65,-118.07"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1241.54,-143.66 1238.45,-153.79 1247.19,-147.8 1241.54,-143.66"/>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node11 -->
+<g id="edge11_Node000009_Node000011" class="edge">
+<title>Node9&#45;&gt;Node11</title>
+<g id="a_edge11_Node000009_Node000011"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1314.97,-172.76C1508.66,-170.36 1975.91,-160.3 2365,-118 2368.12,-117.66 2371.28,-117.29 2374.48,-116.9"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1314.8,-169.26 1304.84,-172.88 1314.88,-176.26 1314.8,-169.26"/>
+</a>
+</g>
+</g>
+<!-- Node12 -->
+<g id="Node000012" class="node">
+<title>Node12</title>
+<g id="a_Node000012"><a xlink:href="gRPC_2include_2DeviceRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC DeviceRequest.">
+<polygon fill="white" stroke="#666666" points="1546.5,-118 1377.5,-118 1377.5,-77 1546.5,-77 1546.5,-118"/>
+<text text-anchor="start" x="1385.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1385.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1462" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/DeviceRequest.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node12 -->
+<g id="edge13_Node000009_Node000012" class="edge">
+<title>Node9&#45;&gt;Node12</title>
+<g id="a_edge13_Node000009_Node000012"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1295.57,-150.94C1328.84,-140.46 1368.01,-128.12 1399.99,-118.04"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1294.4,-147.65 1285.91,-153.99 1296.5,-154.32 1294.4,-147.65"/>
+</a>
+</g>
+</g>
+<!-- Node13 -->
+<g id="Node000013" class="node">
+<title>Node13</title>
+<g id="a_Node000013"><a xlink:href="ExecuteCommand_8h.html" target="_top" xlink:title="Implements Catena gRPC ExecuteCommand.">
+<polygon fill="white" stroke="#666666" points="1749,-118 1565,-118 1565,-77 1749,-77 1749,-118"/>
+<text text-anchor="start" x="1573" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1573" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1657" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ExecuteCommand.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node13 -->
+<g id="edge14_Node000009_Node000013" class="edge">
+<title>Node9&#45;&gt;Node13</title>
+<g id="a_edge14_Node000009_Node000013"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1314.73,-158.86C1381.3,-147.98 1473.85,-132.56 1555,-118 1558.28,-117.41 1561.62,-116.81 1565,-116.19"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1313.99,-155.43 1304.69,-160.5 1315.12,-162.34 1313.99,-155.43"/>
+</a>
+</g>
+</g>
+<!-- Node14 -->
+<g id="Node000014" class="node">
+<title>Node14</title>
+<g id="a_Node000014"><a xlink:href="ExternalObjectRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC ExternalObjectRequest.">
+<polygon fill="white" stroke="#666666" points="1974.5,-118 1767.5,-118 1767.5,-77 1974.5,-77 1974.5,-118"/>
+<text text-anchor="start" x="1775.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1775.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1871" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ExternalObjectRequest.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node14 -->
+<g id="edge15_Node000009_Node000014" class="edge">
+<title>Node9&#45;&gt;Node14</title>
+<g id="a_edge15_Node000009_Node000014"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1314.78,-165.94C1421.21,-156.64 1602.81,-139.43 1758,-118 1761.06,-117.58 1764.16,-117.14 1767.29,-116.68"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1314.38,-162.46 1304.72,-166.82 1314.99,-169.44 1314.38,-162.46"/>
+</a>
+</g>
+</g>
+<!-- Node15 -->
+<g id="Node000015" class="node">
+<title>Node15</title>
+<g id="a_Node000015"><a xlink:href="GetParam_8h.html" target="_top" xlink:title="Implements Catena gRPC GetParam.">
+<polygon fill="white" stroke="#666666" points="2153.5,-118 1992.5,-118 1992.5,-77 2153.5,-77 2153.5,-118"/>
+<text text-anchor="start" x="2000.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2000.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2073" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/GetParam.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node15 -->
+<g id="edge16_Node000009_Node000015" class="edge">
+<title>Node9&#45;&gt;Node15</title>
+<g id="a_edge16_Node000009_Node000015"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1314.76,-170.98C1457.58,-166.09 1743.23,-152.57 1983,-118 1986.01,-117.57 1989.06,-117.09 1992.14,-116.58"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1314.6,-167.48 1304.72,-171.32 1314.84,-174.48 1314.6,-167.48"/>
+</a>
+</g>
+</g>
+<!-- Node16 -->
+<g id="Node000016" class="node">
+<title>Node16</title>
+<g id="a_Node000016"><a xlink:href="gRPC_2include_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements Catena gRPC GetPopulatedSlots.">
+<polygon fill="white" stroke="#666666" points="2356.5,-118 2171.5,-118 2171.5,-77 2356.5,-77 2356.5,-118"/>
+<text text-anchor="start" x="2179.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2179.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2264" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/GetPopulatedSlots.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node16 -->
+<g id="edge17_Node000009_Node000016" class="edge">
+<title>Node9&#45;&gt;Node16</title>
+<g id="a_edge17_Node000009_Node000016"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1314.65,-172.04C1482.47,-168.48 1852.65,-156.56 2162,-118 2165.04,-117.62 2168.13,-117.21 2171.24,-116.76"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1314.55,-168.54 1304.62,-172.25 1314.69,-175.54 1314.55,-168.54"/>
+</a>
+</g>
+</g>
+<!-- Node17 -->
+<g id="Node000017" class="node">
+<title>Node17</title>
+<g id="a_Node000017"><a xlink:href="gRPC_2include_2GetValue_8h.html" target="_top" xlink:title="Implements Catena gRPC GetValue.">
+<polygon fill="white" stroke="#666666" points="554.5,-118 393.5,-118 393.5,-77 554.5,-77 554.5,-118"/>
+<text text-anchor="start" x="401.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="401.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="474" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/GetValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node17 -->
+<g id="edge18_Node000009_Node000017" class="edge">
+<title>Node9&#45;&gt;Node17</title>
+<g id="a_edge18_Node000009_Node000017"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1133.34,-169.68C1005.57,-163.43 765.48,-148.55 563,-118 560.34,-117.6 557.64,-117.17 554.92,-116.7"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1133.32,-173.18 1143.47,-170.17 1133.65,-166.19 1133.32,-173.18"/>
+</a>
+</g>
+</g>
+<!-- Node18 -->
+<g id="Node000018" class="node">
+<title>Node18</title>
+<g id="a_Node000018"><a xlink:href="gRPC_2include_2LanguagePackRequest_8h.html" target="_top" xlink:title="Implements Catena gRPC LanguagePackRequest.">
+<polygon fill="white" stroke="#666666" points="777.5,-118 572.5,-118 572.5,-77 777.5,-77 777.5,-118"/>
+<text text-anchor="start" x="580.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="580.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="675" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/LanguagePackRequest.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node18 -->
+<g id="edge19_Node000009_Node000018" class="edge">
+<title>Node9&#45;&gt;Node18</title>
+<g id="a_edge19_Node000009_Node000018"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1133.08,-163.27C1044.37,-152.98 905.68,-136.08 786,-118 783.29,-117.59 780.55,-117.17 777.78,-116.73"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1132.78,-166.75 1143.11,-164.43 1133.58,-159.8 1132.78,-166.75"/>
+</a>
+</g>
+</g>
+<!-- Node19 -->
+<g id="Node000019" class="node">
+<title>Node19</title>
+<g id="a_Node000019"><a xlink:href="gRPC_2include_2ListLanguages_8h.html" target="_top" xlink:title="Implements Catena gRPC ListLanguages.">
+<polygon fill="white" stroke="#666666" points="960.5,-118 795.5,-118 795.5,-77 960.5,-77 960.5,-118"/>
+<text text-anchor="start" x="803.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="803.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="878" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/ListLanguages.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node19 -->
+<g id="edge20_Node000009_Node000019" class="edge">
+<title>Node9&#45;&gt;Node19</title>
+<g id="a_edge20_Node000009_Node000019"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1133.49,-153.88C1079.97,-142.28 1012.7,-127.7 960.62,-116.41"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1132.8,-157.31 1143.32,-156.01 1134.28,-150.47 1132.8,-157.31"/>
+</a>
+</g>
+</g>
+<!-- Node20 -->
+<g id="Node000020" class="node">
+<title>Node20</title>
+<g id="a_Node000020"><a xlink:href="gRPC_2include_2MultiSetValue_8h.html" target="_top" xlink:title="Generic CallData class for the SetValue and MultiSetValue RPCs.">
+<polygon fill="white" stroke="#666666" points="1141.5,-118 978.5,-118 978.5,-77 1141.5,-77 1141.5,-118"/>
+<text text-anchor="start" x="986.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="986.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1060" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/MultiSetValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node20 -->
+<g id="edge21_Node000009_Node000020" class="edge">
+<title>Node9&#45;&gt;Node20</title>
+<g id="a_edge21_Node000009_Node000020"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1172.01,-149.72C1149.68,-139.51 1123.92,-127.73 1102.73,-118.04"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1170.79,-153.01 1181.34,-153.99 1173.7,-146.65 1170.79,-153.01"/>
+</a>
+</g>
+</g>
+<!-- Node21 -->
+<g id="Node000021" class="node">
+<title>Node21</title>
+<g id="a_Node000021"><a xlink:href="gRPC_2include_2SetValue_8h.html" target="_top" xlink:title="Implements Catena gRPC SetValue.">
+<polygon fill="white" stroke="#666666" points="1195.5,-41 1034.5,-41 1034.5,0 1195.5,0 1195.5,-41"/>
+<text text-anchor="start" x="1042.5" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1042.5" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1115" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/SetValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node21 -->
+<g id="edge23_Node000009_Node000021" class="edge">
+<title>Node9&#45;&gt;Node21</title>
+<g id="a_edge23_Node000009_Node000021"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1203.95,-145.54C1182.32,-115.38 1148.42,-68.1 1129.32,-41.47"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1201.3,-147.85 1209.97,-153.94 1206.99,-143.77 1201.3,-147.85"/>
+</a>
+</g>
+</g>
+<!-- Node9&#45;&gt;Node22 -->
+<g id="edge24_Node000009_Node000022" class="edge">
+<title>Node9&#45;&gt;Node22</title>
+<g id="a_edge24_Node000009_Node000022"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1133.33,-172.38C954.95,-169.35 546.11,-158.21 205,-118 202.09,-117.66 199.15,-117.28 196.17,-116.89"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1133.4,-175.89 1143.45,-172.55 1133.51,-168.89 1133.4,-175.89"/>
+</a>
+</g>
+</g>
+<!-- Node20&#45;&gt;Node21 -->
+<g id="edge22_Node000020_Node000021" class="edge">
+<title>Node20&#45;&gt;Node21</title>
+<g id="a_edge22_Node000020_Node000021"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1080.41,-68.67C1087.13,-59.5 1094.47,-49.5 1100.65,-41.07"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1077.54,-66.66 1074.45,-76.79 1083.19,-70.8 1077.54,-66.66"/>
+</a>
+</g>
+</g>
+<!-- Node24&#45;&gt;Node25 -->
+<g id="edge29_Node000024_Node000025" class="edge">
+<title>Node24&#45;&gt;Node25</title>
+<g id="a_edge29_Node000024_Node000025"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2105.77,-386.34C2110.74,-375.81 2116.22,-364.19 2120.71,-354.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2102.5,-385.06 2101.39,-395.6 2108.83,-388.05 2102.5,-385.06"/>
+</a>
+</g>
+</g>
+<!-- Node30&#45;&gt;Node31 -->
+<g id="edge38_Node000030_Node000031" class="edge">
+<title>Node30&#45;&gt;Node31</title>
+<g id="a_edge38_Node000030_Node000031"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2994.11,-386.01C2990.61,-375.57 2986.76,-364.09 2983.6,-354.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2990.83,-387.23 2997.33,-395.6 2997.46,-385.01 2990.83,-387.23"/>
+</a>
+</g>
+</g>
+<!-- Node39 -->
+<g id="Node000039" class="node">
+<title>Node39</title>
+<g id="a_Node000039"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue RPC.">
+<polygon fill="white" stroke="#666666" points="2852,-272 2660,-272 2660,-231 2852,-231 2852,-272"/>
+<text text-anchor="start" x="2668" y="-260" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2668" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2756" y="-238" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/SetValue.h</text>
+</a>
+</g>
+</g>
+<!-- Node38&#45;&gt;Node39 -->
+<g id="edge47_Node000038_Node000039" class="edge">
+<title>Node38&#45;&gt;Node39</title>
+<g id="a_edge47_Node000038_Node000039"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2756,-302.87C2756,-292.6 2756,-281.4 2756,-272.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2752.5,-303.1 2756,-313.1 2759.5,-303.1 2752.5,-303.1"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node31 -->
+<g id="edge51_Node000040_Node000031" class="edge">
+<title>Node40&#45;&gt;Node31</title>
+<g id="a_edge51_Node000040_Node000031"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1935.22,-403C1959.7,-400.36 1985.75,-397.83 2010,-396 2393.24,-367.06 2493.42,-413.58 2874,-360 2883.84,-358.61 2894.11,-356.7 2904.19,-354.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1934.76,-399.53 1925.19,-404.09 1935.52,-406.49 1934.76,-399.53"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node32 -->
+<g id="edge50_Node000040_Node000032" class="edge">
+<title>Node40&#45;&gt;Node32</title>
+<g id="a_edge50_Node000040_Node000032"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1789.42,-390.66C1769.64,-379.13 1746.45,-365.6 1727.89,-354.77"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1787.84,-393.79 1798.24,-395.81 1791.37,-387.75 1787.84,-393.79"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node33 -->
+<g id="edge52_Node000040_Node000033" class="edge">
+<title>Node40&#45;&gt;Node33</title>
+<g id="a_edge52_Node000040_Node000033"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1728.79,-395.95C1432.64,-360.81 1352.98,-397.8 1061,-360 1049.83,-358.55 1038.16,-356.65 1026.65,-354.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1728.62,-399.46 1738.97,-397.18 1729.46,-392.51 1728.62,-399.46"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node34 -->
+<g id="edge53_Node000040_Node000034" class="edge">
+<title>Node40&#45;&gt;Node34</title>
+<g id="a_edge53_Node000040_Node000034"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1935.31,-403.99C1959.79,-401.31 1985.81,-398.51 2010,-396 2172.58,-379.1 2214.61,-385.85 2376,-360 2378.95,-359.53 2381.94,-359.02 2384.95,-358.5"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1934.84,-400.52 1925.28,-405.08 1935.61,-407.47 1934.84,-400.52"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node35 -->
+<g id="edge54_Node000040_Node000035" class="edge">
+<title>Node40&#45;&gt;Node35</title>
+<g id="a_edge54_Node000040_Node000035"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1728.96,-395.92C1559.91,-372.28 1514.74,-379.2 1349,-360 1321.44,-356.81 1291.59,-352.9 1264.19,-349.12"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1728.56,-399.4 1738.95,-397.33 1729.54,-392.47 1728.56,-399.4"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node36 -->
+<g id="edge55_Node000040_Node000036" class="edge">
+<title>Node40&#45;&gt;Node36</title>
+<g id="a_edge55_Node000040_Node000036"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1732.12,-393.8C1685.06,-383.56 1628.14,-371.17 1577,-360 1574.13,-359.37 1571.22,-358.74 1568.28,-358.09"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1731.49,-397.24 1742.01,-395.95 1732.98,-390.4 1731.49,-397.24"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node37 -->
+<g id="edge56_Node000040_Node000037" class="edge">
+<title>Node40&#45;&gt;Node37</title>
+<g id="a_edge56_Node000040_Node000037"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1863.68,-389.21C1877.23,-377.96 1892.77,-365.06 1905.3,-354.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1861.44,-386.52 1855.98,-395.6 1865.91,-391.91 1861.44,-386.52"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node38 -->
+<g id="edge57_Node000040_Node000038" class="edge">
+<title>Node40&#45;&gt;Node38</title>
+<g id="a_edge57_Node000040_Node000038"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1935.24,-403.34C1959.73,-400.69 1985.77,-398.07 2010,-396 2271.76,-373.69 2338.88,-388.82 2600,-360 2615.27,-358.31 2631.32,-356.17 2647.08,-353.85"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1934.78,-399.87 1925.22,-404.43 1935.54,-406.83 1934.78,-399.87"/>
+</a>
+</g>
+</g>
+<!-- Node40&#45;&gt;Node41 -->
+<g id="edge49_Node000040_Node000041" class="edge">
+<title>Node40&#45;&gt;Node41</title>
+<g id="a_edge49_Node000040_Node000041"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1935.21,-402.86C1959.69,-400.23 1985.74,-397.73 2010,-396 2485.06,-362.04 2607.36,-409.99 3081,-360 3100.27,-357.97 3120.89,-354.83 3140.22,-351.46"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1934.75,-399.39 1925.18,-403.95 1935.5,-406.35 1934.75,-399.39"/>
+</a>
+</g>
+</g>
+<!-- Node42&#45;&gt;Node41 -->
+<g id="edge59_Node000042_Node000041" class="edge">
+<title>Node42&#45;&gt;Node41</title>
+<g id="a_edge59_Node000042_Node000041"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M3253.93,-386.98C3247.16,-376.29 3239.62,-364.38 3233.46,-354.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="3251.08,-389.03 3259.39,-395.6 3257,-385.28 3251.08,-389.03"/>
+</a>
+</g>
+</g>
+<!-- Node43&#45;&gt;Node27 -->
+<g id="edge63_Node000043_Node000027" class="edge">
+<title>Node43&#45;&gt;Node27</title>
+<g id="a_edge63_Node000043_Node000027"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2611.86,-467.37C2626.69,-457.53 2643.44,-446.41 2657.36,-437.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2609.79,-464.54 2603.39,-472.99 2613.66,-470.38 2609.79,-464.54"/>
 </a>
 </g>
 </g>
@@ -1412,26 +1412,26 @@ var sectionId = 'dynsection-1';
 <g id="edge80_Node000044_Node000002" class="edge">
 <title>Node44&#45;&gt;Node2</title>
 <g id="a_edge80_Node000044_Node000002"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1715.38,-616.69C1715.38,-608.08 1715.38,-598.9 1715.38,-591.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1711.88,-616.79 1715.38,-626.79 1718.88,-616.79 1711.88,-616.79"/>
+<path fill="none" stroke="#63b8ff" d="M2446.52,-616.98C2444.32,-608.28 2441.96,-598.98 2439.96,-591.07"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2443.16,-617.96 2449.01,-626.79 2449.94,-616.24 2443.16,-617.96"/>
 </a>
 </g>
 </g>
-<!-- Node44&#45;&gt;Node8 -->
-<g id="edge81_Node000044_Node000008" class="edge">
-<title>Node44&#45;&gt;Node8</title>
-<g id="a_edge81_Node000044_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1631.55,-643.98C1474.49,-637.03 1127.08,-611.01 853.38,-514 755.38,-479.27 744.57,-442.1 651.38,-396 624.69,-382.8 594.06,-370.02 568.73,-360.06"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1631.47,-647.48 1641.61,-644.41 1631.77,-640.49 1631.47,-647.48"/>
+<!-- Node44&#45;&gt;Node27 -->
+<g id="edge81_Node000044_Node000027" class="edge">
+<title>Node44&#45;&gt;Node27</title>
+<g id="a_edge81_Node000044_Node000027"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2531.14,-623.35C2583.3,-603.34 2648.54,-568.81 2682,-514 2696.25,-490.66 2694.38,-457.92 2691.14,-437.21"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2529.72,-620.15 2521.57,-626.92 2532.16,-626.71 2529.72,-620.15"/>
 </a>
 </g>
 </g>
-<!-- Node45&#45;&gt;Node42 -->
-<g id="edge88_Node000045_Node000042" class="edge">
-<title>Node45&#45;&gt;Node42</title>
-<g id="a_edge88_Node000045_Node000042"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2584.74,-540.76C2599.84,-510.57 2623.19,-463.87 2636.39,-437.47"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2581.5,-539.43 2580.16,-549.94 2587.76,-542.56 2581.5,-539.43"/>
+<!-- Node45&#45;&gt;Node30 -->
+<g id="edge88_Node000045_Node000030" class="edge">
+<title>Node45&#45;&gt;Node30</title>
+<g id="a_edge88_Node000045_Node000030"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M3065.63,-540.76C3050.53,-510.57 3027.18,-463.87 3013.98,-437.47"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="3062.62,-542.56 3070.22,-549.94 3068.88,-539.43 3062.62,-542.56"/>
 </a>
 </g>
 </g>
@@ -1439,10 +1439,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000047" class="node">
 <title>Node47</title>
 <g id="a_Node000047"><a xlink:href="PeerManager_8h.html" target="_top" xlink:title="Handles Connections to Peers.">
-<polygon fill="white" stroke="#666666" points="3012.88,-591 2851.88,-591 2851.88,-550 3012.88,-550 3012.88,-591"/>
-<text text-anchor="start" x="2859.88" y="-579" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2859.88" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2932.38" y="-557" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/PeerManager.h</text>
+<polygon fill="white" stroke="#666666" points="3590.5,-591 3429.5,-591 3429.5,-550 3590.5,-550 3590.5,-591"/>
+<text text-anchor="start" x="3437.5" y="-579" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3437.5" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="3510" y="-557" font-family="Helvetica,sans-Serif" font-size="10.00">/gRPC/include/PeerManager.h</text>
 </a>
 </g>
 </g>
@@ -1450,8 +1450,8 @@ var sectionId = 'dynsection-1';
 <g id="edge97_Node000046_Node000047" class="edge">
 <title>Node46&#45;&gt;Node47</title>
 <g id="a_edge97_Node000046_Node000047"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2932.38,-616.69C2932.38,-608.08 2932.38,-598.9 2932.38,-591.07"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2928.88,-616.79 2932.38,-626.79 2935.88,-616.79 2928.88,-616.79"/>
+<path fill="none" stroke="#63b8ff" d="M3510,-616.69C3510,-608.08 3510,-598.9 3510,-591.07"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="3506.5,-616.79 3510,-626.79 3513.5,-616.79 3506.5,-616.79"/>
 </a>
 </g>
 </g>
