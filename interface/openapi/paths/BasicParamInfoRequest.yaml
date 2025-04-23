@@ -48,7 +48,7 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid_prefix
-      in: path
+      in: query
       required: false
       description: Uniquely identifies the starting parameter relative to device.params. Specifying "" selects all top-level parameters
       schema:
@@ -56,7 +56,7 @@ get:
       default: ""
     
     - name: recursive
-      in: path
+      in: query
       required: false
       description: Optional flag to indicate whether to include all child parameters or not.
       schema:
