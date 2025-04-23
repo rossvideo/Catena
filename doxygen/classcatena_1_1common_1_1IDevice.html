@@ -142,9 +142,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:a948505161c842187c0f2757cfaaedbc8" id="r_a948505161c842187c0f2757cfaaedbc8"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a948505161c842187c0f2757cfaaedbc8">slot</a> () const =0</td></tr>
 <tr class="memdesc:a948505161c842187c0f2757cfaaedbc8"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the slot number of the device  <br /></td></tr>
 <tr class="separator:a948505161c842187c0f2757cfaaedbc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4c1cd27fa7bced536634ca67093d7bd" id="r_ad4c1cd27fa7bced536634ca67093d7bd"><td class="memItemLeft" align="right" valign="top">virtual std::lock_guard&lt; std::mutex &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#ad4c1cd27fa7bced536634ca67093d7bd">lock</a> ()=0</td></tr>
-<tr class="memdesc:ad4c1cd27fa7bced536634ca67093d7bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locks the device until the returned lock_guard is destroyed.  <br /></td></tr>
-<tr class="separator:ad4c1cd27fa7bced536634ca67093d7bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adaa519c4733f2b22d84d313e0965de28" id="r_adaa519c4733f2b22d84d313e0965de28"><td class="memItemLeft" align="right" valign="top">virtual std::mutex &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#adaa519c4733f2b22d84d313e0965de28">mutex</a> ()=0</td></tr>
+<tr class="memdesc:adaa519c4733f2b22d84d313e0965de28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the device's mutex.  <br /></td></tr>
+<tr class="separator:adaa519c4733f2b22d84d313e0965de28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb60030c822f844ea26021c88e561e87" id="r_afb60030c822f844ea26021c88e561e87"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#afb60030c822f844ea26021c88e561e87">detail_level</a> (const <a class="el" href="classcatena_1_1common_1_1IDevice.html#a4da29ef35ad7e6d0f8bcf000ce078097">DetailLevel_e</a> detail_level)=0</td></tr>
 <tr class="memdesc:afb60030c822f844ea26021c88e561e87"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the detail level of the device  <br /></td></tr>
 <tr class="separator:afb60030c822f844ea26021c88e561e87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -903,8 +903,8 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
 
 </div>
 </div>
-<a id="ad4c1cd27fa7bced536634ca67093d7bd" name="ad4c1cd27fa7bced536634ca67093d7bd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4c1cd27fa7bced536634ca67093d7bd">&#9670;&#160;</a></span>lock()</h2>
+<a id="adaa519c4733f2b22d84d313e0965de28" name="adaa519c4733f2b22d84d313e0965de28"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adaa519c4733f2b22d84d313e0965de28">&#9670;&#160;</a></span>mutex()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -913,7 +913,7 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual std::lock_guard&lt; std::mutex &gt; catena::common::IDevice::lock </td>
+          <td class="memname">virtual std::mutex &amp; catena::common::IDevice::mutex </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -926,10 +926,9 @@ vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcat
 </table>
 </div><div class="memdoc">
 
-<p>Locks the device until the returned lock_guard is destroyed. </p>
-<dl class="section return"><dt>Returns</dt><dd>A lock guard containing the device's locked mutex. </dd></dl>
+<p>Returns the device's mutex. </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a054867f7677ec663ba31bf51d0d8839d">catena::common::Device</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#afca445ccc7d023e325c408afc852f9a1">catena::common::Device</a>.</p>
 
 </div>
 </div>

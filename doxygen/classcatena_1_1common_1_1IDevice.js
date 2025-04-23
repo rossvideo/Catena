@@ -19,7 +19,7 @@ var classcatena_1_1common_1_1IDevice =
     [ "getParam", "classcatena_1_1common_1_1IDevice.html#ab32c92e2d64e1797dd4f20289d822158", null ],
     [ "getTopLevelParams", "classcatena_1_1common_1_1IDevice.html#a01f5486b4a592d4592585ed218e4f11d", null ],
     [ "getValue", "classcatena_1_1common_1_1IDevice.html#afc52e8ece30cd01b428c6a14c855b5d3", null ],
-    [ "lock", "classcatena_1_1common_1_1IDevice.html#ad4c1cd27fa7bced536634ca67093d7bd", null ],
+    [ "mutex", "classcatena_1_1common_1_1IDevice.html#adaa519c4733f2b22d84d313e0965de28", null ],
     [ "set_default_max_length", "classcatena_1_1common_1_1IDevice.html#a08a3075dc712800ffe3044b5dc80240b", null ],
     [ "set_default_total_length", "classcatena_1_1common_1_1IDevice.html#a45c1d87171f95fa1bdb8fbf0d2e81387", null ],
     [ "setValue", "classcatena_1_1common_1_1IDevice.html#ae77aa1916647939e782e1e7a9d6cd9c1", null ],

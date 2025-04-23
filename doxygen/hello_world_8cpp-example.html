@@ -155,7 +155,7 @@ $(document).ready(function(){initNavTree('hello_world_8cpp-example.html',''); in
 <div class="line">    <span class="comment">// for the shortest possible time - production code wouldn&#39;t output</span></div>
 <div class="line">    <span class="comment">// to std::out with the lock asserted, c) avoid deadlock by nesting calls</span></div>
 <div class="line">    <span class="comment">// to Device methods that try to lock the mutex.</span></div>
-<div class="line">    <span class="keyword">auto</span> lg = dm.lock();</div>
+<div class="line">    std::lock_guard lg(dm.mutex());</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// err will be passed to each getParam call, and if the call fails</span></div>
 <div class="line">    <span class="comment">// the exception_with_status object will be populated with the error</span></div>
