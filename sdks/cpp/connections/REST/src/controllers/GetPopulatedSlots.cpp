@@ -6,7 +6,7 @@ using catena::REST::GetPopulatedSlots;
 // Initializes the object counter for GetPopulatedSlots to 0.
 int GetPopulatedSlots::objectCounter_ = 0;
 
-GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm) :
+GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());

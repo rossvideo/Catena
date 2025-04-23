@@ -45,7 +45,7 @@
 #include <rpc/TimeNow.h>
 #include <Status.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
 #include <Enums.h>
@@ -64,7 +64,7 @@ namespace REST {
 class GetPopulatedSlots : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
-    using Device = catena::common::Device;
+    using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
@@ -74,7 +74,7 @@ class GetPopulatedSlots : public ICallData {
      * @param context The SocketReader object. Here to maintain consistency.
      * @param dm The device to get the slot of.
      */ 
-    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, Device& dm);
+    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief GetPopulatedSlots's main process.
      */
@@ -90,7 +90,7 @@ class GetPopulatedSlots : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new GetPopulatedSlots(socket, context, dm);
     }
   private:
@@ -118,7 +118,7 @@ class GetPopulatedSlots : public ICallData {
     /**
      * @brief The device to get slot of.
      */
-    Device& dm_;
+    IDevice& dm_;
  
     /**
      * @brief ID of the GetPopulatedSlots object

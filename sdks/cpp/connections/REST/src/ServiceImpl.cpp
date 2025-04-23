@@ -29,7 +29,7 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
@@ -37,7 +37,6 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()} {
-
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }

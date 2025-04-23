@@ -57,7 +57,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        BasicParamInfoRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        BasicParamInfoRequest(CatenaServiceImpl *service, IDevice& dm, bool ok);
 
         /**
          * @brief Manages the steps of the BasicParamInfoRequest gRPC command
@@ -118,7 +118,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
         /**
          * @brief The device to get the value from.
          */
-        Device &dm_;
+        IDevice& dm_;
         
         /**
          * @brief The object's unique id.
@@ -164,7 +164,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
                  * @param responses The vector of responses
                  * @param request The request
                  */
-                BasicParamInfoVisitor(Device& device, catena::common::Authorizer& authz, 
+                BasicParamInfoVisitor(IDevice& device, catena::common::Authorizer& authz, 
                                     std::vector<catena::BasicParamInfoResponse>& responses,
                                     BasicParamInfoRequest& request)
                     : device_(device), authz_(authz), responses_(responses), request_(request) {}
@@ -188,7 +188,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
                 /**
                  * @brief The device to visit within the visitor
                  */
-                Device& device_;
+                IDevice& device_;
 
                 /**
                  * @brief The authorizer within the visitor

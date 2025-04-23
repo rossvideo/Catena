@@ -42,7 +42,7 @@
 #include <IConstraint.h>
 #include <IParam.h>
 #include <Tags.h>
-#include <Device.h>
+#include <IDevice.h>
 
 #include <google/protobuf/message_lite.h>
 
@@ -77,7 +77,7 @@ class PicklistConstraint : public IConstraint {
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Device& dm);
+    PicklistConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm);
 
     /**
      * @brief Construct a new Picklist Constraint object

@@ -6,7 +6,7 @@ using catena::REST::AddLanguage;
 // Initializes the object counter for AddLanguage to 0.
 int AddLanguage::objectCounter_ = 0;
 
-AddLanguage::AddLanguage(tcp::socket& socket, SocketReader& context, Device& dm) :
+AddLanguage::AddLanguage(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -26,10 +26,10 @@ void AddLanguage::proceed() {
         if (status.ok()) {
             if(context_.authorizationEnabled()) {
                 catena::common::Authorizer authz{context_.jwsToken()};
-                Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 rc = dm_.addLanguage(payload, authz);
             } else {
-                Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 rc = dm_.addLanguage(payload, catena::common::Authorizer::kAuthzDisabled);
             }
         } else {

@@ -66,7 +66,7 @@ std::string locationToString(const City::Location& location) {
 
 int main() {
     // lock the model
-    Device::LockGuard lg(dm);
+    std::lock_guard lg(dm.mutex());
     catena::exception_with_status err{"", catena::StatusCode::OK};
 
     /**

@@ -41,7 +41,7 @@
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 
 // boost
 #include <boost/asio.hpp>
@@ -62,7 +62,7 @@ namespace REST {
 class IServiceImpl {
 
   // Specifying which Device and IParam to use (defaults to catena::...)
-  using Device = catena::common::Device;
+  using IDevice = catena::common::IDevice;
   using IParam = catena::common::IParam;
 
   public:
