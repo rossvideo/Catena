@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['basicparaminforequest_2eh_0',['BasicParamInfoRequest.h',['../REST_2include_2controllers_2BasicParamInfoRequest_8h.html',1,'']]]
+  ['connect_2eh_0',['connect.h',['../common_2include_2rpc_2Connect_8h.html',1,'(Global Namespace)'],['../connections_2gRPC_2include_2Connect_8h.html',1,'(Global Namespace)'],['../connections_2REST_2include_2controllers_2Connect_8h.html',1,'(Global Namespace)']]]
 ];
