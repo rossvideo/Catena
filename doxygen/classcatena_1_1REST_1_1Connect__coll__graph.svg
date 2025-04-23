@@ -46,7 +46,7 @@
   </g>
 </defs>
 <script type="application/ecmascript">
-var viewWidth = 585;
+var viewWidth = 583;
 var viewHeight = 149;
 var sectionId = 'dynsection-1';
 </script>
@@ -149,9 +149,9 @@ var sectionId = 'dynsection-1';
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="classcatena_1_1common_1_1IDevice.html" target="_top" xlink:title="Interface class for Device.">
-<polygon fill="white" stroke="#666666" points="577,-141 436,-141 436,-122 577,-122 577,-141"/>
-<text text-anchor="middle" x="506.5" y="-129" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IDevice</text>
+<g id="a_Node000006"><a xlink:href="classcatena_1_1common_1_1Device.html" target="_top" xlink:title="Implements the Device interface defined in the protobuf.">
+<polygon fill="white" stroke="#666666" points="574.5,-141 436.5,-141 436.5,-122 574.5,-122 574.5,-141"/>
+<text text-anchor="middle" x="505.5" y="-129" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Device</text>
 </a>
 </g>
 </g>
@@ -159,8 +159,8 @@ var sectionId = 'dynsection-1';
 <g id="edge6_Node000003_Node000006" class="edge">
 <title>Node6&#45;&gt;Node3</title>
 <g id="a_edge6_Node000003_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M461.21,-119.52C409.19,-106.91 324.93,-86.48 277.62,-75.01"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="460.63,-122.98 471.17,-121.94 462.28,-116.18 460.63,-122.98"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M460.39,-119.52C408.56,-106.91 324.62,-86.48 277.49,-75.01"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="459.76,-122.97 470.3,-121.94 461.41,-116.17 459.76,-122.97"/>
 </a>
 </g>
 <text text-anchor="middle" x="403" y="-96" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> dm_</text>

@@ -23,7 +23,7 @@ var classCatenaServiceImpl =
       [ "kPostWrite", "classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909da89585777c1d2b1f969669074947a3de4", null ],
       [ "kFinish", "classCatenaServiceImpl.html#a10ee0ab8b76cd0b2fd6d07cbe749909da8941714ff8251a03708025c060c46556", null ]
     ] ],
-    [ "CatenaServiceImpl", "classCatenaServiceImpl.html#af79f240a3332fd0522e0201409958507", null ],
+    [ "CatenaServiceImpl", "classCatenaServiceImpl.html#a0b0ce2336c53b6b0968ea34b6d881c9a", null ],
     [ "authorizationEnabled", "classCatenaServiceImpl.html#a0ab0d1ddbe539086bb1c75d2a9ec1ef0", null ],
     [ "deregisterItem", "classCatenaServiceImpl.html#ad54e3bcdc90f527f6e1826fa14388082", null ],
     [ "init", "classCatenaServiceImpl.html#a277195cdaaad6fc8b70dabc27a322103", null ],

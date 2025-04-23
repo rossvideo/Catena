@@ -10,7 +10,6 @@ var namespacecatena_1_1common =
     [ "FieldInfo", "structcatena_1_1common_1_1FieldInfo.html", null ],
     [ "IConnect", "classcatena_1_1common_1_1IConnect.html", "classcatena_1_1common_1_1IConnect" ],
     [ "IConstraint", "classcatena_1_1common_1_1IConstraint.html", "classcatena_1_1common_1_1IConstraint" ],
-    [ "IDevice", "classcatena_1_1common_1_1IDevice.html", "classcatena_1_1common_1_1IDevice" ],
     [ "ILanguagePack", "classcatena_1_1common_1_1ILanguagePack.html", "classcatena_1_1common_1_1ILanguagePack" ],
     [ "IMenu", "classcatena_1_1common_1_1IMenu.html", "classcatena_1_1common_1_1IMenu" ],
     [ "IMenuGroup", "classcatena_1_1common_1_1IMenuGroup.html", "classcatena_1_1common_1_1IMenuGroup" ],
