@@ -155,11 +155,11 @@ $(document).ready(function(){initNavTree('IDevice_8h_source.html',''); initResiz
 <div class="foldopen" id="foldopen00067" data-start="{" data-end="};">
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno"><a class="line" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">   67</a></span>    <span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">LockGuard</a> {</div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>      <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">LockGuard</a>(<a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>* dm) : dm_(dm) { dm_-&gt;mutex_.lock(); }</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">~LockGuard</a>() { dm_-&gt;mutex_.unlock(); }</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">LockGuard</a>(<a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm) : dm_(dm) { dm_.mutex_.lock(); }</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">~LockGuard</a>() { dm_.mutex_.unlock(); }</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>      <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>* dm_;</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm_;</div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    };</div>
 </div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">LockGuard</a>;</div>
