@@ -6,7 +6,7 @@ using catena::REST::LanguagePackRequest;
 // Initializes the object counter for LanguagePackRequest to 0.
 int LanguagePackRequest::objectCounter_ = 0;
 
-LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice* dm) :
+LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -19,8 +19,8 @@ void LanguagePackRequest::proceed() {
     catena::DeviceComponent_ComponentLanguagePack ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        IDevice::LockGuard lg(dm_);
-        rc = dm_->getLanguagePack(context_.fields("language"), ans);
+        IDevice::LockGuard lg(&dm_);
+        rc = dm_.getLanguagePack(context_.fields("language"), ans);
     // ERROR
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);

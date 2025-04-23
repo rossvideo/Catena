@@ -74,7 +74,7 @@ class GetPopulatedSlots : public ICallData {
      * @param context The SocketReader object. Here to maintain consistency.
      * @param dm The device to get the slot of.
      */ 
-    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief GetPopulatedSlots's main process.
      */
@@ -90,7 +90,7 @@ class GetPopulatedSlots : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new GetPopulatedSlots(socket, context, dm);
     }
   private:
@@ -118,7 +118,7 @@ class GetPopulatedSlots : public ICallData {
     /**
      * @brief The device to get slot of.
      */
-    IDevice* dm_;
+    IDevice& dm_;
  
     /**
      * @brief ID of the GetPopulatedSlots object

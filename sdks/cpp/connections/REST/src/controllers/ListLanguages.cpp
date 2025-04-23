@@ -6,7 +6,7 @@ using catena::REST::ListLanguages;
 // Initializes the object counter for ListLanguages to 0.
 int ListLanguages::objectCounter_ = 0;
 
-ListLanguages::ListLanguages(tcp::socket& socket, SocketReader& context, IDevice* dm) :
+ListLanguages::ListLanguages(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -19,8 +19,8 @@ void ListLanguages::proceed() {
     catena::LanguageList ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        IDevice::LockGuard lg(dm_);
-        dm_->toProto(ans);
+        IDevice::LockGuard lg(&dm_);
+        dm_.toProto(ans);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }

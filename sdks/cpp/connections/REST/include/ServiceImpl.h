@@ -89,7 +89,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
      */
-    explicit CatenaServiceImpl(IDevice* dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
+    explicit CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
 
     /**
      * @brief Returns the API's version.
@@ -136,7 +136,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief The device to implement Catena services to
      */
-    IDevice* dm_;
+    IDevice& dm_;
     /**
      * @brief The path to the external object
      */
@@ -163,7 +163,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
                                                     std::string,
                                                     tcp::socket&,
                                                     SocketReader&,
-                                                    IDevice*>;
+                                                    IDevice&>;
     /**
      * @brief Creating an ICallData factory for handling RPC routing.
      */

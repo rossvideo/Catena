@@ -73,7 +73,7 @@ class LanguagePackRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the value from.
      */ 
-    LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief LanguagePackRequest's main process.
      */
@@ -89,7 +89,7 @@ class LanguagePackRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new LanguagePackRequest(socket, context, dm);
     }
   private:
@@ -121,7 +121,7 @@ class LanguagePackRequest : public ICallData {
     /**
      * @brief The device to set values of.
      */
-    IDevice* dm_;
+    IDevice& dm_;
 
     /**
      * @brief ID of the LanguagePackRequest object

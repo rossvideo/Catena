@@ -74,7 +74,7 @@ class Connect : public IConnect {
      * @param authz true if authorization is enabled, false otherwise.
      * @param jwsToken The client's JWS token.
      */
-    Connect(IDevice* dm, bool authz, const std::string& jwsToken) : dm_{dm} {
+    Connect(IDevice& dm, bool authz, const std::string& jwsToken) : dm_{dm} {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
@@ -221,7 +221,7 @@ class Connect : public IConnect {
     /**
      * @brief The connected device.
      */
-    IDevice* dm_;
+    IDevice& dm_;
     /**
      * @brief Bool indicating whether the child has an update to write.
      */

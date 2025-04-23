@@ -73,7 +73,7 @@ class AddLanguage : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to add the language pack to.
      */ 
-    AddLanguage(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    AddLanguage(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief AddLanguage's main process.
      */
@@ -89,7 +89,7 @@ class AddLanguage : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new AddLanguage(socket, context, dm);
     }
   private:
@@ -121,7 +121,7 @@ class AddLanguage : public ICallData {
     /**
      * @brief The device to add the language pack to.
      */
-    IDevice* dm_;
+    IDevice& dm_;
 
     /**
      * @brief ID of the AddLanguage object

@@ -73,7 +73,7 @@ class ListLanguages : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the value from.
      */ 
-    ListLanguages(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    ListLanguages(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief ListLanguages's main process.
      */
@@ -89,7 +89,7 @@ class ListLanguages : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new ListLanguages(socket, context, dm);
     }
   private:
@@ -121,7 +121,7 @@ class ListLanguages : public ICallData {
     /**
      * @brief The device to list languges of.
      */
-    IDevice* dm_;
+    IDevice& dm_;
 
     /**
      * @brief ID of the ListLanguages object

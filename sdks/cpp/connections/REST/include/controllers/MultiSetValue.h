@@ -74,7 +74,7 @@ class MultiSetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to set the value(s) of.
      */ 
-    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief MultiSetValue main process.
      */
@@ -90,7 +90,7 @@ class MultiSetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new MultiSetValue(socket, context, dm);
     }
   protected:
@@ -101,7 +101,7 @@ class MultiSetValue : public ICallData {
      * @param dm The device to set the value(s) of.
      * @param objectId The object's unique id.
      */
-    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice* dm, int objectId);
+    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm, int objectId);
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
@@ -135,7 +135,7 @@ class MultiSetValue : public ICallData {
     /**
      * @brief The device to set values of.
      */
-    IDevice* dm_;
+    IDevice& dm_;
     /**
      * @brief The MultiSetValuePayload extracted from jsonPayload_.
      */

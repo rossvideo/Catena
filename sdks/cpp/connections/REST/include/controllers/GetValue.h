@@ -74,7 +74,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the value from.
      */ 
-    GetValue(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    GetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief GetValue's main process.
      */
@@ -90,7 +90,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new GetValue(socket, context, dm);
     }
   private:
@@ -122,7 +122,7 @@ class GetValue : public ICallData {
     /**
      * @brief The device to set values of.
      */
-    IDevice* dm_;
+    IDevice& dm_;
 
     /**
      * @brief ID of the GetValue object

@@ -74,7 +74,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */ 
-    Connect(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    Connect(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * Connect main process
      */
@@ -90,7 +90,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new Connect(socket, context, dm);
     }
     

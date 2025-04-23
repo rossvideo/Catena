@@ -73,7 +73,7 @@ class DeviceRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get components from.
      */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice* dm);
+    DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief DeviceRequest's main process.
      */
@@ -89,7 +89,7 @@ class DeviceRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice* dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new DeviceRequest(socket, context, dm);
     }
   private:
@@ -121,7 +121,7 @@ class DeviceRequest : public ICallData {
     /**
      * @brief The device to get components from.
      */
-    IDevice* dm_;
+    IDevice& dm_;
 
     /**
      * @brief A list of the subscribed oids to return.

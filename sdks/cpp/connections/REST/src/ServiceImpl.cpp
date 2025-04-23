@@ -29,7 +29,7 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-CatenaServiceImpl::CatenaServiceImpl(IDevice* dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
@@ -37,10 +37,6 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice* dm, std::string& EOPath, bool auth
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()} {
-
-    if (!dm) {
-        throw std::invalid_argument("No device manager specified");
-    }
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
@@ -88,7 +84,7 @@ void CatenaServiceImpl::run() {
                         SocketWriter(socket, context.origin()).write(rc);
                     // Otherwise routing to rpc.
                     } else if (router_.canMake(rpcKey)) {
-                        std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, &(*dm_));
+                        std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);
                         rpc->proceed();
                         rpc->finish();
                     // ERROR
