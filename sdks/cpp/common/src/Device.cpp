@@ -416,8 +416,8 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
         dst->add_access_scopes(scope);
     }
 
-    // If detail level is NONE, only send device info
-    if (detail_level_ == catena::Device_DetailLevel_NONE) {
+    // If detail level is NONE or UNSET, only send device info
+    if (detail_level_ == catena::Device_DetailLevel_NONE || detail_level_ == catena::Device_DetailLevel_UNSET) {
         co_return component;
     }
 
@@ -560,6 +560,7 @@ bool Device::shouldSendParam(const IParam& param, bool is_subscribed, Authorizer
             
             should_send = 
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_NONE)) ||
+                (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_UNSET)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_MINIMAL) && param.getDescriptor().minimalSet()) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_FULL)) ||
                 (casted_detail_level == static_cast<int>(catena::Device_DetailLevel_SUBSCRIPTIONS) && (param.getDescriptor().minimalSet() || is_subscribed)) ||
