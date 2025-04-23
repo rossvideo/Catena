@@ -8,7 +8,7 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     [ "Enums.h", "Enums_8h.html", "Enums_8h" ],
     [ "Fake.h", "Fake_8h.html", "Fake_8h" ],
     [ "IConstraint.h", "IConstraint_8h.html", "IConstraint_8h" ],
-    [ "IDevice.h", "IDevice_8h.html", null ],
+    [ "IDevice.h", "IDevice_8h.html", "IDevice_8h" ],
     [ "ILanguagePack.h", "ILanguagePack_8h.html", "ILanguagePack_8h" ],
     [ "IMenu.h", "IMenu_8h.html", "IMenu_8h" ],
     [ "IMenuGroup.h", "IMenuGroup_8h.html", "IMenuGroup_8h" ],
