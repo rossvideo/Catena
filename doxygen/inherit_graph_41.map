@@ -1,25 +1,5 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$classcatena_1_1REST_1_1ICallData.html" title="Interface class for the REST API RPCs." alt="" coords="258,189,433,215"/>
-<area shape="rect" id="Node000001" href="$classcatena_1_1REST_1_1AddLanguage.html" title="ICallData class for the AddLanguage REST RPC." alt="" coords="494,55,697,80"/>
-<area shape="poly" id="edge17_Node000000_Node000001" title=" " alt="" coords="367,178,420,132,453,109,488,89,519,78,521,83,490,94,456,113,423,137,371,182"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1REST_1_1Connect.html" title="ICallData class for the Connect REST RPC." alt="" coords="512,5,679,31"/>
-<area shape="poly" id="edge18_Node000000_Node000002" title=" " alt="" coords="359,176,410,108,446,71,488,40,513,28,515,33,491,44,450,75,414,111,364,179"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1REST_1_1DeviceRequest.html" title="ICallData class for the DeviceRequest REST RPC." alt="" coords="489,104,701,129"/>
-<area shape="poly" id="edge19_Node000000_Node000005" title=" " alt="" coords="385,181,488,139,534,127,535,132,490,145,387,186"/>
-<area shape="rect" id="Node000006" href="$classcatena_1_1REST_1_1GetPopulatedSlots.html" title="ICallData class for the GetPopulatedSlots REST RPC." alt="" coords="494,154,697,194"/>
-<area shape="poly" id="edge20_Node000000_Node000006" title=" " alt="" coords="446,188,493,183,494,188,447,193"/>
-<area shape="rect" id="Node000007" href="$classcatena_1_1REST_1_1GetValue.html" title="ICallData class for the GetValue REST RPC." alt="" coords="509,219,682,244"/>
-<area shape="poly" id="edge21_Node000000_Node000007" title=" " alt="" coords="447,211,509,219,508,224,446,216"/>
-<area shape="rect" id="Node000008" href="$classcatena_1_1REST_1_1LanguagePackRequest.html" title="ICallData class for the LanguagePackRequest REST RPC." alt="" coords="492,269,699,309"/>
-<area shape="poly" id="edge22_Node000000_Node000008" title=" " alt="" coords="393,217,490,253,530,266,528,271,488,258,391,222"/>
-<area shape="rect" id="Node000009" href="$classcatena_1_1REST_1_1ListLanguages.html" title="ICallData class for the ListLanguages REST RPC." alt="" coords="492,333,699,359"/>
-<area shape="poly" id="edge23_Node000000_Node000009" title=" " alt="" coords="369,223,421,271,455,297,490,318,523,331,521,336,488,323,452,301,418,276,366,227"/>
-<area shape="rect" id="Node000010" href="$classcatena_1_1REST_1_1MultiSetValue.html" title="Generic ICallData class for the SetValue and MultiSetValue REST RPCs." alt="" coords="493,383,697,408"/>
-<area shape="poly" id="edge24_Node000000_Node000010" title=" " alt="" coords="363,225,384,259,413,298,449,337,491,369,515,380,512,385,488,374,445,341,409,301,379,262,358,228"/>
-<area shape="rect" id="Node000011" href="$classcatena_1_1REST_1_1SetValue.html" title="ICallData class for the SetValue REST RPC." alt="" coords="749,383,920,408"/>
-<area shape="poly" id="edge25_Node000010_Node000011" title=" " alt="" coords="711,393,749,393,749,398,711,398"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs." alt="" coords="5,5,201,31"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="249,5,441,31"/>
-<area shape="poly" id="edge26_Node000004_Node000003" title=" " alt="" coords="215,15,249,15,249,21,215,21"/>
-<area shape="poly" id="edge27_Node000003_Node000002" title=" " alt="" coords="455,15,512,15,512,21,455,21"/>
+<area shape="rect" id="Node000000" href="$classcatena_1_1REST_1_1IServiceImpl.html" title="Interface for the REST::CatenaServiceImpl class." alt="" coords="5,5,200,31"/>
+<area shape="rect" id="Node000001" href="$classcatena_1_1REST_1_1CatenaServiceImpl.html" title="Implements Catena REST API request handlers." alt="" coords="248,5,485,31"/>
+<area shape="poly" id="edge28_Node000000_Node000001" title=" " alt="" coords="214,15,248,15,248,21,214,21"/>
 </map>

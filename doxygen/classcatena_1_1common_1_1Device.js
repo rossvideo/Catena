@@ -23,6 +23,7 @@ var classcatena_1_1common_1_1Device =
     [ "getParam", "classcatena_1_1common_1_1Device.html#a8b73e46646b2472e2e5e9f645b47a327", null ],
     [ "getTopLevelParams", "classcatena_1_1common_1_1Device.html#a811b91c8189eac1ba945956129e3b8d7", null ],
     [ "getValue", "classcatena_1_1common_1_1Device.html#abd8593ef03bc63539bd551abee1b5537", null ],
+    [ "lock", "classcatena_1_1common_1_1Device.html#a054867f7677ec663ba31bf51d0d8839d", null ],
     [ "set_default_max_length", "classcatena_1_1common_1_1Device.html#ae159a884fae051a65a541193da5a8391", null ],
     [ "set_default_total_length", "classcatena_1_1common_1_1Device.html#a8d0f934f834a1bf8871ea5cecd70e64c", null ],
     [ "setValue", "classcatena_1_1common_1_1Device.html#a03b2f75d6eba9d6fc1bcad9bed272c4d", null ],

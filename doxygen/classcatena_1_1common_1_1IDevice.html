@@ -95,7 +95,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IDevice.html'
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="#friends">Friends</a> &#124;
 <a href="classcatena_1_1common_1_1IDevice-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::IDevice Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div></div>
 </div><!--header-->
@@ -115,9 +114,6 @@ Inheritance diagram for catena::common::IDevice:</div>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This struct manages the state and lifetime of the coroutine. It also provides the interface for resuming the coroutine.  <a href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">LockGuard</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html" title="LockGuard is a helper class to lock and unlock the device mutex.">LockGuard</a> is a helper class to lock and unlock the device mutex.  <a href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
@@ -146,6 +142,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:a948505161c842187c0f2757cfaaedbc8" id="r_a948505161c842187c0f2757cfaaedbc8"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a948505161c842187c0f2757cfaaedbc8">slot</a> () const =0</td></tr>
 <tr class="memdesc:a948505161c842187c0f2757cfaaedbc8"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the slot number of the device  <br /></td></tr>
 <tr class="separator:a948505161c842187c0f2757cfaaedbc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4c1cd27fa7bced536634ca67093d7bd" id="r_ad4c1cd27fa7bced536634ca67093d7bd"><td class="memItemLeft" align="right" valign="top">virtual std::lock_guard&lt; std::mutex &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#ad4c1cd27fa7bced536634ca67093d7bd">lock</a> ()=0</td></tr>
+<tr class="memdesc:ad4c1cd27fa7bced536634ca67093d7bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locks the device until the returned lock_guard is destroyed.  <br /></td></tr>
+<tr class="separator:ad4c1cd27fa7bced536634ca67093d7bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb60030c822f844ea26021c88e561e87" id="r_afb60030c822f844ea26021c88e561e87"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#afb60030c822f844ea26021c88e561e87">detail_level</a> (const <a class="el" href="classcatena_1_1common_1_1IDevice.html#a4da29ef35ad7e6d0f8bcf000ce078097">DetailLevel_e</a> detail_level)=0</td></tr>
 <tr class="memdesc:afb60030c822f844ea26021c88e561e87"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the detail level of the device  <br /></td></tr>
 <tr class="separator:afb60030c822f844ea26021c88e561e87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,12 +230,6 @@ vdk::signal&lt; void(const ComponentLanguagePack &amp;)&gt;&#160;</td><td class=
 vdk::signal&lt; void(const std::string &amp;, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *, const int32_t)&gt;&#160;</td><td class="memItemRight" valign="bottom"><b>valueSetByServer</b></td></tr>
 <tr class="memdesc:a465b1d568c090e5486e2dfce6b00b35f"><td class="mdescLeft">&#160;</td><td class="mdescRight">signal emitted when a value is set by the server, or business logic. Intended recipient is the connection manager. <br /></td></tr>
 <tr class="separator:a465b1d568c090e5486e2dfce6b00b35f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:ad5a5349b7bf4fc3606898ce0595cbf61" id="r_ad5a5349b7bf4fc3606898ce0595cbf61"><td class="memItemLeft" align="right" valign="top"><a id="ad5a5349b7bf4fc3606898ce0595cbf61" name="ad5a5349b7bf4fc3606898ce0595cbf61"></a>
-class&#160;</td><td class="memItemRight" valign="bottom"><b>LockGuard</b></td></tr>
-<tr class="separator:ad5a5349b7bf4fc3606898ce0595cbf61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a>. </p>
@@ -910,6 +903,36 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>LockGuard</b></td></
 
 </div>
 </div>
+<a id="ad4c1cd27fa7bced536634ca67093d7bd" name="ad4c1cd27fa7bced536634ca67093d7bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4c1cd27fa7bced536634ca67093d7bd">&#9670;&#160;</a></span>lock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual std::lock_guard&lt; std::mutex &gt; catena::common::IDevice::lock </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Locks the device until the returned lock_guard is destroyed. </p>
+<dl class="section return"><dt>Returns</dt><dd>A lock guard containing the device's locked mutex. </dd></dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a054867f7677ec663ba31bf51d0d8839d">catena::common::Device</a>.</p>
+
+</div>
+</div>
 <a id="a08a3075dc712800ffe3044b5dc80240b" name="a08a3075dc712800ffe3044b5dc80240b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a08a3075dc712800ffe3044b5dc80240b">&#9670;&#160;</a></span>set_default_max_length()</h2>
 
@@ -1237,7 +1260,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>LockGuard</b></td></
   </table>
   </dd>
 </dl>
-<p>N.B. This method is not thread-safe. It is the caller's responsibility to ensure that the device is not modified while this method is running. This class provides a <a class="el" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html" title="LockGuard is a helper class to lock and unlock the device mutex.">LockGuard</a> helper class to make this easier. </p>
+<p>N.B. This method is not thread-safe. It is the caller's responsibility to ensure that the device is not modified while this method is running. This class provides a LockGuard helper class to make this easier. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ac5e6638e51d977c9a0d058c0fb1ba0a6">catena::common::Device</a>.</p>
 

@@ -147,9 +147,9 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
 <div class="line">    <span class="comment">// lock the model</span></div>
-<div class="line">    <a id="_a1" name="_a1"></a><a class="code hl_class" href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">Device::LockGuard</a> lg(dm);</div>
+<div class="line">    <span class="keyword">auto</span> lg = dm.lock();</div>
 <div class="line"> </div>
-<div class="line">    <a id="_a2" name="_a2"></a><a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> err{<span class="stringliteral">&quot;&quot;</span>, <a id="a3" name="a3"></a><a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>};</div>
+<div class="line">    <a id="_a1" name="_a1"></a><a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> err{<span class="stringliteral">&quot;&quot;</span>, <a id="a2" name="a2"></a><a class="code hl_enumvalue" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>};</div>
 <div class="line">    catena::Value value;</div>
 <div class="line">    std::string clientScope = <span class="stringliteral">&quot;operate&quot;</span>;</div>
 <div class="line"> </div>
@@ -355,7 +355,6 @@ $(document).ready(function(){initNavTree('use_constraints_8cpp-example.html','')
 <div class="ttc" id="aPicklistConstraint_8h_html"><div class="ttname"><a href="PicklistConstraint_8h.html">PicklistConstraint.h</a></div><div class="ttdoc">A constraint that checks if a value is in a list of strings.</div></div>
 <div class="ttc" id="aPolyglotText_8h_html"><div class="ttname"><a href="PolyglotText_8h.html">PolyglotText.h</a></div><div class="ttdoc">Polyglot Text serialization and deserialization to protobuf.</div></div>
 <div class="ttc" id="aRangeConstraint_8h_html"><div class="ttname"><a href="RangeConstraint_8h.html">RangeConstraint.h</a></div><div class="ttdoc">A constraint that checks if a value is within a range.</div></div>
-<div class="ttc" id="aclasscatena_1_1common_1_1IDevice_1_1LockGuard_html"><div class="ttname"><a href="classcatena_1_1common_1_1IDevice_1_1LockGuard.html">catena::common::IDevice::LockGuard</a></div><div class="ttdoc">LockGuard is a helper class to lock and unlock the device mutex.</div><div class="ttdef"><b>Definition</b> IDevice.h:67</div></div>
 <div class="ttc" id="anamespacecatena_1_1common_html"><div class="ttname"><a href="namespacecatena_1_1common.html">catena::common</a></div><div class="ttdoc">Functionality that can be shared between the different connection management types.</div><div class="ttdef"><b>Definition</b> Authorization.h:64</div></div>
 <div class="ttc" id="anamespacecatena_html_a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb"><div class="ttname"><a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a></div><div class="ttdeci">@ OK</div><div class="ttdoc">Not an error; returned on success.</div><div class="ttdef"><b>Definition</b> Status.h:47</div></div>
 <div class="ttc" id="astructcatena_1_1common_1_1ParamTag_html"><div class="ttname"><a href="structcatena_1_1common_1_1ParamTag.html">catena::common::ParamTag</a></div><div class="ttdoc">Alias for IParam used to improve readability.</div><div class="ttdef"><b>Definition</b> Tags.h:47</div></div>

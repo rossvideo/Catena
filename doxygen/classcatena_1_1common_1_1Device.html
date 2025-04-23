@@ -158,6 +158,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:af7658a6d3922612c9e4f38b7f847d89a" id="r_af7658a6d3922612c9e4f38b7f847d89a"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af7658a6d3922612c9e4f38b7f847d89a">slot</a> () const override</td></tr>
 <tr class="memdesc:af7658a6d3922612c9e4f38b7f847d89a"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the slot number of the device  <br /></td></tr>
 <tr class="separator:af7658a6d3922612c9e4f38b7f847d89a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a054867f7677ec663ba31bf51d0d8839d" id="r_a054867f7677ec663ba31bf51d0d8839d"><td class="memItemLeft" align="right" valign="top">std::lock_guard&lt; std::mutex &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a054867f7677ec663ba31bf51d0d8839d">lock</a> () override</td></tr>
+<tr class="memdesc:a054867f7677ec663ba31bf51d0d8839d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Locks the device until the returned lock_guard is destroyed.  <br /></td></tr>
+<tr class="separator:a054867f7677ec663ba31bf51d0d8839d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6e255366e3ee77a6fdd573e1669e956" id="r_af6e255366e3ee77a6fdd573e1669e956"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#af6e255366e3ee77a6fdd573e1669e956">detail_level</a> (const <a class="el" href="classcatena_1_1common_1_1Device.html#a76d5085676e5298e9a474c5af3ad4511">DetailLevel_e</a> detail_level) override</td></tr>
 <tr class="memdesc:af6e255366e3ee77a6fdd573e1669e956"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the detail level of the device  <br /></td></tr>
 <tr class="separator:af6e255366e3ee77a6fdd573e1669e956"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1092,6 +1095,36 @@ template&lt;typename TAG &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>an <a class="el" href="structcatena_1_1exception__with__status.html" title="A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.">exception_with_status</a> with status set OK if successful, otherwise an error. Intention is to for GetValue RPCs / API calls to be serviced by this method. </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#afc52e8ece30cd01b428c6a14c855b5d3">catena::common::IDevice</a>.</p>
+
+</div>
+</div>
+<a id="a054867f7677ec663ba31bf51d0d8839d" name="a054867f7677ec663ba31bf51d0d8839d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a054867f7677ec663ba31bf51d0d8839d">&#9670;&#160;</a></span>lock()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::lock_guard&lt; std::mutex &gt; catena::common::Device::lock </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Locks the device until the returned lock_guard is destroyed. </p>
+<dl class="section return"><dt>Returns</dt><dd>A lock guard containing the device's locked mutex. </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#ad4c1cd27fa7bced536634ca67093d7bd">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
