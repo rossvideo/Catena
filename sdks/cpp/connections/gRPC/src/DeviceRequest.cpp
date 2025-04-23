@@ -164,7 +164,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 try {     
                     catena::DeviceComponent component{};
                     {
-                        auto lg = dm_.lock();
+                        std::lock_guard lg(dm_.mutex());
                         component = serializer_->getNext();
                     }
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;

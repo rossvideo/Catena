@@ -66,7 +66,7 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
             new ListLanguages(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try { // Getting and returning languages.
-                auto lg = dm_.lock();
+                std::lock_guard lg(dm_.mutex());
                 catena::LanguageList ans;
                 dm_.toProto(ans);
                 status_ = CallStatus::kFinish;

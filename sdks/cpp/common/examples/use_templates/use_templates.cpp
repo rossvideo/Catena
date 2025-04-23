@@ -46,7 +46,7 @@ using namespace use_templates;
 #include <iostream>
 int main() {
     // lock the model
-    auto lg = dm.lock();
+    std::lock_guard lg(dm.mutex());
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> ip;
 

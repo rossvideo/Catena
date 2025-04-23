@@ -103,7 +103,7 @@ void statusUpdateExample(){
             // update the counter once per second, and emit the event
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {
-                auto lg = dm.lock();
+                std::lock_guard lg(dm.mutex());
                 counter.get()++;
                 std::cout << counter.getOid() << " set to " << counter.get() << '\n';
                 dm.valueSetByServer.emit("/counter", &counter, 0);

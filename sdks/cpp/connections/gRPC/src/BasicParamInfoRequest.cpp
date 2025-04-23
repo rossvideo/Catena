@@ -105,12 +105,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
                     {
-                    auto lg = dm_.lock();
+                    std::lock_guard lg(dm_.mutex());
                     top_level_params = dm_.getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        auto lg = dm_.lock();                    
+                        std::lock_guard lg(dm_.mutex());                    
                         responses_.clear();  
                         // Process each top-level parameter
                         for (auto& top_level_param : top_level_params) {
@@ -136,7 +136,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 // Mode 2: Get a specific parameter and its children
                 } else if (!req_.oid_prefix().empty()) { 
                     {
-                    auto lg = dm_.lock();
+                    std::lock_guard lg(dm_.mutex());
                     param = dm_.getParam(req_.oid_prefix(), rc, *authz);
                     }
 

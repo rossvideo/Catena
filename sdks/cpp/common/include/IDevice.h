@@ -89,10 +89,9 @@ class IDevice {
     virtual inline uint32_t slot() const = 0;
 
     /**
-     * @brief Locks the device until the returned lock_guard is destroyed.
-     * @return A lock guard containing the device's locked mutex.
+     * @brief Returns the device's mutex.
      */
-    virtual inline std::lock_guard<std::mutex> lock() = 0;
+    virtual inline std::mutex& mutex() = 0;
 
     /**
      * @brief set the detail level of the device

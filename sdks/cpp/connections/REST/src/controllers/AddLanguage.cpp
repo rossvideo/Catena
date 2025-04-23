@@ -26,10 +26,10 @@ void AddLanguage::proceed() {
         if (status.ok()) {
             if(context_.authorizationEnabled()) {
                 catena::common::Authorizer authz{context_.jwsToken()};
-                auto lg = dm_.lock();
+                std::lock_guard lg(dm_.mutex());
                 rc = dm_.addLanguage(payload, authz);
             } else {
-                auto lg = dm_.lock();
+                std::lock_guard lg(dm_.mutex());
                 rc = dm_.addLanguage(payload, catena::common::Authorizer::kAuthzDisabled);
             }
         } else {

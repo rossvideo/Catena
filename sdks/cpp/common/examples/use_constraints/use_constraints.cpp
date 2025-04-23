@@ -65,7 +65,7 @@ using catena::common::getParamValue;
 
 int main() {
     // lock the model
-    auto lg = dm.lock();
+    std::lock_guard lg(dm.mutex());
 
     catena::exception_with_status err{"", catena::StatusCode::OK};
     catena::Value value;

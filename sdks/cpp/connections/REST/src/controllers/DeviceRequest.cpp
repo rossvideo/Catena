@@ -32,7 +32,7 @@ void DeviceRequest::proceed() {
             writeConsole(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
-            auto lg = dm_.lock();
+            std::lock_guard lg(dm_.mutex());
             component = serializer->getNext();
             }
             writer_.write(component);

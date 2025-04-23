@@ -39,7 +39,7 @@ void MultiSetValue::proceed() {
             }
             // Trying and commiting the multiSetValue.
             {
-            auto lg = dm_.lock();
+            std::lock_guard lg(dm_.mutex());
             if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
                 rc = dm_.commitMultiSetValue(reqs_, *authz);
             }

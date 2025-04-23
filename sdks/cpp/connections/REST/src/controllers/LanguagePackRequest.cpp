@@ -19,7 +19,7 @@ void LanguagePackRequest::proceed() {
     catena::DeviceComponent_ComponentLanguagePack ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        auto lg = dm_.lock();
+        std::lock_guard lg(dm_.mutex());
         rc = dm_.getLanguagePack(context_.fields("language"), ans);
     // ERROR
     } catch (...) {
