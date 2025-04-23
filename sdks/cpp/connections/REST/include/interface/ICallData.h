@@ -40,7 +40,7 @@
 // common
 #include <Enums.h>
 #include <patterns/EnumDecorator.h>
-#include <Device.h>
+#include <IDevice.h>
 
 using DetailLevel = catena::patterns::EnumDecorator<catena::Device_DetailLevel>;
 

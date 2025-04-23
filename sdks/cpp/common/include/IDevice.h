@@ -243,6 +243,35 @@ class IDevice {
     virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const = 0;
 
     /**
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for parameters and commands.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    virtual void addItem(const std::string& key, IParam* item) = 0;
+    /**
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for constraints.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    virtual void addItem(const std::string& key, IConstraint* item) = 0;
+    /**
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for menu groups.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    virtual void addItem(const std::string& key, IMenuGroup* item) = 0;
+    /**
+     * @brief add an item to one of the collections owned by the device
+     * Overload for language packs.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    virtual void addItem(const std::string& key, ILanguagePack* item) = 0;
+
+    /**
      * @brief get a parameter by oid with authorization
      * @param fqoid the fully qualified oid of the parameter
      * @param authz The Authorizer to test read permission with.

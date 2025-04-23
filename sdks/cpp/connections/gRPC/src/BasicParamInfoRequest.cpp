@@ -38,7 +38,6 @@
 using catena::common::ParamTag;
 using catena::common::Path;
 using catena::common::ParamVisitor;
-using catena::common::Device;
 using catena::common::IParam;
 using catena::common::Authorizer;
 

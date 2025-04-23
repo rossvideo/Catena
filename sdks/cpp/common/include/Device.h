@@ -384,29 +384,39 @@ class Device : public IDevice {
      */
     DeviceSerializer getDeviceSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const;
     /**
-     * @brief add an item to one of the collections owned by the device
-     * @tparam TAG identifies the collection to which the item will be added
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for parameters and commands.
      * @param key item's unique key
      * @param item the item to be added
      */
-    template <typename TAG>
-    void addItem(const std::string& key, typename TAG::type* item) {
-        if constexpr (std::is_same_v<TAG, common::ParamTag>) {
+    void addItem(const std::string& key, IParam* item) override {
+        if (item->getDescriptor().isCommand()) {
+            commands_[key] = item;
+        } else {
             params_[key] = item;
         }
-        if constexpr (std::is_same_v<TAG, common::ConstraintTag>) {
-            constraints_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, common::MenuGroupTag>) {
-            menu_groups_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, common::CommandTag>) {
-            commands_[key] = item;
-        }
-        if constexpr (std::is_same_v<TAG, common::LanguagePackTag>) {
-            language_packs_[key] = item;
-        }
     }
+    /**
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for constraints.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    void addItem(const std::string& key, IConstraint* item) override { constraints_[key] = item; }
+    /**
+     * @brief add an item to one of the collections owned by the device.
+     * Overload for menu groups.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    void addItem(const std::string& key, IMenuGroup* item) override { menu_groups_[key] = item; }
+    /**
+     * @brief add an item to one of the collections owned by the device
+     * Overload for language packs.
+     * @param key item's unique key
+     * @param item the item to be added
+     */
+    void addItem(const std::string& key, ILanguagePack* item) override { language_packs_[key] = item; }
 
     /**
      * @brief gets an item from one of the collections owned by the device

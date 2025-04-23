@@ -38,7 +38,7 @@
 #include <PolyglotText.h>
 
 // common
-#include <Device.h>
+#include <IDevice.h>
 #include <Menu.h>
 
 // protobuf interface
@@ -90,8 +90,8 @@ class MenuGroup : public common::IMenuGroup {
      * @param name the name of the Menu Group
      * @param dev the device to add the menu group to
      */
-    MenuGroup(std::string oid, const PolyglotText::ListInitializer name, Device& dev) : name_{name} {
-        dev.addItem<common::MenuGroupTag>(oid, this);
+    MenuGroup(std::string oid, const PolyglotText::ListInitializer name, IDevice& dev) : name_{name} {
+        dev.addItem(oid, this);
     }
 
 
