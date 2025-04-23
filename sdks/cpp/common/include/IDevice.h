@@ -62,19 +62,6 @@ namespace common {
 class IDevice {
   public:
     /**
-     * @brief LockGuard is a helper class to lock and unlock the device mutex
-     */
-    class LockGuard {
-      public:
-        LockGuard(IDevice& dm) : dm_(dm) { dm_.mutex_.lock(); }
-        ~LockGuard() { dm_.mutex_.unlock(); }
-
-      private:
-        IDevice& dm_;
-    };
-    friend class LockGuard;
-
-    /**
      * @brief convenience type aliases to types of objects contained in the
      * device
      */
@@ -100,6 +87,12 @@ class IDevice {
      * @return slot number
      */
     virtual inline uint32_t slot() const = 0;
+
+    /**
+     * @brief Locks the device until the returned lock_guard is destroyed.
+     * @return A lock guard containing the device's locked mutex.
+     */
+    virtual inline std::lock_guard<std::mutex> lock() = 0;
 
     /**
      * @brief set the detail level of the device
@@ -372,9 +365,6 @@ class IDevice {
      * Intended recipient is the connection manager.
      */
     vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
-
-  private:
-    mutable std::mutex mutex_;
 };
 
 }  // namespace common

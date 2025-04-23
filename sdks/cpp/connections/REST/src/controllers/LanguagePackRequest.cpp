@@ -19,7 +19,7 @@ void LanguagePackRequest::proceed() {
     catena::DeviceComponent_ComponentLanguagePack ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        IDevice::LockGuard lg(dm_);
+        auto lg = dm_.lock();
         rc = dm_.getLanguagePack(context_.fields("language"), ans);
     // ERROR
     } catch (...) {

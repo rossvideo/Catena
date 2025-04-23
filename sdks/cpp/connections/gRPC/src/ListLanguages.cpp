@@ -66,7 +66,7 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
             new ListLanguages(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try { // Getting and returning languages.
-                IDevice::LockGuard lg(dm_);
+                auto lg = dm_.lock();
                 catena::LanguageList ans;
                 dm_.toProto(ans);
                 status_ = CallStatus::kFinish;

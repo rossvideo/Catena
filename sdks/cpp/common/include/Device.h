@@ -120,6 +120,12 @@ class Device : public IDevice {
     inline uint32_t slot() const override { return slot_; }
 
     /**
+     * @brief Locks the device until the returned lock_guard is destroyed.
+     * @return A lock guard containing the device's locked mutex.
+     */
+    inline std::lock_guard<std::mutex> lock() override { return std::lock_guard(mutex_); }
+
+    /**
      * @brief set the detail level of the device
      * @param detail_level the detail level of the device
      */
@@ -541,6 +547,7 @@ class Device : public IDevice {
     uint32_t default_total_length_ = 0;
 
     mutable std::mutex mutex_;
+
 };
 }  // namespace common
 }  // namespace catena

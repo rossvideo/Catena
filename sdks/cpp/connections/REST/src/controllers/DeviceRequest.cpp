@@ -32,7 +32,7 @@ void DeviceRequest::proceed() {
             writeConsole(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
-            IDevice::LockGuard lg(dm_);
+            auto lg = dm_.lock();
             component = serializer->getNext();
             }
             writer_.write(component);

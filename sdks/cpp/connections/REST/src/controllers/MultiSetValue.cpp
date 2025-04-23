@@ -39,7 +39,7 @@ void MultiSetValue::proceed() {
             }
             // Trying and commiting the multiSetValue.
             {
-            IDevice::LockGuard lg(dm_);
+            auto lg = dm_.lock();
             if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
                 rc = dm_.commitMultiSetValue(reqs_, *authz);
             }

@@ -62,7 +62,7 @@ void printCoordinate(const Coordinates_elem& coord) {
 
 int main() {
     // // lock the model
-    Device::LockGuard lg(dm);
+    auto lg = dm.lock();
     catena::exception_with_status err{"", catena::StatusCode::OK};
     std::unique_ptr<IParam> ip;
     

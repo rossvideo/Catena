@@ -72,10 +72,10 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
                     catena::common::Authorizer authz{getJWSToken()};
-                    IDevice::LockGuard lg(dm_);
+                    auto lg = dm_.lock();
                     rc = dm_.addLanguage(req_, authz);
                 } else {
-                    IDevice::LockGuard lg(dm_);
+                    auto lg = dm_.lock();
                     rc = dm_.addLanguage(req_, catena::common::Authorizer::kAuthzDisabled);
                 }
                 status_ = CallStatus::kFinish;

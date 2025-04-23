@@ -47,7 +47,7 @@ using catena::common::ParamTag;
 #include <iostream>
 int main() {
     // lock the model
-    Device::LockGuard lg(dm);
+    auto lg = dm.lock();
     catena::exception_with_status err{"", catena::StatusCode::OK};
 
     std::unique_ptr<IParam> ip = dm.getParam("/location", err);

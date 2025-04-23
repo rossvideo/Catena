@@ -95,10 +95,10 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
                     catena::common::Authorizer authz{getJWSToken()};
-                    IDevice::LockGuard lg(dm_);
+                    auto lg = dm_.lock();
                     rc = dm_.getValue(req_.oid(), ans, authz);
                 } else {
-                    IDevice::LockGuard lg(dm_);
+                    auto lg = dm_.lock();
                     rc = dm_.getValue(req_.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
                 }
                 

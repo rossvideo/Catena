@@ -149,7 +149,7 @@ void defineCommands() {
 
         std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
         {
-            Device::LockGuard lg(dm);
+            auto lg = dm.lock();
             state = "playing";
             dm.valueSetByServer.emit("/state", stateParam.get(), 0);
         }
@@ -174,7 +174,7 @@ void defineCommands() {
 
         std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
         {
-            Device::LockGuard lg(dm);
+            auto lg = dm.lock();
             state = "paused";
             dm.valueSetByServer.emit("/state", stateParam.get(), 0);
         }
