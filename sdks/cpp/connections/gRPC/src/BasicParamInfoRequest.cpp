@@ -175,12 +175,12 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                     std::vector<std::unique_ptr<IParam>> top_level_params;
 
                     {
-                    Device::LockGuard lg(dm_);
-                    top_level_params = dm_.getTopLevelParams(rc, *authz);
+                        std::lock_guard lg(dm_.mutex());
+                        top_level_params = dm_.getTopLevelParams(rc, *authz);
                     }
 
                     if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                        Device::LockGuard lg(dm_);                      
+                        std::lock_guard lg(dm_.mutex());                     
                         responses_.clear();  
                         // Process each top-level parameter recursively
                         for (auto& top_level_param : top_level_params) {

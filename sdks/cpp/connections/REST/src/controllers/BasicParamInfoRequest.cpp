@@ -42,11 +42,12 @@ using catena::common::Path;
 using catena::common::ParamVisitor;
 using catena::common::IParam;
 using catena::common::Authorizer;
+using catena::common::IDevice;
 
 // Initializes the object counter for BasicParamInfoRequest to 0.
 int BasicParamInfoRequest::objectCounter_ = 0;
 
-BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::Device& dm) :
+BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
@@ -99,12 +100,12 @@ void BasicParamInfoRequest::proceed() {
             std::vector<std::unique_ptr<IParam>> top_level_params;
 
             {
-                catena::common::Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 top_level_params = dm_.getTopLevelParams(rc, *authz);
             }
 
             if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                catena::common::Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 responses_.clear();
                 // Process each top-level parameter
                 for (auto& top_level_param : top_level_params) {
@@ -128,7 +129,7 @@ void BasicParamInfoRequest::proceed() {
         // Mode 2: Get a specific parameter and its children
         else if (!oid_prefix_.empty()) { 
             {
-                catena::common::Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 param = dm_.getParam(oid_prefix_, rc, *authz);
             }
 
@@ -168,12 +169,12 @@ void BasicParamInfoRequest::proceed() {
             std::vector<std::unique_ptr<IParam>> top_level_params;
 
             {
-                catena::common::Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 top_level_params = dm_.getTopLevelParams(rc, *authz);
             }
 
             if (rc.status == catena::StatusCode::OK && !top_level_params.empty()) {
-                catena::common::Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 responses_.clear();
                 // Process each top-level parameter recursively
                 for (auto& top_level_param : top_level_params) {
