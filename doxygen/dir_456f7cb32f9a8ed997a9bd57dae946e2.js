@@ -1,12 +1,12 @@
 var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
 [
     [ "AddLanguage.h", "gRPC_2include_2AddLanguage_8h.html", "gRPC_2include_2AddLanguage_8h" ],
-    [ "BasicParamInfoRequest.h", "BasicParamInfoRequest_8h_source.html", null ],
+    [ "BasicParamInfoRequest.h", "gRPC_2include_2BasicParamInfoRequest_8h_source.html", null ],
     [ "Connect.h", "connections_2gRPC_2include_2Connect_8h.html", "connections_2gRPC_2include_2Connect_8h" ],
     [ "DeviceRequest.h", "gRPC_2include_2DeviceRequest_8h.html", "gRPC_2include_2DeviceRequest_8h" ],
     [ "ExecuteCommand.h", "ExecuteCommand_8h.html", "ExecuteCommand_8h" ],
     [ "ExternalObjectRequest.h", "ExternalObjectRequest_8h.html", "ExternalObjectRequest_8h" ],
-    [ "GetParam.h", "gRPC_2include_2GetParam_8h.html", "gRPC_2include_2GetParam_8h" ],
+    [ "GetParam.h", "GetParam_8h.html", "GetParam_8h" ],
     [ "GetPopulatedSlots.h", "gRPC_2include_2GetPopulatedSlots_8h.html", "gRPC_2include_2GetPopulatedSlots_8h" ],
     [ "GetValue.h", "gRPC_2include_2GetValue_8h.html", "gRPC_2include_2GetValue_8h" ],
     [ "LanguagePackRequest.h", "gRPC_2include_2LanguagePackRequest_8h.html", "gRPC_2include_2LanguagePackRequest_8h" ],
