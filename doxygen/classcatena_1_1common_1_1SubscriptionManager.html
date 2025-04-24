@@ -93,7 +93,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1SubscriptionM
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classcatena_1_1common_1_1SubscriptionManager-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">catena::common::SubscriptionManager Class Reference</div></div>
 </div><!--header-->
@@ -135,12 +134,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1d4e391391e69f3963fef498f2dba150" id="r_a1d4e391391e69f3963fef498f2dba150"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a1d4e391391e69f3963fef498f2dba150">getWildcardSubscriptions</a> () override</td></tr>
 <tr class="memdesc:a1d4e391391e69f3963fef498f2dba150"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all wildcard subscriptions.  <br /></td></tr>
 <tr class="separator:a1d4e391391e69f3963fef498f2dba150"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:afb4a1b0f92b4baa85d4dbbeb0f92acbe" id="r_afb4a1b0f92b4baa85d4dbbeb0f92acbe"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#afb4a1b0f92b4baa85d4dbbeb0f92acbe">isWildcard</a> (const std::string &amp;oid)</td></tr>
-<tr class="memdesc:afb4a1b0f92b4baa85d4dbbeb0f92acbe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if an OID is a wildcard subscription.  <br /></td></tr>
-<tr class="separator:afb4a1b0f92b4baa85d4dbbeb0f92acbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a596b1976e0ecccf834f8f7ade92a92f4" id="r_a596b1976e0ecccf834f8f7ade92a92f4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a596b1976e0ecccf834f8f7ade92a92f4">isWildcard</a> (const std::string &amp;oid) override</td></tr>
+<tr class="memdesc:a596b1976e0ecccf834f8f7ade92a92f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if an OID is a wildcard subscription.  <br /></td></tr>
+<tr class="separator:a596b1976e0ecccf834f8f7ade92a92f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for managing parameter subscriptions in Catena. </p>
@@ -297,8 +293,8 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="afb4a1b0f92b4baa85d4dbbeb0f92acbe" name="afb4a1b0f92b4baa85d4dbbeb0f92acbe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb4a1b0f92b4baa85d4dbbeb0f92acbe">&#9670;&#160;</a></span>isWildcard()</h2>
+<a id="a596b1976e0ecccf834f8f7ade92a92f4" name="a596b1976e0ecccf834f8f7ade92a92f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a596b1976e0ecccf834f8f7ade92a92f4">&#9670;&#160;</a></span>isWildcard()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -307,7 +303,7 @@ Static Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static bool catena::common::SubscriptionManager::isWildcard </td>
+          <td class="memname">bool catena::common::SubscriptionManager::isWildcard </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>oid</em></td><td>)</td>
@@ -316,7 +312,7 @@ Static Public Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -329,6 +325,8 @@ Static Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the OID is greater than or equal to 2 characters and ends with "/*" </dd></dl>
+
+<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#ac05b965006e98cf193568bce2f25ee40">catena::common::ISubscriptionManager</a>.</p>
 
 </div>
 </div>

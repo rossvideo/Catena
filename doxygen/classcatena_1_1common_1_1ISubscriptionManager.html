@@ -124,6 +124,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a75ff72f7f641b23017e9bacd8620746e" id="r_a75ff72f7f641b23017e9bacd8620746e"><td class="memItemLeft" align="right" valign="top">virtual const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a75ff72f7f641b23017e9bacd8620746e">getWildcardSubscriptions</a> ()=0</td></tr>
 <tr class="memdesc:a75ff72f7f641b23017e9bacd8620746e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all wildcard subscriptions.  <br /></td></tr>
 <tr class="separator:a75ff72f7f641b23017e9bacd8620746e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac05b965006e98cf193568bce2f25ee40" id="r_ac05b965006e98cf193568bce2f25ee40"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#ac05b965006e98cf193568bce2f25ee40">isWildcard</a> (const std::string &amp;oid)=0</td></tr>
+<tr class="memdesc:ac05b965006e98cf193568bce2f25ee40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if an OID is a wildcard subscription.  <br /></td></tr>
+<tr class="separator:ac05b965006e98cf193568bce2f25ee40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for managing parameter subscriptions in Catena. </p>
@@ -277,6 +280,43 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Reference to the set of wildcard subscriptions (OIDs ending with "/*") </dd></dl>
 
 <p>Implemented in <a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a1d4e391391e69f3963fef498f2dba150">catena::common::SubscriptionManager</a>.</p>
+
+</div>
+</div>
+<a id="ac05b965006e98cf193568bce2f25ee40" name="ac05b965006e98cf193568bce2f25ee40"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac05b965006e98cf193568bce2f25ee40">&#9670;&#160;</a></span>isWildcard()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool catena::common::ISubscriptionManager::isWildcard </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>oid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Check if an OID is a wildcard subscription. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">oid</td><td>The OID to check </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true if the OID is greater than or equal to 2 characters and ends with "/*" </dd></dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a596b1976e0ecccf834f8f7ade92a92f4">catena::common::SubscriptionManager</a>.</p>
 
 </div>
 </div>

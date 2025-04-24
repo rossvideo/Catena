@@ -5,5 +5,6 @@ var classcatena_1_1common_1_1SubscriptionManager =
     [ "getAllSubscribedOids", "classcatena_1_1common_1_1SubscriptionManager.html#a6f6b43b7009deb4eda922d08af16c29e", null ],
     [ "getUniqueSubscriptions", "classcatena_1_1common_1_1SubscriptionManager.html#ad2e11fd0dd3440e89f4be34bf736ec09", null ],
     [ "getWildcardSubscriptions", "classcatena_1_1common_1_1SubscriptionManager.html#a1d4e391391e69f3963fef498f2dba150", null ],
+    [ "isWildcard", "classcatena_1_1common_1_1SubscriptionManager.html#a596b1976e0ecccf834f8f7ade92a92f4", null ],
     [ "removeSubscription", "classcatena_1_1common_1_1SubscriptionManager.html#ad74e22560836e1aae2609ed57d939675", null ]
 ];
