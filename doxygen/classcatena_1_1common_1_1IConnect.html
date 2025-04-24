@@ -125,18 +125,18 @@ Protected Member Functions</h2></td></tr>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCancelled</b> ()=0</td></tr>
 <tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled. <br /></td></tr>
 <tr class="separator:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92d342b15eb786c12987e5f6aee6bfcf" id="r_a92d342b15eb786c12987e5f6aee6bfcf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a92d342b15eb786c12987e5f6aee6bfcf">updateResponse</a> (const std::string &amp;oid, size_t idx, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p)=0</td></tr>
-<tr class="memdesc:a92d342b15eb786c12987e5f6aee6bfcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
-<tr class="separator:a92d342b15eb786c12987e5f6aee6bfcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9aa5b09b8675f410683d5b113abcfdd7" id="r_a9aa5b09b8675f410683d5b113abcfdd7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a9aa5b09b8675f410683d5b113abcfdd7">updateResponse</a> (const catena::DeviceComponent_ComponentLanguagePack &amp;l)=0</td></tr>
-<tr class="memdesc:a9aa5b09b8675f410683d5b113abcfdd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a ComponentLanguagePack and handles authorization checks.  <br /></td></tr>
-<tr class="separator:a9aa5b09b8675f410683d5b113abcfdd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1663d3f7fa33ed154d5fa0ef90d9611" id="r_ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#ae1663d3f7fa33ed154d5fa0ef90d9611">updateResponse_</a> (const std::string &amp;oid, size_t idx, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p)=0</td></tr>
+<tr class="memdesc:ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
+<tr class="separator:ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60e207c3bf77638a792eedb998c5e77c" id="r_a60e207c3bf77638a792eedb998c5e77c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a60e207c3bf77638a792eedb998c5e77c">updateResponse_</a> (const catena::DeviceComponent_ComponentLanguagePack &amp;l)=0</td></tr>
+<tr class="memdesc:a60e207c3bf77638a792eedb998c5e77c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a ComponentLanguagePack and handles authorization checks.  <br /></td></tr>
+<tr class="separator:a60e207c3bf77638a792eedb998c5e77c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a9aa5b09b8675f410683d5b113abcfdd7" name="a9aa5b09b8675f410683d5b113abcfdd7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9aa5b09b8675f410683d5b113abcfdd7">&#9670;&#160;</a></span>updateResponse() <span class="overload">[1/2]</span></h2>
+<a id="a60e207c3bf77638a792eedb998c5e77c" name="a60e207c3bf77638a792eedb998c5e77c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60e207c3bf77638a792eedb998c5e77c">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -145,7 +145,7 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCancelled</
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::common::IConnect::updateResponse </td>
+          <td class="memname">virtual void catena::common::IConnect::updateResponse_ </td>
           <td>(</td>
           <td class="paramtype">const catena::DeviceComponent_ComponentLanguagePack &amp;&#160;</td>
           <td class="paramname"><em>l</em></td><td>)</td>
@@ -167,12 +167,12 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCancelled</
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a6aa0f71df88867588f29cc3b5c7277cb">catena::common::Connect</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a08776752e0acd2ba9946b83d4ff38bff">catena::common::Connect</a>.</p>
 
 </div>
 </div>
-<a id="a92d342b15eb786c12987e5f6aee6bfcf" name="a92d342b15eb786c12987e5f6aee6bfcf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a92d342b15eb786c12987e5f6aee6bfcf">&#9670;&#160;</a></span>updateResponse() <span class="overload">[2/2]</span></h2>
+<a id="ae1663d3f7fa33ed154d5fa0ef90d9611" name="ae1663d3f7fa33ed154d5fa0ef90d9611"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1663d3f7fa33ed154d5fa0ef90d9611">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -181,7 +181,7 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCancelled</
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void catena::common::IConnect::updateResponse </td>
+          <td class="memname">virtual void catena::common::IConnect::updateResponse_ </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>oid</em>, </td>
@@ -221,7 +221,7 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCancelled</
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#abc9595bb71fddb254e96c55c91d59002">catena::common::Connect</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a11240b1de8befc4e8c1711130987364b">catena::common::Connect</a>.</p>
 
 </div>
 </div>
