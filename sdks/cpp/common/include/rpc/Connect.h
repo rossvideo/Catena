@@ -76,7 +76,10 @@ class Connect : public IConnect {
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, bool authz, const std::string& jwsToken, SubscriptionManager& subscriptionManager) : dm_{dm}, subscriptionManager_{subscriptionManager} {
+    Connect(IDevice& dm, bool authz, const std::string& jwsToken, SubscriptionManager& subscriptionManager) : 
+        dm_{dm}, 
+        subscriptionManager_{subscriptionManager},
+        detailLevel_{catena::Device_DetailLevel_UNSET} {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
@@ -129,7 +132,7 @@ class Connect : public IConnect {
             bool should_update = false;
             
             // Map of detail levels to their update logic
-            const std::unordered_map<int, std::function<bool()>> detailLevelMap {
+            const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
                 {catena::Device_DetailLevel_FULL, [&]() {
                     // Always update for FULL detail level
                     return true;
@@ -244,7 +247,7 @@ class Connect : public IConnect {
     /**
      * @brief The detail level of the response.
      */
-    int detailLevel_;
+    catena::Device_DetailLevel detailLevel_;
     /**
      * @brief The subscription manager.
      */
