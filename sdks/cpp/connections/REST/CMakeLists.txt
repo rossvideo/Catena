@@ -28,6 +28,7 @@ endif(APPLE)
 set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.81 REQUIRED COMPONENTS system date_time url)
 
 set(sources
@@ -49,16 +50,12 @@ add_library(${target} STATIC ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)
 
-include_directories(
-    ${REST_ROOT_DIR}/include
-    ${Boost_INCLUDE_DIRS}
-)
-
 message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 
 target_include_directories(
     ${target}
     PUBLIC
+        ${Boost_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
 )

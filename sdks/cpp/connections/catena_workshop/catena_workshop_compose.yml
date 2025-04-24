@@ -42,15 +42,17 @@ networks:
 # Setting up the envoyproxy container.
 services:
   status_update:
-    image: catena_status_update
-    container_name: catena_status_update
+    image: catena_performance_test
+    container_name: catena_performance_test
     networks:
-      - catena_network # Only connected to the prv network.
+      - catena_network
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     ports: # Mapping ports from host to container.
-      - 6254:6254 # gRPC
+      - 6256:6254 # gRPC
       - 443:443   # REST
+    command:
+      - "--authz"

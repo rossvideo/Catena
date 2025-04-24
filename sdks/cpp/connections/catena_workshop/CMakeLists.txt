@@ -39,5 +39,5 @@ project(CATENA_WORKSHOP C CXX)
 add_subdirectory("performance_test")
 
 if (DOCKER)
-    make_image(catena_performance_test ${CATENA_CPP_ROOT_DIR} "base.hash;catena_performance_test")
+    make_image(catena_performance_test ${CATENA_CPP_ROOT_DIR} "../docker/base.hash;performance_test")
 endif()
