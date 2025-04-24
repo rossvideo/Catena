@@ -15,7 +15,7 @@
         "CONNECTIONS": "gRPC"
       }
   },
-  "postCreateCommand": "echo 'Development container is ready!'",
+  "postCreateCommand": "sudo chown root:docker /var/run/docker.sock && echo 'Development container is ready!'",
   "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
   "forwardPorts": [6254, 8000, 8080, 443],
   "remoteUser": "${localEnv:USER}",
@@ -37,6 +37,8 @@
     // Mount the build directory as a volume first so that it doesn't sync back to the host
     "source=catena-build,target=/home/${localEnv:USER}/Catena/sdks/cpp/build,type=volume", 
     // Then, mount the Catena directory so that we can sync other changes back to the host
-    "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind"
+    "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind",
+    // the docker daemon
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ]
 }
