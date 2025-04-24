@@ -1,15 +1,23 @@
 
 #include <SocketReader.h>
+#include "ServiceImpl.h"
 using catena::REST::SocketReader;
+
+namespace catena {
+namespace REST {
+
+SocketReader::SocketReader(CatenaServiceImpl& service) 
+    : subscriptionManager_(service.getSubscriptionManager()),
+      service_(&service) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
     method_ = "";
-    service_ = "";
+    endpoint_ = "";
     jwsToken_ = "";
     origin_ = "";
     jsonBody_ = "";
-    detailLevel_ = -1;
+    detailLevel_ = Device_DetailLevel_UNSET;
     authorizationEnabled_ = authz;
 
     // Reading the headers.
@@ -24,16 +32,16 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     std::istringstream(header) >> method_ >> url >> httpVersion;
     url_view u(url);
 
-    // Extracting service_ and slot_ from the url (ex: v1/GetValue/{slot}).
+    // Extracting endpoint_ and slot_ from the url (ex: v1/GetValue/{slot}).
     // Slot is not needed for GetPopulatedSlots and Connect.
     std::string path = u.path();
     try {
         if (path.find("Connect") != std::string::npos ||
             path.find("GetPopulatedSlots") != std::string::npos) {
-            service_ = path;
+            endpoint_ = path;
         } else {
             std::size_t pos = path.find_last_of('/');
-            service_ = path.substr(0, pos);
+            endpoint_ = path.substr(0, pos);
             slot_ = std::stoi(path.substr(pos + 1));
         }
     } catch (...) {
@@ -65,7 +73,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             language_.erase(language_.length() - 1); // Removing newline.
         }
         // Getting detail level
-        else if (detailLevel_ == -1 && header.starts_with("Detail-Level: ")) {
+        else if (detailLevel_ == Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
             std::string dl = header.substr(std::string("Detail-Level: ").length());
             dl.erase(dl.length() - 1); // Removing newline.
             auto& dlMap = catena::common::DetailLevel().getReverseMap(); // Reverse detail level map.
@@ -87,8 +95,11 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             boost::asio::read(socket, boost::asio::buffer(&jsonBody_[contentLength - remainingLength], remainingLength));
         }
     }
-    // Setting detail level to none if not set.
-    if (detailLevel_ == -1) {
+    // Setting detail level to NONE if not set.
+    if (detailLevel_ == Device_DetailLevel_UNSET) {
         detailLevel_ = catena::Device_DetailLevel_NONE;
     }
 }
+
+}; // Namespace REST
+}; // Namespace catena
