@@ -26,15 +26,15 @@ void Connect::proceed() {
     });
     // Waiting for a value set by server to be sent to execute code.
     valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-        updateResponse(oid, idx, p);
+        updateResponse_(oid, idx, p);
     });
     // Waiting for a value set by client to be sent to execute code.
     valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-        updateResponse(oid, idx, p);
+        updateResponse_(oid, idx, p);
     });
     // Waiting for a language to be added to execute code.
     languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
-        updateResponse(l);
+        updateResponse_(l);
     });
     // send client an empty update with slot of the device
     catena::PushUpdates populatedSlots;

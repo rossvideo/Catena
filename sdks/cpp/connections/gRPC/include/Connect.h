@@ -152,5 +152,5 @@ class CatenaServiceImpl::Connect : public CallData {
          * @param idx - The index of the value to update
          * @param p - The parameter to update
          */
-        void updateResponse(const std::string& oid, size_t idx, const IParam* p);
+        void updateResponse_(const std::string& oid, size_t idx, const IParam* p);
 };

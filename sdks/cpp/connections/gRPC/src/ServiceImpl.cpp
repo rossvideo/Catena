@@ -168,7 +168,7 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-std::string CatenaServiceImpl::CallData::getJWSToken() const {
+std::string CatenaServiceImpl::CallData::getJWSToken_() const {
     // Getting client metadata from context.
     auto clientMeta = &context_.client_metadata();
     if (clientMeta == nullptr) {
