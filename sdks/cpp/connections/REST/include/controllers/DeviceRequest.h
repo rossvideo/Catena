@@ -32,6 +32,7 @@
  * @file DeviceRequest.h
  * @brief Implements REST DeviceRequest RPC.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -127,6 +128,16 @@ class DeviceRequest : public ICallData {
      * @brief A list of the subscribed oids to return.
      */
     std::vector<std::string> subscribedOids_;
+
+    /**
+     * @brief A list of the subscriptions from the current request.
+     */
+    std::vector<std::string> requestSubscriptions_;
+
+    /**
+     * @brief Serializer for device.
+     */
+    std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
 
     /**
      * @brief ID of the DeviceRequest object

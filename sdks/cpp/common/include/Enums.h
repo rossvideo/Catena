@@ -65,7 +65,8 @@ inline const common::DetailLevel::FwdMap common::DetailLevel::fwdMap_ = {
   {Device_DetailLevel_SUBSCRIPTIONS, "SUBSCRIPTIONS"},
   {Device_DetailLevel_MINIMAL,       "MINIMAL"},
   {Device_DetailLevel_COMMANDS,      "COMMANDS"},
-  {Device_DetailLevel_NONE,          "NONE"}
+  {Device_DetailLevel_NONE,          "NONE"},
+  {Device_DetailLevel_UNSET,         "UNSET"}
 };
 
 }  // namespace catena
