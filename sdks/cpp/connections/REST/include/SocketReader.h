@@ -69,9 +69,9 @@ class SocketReader : public ISocketReader {
   public:
     /**
      * @brief Constructor for the SocketReader class.
-     * @param service The CatenaServiceImpl object.
+     * @param subscriptionManager The subscription manager to use.
      */
-    SocketReader(CatenaServiceImpl& service);
+    SocketReader(catena::common::SubscriptionManager& subscriptionManager);
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -184,10 +184,6 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
-    /**
-     * @brief The CatenaServiceImpl object.
-     */
-    CatenaServiceImpl* service_ = nullptr;
 };
 
 }; // Namespace REST

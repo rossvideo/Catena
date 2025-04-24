@@ -6,9 +6,8 @@ using catena::REST::SocketReader;
 namespace catena {
 namespace REST {
 
-SocketReader::SocketReader(CatenaServiceImpl& service) 
-    : subscriptionManager_(service.getSubscriptionManager()),
-      service_(&service) {}
+SocketReader::SocketReader(catena::common::SubscriptionManager& subscriptionManager) 
+    : subscriptionManager_(subscriptionManager) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
