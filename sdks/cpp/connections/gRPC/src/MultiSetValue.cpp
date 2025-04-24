@@ -59,11 +59,11 @@ CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDev
     : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
-void CatenaServiceImpl::MultiSetValue::request() {
+void CatenaServiceImpl::MultiSetValue::request_() {
     service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
 }
 
-void CatenaServiceImpl::MultiSetValue::create(CatenaServiceImpl *service, IDevice& dm, bool ok) {
+void CatenaServiceImpl::MultiSetValue::create_(CatenaServiceImpl *service, IDevice& dm, bool ok) {
     new MultiSetValue(service, dm, ok);
 }
 
@@ -83,7 +83,7 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            request();
+            request_();
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
@@ -91,11 +91,11 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            create(service_, dm_, ok);
+            create_(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
                 // Convert to MultiSetValuePayload if not already.
-                toMulti();
+                toMulti_();
                 /**
                  * Creating authorization object depending on client scopes.
                  * Shared ptr to maintain lifetime of object. Raw ptr ensures
@@ -104,7 +104,7 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;

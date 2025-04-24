@@ -50,7 +50,7 @@ int BasicParamInfoRequest::objectCounter_ = 0;
 BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
     
     // Parsing fields and assigning to respective variables.
     try {
@@ -71,13 +71,13 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& 
 }
 
 void BasicParamInfoRequest::proceed() {
-    writeConsole(CallStatus::kCreate, ok_);
+    writeConsole_(CallStatus::kCreate, ok_);
     if (!ok_) {
         finish();
         return;
     }
 
-    writeConsole(CallStatus::kProcess, ok_);
+    writeConsole_(CallStatus::kProcess, ok_);
     if (!ok_) {
         finish();
         return;
@@ -110,12 +110,12 @@ void BasicParamInfoRequest::proceed() {
                 // Process each top-level parameter
                 for (auto& top_level_param : top_level_params) {
                     // Add the parameter to our response list
-                    addParamToResponses(top_level_param.get(), *authz);
+                    addParamToResponses_(top_level_param.get(), *authz);
                     // For array types, calculate and update array length
                     if (top_level_param->isArrayType()) {
                         uint32_t array_length = top_level_param->size();
                         if (array_length > 0) {
-                            updateArrayLengths(top_level_param->getOid(), array_length);
+                            updateArrayLengths_(top_level_param->getOid(), array_length);
                         }
                     }
                 }
@@ -144,7 +144,7 @@ void BasicParamInfoRequest::proceed() {
                 if (param->isArrayType()) {
                     uint32_t array_length = param->size();
                     if (array_length > 0) {
-                        updateArrayLengths(param->getOid(), array_length);
+                        updateArrayLengths_(param->getOid(), array_length);
                     }
                 }
                 
@@ -179,12 +179,12 @@ void BasicParamInfoRequest::proceed() {
                 // Process each top-level parameter recursively
                 for (auto& top_level_param : top_level_params) {
                     // Add the parameter to our response list
-                    addParamToResponses(top_level_param.get(), *authz);
+                    addParamToResponses_(top_level_param.get(), *authz);
                     // For array types, calculate and update array length
                     if (top_level_param->isArrayType()) {
                         uint32_t array_length = top_level_param->size();
                         if (array_length > 0) {
-                            updateArrayLengths(top_level_param->getOid(), array_length);
+                            updateArrayLengths_(top_level_param->getOid(), array_length);
                         }
                     }
                     // Recursively traverse all children of the top-level parameter
@@ -207,13 +207,13 @@ void BasicParamInfoRequest::proceed() {
 }
 
 void BasicParamInfoRequest::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     writer_.finish();
     std::cout << "BasicParamInfoRequest[" << objectId_ << "] finished\n";
 }
 
 // Helper method to add a parameter to the responses
-void BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::Authorizer& authz) {
+void BasicParamInfoRequest::addParamToResponses_(IParam* param, catena::common::Authorizer& authz) {
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();
@@ -221,7 +221,7 @@ void BasicParamInfoRequest::addParamToResponses(IParam* param, catena::common::A
 }
 
 // Updates the array_length field in the protobuf responses
-void BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
+void BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             // Only update if the OID exactly matches the array name
@@ -241,7 +241,7 @@ void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const st
         return;
     }
 
-    request_.addParamToResponses(param, authz_);
+    request_.addParamToResponses_(param, authz_);
 }
 
 // Visits an array and updates the array length information
@@ -252,10 +252,10 @@ void BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, con
         return;
     }
 
-    request_.addParamToResponses(param, authz_);
+    request_.addParamToResponses_(param, authz_);
 
     // Update array length information
     if (length > 0) {
-        request_.updateArrayLengths(param->getOid(), length);
+        request_.updateArrayLengths_(param->getOid(), length);
     }
 } 

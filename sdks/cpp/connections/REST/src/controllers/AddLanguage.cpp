@@ -9,11 +9,11 @@ int AddLanguage::objectCounter_ = 0;
 AddLanguage::AddLanguage(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
 void AddLanguage::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
@@ -52,6 +52,6 @@ void AddLanguage::proceed() {
 }
 
 void AddLanguage::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "AddLanguage[" << objectId_ << "] finished\n";
 }

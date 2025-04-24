@@ -106,14 +106,14 @@ class MultiSetValue : public ICallData {
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
      */
-    virtual bool toMulti();
+    virtual bool toMulti_();
     /**
      * @brief Helper function to write status messages to the API console.
      * 
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
      * @param ok The status of the RPC (open or closed).
      */
-    inline void writeConsole(CallStatus status, bool ok) const override {
+    inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << typeName_ << "SetValue::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
