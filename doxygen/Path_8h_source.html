@@ -210,7 +210,7 @@ $(document).ready(function(){initNavTree('Path_8h_source.html',''); initResizabl
 <div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>            segments_.emplace_back(std::in_place_type&lt;Index&gt;, <a class="code hl_variable" href="classcatena_1_1common_1_1Path.html#a61a2ae300f348afd7bf9c6eaa3eaf48e">kEnd</a>);</div>
 <div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        } <span class="keywordflow">else</span> {</div>
 <div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>            std::string str = segment;</div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>            escape_(str);</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>            escape(str);</div>
 <div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>            segments_.emplace_back(std::in_place_type&lt;std::string&gt;, str);</div>
 <div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        }</div>
 <div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>    }</div>
@@ -226,9 +226,9 @@ $(document).ready(function(){initNavTree('Path_8h_source.html',''); initResizabl
 <div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    <span class="keyword">using </span>Segments = std::vector&lt;Segment&gt;;</div>
 <div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    Segments segments_{}; </div>
 <div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>    std::size_t frontIdx_{0}; </div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    <span class="keywordtype">void</span> escape_(std::string&amp; str);</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>    <span class="keywordtype">void</span> escape(std::string&amp; str);</div>
 <div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span> </div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    std::string unescape_(<span class="keyword">const</span> std::string&amp; str);</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    std::string unescape(<span class="keyword">const</span> std::string&amp; str);</div>
 <div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>};</div>
 </div>
 <div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
