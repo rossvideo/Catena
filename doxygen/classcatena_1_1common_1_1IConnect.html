@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1IConnect.html
 <div class="dynheader">
 Inheritance diagram for catena::common::IConnect:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IConnect__inherit__graph.svg" width="355" height="198"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IConnect__inherit__graph.svg" width="207" height="183"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
@@ -121,8 +121,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a6f5669cd6a921bd8dcd1e1df68477181" id="r_a6f5669cd6a921bd8dcd1e1df68477181"><td class="memItemLeft" align="right" valign="top"><a id="a6f5669cd6a921bd8dcd1e1df68477181" name="a6f5669cd6a921bd8dcd1e1df68477181"></a>
 <a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1common_1_1IConnect.html">IConnect</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a6f5669cd6a921bd8dcd1e1df68477181"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e16530ff77a84dcb7c2b78d94dc88cd" id="r_a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">isCancelled</a> ()=0</td></tr>
-<tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled.  <br /></td></tr>
+<tr class="memitem:a9e16530ff77a84dcb7c2b78d94dc88cd" id="r_a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memItemLeft" align="right" valign="top"><a id="a9e16530ff77a84dcb7c2b78d94dc88cd" name="a9e16530ff77a84dcb7c2b78d94dc88cd"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCancelled</b> ()=0</td></tr>
+<tr class="memdesc:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the call has been canceled. <br /></td></tr>
 <tr class="separator:a9e16530ff77a84dcb7c2b78d94dc88cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1663d3f7fa33ed154d5fa0ef90d9611" id="r_ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#ae1663d3f7fa33ed154d5fa0ef90d9611">updateResponse_</a> (const std::string &amp;oid, size_t idx, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p)=0</td></tr>
 <tr class="memdesc:ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
@@ -134,40 +135,6 @@ Protected Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a9e16530ff77a84dcb7c2b78d94dc88cd" name="a9e16530ff77a84dcb7c2b78d94dc88cd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9e16530ff77a84dcb7c2b78d94dc88cd">&#9670;&#160;</a></span>isCancelled()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual bool catena::common::IConnect::isCancelled </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns true if the call has been canceled. </p>
-
-<p>Implemented in <a class="el" href="classCatenaServiceImpl_1_1Connect.html#a983d5b6b4f0be4d85702537302d305f8">CatenaServiceImpl::Connect</a>.</p>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1IConnect_a9e16530ff77a84dcb7c2b78d94dc88cd_icgraph.svg" width="447" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
-
-</div>
-</div>
 <a id="a60e207c3bf77638a792eedb998c5e77c" name="a60e207c3bf77638a792eedb998c5e77c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a60e207c3bf77638a792eedb998c5e77c">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
 

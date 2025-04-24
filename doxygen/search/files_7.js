@@ -13,5 +13,6 @@ var searchData=
   ['iserviceimpl_2eh_10',['IServiceImpl.h',['../IServiceImpl_8h.html',1,'']]],
   ['isocketreader_2eh_11',['ISocketReader.h',['../ISocketReader_8h.html',1,'']]],
   ['isocketwriter_2eh_12',['ISocketWriter.h',['../ISocketWriter_8h.html',1,'']]],
-  ['isvector_2eh_13',['IsVector.h',['../IsVector_8h.html',1,'']]]
+  ['isubscriptionmanager_2eh_13',['ISubscriptionManager.h',['../ISubscriptionManager_8h.html',1,'']]],
+  ['isvector_2eh_14',['IsVector.h',['../IsVector_8h.html',1,'']]]
 ];
