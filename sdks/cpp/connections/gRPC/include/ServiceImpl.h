@@ -105,11 +105,6 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
-    /**
-     * @brief The subscription manager for handling parameter subscriptions
-     */
-    catena::common::SubscriptionManager subscriptionManager_;
-
   /*
    * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
    * cannot be inherited.
@@ -174,6 +169,10 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      */
     bool authorizationEnabled_;
     /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::common::SubscriptionManager subscriptionManager_;
+    /**
      * @brief Returns the current time as a string including microseconds.
      */
     static std::string timeNow();
@@ -193,6 +192,11 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief Flag to set authorization as enabled or disabled
      */
     inline bool authorizationEnabled() const { return authorizationEnabled_; }
+    /**
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
+     */
+    inline catena::common::SubscriptionManager& getSubscriptionManager() { return subscriptionManager_; }
 
     //Forward declarations of CallData classes for their respective RPC
     class GetPopulatedSlots;

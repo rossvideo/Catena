@@ -102,7 +102,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 // Process removed OIDs
                 for (const auto& oid : req_.removed_oids()) {     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
-                    if (!service_->subscriptionManager_.removeSubscription(oid, dm_, rc)) {
+                    if (!service_->getSubscriptionManager().removeSubscription(oid, dm_, rc)) {
                         throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
                     }
                 }
@@ -112,7 +112,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
                     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
-                    if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                    if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
                         throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                     }
                     
@@ -196,7 +196,7 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
     // Get all subscribed OIDs from the manager
-    const auto& subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+    const auto& subscribedOids = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
     std::cout << "Got " << subscribedOids.size() << " subscribed OIDs" << std::endl;
     
     // Process each subscribed OID

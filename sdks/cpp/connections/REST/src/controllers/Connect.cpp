@@ -7,7 +7,8 @@ using catena::REST::Connect;
 int Connect::objectCounter_ = 0;
 
 Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
+    socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, 
+    catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken(), context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.

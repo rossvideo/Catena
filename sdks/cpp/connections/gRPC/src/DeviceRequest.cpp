@@ -100,14 +100,14 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 dm_.detail_level(req_.detail_level());
                 
                 // Get service subscriptions from the manager
-                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+                subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
                 
                 // If this request has subscriptions, add them
                 if (!req_.subscribed_oids().empty()) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
                         catena::exception_with_status rc{"", catena::StatusCode::OK};
-                        if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
                             throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                         } else {
                             rpc_subscriptions_.push_back(oid);
@@ -116,7 +116,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 }
                 
                 // Get final list of subscriptions for this response
-                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+                subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
                 
                 //Handle authorization
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
