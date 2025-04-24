@@ -176,47 +176,45 @@ $(document).ready(function(){initNavTree('REST_2include_2ServiceImpl_8h_source.h
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a1d6646abc4fa9880ddde88efdd27a972">  107</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a1d6646abc4fa9880ddde88efdd27a972">Shutdown</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#ac2d66494193859d853b610ed92b17686">  111</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#ac2d66494193859d853b610ed92b17686">authorizationEnabled</a>()<span class="keyword"> override </span>{ <span class="keywordflow">return</span> authorizationEnabled_; };</div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a5c9d551d4e7ab8d57c2617848645b9ac">  116</a></span>    <a class="code hl_class" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a>&amp; <a class="code hl_function" href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a5c9d551d4e7ab8d57c2617848645b9ac">getSubscriptionManager</a>() { <span class="keywordflow">return</span> subscriptionManager_; }</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    </div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>    <a class="code hl_class" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a> subscriptionManager_;</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordtype">bool</span> is_port_in_use_() <span class="keyword">const override</span>;</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    boost::asio::io_context io_context_;</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    tcp::acceptor acceptor_;</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    std::string version_;</div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>    uint16_t port_;</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    IDevice&amp; dm_;</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>    std::string&amp; EOPath_;</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>    <span class="keywordtype">bool</span> authorizationEnabled_;</div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    <span class="keywordtype">bool</span> shutdown_ = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>    uint32_t activeRpcs_ = 0;</div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>    std::mutex activeRpcMutex_;</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>    <span class="keyword">using </span>Router = <a class="code hl_class" href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory</a>&lt;<a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">catena::REST::ICallData</a>,</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>                                                    std::string,</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>                                                    tcp::socket&amp;,</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>                                                    <a class="code hl_class" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a>&amp;,</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>                                                    IDevice&amp;&gt;;</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    Router&amp; router_;</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>};</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    <a class="code hl_class" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a> subscriptionManager_;</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keywordtype">bool</span> is_port_in_use_() <span class="keyword">const override</span>;</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    boost::asio::io_context io_context_;</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    tcp::acceptor acceptor_;</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    std::string version_;</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    uint16_t port_;</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    IDevice&amp; dm_;</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    std::string&amp; EOPath_;</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>    <span class="keywordtype">bool</span> authorizationEnabled_;</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    <span class="keywordtype">bool</span> shutdown_ = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>    uint32_t activeRpcs_ = 0;</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>    std::mutex activeRpcMutex_;</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>    <span class="keyword">using </span>Router = <a class="code hl_class" href="classcatena_1_1patterns_1_1GenericFactory.html">catena::patterns::GenericFactory</a>&lt;<a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">catena::REST::ICallData</a>,</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>                                                    std::string,</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>                                                    tcp::socket&amp;,</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>                                                    <a class="code hl_class" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a>&amp;,</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>                                                    IDevice&amp;&gt;;</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>    Router&amp; router_;</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>};</div>
 </div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span> </div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>}; <span class="comment">// namespace REST</span></div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span> </div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>}; <span class="comment">// namespace REST</span></div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="comment">// flags for the API</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment">// flags.h</span></div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="preprocessor">#include &quot;absl/flags/flag.h&quot;</span></div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span><span class="preprocessor">#include &quot;absl/flags/parse.h&quot;</span></div>
 <div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment">// flags for the API</span></div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment">// flags.h</span></div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="preprocessor">#include &quot;absl/flags/flag.h&quot;</span></div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="preprocessor">#include &quot;absl/flags/parse.h&quot;</span></div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span> </div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="comment">// Declare flags for the API</span></div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>ABSL_DECLARE_FLAG(std::string, certs);</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>ABSL_DECLARE_FLAG(uint16_t, port);</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>ABSL_DECLARE_FLAG(<span class="keywordtype">bool</span>, mutual_authc);</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>ABSL_DECLARE_FLAG(<span class="keywordtype">bool</span>, authz);</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>ABSL_DECLARE_FLAG(std::string, static_root);</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment">// Declare flags for the API</span></div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>ABSL_DECLARE_FLAG(std::string, certs);</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>ABSL_DECLARE_FLAG(uint16_t, port);</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>ABSL_DECLARE_FLAG(<span class="keywordtype">bool</span>, mutual_authc);</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>ABSL_DECLARE_FLAG(<span class="keywordtype">bool</span>, authz);</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>ABSL_DECLARE_FLAG(std::string, static_root);</div>
 <div class="ttc" id="aAuthorization_8h_html"><div class="ttname"><a href="Authorization_8h.html">Authorization.h</a></div><div class="ttdoc">Class for handling authorization information.</div></div>
 <div class="ttc" id="aEnums_8h_html"><div class="ttname"><a href="Enums_8h.html">Enums.h</a></div><div class="ttdoc">tools for using EnumDecorators.</div></div>
 <div class="ttc" id="aGenericFactory_8h_html"><div class="ttname"><a href="GenericFactory_8h.html">GenericFactory.h</a></div><div class="ttdoc">Defines tools to create objects based on values that are only known at runtime.</div></div>
@@ -231,7 +229,6 @@ $(document).ready(function(){initNavTree('REST_2include_2ServiceImpl_8h_source.h
 <div class="ttc" id="aclasscatena_1_1REST_1_1CatenaServiceImpl_html_a1d6646abc4fa9880ddde88efdd27a972"><div class="ttname"><a href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a1d6646abc4fa9880ddde88efdd27a972">catena::REST::CatenaServiceImpl::Shutdown</a></div><div class="ttdeci">void Shutdown() override</div><div class="ttdoc">Shuts down an running API. This should only be called sometime after a call to run().</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1CatenaServiceImpl_html_a43e88b7aa9a173f27535cb51fef3e1fd"><div class="ttname"><a href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a43e88b7aa9a173f27535cb51fef3e1fd">catena::REST::CatenaServiceImpl::CatenaServiceImpl</a></div><div class="ttdeci">CatenaServiceImpl(IDevice &amp;dm, std::string &amp;EOPath, bool authz=false, uint16_t port=443)</div><div class="ttdoc">Constructor for the REST API.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1CatenaServiceImpl_html_a53b64ee00ea531c01e11ae45b00b00db"><div class="ttname"><a href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a53b64ee00ea531c01e11ae45b00b00db">catena::REST::CatenaServiceImpl::run</a></div><div class="ttdeci">void run() override</div><div class="ttdoc">Starts the API.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1CatenaServiceImpl_html_a5c9d551d4e7ab8d57c2617848645b9ac"><div class="ttname"><a href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a5c9d551d4e7ab8d57c2617848645b9ac">catena::REST::CatenaServiceImpl::getSubscriptionManager</a></div><div class="ttdeci">catena::common::SubscriptionManager &amp; getSubscriptionManager()</div><div class="ttdoc">Returns a reference to the subscription manager.</div><div class="ttdef"><b>Definition</b> ServiceImpl.h:116</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1CatenaServiceImpl_html_a6e76d46b0053c69b82e8ffc6abe8a91a"><div class="ttname"><a href="classcatena_1_1REST_1_1CatenaServiceImpl.html#a6e76d46b0053c69b82e8ffc6abe8a91a">catena::REST::CatenaServiceImpl::version</a></div><div class="ttdeci">std::string version() const override</div><div class="ttdoc">Returns the API's version.</div><div class="ttdef"><b>Definition</b> ServiceImpl.h:98</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1CatenaServiceImpl_html_ac2d66494193859d853b610ed92b17686"><div class="ttname"><a href="classcatena_1_1REST_1_1CatenaServiceImpl.html#ac2d66494193859d853b610ed92b17686">catena::REST::CatenaServiceImpl::authorizationEnabled</a></div><div class="ttdeci">bool authorizationEnabled() override</div><div class="ttdoc">Returns true if authorization is enabled.</div><div class="ttdef"><b>Definition</b> ServiceImpl.h:111</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ICallData_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ICallData.html">catena::REST::ICallData</a></div><div class="ttdoc">Interface class for the REST API RPCs.</div><div class="ttdef"><b>Definition</b> ICallData.h:67</div></div>

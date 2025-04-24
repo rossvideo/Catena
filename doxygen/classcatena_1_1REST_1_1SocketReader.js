@@ -1,6 +1,6 @@
 var classcatena_1_1REST_1_1SocketReader =
 [
-    [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html#a9fea2a7580a729b18d2dffe951fb4ba6", null ],
+    [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html#acec0777a7a5d85d302c07792bf0ac5fc", null ],
     [ "authorizationEnabled", "classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204", null ],
     [ "detailLevel", "classcatena_1_1REST_1_1SocketReader.html#a7f2402b9309f2c6cc1f3895b3efe29aa", null ],
     [ "fields", "classcatena_1_1REST_1_1SocketReader.html#a326879171d92d4af9a1f773fc1e9cb81", null ],
