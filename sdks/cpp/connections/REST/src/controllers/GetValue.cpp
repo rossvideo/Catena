@@ -26,6 +26,8 @@ void GetValue::proceed() {
         }
 
     // ERROR
+    } catch (const catena::exception_with_status& err) {
+        rc = catena::exception_with_status(err.what(), err.status);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
