@@ -9,11 +9,11 @@ int GetPopulatedSlots::objectCounter_ = 0;
 GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
 void GetPopulatedSlots::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
     try {
         // Getting slot from dm_.
         SlotList slotList;
@@ -27,6 +27,6 @@ void GetPopulatedSlots::proceed() {
 }
 
 void GetPopulatedSlots::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
 }

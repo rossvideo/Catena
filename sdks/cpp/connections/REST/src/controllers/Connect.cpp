@@ -9,7 +9,7 @@ int Connect::objectCounter_ = 0;
 Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken()) {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     detailLevel_ = context.detailLevel();
     userAgent_ = context.fields("user_agent");
@@ -17,7 +17,7 @@ Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
 }
 
 void Connect::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
     // Cancels all open connections if shutdown signal is sent.
     shutdownSignalId_ = shutdownSignal_.connect([this](){
         shutdown_ = true;
@@ -47,7 +47,7 @@ void Connect::proceed() {
         lock.lock();
         cv_.wait(lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
-        writeConsole(CallStatus::kWrite, true);
+        writeConsole_(CallStatus::kWrite, true);
         try {
             if (socket_.is_open() && !shutdown_) {
                 res_.set_slot(dm_.slot());
@@ -62,7 +62,7 @@ void Connect::proceed() {
 }
 
 void Connect::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     try {
         shutdownSignal_.disconnect(shutdownSignalId_);
         dm_.valueSetByClient.disconnect(valueSetByClientId_);

@@ -99,7 +99,7 @@ class ListLanguages : public ICallData {
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
      * @param ok The status of the RPC (open or closed).
      */
-    inline void writeConsole(CallStatus status, bool ok) const override {
+    inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "ListLanguages::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok

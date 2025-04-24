@@ -9,11 +9,11 @@ int GetParam::objectCounter_ = 0;
 GetParam::GetParam(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
 void GetParam::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     catena::DeviceComponent_ComponentParam ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
@@ -51,6 +51,6 @@ void GetParam::proceed() {
 }
 
 void GetParam::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "GetParam[" << objectId_ << "] finished\n";
 }

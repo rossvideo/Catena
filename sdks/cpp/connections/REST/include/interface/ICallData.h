@@ -83,7 +83,7 @@ class ICallData {
 		 * @param status The current state of the RPC (kCreate, kFinish, etc.)
 		 * @param ok The status of the RPC (open or closed).
 		 */
-		virtual inline void writeConsole(CallStatus status, bool ok) const = 0;
+		virtual inline void writeConsole_(CallStatus status, bool ok) const = 0;
 };
 
 };
