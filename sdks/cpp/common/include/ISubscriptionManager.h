@@ -94,6 +94,13 @@ public:
      * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
      */
     virtual const std::set<std::string>& getWildcardSubscriptions() = 0;
+
+    /**
+     * @brief Check if an OID is a wildcard subscription
+     * @param oid The OID to check
+     * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
+     */
+    virtual bool isWildcard(const std::string& oid) = 0;
 };
 
 } // namespace common

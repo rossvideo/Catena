@@ -105,7 +105,7 @@ public:
      * @param oid The OID to check
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
-    static bool isWildcard(const std::string& oid);
+    bool isWildcard(const std::string& oid) override;
 
 private:
     /**
