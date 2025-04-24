@@ -130,12 +130,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Authorization_8h.html",
-"classCatenaServiceImpl_1_1GetPopulatedSlots.html#a818cde0900e77f73121dac3c588e9279",
-"classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f",
-"classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91",
-"classcatena_1_1common_1_1ParamDescriptor.html#ab435431763567252fb805b51a8fa0ccb",
-"classcatena_1_1patterns_1_1EnumDecorator.html#aa0e1bfaba74f0cd83054ec901ece977a",
-"namespacecatena_1_1REST.html"
+"classCatenaServiceImpl_1_1GetValue.html",
+"classcatena_1_1REST_1_1SSEWriter.html#a4efc1ab69a62d9b89bc34c32d1bf4a45",
+"classcatena_1_1common_1_1IDevice.html#a8cde56145c5a266af663e44ef3837f6f",
+"classcatena_1_1common_1_1ParamDescriptor.html#a88a322427c672526be583b45537bcefd",
+"classcatena_1_1patterns_1_1EnumDecorator.html#a4e8f282c67941a7612b2487693b0eb8e",
+"namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
