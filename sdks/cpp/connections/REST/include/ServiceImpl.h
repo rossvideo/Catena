@@ -110,11 +110,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     bool authorizationEnabled() override { return authorizationEnabled_; };
 
-    /**
-     * @brief Returns a reference to the subscription manager
-     */
-    catena::common::SubscriptionManager& getSubscriptionManager() { return subscriptionManager_; }
-    
   private:
     /**
      * @brief The subscription manager for handling parameter subscriptions
