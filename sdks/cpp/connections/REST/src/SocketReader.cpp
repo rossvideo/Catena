@@ -6,7 +6,7 @@ using catena::REST::SocketReader;
 namespace catena {
 namespace REST {
 
-SocketReader::SocketReader(catena::common::SubscriptionManager& subscriptionManager) 
+SocketReader::SocketReader(catena::common::ISubscriptionManager& subscriptionManager) 
     : subscriptionManager_(subscriptionManager) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {

@@ -31,9 +31,12 @@
 // common
 #include <Tags.h>
 #include <Enums.h>
+#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 // connections/gRPC
 #include <Connect.h>
+
 
 // type aliases
 using catena::common::ParamTag;

@@ -45,6 +45,7 @@
 #include <IDevice.h>
 #include <IParam.h>
 #include <ParamVisitor.h>
+#include <ISubscriptionManager.h>
 
 namespace catena {
 namespace common {
@@ -55,7 +56,7 @@ using catena::common::IParam;
 /**
  * @brief Class for managing parameter subscriptions in Catena
  */
-class SubscriptionManager {
+class SubscriptionManager : public ISubscriptionManager {
 public:
     /**
      * @brief Constructor
@@ -69,7 +70,7 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc);
+    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Remove an OID subscription
@@ -78,26 +79,26 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc);
+    bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(IDevice& dm);
+    const std::vector<std::string>& getAllSubscribedOids(IDevice& dm) override;
 
     /**
      * @brief Get all unique subscriptions
      * @return Reference to the set of unique subscriptions
      */
-    const std::set<std::string>& getUniqueSubscriptions();
+    const std::set<std::string>& getUniqueSubscriptions() override;
 
     /**
      * @brief Get all wildcard subscriptions
      * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
      */
-    const std::set<std::string>& getWildcardSubscriptions();
+    const std::set<std::string>& getWildcardSubscriptions() override;
 
     /**
      * @brief Check if an OID is a wildcard subscription
@@ -155,7 +156,7 @@ private:
 
     /**
      * @brief Set of unique subscriptions
-         */
+     */
     std::set<std::string> uniqueSubscriptions_; 
 
     /**

@@ -80,7 +80,7 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(subscriptionManager_);
+                    SocketReader context(*subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.

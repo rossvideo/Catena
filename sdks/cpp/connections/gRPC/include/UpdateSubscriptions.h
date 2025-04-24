@@ -43,7 +43,7 @@
 #include <ServiceImpl.h>
 #include <atomic>
 #include <mutex>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 /**
  * @brief CallData class for the UpdateSubscriptions RPC

@@ -50,6 +50,7 @@
 // gRPC interface
 #include <interface/service.grpc.pb.h>
 #include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 #include <grpcpp/grpcpp.h>
 #include <jwt-cpp/jwt.h>
@@ -104,6 +105,11 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief CallData states.
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
+
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
 
   /*
    * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
