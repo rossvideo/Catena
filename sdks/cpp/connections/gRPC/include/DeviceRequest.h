@@ -55,7 +55,7 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @param dm the device for which the request is made
          * @param ok flag to check if request is successful 
          */
-        DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok);
+        DeviceRequest(CatenaServiceImpl *service, IDevice& dm, bool ok);
          /**
          * @brief Manages gRPC request through a state machine
          *
@@ -89,7 +89,7 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @brief Serializer for device.
          * Can't create serializer until we have client scopes
          */
-        std::optional<Device::DeviceSerializer> serializer_ = std::nullopt;
+        std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
         /**
          * @brief Represents the current status of the call within the state
          * machine (kCreate, kProcess, kFinish, etc.)
@@ -98,7 +98,7 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
         /**
          * @brief Reference to the device to which the request is made
          */
-        Device &dm_;
+        IDevice& dm_;
         /**
          * @brief Unique identifier for device request object
          */

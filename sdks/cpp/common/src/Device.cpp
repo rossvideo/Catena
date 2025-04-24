@@ -392,14 +392,17 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
     return std::move(handle_.promise().deviceMessage); 
 }
 
-Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
     // Call the overloaded version with an explicitly constructed empty vector
     static const std::vector<std::string> empty_vector;
-    return getComponentSerializer(authz, empty_vector, shallow);
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, empty_vector, shallow));
 }
 
-Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow) const {
-    std::cout << "getComponentSerializer received vector size: " << subscribed_oids.size() << std::endl;
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow) const {
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribed_oids, shallow));
+}
+
+Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow) const {
     catena::DeviceComponent component{};
     
     // Send basic device information first

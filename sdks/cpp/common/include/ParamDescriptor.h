@@ -61,7 +61,7 @@ namespace catena {
 namespace common {
 
 class Authorizer; // forward declaration
-class Device; // forward declaration
+class IDevice; // forward declaration
 
 /**
  * @brief ParamDescriptor provides information about a parameter
@@ -127,7 +127,7 @@ class ParamDescriptor {
       const std::string& template_oid,
       catena::common::IConstraint* constraint,
       bool isCommand,
-      Device& dm,
+      IDevice& dm,
       uint32_t max_length,
       std::size_t total_length,
       bool minimal_set,
@@ -327,7 +327,7 @@ class ParamDescriptor {
     std::string oid_;
     std::string template_oid_;
     ParamDescriptor* parent_;
-    std::reference_wrapper<Device> dev_;
+    std::reference_wrapper<IDevice> dev_;
 
     bool isCommand_;
     bool minimal_set_;

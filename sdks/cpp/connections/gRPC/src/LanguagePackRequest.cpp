@@ -34,7 +34,7 @@
 // Initializes the object counter for LanguagePackRequest to 0.
 int CatenaServiceImpl::LanguagePackRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::LanguagePackRequest::LanguagePackRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::LanguagePackRequest::LanguagePackRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service->registerItem(this);
@@ -67,7 +67,7 @@ void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service,
             context_.AsyncNotifyWhenDone(this);
             try { // Getting and returning the requested language.
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                Device::LockGuard lg(dm_);
+                std::lock_guard lg(dm_.mutex());
                 catena::DeviceComponent_ComponentLanguagePack ans;
                 rc = dm_.getLanguagePack(req_.language(), ans);
                 status_ = CallStatus::kFinish;

@@ -48,7 +48,7 @@
 #include <IParam.h>
 #include <Tags.h>
 #include <PolyglotText.h>
-#include <Device.h>
+#include <IDevice.h>
 
 #include <google/protobuf/message_lite.h>
 
@@ -84,10 +84,10 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
      * @param dm the device to add the constraint to
      * @note  the first choice provided will be the default for the constraint
      */
-    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, Device& dm)
+    NamedChoiceConstraint(ListInitializer init, bool strict, std::string oid, bool shared, IDevice& dm)
         : choices_{init.begin(), init.end()}, strict_{strict}, default_{init.begin()->first}, oid_{oid},
           shared_{shared} {
-        dm.addItem<common::ConstraintTag>(oid, this);
+        dm.addItem(oid, this);
     }
 
     /**

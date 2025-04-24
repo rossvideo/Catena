@@ -61,7 +61,7 @@ namespace REST {
 /**
  * @brief ICallData class for the GetValue REST RPC.
  */
-class GetValue : public ICallData {
+class GetParam : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
@@ -74,7 +74,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the value from.
      */ 
-    GetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    GetParam(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief GetValue's main process.
      */
@@ -91,7 +91,7 @@ class GetValue : public ICallData {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
-      return new GetValue(socket, context, dm);
+      return new GetParam(socket, context, dm);
     }
   private:
     /**
@@ -101,7 +101,7 @@ class GetValue : public ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "GetValue::proceed[" << objectId_ << "]: "
+      std::cout << "GetParam::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;

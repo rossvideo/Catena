@@ -32,6 +32,7 @@
  * @file DeviceRequest.h
  * @brief Implements REST DeviceRequest RPC.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -45,7 +46,7 @@
 #include <rpc/TimeNow.h>
 #include <Status.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
 
@@ -63,7 +64,7 @@ namespace REST {
 class DeviceRequest : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
-    using Device = catena::common::Device;
+    using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
@@ -73,7 +74,7 @@ class DeviceRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get components from.
      */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, Device& dm);
+    DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief DeviceRequest's main process.
      */
@@ -89,7 +90,7 @@ class DeviceRequest : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new DeviceRequest(socket, context, dm);
     }
   private:
@@ -99,7 +100,7 @@ class DeviceRequest : public ICallData {
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
      * @param ok The status of the RPC (open or closed).
      */
-    inline void writeConsole(CallStatus status, bool ok) const override {
+    inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
@@ -121,12 +122,22 @@ class DeviceRequest : public ICallData {
     /**
      * @brief The device to get components from.
      */
-    Device& dm_;
+    IDevice& dm_;
 
     /**
      * @brief A list of the subscribed oids to return.
      */
     std::vector<std::string> subscribedOids_;
+
+    /**
+     * @brief A list of the subscriptions from the current request.
+     */
+    std::vector<std::string> requestSubscriptions_;
+
+    /**
+     * @brief Serializer for device.
+     */
+    std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
 
     /**
      * @brief ID of the DeviceRequest object

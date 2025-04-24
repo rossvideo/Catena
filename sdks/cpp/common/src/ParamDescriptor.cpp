@@ -31,7 +31,7 @@
 
 #include <ParamDescriptor.h>
 #include <Authorization.h>  
-#include <Device.h>
+#include <IDevice.h>
 
 
 using catena::common::ParamDescriptor;

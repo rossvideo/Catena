@@ -41,9 +41,11 @@ set(sources
     "src/controllers/GetValue.cpp"
     "src/controllers/MultiSetValue.cpp"
     "src/controllers/SetValue.cpp"
+    "src/controllers/GetParam.cpp"
     "src/controllers/AddLanguage.cpp"
     "src/controllers/LanguagePackRequest.cpp"
     "src/controllers/ListLanguages.cpp"
+    "src/controllers/BasicParamInfoRequest.cpp"
 )
 
 add_library(${target} STATIC ${sources})

@@ -56,7 +56,7 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
          * @param dm - Address of the device to get the value from.
          * @param ok - Flag to check if the command was successfully executed.
          */ 
-        SetValue(CatenaServiceImpl *service, Device &dm, bool ok);
+        SetValue(CatenaServiceImpl *service, IDevice& dm, bool ok);
     private:
         /**
          * @brief Requests Set Value from the system and adds the request to
@@ -64,7 +64,7 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
          * 
          * Helper function to allow reuse of MultiSetValue's proceed().
          */
-        void request() override;
+        void request_() override;
         /**
          * @brief Creates a new SetValue object to serve other clients while
          * processing.
@@ -75,13 +75,13 @@ class CatenaServiceImpl::SetValue : public MultiSetValue {
          *  
          * Helper function to allow reuse of MultiSetValue's proceed().
          */ 
-        void create(CatenaServiceImpl *service, Device &dm, bool ok) override;
+        void create_(CatenaServiceImpl *service, IDevice& dm, bool ok) override;
         /**
          * @brief Converts req_ to a MultiSetValuePayload reqs_.
          *  
          * Helper function to allow reuse of MultiSetValue's proceed().
          */
-        void toMulti() override;
+        void toMulti_() override;
 
         /**
          * @brief The SetValuePayload recieved from request().

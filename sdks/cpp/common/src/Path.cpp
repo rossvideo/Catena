@@ -60,7 +60,7 @@ Path::Path(const std::string &jptr) : segments_{} {
         }
 
         // unescape and strip off leading solidus '/'
-        std::string txt = unescape(match.str()).substr(1, std::string::npos);
+        std::string txt = unescape_(match.str()).substr(1, std::string::npos);
 
         if (match[1].matched) {
             // segment is a string
@@ -175,12 +175,12 @@ Index Path::walked() const noexcept {
     return frontIdx_;
 }
 
-void Path::escape(std::string &str) {
+void Path::escape_(std::string &str) {
     subs(str, "~", "~0");
     subs(str, "/", "~1");
 }
 
-std::string Path::unescape(const std::string &str) {
+std::string Path::unescape_(const std::string &str) {
     std::string ans(str);
     subs(ans, "~0", "~");
     subs(ans, "~1", "/");

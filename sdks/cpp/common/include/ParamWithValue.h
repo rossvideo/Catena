@@ -44,7 +44,7 @@
 #include <Tags.h>
 #include <Path.h>
 #include <ParamDescriptor.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
 #include <Authorization.h>
@@ -76,15 +76,15 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         T& value,
         ParamDescriptor& descriptor,
-        Device &dev,
+        IDevice& dev,
         bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
         if (isCommand) {
-            dev.addItem<common::CommandTag>(descriptor.getOid(), this);
+            dev.addItem(descriptor.getOid(), this);
         } else {
-            dev.addItem<common::ParamTag>(descriptor.getOid(), this);
+            dev.addItem(descriptor.getOid(), this);
         }
-        initializeTracker(value_.get());
+        initializeTracker_(value_.get());
     }
 
     /**
@@ -94,7 +94,7 @@ class ParamWithValue : public catena::common::IParam {
         T& value,
         ParamDescriptor& descriptor
     ) : value_{value}, descriptor_{descriptor} {
-        initializeTracker(value_.get());
+        initializeTracker_(value_.get());
     }
 
     /**
@@ -119,7 +119,7 @@ class ParamWithValue : public catena::common::IParam {
         ParentType& parentValue,
         ParamDescriptor& parentDescriptor
     ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {
-        initializeTracker(value_.get());
+        initializeTracker_(value_.get());
     }
 
     /**
@@ -672,12 +672,12 @@ class ParamWithValue : public catena::common::IParam {
     std::size_t str_length(const std::string& value) const { return value.length(); }
     // Tracker initializers. One overload for each case.
     /**
-     * @brief Default initializeTracker(). Sets mSizeTracker to length of value
+     * @brief Default initializeTracker_(). Sets mSizeTracker to length of value
      * if it's a string
      * @returns catena::exception_with_status OK.
      */
     template<typename U>
-    catena::exception_with_status initializeTracker(const U& value) {
+    catena::exception_with_status initializeTracker_(const U& value) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         try {
             // 0 unless value is a string.
@@ -688,14 +688,14 @@ class ParamWithValue : public catena::common::IParam {
         return ans;
     }
     /**
-     * @brief std::vector overload of initializeTracker(). Sets mSizeTracker to
+     * @brief std::vector overload of initializeTracker_(). Sets mSizeTracker to
      * the number of elements in arrayValue and tSizeTracker to the total
      * length of all values in arrayValue if arrayValue is a string array.
      * @param arrayValue The param's vector value.
      * @returns catena::exception_with_status.
      */
     template<meta::IsVector U>
-    catena::exception_with_status initializeTracker(const U& arrayValue) {
+    catena::exception_with_status initializeTracker_(const U& arrayValue) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         try {
             *mSizeTracker_ = arrayValue.size();
@@ -720,8 +720,8 @@ class ParamWithValue : public catena::common::IParam {
 
     // Tracker updaters. One overload for each case.
     /**
-     * @brief Default set value overload of updateTracker. Makes a call to
-     * initializeTracker requirements are met.
+     * @brief Default set value overload of updateTracker_. Makes a call to
+     * initializeTracker_ requirements are met.
      * @param oldValue The paramWithValue's existing value.
      * @param newValue The value to replace oldValue with. Must be the same
      * type as oldValude.
@@ -729,7 +729,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V>
-    catena::exception_with_status updateTracker(U& oldValue, const V& newValue, Path::Index index) {
+    catena::exception_with_status updateTracker_(U& oldValue, const V& newValue, Path::Index index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index cannot be defined.
         if (index != Path::kNone) {
@@ -737,14 +737,14 @@ class ParamWithValue : public catena::common::IParam {
         // newValue must be the same type at oldValue.
         } else if (!std::is_same<U, V>::value) {
             ans = catena::exception_with_status("Type mismatch between setValue and param " + descriptor_.getOid(), catena::StatusCode::INVALID_ARGUMENT);
-        // Calling initializeTracker if valid input.
+        // Calling initializeTracker_ if valid input.
         } else {
-            ans = initializeTracker(newValue);
+            ans = initializeTracker_(newValue);
         }
         return ans;
     }
     /**
-     * @brief Insert/append value to array overload of updateTracker, updates
+     * @brief Insert/append value to array overload of updateTracker_, updates
      * mSizeTracker accordingly, and tSizeTracker if string array.
      * @param arrayValue The paramWithValue's existing array.
      * @param value The value to insert/append. Must be the same type as
@@ -754,7 +754,7 @@ class ParamWithValue : public catena::common::IParam {
      * @returns catena::exception_with_status.
      */
     template<typename U, typename V> requires (!meta::IsVector<V>)
-    catena::exception_with_status updateTracker(std::vector<U>& arrayValue, const V& value, Path::Index index) {
+    catena::exception_with_status updateTracker_(std::vector<U>& arrayValue, const V& value, Path::Index index) {
         catena::exception_with_status ans{"OK", catena::StatusCode::OK};
         // Index must be specified.
         if (index == Path::kNone) {
@@ -779,51 +779,51 @@ class ParamWithValue : public catena::common::IParam {
     }
     using Kind = catena::Value::KindCase;
     /**
-     * @brief A map to help routing to the updateTracker functions above.
+     * @brief A map to help routing to the updateTracker_ functions above.
      * Protobuf is great in that you need to use a seperate function to get
      * each different type of value.
      * @param key The value's kind_case().
-     * @param value The value we want passed into updateTracker.
+     * @param value The value we want passed into updateTracker_.
      * @param index The index to update (or nullptr if none).
      * @returns catena::exception_with_status.
      */
-    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index)>> updateTrackerMap {
+    const std::unordered_map<Kind, std::function<catena::exception_with_status(const catena::Value&, Path::Index)>> updateTrackerMap_ {
         {Kind::kInt32Value, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker(this->get(), value.int32_value(), index);
+            return this->updateTracker_(this->get(), value.int32_value(), index);
         }},
         {Kind::kFloat32Value, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker(this->get(), value.float32_value(), index);
+            return this->updateTracker_(this->get(), value.float32_value(), index);
         }},
         {Kind::kStringValue, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker(this->get(), value.string_value(), index);
+            return this->updateTracker_(this->get(), value.string_value(), index);
         }},
         {Kind::kStructValue, [this](const catena::Value& value, Path::Index index) {
-            return this->updateTracker(this->get(), value.struct_value(), index);
+            return this->updateTracker_(this->get(), value.struct_value(), index);
         }},
         {Kind::kInt32ArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto ints = value.int32_array_values().ints();
             auto protoVector = std::vector<int>(ints.begin(), ints.end());
-            return this->updateTracker(this->get(), protoVector, index);
+            return this->updateTracker_(this->get(), protoVector, index);
         }},
         {Kind::kFloat32ArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto floats = value.float32_array_values().floats();
             auto protoVector = std::vector<float>(floats.begin(), floats.end());
-            return this->updateTracker(this->get(), protoVector, index);
+            return this->updateTracker_(this->get(), protoVector, index);
         }},
         {Kind::kStringArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto strings = value.string_array_values().strings();
             auto protoVector = std::vector<std::string>(strings.begin(), strings.end());
-            return this->updateTracker(this->get(), protoVector, index);
+            return this->updateTracker_(this->get(), protoVector, index);
         }},
         {Kind::kStructArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto structs = value.struct_array_values().struct_values();
             auto protoVector = std::vector<catena::StructValue>(structs.begin(), structs.end());
-            return this->updateTracker(this->get(), protoVector, index);
+            return this->updateTracker_(this->get(), protoVector, index);
         }},
         {Kind::kStructVariantArrayValues, [this](const catena::Value& value, Path::Index index) {
             auto structs = value.struct_variant_array_values().struct_variants();
             auto protoVector = std::vector<catena::StructVariantValue>(structs.begin(), structs.end());
-            return this->updateTracker(this->get(), protoVector, index);
+            return this->updateTracker_(this->get(), protoVector, index);
         }}
     };
 
@@ -844,9 +844,9 @@ class ParamWithValue : public catena::common::IParam {
         else if (!authz.writeAuthz(*this)) {
             ans = catena::exception_with_status("Not authorized to write to param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
         // Currently: If unimplemented ignore.
-        } else if (updateTrackerMap.contains(value.kind_case())) {
+        } else if (updateTrackerMap_.contains(value.kind_case())) {
             // Updating trackers.
-            ans = updateTrackerMap.at(value.kind_case())(value, index);
+            ans = updateTrackerMap_.at(value.kind_case())(value, index);
             // If the above was successful, check mSize and tSize.
             if (ans.status == catena::StatusCode::OK) {
                 // Validating max length.
@@ -874,7 +874,7 @@ class ParamWithValue : public catena::common::IParam {
         std::shared_ptr<std::size_t> mSizeTracker_ = std::make_shared<std::size_t>(0);
         std::shared_ptr<TSizeTracker> tSizeTracker_ = nullptr;
         // Reinitializing the trackers with the param's actual value.
-        initializeTracker(value_.get());
+        initializeTracker_(value_.get());
     }
 
   private:

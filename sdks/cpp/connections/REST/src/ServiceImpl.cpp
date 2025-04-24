@@ -5,6 +5,7 @@ using catena::REST::CatenaServiceImpl;
 
 // RPCs
 #include <controllers/Connect.h>
+#include <controllers/GetParam.h>
 #include <controllers/MultiSetValue.h>
 #include <controllers/SetValue.h>
 #include <controllers/DeviceRequest.h>
@@ -13,6 +14,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/AddLanguage.h>
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
+#include <controllers/BasicParamInfoRequest.h>
 
 using catena::REST::Connect;
 
@@ -29,15 +31,15 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()} {
-
+      router_{Router::getInstance()},
+      subscriptionManager_{} {
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
@@ -50,25 +52,15 @@ CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz
     router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
     router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
     router_.addProduct("PUT/v1/SetValue",               SetValue::makeOne);
+    router_.addProduct("GET/v1/GetParam",               GetParam::makeOne);
     router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
     router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
     router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
+    router_.addProduct("GET/v1/BasicParamInfoRequest",  BasicParamInfoRequest::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
 vdk::signal<void()> Connect::shutdownSignal_;
-
-void CatenaServiceImpl::writeOptions(tcp::socket& socket, const std::string& origin) {
-    // Writes a response to the client detailing their options for PUT methods.
-    std::string headers = "HTTP/1.1 204 No Content\r\n"
-                          "Access-Control-Allow-Origin: " + origin + "\r\n"
-                          "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                          "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                          "Access-Control-Allow-Credentials: true\r\n"
-                          "Content-Length: 0\r\n\r\n";
-    boost::asio::write(socket, boost::asio::buffer(headers));
-    return;
-}
 
 void CatenaServiceImpl::run() {
     // TLS handled by Envoyproxy
@@ -88,12 +80,13 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context;
+                    SocketReader context(subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.service();
-                    // Returning options to the client if required.
+                    // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        writeOptions(socket, context.origin());
+                        catena::exception_with_status rc("", catena::StatusCode::OK);
+                        SocketWriter(socket, context.origin()).write(rc);
                     // Otherwise routing to rpc.
                     } else if (router_.canMake(rpcKey)) {
                         std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);

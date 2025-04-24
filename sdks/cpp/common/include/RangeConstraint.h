@@ -43,7 +43,7 @@
 #include <IConstraint.h>
 #include <IParam.h>
 #include <Tags.h>
-#include <Device.h>
+#include <IDevice.h>
 
 // catena interface
 #include <google/protobuf/message_lite.h>
@@ -68,10 +68,10 @@ public:
      * @param shared is the constraint shared
      * @param dm the device to add the constraint to
      */
-    RangeConstraint(T min, T max, T step, std::string oid, bool shared, Device& dm)
+    RangeConstraint(T min, T max, T step, std::string oid, bool shared, IDevice& dm)
         : min_(min), max_(max), step_{step}, 
         display_min_{min}, display_max_{max}, oid_{oid}, shared_{shared} {
-        dm.addItem<common::ConstraintTag>(oid, this);
+        dm.addItem(oid, this);
     }
 
     /**
@@ -99,10 +99,10 @@ public:
      * @param dm the device to add the constraint to
      */
     RangeConstraint(T min, T max, T step, T display_min, T display_max, std::string oid,
-        bool shared, Device& dm)
+        bool shared, IDevice& dm)
         : min_(min), max_(max), step_(step),
         display_min_{display_min}, display_max_{display_max}, oid_{oid}, shared_{shared} {
-        dm.addItem<common::ConstraintTag>(oid, this);
+        dm.addItem(oid, this);
     }
 
     /**

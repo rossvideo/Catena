@@ -55,7 +55,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
             std::cout << "Calling registerItem with: " << this << std::endl;
@@ -107,16 +107,16 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             // Waiting for a value set by server to be sent to execute code.
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse(oid, idx, p);
+                updateResponse_(oid, idx, p);
             });
 
             // Waiting for a value set by client to be sent to execute code.
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse(oid, idx, p);
+                updateResponse_(oid, idx, p);
             });
 
             // Waiting for a language to be added to execute code.
-            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
+            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
                 try {
                     // If Connect was cancelled, notify client and end process.
                     if (this->context_.IsCancelled()){
@@ -126,7 +126,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     }
                     // Returning if authorization is enabled and the client does not have monitor scope.
                     if (service_->authorizationEnabled()) {
-                        catena::common::Authorizer authz{getJWSToken()};
+                        catena::common::Authorizer authz{getJWSToken_()};
                         if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
                             return;
                         }
@@ -194,7 +194,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
 /**
  * Updates the response message with parameter values and handles authorization checks.
  */
-void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t idx, const IParam* p) {
+void CatenaServiceImpl::Connect::updateResponse_(const std::string& oid, size_t idx, const IParam* p) {
     try {
         // If Connect was cancelled, notify client and end process
         if (this->context_.IsCancelled()) {
@@ -261,7 +261,7 @@ void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t i
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
         if (service_->authorizationEnabled()) {
-            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
             authz = sharedAuthz.get();
         } else {
             authz = &catena::common::Authorizer::kAuthzDisabled;

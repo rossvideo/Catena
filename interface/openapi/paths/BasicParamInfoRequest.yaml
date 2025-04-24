@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,14 +29,14 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest RPC for the Catena REST API
+# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Author: zuhayr.sarker@rossvideo.com
+# Date: 25/04/22
 #
 
 get:
-  summary: Gets a parameter's basic information from the device model plugged
-    into the specified slot
+  summary: Gets a parameter's basic information from the device model plugged into the specified slot
   operationId: BasicParamInfoRequest
 
   parameters:
@@ -50,8 +50,7 @@ get:
     - name: oid_prefix
       in: query
       required: false
-      description: Uniquely identifies the starting parameter relative to
-        device.params. Specifying "" selects all top-level parameters
+      description: Uniquely identifies the starting parameter relative to device.params. Specifying "" selects all top-level parameters
       schema:
         type: string
       default: ""
@@ -59,54 +58,59 @@ get:
     - name: recursive
       in: query
       required: false
-      description: Optional flag to indicate whether to include all child 
-        parameters or not.
+      description: Optional flag to indicate whether to include all child parameters or not.
       schema:
         type: boolean
       default: false
 
   responses:
     "200":
-      description: A stream of basic information from the specified parameter(s)
+      description: |
+        Returns a stream of basic information about the specified parameter(s).
+        The response is a sequence of JSON objects, each containing information about a single parameter.
+        Each object in the stream has the following structure:
       content:
         application/json:
           schema:
             title: BasicParamInfoResponse
-            type: object
-            properties:
-              info:
-                title: BasicParamInfoRequest
-                type: object
-                properties:
-                  oid:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-                  name:
-                    title: PolyGlot Text
-                    description: Text that a client can display in one of 
-                      multiple languages
-                    type: object
-                  type:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/param_type"
-                  template_oid:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-                
-              array_length:
-                title: Integer
-                type: interger
-                description: The depth of the parameter in the searched tree.
+            type: array
+            items:
+              type: object
+              properties:
+                info:
+                  title: BasicParamInfoRequest
+                  type: object
+                  properties:
+                    oid:
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+                    name:
+                      title: PolyGlot Text
+                      description: Text that a client can display in one of multiple languages
+                      type: object
+                    type:
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/param_type"
+                    template_oid:
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+                  
+                array_length:
+                  title: Integer
+                  type: integer
+                  description: The depth of the parameter in the searched tree.
           
-          example: {
-            "info": {
-              "oid": "text_box",
-              "name": {
-                "display_strings": {
-                  "en": "Text Box",
-                  "fr": "Boîte de Texte",
-                  "es": "Caja de Texto"
-                }
+          example: [
+            {
+              "info": {
+                "oid": "text_box",
+                "name": {
+                  "display_strings": {
+                    "en": "Text Box",
+                    "fr": "Boîte de Texte",
+                    "es": "Caja de Texto"
+                  }
+                },
+                "type": "STRING",
+                "template_oid": ""
               },
-              "type": "STRING",
-              "template_oid": ""
-            },
-            "array_length": 0
-          }
+              "array_length": 0
+            }
+          ]

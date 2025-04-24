@@ -55,7 +55,7 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
          * @param dm the device to execute the command to
          * @param ok flag to check if command was successfully executed 
          */
-        ExecuteCommand(CatenaServiceImpl *service, Device &dm, bool ok);
+        ExecuteCommand(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Manages gRPC command execution through a state machine
          *
@@ -89,7 +89,7 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
         /**
          * @brief Reference to the device to execute the command to
          */
-        Device &dm_;
+        IDevice& dm_;
         /**
          * @brief Unique identifier for command object
          */
