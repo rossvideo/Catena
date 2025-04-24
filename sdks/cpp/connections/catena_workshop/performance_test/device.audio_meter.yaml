@@ -40,6 +40,7 @@ default_scope: st2138:mon
 language_packs: {}
 
 params:
+  # Audio meter test for testing the performance of gRPC vs. REST.
   audio_meter:
     type: STRUCT
     name: {display_strings: {en: Audio Meter}}
@@ -59,3 +60,227 @@ params:
           - struct_value:
               fields:
                 audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+          - struct_value:
+              fields:
+                audio_level: {value: {float32_value: 0}}
+
+  button:
+    type: STRING
+    read_only: true
+    value: { string_value: "off" }
+    constraint:
+      type: STRING_CHOICE
+      string_choice:
+        choices: ["on", "off"]
+        strict: true
+  
+  state:
+      type: STRING
+      read_only: true
+      value: { string_value: "file loaded" }
+      constraint:
+        type: STRING_CHOICE
+        string_choice:
+          choices: ["locating tape", "tape found, loading...", "tape loaded, seeking...", "file found, reading...", "file loaded"]
+          strict: true
+
+commands:
+  # Performance test commands.
+  performance_test_start:
+    type: EMPTY
+  performance_test_end:
+    type: EMPTY
+
+  # Head of line blocking test.
+  load_tape:
+    type: EMPTY
+  press_button:
+    type: STRING
+  
+  

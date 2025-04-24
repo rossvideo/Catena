@@ -91,49 +91,7 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void deviceSetup() {
-    // Setting up device's audio meters.
-    std::string jsonBody =  "\"value\": {"
-                                "\"struct_variant_value\": {"
-                                    "\"fields\": {"
-                                        "\"audio_level\": {"
-                                            "\"value\": {\"float32_value\": 0}"
-                                        "}"
-                                    "}"
-                                "}"
-                            "}";
-    for (int i = 0; i < 63; i++) {
-        catena::Value val;
-        absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(jsonBody), &val);
-        {
-            Device::LockGuard lg(dm); 
-            dm.setValue("/audio_meter_list/-", val);
-        }
-    }
-}
-
-// Updates the 64 audio meters 20 times per second.
-void performanceTest(){
-    for (int i = 0; i < 64; i ++) {
-        std::thread loop([i = std::move(i)]() {
-            std::string oid = "/audio_meter_list/"  + std::to_string(i) + "/audio_level";
-            int counter = 0;
-            while (globalLoop) {
-                catena::Value val;
-                val.set_float32_value(counter++);
-                // update the counter once per second, and emit the event
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                {
-                    Device::LockGuard lg(dm); 
-                    dm.setValue(oid, val);
-                }
-            }
-        });
-        loop.detach();
-    }
-}
-
-// REST logic.
+// Starts the REST server.
 void RunRESTServer(bool authorization, std::string EOPath) {
     try {
         // Creating and running the REST service.
@@ -147,7 +105,7 @@ void RunRESTServer(bool authorization, std::string EOPath) {
     }
 }
 
-// gRPC logic.
+// Starts the gRPC server.
 void RunGRPCServer(bool authorization, std::string EOPath) {
     try {
         std::string addr = absl::StrFormat("0.0.0.0:6254");
@@ -181,6 +139,94 @@ void RunGRPCServer(bool authorization, std::string EOPath) {
     }
 }
 
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    /*
+     * Command to start the performance test.
+     */
+    std::unique_ptr<IParam> startCommand = dm.getCommand("/performance_test_start", err);
+    assert(startCommand != nullptr);
+
+    startCommand->defineCommand([](catena::Value value) {
+        catena::CommandResponse response;
+        globalLoop = true;
+        for (int i = 0; i < 64; i ++) {
+            std::thread loop([i = std::move(i)]() {
+                std::string oid = "/audio_meter_list/"  + std::to_string(i) + "/audio_level";
+                int counter = 0;
+                while (globalLoop) {
+                    catena::Value val;
+                    val.set_float32_value(counter++);
+                    // update the counter once per second, and emit the event
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    {
+                        Device::LockGuard lg(dm); 
+                        dm.setValue(oid, val);
+                    }
+                }
+            });
+            loop.detach();
+        }
+        std::cout << "Performance test started" << std::endl;
+        response.mutable_no_response();
+        return response;
+    });
+    /*
+     * Command to end the performance test.
+     */
+    std::unique_ptr<IParam> endCommand = dm.getCommand("/performance_test_end", err);
+    assert(endCommand != nullptr);
+
+    endCommand->defineCommand([](catena::Value value) {
+        catena::CommandResponse response;
+        globalLoop = false;
+        std::cout << "Performance test ended" << std::endl;
+        response.mutable_no_response();
+        return response;
+    });
+    /*
+     * Command to simulate loading a tape.
+     */
+     std::unique_ptr<IParam> loadCommand = dm.getCommand("/load_tape", err);
+     assert(loadCommand != nullptr);
+ 
+     loadCommand->defineCommand([](catena::Value value) {
+        catena::CommandResponse response;
+        catena::Value state;
+        std::vector<std::string> states = {"locating tape", "tape found, loading...", "tape loaded, seeking...", "file found, reading...", "file loaded"};
+
+        // Simulating loading tape
+        for (std::string& stateVal : states) {
+            state.set_string_value(stateVal);
+            dm.setValue("/state", state);
+            std::cout << stateVal << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+        }
+        
+        response.mutable_no_response();
+        return response;
+     });
+    /*
+     * Command to switch the device's button on/off.
+     */
+    std::unique_ptr<IParam> pressCommand = dm.getCommand("/press_button", err);
+    assert(pressCommand != nullptr);
+
+    pressCommand->defineCommand([](catena::Value value) {
+        catena::CommandResponse response;
+        catena::Value buttonState;
+
+        dm.getValue("/button", buttonState);
+        std::string newState = buttonState.string_value() == "on" ? "off" : "on";
+        buttonState.set_string_value(newState);
+        dm.setValue("/button", buttonState);
+        
+        std::cout << "Button set to " << buttonState.string_value() << std::endl;
+        *response.mutable_response() = buttonState;
+        return response;
+    });
+}
+
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Runs the Catena Service");
     absl::ParseCommandLine(argc, argv);
@@ -193,13 +239,12 @@ int main(int argc, char* argv[]) {
     // Getting flags.
     std::string EOPath = absl::GetFlag(FLAGS_static_root);
     bool authorization = absl::GetFlag(FLAGS_authz);
-
-    deviceSetup();
     
+    defineCommands();
+
     // Running servers.
     std::thread catenaRestThread(RunRESTServer, authorization, EOPath);
     std::thread catenaGRPCThread(RunGRPCServer, authorization, EOPath);
-    performanceTest();
 
     // Shutdown
     catenaRestThread.join();
