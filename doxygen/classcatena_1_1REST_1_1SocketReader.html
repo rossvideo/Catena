@@ -114,6 +114,9 @@ Collaboration diagram for catena::REST::SocketReader:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a9fea2a7580a729b18d2dffe951fb4ba6" id="r_a9fea2a7580a729b18d2dffe951fb4ba6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a9fea2a7580a729b18d2dffe951fb4ba6">SocketReader</a> (<a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> &amp;<a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a3921e71d30efe16c287a51e3f8c32c92">service</a>)</td></tr>
+<tr class="memdesc:a9fea2a7580a729b18d2dffe951fb4ba6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> class.  <br /></td></tr>
+<tr class="separator:a9fea2a7580a729b18d2dffe951fb4ba6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2bcedddfd452f6c746058477dd3258c" id="r_af2bcedddfd452f6c746058477dd3258c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#af2bcedddfd452f6c746058477dd3258c">read</a> (tcp::socket &amp;socket, bool authz=false) override</td></tr>
 <tr class="memdesc:af2bcedddfd452f6c746058477dd3258c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
 <tr class="separator:af2bcedddfd452f6c746058477dd3258c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -121,7 +124,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the method of the request.  <br /></td></tr>
 <tr class="separator:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3921e71d30efe16c287a51e3f8c32c92" id="r_a3921e71d30efe16c287a51e3f8c32c92"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a3921e71d30efe16c287a51e3f8c32c92">service</a> () const override</td></tr>
-<tr class="memdesc:a3921e71d30efe16c287a51e3f8c32c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the rpc of the request.  <br /></td></tr>
+<tr class="memdesc:a3921e71d30efe16c287a51e3f8c32c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.)  <br /></td></tr>
 <tr class="separator:a3921e71d30efe16c287a51e3f8c32c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa77a5dcf3caf0ae527fa88e73dc3fdf1" id="r_aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1">slot</a> () const override</td></tr>
 <tr class="memdesc:aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the slot of the device to make the API call on.  <br /></td></tr>
@@ -138,12 +141,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a59e5e35b9b9d421e186252caf9bd552b" id="r_a59e5e35b9b9d421e186252caf9bd552b"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a59e5e35b9b9d421e186252caf9bd552b">language</a> () const override</td></tr>
 <tr class="memdesc:a59e5e35b9b9d421e186252caf9bd552b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the language to return the resposne in.  <br /></td></tr>
 <tr class="separator:a59e5e35b9b9d421e186252caf9bd552b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e3d1c4cc6ca88dc9e0f4ab07e525f42" id="r_a0e3d1c4cc6ca88dc9e0f4ab07e525f42"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0e3d1c4cc6ca88dc9e0f4ab07e525f42">detailLevel</a> () const override</td></tr>
-<tr class="memdesc:a0e3d1c4cc6ca88dc9e0f4ab07e525f42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the detail level to return the response in.  <br /></td></tr>
-<tr class="separator:a0e3d1c4cc6ca88dc9e0f4ab07e525f42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f2402b9309f2c6cc1f3895b3efe29aa" id="r_a7f2402b9309f2c6cc1f3895b3efe29aa"><td class="memItemLeft" align="right" valign="top">catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a7f2402b9309f2c6cc1f3895b3efe29aa">detailLevel</a> () const override</td></tr>
+<tr class="memdesc:a7f2402b9309f2c6cc1f3895b3efe29aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the detail level to return the response in.  <br /></td></tr>
+<tr class="separator:a7f2402b9309f2c6cc1f3895b3efe29aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b4655c8cf81045dd065ec6d1dca661f" id="r_a0b4655c8cf81045dd065ec6d1dca661f"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f">jsonBody</a> () const override</td></tr>
 <tr class="memdesc:a0b4655c8cf81045dd065ec6d1dca661f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the json body of the request, which may be empty.  <br /></td></tr>
 <tr class="separator:a0b4655c8cf81045dd065ec6d1dca661f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59518bcb303ca47ad05454fc98c48bba" id="r_a59518bcb303ca47ad05454fc98c48bba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a59518bcb303ca47ad05454fc98c48bba">getSubscriptionManager</a> () override</td></tr>
+<tr class="memdesc:a59518bcb303ca47ad05454fc98c48bba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a reference to the subscription manager.  <br /></td></tr>
+<tr class="separator:a59518bcb303ca47ad05454fc98c48bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62c9b62d7b47d7d7d709e1304c130204" id="r_a62c9b62d7b47d7d7d709e1304c130204"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a62c9b62d7b47d7d7d709e1304c130204">authorizationEnabled</a> () const override</td></tr>
 <tr class="memdesc:a62c9b62d7b47d7d7d709e1304c130204"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if authorization is enabled.  <br /></td></tr>
 <tr class="separator:a62c9b62d7b47d7d7d709e1304c130204"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,7 +169,34 @@ Public Member Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper class used to read from a socket using boost. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a9fea2a7580a729b18d2dffe951fb4ba6" name="a9fea2a7580a729b18d2dffe951fb4ba6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fea2a7580a729b18d2dffe951fb4ba6">&#9670;&#160;</a></span>SocketReader()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">catena::REST::SocketReader::SocketReader </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html">CatenaServiceImpl</a> &amp;&#160;</td>
+          <td class="paramname"><em>service</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> class. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">service</td><td>The <a class="el" href="classcatena_1_1REST_1_1CatenaServiceImpl.html" title="Implements Catena REST API request handlers.">CatenaServiceImpl</a> object. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a id="a62c9b62d7b47d7d7d709e1304c130204" name="a62c9b62d7b47d7d7d709e1304c130204"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a62c9b62d7b47d7d7d709e1304c130204">&#9670;&#160;</a></span>authorizationEnabled()</h2>
 
@@ -193,8 +226,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a0e3d1c4cc6ca88dc9e0f4ab07e525f42" name="a0e3d1c4cc6ca88dc9e0f4ab07e525f42"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e3d1c4cc6ca88dc9e0f4ab07e525f42">&#9670;&#160;</a></span>detailLevel()</h2>
+<a id="a7f2402b9309f2c6cc1f3895b3efe29aa" name="a7f2402b9309f2c6cc1f3895b3efe29aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f2402b9309f2c6cc1f3895b3efe29aa">&#9670;&#160;</a></span>detailLevel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -203,7 +236,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int catena::REST::SocketReader::detailLevel </td>
+          <td class="memname">catena::Device_DetailLevel catena::REST::SocketReader::detailLevel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -218,7 +251,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Returns the detail level to return the response in. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#aa1c2e63fb182f1e2ecdb437ec427d122">catena::REST::ISocketReader</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a73e5c7392324c163c6053c62594738dd">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
@@ -255,6 +288,35 @@ Public Member Functions</h2></td></tr>
 </dl>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a37cec4e4229535d2be3de15550848fca">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="a59518bcb303ca47ad05454fc98c48bba" name="a59518bcb303ca47ad05454fc98c48bba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59518bcb303ca47ad05454fc98c48bba">&#9670;&#160;</a></span>getSubscriptionManager()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a> &amp; catena::REST::SocketReader::getSubscriptionManager </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns a reference to the subscription manager. </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a9a46a6e61771e18fe21b0cf18b15ef20">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
@@ -473,7 +535,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Returns the rpc of the request. </p>
+<p>Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.) </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a7cbf5596db249a0a47ea22171a4c3e80">catena::REST::ISocketReader</a>.</p>
 
