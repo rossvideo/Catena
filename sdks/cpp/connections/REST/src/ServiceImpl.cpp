@@ -39,7 +39,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()},
-      subscriptionManager_{} {
+      subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
