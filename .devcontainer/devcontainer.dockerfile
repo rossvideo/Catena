@@ -37,6 +37,19 @@ RUN echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER ${USER_NAME}
 
+# Install Docker & Docker Compose
+RUN sudo apt-get update
+
+# enable docker
+RUN sudo groupadd docker \
+    && sudo usermod -aG docker $USER \
+    && newgrp docker \
+    && sudo systemctl enable docker.service \
+    && sudo systemctl enable containerd.service \
+    && sudo service docker start
+
+
+
 # Clone Catena repository
 RUN mkdir -p ~/Catena \
     && cd ~/Catena \
