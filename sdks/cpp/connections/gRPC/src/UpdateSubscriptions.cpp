@@ -89,7 +89,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 catena::common::Authorizer* authz;
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
@@ -120,7 +120,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 
                 // Now that all subscriptions are processed, send current values for all subscribed parameters
                 try {
-                    sendSubscribedParameters(*authz);
+                    sendSubscribedParameters_(*authz);
                 } catch (const catena::exception_with_status& e) {
                     std::cout << "Error getting subscribed parameters: " << e.what() << std::endl;
                     // Don't throw here - we still want to finish the request successfully
@@ -192,7 +192,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
     }
 }
 
-void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::common::Authorizer& authz) {
+void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
     // Get all subscribed OIDs from the manager

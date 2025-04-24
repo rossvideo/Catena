@@ -71,7 +71,7 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 // If authorization is enabled, check the client's scopes.
                 if(service->authorizationEnabled()) {
-                    catena::common::Authorizer authz{getJWSToken()};
+                    catena::common::Authorizer authz{getJWSToken_()};
                     std::lock_guard lg(dm_.mutex());
                     rc = dm_.addLanguage(req_, authz);
                 } else {

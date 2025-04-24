@@ -83,7 +83,7 @@ class CatenaServiceImpl::BasicParamInfoRequest : public CallData {
          * @param array_name - The name of the array.
          * @param length - The length of the array.
          */
-        void updateArrayLengths(const std::string& array_name, uint32_t length);
+        void updateArrayLengths_(const std::string& array_name, uint32_t length);
 
         /**
          * @brief Parent CatenaServiceImpl.

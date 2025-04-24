@@ -107,7 +107,7 @@ class Connect : public IConnect {
      * @param idx - The index of the value to update
      * @param p - The parameter to update
      */
-    void updateResponse(const std::string& oid, size_t idx, const IParam* p) override {
+    void updateResponse_(const std::string& oid, size_t idx, const IParam* p) override {
         try {
             // If Connect was cancelled, notify client and end process
             if (this->isCancelled()) {
@@ -186,7 +186,7 @@ class Connect : public IConnect {
      * 
      * @param l The added ComponentLanguagePack emitted by device.
      */
-    void updateResponse(const IDevice::ComponentLanguagePack& l) override {
+    void updateResponse_(const IDevice::ComponentLanguagePack& l) override {
         try {
             // If Connect was cancelled, notify client and end process.
             if (this->isCancelled()){

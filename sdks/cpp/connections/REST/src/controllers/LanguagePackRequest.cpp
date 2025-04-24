@@ -9,11 +9,11 @@ int LanguagePackRequest::objectCounter_ = 0;
 LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
 void LanguagePackRequest::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     // Getting the requested language pack.
     catena::DeviceComponent_ComponentLanguagePack ans;
@@ -35,6 +35,6 @@ void LanguagePackRequest::proceed() {
 }
 
 void LanguagePackRequest::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
 }

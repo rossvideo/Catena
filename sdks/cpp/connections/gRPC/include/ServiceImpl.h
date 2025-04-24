@@ -137,7 +137,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
          * @throw Throws a Catena::exception_with_status UNAUTHENTICATED if a
          * JWS bearer token is not found.
          */
-        std::string getJWSToken() const;
+        std::string getJWSToken_() const;
         /**
          * @brief The context of the gRPC command.
          */

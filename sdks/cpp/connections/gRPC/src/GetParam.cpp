@@ -106,7 +106,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;

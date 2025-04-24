@@ -75,7 +75,7 @@ class SetValue : public MultiSetValue {
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
      */
-    bool toMulti() override;
+    bool toMulti_() override;
 
     /**
      * @brief The total # of SetValue objects.

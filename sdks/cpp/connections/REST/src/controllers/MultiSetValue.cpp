@@ -9,25 +9,25 @@ int MultiSetValue::objectCounter_ = 0;
 MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
 MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm, int objectId) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
-bool MultiSetValue::toMulti() {
+bool MultiSetValue::toMulti_() {
     absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);
     reqs_.set_slot(context_.slot());
     return status.ok();
 }
 
 void MultiSetValue::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
         // Converting to MultiSetValuePayload.
-        if (toMulti()) {
+        if (toMulti_()) {
             // Setting up authorizer.
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
@@ -63,6 +63,6 @@ void MultiSetValue::proceed() {
 }
 
 void MultiSetValue::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << typeName_ << "SetValue[" << objectId_ << "] finished\n";
 }

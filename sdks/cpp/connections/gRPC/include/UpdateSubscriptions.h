@@ -72,14 +72,14 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @param baseOid The base OID 
          * @param authz The authorizer to use for access control
          */
-        void processSubscription(const std::string& baseOid, catena::common::Authorizer& authz);
+        void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
 
 
         /**
          * @brief Helper method to send all currently subscribed parameters
          * @param authz The authorizer to use for access control
          */
-        void sendSubscribedParameters(catena::common::Authorizer& authz);
+        void sendSubscribedParameters_(catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.

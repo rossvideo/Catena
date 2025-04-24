@@ -8,13 +8,13 @@ int DeviceRequest::objectCounter_ = 0;
 DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 
     //slot_ = context_.slot(); // Slots are unimplemented
 }
 
 void DeviceRequest::proceed() {
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
     try {
         // controls whether shallow copy or deep copy is used
         bool shallowCopy = true;
@@ -46,7 +46,7 @@ void DeviceRequest::proceed() {
 
         // Getting each component and writing to the stream.
         while (serializer_->hasMore()) {
-            writeConsole(CallStatus::kWrite, socket_.is_open());
+            writeConsole_(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
             std::lock_guard lg(dm_.mutex());
@@ -68,7 +68,7 @@ void DeviceRequest::proceed() {
 }
 
 void DeviceRequest::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
 }

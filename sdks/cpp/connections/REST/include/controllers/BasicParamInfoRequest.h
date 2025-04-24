@@ -104,7 +104,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
      * @param ok The status of the RPC (open or closed).
      */
-    inline void writeConsole(CallStatus status, bool ok) const override {
+    inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "BasicParamInfoRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
@@ -115,7 +115,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * @param param The parameter to add
      * @param authz The authorization object
      */
-    void addParamToResponses(IParam* param, catena::common::Authorizer& authz);
+    void addParamToResponses_(IParam* param, catena::common::Authorizer& authz);
     
     /**
      * @brief Updates the array lengths of the responses.
@@ -123,7 +123,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * @param array_name - The name of the array.
      * @param length - The length of the array.
      */
-    void updateArrayLengths(const std::string& array_name, uint32_t length);
+    void updateArrayLengths_(const std::string& array_name, uint32_t length);
 
     /**
      * @brief The socket to write the response to.

@@ -72,7 +72,7 @@ class IConnect {
      * @param idx - The index of the value to update
      * @param p - The parameter to update
      */
-    virtual void updateResponse(const std::string& oid, size_t idx, const IParam* p) = 0;
+    virtual void updateResponse_(const std::string& oid, size_t idx, const IParam* p) = 0;
     
     /**
      * @brief Updates the response message with a ComponentLanguagePack and
@@ -80,7 +80,7 @@ class IConnect {
      * 
      * @param l The added ComponentLanguagePack emitted by device.
      */
-    virtual void updateResponse(const catena::DeviceComponent_ComponentLanguagePack& l) = 0;
+    virtual void updateResponse_(const catena::DeviceComponent_ComponentLanguagePack& l) = 0;
 };
  
 }; // common
