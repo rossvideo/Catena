@@ -54,7 +54,6 @@ var hierarchy =
     ] ],
     [ "catena::common::IConnect", "classcatena_1_1common_1_1IConnect.html", [
       [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
-        [ "CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
         [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ]
       ] ]
     ] ],

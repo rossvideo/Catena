@@ -148,12 +148,12 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:ac1687101b01e884f447d58035693d935" id="r_ac1687101b01e884f447d58035693d935"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#ac1687101b01e884f447d58035693d935">MultiSetValue</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, int objectId)</td></tr>
 <tr class="memdesc:ac1687101b01e884f447d58035693d935"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for child <a class="el" href="classcatena_1_1REST_1_1SetValue.html" title="ICallData class for the SetValue REST RPC.">SetValue</a> RPCs. Does not call <a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#aa26fed6e620381131c08323271c131f7" title="MultiSetValue main process.">proceed()</a>.  <br /></td></tr>
 <tr class="separator:ac1687101b01e884f447d58035693d935"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad43727eb42fcb268e2db7eb2a4c53ad0" id="r_ad43727eb42fcb268e2db7eb2a4c53ad0"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#ad43727eb42fcb268e2db7eb2a4c53ad0">toMulti</a> ()</td></tr>
-<tr class="memdesc:ad43727eb42fcb268e2db7eb2a4c53ad0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the jsonPayload_ to MultiSetValuePayload reqs_.  <br /></td></tr>
-<tr class="separator:ad43727eb42fcb268e2db7eb2a4c53ad0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ecf4ac41b40b09b961f0e6edc981889" id="r_a6ecf4ac41b40b09b961f0e6edc981889"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#a6ecf4ac41b40b09b961f0e6edc981889">writeConsole</a> (<a class="el" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, bool ok) const override</td></tr>
-<tr class="memdesc:a6ecf4ac41b40b09b961f0e6edc981889"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to write status messages to the API console.  <br /></td></tr>
-<tr class="separator:a6ecf4ac41b40b09b961f0e6edc981889"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab2e113d20c17ab09bbcc275e97770bf" id="r_aab2e113d20c17ab09bbcc275e97770bf"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#aab2e113d20c17ab09bbcc275e97770bf">toMulti_</a> ()</td></tr>
+<tr class="memdesc:aab2e113d20c17ab09bbcc275e97770bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the jsonPayload_ to MultiSetValuePayload reqs_.  <br /></td></tr>
+<tr class="separator:aab2e113d20c17ab09bbcc275e97770bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab373b650b84ffc2105e7d2b73f3e3f96" id="r_ab373b650b84ffc2105e7d2b73f3e3f96"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#ab373b650b84ffc2105e7d2b73f3e3f96">writeConsole_</a> (<a class="el" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, bool ok) const override</td></tr>
+<tr class="memdesc:ab373b650b84ffc2105e7d2b73f3e3f96"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to write status messages to the API console.  <br /></td></tr>
+<tr class="separator:ab373b650b84ffc2105e7d2b73f3e3f96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -399,8 +399,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr
 
 </div>
 </div>
-<a id="ad43727eb42fcb268e2db7eb2a4c53ad0" name="ad43727eb42fcb268e2db7eb2a4c53ad0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad43727eb42fcb268e2db7eb2a4c53ad0">&#9670;&#160;</a></span>toMulti()</h2>
+<a id="aab2e113d20c17ab09bbcc275e97770bf" name="aab2e113d20c17ab09bbcc275e97770bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab2e113d20c17ab09bbcc275e97770bf">&#9670;&#160;</a></span>toMulti_()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -409,7 +409,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool catena::REST::MultiSetValue::toMulti </td>
+          <td class="memname">virtual bool catena::REST::MultiSetValue::toMulti_ </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -427,8 +427,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr
 
 </div>
 </div>
-<a id="a6ecf4ac41b40b09b961f0e6edc981889" name="a6ecf4ac41b40b09b961f0e6edc981889"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ecf4ac41b40b09b961f0e6edc981889">&#9670;&#160;</a></span>writeConsole()</h2>
+<a id="ab373b650b84ffc2105e7d2b73f3e3f96" name="ab373b650b84ffc2105e7d2b73f3e3f96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab373b650b84ffc2105e7d2b73f3e3f96">&#9670;&#160;</a></span>writeConsole_()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -437,7 +437,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void catena::REST::MultiSetValue::writeConsole </td>
+          <td class="memname">void catena::REST::MultiSetValue::writeConsole_ </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a>&#160;</td>
           <td class="paramname"><em>status</em>, </td>
@@ -470,13 +470,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>objectId_</b></td></tr
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#aac01c64dc350b6f0f7a7bfe3a86f51e1">catena::REST::ICallData</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a0b80a7ae783c642c6a3fbf0e2b8f716a">catena::REST::ICallData</a>.</p>
 
 <p class="reference">References <a class="el" href="classcatena_1_1REST_1_1MultiSetValue.html#a7a946af4fc7bf144592643f36baca1db">objectId_</a>, and <a class="el" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1MultiSetValue_a6ecf4ac41b40b09b961f0e6edc981889_cgraph.svg" width="462" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1MultiSetValue_ab373b650b84ffc2105e7d2b73f3e3f96_cgraph.svg" width="462" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
