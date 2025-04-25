@@ -15,7 +15,7 @@
         "CONNECTIONS": "gRPC"
       }
   },
-  "postCreateCommand": "sudo chown root:docker /var/run/docker.sock && echo 'Development container is ready!'",
+  "postCreateCommand": "echo 'Development container is ready!'",
   "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
   "forwardPorts": [6254, 8000, 8080, 443],
   "remoteUser": "${localEnv:USER}",

@@ -41,7 +41,7 @@ USER ${USER_NAME}
 RUN sudo apt-get update
 
 # remove the docker group if it exists
-RUN if getent group docker; then sudo groupdel docker; fi
+# RUN if getent group docker; then sudo groupdel docker; fi
 
 # enable docker
 RUN if ! getent group docker; then sudo groupadd docker; fi \
