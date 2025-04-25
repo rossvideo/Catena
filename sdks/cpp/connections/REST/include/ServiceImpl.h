@@ -33,7 +33,7 @@
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
