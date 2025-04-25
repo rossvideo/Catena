@@ -85,7 +85,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          *   
          * Helper function to allow reuse of proceed().
          */
-        virtual void request();
+        virtual void request_();
         /**
          * @brief Creates a new MultiSetValue object to serve other clients
          * while processing.
@@ -96,7 +96,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * @param dm Address of the device to get the value from.
          * @param ok Flag to check if the command was successfully executed.
          */ 
-        virtual void create(CatenaServiceImpl *service, IDevice& dm, bool ok);
+        virtual void create_(CatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
          * @brief Converts req_ to a MultiSetValuePayload reqs_.
          *   
@@ -104,7 +104,7 @@ class CatenaServiceImpl::MultiSetValue : public CallData {
          * 
          * @note Does nothing in MultiSetValue.
          */
-        virtual void toMulti() { return; }
+        virtual void toMulti_() { return; }
 
         /**
          * @brief Name of childclass to specify gRPC in console notifications.

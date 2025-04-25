@@ -38,7 +38,8 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()} {
+      router_{Router::getInstance()},
+      subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
@@ -79,7 +80,7 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(*this);
+                    SocketReader context(*subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.

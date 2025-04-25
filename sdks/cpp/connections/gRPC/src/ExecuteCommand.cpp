@@ -111,7 +111,7 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
             // Check if authorization is enabled
             try {
                 if (service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{getJWSToken()};
+                    catena::common::Authorizer authz{getJWSToken_()};
                     command = dm_.getCommand(req_.oid(), rc, authz);
                 } else {
                     command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);

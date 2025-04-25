@@ -105,7 +105,7 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std
           dm_{dm}, 
           EOPath_{EOPath}, 
           authorizationEnabled_{authz},
-          subscriptionManager_{} {}
+          subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {}
 
 /**
  * Creates the CallData objects for each gRPC command.
@@ -168,7 +168,7 @@ void CatenaServiceImpl::deregisterItem(CallData *cd) {
     std::cout << "Active RPCs remaining: " << registry_.size() << '\n';
 }
 
-std::string CatenaServiceImpl::CallData::getJWSToken() const {
+std::string CatenaServiceImpl::CallData::getJWSToken_() const {
     // Getting client metadata from context.
     auto clientMeta = &context_.client_metadata();
     if (clientMeta == nullptr) {

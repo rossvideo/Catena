@@ -42,12 +42,13 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
+#include <rpc/Connect.h>
 
 /**
 * @brief CallData class for the Connect RPC
 */
-class CatenaServiceImpl::Connect : public CallData {
+class CatenaServiceImpl::Connect : public CallData, public catena::common::Connect {
     public:
         /**
          * @brief Constructor for the CallData class of the Connect gRPC.
@@ -67,6 +68,13 @@ class CatenaServiceImpl::Connect : public CallData {
          * @param ok - Flag to check if the command was successfully executed.
          */
         void proceed(CatenaServiceImpl *service, bool ok) override;
+
+        /**
+         * @brief Returns true if the connection has been cancelled.
+         * 
+         * @return true if the connection has been cancelled, false otherwise.
+         */
+        bool isCancelled() override;
 
     private:
         /**
@@ -143,14 +151,4 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief ID of the shutdown signal for the Connect object
         */
         unsigned int shutdownSignalId_;
-
-        /**
-         * @brief Updates the response message with parameter values and handles 
-         * authorization checks.
-         * 
-         * @param oid - The OID of the value to update
-         * @param idx - The index of the value to update
-         * @param p - The parameter to update
-         */
-        void updateResponse(const std::string& oid, size_t idx, const IParam* p);
 };

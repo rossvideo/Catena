@@ -93,7 +93,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 std::shared_ptr<Authorizer> sharedAuthz;
                 Authorizer* authz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &Authorizer::kAuthzDisabled;
@@ -119,7 +119,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             if (top_level_param->isArrayType()) {
                                 uint32_t array_length = top_level_param->size();
                                 if (array_length > 0) {
-                                    updateArrayLengths(top_level_param->getOid(), array_length);
+                                    updateArrayLengths_(top_level_param->getOid(), array_length);
                                 }
                             }   
                         }
@@ -150,7 +150,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                         if (param->isArrayType()) {
                             uint32_t array_length = param->size();
                             if (array_length > 0) {
-                                updateArrayLengths(param->getOid(), array_length);
+                                updateArrayLengths_(param->getOid(), array_length);
                             }
                         }
                         
@@ -190,7 +190,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                             if (top_level_param->isArrayType()) {
                                 uint32_t array_length = top_level_param->size();
                                 if (array_length > 0) {
-                                    updateArrayLengths(top_level_param->getOid(), array_length);
+                                    updateArrayLengths_(top_level_param->getOid(), array_length);
                                 }
                             }
                             
@@ -277,7 +277,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID
  */
-void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths(const std::string& array_name, uint32_t length) {
+void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             // Only update if the OID exactly matches the array name
@@ -320,6 +320,6 @@ void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visitArray
 
     // Update array length information
     if (length > 0) {
-        request_.updateArrayLengths(param->getOid(), length);
+        request_.updateArrayLengths_(param->getOid(), length);
     }
 }

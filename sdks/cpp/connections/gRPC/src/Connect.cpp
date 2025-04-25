@@ -35,6 +35,7 @@
 // connections/gRPC
 #include <Connect.h>
 
+
 // type aliases
 using catena::common::ParamTag;
 using catena::common::Path;
@@ -57,7 +58,8 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  */
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
+        catena::common::Connect(dm, service->authorizationEnabled(), "", service->getSubscriptionManager()) {
             std::cout << "Calling registerItem with: " << this << std::endl;
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -107,39 +109,17 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             });
             // Waiting for a value set by server to be sent to execute code.
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse(oid, idx, p);
+                updateResponse_(oid, idx, p);
             });
 
             // Waiting for a value set by client to be sent to execute code.
             valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse(oid, idx, p);
+                updateResponse_(oid, idx, p);
             });
 
             // Waiting for a language to be added to execute code.
             languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
-                try {
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    // Returning if authorization is enabled and the client does not have monitor scope.
-                    if (service_->authorizationEnabled()) {
-                        catena::common::Authorizer authz{getJWSToken()};
-                        if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
-                            return;
-                        }
-                    }
-                    // Updating res_'s device_component and pushing update.
-                    auto pack = this->res_.mutable_device_component()->mutable_language_pack();
-                    pack->set_language(l.language());
-                    pack->mutable_language_pack()->CopyFrom(l.language_pack());
-                    this->hasUpdate_ = true;
-                    this->cv_.notify_one();
-                } catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                }
+                updateResponse_(l);
             });
 
             // send client a empty update with slot of the device
@@ -191,99 +171,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-/**
- * Updates the response message with parameter values and handles authorization checks.
- */
-void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t idx, const IParam* p) {
-    try {
-        // If Connect was cancelled, notify client and end process
-        if (this->context_.IsCancelled()) {
-            this->hasUpdate_ = true;
-            this->cv_.notify_one();
-            return;
-        }
-        
-        // Check if we should process this update based on detail level
-        bool should_update = false;
-        switch (req_.detail_level()) {
-            case catena::Device_DetailLevel_FULL:
-                // Always update for FULL detail level
-                should_update = true;
-                break;
-                
-            case catena::Device_DetailLevel_SUBSCRIPTIONS:
-                // Update if OID is subscribed or in minimal set
-                {
-                    auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                    should_update = p->getDescriptor().minimalSet();
-                    
-                    // Check for exact match or wildcard match
-                    for (const auto& subscribedOid : subscribedOids) {
-                        if (subscribedOid == oid) {
-                            should_update = true;
-                            break;
-                        }
-                        // Check for wildcard match (ends with /*)
-                        if (subscribedOid.length() >= 2 && 
-                            subscribedOid.substr(subscribedOid.length() - 2) == "/*" &&
-                            oid.find(subscribedOid.substr(0, subscribedOid.length() - 2)) == 0) {
-                            should_update = true;
-                            break;
-                        }
-                    }
-                }
-                break;
-                
-            case catena::Device_DetailLevel_MINIMAL:
-                // For MINIMAL, only update if it's in the minimal set
-                should_update = p->getDescriptor().minimalSet();
-                break;
-                
-            case catena::Device_DetailLevel_COMMANDS:
-                // For COMMANDS, only update command parameters
-                should_update = p->getDescriptor().isCommand();
-                break;
-                
-            case catena::Device_DetailLevel_NONE:
-                // Don't send any updates
-                should_update = false;
-                break;
-                
-            default:
-                std::cout << "Unknown detail level: " << req_.detail_level() << std::endl;
-                return;
-        }
-
-        if (!should_update) {
-            return;
-        }
-
-        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-        catena::common::Authorizer* authz;
-        if (service_->authorizationEnabled()) {
-            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
-            authz = sharedAuthz.get();
-        } else {
-            authz = &catena::common::Authorizer::kAuthzDisabled;
-        }
-
-        if (service_->authorizationEnabled() && !authz->readAuthz(*p)) {
-            return;
-        }
-
-        this->res_.mutable_value()->set_oid(oid);
-        this->res_.mutable_value()->set_element_index(idx);
-        
-        catena::Value* value = this->res_.mutable_value()->mutable_value();
-
-        catena::exception_with_status rc{"", catena::StatusCode::OK};
-        rc = p->toProto(*value, *authz);
-        //If the param conversion was successful, send the update
-        if (rc.status == catena::StatusCode::OK) {
-            this->hasUpdate_ = true;
-            this->cv_.notify_one();
-        }
-    } catch(catena::exception_with_status& why) {
-        // if an error is thrown, no update is pushed to the client
-    }
+// Returns true if the connection has been cancelled.
+bool CatenaServiceImpl::Connect::isCancelled() {
+    return context_.IsCancelled();
 }

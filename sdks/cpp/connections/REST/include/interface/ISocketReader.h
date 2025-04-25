@@ -44,6 +44,7 @@ using boost::asio::ip::tcp;
 
 //common
 #include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 #include <string>
 #include <unordered_map>
@@ -121,7 +122,7 @@ class ISocketReader {
     /**
      * @brief Returns a reference to the subscription manager
      */
-    virtual catena::common::SubscriptionManager& getSubscriptionManager() = 0;
+    virtual catena::common::ISubscriptionManager& getSubscriptionManager() = 0;
 };
  
 }; // Namespace REST
