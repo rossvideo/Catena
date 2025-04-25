@@ -44,11 +44,11 @@ RUN sudo apt-get update
 # RUN if getent group docker; then sudo groupdel docker; fi
 
 # enable docker
-RUN if ! getent group docker; then sudo groupadd docker; fi \
-    && sudo usermod -aG docker $USER_NAME \
-    && sudo systemctl enable docker.service \
-    && sudo systemctl enable containerd.service \
-    && sudo service docker start
+# RUN if ! getent group docker; then sudo groupadd docker; fi \
+#     && sudo usermod -aG docker $USER_NAME \
+#     && sudo systemctl enable docker.service \
+#     && sudo systemctl enable containerd.service \
+#     && sudo service docker start
 
 
 # Clone Catena repository

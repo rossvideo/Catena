@@ -15,7 +15,9 @@
         "CONNECTIONS": "gRPC"
       }
   },
-  "postCreateCommand": "echo 'Development container is ready!'",
+  "postCreateCommand": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME} && echo 'Docker setup complete, please restart the dev container!'",
+
+  
   "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
   "forwardPorts": [6254, 8000, 8080, 443],
   "remoteUser": "${localEnv:USER}",
