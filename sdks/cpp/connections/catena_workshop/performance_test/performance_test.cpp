@@ -160,7 +160,7 @@ void defineCommands() {
                     // update the counter once per second, and emit the event
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     {
-                        Device::LockGuard lg(dm); 
+                        std::lock_guard lg(dm.mutex());
                         dm.setValue(oid, val);
                     }
                 }
