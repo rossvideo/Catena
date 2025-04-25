@@ -45,6 +45,7 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <Authorization.h>
+#include <SubscriptionManager.h>
 #include "IConnect.h"
 
 #include <interface/device.pb.h>
@@ -73,8 +74,12 @@ class Connect : public IConnect {
      * @param dm The device manager.
      * @param authz true if authorization is enabled, false otherwise.
      * @param jwsToken The client's JWS token.
+     * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, bool authz, const std::string& jwsToken) : dm_{dm} {
+    Connect(IDevice& dm, bool authz, const std::string& jwsToken, SubscriptionManager& subscriptionManager) : 
+        dm_{dm}, 
+        subscriptionManager_{subscriptionManager},
+        detailLevel_{catena::Device_DetailLevel_UNSET} {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
@@ -115,53 +120,54 @@ class Connect : public IConnect {
                 this->cv_.notify_one();
                 return;
             }
-            
+
+            if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
+                return;
+            }
+
+            // Get all subscribed OIDs
+            auto subscribedOids = this->subscriptionManager_.getAllSubscribedOids(this->dm_);
+
             // Check if we should process this update based on detail level
             bool should_update = false;
-            switch (this->detailLevel_) {
-                case catena::Device_DetailLevel_FULL:
+            
+            // Map of detail levels to their update logic
+            const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
+                {catena::Device_DetailLevel_FULL, [&]() {
                     // Always update for FULL detail level
-                    should_update = true;
-                    break;
-                    
-                // case catena::Device_DetailLevel_SUBSCRIPTIONS:
-                //     // Update if OID is subscribed or in minimal set
-                //     {
-                //         auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                //         should_update = p->getDescriptor().minimalSet() || 
-                //                       (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
-                //     }
-                //     break;
-                    
-                case catena::Device_DetailLevel_MINIMAL:
+                    return true;
+                }},
+                {catena::Device_DetailLevel_MINIMAL, [&]() {
                     // For MINIMAL, only update if it's in the minimal set
-                    should_update = p->getDescriptor().minimalSet();
-                    break;
-                    
-                case catena::Device_DetailLevel_COMMANDS:
+                    return p->getDescriptor().minimalSet();
+                }},
+                {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
+                    // Update if OID is subscribed or in minimal set
+                    return p->getDescriptor().minimalSet() || 
+                           (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                }},
+                {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
-                    should_update = p->getDescriptor().isCommand();
-                    break;
-                    
-                case catena::Device_DetailLevel_NONE:
+                    return p->getDescriptor().isCommand();
+                }},
+                {catena::Device_DetailLevel_NONE, [&]() {
                     // Don't send any updates
-                    should_update = false;
-                    break;
-                    
-                default:
-                    std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
-                    // Don't send any updates
-                    should_update = false;
-                    break;
+                    return false;
+                }}
+            };
+
+            auto it = detailLevelMap.find(this->detailLevel_);
+            if (it != detailLevelMap.end()) {
+                should_update = it->second();
+            } else {
+                std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
+                should_update = false;
             }
     
             if (!should_update) {
                 return;
             }
     
-            if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
-                return;
-            }
     
             this->res_.mutable_value()->set_oid(oid);
             this->res_.mutable_value()->set_element_index(idx);
@@ -241,7 +247,11 @@ class Connect : public IConnect {
     /**
      * @brief The detail level of the response.
      */
-    int detailLevel_;
+    catena::Device_DetailLevel detailLevel_;
+    /**
+     * @brief The subscription manager.
+     */
+    SubscriptionManager& subscriptionManager_;
     /**
      * @brief The user agent of the client.
      * 
