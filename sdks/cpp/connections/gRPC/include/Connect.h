@@ -42,7 +42,7 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 #include <rpc/Connect.h>
 
 /**
