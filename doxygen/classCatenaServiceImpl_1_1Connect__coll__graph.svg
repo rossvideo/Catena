@@ -46,7 +46,7 @@
   </g>
 </defs>
 <script type="application/ecmascript">
-var viewWidth = 615;
+var viewWidth = 618;
 var viewHeight = 216;
 var sectionId = 'dynsection-1';
 </script>
@@ -58,9 +58,9 @@ var sectionId = 'dynsection-1';
 <g id="Node000001" class="node">
 <title>Node1</title>
 <g id="a_Node000001"><a xlink:title="CallData class for the Connect RPC.">
-<polygon fill="#999999" stroke="#666666" points="607,-131 492,-131 492,-101 607,-101 607,-131"/>
-<text text-anchor="start" x="500" y="-119" font-family="Helvetica,sans-Serif" font-size="10.00">CatenaServiceImpl::</text>
-<text text-anchor="middle" x="549.5" y="-108" font-family="Helvetica,sans-Serif" font-size="10.00">Connect</text>
+<polygon fill="#999999" stroke="#666666" points="610,-131 495,-131 495,-101 610,-101 610,-131"/>
+<text text-anchor="start" x="503" y="-119" font-family="Helvetica,sans-Serif" font-size="10.00">CatenaServiceImpl::</text>
+<text text-anchor="middle" x="552.5" y="-108" font-family="Helvetica,sans-Serif" font-size="10.00">Connect</text>
 </a>
 </g>
 </g>
@@ -68,9 +68,9 @@ var sectionId = 'dynsection-1';
 <g id="Node000002" class="node">
 <title>Node2</title>
 <g id="a_Node000002"><a xlink:href="classCatenaServiceImpl_1_1CallData.html" target="_top" xlink:title="Abstract base class for the CallData classes. Provides the proceed method.">
-<polygon fill="white" stroke="#666666" points="440.5,-183 325.5,-183 325.5,-153 440.5,-153 440.5,-183"/>
-<text text-anchor="start" x="333.5" y="-171" font-family="Helvetica,sans-Serif" font-size="10.00">CatenaServiceImpl::</text>
-<text text-anchor="middle" x="383" y="-160" font-family="Helvetica,sans-Serif" font-size="10.00">CallData</text>
+<polygon fill="white" stroke="#666666" points="443.5,-183 328.5,-183 328.5,-153 443.5,-153 443.5,-183"/>
+<text text-anchor="start" x="336.5" y="-171" font-family="Helvetica,sans-Serif" font-size="10.00">CatenaServiceImpl::</text>
+<text text-anchor="middle" x="386" y="-160" font-family="Helvetica,sans-Serif" font-size="10.00">CallData</text>
 </a>
 </g>
 </g>
@@ -78,8 +78,8 @@ var sectionId = 'dynsection-1';
 <g id="edge1_Node000001_Node000002" class="edge">
 <title>Node2&#45;&gt;Node1</title>
 <g id="a_edge1_Node000001_Node000002"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M441.27,-149.9C460.78,-143.73 482.37,-136.91 501.03,-131.01"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="440.06,-146.61 431.58,-152.96 442.17,-153.28 440.06,-146.61"/>
+<path fill="none" stroke="#63b8ff" d="M444.27,-149.9C463.78,-143.73 485.37,-136.91 504.03,-131.01"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="443.06,-146.61 434.58,-152.96 445.17,-153.28 443.06,-146.61"/>
 </a>
 </g>
 </g>
@@ -87,8 +87,8 @@ var sectionId = 'dynsection-1';
 <g id="Node000003" class="node">
 <title>Node3</title>
 <g id="a_Node000003"><a xlink:title=" ">
-<polygon fill="white" stroke="#bfbfbf" points="125,-207.5 39,-207.5 39,-188.5 125,-188.5 125,-207.5"/>
-<text text-anchor="middle" x="82" y="-195.5" font-family="Helvetica,sans-Serif" font-size="10.00">ServerContext</text>
+<polygon fill="white" stroke="#bfbfbf" points="126.5,-207.5 40.5,-207.5 40.5,-188.5 126.5,-188.5 126.5,-207.5"/>
+<text text-anchor="middle" x="83.5" y="-195.5" font-family="Helvetica,sans-Serif" font-size="10.00">ServerContext</text>
 </a>
 </g>
 </g>
@@ -96,18 +96,18 @@ var sectionId = 'dynsection-1';
 <g id="edge2_Node000002_Node000003" class="edge">
 <title>Node3&#45;&gt;Node2</title>
 <g id="a_edge2_Node000002_Node000003"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M135.45,-192.74C188.68,-187.4 270.81,-179.16 325.46,-173.67"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="134.81,-189.28 125.21,-193.77 135.5,-196.25 134.81,-189.28"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M136.56,-192.8C190.08,-187.46 273.17,-179.16 328.32,-173.66"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="136.2,-189.32 126.6,-193.8 136.9,-196.29 136.2,-189.32"/>
 </a>
 </g>
-<text text-anchor="middle" x="237.5" y="-190" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> context_</text>
+<text text-anchor="middle" x="240.5" y="-190" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> context_</text>
 </g>
 <!-- Node4 -->
 <g id="Node000004" class="node">
 <title>Node4</title>
 <g id="a_Node000004"><a xlink:href="classcatena_1_1common_1_1Connect.html" target="_top" xlink:title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">
-<polygon fill="white" stroke="#666666" points="455,-104.5 311,-104.5 311,-85.5 455,-85.5 455,-104.5"/>
-<text text-anchor="middle" x="383" y="-92.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
+<polygon fill="white" stroke="#666666" points="458,-104.5 314,-104.5 314,-85.5 458,-85.5 458,-104.5"/>
+<text text-anchor="middle" x="386" y="-92.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Connect</text>
 </a>
 </g>
 </g>
@@ -115,8 +115,8 @@ var sectionId = 'dynsection-1';
 <g id="edge3_Node000001_Node000004" class="edge">
 <title>Node4&#45;&gt;Node1</title>
 <g id="a_edge3_Node000001_Node000004"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M465.29,-105.38C474.26,-106.52 483.24,-107.67 491.81,-108.76"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="465.56,-101.88 455.2,-104.09 464.67,-108.83 465.56,-101.88"/>
+<path fill="none" stroke="#63b8ff" d="M468.29,-105.38C477.26,-106.52 486.24,-107.67 494.81,-108.76"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="468.56,-101.88 458.2,-104.09 467.67,-108.83 468.56,-101.88"/>
 </a>
 </g>
 </g>
@@ -124,8 +124,8 @@ var sectionId = 'dynsection-1';
 <g id="Node000005" class="node">
 <title>Node5</title>
 <g id="a_Node000005"><a xlink:href="classcatena_1_1common_1_1IConnect.html" target="_top" xlink:title="Interface class for Connect RPCs.">
-<polygon fill="white" stroke="#666666" points="155.5,-170.5 8.5,-170.5 8.5,-151.5 155.5,-151.5 155.5,-170.5"/>
-<text text-anchor="middle" x="82" y="-158.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
+<polygon fill="white" stroke="#666666" points="157,-170.5 10,-170.5 10,-151.5 157,-151.5 157,-170.5"/>
+<text text-anchor="middle" x="83.5" y="-158.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IConnect</text>
 </a>
 </g>
 </g>
@@ -133,8 +133,8 @@ var sectionId = 'dynsection-1';
 <g id="edge4_Node000004_Node000005" class="edge">
 <title>Node5&#45;&gt;Node4</title>
 <g id="a_edge4_Node000004_Node000005"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M136.2,-149.26C194.02,-136.49 285.31,-116.34 338.86,-104.52"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="135.17,-145.9 126.16,-151.47 136.68,-152.74 135.17,-145.9"/>
+<path fill="none" stroke="#63b8ff" d="M138.06,-149.33C147.7,-147.23 157.65,-145.05 167,-143 227.57,-129.72 297.58,-114.29 341.58,-104.59"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="137.2,-145.94 128.18,-151.49 138.69,-152.77 137.2,-145.94"/>
 </a>
 </g>
 </g>
@@ -142,8 +142,8 @@ var sectionId = 'dynsection-1';
 <g id="Node000006" class="node">
 <title>Node6</title>
 <g id="a_Node000006"><a xlink:href="classcatena_1_1common_1_1Authorizer.html" target="_top" xlink:title="Class for handling authorization information.">
-<polygon fill="white" stroke="#666666" points="159.5,-104.5 4.5,-104.5 4.5,-85.5 159.5,-85.5 159.5,-104.5"/>
-<text text-anchor="middle" x="82" y="-92.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Authorizer</text>
+<polygon fill="white" stroke="#666666" points="161,-104.5 6,-104.5 6,-85.5 161,-85.5 161,-104.5"/>
+<text text-anchor="middle" x="83.5" y="-92.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Authorizer</text>
 </a>
 </g>
 </g>
@@ -151,28 +151,28 @@ var sectionId = 'dynsection-1';
 <g id="edge5_Node000004_Node000006" class="edge">
 <title>Node6&#45;&gt;Node4</title>
 <g id="a_edge5_Node000004_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M169.62,-95C214.49,-95 268.6,-95 310.97,-95"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="169.61,-91.5 159.61,-95 169.61,-98.5 169.61,-91.5"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M171.21,-95C216.49,-95 271.21,-95 313.95,-95"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="171.11,-91.5 161.11,-95 171.11,-98.5 171.11,-91.5"/>
 </a>
 </g>
-<text text-anchor="middle" x="237.5" y="-98" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> authz_</text>
+<text text-anchor="middle" x="240.5" y="-98" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> authz_</text>
 </g>
 <!-- Node6&#45;&gt;Node6 -->
 <g id="edge6_Node000006_Node000006" class="edge">
 <title>Node6&#45;&gt;Node6</title>
 <g id="a_edge6_Node000006_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M53.25,-113.32C54.46,-118.51 64.04,-122.5 82,-122.5 109.37,-122.5 117.28,-113.23 105.74,-104.58"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="56.33,-115 58.26,-104.58 50.25,-111.52 56.33,-115"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M54.38,-113.32C55.6,-118.51 65.3,-122.5 83.5,-122.5 111.23,-122.5 119.24,-113.23 107.54,-104.58"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="57.46,-114.99 59.46,-104.58 51.41,-111.47 57.46,-114.99"/>
 </a>
 </g>
-<text text-anchor="middle" x="82" y="-125.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> kAuthzDisabled</text>
+<text text-anchor="middle" x="83.5" y="-125.5" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> kAuthzDisabled</text>
 </g>
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
 <g id="a_Node000007"><a xlink:href="classcatena_1_1common_1_1IDevice.html" target="_top" xlink:title="Interface class for Device.">
-<polygon fill="white" stroke="#666666" points="152.5,-67.5 11.5,-67.5 11.5,-48.5 152.5,-48.5 152.5,-67.5"/>
-<text text-anchor="middle" x="82" y="-55.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IDevice</text>
+<polygon fill="white" stroke="#666666" points="154,-67.5 13,-67.5 13,-48.5 154,-48.5 154,-67.5"/>
+<text text-anchor="middle" x="83.5" y="-55.5" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::IDevice</text>
 </a>
 </g>
 </g>
@@ -180,19 +180,19 @@ var sectionId = 'dynsection-1';
 <g id="edge7_Node000004_Node000007" class="edge">
 <title>Node7&#45;&gt;Node4</title>
 <g id="a_edge7_Node000004_Node000007"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M162.71,-65.17C202,-69 250.06,-74.14 293,-80 304.64,-81.59 317.1,-83.54 328.9,-85.49"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="162.94,-61.67 152.65,-64.19 162.27,-68.64 162.94,-61.67"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M164.32,-65.1C203.98,-68.93 252.59,-74.09 296,-80 307.64,-81.59 320.11,-83.53 331.9,-85.49"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="164.46,-61.6 154.17,-64.13 163.79,-68.56 164.46,-61.6"/>
 </a>
 </g>
-<text text-anchor="middle" x="237.5" y="-83" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> dm_</text>
+<text text-anchor="middle" x="240.5" y="-83" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> dm_</text>
 </g>
 <!-- Node8 -->
 <g id="Node000008" class="node">
 <title>Node8</title>
-<g id="a_Node000008"><a xlink:href="classcatena_1_1common_1_1SubscriptionManager.html" target="_top" xlink:title="Class for managing parameter subscriptions in Catena.">
-<polygon fill="white" stroke="#666666" points="164,-30 0,-30 0,0 164,0 164,-30"/>
-<text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::Subscription</text>
-<text text-anchor="middle" x="82" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">Manager</text>
+<g id="a_Node000008"><a xlink:href="classcatena_1_1common_1_1ISubscriptionManager.html" target="_top" xlink:title="Interface for managing parameter subscriptions in Catena.">
+<polygon fill="white" stroke="#666666" points="167,-30 0,-30 0,0 167,0 167,-30"/>
+<text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">catena::common::ISubscription</text>
+<text text-anchor="middle" x="83.5" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">Manager</text>
 </a>
 </g>
 </g>
@@ -200,11 +200,11 @@ var sectionId = 'dynsection-1';
 <g id="edge8_Node000004_Node000008" class="edge">
 <title>Node8&#45;&gt;Node4</title>
 <g id="a_edge8_Node000004_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M174.4,-25.51C211.74,-31.24 255,-39.73 293,-52 319.46,-60.54 348.07,-75.49 365.51,-85.32"/>
-<polygon fill="#9a32cd" stroke="#9a32cd" points="174.45,-21.98 164.04,-23.97 173.41,-28.9 174.45,-21.98"/>
+<path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M177.04,-25.52C214.53,-31.24 257.89,-39.72 296,-52 322.62,-60.58 351.43,-75.66 368.84,-85.49"/>
+<polygon fill="#9a32cd" stroke="#9a32cd" points="177.54,-22.06 167.13,-24.05 176.51,-28.98 177.54,-22.06"/>
 </a>
 </g>
-<text text-anchor="middle" x="237.5" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> subscriptionManager_</text>
+<text text-anchor="middle" x="240.5" y="-55" font-family="Helvetica,sans-Serif" font-size="10.00" fill="grey"> subscriptionManager_</text>
 </g>
 </g>
 </svg>

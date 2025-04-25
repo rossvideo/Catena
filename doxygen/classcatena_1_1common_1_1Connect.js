@@ -1,7 +1,7 @@
 var classcatena_1_1common_1_1Connect =
 [
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a86b2bc07e6ff84fe3b86dcdfca117d28", null ],
-    [ "Connect", "classcatena_1_1common_1_1Connect.html#a1e439ae194187fa99765739ea4bfebc8", null ],
+    [ "Connect", "classcatena_1_1common_1_1Connect.html#a868aa12deb0a1ad80790b032fb890cb0", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#aaa137c0fa7a8e9914734e516a0036dcb", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a456e6a4492e1d42e5971c7d4b01bbb69", null ],
     [ "~Connect", "classcatena_1_1common_1_1Connect.html#afa1a5e9a2bce4cac9a6c362f66eacdb2", null ],
@@ -16,6 +16,6 @@ var classcatena_1_1common_1_1Connect =
     [ "language_", "classcatena_1_1common_1_1Connect.html#a017fd071366adf86a7e0d90c64aa10d2", null ],
     [ "res_", "classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5", null ],
     [ "sharedAuthz_", "classcatena_1_1common_1_1Connect.html#a156de209700b42ce94bfa322e16138e2", null ],
-    [ "subscriptionManager_", "classcatena_1_1common_1_1Connect.html#aea5f7af92b1423f21d005e6789df2c70", null ],
+    [ "subscriptionManager_", "classcatena_1_1common_1_1Connect.html#a1d1530db5d58c723f6067e5090e43db9", null ],
     [ "userAgent_", "classcatena_1_1common_1_1Connect.html#af65f3d8646574a41942a3f68106a8a2f", null ]
 ];

@@ -97,6 +97,9 @@ var hierarchy =
       [ "catena::REST::SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", null ],
       [ "catena::REST::SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", null ]
     ] ],
+    [ "catena::common::ISubscriptionManager", "classcatena_1_1common_1_1ISubscriptionManager.html", [
+      [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", null ]
+    ] ],
     [ "catena::common::LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
@@ -125,7 +128,6 @@ var hierarchy =
       [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
-    [ "catena::common::SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", null ],
     [ "std::true_type", null, [
       [ "catena::meta::is_streamable< T, std::void_t< decltype(std::cout<< std::declval< T >())> >", "structcatena_1_1meta_1_1is__streamable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1cout_3_3_f018ad5e508e96c26725f0228af2f889.html", null ],
       [ "catena::meta::is_variant< T, std::void_t< decltype(std::get< 0 >(std::declval< T >()))> >", "structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html", null ]
