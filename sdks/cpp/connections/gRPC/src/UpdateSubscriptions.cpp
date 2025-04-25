@@ -33,7 +33,6 @@
 
 // connections/gRPC
 #include <UpdateSubscriptions.h>
-#include <SubscriptionManager.h>
 
 // type aliases
 using catena::common::ParamTag;

@@ -1,5 +1,6 @@
 // connections/REST
 #include <controllers/DeviceRequest.h>
+#include <ISubscriptionManager.h>
 using catena::REST::DeviceRequest;
 
 // Initializes the object counter for Connect to 0.
@@ -27,7 +28,7 @@ void DeviceRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
                
-        auto& subscriptionManager = context_.getSubscriptionManager(); 
+        auto& subscriptionManager = context_.getSubscriptionManager();
         subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
 
         // Set the detail level on the device

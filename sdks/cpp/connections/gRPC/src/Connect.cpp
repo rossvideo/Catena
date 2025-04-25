@@ -35,6 +35,7 @@
 // connections/gRPC
 #include <Connect.h>
 
+
 // type aliases
 using catena::common::ParamTag;
 using catena::common::Path;
@@ -58,7 +59,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
-        catena::common::Connect(dm, service->authorizationEnabled(), "", service_->getSubscriptionManager()) {
+        catena::common::Connect(dm, service->authorizationEnabled(), "", service->getSubscriptionManager()) {
             std::cout << "Calling registerItem with: " << this << std::endl;
     service->registerItem(this);
     objectId_ = objectCounter_++;

@@ -50,6 +50,7 @@
 // gRPC interface
 #include <interface/service.grpc.pb.h>
 #include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 #include <grpcpp/grpcpp.h>
 #include <jwt-cpp/jwt.h>
@@ -171,7 +172,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    catena::common::SubscriptionManager subscriptionManager_;
+    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
     /**
      * @brief Returns the current time as a string including microseconds.
      */
@@ -196,7 +197,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief Get the subscription manager
      * @return Reference to the subscription manager
      */
-    inline catena::common::SubscriptionManager& getSubscriptionManager() { return subscriptionManager_; }
+    inline catena::common::ISubscriptionManager& getSubscriptionManager() { return *subscriptionManager_; }
 
     //Forward declarations of CallData classes for their respective RPC
     class GetPopulatedSlots;

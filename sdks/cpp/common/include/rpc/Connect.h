@@ -45,7 +45,7 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <Authorization.h>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 #include "IConnect.h"
 
 #include <interface/device.pb.h>
@@ -76,7 +76,7 @@ class Connect : public IConnect {
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, bool authz, const std::string& jwsToken, SubscriptionManager& subscriptionManager) : 
+    Connect(IDevice& dm, bool authz, const std::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
         dm_{dm}, 
         subscriptionManager_{subscriptionManager},
         detailLevel_{catena::Device_DetailLevel_UNSET} {
@@ -251,7 +251,7 @@ class Connect : public IConnect {
     /**
      * @brief The subscription manager.
      */
-    SubscriptionManager& subscriptionManager_;
+    ISubscriptionManager& subscriptionManager_;
     /**
      * @brief The user agent of the client.
      * 
