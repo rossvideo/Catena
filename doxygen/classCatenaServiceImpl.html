@@ -94,7 +94,6 @@ $(document).ready(function(){initNavTree('classCatenaServiceImpl.html',''); init
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classCatenaServiceImpl-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">CatenaServiceImpl Class Reference</div></div>
 </div><!--header-->
@@ -205,13 +204,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>shutdownServer</b> ()
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>authorizationEnabled</b> () const</td></tr>
 <tr class="memdesc:a0ab0d1ddbe539086bb1c75d2a9ec1ef0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag to set authorization as enabled or disabled. <br /></td></tr>
 <tr class="separator:a0ab0d1ddbe539086bb1c75d2a9ec1ef0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a44367172e4061042ee69a0bf1787916a" id="r_a44367172e4061042ee69a0bf1787916a"><td class="memItemLeft" align="right" valign="top"><a id="a44367172e4061042ee69a0bf1787916a" name="a44367172e4061042ee69a0bf1787916a"></a>
-std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html">catena::common::ISubscriptionManager</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>subscriptionManager_</b></td></tr>
-<tr class="memdesc:a44367172e4061042ee69a0bf1787916a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The subscription manager for handling parameter subscriptions. <br /></td></tr>
-<tr class="separator:a44367172e4061042ee69a0bf1787916a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4552f41e3574d00694deb73d2c9d0af5" id="r_a4552f41e3574d00694deb73d2c9d0af5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCatenaServiceImpl.html#a4552f41e3574d00694deb73d2c9d0af5">getSubscriptionManager</a> ()</td></tr>
+<tr class="memdesc:a4552f41e3574d00694deb73d2c9d0af5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the subscription manager.  <br /></td></tr>
+<tr class="separator:a4552f41e3574d00694deb73d2c9d0af5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implements Catena gRPC request handlers. </p>
@@ -291,6 +286,34 @@ std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1ISubscriptionMa
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a4552f41e3574d00694deb73d2c9d0af5" name="a4552f41e3574d00694deb73d2c9d0af5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4552f41e3574d00694deb73d2c9d0af5">&#9670;&#160;</a></span>getSubscriptionManager()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html">catena::common::SubscriptionManager</a> &amp; CatenaServiceImpl::getSubscriptionManager </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the subscription manager. </p>
+<dl class="section return"><dt>Returns</dt><dd>Reference to the subscription manager </dd></dl>
 
 </div>
 </div>

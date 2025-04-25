@@ -1,7 +1,18 @@
 <map id="CatenaServiceImpl::Connect" name="CatenaServiceImpl::Connect">
-<area shape="rect" id="Node000001" title="CallData class for the Connect RPC." alt="" coords="5,183,159,223"/>
-<area shape="rect" id="Node000002" href="$classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method." alt="" coords="5,93,159,133"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="85,147,85,183,79,183,79,147"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="25,5,139,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="85,44,85,93,79,93,79,44"/>
+<area shape="rect" id="Node000001" title="CallData class for the Connect RPC." alt="" coords="661,107,815,147"/>
+<area shape="rect" id="Node000002" href="$classCatenaServiceImpl_1_1CallData.html" title="Abstract base class for the CallData classes. Provides the proceed method." alt="" coords="439,38,593,78"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="594,80,674,105,673,110,593,85"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="57,5,172,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="186,22,440,48,439,53,186,28"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame..." alt="" coords="420,143,612,168"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="625,139,661,134,661,140,626,144"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1IConnect.html" title="Interface class for Connect RPCs." alt="" coords="17,55,213,80"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="188,80,458,140,457,145,186,86"/>
+<area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1Authorizer.html" title="Class for handling authorization information." alt="" coords="11,143,218,168"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="231,153,420,153,420,158,231,158"/>
+<area shape="poly" id="edge6_Node000006_Node000006" title=" " alt="" coords="75,129,86,120,115,116,138,118,152,124,156,134,148,144,144,141,150,134,148,128,137,123,115,121,88,125,78,133"/>
+<area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1IDevice.html" title="Interface class for Device." alt="" coords="21,192,209,217"/>
+<area shape="poly" id="edge7_Node000004_Node000007" title=" " alt="" coords="222,192,396,173,443,165,444,171,396,178,223,198"/>
+<area shape="rect" id="Node000008" href="$classcatena_1_1common_1_1SubscriptionManager.html" title="Class for managing parameter subscriptions in Catena." alt="" coords="5,242,224,282"/>
+<area shape="poly" id="edge8_Node000004_Node000008" title=" " alt="" coords="237,245,316,231,395,210,448,189,491,166,494,171,450,194,397,215,317,236,238,251"/>
 </map>

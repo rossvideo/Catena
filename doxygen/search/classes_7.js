@@ -17,6 +17,5 @@ var searchData=
   ['is_5fvariant_3c_20t_2c_20std_3a_3avoid_5ft_3c_20decltype_28std_3a_3aget_3c_200_20_3e_28std_3a_3adeclval_3c_20t_20_3e_28_29_29_29_3e_20_3e_14',['is_variant&lt; T, std::void_t&lt; decltype(std::get&lt; 0 &gt;(std::declval&lt; T &gt;()))&gt; &gt;',['../structcatena_1_1meta_1_1is__variant_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1get_3_010_01ebdd46a9af85028d423a39579c8d1c53.html',1,'catena::meta']]],
   ['iserviceimpl_15',['IServiceImpl',['../classcatena_1_1REST_1_1IServiceImpl.html',1,'catena::REST']]],
   ['isocketreader_16',['ISocketReader',['../classcatena_1_1REST_1_1ISocketReader.html',1,'catena::REST']]],
-  ['isocketwriter_17',['ISocketWriter',['../classcatena_1_1REST_1_1ISocketWriter.html',1,'catena::REST']]],
-  ['isubscriptionmanager_18',['ISubscriptionManager',['../classcatena_1_1common_1_1ISubscriptionManager.html',1,'catena::common']]]
+  ['isocketwriter_17',['ISocketWriter',['../classcatena_1_1REST_1_1ISocketWriter.html',1,'catena::REST']]]
 ];

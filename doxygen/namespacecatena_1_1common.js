@@ -17,7 +17,6 @@ var namespacecatena_1_1common =
     [ "IParam", "classcatena_1_1common_1_1IParam.html", "classcatena_1_1common_1_1IParam" ],
     [ "IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", "classcatena_1_1common_1_1IParamVisitor" ],
     [ "IPolyglotText", "classcatena_1_1common_1_1IPolyglotText.html", null ],
-    [ "ISubscriptionManager", "classcatena_1_1common_1_1ISubscriptionManager.html", "classcatena_1_1common_1_1ISubscriptionManager" ],
     [ "LanguagePack", "classcatena_1_1common_1_1LanguagePack.html", "classcatena_1_1common_1_1LanguagePack" ],
     [ "LanguagePackTag", "structcatena_1_1common_1_1LanguagePackTag.html", null ],
     [ "Menu", "classcatena_1_1common_1_1Menu.html", "classcatena_1_1common_1_1Menu" ],

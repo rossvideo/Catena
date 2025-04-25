@@ -15,7 +15,6 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     [ "IParam.h", "IParam_8h.html", "IParam_8h" ],
     [ "IParamVisitor.h", "IParamVisitor_8h.html", "IParamVisitor_8h" ],
     [ "IPolyglotText.h", "IPolyglotText_8h.html", "IPolyglotText_8h" ],
-    [ "ISubscriptionManager.h", "ISubscriptionManager_8h.html", "ISubscriptionManager_8h" ],
     [ "LanguagePack.h", "LanguagePack_8h.html", "LanguagePack_8h" ],
     [ "Menu.h", "Menu_8h.html", "Menu_8h" ],
     [ "MenuGroup.h", "MenuGroup_8h.html", "MenuGroup_8h" ],

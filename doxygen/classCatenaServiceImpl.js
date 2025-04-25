@@ -26,9 +26,9 @@ var classCatenaServiceImpl =
     [ "CatenaServiceImpl", "classCatenaServiceImpl.html#a8b623dcb51d3bdecfe9f32fa5d57e77c", null ],
     [ "authorizationEnabled", "classCatenaServiceImpl.html#a0ab0d1ddbe539086bb1c75d2a9ec1ef0", null ],
     [ "deregisterItem", "classCatenaServiceImpl.html#ad54e3bcdc90f527f6e1826fa14388082", null ],
+    [ "getSubscriptionManager", "classCatenaServiceImpl.html#a4552f41e3574d00694deb73d2c9d0af5", null ],
     [ "init", "classCatenaServiceImpl.html#a277195cdaaad6fc8b70dabc27a322103", null ],
     [ "processEvents", "classCatenaServiceImpl.html#ae915df806984a0f15798aaa9d5b46d0c", null ],
     [ "registerItem", "classCatenaServiceImpl.html#a5cceb267107e0837203946cde5469269", null ],
-    [ "shutdownServer", "classCatenaServiceImpl.html#aa20fbc7c7b095cf38712a04be8ac1bee", null ],
-    [ "subscriptionManager_", "classCatenaServiceImpl.html#a44367172e4061042ee69a0bf1787916a", null ]
+    [ "shutdownServer", "classCatenaServiceImpl.html#aa20fbc7c7b095cf38712a04be8ac1bee", null ]
 ];
