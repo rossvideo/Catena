@@ -41,7 +41,7 @@
 // common
 #include <Status.h>
 #include <Enums.h>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -71,7 +71,7 @@ class SocketReader : public ISocketReader {
      * @brief Constructor for the SocketReader class.
      * @param subscriptionManager The subscription manager to use.
      */
-    SocketReader(catena::common::SubscriptionManager& subscriptionManager);
+    SocketReader(catena::common::ISubscriptionManager& subscriptionManager);
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -127,7 +127,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns a reference to the subscription manager
      */
-    catena::common::SubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
+    catena::common::ISubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
 
     /**
      * @brief Returns true if authorization is enabled.
@@ -166,7 +166,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    catena::common::SubscriptionManager& subscriptionManager_;
+    catena::common::ISubscriptionManager& subscriptionManager_;
     /**
      * @brief The detail level to return the response in.
      */

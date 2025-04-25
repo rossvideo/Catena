@@ -49,6 +49,7 @@
 #include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
+#include <SubscriptionManager.h>
 
 // Connections/REST
 #include "SocketReader.h"

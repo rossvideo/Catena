@@ -42,11 +42,6 @@ using catena::common::ParamVisitor;
 namespace catena {
 namespace common {
 
-// Returns true if the OID ends with "/*", indicating it's a wildcard subscription
-bool SubscriptionManager::isWildcard(const std::string& oid) {
-    return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
-}
-
 // Add a subscription (either unique or wildcard). Returns true if added, false if already exists
 bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) {
     subscriptionLock_.lock();
@@ -225,6 +220,11 @@ const std::set<std::string>& SubscriptionManager::getWildcardSubscriptions() {
     auto& result = wildcardSubscriptions_;
     subscriptionLock_.unlock();
     return result;
+}
+
+// Returns true if the OID ends with "/*", indicating it's a wildcard subscription
+bool SubscriptionManager::isWildcard(const std::string& oid) {
+    return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
 
 } // namespace common
