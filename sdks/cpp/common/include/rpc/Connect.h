@@ -79,7 +79,7 @@ class Connect : public IConnect {
     Connect(IDevice& dm, bool authz, const std::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
         dm_{dm}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_NONE} {
+        detailLevel_{catena::Device_DetailLevel_UNSET} {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
