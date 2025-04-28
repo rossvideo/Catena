@@ -76,7 +76,7 @@ class Connect : public IConnect {
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, bool authz, const sFixed gRPC connect command update bug d::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
+    Connect(IDevice& dm, bool authz, const std::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
         dm_{dm}, 
         subscriptionManager_{subscriptionManager},
         detailLevel_{catena::Device_DetailLevel_UNSET} {
@@ -173,6 +173,7 @@ class Connect : public IConnect {
                 std::cout << "Not updating due to detail level filter" << std::endl;
                 return;
             }
+    
     
             this->res_.mutable_value()->set_oid(oid);
             this->res_.mutable_value()->set_element_index(idx);
