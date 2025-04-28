@@ -161,9 +161,8 @@ class Connect : public IConnect {
                 }}
             };
 
-            auto it = detailLevelMap.find(this->detailLevel_);
-            if (it != detailLevelMap.end()) {
-                it->second();
+            if (detailLevelMap.contains(this->detailLevel_)) {
+                detailLevelMap.at(this->detailLevel_)();
             } else {
                 std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
                 should_update = false;
