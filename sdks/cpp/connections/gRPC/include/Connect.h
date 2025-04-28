@@ -86,10 +86,6 @@ class CatenaServiceImpl::Connect : public CallData, public catena::common::Conne
          */
         catena::ConnectPayload req_;
         /**
-         * @brief Server response (updates).
-         */
-        catena::PushUpdates res_;
-        /**
          * @brief gRPC async writer to write updates.
          */
         ServerAsyncWriter<catena::PushUpdates> writer_;
@@ -98,22 +94,9 @@ class CatenaServiceImpl::Connect : public CallData, public catena::common::Conne
          */
         CallStatus status_;
         /**
-         * @brief The device to connect to.
-         */
-        IDevice& dm_;
-        /**
          * @brief The mutex to for locking the object while writing
          */
         std::mutex mtx_;
-        /**
-         * @brief Condition variable to notify the object when the value has
-         * been updated
-         */
-        std::condition_variable cv_;
-        /**
-         * @brief Flag to check if the value has been updated
-         */
-        bool hasUpdate_{false};
         /**
          * @brief ID of the Connect object
          */

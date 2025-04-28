@@ -79,7 +79,7 @@ class Connect : public IConnect {
     Connect(IDevice& dm, bool authz, const std::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
         dm_{dm}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET} {
+        detailLevel_{catena::Device_DetailLevel_NONE} {
         if (authz) {
             sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
             authz_ = sharedAuthz_.get();
@@ -132,43 +132,49 @@ class Connect : public IConnect {
             bool should_update = false;
             
             // Map of detail levels to their update logic
-            const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
+            const std::unordered_map<catena::Device_DetailLevel, std::function<void()>> detailLevelMap {
                 {catena::Device_DetailLevel_FULL, [&]() {
                     // Always update for FULL detail level
-                    return true;
+                    std::cout << "Updating for FULL detail level" << std::endl;
+                    should_update = true;
                 }},
                 {catena::Device_DetailLevel_MINIMAL, [&]() {
                     // For MINIMAL, only update if it's in the minimal set
-                    return p->getDescriptor().minimalSet();
+                    std::cout << "Updating for MINIMAL detail level" << std::endl;
+                    should_update = p->getDescriptor().minimalSet();
                 }},
                 {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                     // Update if OID is subscribed or in minimal set
-                    return p->getDescriptor().minimalSet() || 
+                    std::cout << "Updating for SUBSCRIPTIONS detail level" << std::endl;
+                    should_update = p->getDescriptor().minimalSet() || 
                            (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
-                    return p->getDescriptor().isCommand();
+                    std::cout << "Updating for COMMANDS detail level" << std::endl;
+                    should_update = p->getDescriptor().isCommand();
                 }},
                 {catena::Device_DetailLevel_NONE, [&]() {
                     // Don't send any updates
-                    return false;
+                    std::cout << "Updating for NONE detail level" << std::endl;
+                    should_update = false;
                 }}
             };
 
             auto it = detailLevelMap.find(this->detailLevel_);
             if (it != detailLevelMap.end()) {
-                should_update = it->second();
+                it->second();
             } else {
                 std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
                 should_update = false;
             }
     
             if (!should_update) {
+                std::cout << "Not updating due to detail level filter" << std::endl;
                 return;
             }
     
-    
+            std::cout << "Setting up response for OID: " << oid << ", index: " << idx << std::endl;
             this->res_.mutable_value()->set_oid(oid);
             this->res_.mutable_value()->set_element_index(idx);
             
@@ -178,8 +184,11 @@ class Connect : public IConnect {
             rc = p->toProto(*value, *authz_);
             //If the param conversion was successful, send the update
             if (rc.status == catena::StatusCode::OK) {
+                std::cout << "Update successful, notifying writer" << std::endl;
                 this->hasUpdate_ = true;
                 this->cv_.notify_one();
+            } else {
+                std::cout << "Update failed with status: " << rc.status << std::endl;
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
@@ -233,7 +242,7 @@ class Connect : public IConnect {
      */
     bool hasUpdate_ = false;
     /**
-     * @brief A condition vairable used to wait for an update.
+     * @brief A condition variable used to wait for an update.
      */
     std::condition_variable cv_;
     /**

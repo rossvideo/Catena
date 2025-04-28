@@ -57,7 +57,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * then starts the process.
  */
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+    : service_{service}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
         catena::common::Connect(dm, service->authorizationEnabled(), "", service->getSubscriptionManager()) {
             std::cout << "Calling registerItem with: " << this << std::endl;
@@ -90,6 +90,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * from the service.
          */ 
         case CallStatus::kCreate:
+            std::cout << "Transitioning from kCreate to kProcess" << std::endl;
             status_ = CallStatus::kProcess;
             service_->RequestConnect(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
             break;
@@ -98,6 +99,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            std::cout << "In kProcess state, setting up connections" << std::endl;
             // Used to serve other clients while processing.
             new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
@@ -122,8 +124,13 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 updateResponse_(l);
             });
 
+            // Set detail level from request
+            detailLevel_ = req_.detail_level();
+            dm_.detail_level(req_.detail_level());
+
             // send client a empty update with slot of the device
             {
+                std::cout << "Transitioning from kProcess to kWrite" << std::endl;
                 status_ = CallStatus::kWrite;
                 catena::PushUpdates populatedSlots;
                 populatedSlots.set_slot(dm_.slot());
@@ -135,7 +142,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
-            // Waiting until there is an update to proceed.
+            std::cout << "In kWrite state, waiting for updates" << std::endl;
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
@@ -147,6 +154,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
+                std::cout << "Writing update to client" << std::endl;
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
