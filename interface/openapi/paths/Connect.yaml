@@ -40,7 +40,7 @@ get:
 
   parameters:
     - name: Language
-      in: header
+      in: query
       required: false
       description: The langauge code specifiying what language to recieve 
         updates in
@@ -49,7 +49,7 @@ get:
       default: en
 
     - name: Detail-Level
-      in: header
+      in: query
       required: false
       description: The level of detail to connect in
       schema:

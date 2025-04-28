@@ -51,6 +51,14 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     for (auto element : u.encoded_params()) {
         fields_[(std::string)element.key] = element.value;
     }
+    // Set detailLevel_ from query parameter if present and not already set
+    if (detailLevel_ == Device_DetailLevel_UNSET && fields_.count("Detail-Level")) {
+        std::string dl = fields_["Detail-Level"];
+        auto& dlMap = catena::common::DetailLevel().getReverseMap();
+        if (dlMap.find(dl) != dlMap.end()) {
+            detailLevel_ = dlMap.at(dl);
+        }
+    }
     
     // Looping through headers to retrieve JWS token and json body len.
     std::size_t contentLength = 0;
@@ -70,15 +78,6 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
         else if (language_.empty() && header.starts_with("Language: ")) {
             language_ = header.substr(std::string("Language: ").length());
             language_.erase(language_.length() - 1); // Removing newline.
-        }
-        // Getting detail level
-        else if (detailLevel_ == Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
-            std::string dl = header.substr(std::string("Detail-Level: ").length());
-            dl.erase(dl.length() - 1); // Removing newline.
-            auto& dlMap = catena::common::DetailLevel().getReverseMap(); // Reverse detail level map.
-            if (dlMap.contains(dl)) {
-                detailLevel_ = dlMap.at(dl);
-            }
         }
         // Getting body content-Length
         else if (contentLength == 0 && header.starts_with("Content-Length: ")) {
