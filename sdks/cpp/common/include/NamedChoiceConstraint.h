@@ -116,14 +116,14 @@ template <typename T> class NamedChoiceConstraint : public catena::common::ICons
     bool satisfied(const catena::Value& src) const override {
 
         if constexpr (std::is_same<T, int32_t>::value) {
-            return choices_.find(src.int32_value()) != choices_.end();
+            return choices_.contains(src.int32_value());
         }
 
         if constexpr (std::is_same<T, std::string>::value) {
             if (!strict_) {
                 return true;
             }
-            return choices_.find(src.string_value()) != choices_.end();
+            return choices_.contains(src.string_value());
         }
     }
 

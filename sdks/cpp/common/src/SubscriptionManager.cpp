@@ -107,7 +107,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm
         std::string baseOid = oid.substr(0, oid.length() - 2); // Remove "/*"
         
         // Check if wildcard subscription exists
-        if (wildcardSubscriptions_.find(oid) == wildcardSubscriptions_.end()) {
+        if (!wildcardSubscriptions_.contains(oid)) {
             rc = catena::exception_with_status("Wildcard subscription not found for OID: " + oid, 
                                              catena::StatusCode::NOT_FOUND);
             subscriptionLock_.unlock();
@@ -132,7 +132,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm
         return true;
     } else {
         // Check if unique subscription exists
-        if (uniqueSubscriptions_.find(oid) == uniqueSubscriptions_.end()) {
+        if (!uniqueSubscriptions_.contains(oid)) {
             rc = catena::exception_with_status("Subscription not found for OID: " + oid, 
                                              catena::StatusCode::NOT_FOUND);
             subscriptionLock_.unlock();

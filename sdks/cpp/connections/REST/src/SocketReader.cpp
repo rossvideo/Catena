@@ -76,7 +76,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             std::string dl = header.substr(std::string("Detail-Level: ").length());
             dl.erase(dl.length() - 1); // Removing newline.
             auto& dlMap = catena::common::DetailLevel().getReverseMap(); // Reverse detail level map.
-            if (dlMap.find(dl) != dlMap.end()) {
+            if (dlMap.contains(dl)) {
                 detailLevel_ = dlMap.at(dl);
             }
         }
