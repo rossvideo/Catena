@@ -178,8 +178,6 @@ class Connect : public IConnect {
             if (rc.status == catena::StatusCode::OK) {
                 this->hasUpdate_ = true;
                 this->cv_.notify_one();
-            } else {
-                std::cout << "Update failed with status: " << rc.status << std::endl;
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
