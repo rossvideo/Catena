@@ -135,28 +135,23 @@ class Connect : public IConnect {
             const std::unordered_map<catena::Device_DetailLevel, std::function<void()>> detailLevelMap {
                 {catena::Device_DetailLevel_FULL, [&]() {
                     // Always update for FULL detail level
-                    std::cout << "Updating for FULL detail level" << std::endl;
                     should_update = true;
                 }},
                 {catena::Device_DetailLevel_MINIMAL, [&]() {
                     // For MINIMAL, only update if it's in the minimal set
-                    std::cout << "Updating for MINIMAL detail level" << std::endl;
                     should_update = p->getDescriptor().minimalSet();
                 }},
                 {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                     // Update if OID is subscribed or in minimal set
-                    std::cout << "Updating for SUBSCRIPTIONS detail level" << std::endl;
                     should_update = p->getDescriptor().minimalSet() || 
                            (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
-                    std::cout << "Updating for COMMANDS detail level" << std::endl;
                     should_update = p->getDescriptor().isCommand();
                 }},
                 {catena::Device_DetailLevel_NONE, [&]() {
                     // Don't send any updates
-                    std::cout << "Updating for NONE detail level" << std::endl;
                     should_update = false;
                 }}
             };
@@ -164,12 +159,10 @@ class Connect : public IConnect {
             if (detailLevelMap.contains(this->detailLevel_)) {
                 detailLevelMap.at(this->detailLevel_)();
             } else {
-                std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
                 should_update = false;
             }
     
             if (!should_update) {
-                std::cout << "Not updating due to detail level filter" << std::endl;
                 return;
             }
     
@@ -183,7 +176,6 @@ class Connect : public IConnect {
             rc = p->toProto(*value, *authz_);
             //If the param conversion was successful, send the update
             if (rc.status == catena::StatusCode::OK) {
-                std::cout << "Update successful, notifying writer" << std::endl;
                 this->hasUpdate_ = true;
                 this->cv_.notify_one();
             } else {
