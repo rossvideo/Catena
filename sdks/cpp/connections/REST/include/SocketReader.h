@@ -98,7 +98,7 @@ class SocketReader : public ISocketReader {
      * @param key The name of the field to retrieve.
      */
     const std::string& fields(const std::string& key) const override {
-      if (fields_.find(key) != fields_.end()) {
+      if (fields_.contains(key)) {
         return fields_.at(key);
       } else {
         return fieldNotFound;

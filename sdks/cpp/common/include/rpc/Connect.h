@@ -132,35 +132,33 @@ class Connect : public IConnect {
             bool should_update = false;
             
             // Map of detail levels to their update logic
-            const std::unordered_map<catena::Device_DetailLevel, std::function<bool()>> detailLevelMap {
+            const std::unordered_map<catena::Device_DetailLevel, std::function<void()>> detailLevelMap {
                 {catena::Device_DetailLevel_FULL, [&]() {
                     // Always update for FULL detail level
-                    return true;
+                    should_update = true;
                 }},
                 {catena::Device_DetailLevel_MINIMAL, [&]() {
                     // For MINIMAL, only update if it's in the minimal set
-                    return p->getDescriptor().minimalSet();
+                    should_update = p->getDescriptor().minimalSet();
                 }},
                 {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
                     // Update if OID is subscribed or in minimal set
-                    return p->getDescriptor().minimalSet() || 
+                    should_update = p->getDescriptor().minimalSet() || 
                            (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
-                    return p->getDescriptor().isCommand();
+                    should_update = p->getDescriptor().isCommand();
                 }},
                 {catena::Device_DetailLevel_NONE, [&]() {
                     // Don't send any updates
-                    return false;
+                    should_update = false;
                 }}
             };
 
-            auto it = detailLevelMap.find(this->detailLevel_);
-            if (it != detailLevelMap.end()) {
-                should_update = it->second();
+            if (detailLevelMap.contains(this->detailLevel_)) {
+                detailLevelMap.at(this->detailLevel_)();
             } else {
-                std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
                 should_update = false;
             }
     
@@ -233,7 +231,7 @@ class Connect : public IConnect {
      */
     bool hasUpdate_ = false;
     /**
-     * @brief A condition vairable used to wait for an update.
+     * @brief A condition variable used to wait for an update.
      */
     std::condition_variable cv_;
     /**

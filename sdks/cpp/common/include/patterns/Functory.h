@@ -148,7 +148,7 @@ public:
     */
     bool has(const K key) const {
         LockGuard lock(_mtx);
-        return _registry.find(key) != _registry.end();
+        return _registry.contains(key);
     }
 };
 }

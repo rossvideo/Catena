@@ -119,8 +119,7 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
      */
     bool addProduct(const K key, Maker maker) {
         LockGuard lock(_mtx);
-        auto it = _registry.find(key);
-        if (it == _registry.end()) {
+        if (!_registry.contains(key)) {
             _registry[key] = maker;
         } else {
             std::stringstream err;
@@ -143,13 +142,12 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
      */
     std::unique_ptr<P> makeProduct(const K key, Ms&&... args) {
         LockGuard lock(_mtx);
-        auto it = _registry.find(key);
-        if (it != _registry.end()) {
+        if (_registry.contains(key)) {
             std::unique_ptr<P> ans;
             try {
                 // N.B. P could be a base class with pure virtual methods, so 
                 // we can't use std::make_unique here.
-                P* p = it->second(std::forward<Ms>(args)...);
+                P* p = _registry.at(key)(std::forward<Ms>(args)...);
                 ans.reset(p);
                 return ans;
             }
@@ -180,12 +178,7 @@ class GenericFactory final : public Singleton<GenericFactory<P, K, Ms...>> {
      */
     bool canMake(const K key) const {
         LockGuard lock(_mtx);
-        bool ans = false;
-        auto it = _registry.find(key);
-        if (it != _registry.end()) {
-            ans = true;
-        }
-        return ans;
+        return _registry.contains(key);
     }
 
     /**

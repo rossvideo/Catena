@@ -137,7 +137,7 @@ void statusUpdateExample(){
 
         // this is the "receiving end" of the status update example
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            if (handlers.find(oid) != handlers.end()) {
+            if (handlers.contains(oid)) {
                 handlers[oid](oid, p, idx);
             }
         });
