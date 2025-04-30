@@ -83,18 +83,6 @@ public:
     virtual const std::set<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
 
     /**
-     * @brief Get all unique subscriptions
-     * @return Reference to the set of unique subscriptions
-     */
-    virtual const std::set<std::string>& getUniqueSubscriptions() = 0;
-
-    /**
-     * @brief Get all wildcard subscriptions
-     * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
-     */
-    virtual const std::set<std::string>& getWildcardSubscriptions() = 0;
-
-    /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"

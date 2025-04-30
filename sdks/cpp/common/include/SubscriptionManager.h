@@ -89,18 +89,6 @@ public:
     const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
 
     /**
-     * @brief Get all unique subscriptions
-     * @return Reference to the set of unique subscriptions
-     */
-    const std::set<std::string>& getUniqueSubscriptions() override;
-
-    /**
-     * @brief Get all wildcard subscriptions
-     * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
-     */
-    const std::set<std::string>& getWildcardSubscriptions() override;
-
-    /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
@@ -153,21 +141,10 @@ private:
             std::set<std::string>& oids_;
     };
 
-
     /**
-     * @brief Set of unique subscriptions
+     * @brief Set of all active subscriptions (unique and expanded wildcards)
      */
-    std::set<std::string> uniqueSubscriptions_; 
-
-    /**
-     * @brief Set of wildcard subscriptions
-     */
-    std::set<std::string> wildcardSubscriptions_;
-
-    /**
-     * @brief Vector of all subscribed OIDs
-     */
-    std::set<std::string> allSubscribedOids_;
+    std::set<std::string> subscriptions_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs
