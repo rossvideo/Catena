@@ -47,6 +47,7 @@ void Connect::proceed() {
         lock.lock();
         cv_.wait(lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
+        numUpdates_++;
         writeConsole_(CallStatus::kWrite, true);
         try {
             if (socket_.is_open() && !shutdown_) {
@@ -76,4 +77,5 @@ void Connect::finish() {
         socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";
+    std::cout<<"Sent out "<<numUpdates_<<" updates\n";
 }

@@ -153,6 +153,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief Flag to indicate when the shutdown signal has been recieved.
      */
     bool shutdown_;
+    uint32_t numUpdates_ = 0;
     
     /**
      * @brief ID of the Connect object

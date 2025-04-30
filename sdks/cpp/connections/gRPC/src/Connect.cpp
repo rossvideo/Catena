@@ -76,6 +76,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
      */
     if(!ok && status_ != CallStatus::kFinish){
         std::cout << "Connect[" << objectId_ << "] cancelled\n";
+        std::cout<<"Sent out "<<numUpdates_<<" updates\n";
         std::cout << "Cancelling all open connections" << std::endl;
         shutdownSignal_.emit();
         status_ = CallStatus::kFinish;
@@ -159,11 +160,13 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
+            numUpdates_++;
             // If connect was cancelled finish the process.
             if (context_.IsCancelled()) {
                 status_ = CallStatus::kFinish;
                 std::cout << "Connection[" << objectId_ << "] cancelled\n";
                 writer_.Finish(Status::CANCELLED, this);
+                std::cout<<"Sent out "<<numUpdates_<<" updates\n";
                 break;
             // Send the client an update with the slot of the device.
             } else {
@@ -177,6 +180,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
+            std::cout<<"Sent out "<<numUpdates_<<" updates\n";
             shutdownSignal_.disconnect(shutdownSignalId_);
             dm_.valueSetByClient.disconnect(valueSetByClientId_);
             dm_.valueSetByServer.disconnect(valueSetByServerId_);

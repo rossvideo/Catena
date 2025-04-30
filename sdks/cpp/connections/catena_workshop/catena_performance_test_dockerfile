@@ -34,6 +34,11 @@
 
 FROM base
 
+RUN apt-get update && \
+    apt-get install -y net-tools
+
+COPY ../connections/catena_workshop/ghz /usr/local/bin/ghz
+
 COPY build/connections/catena_workshop/performance_test/performance_test /opt/performance_test
 
 ENTRYPOINT ["/opt/performance_test"]

@@ -108,7 +108,7 @@ void RunRESTServer(bool authorization, std::string EOPath) {
 // Starts the gRPC server.
 void RunGRPCServer(bool authorization, std::string EOPath) {
     try {
-        std::string addr = absl::StrFormat("0.0.0.0:6254");
+        std::string addr = absl::StrFormat("0.0.0.0:6256");
 
         grpc::ServerBuilder builder;
         // set some grpc options

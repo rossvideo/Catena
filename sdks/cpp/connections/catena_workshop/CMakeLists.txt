@@ -40,4 +40,5 @@ add_subdirectory("performance_test")
 
 if (DOCKER)
     make_image(catena_performance_test ${CATENA_CPP_ROOT_DIR} "../docker/base.hash;performance_test")
+    make_image(catena_ghz ${CATENA_CPP_ROOT_DIR} "../docker/base.hash")
 endif()

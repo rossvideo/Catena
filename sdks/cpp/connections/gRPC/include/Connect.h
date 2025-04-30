@@ -143,6 +143,7 @@ class CatenaServiceImpl::Connect : public CallData {
          * @brief ID of the shutdown signal for the Connect object
         */
         unsigned int shutdownSignalId_;
+        uint32_t numUpdates_ = 0;
 
         /**
          * @brief Updates the response message with parameter values and handles 
