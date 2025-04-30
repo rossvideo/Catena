@@ -370,7 +370,7 @@ class Device : public IDevice {
      * @param subscribed_oids the oids of the subscribed parameters
      * @return a DeviceSerializer object
      */
-    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const override;
+    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow = false) const override;
     /**
      * @brief This is a helper function for the shared IDevice function
      * getComponentSerializer to return a DeviceSerializer object. It can be
@@ -382,7 +382,7 @@ class Device : public IDevice {
      * the whole device will be returned in one message
      * @param subscribed_oids the oids of the subscribed parameters
      */
-    DeviceSerializer getDeviceSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow = false) const;
+    DeviceSerializer getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow = false) const;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for parameters and commands.

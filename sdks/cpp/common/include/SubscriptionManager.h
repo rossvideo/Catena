@@ -86,7 +86,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(IDevice& dm) override;
+    const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
 
     /**
      * @brief Get all unique subscriptions
@@ -127,7 +127,7 @@ private:
              * @brief Constructor for the SubscriptionVisitor class
              * @param oids The vector of subscribed OIDs
              */
-            explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+            explicit SubscriptionVisitor(std::set<std::string>& oids) : oids_(oids) {}
             
             /**
              * @brief Visit a parameter
@@ -135,7 +135,7 @@ private:
              * @param path The path of the parameter
              */
             void visit(catena::common::IParam* param, const std::string& path) override {
-                oids_.push_back(path);
+                oids_.insert(path);
             }
             
             /**
@@ -150,7 +150,7 @@ private:
             /**
              * @brief The vector of subscribed OIDs within the visitor
              */
-            std::vector<std::string>& oids_;
+            std::set<std::string>& oids_;
     };
 
 
@@ -167,7 +167,7 @@ private:
     /**
      * @brief Vector of all subscribed OIDs
      */
-    std::vector<std::string> allSubscribedOids_;
+    std::set<std::string> allSubscribedOids_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs

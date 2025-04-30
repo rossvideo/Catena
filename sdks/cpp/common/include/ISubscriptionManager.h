@@ -40,7 +40,6 @@
 
 #include <set>
 #include <string>
-#include <vector>
 #include <memory>
 #include <IDevice.h>
 #include <IParam.h>
@@ -81,7 +80,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    virtual const std::vector<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
+    virtual const std::set<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
 
     /**
      * @brief Get all unique subscriptions

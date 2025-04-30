@@ -153,9 +153,7 @@ void SubscriptionManager::updateAllSubscribedOids_(IDevice& dm) {
     allSubscribedOids_.clear();
     
     // Add unique subscriptions
-    allSubscribedOids_.insert(allSubscribedOids_.end(), 
-                             uniqueSubscriptions_.begin(), 
-                             uniqueSubscriptions_.end());
+    allSubscribedOids_.insert(uniqueSubscriptions_.begin(), uniqueSubscriptions_.end());
     
     // Add wildcard subscriptions 
     for (const auto& wildcardOid : wildcardSubscriptions_) {
@@ -198,7 +196,7 @@ void SubscriptionManager::updateAllSubscribedOids_(IDevice& dm) {
 }
 
 // Get all subscribed OIDs, including wildcard subscriptions
-const std::vector<std::string>& SubscriptionManager::getAllSubscribedOids(IDevice& dm) {
+const std::set<std::string>& SubscriptionManager::getAllSubscribedOids(IDevice& dm) {
     subscriptionLock_.lock();
     updateAllSubscribedOids_(dm);
     auto& result = allSubscribedOids_;
