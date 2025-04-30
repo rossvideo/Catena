@@ -7,12 +7,11 @@ using catena::REST::Connect;
 int Connect::objectCounter_ = 0;
 
 Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, 
+    socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, context_{context},
     catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken(), context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
-    detailLevel_ = context.detailLevel();
     userAgent_ = context.fields("user_agent");
     forceConnection_ = context.fields("force_connection") == "true";
 }
@@ -25,6 +24,11 @@ void Connect::proceed() {
         this->hasUpdate_ = true;
         this->cv_.notify_one();
     });
+
+    // Set detail level from context
+    detailLevel_ = context_.detailLevel();
+    dm_.detail_level(detailLevel_);
+
     // Waiting for a value set by server to be sent to execute code.
     valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
         updateResponse_(oid, idx, p);

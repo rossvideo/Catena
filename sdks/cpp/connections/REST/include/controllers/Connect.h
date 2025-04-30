@@ -129,8 +129,14 @@ class Connect : public ICallData, public catena::common::Connect {
     /**
      * @brief The mutex to for locking the object while writing
      */
+    /**
+     * @brief The SocketReader object for reading the request.
+     */
+    SocketReader& context_;
+    /**
+     * @brief The mutex to for locking the object while writing
+     */
     std::mutex mtx_;
-
     /**
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.

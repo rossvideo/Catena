@@ -71,11 +71,11 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             language_ = header.substr(std::string("Language: ").length());
             language_.erase(language_.length() - 1); // Removing newline.
         }
-        // Getting detail level
+        // Getting detail level from header
         else if (detailLevel_ == Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
             std::string dl = header.substr(std::string("Detail-Level: ").length());
-            dl.erase(dl.length() - 1); // Removing newline.
-            auto& dlMap = catena::common::DetailLevel().getReverseMap(); // Reverse detail level map.
+            dl.erase(dl.length() - 1); // Removing newline
+            auto& dlMap = catena::common::DetailLevel().getReverseMap();
             if (dlMap.contains(dl)) {
                 detailLevel_ = dlMap.at(dl);
             }
