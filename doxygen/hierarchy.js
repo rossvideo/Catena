@@ -43,6 +43,7 @@ var hierarchy =
       [ "catena::REST::BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", null ],
       [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
       [ "catena::REST::DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", null ],
+      [ "catena::REST::ExecuteCommand", "classcatena_1_1REST_1_1ExecuteCommand.html", null ],
       [ "catena::REST::GetParam", "classcatena_1_1REST_1_1GetParam.html", null ],
       [ "catena::REST::GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", null ],
       [ "catena::REST::GetValue", "classcatena_1_1REST_1_1GetValue.html", null ],
