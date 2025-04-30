@@ -54,6 +54,19 @@ UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, SocketReader& cont
       writer_(socket, context.origin()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
+    try {
+        // Parse JSON body if present
+        if (!context_.jsonBody().empty()) {
+            absl::Status status = google::protobuf::util::JsonStringToMessage(
+                absl::string_view(context_.jsonBody()), &req_);
+            if (!status.ok()) {
+                throw catena::exception_with_status("Failed to parse UpdateSubscriptionsPayload: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
+            }
+        }
+    } catch (...) {
+        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
+        writer_.write(err);
+    }
 }
 
 void UpdateSubscriptions::proceed() {
