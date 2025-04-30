@@ -185,9 +185,9 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IDevice</b> ()=de
 <tr class="memitem:a9dda7d427d095d9f4d7fc46a57664d58" id="r_a9dda7d427d095d9f4d7fc46a57664d58"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a9dda7d427d095d9f4d7fc46a57664d58">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=false) const =0</td></tr>
 <tr class="memdesc:a9dda7d427d095d9f4d7fc46a57664d58"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
 <tr class="separator:a9dda7d427d095d9f4d7fc46a57664d58"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82e51780a6d970d757179ddd3bc637ff" id="r_a82e51780a6d970d757179ddd3bc637ff"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a82e51780a6d970d757179ddd3bc637ff">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::vector&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const =0</td></tr>
-<tr class="memdesc:a82e51780a6d970d757179ddd3bc637ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
-<tr class="separator:a82e51780a6d970d757179ddd3bc637ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0398fec0c5c326bcb6b6ee4f9e4ccd96" id="r_a0398fec0c5c326bcb6b6ee4f9e4ccd96"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a0398fec0c5c326bcb6b6ee4f9e4ccd96">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const =0</td></tr>
+<tr class="memdesc:a0398fec0c5c326bcb6b6ee4f9e4ccd96"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
+<tr class="separator:a0398fec0c5c326bcb6b6ee4f9e4ccd96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25d3dd8acc104af89a99e88f33f6c01d" id="r_a25d3dd8acc104af89a99e88f33f6c01d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IDevice.html#a25d3dd8acc104af89a99e88f33f6c01d">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *item)=0</td></tr>
 <tr class="memdesc:a25d3dd8acc104af89a99e88f33f6c01d"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for parameters and commands.  <br /></td></tr>
 <tr class="separator:a25d3dd8acc104af89a99e88f33f6c01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -761,8 +761,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a82e51780a6d970d757179ddd3bc637ff" name="a82e51780a6d970d757179ddd3bc637ff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a82e51780a6d970d757179ddd3bc637ff">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[2/2]</span></h2>
+<a id="a0398fec0c5c326bcb6b6ee4f9e4ccd96" name="a0398fec0c5c326bcb6b6ee4f9e4ccd96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0398fec0c5c326bcb6b6ee4f9e4ccd96">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -779,7 +779,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::set&lt; std::string &gt; &amp;&#160;</td>
           <td class="paramname"><em>subscribed_oids</em>, </td>
         </tr>
         <tr>
@@ -812,7 +812,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a DeviceSerializer object </dd></dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#ae2c1463e0a84a3c1775a992823ca6268">catena::common::Device</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Device.html#a4af444b377089de944b9a88d698c9bea">catena::common::Device</a>.</p>
 
 </div>
 </div>

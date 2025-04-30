@@ -125,9 +125,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ad74e22560836e1aae2609ed57d939675" id="r_ad74e22560836e1aae2609ed57d939675"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#ad74e22560836e1aae2609ed57d939675">removeSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc) override</td></tr>
 <tr class="memdesc:ad74e22560836e1aae2609ed57d939675"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an OID subscription.  <br /></td></tr>
 <tr class="separator:ad74e22560836e1aae2609ed57d939675"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f6b43b7009deb4eda922d08af16c29e" id="r_a6f6b43b7009deb4eda922d08af16c29e"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a6f6b43b7009deb4eda922d08af16c29e">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm) override</td></tr>
-<tr class="memdesc:a6f6b43b7009deb4eda922d08af16c29e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
-<tr class="separator:a6f6b43b7009deb4eda922d08af16c29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5e1956605616c5d8497e5b835f09444" id="r_aa5e1956605616c5d8497e5b835f09444"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#aa5e1956605616c5d8497e5b835f09444">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm) override</td></tr>
+<tr class="memdesc:aa5e1956605616c5d8497e5b835f09444"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
+<tr class="separator:aa5e1956605616c5d8497e5b835f09444"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2e11fd0dd3440e89f4be34bf736ec09" id="r_ad2e11fd0dd3440e89f4be34bf736ec09"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#ad2e11fd0dd3440e89f4be34bf736ec09">getUniqueSubscriptions</a> () override</td></tr>
 <tr class="memdesc:ad2e11fd0dd3440e89f4be34bf736ec09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all unique subscriptions.  <br /></td></tr>
 <tr class="separator:ad2e11fd0dd3440e89f4be34bf736ec09"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,8 +196,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6f6b43b7009deb4eda922d08af16c29e" name="a6f6b43b7009deb4eda922d08af16c29e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f6b43b7009deb4eda922d08af16c29e">&#9670;&#160;</a></span>getAllSubscribedOids()</h2>
+<a id="aa5e1956605616c5d8497e5b835f09444" name="aa5e1956605616c5d8497e5b835f09444"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa5e1956605616c5d8497e5b835f09444">&#9670;&#160;</a></span>getAllSubscribedOids()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -206,7 +206,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt; std::string &gt; &amp; catena::common::SubscriptionManager::getAllSubscribedOids </td>
+          <td class="memname">const std::set&lt; std::string &gt; &amp; catena::common::SubscriptionManager::getAllSubscribedOids </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
           <td class="paramname"><em>dm</em></td><td>)</td>
@@ -229,7 +229,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Reference to the vector of all subscribed OIDs </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a83fff7df35aaa7b4f841545883d833b1">catena::common::ISubscriptionManager</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#ab5d55752a99c745909efca91f2931987">catena::common::ISubscriptionManager</a>.</p>
 
 </div>
 </div>

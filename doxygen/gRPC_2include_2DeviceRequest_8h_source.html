@@ -151,9 +151,9 @@ $(document).ready(function(){initNavTree('gRPC_2include_2DeviceRequest_8h_source
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        <span class="keywordtype">int</span> objectId_;</div>
 <div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> shutdownSignalId_;</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        std::vector&lt;std::string&gt; subscribed_oids_;</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        std::set&lt;std::string&gt; subscribed_oids_;</div>
 <div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span> </div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        std::vector&lt;std::string&gt; rpc_subscriptions_;</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        std::set&lt;std::string&gt; rpc_subscriptions_;</div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>};</div>
 </div>
