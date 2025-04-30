@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Copyright 2025 Ross Video Ltd
  *
@@ -29,61 +31,55 @@
  */
 
 /**
- * @file Connect.h
- * @brief Implements REST Connect RPC.
- * @author benjamin.whitten@rossvideo.com
+ * @file UpdateSubscriptions.h
+ * @brief Implements Catena REST UpdateSubscriptions
+ * @author zuhayr.sarker@rossvideo.com
+ * @date 2025-04-28
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#pragma once
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+// connections/REST
+#include <ISubscriptionManager.h>
 
 // common
-#include <rpc/Connect.h>
-#include <rpc/TimeNow.h>
-#include <Status.h>
-#include <IParam.h>
 #include <IDevice.h>
-#include <utils.h>
-#include <Authorization.h>
-#include <SubscriptionManager.h>
+#include <rpc/TimeNow.h>
 
 // Connections/REST
-#include "SocketReader.h"
-#include "SocketWriter.h"
-#include "interface/ICallData.h"
+#include <SocketReader.h>
+#include <SocketWriter.h>
+#include <interface/ICallData.h>
 
 namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the Connect REST RPC.
+ * @brief Controller class for handling UpdateSubscriptions requests
  */
-class Connect : public ICallData, public catena::common::Connect {
-  public:
+class UpdateSubscriptions : public ICallData {
+public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the Connect RPC.
-     *
-     * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
-     * @param dm The device to connect to.
-     */ 
-    Connect(tcp::socket& socket, SocketReader& context, IDevice& dm);
+     * @brief Constructor for the UpdateSubscriptions controller
+     * @param socket The TCP socket for the connection
+     * @param context The socket reader context
+     * @param dm The device model
+     */
+    UpdateSubscriptions(tcp::socket& socket, SocketReader& context, IDevice& dm);
+
     /**
-     * Connect main process
+     * @brief Processes the UpdateSubscriptions request
      */
     void proceed() override;
+
     /**
-     * Finishes the Connect process by disconnecting listeners.
+     * @brief Finishes the UpdateSubscriptions process
      */
     void finish() override;
+
     /**
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
@@ -92,15 +88,23 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
-      return new Connect(socket, context, dm);
+        return new UpdateSubscriptions(socket, context, dm);
     }
-    
+
+private:
     /**
-     * @brief Signal emitted in the case of an error which requires the all
-     * open connections to be shut down.
+     * @brief Helper method to process a subscription
+     * @param baseOid The base OID 
+     * @param authz The authorizer to use for access control
      */
-    static vdk::signal<void()> shutdownSignal_;
-  private:
+    void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
+
+    /**
+     * @brief Helper method to send all currently subscribed parameters
+     * @param authz The authorizer to use for access control
+     */
+    void sendSubscribedParameters_(catena::common::Authorizer& authz);
+
     /**
      * @brief Helper function to write status messages to the API console.
      * 
@@ -108,69 +112,72 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "Connect::proceed[" << objectId_ << "]: "
-                << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+        std::cout << "UpdateSubscriptions::proceed[" << objectId_ << "]: "
+                  << catena::common::timeNow() << " status: "
+                  << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
+                  << std::endl;
     }
-    /**
-     * @brief Returns true if the RPC was cancelled.
-     */
-    inline bool isCancelled() override { return !this->socket_.is_open(); }
 
     /**
-     * @brief The socket to write the response stream to.
+     * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
+
+    /**
+     * @brief The SocketReader object.
+     */
+    SocketReader& context_;
+
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
     SSEWriter writer_;
+
     /**
-     * @brief The mutex to for locking the object while writing
+     * @brief The request payload
      */
+    catena::UpdateSubscriptionsPayload req_;
+
     /**
-     * @brief The SocketReader object for reading the request.
+     * @brief The response payload for a single response
      */
-    SocketReader& context_;
+    catena::DeviceComponent_ComponentParam res_;
+
     /**
-     * @brief The mutex to for locking the object while writing
+     * @brief Vector to store all responses to be sent
      */
-    std::mutex mtx_;
+    std::vector<catena::DeviceComponent_ComponentParam> responses_;
+
     /**
-     * @brief Id of operation waiting for valueSetByClient to be emitted.
-     * Used when ending the connection.
+     * @brief Current response index being processed
      */
-    unsigned int valueSetByClientId_;
+    uint32_t current_response_{0};
+
     /**
-     * @brief Id of operation waiting for valueSetByServer to be emitted.
-     * Used when ending the connection.
-     */
-    unsigned int valueSetByServerId_;
-    /**
-     * @brief Id of operation waiting for languageAddedPushUpdate to be
-     * emitted. Used when ending the connection.
-     */
-    unsigned int languageAddedId_;
-    /**
-     * @brief ID of the shutdown signal for the Connect object
-    */
-    unsigned int shutdownSignalId_;
-    /**
-     * @brief Flag to indicate when the shutdown signal has been recieved.
-     */
-    bool shutdown_;
-    uint32_t numUpdates_ = 0;
-    
-    /**
-     * @brief ID of the Connect object
-     */
-    int objectId_;
-    /**
-     * @brief The total # of Connect objects.
+     * @brief The object's unique id counter
      */
     static int objectCounter_;
+
+    /**
+     * @brief The object's unique id
+     */
+    int objectId_;
+
+    /**
+     * @brief The mutex for the writer lock
+     */
+    std::mutex mtx_;
+
+    /**
+     * @brief The writer lock
+     */
+    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
+    /**
+     * @brief The device model
+     */
+    IDevice& dm_;
 };
 
-}; // namespace REST
-}; // namespace catena
+} // namespace REST 
+} // namespace catena

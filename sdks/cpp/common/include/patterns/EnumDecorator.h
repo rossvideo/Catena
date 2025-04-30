@@ -103,9 +103,8 @@ template <typename E> class EnumDecorator {
      */
     EnumDecorator(const std::string& str) : value_{static_cast<E>(0)} {
         const RevMap& revMap = getReverseMap();
-        auto it = revMap.find(str);
-        if (it != revMap.end()) {
-            value_ = it->second;
+        if (revMap.contains(str)) {
+            value_ = revMap.at(str);
         }
     }
 
@@ -141,8 +140,7 @@ template <typename E> class EnumDecorator {
      * @param value the integral value
      */
     EnumDecorator(utype value) : value_{static_cast<E>(value)} {
-        auto it = fwdMap_.find(value_);
-        if (it == fwdMap_.end()) {
+        if (!fwdMap_.contains(value_)) {
             value_ = static_cast<E>(0);
         }
     }
@@ -198,9 +196,8 @@ template <typename E> class EnumDecorator {
      * @brief cast to a string
      */
     operator std::string() const {
-        auto it = fwdMap_.find(value_);
-        if (it != fwdMap_.end()) {
-            return it->second;
+        if (fwdMap_.contains(value_)) {
+            return fwdMap_.at(value_);
         } else {
             return std::string();
         }
@@ -210,9 +207,8 @@ template <typename E> class EnumDecorator {
      * @brief get the string representation of the enum value
      */
     const std::string& toString() const {
-        auto it = fwdMap_.find(value_);
-        if (it != fwdMap_.end()) {
-            return it->second;
+        if (fwdMap_.contains(value_)) {
+            return fwdMap_.at(value_);
         } else {
             static std::string empty;
             return empty;

@@ -37,6 +37,7 @@ set(sources
     "src/SocketWriter.cpp"
     "src/controllers/Connect.cpp"
     "src/controllers/DeviceRequest.cpp"
+    "src/controllers/ExecuteCommand.cpp"
     "src/controllers/GetPopulatedSlots.cpp"
     "src/controllers/GetValue.cpp"
     "src/controllers/MultiSetValue.cpp"
@@ -46,6 +47,7 @@ set(sources
     "src/controllers/LanguagePackRequest.cpp"
     "src/controllers/ListLanguages.cpp"
     "src/controllers/BasicParamInfoRequest.cpp"
+    "src/controllers/UpdateSubscriptions.cpp"
 )
 
 add_library(${target} STATIC ${sources})

@@ -15,6 +15,8 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
 #include <controllers/BasicParamInfoRequest.h>
+#include <controllers/UpdateSubscriptions.h>
+#include <controllers/ExecuteCommand.h>
 
 using catena::REST::Connect;
 
@@ -39,7 +41,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
       router_{Router::getInstance()},
-      subscriptionManager_{} {
+      subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
@@ -48,6 +50,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
 
     router_.addProduct("GET/v1/Connect",                Connect::makeOne);
     router_.addProduct("GET/v1/DeviceRequest",          DeviceRequest::makeOne);
+    router_.addProduct("PUT/v1/ExecuteCommand",         ExecuteCommand::makeOne);
     router_.addProduct("GET/v1/GetPopulatedSlots",      GetPopulatedSlots::makeOne);
     router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
     router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
@@ -57,6 +60,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
     router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
     router_.addProduct("GET/v1/BasicParamInfoRequest",  BasicParamInfoRequest::makeOne);
+    router_.addProduct("PUT/v1/UpdateSubscriptions",    UpdateSubscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -80,7 +84,7 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(subscriptionManager_);
+                    SocketReader context(*subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
                     std::string rpcKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.

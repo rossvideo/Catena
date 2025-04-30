@@ -33,7 +33,7 @@
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -45,7 +45,7 @@
 #include <IParam.h>
 #include <Authorization.h>
 #include <Enums.h>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 // REST
 #include <interface/IServiceImpl.h>
 #include <interface/ICallData.h>
@@ -114,7 +114,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief The subscription manager for handling parameter subscriptions
      */
-    catena::common::SubscriptionManager subscriptionManager_;
+    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
 
     /**
      * @brief Returns true if port_ is already in use.

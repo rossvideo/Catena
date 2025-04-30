@@ -127,12 +127,12 @@ class DeviceRequest : public ICallData {
     /**
      * @brief A list of the subscribed oids to return.
      */
-    std::vector<std::string> subscribedOids_;
+    std::set<std::string> subscribedOids_;
 
     /**
      * @brief A list of the subscriptions from the current request.
      */
-    std::vector<std::string> requestSubscriptions_;
+    std::set<std::string> requestSubscriptions_;
 
     /**
      * @brief Serializer for device.

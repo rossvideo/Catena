@@ -57,7 +57,7 @@ bool PicklistConstraint::satisfied(const catena::Value& src) const {
         return true;
     }
 
-    return choices_.find(src.string_value()) != choices_.end();
+    return choices_.contains(src.string_value());
 }
 
 /**
