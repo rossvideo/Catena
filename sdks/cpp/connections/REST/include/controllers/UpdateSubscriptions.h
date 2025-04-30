@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Copyright 2025 Ross Video Ltd
  *
@@ -29,60 +31,55 @@
  */
 
 /**
- * @file DeviceRequest.h
- * @brief Implements REST DeviceRequest RPC.
- * @author benjamin.whitten@rossvideo.com
+ * @file UpdateSubscriptions.h
+ * @brief Implements Catena REST UpdateSubscriptions
  * @author zuhayr.sarker@rossvideo.com
+ * @date 2025-04-28
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#pragma once
-
-// protobuf
-#include <interface/device.pb.h>
-#include <google/protobuf/util/json_util.h>
+// connections/REST
+#include <ISubscriptionManager.h>
 
 // common
-#include <rpc/TimeNow.h>
-#include <Status.h>
-#include <IParam.h>
 #include <IDevice.h>
-#include <utils.h>
-#include <Authorization.h>
+#include <rpc/TimeNow.h>
 
 // Connections/REST
-#include "SocketReader.h"
-#include "SocketWriter.h"
-#include "interface/ICallData.h"
+#include <SocketReader.h>
+#include <SocketWriter.h>
+#include <interface/ICallData.h>
 
 namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the DeviceRequest REST RPC.
+ * @brief Controller class for handling UpdateSubscriptions requests
  */
-class DeviceRequest : public ICallData {
-  public:
+class UpdateSubscriptions : public ICallData {
+public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the DeviceRequest RPC.
-     *
-     * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
-     * @param dm The device to get components from.
-     */ 
-    DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
+     * @brief Constructor for the UpdateSubscriptions controller
+     * @param socket The TCP socket for the connection
+     * @param context The socket reader context
+     * @param dm The device model
+     */
+    UpdateSubscriptions(tcp::socket& socket, SocketReader& context, IDevice& dm);
+
     /**
-     * @brief DeviceRequest's main process.
+     * @brief Processes the UpdateSubscriptions request
      */
     void proceed() override;
+
     /**
-     * @brief Finishes the DeviceRequest process.
+     * @brief Finishes the UpdateSubscriptions process
      */
     void finish() override;
+
     /**
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
@@ -91,9 +88,23 @@ class DeviceRequest : public ICallData {
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
-      return new DeviceRequest(socket, context, dm);
+        return new UpdateSubscriptions(socket, context, dm);
     }
-  private:
+
+private:
+    /**
+     * @brief Helper method to process a subscription
+     * @param baseOid The base OID 
+     * @param authz The authorizer to use for access control
+     */
+    void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
+
+    /**
+     * @brief Helper method to send all currently subscribed parameters
+     * @param authz The authorizer to use for access control
+     */
+    void sendSubscribedParameters_(catena::common::Authorizer& authz);
+
     /**
      * @brief Helper function to write status messages to the API console.
      * 
@@ -101,53 +112,72 @@ class DeviceRequest : public ICallData {
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-      std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
-                << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+        std::cout << "UpdateSubscriptions::proceed[" << objectId_ << "]: "
+                  << catena::common::timeNow() << " status: "
+                  << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
+                  << std::endl;
     }
-    
+
     /**
-     * @brief The socket to write the response stream to.
+     * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
+
     /**
      * @brief The SocketReader object.
      */
     SocketReader& context_;
+
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
     SSEWriter writer_;
-    /**
-     * @brief The device to get components from.
-     */
-    IDevice& dm_;
 
     /**
-     * @brief A list of the subscribed oids to return.
+     * @brief The request payload
      */
-    std::set<std::string> subscribedOids_;
+    catena::UpdateSubscriptionsPayload req_;
 
     /**
-     * @brief A list of the subscriptions from the current request.
+     * @brief The response payload for a single response
      */
-    std::set<std::string> requestSubscriptions_;
+    catena::DeviceComponent_ComponentParam res_;
 
     /**
-     * @brief Serializer for device.
+     * @brief Vector to store all responses to be sent
      */
-    std::unique_ptr<IDevice::IDeviceSerializer> serializer_ = nullptr;
+    std::vector<catena::DeviceComponent_ComponentParam> responses_;
 
     /**
-     * @brief ID of the DeviceRequest object
+     * @brief Current response index being processed
      */
-    int objectId_;
+    uint32_t current_response_{0};
+
     /**
-     * @brief The total # of DeviceRequest objects.
+     * @brief The object's unique id counter
      */
     static int objectCounter_;
+
+    /**
+     * @brief The object's unique id
+     */
+    int objectId_;
+
+    /**
+     * @brief The mutex for the writer lock
+     */
+    std::mutex mtx_;
+
+    /**
+     * @brief The writer lock
+     */
+    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
+
+    /**
+     * @brief The device model
+     */
+    IDevice& dm_;
 };
 
-}; // namespace REST
-}; // namespace catena
+} // namespace REST 
+} // namespace catena

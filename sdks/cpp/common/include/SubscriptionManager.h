@@ -86,19 +86,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(IDevice& dm) override;
-
-    /**
-     * @brief Get all unique subscriptions
-     * @return Reference to the set of unique subscriptions
-     */
-    const std::set<std::string>& getUniqueSubscriptions() override;
-
-    /**
-     * @brief Get all wildcard subscriptions
-     * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
-     */
-    const std::set<std::string>& getWildcardSubscriptions() override;
+    const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
 
     /**
      * @brief Check if an OID is a wildcard subscription
@@ -127,7 +115,7 @@ private:
              * @brief Constructor for the SubscriptionVisitor class
              * @param oids The vector of subscribed OIDs
              */
-            explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+            explicit SubscriptionVisitor(std::set<std::string>& oids) : oids_(oids) {}
             
             /**
              * @brief Visit a parameter
@@ -135,7 +123,7 @@ private:
              * @param path The path of the parameter
              */
             void visit(catena::common::IParam* param, const std::string& path) override {
-                oids_.push_back(path);
+                oids_.insert(path);
             }
             
             /**
@@ -150,24 +138,13 @@ private:
             /**
              * @brief The vector of subscribed OIDs within the visitor
              */
-            std::vector<std::string>& oids_;
+            std::set<std::string>& oids_;
     };
 
-
     /**
-     * @brief Set of unique subscriptions
+     * @brief Set of all active subscriptions (unique and expanded wildcards)
      */
-    std::set<std::string> uniqueSubscriptions_; 
-
-    /**
-     * @brief Set of wildcard subscriptions
-     */
-    std::set<std::string> wildcardSubscriptions_;
-
-    /**
-     * @brief Vector of all subscribed OIDs
-     */
-    std::vector<std::string> allSubscribedOids_;
+    std::set<std::string> subscriptions_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs

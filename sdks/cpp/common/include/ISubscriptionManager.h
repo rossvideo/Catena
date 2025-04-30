@@ -40,7 +40,6 @@
 
 #include <set>
 #include <string>
-#include <vector>
 #include <memory>
 #include <IDevice.h>
 #include <IParam.h>
@@ -81,19 +80,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    virtual const std::vector<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
-
-    /**
-     * @brief Get all unique subscriptions
-     * @return Reference to the set of unique subscriptions
-     */
-    virtual const std::set<std::string>& getUniqueSubscriptions() = 0;
-
-    /**
-     * @brief Get all wildcard subscriptions
-     * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
-     */
-    virtual const std::set<std::string>& getWildcardSubscriptions() = 0;
+    virtual const std::set<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
 
     /**
      * @brief Check if an OID is a wildcard subscription
