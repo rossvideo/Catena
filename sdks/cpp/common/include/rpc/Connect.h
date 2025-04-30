@@ -163,7 +163,6 @@ class Connect : public IConnect {
             }
     
             if (!should_update) {
-                std::cout << "Not updating due to detail level filter" << std::endl;
                 return;
             }
     
