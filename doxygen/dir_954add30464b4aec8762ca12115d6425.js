@@ -11,5 +11,6 @@ var dir_954add30464b4aec8762ca12115d6425 =
     [ "LanguagePackRequest.h", "REST_2include_2controllers_2LanguagePackRequest_8h.html", "REST_2include_2controllers_2LanguagePackRequest_8h" ],
     [ "ListLanguages.h", "REST_2include_2controllers_2ListLanguages_8h_source.html", null ],
     [ "MultiSetValue.h", "REST_2include_2controllers_2MultiSetValue_8h.html", "REST_2include_2controllers_2MultiSetValue_8h" ],
-    [ "SetValue.h", "REST_2include_2controllers_2SetValue_8h.html", "REST_2include_2controllers_2SetValue_8h" ]
+    [ "SetValue.h", "REST_2include_2controllers_2SetValue_8h.html", "REST_2include_2controllers_2SetValue_8h" ],
+    [ "UpdateSubscriptions.h", "REST_2include_2controllers_2UpdateSubscriptions_8h.html", "REST_2include_2controllers_2UpdateSubscriptions_8h" ]
 ];

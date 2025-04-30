@@ -79,7 +79,8 @@ var annotated_dup =
         [ "SetValue", "classcatena_1_1REST_1_1SetValue.html", "classcatena_1_1REST_1_1SetValue" ],
         [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
         [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],
-        [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ]
+        [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ],
+        [ "UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", "classcatena_1_1REST_1_1UpdateSubscriptions" ]
       ] ],
       [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
       [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],

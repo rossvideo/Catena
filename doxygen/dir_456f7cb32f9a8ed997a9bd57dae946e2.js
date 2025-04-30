@@ -18,5 +18,5 @@ var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
     [ "ServiceImpl.h", "gRPC_2include_2ServiceImpl_8h.html", "gRPC_2include_2ServiceImpl_8h" ],
     [ "SetValue.h", "gRPC_2include_2SetValue_8h.html", "gRPC_2include_2SetValue_8h" ],
     [ "SharedFlags.h", "SharedFlags_8h.html", "SharedFlags_8h" ],
-    [ "UpdateSubscriptions.h", "UpdateSubscriptions_8h.html", "UpdateSubscriptions_8h" ]
+    [ "UpdateSubscriptions.h", "gRPC_2include_2UpdateSubscriptions_8h.html", "gRPC_2include_2UpdateSubscriptions_8h" ]
 ];

@@ -51,7 +51,8 @@ var hierarchy =
       [ "catena::REST::ListLanguages", "classcatena_1_1REST_1_1ListLanguages.html", null ],
       [ "catena::REST::MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", [
         [ "catena::REST::SetValue", "classcatena_1_1REST_1_1SetValue.html", null ]
-      ] ]
+      ] ],
+      [ "catena::REST::UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", null ]
     ] ],
     [ "catena::common::IConnect", "classcatena_1_1common_1_1IConnect.html", [
       [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
