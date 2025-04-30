@@ -177,11 +177,8 @@ class Connect : public IConnect {
             rc = p->toProto(*value, *authz_);
             //If the param conversion was successful, send the update
             if (rc.status == catena::StatusCode::OK) {
-                std::cout << "Update successful, notifying writer" << std::endl;
                 this->hasUpdate_ = true;
                 this->cv_.notify_one();
-            } else {
-                std::cout << "Update failed with status: " << rc.status << std::endl;
             }
         } catch(catena::exception_with_status& why) {
             // if an error is thrown, no update is pushed to the client
