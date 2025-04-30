@@ -49,11 +49,10 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     if (isWildcard(oid)) {
         // Expand wildcard and add all matching OIDs
         std::string basePath = oid.substr(0, oid.length() - 2);
-        catena::exception_with_status rc2{"", catena::StatusCode::OK};
         std::unique_ptr<IParam> baseParam;
         {
             std::lock_guard lg(dm.mutex());
-            baseParam = dm.getParam(basePath, rc2);
+            baseParam = dm.getParam(basePath, rc);
         }
         if (baseParam) {
             SubscriptionVisitor visitor(subscriptions_);
@@ -62,7 +61,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
             std::vector<std::unique_ptr<IParam>> allParams;
             {
                 std::lock_guard lg(dm.mutex());
-                allParams = dm.getTopLevelParams(rc2);
+                allParams = dm.getTopLevelParams(rc);
             }
             for (auto& param : allParams) {
                 std::string paramOid = param->getOid();
@@ -82,7 +81,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     return true;
 }
 
-// Remove a subscription (either unique or wildcard). Returns true if removed, false if not found
+// Remove a subscription (either unique or wildcard)
 bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm, catena::exception_with_status& rc) {
     subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
