@@ -128,12 +128,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa5e1956605616c5d8497e5b835f09444" id="r_aa5e1956605616c5d8497e5b835f09444"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#aa5e1956605616c5d8497e5b835f09444">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm) override</td></tr>
 <tr class="memdesc:aa5e1956605616c5d8497e5b835f09444"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
 <tr class="separator:aa5e1956605616c5d8497e5b835f09444"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2e11fd0dd3440e89f4be34bf736ec09" id="r_ad2e11fd0dd3440e89f4be34bf736ec09"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#ad2e11fd0dd3440e89f4be34bf736ec09">getUniqueSubscriptions</a> () override</td></tr>
-<tr class="memdesc:ad2e11fd0dd3440e89f4be34bf736ec09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all unique subscriptions.  <br /></td></tr>
-<tr class="separator:ad2e11fd0dd3440e89f4be34bf736ec09"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d4e391391e69f3963fef498f2dba150" id="r_a1d4e391391e69f3963fef498f2dba150"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a1d4e391391e69f3963fef498f2dba150">getWildcardSubscriptions</a> () override</td></tr>
-<tr class="memdesc:a1d4e391391e69f3963fef498f2dba150"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all wildcard subscriptions.  <br /></td></tr>
-<tr class="separator:a1d4e391391e69f3963fef498f2dba150"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a596b1976e0ecccf834f8f7ade92a92f4" id="r_a596b1976e0ecccf834f8f7ade92a92f4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a596b1976e0ecccf834f8f7ade92a92f4">isWildcard</a> (const std::string &amp;oid) override</td></tr>
 <tr class="memdesc:a596b1976e0ecccf834f8f7ade92a92f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if an OID is a wildcard subscription.  <br /></td></tr>
 <tr class="separator:a596b1976e0ecccf834f8f7ade92a92f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -230,66 +224,6 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Reference to the vector of all subscribed OIDs </dd></dl>
 
 <p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#ab5d55752a99c745909efca91f2931987">catena::common::ISubscriptionManager</a>.</p>
-
-</div>
-</div>
-<a id="ad2e11fd0dd3440e89f4be34bf736ec09" name="ad2e11fd0dd3440e89f4be34bf736ec09"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad2e11fd0dd3440e89f4be34bf736ec09">&#9670;&#160;</a></span>getUniqueSubscriptions()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::set&lt; std::string &gt; &amp; catena::common::SubscriptionManager::getUniqueSubscriptions </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get all unique subscriptions. </p>
-<dl class="section return"><dt>Returns</dt><dd>Reference to the set of unique subscriptions </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#aa1f6fad6fc414c795396f2d479c05402">catena::common::ISubscriptionManager</a>.</p>
-
-</div>
-</div>
-<a id="a1d4e391391e69f3963fef498f2dba150" name="a1d4e391391e69f3963fef498f2dba150"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1d4e391391e69f3963fef498f2dba150">&#9670;&#160;</a></span>getWildcardSubscriptions()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::set&lt; std::string &gt; &amp; catena::common::SubscriptionManager::getWildcardSubscriptions </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get all wildcard subscriptions. </p>
-<dl class="section return"><dt>Returns</dt><dd>Reference to the set of wildcard subscriptions (OIDs ending with "/*") </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a75ff72f7f641b23017e9bacd8620746e">catena::common::ISubscriptionManager</a>.</p>
 
 </div>
 </div>
