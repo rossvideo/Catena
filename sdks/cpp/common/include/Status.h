@@ -10,7 +10,7 @@
 
  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -163,19 +163,43 @@ enum StatusCode {
 
   // --- REST-specific status codes (do not use in gRPC) ---
   /**
-   * The following codes are intended for REST/HTTP APIs only and do not map to gRPC status codes.
-   * Use these codes to represent HTTP-specific conditions.
+   * The following codes are intended for REST/HTTP APIs only and do not map to 
+   * gRPC status codes. Use these codes to represent HTTP-specific conditions.
    */
-  CREATED               = 201, ///< HTTP 201: The request has succeeded and a new resource has been created as a result. REST only.
-  ACCEPTED              = 202, ///< HTTP 202: The request has been accepted for processing, but the processing has not been completed. REST only.
-  NO_CONTENT            = 204, ///< HTTP 204: The server successfully processed the request and is not returning any content. REST only.
-  UNPROCESSABLE_ENTITY  = 422, ///< HTTP 422: The request was well-formed but was unable to be followed due to semantic errors. REST only.
-  METHOD_NOT_ALLOWED    = 405, ///< HTTP 405: The method is not allowed for the requested resource. REST only.
-  CONFLICT              = 409, ///< HTTP 409: The request could not be completed due to a conflict. REST only.
-  TOO_MANY_REQUESTS     = 429, ///< HTTP 429: The user has sent too many requests in a given amount of time. REST only.
-  BAD_GATEWAY           = 502, ///< HTTP 502: The server was acting as a gateway or proxy and received an invalid response. REST only.
-  SERVICE_UNAVAILABLE   = 503, ///< HTTP 503: The server is not ready to handle the request. REST only.
-  GATEWAY_TIMEOUT       = 504, ///< HTTP 504: The server was acting as a gateway or proxy and did not receive a timely response. REST only.
+  /// The request has succeeded and a new resource has been created as a result.
+  CREATED = 201,
+
+  /// The request has been accepted for processing, but the processing has not
+  /// yet been completed.
+  ACCEPTED = 202,
+
+  /// The server successfully processed the request and is not returning any
+  /// content in the response.
+  NO_CONTENT = 204,
+
+  /// The request was well-formed but was unable to be followed due to semantic
+  /// errors in the request.
+  UNPROCESSABLE_ENTITY = 422,
+
+  /// The method is not allowed for the requested resource.
+  METHOD_NOT_ALLOWED = 405,
+
+  /// The request could not be completed due to a conflict.
+  CONFLICT = 409,
+
+  /// The user has sent too many requests in a given amount of time.
+  TOO_MANY_REQUESTS = 429,
+
+  /// The server was acting as a gateway/proxy and received an invalid response
+  /// from the upstream server.
+  BAD_GATEWAY = 502,
+
+  /// The server is not ready to handle the request.
+  SERVICE_UNAVAILABLE = 503,
+
+  /// The server was acting as a gateway/proxy and did not receive a timely
+  /// response from the upstream server.
+  GATEWAY_TIMEOUT = 504,
 };
 
 /**
