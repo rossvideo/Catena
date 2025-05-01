@@ -46,17 +46,27 @@ namespace common {
 bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) {
     subscriptionLock_.lock();
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
+    
+    // First check if the OID exists in the device model
+    std::unique_ptr<IParam> param;
+    {
+        std::lock_guard lg(dm.mutex());
+        param = dm.getParam(oid, rc);
+    }
+    
+    if (!param) {
+        rc = catena::exception_with_status("OID not found: " + oid, 
+                                         catena::StatusCode::NOT_FOUND);
+        subscriptionLock_.unlock();
+        return false;
+    }
+
     if (isWildcard(oid)) {
         // Expand wildcard and add all matching OIDs
         std::string basePath = oid.substr(0, oid.length() - 2);
-        std::unique_ptr<IParam> baseParam;
-        {
-            std::lock_guard lg(dm.mutex());
-            baseParam = dm.getParam(basePath, rc);
-        }
-        if (baseParam) {
+        if (param->getOid() == basePath) {
             SubscriptionVisitor visitor(subscriptions_);
-            ParamVisitor::traverseParams(baseParam.get(), basePath, dm, visitor);
+            ParamVisitor::traverseParams(param.get(), basePath, dm, visitor);
         } else {
             std::vector<std::unique_ptr<IParam>> allParams;
             {

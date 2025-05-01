@@ -54,4 +54,5 @@ void AddLanguage::proceed() {
 void AddLanguage::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "AddLanguage[" << objectId_ << "] finished\n";
+    writer_.finish();
 }

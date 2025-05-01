@@ -63,8 +63,21 @@ class ExecuteCommand : public ICallData {
         return new ExecuteCommand(socket, context, dm);
     }
 
-    ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    /**
+     * @brief Constructor for the ExecuteCommand RPC.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    /**
+     * @brief ExecuteCommand's main process.
+     */
     void proceed() override;
+    /**
+     * @brief Finishes the ExecuteCommand process
+     */
     void finish() override;
 
   private:

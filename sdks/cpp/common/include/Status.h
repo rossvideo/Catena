@@ -30,8 +30,9 @@
 namespace catena {
 
 /**
- * @brief Status Code - reproduced from google's grpc project.
+ * @brief Status Code - reproduced from google's grpc project and extended for REST.
  * 
+ * Codes 0-16 are compatible with gRPC. Codes >= 20 are REST-specific and should not be used in gRPC contexts.
  * The license for this code is Apache 2.0 which permits redistribution
  * and modification. The original code is available at: https://github.com/grpc/grpc
  * 
@@ -156,7 +157,23 @@ enum StatusCode {
   DATA_LOSS = 15,
 
   /// Force users to include a default branch:
-  DO_NOT_USE = -1
+  DO_NOT_USE = -1,
+
+  // --- REST-specific status codes (do not use in gRPC) ---
+  /**
+   * The following codes are intended for REST/HTTP APIs only and do not map to gRPC status codes.
+   * Use these codes to represent HTTP-specific conditions.
+   */
+  CREATED               = 100, ///< HTTP 201: The request has succeeded and a new resource has been created as a result. REST only.
+  ACCEPTED              = 101, ///< HTTP 202: The request has been accepted for processing, but the processing has not been completed. REST only.
+  NO_CONTENT            = 102, ///< HTTP 204: The server successfully processed the request and is not returning any content. REST only.
+  UNPROCESSABLE_ENTITY  = 20,  ///< HTTP 422: The request was well-formed but was unable to be followed due to semantic errors. REST only.
+  METHOD_NOT_ALLOWED    = 21,  ///< HTTP 405: The method is not allowed for the requested resource. REST only.
+  CONFLICT              = 22,  ///< HTTP 409: The request could not be completed due to a conflict. REST only.
+  TOO_MANY_REQUESTS     = 23,  ///< HTTP 429: The user has sent too many requests in a given amount of time. REST only.
+  BAD_GATEWAY           = 24,  ///< HTTP 502: The server was acting as a gateway or proxy and received an invalid response. REST only.
+  SERVICE_UNAVAILABLE   = 25,  ///< HTTP 503: The server is not ready to handle the request. REST only.
+  GATEWAY_TIMEOUT       = 26,  ///< HTTP 504: The server was acting as a gateway or proxy and did not receive a timely response. REST only.
 };
 
 /**

@@ -89,7 +89,6 @@ void CatenaServiceImpl::run() {
                     std::string rpcKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        catena::exception_with_status rc("", catena::StatusCode::OK);
                         SocketWriter(socket, context.origin()).write(rc);
                     // Otherwise routing to rpc.
                     } else if (router_.canMake(rpcKey)) {
@@ -97,10 +96,18 @@ void CatenaServiceImpl::run() {
                         rpc->proceed();
                         rpc->finish();
                     // ERROR
-                    } else {
+                    } else { 
                         rc = catena::exception_with_status("RPC " + rpcKey + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
                     }
                 // ERROR
+                } catch (const catena::exception_with_status& e) {
+                    rc = std::move(catena::exception_with_status(e.what(), e.status)); 
+                } catch (const std::invalid_argument& e) {
+                    rc = catena::exception_with_status(e.what(), catena::StatusCode::INVALID_ARGUMENT);
+                } catch (const std::runtime_error& e) {
+                    rc = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+                } catch (const std::exception& e) {
+                    rc = catena::exception_with_status(e.what(), catena::StatusCode::UNKNOWN);
                 } catch (...) {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
@@ -112,7 +119,7 @@ void CatenaServiceImpl::run() {
                 // Try ensures that we don't fail to decrement active RPCs.
                 try {
                     SocketWriter writer(socket);
-                    writer.write(rc);
+                    writer.finish(catena::REST::codeMap_.at(rc.status));
                 } catch (...) {}
             }
             // rpc completed. Decrementing activeRPCs.

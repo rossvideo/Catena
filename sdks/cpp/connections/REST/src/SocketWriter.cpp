@@ -34,7 +34,7 @@ void SocketWriter::write(catena::exception_with_status& err) {
     if (response_.empty() && err.status == catena::StatusCode::OK) {
         errCode = 204;
     } else {
-        errCode = codeMap_.at(err.status);
+        errCode = codeMap_.at(err.status).code;
     }
     // Returning the response.
     std::string headers = "HTTP/1.1 " + std::to_string(errCode) + " " + err.what() + "\r\n"
@@ -69,11 +69,21 @@ void SocketWriter::finish(google::protobuf::Message& msg) {
 }
 
 
+void SocketWriter::finish(const HttpStatus& status) {
+    if (multi_) {
+        response_ = "{\"response\":[" + response_ + "]}";
+    }
+    std::string headers = "HTTP/1.1 " + std::to_string(status.code) + " " + status.reason + "\r\n"
+                            "Content-Type: application/json\r\n"
+                            "Content-Length: " + std::to_string(response_.size()) + "\r\n" +
+                            CORS_ +
+                            "Connection: close\r\n\r\n";
+    boost::asio::write(socket_, boost::asio::buffer(headers + response_));
+}
 
-SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin)
+SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const HttpStatus& status)
     : socket_{socket} {
-    // Writing the headers.
-    std::string headers = "HTTP/1.1 200\r\n"
+    std::string headers = "HTTP/1.1 " + std::to_string(status.code) + " " + status.reason + "\r\n"
                           "Content-Type: text/event-stream\r\n"
                           "Access-Control-Allow-Origin: " + origin + "\r\n"
                           "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
@@ -102,5 +112,5 @@ void SSEWriter::write(google::protobuf::Message& msg) {
 void SSEWriter::write(catena::exception_with_status& err) {
     // Writing error message.
     std::string errMsg = err.what();
-    boost::asio::write(socket_, boost::asio::buffer("data: " + std::to_string(codeMap_.at(err.status)) + " " + errMsg + "\n\n"));
+    boost::asio::write(socket_, boost::asio::buffer("data: " + codeMap_.at(err.status).reason + " " + errMsg + "\n\n"));
 }

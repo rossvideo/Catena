@@ -131,7 +131,7 @@ private:
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<SSEWriter> writer_{nullptr};
 
     /**
      * @brief The request payload
@@ -177,6 +177,11 @@ private:
      * @brief The device model
      */
     IDevice& dm_;
+    
+    /**
+     * @brief The error status
+     */
+    catena::exception_with_status rc_;
 };
 
 } // namespace REST 

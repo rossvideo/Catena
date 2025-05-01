@@ -82,7 +82,7 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the BasicParamInfoRequest process.
+     * @brief Finishes the BasicParamInfoRequest process
      */
     void finish() override;
     
@@ -138,17 +138,17 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     /**
      * @brief The SSEWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<SSEWriter> writer_{nullptr};
     
+    /**
+     * @brief The error status
+     */
+    catena::exception_with_status rc_;
+
     /**
      * @brief The device to get parameter info from.
      */
     catena::common::IDevice& dm_;
-    
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
 
     /**
      * @brief The oid prefix to get parameter info for.

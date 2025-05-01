@@ -56,6 +56,11 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
+struct HttpStatus {
+    int code;
+    std::string reason;
+};
+
 /**
  * @brief Helper class used to write a unary response to a socket using boost.
  * 
@@ -97,6 +102,13 @@ class SocketWriter : public ISocketWriter {
      * finish().
      */
     void finish(google::protobuf::Message& msg);
+    /**
+     * @brief Finishes the writing process by writing a message to the socket.
+     * 
+     * SocketWriter exlusive function which acts as a call to write() then
+     * finish().
+     */
+    void finish(const HttpStatus& status);
 
   private:
     /**
@@ -129,11 +141,12 @@ class SocketWriter : public ISocketWriter {
 class SSEWriter : public ISocketWriter {
   public:
     /**
-     * @brief Constructor for SSEWriter.
+     * @brief Constructor for SSEWriter with status code and reason.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
+     * @param status The HTTP status code and reason.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin = "*");
+    SSEWriter(tcp::socket& socket, const std::string& origin, const HttpStatus& status = {200, "OK"});
     /**
      * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.
@@ -161,25 +174,35 @@ class SSEWriter : public ISocketWriter {
 /**
  * @brief Maps catena::StatusCode to HTTP status codes.
  */
-const std::map<catena::StatusCode, int> codeMap_ {
-  {catena::StatusCode::OK,                  200},
-  {catena::StatusCode::CANCELLED,           410},
-  {catena::StatusCode::UNKNOWN,             404},
-  {catena::StatusCode::INVALID_ARGUMENT,    406},
-  {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-  {catena::StatusCode::NOT_FOUND,           410},
-  {catena::StatusCode::ALREADY_EXISTS,      409},
-  {catena::StatusCode::PERMISSION_DENIED,   401},
-  {catena::StatusCode::UNAUTHENTICATED,     407},
-  {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-  {catena::StatusCode::FAILED_PRECONDITION, 412},
-  {catena::StatusCode::ABORTED,             10},  // TODO
-  {catena::StatusCode::OUT_OF_RANGE,        416},
-  {catena::StatusCode::UNIMPLEMENTED,       501},
-  {catena::StatusCode::INTERNAL,            500},
-  {catena::StatusCode::UNAVAILABLE,         503},
-  {catena::StatusCode::DATA_LOSS,           15},  // TODO
-  {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
+const std::map<catena::StatusCode, HttpStatus> codeMap_ {
+  {catena::StatusCode::OK,                  {200, "OK"}},
+  {catena::StatusCode::CANCELLED,           {400, "Cancelled"}},
+  {catena::StatusCode::UNKNOWN,             {500, "Internal Server Error"}},
+  {catena::StatusCode::INVALID_ARGUMENT,    {400, "Bad Request"}},
+  {catena::StatusCode::DEADLINE_EXCEEDED,   {408, "Request Timeout"}},
+  {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
+  {catena::StatusCode::ALREADY_EXISTS,      {409, "Conflict"}},
+  {catena::StatusCode::PERMISSION_DENIED,   {403, "Forbidden"}},
+  {catena::StatusCode::UNAUTHENTICATED,     {401, "Unauthorized"}},
+  {catena::StatusCode::RESOURCE_EXHAUSTED,  {429, "Too Many Requests"}},
+  {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},
+  {catena::StatusCode::ABORTED,             {409, "Conflict"}},
+  {catena::StatusCode::OUT_OF_RANGE,        {416, "Range Not Satisfiable"}},
+  {catena::StatusCode::UNIMPLEMENTED,       {501, "Not Implemented"}},
+  {catena::StatusCode::INTERNAL,            {500, "Internal Server Error"}},
+  {catena::StatusCode::UNAVAILABLE,         {503, "Service Unavailable"}},
+  {catena::StatusCode::DATA_LOSS,           {500, "Internal Server Error"}},
+  {catena::StatusCode::DO_NOT_USE,          {500, "Internal Server Error"}},
+  {catena::StatusCode::CREATED,             {201, "Created"}},
+  {catena::StatusCode::ACCEPTED,            {202, "Accepted"}},
+  {catena::StatusCode::NO_CONTENT,          {204, "No Content"}},
+  {catena::StatusCode::UNPROCESSABLE_ENTITY,{422, "Unprocessable Entity"}},
+  {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
+  {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
+  {catena::StatusCode::TOO_MANY_REQUESTS,   {429, "Too Many Requests"}},
+  {catena::StatusCode::BAD_GATEWAY,         {502, "Bad Gateway"}},
+  {catena::StatusCode::SERVICE_UNAVAILABLE, {503, "Service Unavailable"}},
+  {catena::StatusCode::GATEWAY_TIMEOUT,     {504, "Gateway Timeout"}},
 };
 
 }; // Namespace REST
