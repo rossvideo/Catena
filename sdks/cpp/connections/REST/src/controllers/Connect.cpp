@@ -8,12 +8,14 @@ int Connect::objectCounter_ = 0;
 
 Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, context_{context},
-    catena::common::Connect(dm, context.authorizationEnabled(), context.jwsToken(), context.getSubscriptionManager()) {
+    catena::common::Connect(dm, context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
     forceConnection_ = context.fields("force_connection") == "true";
+    // Setting up the client's authorizer.
+    initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
 }
 
 void Connect::proceed() {

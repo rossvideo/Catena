@@ -76,16 +76,10 @@ class Connect : public IConnect {
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, bool authz, const std::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
+    Connect(IDevice& dm, ISubscriptionManager& subscriptionManager) : 
         dm_{dm}, 
         subscriptionManager_{subscriptionManager},
         detailLevel_{catena::Device_DetailLevel_UNSET} {
-        if (authz) {
-            sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
-            authz_ = sharedAuthz_.get();
-        } else {
-            authz_ = &catena::common::Authorizer::kAuthzDisabled;
-        }
     }
     /**
      * @brief Connect does not have copy semantics
@@ -211,6 +205,20 @@ class Connect : public IConnect {
             this->cv_.notify_one();
         } catch(catena::exception_with_status& why){
             // if an error is thrown, no update is pushed to the client
+        }
+    }
+
+    /**
+     * @brief Sets up the authorizer object with the jwsToken.
+     * @param jwsToken The jwsToken to use for authorization.
+     * @param authz true if authorization is enabled, false otherwise.
+     */
+    void initAuthz_(const std::string& jwsToken, bool authz = false) override {
+        if (authz) {
+            sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
+            authz_ = sharedAuthz_.get();
+        } else {
+            authz_ = &catena::common::Authorizer::kAuthzDisabled;
         }
     }
 
