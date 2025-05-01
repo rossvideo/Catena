@@ -59,7 +59,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
-        catena::common::Connect(dm, service->authorizationEnabled(), "", service->getSubscriptionManager()) {
+        catena::common::Connect(dm, service->getSubscriptionManager()) {
             std::cout << "Calling registerItem with: " << this << std::endl;
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -110,6 +110,13 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 hasUpdate_ = true;
                 this->cv_.notify_one();
             });
+            // Setting up the authorizer.
+            if (service_->authorizationEnabled()) {
+                sharedAuthz_ = std::make_shared<catena::common::Authorizer>(getJWSToken_());
+                authz_ = sharedAuthz_.get();
+            } else {
+                authz_ = &catena::common::Authorizer::kAuthzDisabled;
+            }
             // Waiting for a value set by server to be sent to execute code.
             valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                 updateResponse_(oid, idx, p);

@@ -76,17 +76,17 @@ class Connect : public IConnect {
      * @param jwsToken The client's JWS token.
      * @param subscriptionManager The subscription manager.
      */
-    Connect(IDevice& dm, bool authz, const std::string& jwsToken, ISubscriptionManager& subscriptionManager) : 
+    Connect(IDevice& dm, ISubscriptionManager& subscriptionManager) : 
         dm_{dm}, 
         subscriptionManager_{subscriptionManager},
-        detailLevel_{catena::Device_DetailLevel_UNSET} {
-        if (authz) {
-            sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
-            authz_ = sharedAuthz_.get();
-        } else {
-            authz_ = &catena::common::Authorizer::kAuthzDisabled;
-        }
-    }
+        detailLevel_{catena::Device_DetailLevel_UNSET} {}
+        // if (authz) {
+        //     sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
+        //     authz_ = sharedAuthz_.get();
+        // } else {
+        //     authz_ = &catena::common::Authorizer::kAuthzDisabled;
+        // }
+    // }
     /**
      * @brief Connect does not have copy semantics
      */
