@@ -32,7 +32,9 @@ namespace catena {
 /**
  * @brief Status Code - reproduced from google's grpc project and extended for REST.
  * 
- * Codes 0-16 are compatible with gRPC. Codes >= 20 are REST-specific and should not be used in gRPC contexts.
+ * Codes 0-16 are compatible with gRPC. Codes mapped to HTTP status codes are 
+ * REST-specific and should not be used in gRPC contexts.
+ * 
  * The license for this code is Apache 2.0 which permits redistribution
  * and modification. The original code is available at: https://github.com/grpc/grpc
  * 
