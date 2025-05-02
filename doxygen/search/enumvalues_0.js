@@ -1,5 +1,6 @@
 var searchData=
 [
   ['aborted_0',['ABORTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a7f8f3a9415da86dce4ee44a26e5f6548',1,'catena']]],
-  ['already_5fexists_1',['ALREADY_EXISTS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]]
+  ['accepted_1',['ACCEPTED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb',1,'catena']]],
+  ['already_5fexists_2',['ALREADY_EXISTS',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3d430574b3891ed9968337f9840e5940',1,'catena']]]
 ];
