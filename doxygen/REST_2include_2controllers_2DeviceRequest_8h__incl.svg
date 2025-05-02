@@ -57,7 +57,7 @@ var sectionId = 'dynsection-0';
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Implements REST DeviceRequest RPC.">
+<g id="a_Node000001"><a xlink:title="Implements REST DeviceRequest controller.">
 <polygon fill="#999999" stroke="#666666" points="1436,-712 1213,-712 1213,-671 1436,-671 1436,-712"/>
 <text text-anchor="start" x="1221" y="-700" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1221" y="-689" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -249,7 +249,7 @@ var sectionId = 'dynsection-0';
 <!-- Node56 -->
 <g id="Node000056" class="node">
 <title>Node56</title>
-<g id="a_Node000056"><a xlink:href="ICallData_8h.html" target="_top" xlink:title="Interface class for REST RPCs.">
+<g id="a_Node000056"><a xlink:href="ICallData_8h.html" target="_top" xlink:title="Interface class for REST controllers.">
 <polygon fill="white" stroke="#666666" points="1639,-635 1522,-635 1522,-616 1639,-616 1639,-635"/>
 <text text-anchor="middle" x="1580.5" y="-623" font-family="Helvetica,sans-Serif" font-size="10.00">interface/ICallData.h</text>
 </a>
