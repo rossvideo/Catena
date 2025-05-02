@@ -48,7 +48,7 @@ paths:
     $ref: './paths/GetPopulatedSlots.yaml'
   /execute-command/{slot}:
     $ref: "./paths/ExecuteCommand.yaml"
-  /ExternalObjectRequest/{slot}:
+  /external-object-request/{slot}:
     $ref: './paths/ExternalObjectRequest.yaml'
   /basic-param-info-request/{slot}:
     $ref: './paths/BasicParamInfoRequest.yaml'
