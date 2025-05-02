@@ -75,9 +75,9 @@ class ISocketWriter {
 
     /**
      * @brief Finishes writing the HTTP response.
-     * @param err Optional error status to finish with. If not provided, finishes with OK status.
+     * @param err The error status to finish with.
      */
-    virtual void finish(const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) = 0;
+    virtual void finish(const catena::exception_with_status& err) = 0;
 };
  
 }; // Namespace REST
