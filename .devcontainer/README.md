@@ -19,41 +19,68 @@
 - this is the settings for vscode / curser to use when creating the dev container
 
 ## Setup
-1. be on not windows (in a wsl is ok)
+1. Install wsl
 
-2. install the Dev conatiner extenshion on your host systems vscode / curser
+2. Install the Dev container extension on your host systems vscode / curser
 ```sh
 code --install-extension ms-vscode-remote.remote-containers
 ```
 
-3. install docker and docker compose
-```sh
-# for ubuntu 24.04
-## setup the certs for docker
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+3. Generate GitHub personal accesss token
 
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-```
-```sh
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+Request to be in rossvideo github group and set up SSO
+Navigate to user settings in github  
+Developer settings  
+Personal access token  
+Tokens (classic)  
+Generate new token (classic)  
+Use passkey  
+Enable read:packages  
+Generate token  
+Save key somewhere  
+Navigate back to Tokens (classic)  
+Configure SSO -> rossvideo -> Authorize  
 
-sudo groupadd docker
-sudo usermod -aG docker $USER
-newgrp docker
-sudo systemctl enable docker.service
-sudo systemctl enable containerd.service
-sudo service docker start
+4. Run Powershell script to generate WSL ubuntu instance and setup docker
+```sh
+.\wsl.ps1 $USERNAME $GITHUB_SIGNING_NAME $ROSS_EMAIL
 ```
 
-4. pull the repo
-5. ctl+shift+p `Dev Containers: Rebuild Without Cache and Reopen in Container`
+5. Login to docker using the generated key
+
+From inside the Cursor terminal
+```sh
+echo $KEY | docker login ghcr.io -u $USERNAME --password-stdin
+```
+where KEY is the token you made and USERNAME is your github 
+
+6. Setup docker inside WSL
+
+From inside Cursor,
+```sh
+CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Container
+```
+Once that finishes, as instructed by the terminal, close cursor  
+Run command from Powershell
+```sh
+wsl -d CatenaUbuntu
+```
+from inside the WSL shell
+```sh
+cd ~/Catena
+code .
+```
+From inside Cursor,
+```sh
+CTRL + SHIFT + P -> Dev Containers: Rebuild without cache and Reopen in Container
+```
+5. Setup ninja builds
+
+From inside the WSL shell in Cursor
+```sh
+cd  ~/Catena/sdk/cpp/build
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
+ninja clean
+ninja
+```
 6. your good to dev now :D
