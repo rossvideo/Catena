@@ -12,8 +12,10 @@
 - a service container
 - - this container is a minifide compiled version of Cantena
 
-### toolchain.env
-- this conatined the versions of all the tools beening used in the toolchain conatiner and the default branch of Catena for the dev conatiner
+### toolchain
+
+the toolchain is generated from a docker file installing tools defined in [toolchain-cpp.dockerfile](toolchain-cpp.dockerfile)  
+The version of each tool is defined in [toolchain-cpp.env](toolchain-cpp.env)
 
 ### devcontainer.json
 - this is the settings for vscode / curser to use when creating the dev container
