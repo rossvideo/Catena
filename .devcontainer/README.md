@@ -14,8 +14,8 @@
 
 ### toolchain
 
-the toolchain is generated from a docker file installing tools defined in [toolchain-cpp.dockerfile](toolchain-cpp.dockerfile)  
-The version of each tool is defined in [toolchain-cpp.env](toolchain-cpp.env)
+the toolchain is generated from a docker file installing tools defined in [toolchain-cpp.dockerfile](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain-cpp.dockerfile)  
+The version of each tool is defined in [toolchain-cpp.env](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/toolchain-cpp.env)
 
 ### devcontainer.json
 - this is the settings for vscode / curser to use when creating the dev container
