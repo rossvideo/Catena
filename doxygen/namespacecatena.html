@@ -154,21 +154,9 @@ Enumerations</h2></td></tr>
 , <br />
 &#160;&#160;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551">DATA_LOSS</a> = 15
 , <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f">DO_NOT_USE</a> = -1
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af5ae6e1ca9fd3829acb25e84162b1fd8">CREATED</a> = 201
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb">ACCEPTED</a> = 202
-, <br />
-&#160;&#160;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ac66c6fe414f6276c8f5cae9095e3caac">NO_CONTENT</a> = 204
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a68df7493cc4c2eb86af4425169357317">UNPROCESSABLE_ENTITY</a> = 422
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a93b4a2195385df1142c8042e414a6e75">METHOD_NOT_ALLOWED</a> = 405
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ace0923fbefae354aa5f6fd7d6735c764">CONFLICT</a> = 409
-, <br />
-&#160;&#160;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a99e6e5bcff220e13c14f05e5b7f27ecc">TOO_MANY_REQUESTS</a> = 429
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca">BAD_GATEWAY</a> = 502
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201">SERVICE_UNAVAILABLE</a> = 503
-, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696">GATEWAY_TIMEOUT</a> = 504
 <br />
  }</td></tr>
-<tr class="memdesc:a8883f03e942ef610b66860d5b52f8d85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status Code - reproduced from google's grpc project and extended for REST.  <a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">More...</a><br /></td></tr>
+<tr class="memdesc:a8883f03e942ef610b66860d5b52f8d85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Status Code - reproduced from google's grpc project.  <a href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">More...</a><br /></td></tr>
 <tr class="separator:a8883f03e942ef610b66860d5b52f8d85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
@@ -204,8 +192,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Status Code - reproduced from google's grpc project and extended for <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a>. </p>
-<p>Codes 0-16 are compatible with gRPC. Codes mapped to HTTP status codes are REST-specific and should not be used in gRPC contexts.</p>
+<p>Status Code - reproduced from google's grpc project. </p>
 <p>The license for this code is Apache 2.0 which permits redistribution and modification. The original code is available at: <a href="https://github.com/grpc/grpc">https://github.com/grpc/grpc</a></p>
 <p>The governing license is available here: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
 <p>The intent here is to re-use the grpc status codes without creating a dependency on the grpc project. The risk of the values of these codes changing is low, but if it does happen, we can always update this file. </p>
@@ -251,27 +238,6 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551" name="a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551"></a>DATA_LOSS&#160;</td><td class="fielddoc"><p>Unrecoverable data loss or corruption. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f" name="a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f"></a>DO_NOT_USE&#160;</td><td class="fielddoc"><p>Force users to include a default branch: </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85af5ae6e1ca9fd3829acb25e84162b1fd8" name="a8883f03e942ef610b66860d5b52f8d85af5ae6e1ca9fd3829acb25e84162b1fd8"></a>CREATED&#160;</td><td class="fielddoc"><p>The request has succeeded and a new resource has been created as a result. </p>
-<p>The following codes are intended for REST/HTTP APIs only and do not map to gRPC status codes. Use these codes to represent HTTP-specific conditions. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb" name="a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb"></a>ACCEPTED&#160;</td><td class="fielddoc"><p>The request has been accepted for processing, but the processing has not yet been completed. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85ac66c6fe414f6276c8f5cae9095e3caac" name="a8883f03e942ef610b66860d5b52f8d85ac66c6fe414f6276c8f5cae9095e3caac"></a>NO_CONTENT&#160;</td><td class="fielddoc"><p>The server successfully processed the request and is not returning any content in the response. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a68df7493cc4c2eb86af4425169357317" name="a8883f03e942ef610b66860d5b52f8d85a68df7493cc4c2eb86af4425169357317"></a>UNPROCESSABLE_ENTITY&#160;</td><td class="fielddoc"><p>The request was well-formed but was unable to be followed due to semantic errors in the request. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a93b4a2195385df1142c8042e414a6e75" name="a8883f03e942ef610b66860d5b52f8d85a93b4a2195385df1142c8042e414a6e75"></a>METHOD_NOT_ALLOWED&#160;</td><td class="fielddoc"><p>The method is not allowed for the requested resource. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85ace0923fbefae354aa5f6fd7d6735c764" name="a8883f03e942ef610b66860d5b52f8d85ace0923fbefae354aa5f6fd7d6735c764"></a>CONFLICT&#160;</td><td class="fielddoc"><p>The request could not be completed due to a conflict. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a99e6e5bcff220e13c14f05e5b7f27ecc" name="a8883f03e942ef610b66860d5b52f8d85a99e6e5bcff220e13c14f05e5b7f27ecc"></a>TOO_MANY_REQUESTS&#160;</td><td class="fielddoc"><p>The user has sent too many requests in a given amount of time. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca" name="a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca"></a>BAD_GATEWAY&#160;</td><td class="fielddoc"><p>The server was acting as a gateway/proxy and received an invalid response from the upstream server. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201" name="a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201"></a>SERVICE_UNAVAILABLE&#160;</td><td class="fielddoc"><p>The server is not ready to handle the request. </p>
-</td></tr>
-<tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696" name="a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696"></a>GATEWAY_TIMEOUT&#160;</td><td class="fielddoc"><p>The server was acting as a gateway/proxy and did not receive a timely response from the upstream server. </p>
 </td></tr>
 </table>
 
