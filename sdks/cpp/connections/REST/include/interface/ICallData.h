@@ -30,7 +30,7 @@
 
 /**
  * @file ICallData.h
- * @brief Interface class for REST endpoints.
+ * @brief Interface class for REST controllers.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -62,17 +62,17 @@ namespace REST {
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
 /**
- * @brief Interface class for the REST API endpoints.
+ * @brief Interface class for REST API controllers.
  */
 class ICallData {
 	public:
 		virtual ~ICallData() = default;
 		/**
-		 * @brief The endpoint's main process.
+		 * @brief The controller's main process.
 		 */
 		virtual void proceed() = 0;
 		/**
-		 * @brief Finishes the endpoint.
+		 * @brief Finishes the controller.
 		 */
 		virtual void finish() = 0;
 

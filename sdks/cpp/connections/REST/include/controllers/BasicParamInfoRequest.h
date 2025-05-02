@@ -62,7 +62,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the BasicParamInfoRequest REST endpoint.
+ * @brief ICallData class for the BasicParamInfoRequest REST controller.
  */
 class BasicParamInfoRequest : public ICallData {
   public:
@@ -71,7 +71,7 @@ class BasicParamInfoRequest : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the BasicParamInfoRequest endpoint.
+     * @brief Constructor for the BasicParamInfoRequest controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -90,13 +90,13 @@ class BasicParamInfoRequest : public ICallData {
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, catena::common::IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new BasicParamInfoRequest(socket, context, dm);
     }
     

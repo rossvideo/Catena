@@ -30,7 +30,7 @@
 
 /**
  * @file Connect.h
- * @brief Implements REST Connect endpoint.
+ * @brief Implements REST Connect controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -60,7 +60,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the Connect REST endpoint.
+ * @brief ICallData class for the Connect REST controller.
  */
 class Connect : public ICallData, public catena::common::Connect {
   public:
@@ -69,7 +69,7 @@ class Connect : public ICallData, public catena::common::Connect {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the Connect endpoint.
+     * @brief Constructor for the Connect controller.
      *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -77,15 +77,17 @@ class Connect : public ICallData, public catena::common::Connect {
      */ 
     Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
-     * Connect main process
+     * @brief Connect's main process.
      */
     void proceed() override;
+    
     /**
-     * Finishes the Connect process by disconnecting listeners.
+     * @brief Finishes the Connect process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

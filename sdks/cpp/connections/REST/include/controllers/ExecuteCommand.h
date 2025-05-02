@@ -30,7 +30,7 @@
 
 /**
  * @file ExecuteCommand.h
- * @brief Implements REST ExecuteCommand endpoint.
+ * @brief Implements REST ExecuteCommand controller.
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -56,7 +56,11 @@ namespace REST {
 
 using catena::common::IParam;
 using catena::common::IDevice;
+using catena::common::timeNow;
 
+/**
+ * @brief Controller class for handling ExecuteCommand REST requests.
+ */
 class ExecuteCommand : public ICallData {
   public:
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
@@ -64,8 +68,7 @@ class ExecuteCommand : public ICallData {
     }
 
     /**
-     * @brief Constructor for the ExecuteCommand endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the ExecuteCommand controller.
      *
      * @param socket The socket to write the response to.
      * @param context The SocketReader object.
@@ -84,7 +87,7 @@ class ExecuteCommand : public ICallData {
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The SocketReader object.
@@ -101,9 +104,8 @@ class ExecuteCommand : public ICallData {
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
-                << catena::common::timeNow() << " status: "
-                << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
-                << std::endl;
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
     }
 
   private:

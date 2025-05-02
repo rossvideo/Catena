@@ -30,7 +30,7 @@
 
 /**
  * @file AddLanguage.h
- * @brief Implements REST AddLanguage endpoint.
+ * @brief Implements REST AddLanguage controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -58,7 +58,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the AddLanguage REST endpoint.
+ * @brief ICallData class for the AddLanguage REST controller.
  */
 class AddLanguage : public ICallData {
   public:
@@ -67,7 +67,7 @@ class AddLanguage : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the AddLanguage endpoint.
+     * @brief Constructor for the AddLanguage controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -83,7 +83,7 @@ class AddLanguage : public ICallData {
      */
     void finish() override;
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

@@ -30,7 +30,7 @@
 
 /**
  * @file GetPopulatedSlots.h
- * @brief Implements REST GetPopulatedSlots endpoint.
+ * @brief Implements REST GetPopulatedSlots controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the GetPopulatedSlots REST endpoint.
+ * @brief ICallData class for the GetPopulatedSlots REST controller.
  */
 class GetPopulatedSlots : public ICallData {
   public:
@@ -68,24 +68,25 @@ class GetPopulatedSlots : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the GetPopulatedSlots endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the GetPopulatedSlots controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the slot of.
+     * @param dm The device to get the populated slots of.
      */ 
     GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief GetPopulatedSlots's main process.
      */
     void proceed() override;
+    
     /**
-     * @brief Finishes the GetPopulatedSlots process
+     * @brief Finishes the GetPopulatedSlots process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

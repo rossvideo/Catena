@@ -30,7 +30,7 @@
 
 /**
  * @file DeviceRequest.h
- * @brief Implements REST DeviceRequest endpoint.
+ * @brief Implements REST DeviceRequest controller.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the DeviceRequest REST endpoint.
+ * @brief ICallData class for the DeviceRequest REST controller.
  */
 class DeviceRequest : public ICallData {
   public:
@@ -68,8 +68,7 @@ class DeviceRequest : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the DeviceRequest endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the DeviceRequest controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -82,12 +81,12 @@ class DeviceRequest : public ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the DeviceRequest process
+     * @brief Finishes the DeviceRequest process.
      */
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

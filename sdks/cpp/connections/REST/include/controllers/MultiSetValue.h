@@ -30,7 +30,7 @@
 
 /**
  * @file MultiSetValue.h
- * @brief Implements REST MultiSetValue endpoint.
+ * @brief Implements REST MultiSetValue controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the MultiSetValue REST endpoint.
+ * @brief ICallData class for the MultiSetValue REST controller.
  */
 class MultiSetValue : public ICallData {
   public:
@@ -68,12 +68,11 @@ class MultiSetValue : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the MultiSetValue endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the MultiSetValue controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set the values in.
+     * @param dm The device to set values on.
      */ 
     MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
@@ -82,12 +81,12 @@ class MultiSetValue : public ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the MultiSetValue process
+     * @brief Finishes the MultiSetValue process.
      */
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

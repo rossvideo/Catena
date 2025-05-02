@@ -30,7 +30,7 @@
 
 /**
  * @file SetValue.h
- * @brief Implements REST SetValue endpoint.
+ * @brief Implements REST SetValue controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -44,7 +44,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the SetValue REST endpoint.
+ * @brief ICallData class for the SetValue REST controller.
  */
 class SetValue : public MultiSetValue {
   // Specifying which Device and IParam to use (defaults to catena::...)
@@ -53,8 +53,7 @@ class SetValue : public MultiSetValue {
 
   public:
     /**
-     * @brief Constructor for the SetValue endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the SetValue controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.

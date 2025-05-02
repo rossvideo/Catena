@@ -54,7 +54,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Controller class for handling UpdateSubscriptions requests
+ * @brief ICallData class for the UpdateSubscriptions REST controller.
  */
 class UpdateSubscriptions : public ICallData {
 public:
@@ -63,8 +63,7 @@ public:
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the UpdateSubscriptions endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the UpdateSubscriptions controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -73,17 +72,17 @@ public:
     UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
-     * @brief Processes the UpdateSubscriptions request
+     * @brief UpdateSubscriptions's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the UpdateSubscriptions process
+     * @brief Finishes the UpdateSubscriptions process.
      */
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

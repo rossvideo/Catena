@@ -29,8 +29,8 @@
  */
 
 /**
- * @file GetValue.h
- * @brief Implements REST GetValue RPC.
+ * @file GetParam.h
+ * @brief Implements REST GetParam controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the GetParam REST endpoint.
+ * @brief ICallData class for the GetParam REST controller.
  */
 class GetParam : public ICallData {
   public:
@@ -68,8 +68,7 @@ class GetParam : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the GetParam endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the GetParam controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -82,12 +81,12 @@ class GetParam : public ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the GetParam process
+     * @brief Finishes the GetParam process.
      */
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

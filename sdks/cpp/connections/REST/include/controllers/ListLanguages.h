@@ -30,7 +30,7 @@
 
 /**
  * @file ListLanguages.h
- * @brief Implements REST ListLanguages endpoint.
+ * @brief Implements REST ListLanguages controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -58,7 +58,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the ListLanguages REST endpoint.
+ * @brief ICallData class for the ListLanguages REST controller.
  */
 class ListLanguages : public ICallData {
   public:
@@ -67,8 +67,7 @@ class ListLanguages : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the ListLanguages endpoint. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the ListLanguages controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -81,12 +80,12 @@ class ListLanguages : public ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the ListLanguages process
+     * @brief Finishes the ListLanguages process.
      */
     void finish() override;
     
     /**
-     * @brief Creates a new request object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
