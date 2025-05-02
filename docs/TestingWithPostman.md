@@ -15,6 +15,8 @@ Follow [this guide](https://learning.postman.com/docs/getting-started/installati
 
 ![Alt](images/Postman%20guide%20example.png) 
 
+> For more information on the REST API calls, see [gRPC]()
+
 ### Sending a REST API call using Postman
 1. Once installed open Postman and create a new request by selecting "new" then selecting "HTTP". 
 2. Go to the "URL" tab and enter the IP and port of that the service is running on followed by "v1/endpoint-to-call/slot"
@@ -58,3 +60,9 @@ Follow [this guide](https://learning.postman.com/docs/getting-started/installati
 2. Create a [JSON web token](https://jwt.io/) and paste it into the token field.
 
 ![Alt](images/Postman%20Authorization.PNG)
+
+<div style="text-align: center">
+
+[Next Page: Supported gRPC Services](index.html)
+
+</div>
