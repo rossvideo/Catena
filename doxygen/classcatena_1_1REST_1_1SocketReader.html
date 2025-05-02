@@ -121,7 +121,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:af2bcedddfd452f6c746058477dd3258c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
 <tr class="separator:af2bcedddfd452f6c746058477dd3258c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83236f1c3ab45215d0b34d4b6a2fa16e" id="r_a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a83236f1c3ab45215d0b34d4b6a2fa16e">method</a> () const override</td></tr>
-<tr class="memdesc:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
+<tr class="memdesc:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the method of the request.  <br /></td></tr>
 <tr class="separator:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3921e71d30efe16c287a51e3f8c32c92" id="r_a3921e71d30efe16c287a51e3f8c32c92"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a3921e71d30efe16c287a51e3f8c32c92">service</a> () const override</td></tr>
 <tr class="memdesc:a3921e71d30efe16c287a51e3f8c32c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.)  <br /></td></tr>
@@ -129,9 +129,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa77a5dcf3caf0ae527fa88e73dc3fdf1" id="r_aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1">slot</a> () const override</td></tr>
 <tr class="memdesc:aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the slot of the device to make the API call on.  <br /></td></tr>
 <tr class="separator:aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4bbc091b0f24c074e9edf7f77fc09f84" id="r_a4bbc091b0f24c074e9edf7f77fc09f84"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a4bbc091b0f24c074e9edf7f77fc09f84">hasField</a> (const std::string &amp;key) const</td></tr>
-<tr class="memdesc:a4bbc091b0f24c074e9edf7f77fc09f84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the field exists in the URL, regardless of its value.  <br /></td></tr>
-<tr class="separator:a4bbc091b0f24c074e9edf7f77fc09f84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a326879171d92d4af9a1f773fc1e9cb81" id="r_a326879171d92d4af9a1f773fc1e9cb81"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a326879171d92d4af9a1f773fc1e9cb81">fields</a> (const std::string &amp;key) const override</td></tr>
 <tr class="memdesc:a326879171d92d4af9a1f773fc1e9cb81"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the field "key" queried from the URL, or an empty sting if it does not exist.  <br /></td></tr>
 <tr class="separator:a326879171d92d4af9a1f773fc1e9cb81"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -323,40 +320,6 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a4bbc091b0f24c074e9edf7f77fc09f84" name="a4bbc091b0f24c074e9edf7f77fc09f84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4bbc091b0f24c074e9edf7f77fc09f84">&#9670;&#160;</a></span>hasField()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::REST::SocketReader::hasField </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>key</em></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns true if the field exists in the URL, regardless of its value. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">key</td><td>The name of the field to check. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="a0b4655c8cf81045dd065ec6d1dca661f" name="a0b4655c8cf81045dd065ec6d1dca661f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0b4655c8cf81045dd065ec6d1dca661f">&#9670;&#160;</a></span>jsonBody()</h2>
 
@@ -467,7 +430,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Returns the HTTP method of the request. </p>
+<p>Returns the method of the request. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97">catena::REST::ISocketReader</a>.</p>
 
