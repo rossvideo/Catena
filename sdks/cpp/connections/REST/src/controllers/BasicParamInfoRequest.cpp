@@ -87,7 +87,6 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& 
 }
 
 void BasicParamInfoRequest::proceed() {
-    writeConsole_(CallStatus::kCreate, socket_.is_open());
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     try {

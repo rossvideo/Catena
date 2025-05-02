@@ -140,10 +140,6 @@ class MultiSetValue : public ICallData {
     IDevice& dm_;
 
     /**
-     * @brief The JSON payload from the request.
-     */
-    std::string jsonPayload_;
-    /**
      * @brief The MultiSetValuePayload from the request.
      */
     catena::MultiSetValuePayload reqs_;
