@@ -49,20 +49,36 @@ int BasicParamInfoRequest::objectCounter_ = 0;
 
 BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, context_{context}, dm_{dm}, 
-    rc_("", catena::StatusCode::OK), recursive_{false} {
+    rc_("", catena::StatusCode::OK), recursive_{false},
+    writer_{std::make_unique<SSEWriter>(socket, context.origin())} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     
     // Parsing fields and assigning to respective variables.
     try {
-        // Handle URL-encoded empty values
-        std::string oid_prefix_value = context.fields("oid_prefix");
-        if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
-            oid_prefix_ = "";
+        // Get recursive from query parameters - presence means true
+        recursive_ = context.fields("recursive") == "true" || context.fields("recursive").empty();
+
+        // Get oid_prefix from JSON body if present, otherwise from query parameters
+        if (!context_.jsonBody().empty()) {
+            absl::Status status = google::protobuf::util::JsonStringToMessage(
+                absl::string_view(context_.jsonBody()), &req_);
+            if (!status.ok()) {
+                rc_ = catena::exception_with_status("Failed to parse BasicParamInfoRequestPayload: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
+                finish();
+                return;
+            }
+            // Set oid_prefix from JSON body
+            oid_prefix_ = req_.oid_prefix().empty() ? "" : req_.oid_prefix();
         } else {
-            oid_prefix_ = "/" + oid_prefix_value;
+            // Fall back to query parameters if no JSON body
+            std::string oid_prefix_value = context.fields("oid_prefix");
+            if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
+                oid_prefix_ = "";
+            } else {
+                oid_prefix_ = "/" + oid_prefix_value;
+            }
         }
-        recursive_ = context.fields("recursive") == "true";
     // Parse error
     } catch (...) {
         rc_ = catena::exception_with_status("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);

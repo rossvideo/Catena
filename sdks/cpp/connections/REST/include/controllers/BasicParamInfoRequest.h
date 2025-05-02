@@ -151,6 +151,11 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     catena::common::IDevice& dm_;
 
     /**
+     * @brief The request payload from JSON body
+     */
+    catena::BasicParamInfoRequestPayload req_;
+    
+    /**
      * @brief The oid prefix to get parameter info for.
      */
     std::string oid_prefix_;

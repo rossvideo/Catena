@@ -61,6 +61,14 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
         return false;
     }
 
+    // Check for duplicate subscription
+    if (!isWildcard(oid) && subscriptions_.find(oid) != subscriptions_.end()) {
+        rc = catena::exception_with_status("Subscription already exists for OID: " + oid,
+                                         catena::StatusCode::NO_CONTENT);
+        subscriptionLock_.unlock();
+        return false;
+    }
+
     if (isWildcard(oid)) {
         // Expand wildcard and add all matching OIDs
         std::string basePath = oid.substr(0, oid.length() - 2);
