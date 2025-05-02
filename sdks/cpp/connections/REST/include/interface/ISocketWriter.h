@@ -78,7 +78,7 @@ class ISocketWriter {
      */
     virtual void write(catena::exception_with_status& err) = 0;
     /**
-     * @brief Finishes writing process.
+     * @brief Finishes writing the HTTP response.
      */
     virtual void finish() = 0;
 };

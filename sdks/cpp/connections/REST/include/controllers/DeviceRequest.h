@@ -30,7 +30,7 @@
 
 /**
  * @file DeviceRequest.h
- * @brief Implements REST DeviceRequest RPC.
+ * @brief Implements REST DeviceRequest endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the DeviceRequest REST RPC.
+ * @brief CallData class for the DeviceRequest REST endpoint.
  */
 class DeviceRequest : public ICallData {
   public:
@@ -68,23 +68,26 @@ class DeviceRequest : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the DeviceRequest RPC.
+     * @brief Constructor for the DeviceRequest endpoint. Calls proceed() once
+     * initialized.
      *
-     * @param socket The socket to write the response stream to.
+     * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get components from.
+     * @param dm The device to get information from.
      */ 
     DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief DeviceRequest's main process.
      */
     void proceed() override;
+    
     /**
-     * @brief Finishes the DeviceRequest process.
+     * @brief Finishes the DeviceRequest process
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new request object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -93,12 +96,12 @@ class DeviceRequest : public ICallData {
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new DeviceRequest(socket, context, dm);
     }
-  private:
+    
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "DeviceRequest::proceed[" << objectId_ << "]: "
@@ -106,7 +109,7 @@ class DeviceRequest : public ICallData {
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
-    
+  private:
     /**
      * @brief The socket to write the response stream to.
      */

@@ -75,11 +75,11 @@ class ISocketReader {
      */
     virtual void read(tcp::socket& socket, bool authz = false) = 0;
     /**
-     * @brief Returns the method of the request.
+     * @brief Returns the HTTP method of the request.
      */
     virtual const std::string& method() const = 0;
     /**
-     * @brief Returns the rpc of the request.
+     * @brief Returns the REST endpoint of the request.
      */
     virtual const std::string& service() const = 0;
     /**
@@ -102,7 +102,7 @@ class ISocketReader {
      */
     virtual const std::string& origin() const = 0;
     /**
-     * @brief Returns the language to return the resposne in.
+     * @brief Returns the language to return the response in.
      */
     virtual const std::string& language() const = 0;
     /**

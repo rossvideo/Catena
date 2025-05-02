@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetValue REST RPC.
+ * @brief CallData class for the GetParam REST endpoint.
  */
 class GetParam : public ICallData {
   public:
@@ -68,23 +68,26 @@ class GetParam : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the GetValue RPC.
+     * @brief Constructor for the GetParam endpoint. Calls proceed() once
+     * initialized.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to get the value from.
+     * @param dm The device to get the parameter from.
      */ 
     GetParam(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
-     * @brief GetValue's main process.
+     * @brief GetParam's main process.
      */
     void proceed() override;
+    
     /**
-     * @brief Finishes the GetValue process.
+     * @brief Finishes the GetParam process
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new request object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -93,12 +96,12 @@ class GetParam : public ICallData {
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new GetParam(socket, context, dm);
     }
-  private:
+    
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "GetParam::proceed[" << objectId_ << "]: "
@@ -107,6 +110,7 @@ class GetParam : public ICallData {
                 << std::endl;
     }
 
+  private:
     /**
      * @brief The socket to write the response to.
      */
@@ -125,11 +129,11 @@ class GetParam : public ICallData {
     IDevice& dm_;
 
     /**
-     * @brief ID of the GetValue object
+     * @brief ID of the GetParam object
      */
     int objectId_;
     /**
-     * @brief The total # of GetValue objects.
+     * @brief The total # of GetParam objects.
      */
     static int objectCounter_;
 };

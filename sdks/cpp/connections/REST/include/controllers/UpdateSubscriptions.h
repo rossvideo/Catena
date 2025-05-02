@@ -63,25 +63,27 @@ public:
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the UpdateSubscriptions controller
-     * @param socket The TCP socket for the connection
-     * @param context The socket reader context
-     * @param dm The device model
-     */
+     * @brief Constructor for the UpdateSubscriptions endpoint. Calls proceed() once
+     * initialized.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object.
+     * @param dm The device to update subscriptions on.
+     */ 
     UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
-
+    
     /**
      * @brief Processes the UpdateSubscriptions request
      */
     void proceed() override;
-
+    
     /**
      * @brief Finishes the UpdateSubscriptions process
      */
     void finish() override;
-
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new request object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.

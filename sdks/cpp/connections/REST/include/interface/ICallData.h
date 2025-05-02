@@ -30,7 +30,7 @@
 
 /**
  * @file ICallData.h
- * @brief Interface class for REST RPCs.
+ * @brief Interface class for REST endpoints.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -62,17 +62,17 @@ namespace REST {
 enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
 /**
- * @brief Interface class for the REST API RPCs.
+ * @brief Interface class for the REST API endpoints.
  */
 class ICallData {
 	public:
 		virtual ~ICallData() = default;
 		/**
-		 * @brief The RPC's main process.
+		 * @brief The endpoint's main process.
 		 */
 		virtual void proceed() = 0;
 		/**
-		 * @brief Finishes the RPC.
+		 * @brief Finishes the endpoint.
 		 */
 		virtual void finish() = 0;
 
@@ -80,8 +80,8 @@ class ICallData {
 		/**
 		 * @brief Helper function to write status messages to the API console.
 		 * 
-		 * @param status The current state of the RPC (kCreate, kFinish, etc.)
-		 * @param ok The status of the RPC (open or closed).
+		 * @param status The current state of the request (kCreate, kFinish, etc.)
+		 * @param ok The status of the request (open or closed).
 		 */
 		virtual inline void writeConsole_(CallStatus status, bool ok) const = 0;
 };

@@ -30,7 +30,7 @@
 
 /**
  * @file GetPopulatedSlots.h
- * @brief Implements REST GetPopulatedSlots RPC.
+ * @brief Implements REST GetPopulatedSlots endpoint.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetPopulatedSlots REST RPC.
+ * @brief CallData class for the GetPopulatedSlots REST endpoint.
  */
 class GetPopulatedSlots : public ICallData {
   public:
@@ -68,10 +68,11 @@ class GetPopulatedSlots : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the GetPopulatedSlots RPC.
+     * @brief Constructor for the GetPopulatedSlots endpoint. Calls proceed() once
+     * initialized.
      *
      * @param socket The socket to write the response to.
-     * @param context The ISocketReader object. Here to maintain consistency.
+     * @param context The ISocketReader object.
      * @param dm The device to get the slot of.
      */ 
     GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, IDevice& dm);
@@ -80,11 +81,11 @@ class GetPopulatedSlots : public ICallData {
      */
     void proceed() override;
     /**
-     * @brief Finishes the GetPopulatedSlots process.
+     * @brief Finishes the GetPopulatedSlots process
      */
     void finish() override;
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new request object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -95,10 +96,10 @@ class GetPopulatedSlots : public ICallData {
     }
   private:
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "Connect::proceed[" << objectId_ << "]: "

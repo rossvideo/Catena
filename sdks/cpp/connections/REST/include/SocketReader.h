@@ -80,7 +80,7 @@ class SocketReader : public ISocketReader {
      */
     void read(tcp::socket& socket, bool authz = false) override;
     /**
-     * @brief Returns the method of the request.
+     * @brief Returns the HTTP method of the request.
      */
     const std::string& method() const override { return method_; }
     /**
