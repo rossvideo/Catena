@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['bad_5fgateway_0',['BAD_GATEWAY',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca',1,'catena']]]
+  ['cancelled_0',['CANCELLED',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a09a0c7607585f76475b04e3ba9ed3b7f',1,'catena']]]
 ];

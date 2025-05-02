@@ -25,17 +25,7 @@ var namespacecatena =
       [ "INTERNAL", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ac5ccebadad020a75cb223bf56f77a3c7", null ],
       [ "UNAVAILABLE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a374ac00d9beb2a41ba6dd3940deebc4e", null ],
       [ "DATA_LOSS", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9f21c5c424a73be49eb7d5182d3f6551", null ],
-      [ "DO_NOT_USE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f", null ],
-      [ "CREATED", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85af5ae6e1ca9fd3829acb25e84162b1fd8", null ],
-      [ "ACCEPTED", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb", null ],
-      [ "NO_CONTENT", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ac66c6fe414f6276c8f5cae9095e3caac", null ],
-      [ "UNPROCESSABLE_ENTITY", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a68df7493cc4c2eb86af4425169357317", null ],
-      [ "METHOD_NOT_ALLOWED", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a93b4a2195385df1142c8042e414a6e75", null ],
-      [ "CONFLICT", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85ace0923fbefae354aa5f6fd7d6735c764", null ],
-      [ "TOO_MANY_REQUESTS", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a99e6e5bcff220e13c14f05e5b7f27ecc", null ],
-      [ "BAD_GATEWAY", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3b1d30cc8dadf912c63485ca943476ca", null ],
-      [ "SERVICE_UNAVAILABLE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201", null ],
-      [ "GATEWAY_TIMEOUT", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85aa43de93dcd5ab8b4aea415b756197696", null ]
+      [ "DO_NOT_USE", "namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f", null ]
     ] ],
     [ "expandEnvVariables", "namespacecatena.html#aa3ce72179203719924c0cff74fd3f82c", null ],
     [ "getServerCredentials", "namespacecatena.html#a989cc41eb5054f4902e9bf6a66334373", null ],
