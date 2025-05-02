@@ -130,10 +130,60 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a60e207c3bf77638a792eedb998c5e77c" id="r_a60e207c3bf77638a792eedb998c5e77c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a60e207c3bf77638a792eedb998c5e77c">updateResponse_</a> (const catena::DeviceComponent_ComponentLanguagePack &amp;l)=0</td></tr>
 <tr class="memdesc:a60e207c3bf77638a792eedb998c5e77c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a ComponentLanguagePack and handles authorization checks.  <br /></td></tr>
 <tr class="separator:a60e207c3bf77638a792eedb998c5e77c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02ef98650e356794414eb781a552fddb" id="r_a02ef98650e356794414eb781a552fddb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb">initAuthz_</a> (const std::string &amp;jwsToken, bool authz=false)=0</td></tr>
+<tr class="memdesc:a02ef98650e356794414eb781a552fddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the authorizer object with the jwsToken.  <br /></td></tr>
+<tr class="separator:a02ef98650e356794414eb781a552fddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface class for <a class="el" href="classcatena_1_1common_1_1Connect.html" title="Pure virtual class for Connect RPCs. Contains functions for updating the response message with parame...">Connect</a> RPCs. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a02ef98650e356794414eb781a552fddb" name="a02ef98650e356794414eb781a552fddb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02ef98650e356794414eb781a552fddb">&#9670;&#160;</a></span>initAuthz_()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void catena::common::IConnect::initAuthz_ </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>jwsToken</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>authz</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sets up the authorizer object with the jwsToken. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">jwsToken</td><td>The jwsToken to use for authorization. </td></tr>
+    <tr><td class="paramname">authz</td><td>true if authorization is enabled, false otherwise. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904">catena::common::Connect</a>.</p>
+
+</div>
+</div>
 <a id="a9e16530ff77a84dcb7c2b78d94dc88cd" name="a9e16530ff77a84dcb7c2b78d94dc88cd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9e16530ff77a84dcb7c2b78d94dc88cd">&#9670;&#160;</a></span>isCancelled()</h2>
 

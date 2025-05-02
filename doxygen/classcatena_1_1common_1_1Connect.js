@@ -1,10 +1,11 @@
 var classcatena_1_1common_1_1Connect =
 [
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a86b2bc07e6ff84fe3b86dcdfca117d28", null ],
-    [ "Connect", "classcatena_1_1common_1_1Connect.html#a868aa12deb0a1ad80790b032fb890cb0", null ],
+    [ "Connect", "classcatena_1_1common_1_1Connect.html#adb9de7538cc4b3874cf81ab9f2e705d3", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#aaa137c0fa7a8e9914734e516a0036dcb", null ],
     [ "Connect", "classcatena_1_1common_1_1Connect.html#a456e6a4492e1d42e5971c7d4b01bbb69", null ],
     [ "~Connect", "classcatena_1_1common_1_1Connect.html#afa1a5e9a2bce4cac9a6c362f66eacdb2", null ],
+    [ "initAuthz_", "classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904", null ],
     [ "updateResponse_", "classcatena_1_1common_1_1Connect.html#a08776752e0acd2ba9946b83d4ff38bff", null ],
     [ "updateResponse_", "classcatena_1_1common_1_1Connect.html#a11240b1de8befc4e8c1711130987364b", null ],
     [ "authz_", "classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6", null ],
