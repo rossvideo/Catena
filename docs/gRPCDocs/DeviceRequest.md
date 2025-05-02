@@ -5,10 +5,15 @@ The DeviceRequest gRPC returns a stream of components from the device manager at
 ### IN
 ```
 message DeviceRequestPayload {
-  uint32 slot = 1;                     // The slot id, must be included
-  string language = 2;                 // Optionally specify the language for the response
-  Device.DetailLevel detail_level = 3; // Optionally specify the detail level for the response
-  repeated string subscribed_oids = 4; // Optionally specify a subscription list for the device (see UpdateSubscriptionsPayload)
+  uint32 slot = 1;                     /* Uniquely identifies the device at
+                                        * node scope. */
+  string language = 2;                 /* Optionally specify the language for
+                                        * the response */
+  Device.DetailLevel detail_level = 3; /* Optionally specify the detail level
+                                        * for the response */
+  repeated string subscribed_oids = 4; /* Optionally specify a subscription
+                                        * list for the device (see
+                                        * UpdateSubscriptionsPayload) */
 }
 ```
 ### OUT
@@ -75,7 +80,8 @@ message DeviceComponent {
 
   /* A language pack. */
   message ComponentLanguagePack {
-    string language = 1; // Language string is the language code that identifies the language e.g. en-uk
+    string language = 1; /* Language string is the language code that
+                          * identifies the language e.g. en-uk */
     LanguagePack language_pack = 2;
   }
 
@@ -94,6 +100,6 @@ message DeviceComponent {
 
 <div style="text-align: center">
 
-[Next Page: GetPopulatedSlots](index.html)
+[Next Page: GetPopulatedSlots](gRPCDocs/GetPopulatedSlots.html)
 
 </div>

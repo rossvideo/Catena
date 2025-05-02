@@ -63,6 +63,6 @@ Follow [this guide](https://learning.postman.com/docs/getting-started/installati
 
 <div style="text-align: center">
 
-[Next Page: Supported gRPC Services](index.html)
+[Next Page: Supported gRPC Services](gRPC.html)
 
 </div>

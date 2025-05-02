@@ -13,6 +13,6 @@ message SlotList {
 
 <div style="text-align: center">
 
-[Next Page: ExecuteCommand](index.html)
+[Next Page: ExecuteCommand](gRPCDocs/ExecuteCommand.html)
 
 </div>
