@@ -170,28 +170,27 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2ExecuteCom
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>    }</div>
 </div>
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    </div>
-<div class="foldopen" id="foldopen00105" data-start="{" data-end="}">
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1ExecuteCommand.html#aa58c621c40da657e558fac88f4fa3611">  105</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1ExecuteCommand.html#aa58c621c40da657e558fac88f4fa3611">writeConsole_</a>(<a class="code hl_enumeration" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, <span class="keywordtype">bool</span> ok)<span class="keyword"> const override </span>{</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>      std::cout &lt;&lt; <span class="stringliteral">&quot;ExecuteCommand::proceed[&quot;</span> &lt;&lt; objectId_ &lt;&lt; <span class="stringliteral">&quot;]: &quot;</span></div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>                &lt;&lt; timeNow() &lt;&lt; <span class="stringliteral">&quot; status: &quot;</span>&lt;&lt; <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(status)</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>                &lt;&lt;<span class="stringliteral">&quot;, ok: &quot;</span>&lt;&lt; std::boolalpha &lt;&lt; ok &lt;&lt; std::endl;</div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    }</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> writeConsole_(<a class="code hl_enumeration" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, <span class="keywordtype">bool</span> ok)<span class="keyword"> const override </span>{</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>      std::cout &lt;&lt; <span class="stringliteral">&quot;ExecuteCommand::proceed[&quot;</span> &lt;&lt; objectId_ &lt;&lt; <span class="stringliteral">&quot;]: &quot;</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>                &lt;&lt; timeNow() &lt;&lt; <span class="stringliteral">&quot; status: &quot;</span>&lt;&lt; <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(status)</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>                &lt;&lt;<span class="stringliteral">&quot;, ok: &quot;</span>&lt;&lt; std::boolalpha &lt;&lt; ok &lt;&lt; std::endl;</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    }</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    tcp::socket&amp; socket_;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    SocketWriter writer_;</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    SocketReader&amp; context_;</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    IDevice&amp; dm_;</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    catena::ExecuteCommandPayload req_;</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    std::string oid_;</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>};</div>
 </div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    tcp::socket&amp; socket_;</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <a class="code hl_class" href="classcatena_1_1REST_1_1SocketWriter.html">SocketWriter</a> writer_;</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <a class="code hl_class" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a>&amp; context_;</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm_;</div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>    catena::ExecuteCommandPayload req_;</div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    std::string oid_;</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>};</div>
-</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span> </div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>} <span class="comment">// namespace REST</span></div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>} <span class="comment">// namespace catena </span></div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>} <span class="comment">// namespace REST</span></div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>} <span class="comment">// namespace catena </span></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aICallData_8h_html"><div class="ttname"><a href="ICallData_8h.html">ICallData.h</a></div><div class="ttdoc">Interface class for REST controllers.</div></div>
 <div class="ttc" id="aIParam_8h_html"><div class="ttname"><a href="IParam_8h.html">IParam.h</a></div><div class="ttdoc">Interface for parameters.</div></div>
@@ -200,13 +199,11 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2ExecuteCom
 <div class="ttc" id="aTimeNow_8h_html"><div class="ttname"><a href="TimeNow_8h.html">TimeNow.h</a></div><div class="ttdoc">Contains a function which returns the current time as a string.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ExecuteCommand_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ExecuteCommand.html">catena::REST::ExecuteCommand</a></div><div class="ttdoc">Controller class for handling ExecuteCommand REST requests.</div><div class="ttdef"><b>Definition</b> ExecuteCommand.h:64</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ExecuteCommand_html_a0e34f0a06c9031559191c119ab371833"><div class="ttname"><a href="classcatena_1_1REST_1_1ExecuteCommand.html#a0e34f0a06c9031559191c119ab371833">catena::REST::ExecuteCommand::proceed</a></div><div class="ttdeci">void proceed() override</div><div class="ttdoc">ExecuteCommand's main process.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1ExecuteCommand_html_aa58c621c40da657e558fac88f4fa3611"><div class="ttname"><a href="classcatena_1_1REST_1_1ExecuteCommand.html#aa58c621c40da657e558fac88f4fa3611">catena::REST::ExecuteCommand::writeConsole_</a></div><div class="ttdeci">void writeConsole_(CallStatus status, bool ok) const override</div><div class="ttdoc">Writes the current state of the request to the console.</div><div class="ttdef"><b>Definition</b> ExecuteCommand.h:105</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ExecuteCommand_html_aafddb314b7aaee910f1fb16ebc9bfc95"><div class="ttname"><a href="classcatena_1_1REST_1_1ExecuteCommand.html#aafddb314b7aaee910f1fb16ebc9bfc95">catena::REST::ExecuteCommand::finish</a></div><div class="ttdeci">void finish() override</div><div class="ttdoc">Finishes the ExecuteCommand process.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ExecuteCommand_html_ab644f3b4965dbb01d7072641947acc32"><div class="ttname"><a href="classcatena_1_1REST_1_1ExecuteCommand.html#ab644f3b4965dbb01d7072641947acc32">catena::REST::ExecuteCommand::ExecuteCommand</a></div><div class="ttdeci">ExecuteCommand(tcp::socket &amp;socket, SocketReader &amp;context, IDevice &amp;dm)</div><div class="ttdoc">Constructor for the ExecuteCommand controller.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ExecuteCommand_html_af7eb167220d42d3d58694569d9c76a6b"><div class="ttname"><a href="classcatena_1_1REST_1_1ExecuteCommand.html#af7eb167220d42d3d58694569d9c76a6b">catena::REST::ExecuteCommand::makeOne</a></div><div class="ttdeci">static ICallData * makeOne(tcp::socket &amp;socket, SocketReader &amp;context, IDevice &amp;dm)</div><div class="ttdoc">Creates a new controller object for use with GenericFactory.</div><div class="ttdef"><b>Definition</b> ExecuteCommand.h:96</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ICallData_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ICallData.html">catena::REST::ICallData</a></div><div class="ttdoc">Interface class for REST API controllers.</div><div class="ttdef"><b>Definition</b> ICallData.h:67</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1SocketReader_html"><div class="ttname"><a href="classcatena_1_1REST_1_1SocketReader.html">catena::REST::SocketReader</a></div><div class="ttdoc">Helper class used to read from a socket using boost.</div><div class="ttdef"><b>Definition</b> SocketReader.h:68</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1SocketWriter_html"><div class="ttname"><a href="classcatena_1_1REST_1_1SocketWriter.html">catena::REST::SocketWriter</a></div><div class="ttdoc">Helper class used to write a unary response to a socket using boost.</div><div class="ttdef"><b>Definition</b> SocketWriter.h:64</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IDevice_html"><div class="ttname"><a href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></div><div class="ttdoc">Interface class for Device.</div><div class="ttdef"><b>Definition</b> IDevice.h:62</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IParam_html"><div class="ttname"><a href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></div><div class="ttdoc">IParam is the interface for business logic and connection logic to interact with parameters.</div><div class="ttdef"><b>Definition</b> IParam.h:50</div></div>
 <div class="ttc" id="anamespacecatena_1_1REST_html_a58c70401164afb6c66bd561a88da4009"><div class="ttname"><a href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">catena::REST::CallStatus</a></div><div class="ttdeci">CallStatus</div><div class="ttdoc">CallData states for status messages.</div><div class="ttdef"><b>Definition</b> ICallData.h:62</div></div>
