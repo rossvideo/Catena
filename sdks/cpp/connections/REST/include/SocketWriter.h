@@ -98,12 +98,13 @@ class SocketWriter : public ISocketWriter {
      */
     void finish(google::protobuf::Message& msg);
     /**
-     * @brief Finishes the writing process by writing a message to the socket.
+     * @brief Finishes the writing process by writing an error to the socket.
      * 
      * SocketWriter exlusive function which acts as a call to write() then
      * finish().
+     * @param err The catena::exception_with_status containing the error details.
      */
-    void finish(catena::StatusCode status);
+    void finish(const catena::exception_with_status& err);
 
   private:
     /**
@@ -136,12 +137,12 @@ class SocketWriter : public ISocketWriter {
 class SSEWriter : public ISocketWriter {
   public:
     /**
-     * @brief Constructor for SSEWriter with status code.
+     * @brief Constructor for SSEWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
-     * @param status The catena::StatusCode.
+     * @param err The catena::exception_with_status for initialization.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin = "*", catena::StatusCode status = catena::StatusCode::OK);
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*", const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK));
     /**
      * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.

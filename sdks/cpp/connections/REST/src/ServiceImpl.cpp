@@ -119,7 +119,7 @@ void CatenaServiceImpl::run() {
                 // Try ensures that we don't fail to decrement active requests.
                 try {
                     SocketWriter writer(socket);
-                    writer.finish(rc.status);
+                    writer.finish(rc);
                 } catch (...) {}
             }
             // request completed. Decrementing activeRequests.

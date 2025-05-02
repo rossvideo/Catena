@@ -114,7 +114,7 @@ void UpdateSubscriptions::finish() {
     std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
     
     if (!writer_) {
-        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_.status);
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_);
     }
     socket_.close();
 }

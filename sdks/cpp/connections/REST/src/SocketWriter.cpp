@@ -29,20 +29,21 @@ void SocketWriter::write(google::protobuf::Message& msg) {
 void SocketWriter::write(catena::exception_with_status& err) {
     // Writes an error message to the socket.
     // Clearing response_ and gettinge errCode.
-    std::string response_ = err.what();
     int errCode;
     if (response_.empty() && err.status == catena::StatusCode::OK) {
         errCode = 204;
     } else {
         errCode = codeMap_.at(err.status).first;
     }
+    std::string errorMessage = err.what();
+    
     // Returning the response.
-    std::string headers = "HTTP/1.1 " + std::to_string(errCode) + " " + err.what() + "\r\n"
+    std::string headers = "HTTP/1.1 " + std::to_string(errCode) + " " + errorMessage + "\r\n"
                           "Content-Type: text/plain\r\n"
-                          "Content-Length: " + std::to_string(response_.size()) + "\r\n" +
+                          "Content-Length: " + std::to_string(errorMessage.size()) + "\r\n" +
                           CORS_ +
                           "Connection: close\r\n\r\n";
-    boost::asio::write(socket_, boost::asio::buffer(headers + response_));
+    boost::asio::write(socket_, boost::asio::buffer(headers + errorMessage));
 }
 
 void SocketWriter::finish() {
@@ -68,9 +69,9 @@ void SocketWriter::finish(google::protobuf::Message& msg) {
     finish();
 }
 
-void SocketWriter::finish(catena::StatusCode status) {
-
-    auto httpStatus = codeMap_.at(status);
+void SocketWriter::finish(const catena::exception_with_status& err) {
+    // Finishes the writing process by writing a status to the socket.
+    auto httpStatus = codeMap_.at(err.status);
     std::stringstream ss;
     ss << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
        << "Content-Type: application/json\r\n"
@@ -82,8 +83,8 @@ void SocketWriter::finish(catena::StatusCode status) {
     boost::asio::write(socket_, boost::asio::buffer(ss.str()));
 }
 
-SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, catena::StatusCode status) : socket_{socket} {
-    auto httpStatus = codeMap_.at(status);
+SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const catena::exception_with_status& err) : socket_{socket} {
+    auto httpStatus = codeMap_.at(err.status);
     std::stringstream ss;
     ss << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
        << "Content-Type: text/event-stream\r\n"
