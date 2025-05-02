@@ -92,6 +92,14 @@ class SocketReader : public ISocketReader {
      */
     uint32_t slot() const override { return slot_; };
     /**
+     * @brief Returns true if the field exists in the URL, regardless of its value.
+     * 
+     * @param key The name of the field to check.
+     */
+    bool hasField(const std::string& key) const {
+      return fields_.contains(key);
+    }
+    /**
      * @brief Returns the field "key" queried from the URL, or an empty sting
      * if it does not exist.
      * 

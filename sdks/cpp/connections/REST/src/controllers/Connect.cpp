@@ -13,7 +13,7 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
-    forceConnection_ = context.fields("force_connection") == "true" || context.fields("force_connection").empty();
+    forceConnection_ = context.hasField("force_connection");
 }
 
 void Connect::proceed() {

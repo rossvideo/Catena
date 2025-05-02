@@ -56,7 +56,8 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& 
     // Parsing fields and assigning to respective variables.
     try {
         // Get recursive from query parameters - presence means true
-        recursive_ = context.fields("recursive") == "true" || context.fields("recursive").empty();
+        recursive_ = context.hasField("recursive");
+
 
         // Get oid_prefix from JSON body if present, otherwise from query parameters
         if (!context_.jsonBody().empty()) {
