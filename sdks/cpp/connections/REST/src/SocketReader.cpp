@@ -35,8 +35,8 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     // Slot is not needed for GetPopulatedSlots and Connect.
     std::string path = u.path();
     try {
-        if (path.find("Connect") != std::string::npos ||
-            path.find("GetPopulatedSlots") != std::string::npos) {
+        if (path.find("connect") != std::string::npos ||
+            path.find("get-populated-slots") != std::string::npos) {
             endpoint_ = path;
         } else {
             std::size_t pos = path.find_last_of('/');

@@ -42,31 +42,31 @@ servers:
   - url: https://device.catenamedia.tv/v1
   - url: http://localhost:443/v1
 paths:
-  /DeviceRequest/{slot}:
+  /device-request/{slot}:
     $ref: './paths/DeviceRequest.yaml'
-  /GetPopulatedSlots:
+  /get-populated-slots:
     $ref: './paths/GetPopulatedSlots.yaml'
-  /ExecuteCommand/{slot}:
+  /execute-command/{slot}:
     $ref: "./paths/ExecuteCommand.yaml"
-  /ExternalObjectRequest/{slot}:
+  /external-object-request/{slot}:
     $ref: './paths/ExternalObjectRequest.yaml'
-  /BasicParamInfoRequest/{slot}:
+  /basic-param-info-request/{slot}:
     $ref: './paths/BasicParamInfoRequest.yaml'
-  /GetValue/{slot}:
+  /get-value/{slot}:
     $ref: './paths/GetValue.yaml'
-  /SetValue/{slot}:
+  /set-value/{slot}:
     $ref: './paths/SetValue.yaml'
-  /MultiSetValue/{slot}:
+  /multi-set-value/{slot}:
     $ref: './paths/MultiSetValue.yaml'
-  /UpdateSubscriptions/{slot}:
+  /update-subscriptions/{slot}:
     $ref: './paths/UpdateSubscriptions.yaml'
-  /GetParam/{slot}:
+  /get-param/{slot}:
     $ref: './paths/GetParam.yaml'
-  /Connect:
+  /connect:
     $ref : './paths/Connect.yaml'
-  /AddLanguage/{slot}:
+  /add-language/{slot}:
     $ref: './paths/AddLanguage.yaml'
-  /LanguagePackRequest/{slot}:
+  /language-pack-request/{slot}:
     $ref: './paths/LanguagePackRequest.yaml'
-  /ListLanguages/{slot}:
+  /list-languages/{slot}:
     $ref: './paths/ListLanguages.yaml'
