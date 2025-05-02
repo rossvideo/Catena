@@ -59,8 +59,7 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
 CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
-        catena::common::Connect(dm, service->authorizationEnabled(), "", service->getSubscriptionManager()) {
-            std::cout << "Calling registerItem with: " << this << std::endl;
+        catena::common::Connect(dm, service->getSubscriptionManager()) {
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process
@@ -103,38 +102,46 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             // Used to serve other clients while processing.
             new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
-            // Cancels all open connections if shutdown signal is sent.
-            shutdownSignalId_ = shutdownSignal_.connect([this](){
-                context_.TryCancel();
-                hasUpdate_ = true;
-                this->cv_.notify_one();
-            });
-            // Waiting for a value set by server to be sent to execute code.
-            valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse_(oid, idx, p);
-            });
+            try {
+                // Setting up the client's authorizer.
+                initAuthz_(getJWSToken_(), service_->authorizationEnabled());
+                // Cancels all open connections if shutdown signal is sent.
+                shutdownSignalId_ = shutdownSignal_.connect([this](){
+                    context_.TryCancel();
+                    hasUpdate_ = true;
+                    this->cv_.notify_one();
+                });
+                // Waiting for a value set by server to be sent to execute code.
+                valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                    updateResponse_(oid, idx, p);
+                });
 
-            // Waiting for a value set by client to be sent to execute code.
-            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse_(oid, idx, p);
-            });
+                // Waiting for a value set by client to be sent to execute code.
+                valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                    updateResponse_(oid, idx, p);
+                });
 
-            // Waiting for a language to be added to execute code.
-            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
-                updateResponse_(l);
-            });
+                // Waiting for a language to be added to execute code.
+                languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
+                    updateResponse_(l);
+                });
 
-            // Set detail level from request
-            detailLevel_ = req_.detail_level();
-            dm_.detail_level(req_.detail_level());
+                // Set detail level from request
+                detailLevel_ = req_.detail_level();
+                dm_.detail_level(req_.detail_level());
 
-            // send client a empty update with slot of the device
-            {
-                std::cout << "Transitioning from kProcess to kWrite" << std::endl;
-                status_ = CallStatus::kWrite;
-                catena::PushUpdates populatedSlots;
-                populatedSlots.set_slot(dm_.slot());
-                writer_.Write(populatedSlots, this);
+                // send client a empty update with slot of the device
+                {
+                    std::cout << "Transitioning from kProcess to kWrite" << std::endl;
+                    status_ = CallStatus::kWrite;
+                    catena::PushUpdates populatedSlots;
+                    populatedSlots.set_slot(dm_.slot());
+                    writer_.Write(populatedSlots, this);
+                }
+            } catch (catena::exception_with_status& rc) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
+                writer_.Finish(errorStatus, this);
             }
             break;
         /**
