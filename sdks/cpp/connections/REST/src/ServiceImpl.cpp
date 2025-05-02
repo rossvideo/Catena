@@ -48,19 +48,19 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
 
     // Initializing the routes for router_.
 
-    router_.addProduct("GET/v1/Connect",                Connect::makeOne);
-    router_.addProduct("GET/v1/DeviceRequest",          DeviceRequest::makeOne);
-    router_.addProduct("PUT/v1/ExecuteCommand",         ExecuteCommand::makeOne);
-    router_.addProduct("GET/v1/GetPopulatedSlots",      GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
-    router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
-    router_.addProduct("PUT/v1/SetValue",               SetValue::makeOne);
-    router_.addProduct("GET/v1/GetParam",               GetParam::makeOne);
-    router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
-    router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
-    router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
-    router_.addProduct("GET/v1/BasicParamInfoRequest",  BasicParamInfoRequest::makeOne);
-    router_.addProduct("PUT/v1/UpdateSubscriptions",    UpdateSubscriptions::makeOne);
+    router_.addProduct("GET/v1/connect",                    Connect::makeOne);
+    router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
+    router_.addProduct("PUT/v1/execute-command",            ExecuteCommand::makeOne);
+    router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
+    router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);
+    router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
+    router_.addProduct("PUT/v1/set-value",                  SetValue::makeOne);
+    router_.addProduct("GET/v1/get-param",                  GetParam::makeOne);
+    router_.addProduct("GET/v1/language-pack-request",      LanguagePackRequest::makeOne);
+    router_.addProduct("GET/v1/list-languages",             ListLanguages::makeOne);
+    router_.addProduct("PUT/v1/add-language",               AddLanguage::makeOne);
+    router_.addProduct("GET/v1/basic-param-info-request",   BasicParamInfoRequest::makeOne);
+    router_.addProduct("PUT/v1/update-subscriptions",       UpdateSubscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
