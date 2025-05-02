@@ -24,7 +24,7 @@ Follow [this guide](https://learning.postman.com/docs/getting-started/installati
 6. If the API call requires a JSON body, click on the "Body" tab and enter it there.
 5. Click invoke.
 
-![Alt](images/Postman%20guide%20example.png) 
+![Alt](images/Postman%20guide%20example%20REST.png) 
 
 > For more information on the REST API calls, see the [OpenAPI docs]()
 
