@@ -128,15 +128,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a21167be973c4d8b7b14da99dc3203213" id="r_a21167be973c4d8b7b14da99dc3203213"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a21167be973c4d8b7b14da99dc3203213">write</a> (google::protobuf::Message &amp;msg)=0</td></tr>
 <tr class="memdesc:a21167be973c4d8b7b14da99dc3203213"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a protobuf message to socket in JSON format.  <br /></td></tr>
 <tr class="separator:a21167be973c4d8b7b14da99dc3203213"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44675abc67626c4dd9f9ec5f3575a80f" id="r_a44675abc67626c4dd9f9ec5f3575a80f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a44675abc67626c4dd9f9ec5f3575a80f">finish</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err=<a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(&quot;&quot;, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>))=0</td></tr>
-<tr class="memdesc:a44675abc67626c4dd9f9ec5f3575a80f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing the HTTP response.  <br /></td></tr>
-<tr class="separator:a44675abc67626c4dd9f9ec5f3575a80f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaba7eb43d24585fafeaa602fb20bc3f0" id="r_aaba7eb43d24585fafeaa602fb20bc3f0"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#aaba7eb43d24585fafeaa602fb20bc3f0">finish</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err)=0</td></tr>
+<tr class="memdesc:aaba7eb43d24585fafeaa602fb20bc3f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing the HTTP response.  <br /></td></tr>
+<tr class="separator:aaba7eb43d24585fafeaa602fb20bc3f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> classes. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a44675abc67626c4dd9f9ec5f3575a80f" name="a44675abc67626c4dd9f9ec5f3575a80f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44675abc67626c4dd9f9ec5f3575a80f">&#9670;&#160;</a></span>finish()</h2>
+<a id="aaba7eb43d24585fafeaa602fb20bc3f0" name="aaba7eb43d24585fafeaa602fb20bc3f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaba7eb43d24585fafeaa602fb20bc3f0">&#9670;&#160;</a></span>finish()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -148,7 +148,7 @@ Public Member Functions</h2></td></tr>
           <td class="memname">virtual void catena::REST::ISocketWriter::finish </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
-          <td class="paramname"><em>err</em> = <code><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>(&quot;&quot;,&#160;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::StatusCode::OK</a>)</code></td><td>)</td>
+          <td class="paramname"><em>err</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -162,7 +162,7 @@ Public Member Functions</h2></td></tr>
 <p>Finishes writing the HTTP response. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">err</td><td>Optional error status to finish with. If not provided, finishes with OK status. </td></tr>
+    <tr><td class="paramname">err</td><td>The error status to finish with. </td></tr>
   </table>
   </dd>
 </dl>
