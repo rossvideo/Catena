@@ -56,11 +56,6 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
-struct HttpStatus {
-    int code;
-    std::string reason;
-};
-
 /**
  * @brief Helper class used to write a unary response to a socket using boost.
  * 
@@ -108,7 +103,7 @@ class SocketWriter : public ISocketWriter {
      * SocketWriter exlusive function which acts as a call to write() then
      * finish().
      */
-    void finish(const HttpStatus& status);
+    void finish(catena::StatusCode status);
 
   private:
     /**
@@ -141,12 +136,12 @@ class SocketWriter : public ISocketWriter {
 class SSEWriter : public ISocketWriter {
   public:
     /**
-     * @brief Constructor for SSEWriter with status code and reason.
+     * @brief Constructor for SSEWriter with status code.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
-     * @param status The HTTP status code and reason.
+     * @param status The catena::StatusCode.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin, const HttpStatus& status = {200, "OK"});
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*", catena::StatusCode status = catena::StatusCode::OK);
     /**
      * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.
@@ -172,9 +167,9 @@ class SSEWriter : public ISocketWriter {
 };
 
 /**
- * @brief Maps catena::StatusCode to HTTP status codes.
+ * @brief Maps catena::StatusCode to HTTP status codes and reasons.
  */
-const std::map<catena::StatusCode, HttpStatus> codeMap_ {
+const std::map<catena::StatusCode, std::pair<int, std::string>> codeMap_ {
   {catena::StatusCode::OK,                  {200, "OK"}},
   {catena::StatusCode::CANCELLED,           {400, "Cancelled"}},
   {catena::StatusCode::UNKNOWN,             {500, "Internal Server Error"}},

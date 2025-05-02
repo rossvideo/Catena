@@ -34,7 +34,7 @@ void SocketWriter::write(catena::exception_with_status& err) {
     if (response_.empty() && err.status == catena::StatusCode::OK) {
         errCode = 204;
     } else {
-        errCode = codeMap_.at(err.status).code;
+        errCode = codeMap_.at(err.status).first;
     }
     // Returning the response.
     std::string headers = "HTTP/1.1 " + std::to_string(errCode) + " " + err.what() + "\r\n"
@@ -68,29 +68,34 @@ void SocketWriter::finish(google::protobuf::Message& msg) {
     finish();
 }
 
+void SocketWriter::finish(catena::StatusCode status) {
 
-void SocketWriter::finish(const HttpStatus& status) {
-    if (multi_) {
-        response_ = "{\"response\":[" + response_ + "]}";
-    }
-    std::string headers = "HTTP/1.1 " + std::to_string(status.code) + " " + status.reason + "\r\n"
-                            "Content-Type: application/json\r\n"
-                            "Content-Length: " + std::to_string(response_.size()) + "\r\n" +
-                            CORS_ +
-                            "Connection: close\r\n\r\n";
-    boost::asio::write(socket_, boost::asio::buffer(headers + response_));
+    auto httpStatus = codeMap_.at(status);
+    std::stringstream ss;
+    ss << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
+       << "Content-Type: application/json\r\n"
+       << CORS_
+       << "Content-Length: " << response_.length() << "\r\n"
+       << "\r\n"
+       << response_;
+
+    boost::asio::write(socket_, boost::asio::buffer(ss.str()));
 }
 
-SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const HttpStatus& status)
-    : socket_{socket} {
-    std::string headers = "HTTP/1.1 " + std::to_string(status.code) + " " + status.reason + "\r\n"
-                          "Content-Type: text/event-stream\r\n"
-                          "Access-Control-Allow-Origin: " + origin + "\r\n"
-                          "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                          "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
-                          "Access-Control-Allow-Credentials: true\r\n"
-                          "Connection: keep-alive\r\n\r\n";
-    boost::asio::write(socket_, boost::asio::buffer(headers));
+SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, catena::StatusCode status) : socket_{socket} {
+    auto httpStatus = codeMap_.at(status);
+    std::stringstream ss;
+    ss << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
+       << "Content-Type: text/event-stream\r\n"
+       << "Cache-Control: no-cache\r\n"
+       << "Connection: keep-alive\r\n"
+       << "Access-Control-Allow-Origin: " << origin << "\r\n"
+       << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+       << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+       << "Access-Control-Allow-Credentials: true\r\n"
+       << "\r\n";
+
+    boost::asio::write(socket_, boost::asio::buffer(ss.str()));
 }
 
 void SSEWriter::write(google::protobuf::Message& msg) {   
@@ -111,6 +116,8 @@ void SSEWriter::write(google::protobuf::Message& msg) {
 
 void SSEWriter::write(catena::exception_with_status& err) {
     // Writing error message.
-    std::string errMsg = err.what();
-    boost::asio::write(socket_, boost::asio::buffer("data: " + codeMap_.at(err.status).reason + " " + errMsg + "\n\n"));
+    auto httpStatus = codeMap_.at(err.status);
+    std::stringstream ss;
+    ss << "data: " << httpStatus.second << " " << err.what() << "\n\n";
+    boost::asio::write(socket_, boost::asio::buffer(ss.str()));
 }

@@ -50,7 +50,7 @@ int BasicParamInfoRequest::objectCounter_ = 0;
 BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     socket_{socket}, context_{context}, dm_{dm}, 
     rc_("", catena::StatusCode::OK), recursive_{false},
-    writer_{std::make_unique<SSEWriter>(socket, context.origin())} {
+    writer_{std::make_unique<SSEWriter>(socket, context.origin(), rc_.status)} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     
@@ -220,7 +220,7 @@ void BasicParamInfoRequest::finish() {
     std::cout << "BasicParamInfoRequest[" << objectId_ << "] finished\n";
     
     if (!writer_) {
-        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), catena::REST::codeMap_.at(rc_.status));
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_.status);
     }
     socket_.close();
 }

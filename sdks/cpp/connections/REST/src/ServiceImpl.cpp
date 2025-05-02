@@ -3,7 +3,7 @@
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
 
-// REST endpoints
+// REST controllers
 #include <controllers/Connect.h>
 #include <controllers/GetParam.h>
 #include <controllers/MultiSetValue.h>
@@ -75,8 +75,10 @@ void CatenaServiceImpl::run() {
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
         // Once a connection is made, increment activeRequests and handle async.
-        std::lock_guard<std::mutex> lock(activeRequestMutex_);
-        activeRequests_ += 1;
+        {
+            std::lock_guard<std::mutex> lock(activeRequestMutex_);
+            activeRequests_ += 1;
+        }
         std::thread([this, socket = std::move(socket)]() mutable {
             catena::exception_with_status rc("", catena::StatusCode::OK);
             if (!shutdown_) {
@@ -117,13 +119,15 @@ void CatenaServiceImpl::run() {
                 // Try ensures that we don't fail to decrement active requests.
                 try {
                     SocketWriter writer(socket);
-                    writer.finish(catena::REST::codeMap_.at(rc.status));
+                    writer.finish(rc.status);
                 } catch (...) {}
             }
             // request completed. Decrementing activeRequests.
-            std::lock_guard<std::mutex> lock(activeRequestMutex_);
-            activeRequests_ -= 1;
-            std::cout<<"Active requests remaining: "<<activeRequests_<<std::endl;
+            {
+                std::lock_guard<std::mutex> lock(activeRequestMutex_);
+                activeRequests_ -= 1;
+                std::cout<<"Active requests remaining: "<<activeRequests_<<std::endl;
+            }
         }).detach();
     }
     
