@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="Implements REST SetValue RPC.">
+<g id="a_Node000001"><a xlink:title="Implements REST SetValue controller.">
 <polygon fill="#999999" stroke="#666666" points="1522,-712 1330,-712 1330,-671 1522,-671 1522,-712"/>
 <text text-anchor="start" x="1338" y="-700" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
 <text text-anchor="start" x="1338" y="-689" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
@@ -22,7 +22,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue RPC.">
+<g id="a_Node000002"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue controller.">
 <polygon fill="white" stroke="#666666" points="1472.5,-635 1379.5,-635 1379.5,-616 1472.5,-616 1472.5,-635"/>
 <text text-anchor="middle" x="1426" y="-623" font-family="Helvetica,sans-Serif" font-size="10.00">MultiSetValue.h</text>
 </a>
@@ -239,7 +239,7 @@
 <!-- Node57 -->
 <g id="Node000057" class="node">
 <title>Node57</title>
-<g id="a_Node000057"><a xlink:href="ICallData_8h.html" target="_top" xlink:title="Interface class for REST RPCs.">
+<g id="a_Node000057"><a xlink:href="ICallData_8h.html" target="_top" xlink:title="Interface class for REST controllers.">
 <polygon fill="white" stroke="#666666" points="1378.5,-580 1261.5,-580 1261.5,-561 1378.5,-561 1378.5,-580"/>
 <text text-anchor="middle" x="1320" y="-568" font-family="Helvetica,sans-Serif" font-size="10.00">interface/ICallData.h</text>
 </a>
