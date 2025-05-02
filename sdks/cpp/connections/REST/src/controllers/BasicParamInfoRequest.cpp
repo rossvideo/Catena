@@ -124,11 +124,7 @@ void BasicParamInfoRequest::proceed() {
                         }
                     }
                 }
-                writer_lock_.lock();
-                for (auto& response : responses_) {
-                    writer_->write(response);
-                }
-                writer_lock_.unlock();
+                finish();
             }
         }
         // Mode 2: Get a specific parameter and its children
@@ -160,11 +156,7 @@ void BasicParamInfoRequest::proceed() {
                 }
 
                 // Write all responses to the client
-                writer_lock_.lock();
-                for (auto& response : responses_) {
-                    writer_->write(response);
-                }
-                writer_lock_.unlock();
+                finish();
             } else {
                 rc_ = catena::exception_with_status(rc.what(), rc.status);
                 finish();
@@ -197,11 +189,7 @@ void BasicParamInfoRequest::proceed() {
                     BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
                     ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
                 }
-                writer_lock_.lock();
-                for (auto& response : responses_) {
-                    writer_->write(response);
-                }
-                writer_lock_.unlock();
+                finish();
             }
         }
     } catch (catena::exception_with_status& err) {
@@ -220,6 +208,13 @@ void BasicParamInfoRequest::finish() {
     if (!writer_) {
         writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_);
     }
+    
+    writer_lock_.lock();
+    for (auto& response : responses_) {
+        writer_->write(response);
+    }
+    writer_lock_.unlock();
+    
     socket_.close();
 }
 
