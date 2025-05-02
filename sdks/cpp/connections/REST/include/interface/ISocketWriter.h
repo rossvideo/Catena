@@ -72,15 +72,12 @@ class ISocketWriter {
      * @param msg The protobuf message to write as JSON.
      */
     virtual void write(google::protobuf::Message& msg) = 0;
-    /**
-     * @brief Writes an error message to the socket.
-     * @param err The catena::exception_with_status.
-     */
-    virtual void write(catena::exception_with_status& err) = 0;
+
     /**
      * @brief Finishes writing the HTTP response.
+     * @param err Optional error status to finish with. If not provided, finishes with OK status.
      */
-    virtual void finish() = 0;
+    virtual void finish(const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) = 0;
 };
  
 }; // Namespace REST

@@ -87,6 +87,12 @@ class ISocketReader {
      */
     virtual uint32_t slot() const = 0;
     /**
+     * @brief Returns true if the field exists in the URL, regardless of its value.
+     * 
+     * @param key The name of the field to check.
+     */
+    virtual bool hasField(const std::string& key) const = 0;
+    /**
      * @brief Returns the field "key" queried from the URL, or an empty sting
      * if it does not exist.
      * 

@@ -19,10 +19,10 @@ void GetPopulatedSlots::proceed() {
         SlotList slotList;
         slotList.add_slots(dm_.slot());
         // Writing response.
-        writer_.finish(slotList);
+        writer_.write(slotList);
     } catch (...) {
         catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-        writer_.write(rc);
+        writer_.finish(rc);
     }
 }
 

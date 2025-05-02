@@ -96,7 +96,7 @@ class SocketReader : public ISocketReader {
      * 
      * @param key The name of the field to check.
      */
-    bool hasField(const std::string& key) const {
+    bool hasField(const std::string& key) const override {
       return fields_.contains(key);
     }
     /**

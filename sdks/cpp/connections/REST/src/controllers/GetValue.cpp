@@ -34,9 +34,9 @@ void GetValue::proceed() {
 
     // Finishing by writing answer to client.
     if (rc.status == catena::StatusCode::OK) {
-        writer_.finish(ans);
+        writer_.write(ans);
     } else {
-        writer_.write(rc);
+        writer_.finish(rc);
     }
 }
 

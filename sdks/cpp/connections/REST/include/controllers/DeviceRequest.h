@@ -96,6 +96,8 @@ class DeviceRequest : public ICallData {
       return new DeviceRequest(socket, context, dm);
     }
     
+
+  private:
     /**
      * @brief Writes the current state of the request to the console.
      * 
@@ -108,7 +110,6 @@ class DeviceRequest : public ICallData {
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
-  private:
     /**
      * @brief The socket to write the response stream to.
      */

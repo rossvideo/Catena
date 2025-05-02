@@ -38,7 +38,7 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDev
         }
     } catch (...) {
         catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
+        writer_.finish(err);
     }
 }
 
@@ -60,7 +60,7 @@ void ExecuteCommand::proceed() {
         // If the command is not found, return an error
         if (command == nullptr) {
             if (req_.respond()) {
-                writer_.write(rc);
+                writer_.finish(rc);
             }
             return;
         }
@@ -71,19 +71,19 @@ void ExecuteCommand::proceed() {
         // Only write response if respond is true
         if (req_.respond()) {
             if (rc.status == catena::StatusCode::OK) {
-                writer_.finish(res);
+                writer_.write(res);
             } else {
-                writer_.write(rc);
+                writer_.finish(rc);
             }
         }
     } catch (catena::exception_with_status& err) {
         if (req_.respond()) {
-            writer_.write(err);
+            writer_.finish(err);
         }
     } catch (...) {
         if (req_.respond()) {
             catena::exception_with_status err("Unknown error", catena::StatusCode::UNKNOWN);
-            writer_.write(err);
+            writer_.finish(err);
         }
     }
 }
@@ -91,5 +91,4 @@ void ExecuteCommand::proceed() {
 void ExecuteCommand::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
-    writer_.finish();
 } 

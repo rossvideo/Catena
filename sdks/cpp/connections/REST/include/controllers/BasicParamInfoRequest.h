@@ -100,6 +100,8 @@ class BasicParamInfoRequest : public ICallData {
       return new BasicParamInfoRequest(socket, context, dm);
     }
     
+    
+  private:
     /**
      * @brief Writes the current state of the request to the console.
      * @param status The current state of the request (kCreate, kFinish, etc.)
@@ -110,12 +112,9 @@ class BasicParamInfoRequest : public ICallData {
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
-    
-  private:
     /**
      * @brief Helper method to add a parameter to the responses
      * @param param The parameter to add
-     * @param authz The authorization object
      */
     void addParamToResponses_(IParam* param, catena::common::Authorizer& authz);
     

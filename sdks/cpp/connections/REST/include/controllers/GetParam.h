@@ -96,6 +96,9 @@ class GetParam : public ICallData {
       return new GetParam(socket, context, dm);
     }
     
+
+
+  private:
     /**
      * @brief Writes the current state of the request to the console.
      * 
@@ -108,8 +111,6 @@ class GetParam : public ICallData {
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
-
-  private:
     /**
      * @brief The socket to write the response to.
      */

@@ -82,7 +82,7 @@ class IServiceImpl {
      */
     virtual void run() = 0;
     /**
-     * @brief Shuts down the running API server. This should only be called sometimes
+     * @brief Shuts down the running API server. This should only be called some time.
      * after a call to run().
      */
     virtual void Shutdown() = 0;

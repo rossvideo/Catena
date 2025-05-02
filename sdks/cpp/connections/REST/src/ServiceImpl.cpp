@@ -89,7 +89,7 @@ void CatenaServiceImpl::run() {
                     std::string requestKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        SocketWriter(socket, context.origin()).write(rc);
+                        SocketWriter(socket, context.origin()).finish(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
                         std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dm_);

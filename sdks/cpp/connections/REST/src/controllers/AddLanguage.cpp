@@ -45,14 +45,13 @@ void AddLanguage::proceed() {
     // Finishing by writing answer to client.
     if (rc.status == catena::StatusCode::OK) {
         catena::Empty ans = catena::Empty();
-        writer_.finish(ans);
+        writer_.write(ans);
     } else {
-        writer_.write(rc);
+        writer_.finish(rc);
     }
 }
 
 void AddLanguage::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "AddLanguage[" << objectId_ << "] finished\n";
-    writer_.finish();
 }

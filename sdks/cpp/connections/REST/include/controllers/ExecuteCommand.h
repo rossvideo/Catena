@@ -97,7 +97,10 @@ class ExecuteCommand : public ICallData {
       return new ExecuteCommand(socket, context, dm);
     }
     
-    /**
+
+
+  private:
+      /**
      * @brief Writes the current state of the request to the console.
      * @param status The current state of the request (kCreate, kFinish, etc.)
      * @param ok The status of the request (open or closed).
@@ -107,8 +110,6 @@ class ExecuteCommand : public ICallData {
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
-
-  private:
     /**
      * @brief The number of ExecuteCommand objects created.
      */
