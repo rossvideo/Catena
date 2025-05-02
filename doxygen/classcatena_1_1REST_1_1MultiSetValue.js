@@ -8,6 +8,7 @@ var classcatena_1_1REST_1_1MultiSetValue =
     [ "writeConsole_", "classcatena_1_1REST_1_1MultiSetValue.html#ab373b650b84ffc2105e7d2b73f3e3f96", null ],
     [ "context_", "classcatena_1_1REST_1_1MultiSetValue.html#aee03793e64307595ac5b046a65e18dd6", null ],
     [ "dm_", "classcatena_1_1REST_1_1MultiSetValue.html#a01bb1af3c1faff46b0cc85401c1c17ef", null ],
+    [ "jsonPayload_", "classcatena_1_1REST_1_1MultiSetValue.html#a5ebe0e8734c68dbbbcb9c0f520e797e3", null ],
     [ "objectId_", "classcatena_1_1REST_1_1MultiSetValue.html#a7a946af4fc7bf144592643f36baca1db", null ],
     [ "reqs_", "classcatena_1_1REST_1_1MultiSetValue.html#aa5dac8fba316dc5395ec25acb853696a", null ],
     [ "socket_", "classcatena_1_1REST_1_1MultiSetValue.html#a3e6d07f28f3a9b154cf5d84d34b490e6", null ],
