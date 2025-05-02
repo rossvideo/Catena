@@ -35,7 +35,7 @@
 #
 
 get:
-  summary: Set the value of a parameter within a device model
+  summary: Returns a language pack from the device model.
   operationId: LanguagePackRequest
   parameters:
     - name: slot
