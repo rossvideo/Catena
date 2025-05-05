@@ -42,21 +42,12 @@
 #include <string>
 #include <tuple>
 
+// Common
+#include <SubscriptionManager.h>
+
 namespace fs = std::filesystem;
 
 #include "SocketReader.h"
-
-// // Mocking the SocketReader interface
-// class MockSocketReader : public catena::REST::ISocketReader {
-//     public:
-//         MOCK_METHOD(void, read, (tcp::socket& socket, bool authz), (override));
-//         MOCK_METHOD(std::string&, method, (), (const, override));
-//         MOCK_METHOD(std::string&, rpc, (), (const, override));
-//         MOCK_METHOD(void, fields, ((std::unordered_map<std::string, std::string>&) fieldMap), (const, override));
-//         MOCK_METHOD(std::string&, jwsToken, (), (const, override));
-//         MOCK_METHOD(std::string&, jsonBody, (), (const, override));
-//         MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-// };
 
 // Writes a request to and returns server socket for SocketReader tests.
 std::unique_ptr<tcp::socket> mockServerSocket() {
@@ -68,7 +59,7 @@ std::unique_ptr<tcp::socket> mockServerSocket() {
     serverSocket.connect(acceptor.local_endpoint());
     acceptor.accept(clientSocket);
     // Writing request to server.
-    std::string request = "GET localhost:443/v1/GetValue/slot/1/oid/text_box HTTP/1.1\n"
+    std::string request = "PUT /v1/test-call/1?testField1=1&testField2=2 HTTP/1.1\n"
                           "Origin: test_origin\n"
                           "User-Agent: test_agent\n"
                           "Authorization: Bearer test_bearer \n"
@@ -88,19 +79,16 @@ std::unique_ptr<tcp::socket> mockServerSocket() {
 TEST(REST_API_tests, SocketReader_NormalCase) {
     auto serverSocket = mockServerSocket();
     // Creating a SocketReader and reading the request.
-    catena::REST::SocketReader socketReader;
+    catena::common::SubscriptionManager sm;    
+    catena::REST::SocketReader socketReader(sm);
     socketReader.read(*serverSocket, false);
-    // Reading extracted fields from the socketReader.
-    std::unordered_map<std::string, std::string> fields = {
-        {"oid", ""},
-        {"slot", ""}
-    };
-    socketReader.fields(fields);
     // Checking answers.
-    EXPECT_EQ(socketReader.method(),               "GET"              );
-    EXPECT_EQ(socketReader.rpc(),                  "/v1/GetValue"     );
-    EXPECT_EQ(fields.at("slot"),                   "1"                );
-    EXPECT_EQ(fields.at("oid"),                    "text_box"         );
+    EXPECT_EQ(socketReader.method(),               "PUT"              );
+    EXPECT_EQ(socketReader.service(),             "/v1/test-call"     );
+    EXPECT_EQ(socketReader.slot(),                 1                  );
+    EXPECT_EQ(socketReader.fields("testField1"),   "1"                );
+    EXPECT_EQ(socketReader.fields("testField2"),   "2"                );
+    EXPECT_EQ(socketReader.fields("testField3"),   ""                 );
     EXPECT_EQ(socketReader.authorizationEnabled(), false              );
     EXPECT_EQ(socketReader.jwsToken(),             ""                 );
     EXPECT_EQ(socketReader.origin(),               "test_origin"      );
@@ -111,19 +99,16 @@ TEST(REST_API_tests, SocketReader_NormalCase) {
 TEST(REST_API_tests, SocketReader_AuthzCase) {
     auto serverSocket = mockServerSocket();
     // Creating a SocketReader and reading the request.
-    catena::REST::SocketReader socketReader;
+    catena::common::SubscriptionManager sm;    
+    catena::REST::SocketReader socketReader(sm);
     socketReader.read(*serverSocket, true);
-    // Getting fields from the SocketReader.
-    std::unordered_map<std::string, std::string> fields = {
-        {"oid", ""},
-        {"slot", ""}
-    };
-    socketReader.fields(fields);
-    // Checking answer.
-    EXPECT_EQ(socketReader.method(),               "GET"              );
-    EXPECT_EQ(socketReader.rpc(),                  "/v1/GetValue"     );
-    EXPECT_EQ(fields.at("slot"),                   "1"                );
-    EXPECT_EQ(fields.at("oid"),                    "text_box"         );
+    // Checking answers.
+    EXPECT_EQ(socketReader.method(),               "PUT"              );
+    EXPECT_EQ(socketReader.service(),             "/v1/test-call"     );
+    EXPECT_EQ(socketReader.slot(),                 1                  );
+    EXPECT_EQ(socketReader.fields("testField1"),   "1"                );
+    EXPECT_EQ(socketReader.fields("testField2"),   "2"                );
+    EXPECT_EQ(socketReader.fields("testField3"),   ""                 );
     EXPECT_EQ(socketReader.authorizationEnabled(), true               );
     EXPECT_EQ(socketReader.jwsToken(),             "test_bearer"      );
     EXPECT_EQ(socketReader.origin(),               "test_origin"      );
