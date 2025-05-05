@@ -16,6 +16,7 @@ LABEL org.opencontainers.image.title=${IMAGE_TITLE}
 LABEL org.opencontainers.image.description=${IMAGE_DESCRIPTION}
 LABEL org.opencontainers.image.version=${IMAGE_VERSION}
 LABEL org.opencontainers.image.vendor=${IMAGE_VENDOR}
+LABEL org.opencontainers.image.source="https://github.com/rossvideo/Catena/.devcontainer/devcontainer.dockerfile/devcontainer.dockerfile"
 
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}

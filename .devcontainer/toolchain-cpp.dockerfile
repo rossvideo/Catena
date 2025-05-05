@@ -3,6 +3,7 @@ LABEL org.opencontainers.image.title=$IMAGE_TITLE
 LABEL org.opencontainers.image.description=$IMAGE_DESCRIPTION
 LABEL org.opencontainers.image.version=$IMAGE_VERSION
 LABEL org.opencontainers.image.vendor=$IMAGE_VENDOR
+LABEL org.opencontainers.image.source="https://github.com/rossvideo/Catena/.devcontainer/toolchain-cpp.dockerfile/toolchain-cpp.dockerfile"
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
