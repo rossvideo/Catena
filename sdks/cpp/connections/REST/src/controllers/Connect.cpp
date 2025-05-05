@@ -49,7 +49,7 @@ void Connect::proceed() {
         writer_.write(populatedSlots);
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
-        writer_.finish(err);
+        writer_.finish(catena::Empty(), err);
         shutdown_ = true;
     }
 
@@ -84,7 +84,7 @@ void Connect::finish() {
     } catch (...) {}
     // Finishing and closing the socket.
     if (socket_.is_open()) {
-        writer_.finish(catena::exception_with_status("", catena::StatusCode::OK));
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";

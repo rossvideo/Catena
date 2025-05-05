@@ -3,7 +3,7 @@
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
-void SocketWriter::write(google::protobuf::Message& msg) {
+void SocketWriter::write(const google::protobuf::Message& msg) {
     // Adds a JSON message to the end of the response.
     // Converting the value to JSON.
     std::string jsonOutput;
@@ -21,11 +21,18 @@ void SocketWriter::write(google::protobuf::Message& msg) {
         }
     // Error
     } else {
-        finish(catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
+        catena::Empty empty;
+        finish(empty, catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
     }
 }
 
-void SocketWriter::finish(const catena::exception_with_status& err) {
+
+void SocketWriter::finish(const google::protobuf::Message& msg, const catena::exception_with_status& err) {
+    if (err.status == catena::StatusCode::OK) {
+        // Success case - write the message
+        write(msg);
+    }
+    
     // Finishes the writing process with an error message.
     auto httpStatus = codeMap_.at(err.status);
     
@@ -50,11 +57,6 @@ void SocketWriter::finish(const catena::exception_with_status& err) {
     boost::asio::write(socket_, boost::asio::buffer(headers.str()));
 }
 
-void SocketWriter::finish(google::protobuf::Message& msg) {
-    // Finishes the writing process by writing a message to the socket.
-    write(msg);
-    finish(catena::exception_with_status("", catena::StatusCode::OK));
-}
 
 SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const catena::exception_with_status& err) : socket_{socket} {
     auto httpStatus = codeMap_.at(err.status);
@@ -72,7 +74,7 @@ SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const caten
     boost::asio::write(socket_, boost::asio::buffer(headers.str()));
 }
 
-void SSEWriter::write(google::protobuf::Message& msg) {   
+void SSEWriter::write(const google::protobuf::Message& msg) {   
     // Converting the value to JSON.
     std::string jsonOutput;
     google::protobuf::util::JsonPrintOptions options; // Default options
@@ -83,11 +85,11 @@ void SSEWriter::write(google::protobuf::Message& msg) {
         boost::asio::write(socket_, boost::asio::buffer("data: " + jsonOutput + "\n\n"));
     // Error, writting error to the client.
     } else {
-        finish(catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
+        finish(catena::Empty(), catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
     }
 }
 
-void SSEWriter::finish(const catena::exception_with_status& err) {
+void SSEWriter::finish(const google::protobuf::Message& msg, const catena::exception_with_status& err) {
     // Writing error message.
     auto httpStatus = codeMap_.at(err.status);
     std::stringstream headers;

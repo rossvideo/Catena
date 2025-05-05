@@ -26,11 +26,7 @@ void ListLanguages::proceed() {
     }
 
     // Finishing by writing answer to client.
-    if (rc.status == catena::StatusCode::OK) {
-        writer_.finish(ans);
-    } else {
-        writer_.finish(rc);
-    }
+    writer_.finish(ans, rc);
 }
 
 void ListLanguages::finish() {

@@ -43,12 +43,7 @@ void AddLanguage::proceed() {
     }
 
     // Finishing by writing answer to client.
-    if (rc.status == catena::StatusCode::OK) {
-        catena::Empty ans = catena::Empty();
-        writer_.finish(ans);
-    } else {
-        writer_.finish(rc);
-    }
+    writer_.finish(catena::Empty(), rc);
 }
 
 void AddLanguage::finish() {

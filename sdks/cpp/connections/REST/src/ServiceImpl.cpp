@@ -89,7 +89,7 @@ void CatenaServiceImpl::run() {
                     std::string requestKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        SocketWriter(socket, context.origin()).finish(rc);
+                        SocketWriter(socket, context.origin()).finish(catena::Empty(), rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
                         std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dm_);
@@ -119,7 +119,7 @@ void CatenaServiceImpl::run() {
                 // Try ensures that we don't fail to decrement active requests.
                 try {
                     SocketWriter writer(socket);
-                    writer.finish(rc);
+                    writer.finish(catena::Empty(), rc);
                 } catch (...) {}
             }
             // request completed. Decrementing activeRequests.

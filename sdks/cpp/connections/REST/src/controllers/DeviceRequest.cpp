@@ -55,14 +55,14 @@ void DeviceRequest::proceed() {
             }
             writer_.write(component);
         }
-        writer_.finish(catena::exception_with_status("", catena::StatusCode::OK));
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {
-        writer_.finish(err);
+        writer_.finish(catena::Empty(), err);
     } catch (...) {
         catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
-        writer_.finish(err);
+        writer_.finish(catena::Empty(), err);
     }
 }
 
