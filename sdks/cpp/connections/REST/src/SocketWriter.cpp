@@ -34,15 +34,13 @@ void SocketWriter::finish(const catena::exception_with_status& err) {
         httpStatus = codeMap_.at(catena::StatusCode::NO_CONTENT);
     }
 
-    if (!response_.empty()) {
-        if (multi_) {
-            response_ = "{\"response\":[" + response_ + "]}";
-        } 
+    if (!response_.empty() && multi_) {
+        response_ = "{\"response\":[" + response_ + "]}";
     }
 
     std::stringstream headers;
     headers << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
-            << "Content-Type: text/plain\r\n"
+            << "Content-Type: application/json\r\n"
             << CORS_ << "\r\n"
             << "Content-Length: " << response_.length() << "\r\n"
             << "Connection: close\r\n"
@@ -50,6 +48,12 @@ void SocketWriter::finish(const catena::exception_with_status& err) {
             << response_;
 
     boost::asio::write(socket_, boost::asio::buffer(headers.str()));
+}
+
+void SocketWriter::finish(google::protobuf::Message& msg) {
+    // Finishes the writing process by writing a message to the socket.
+    write(msg);
+    finish(catena::exception_with_status("", catena::StatusCode::OK));
 }
 
 SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const catena::exception_with_status& err) : socket_{socket} {

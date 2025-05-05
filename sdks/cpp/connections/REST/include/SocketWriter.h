@@ -79,13 +79,19 @@ class SocketWriter : public ISocketWriter {
      * @brief Adds the protobuf message to the end of response in JSON format.
      * @param msg The protobuf message to add as JSON.
      */
-    virtual void write(google::protobuf::Message& msg) override;
+    void write(google::protobuf::Message& msg) override;
 
     /**
      * @brief Finishes writing the HTTP response.
      * @param err Optional error status to finish with. If not provided, finishes with OK status.
      */
-    virtual void finish(const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
+    void finish(const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
+
+    /**
+     * @brief Finishes the writing process by writing a message to the socket.
+     * SocketWriter exclusive function which acts as a call to write() then finish().
+     */
+    void finish(google::protobuf::Message& msg);
 
   private:
     /**
@@ -129,13 +135,13 @@ class SSEWriter : public ISocketWriter {
      * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.
      */
-    virtual void write(google::protobuf::Message& msg) override;
+    void write(google::protobuf::Message& msg) override;
 
     /**
      * @brief Finishes the SSE stream.
      * @param err Optional error status to finish with. If not provided, finishes with OK status.
      */
-    virtual void finish(const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
+    void finish(const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
 
   private:
     /**

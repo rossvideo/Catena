@@ -27,7 +27,7 @@ void ListLanguages::proceed() {
 
     // Finishing by writing answer to client.
     if (rc.status == catena::StatusCode::OK) {
-        writer_.write(ans);
+        writer_.finish(ans);
     } else {
         writer_.finish(rc);
     }
