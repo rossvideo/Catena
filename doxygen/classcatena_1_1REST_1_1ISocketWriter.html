@@ -125,18 +125,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a609ed37959b60b07b3eb06bd78af5381" id="r_a609ed37959b60b07b3eb06bd78af5381"><td class="memItemLeft" align="right" valign="top"><a id="a609ed37959b60b07b3eb06bd78af5381" name="a609ed37959b60b07b3eb06bd78af5381"></a>
 <a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">ISocketWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html">ISocketWriter</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a609ed37959b60b07b3eb06bd78af5381"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21167be973c4d8b7b14da99dc3203213" id="r_a21167be973c4d8b7b14da99dc3203213"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a21167be973c4d8b7b14da99dc3203213">write</a> (google::protobuf::Message &amp;msg)=0</td></tr>
-<tr class="memdesc:a21167be973c4d8b7b14da99dc3203213"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a protobuf message to socket in JSON format.  <br /></td></tr>
-<tr class="separator:a21167be973c4d8b7b14da99dc3203213"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaba7eb43d24585fafeaa602fb20bc3f0" id="r_aaba7eb43d24585fafeaa602fb20bc3f0"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#aaba7eb43d24585fafeaa602fb20bc3f0">finish</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err)=0</td></tr>
-<tr class="memdesc:aaba7eb43d24585fafeaa602fb20bc3f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing the HTTP response.  <br /></td></tr>
-<tr class="separator:aaba7eb43d24585fafeaa602fb20bc3f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00dc3f2d51b2daf9316e416d1f348e25" id="r_a00dc3f2d51b2daf9316e416d1f348e25"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a00dc3f2d51b2daf9316e416d1f348e25">write</a> (const google::protobuf::Message &amp;msg)=0</td></tr>
+<tr class="memdesc:a00dc3f2d51b2daf9316e416d1f348e25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a protobuf message to socket in JSON format.  <br /></td></tr>
+<tr class="separator:a00dc3f2d51b2daf9316e416d1f348e25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a640c102351121406cfc17e6fcb31b076" id="r_a640c102351121406cfc17e6fcb31b076"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketWriter.html#a640c102351121406cfc17e6fcb31b076">finish</a> (const google::protobuf::Message &amp;msg, const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err)=0</td></tr>
+<tr class="memdesc:a640c102351121406cfc17e6fcb31b076"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing the HTTP response.  <br /></td></tr>
+<tr class="separator:a640c102351121406cfc17e6fcb31b076"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for the <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a> classes. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="aaba7eb43d24585fafeaa602fb20bc3f0" name="aaba7eb43d24585fafeaa602fb20bc3f0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaba7eb43d24585fafeaa602fb20bc3f0">&#9670;&#160;</a></span>finish()</h2>
+<a id="a640c102351121406cfc17e6fcb31b076" name="a640c102351121406cfc17e6fcb31b076"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a640c102351121406cfc17e6fcb31b076">&#9670;&#160;</a></span>finish()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -147,9 +147,19 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void catena::REST::ISocketWriter::finish </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
-          <td class="paramname"><em>err</em></td><td>)</td>
+          <td class="paramtype">const google::protobuf::Message &amp;&#160;</td>
+          <td class="paramname"><em>msg</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;&#160;</td>
+          <td class="paramname"><em>err</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -167,12 +177,12 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ac3a953bb73d71fa5ae8919f506bc44f5">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a1893578139466329c755f407cf84363a">catena::REST::SSEWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a0a69d54e463717997fb83b09d84120f9">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#ac187e7d92383147e0b7d2ae2e2ec4484">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
-<a id="a21167be973c4d8b7b14da99dc3203213" name="a21167be973c4d8b7b14da99dc3203213"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a21167be973c4d8b7b14da99dc3203213">&#9670;&#160;</a></span>write()</h2>
+<a id="a00dc3f2d51b2daf9316e416d1f348e25" name="a00dc3f2d51b2daf9316e416d1f348e25"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a00dc3f2d51b2daf9316e416d1f348e25">&#9670;&#160;</a></span>write()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -183,7 +193,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void catena::REST::ISocketWriter::write </td>
           <td>(</td>
-          <td class="paramtype">google::protobuf::Message &amp;&#160;</td>
+          <td class="paramtype">const google::protobuf::Message &amp;&#160;</td>
           <td class="paramname"><em>msg</em></td><td>)</td>
           <td></td>
         </tr>
@@ -203,7 +213,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a41b73ddc39781a722c6d60e73505f261">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a1563491b348dd9c5dffa5c831c8b0cfd">catena::REST::SSEWriter</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ae1489e66f9884ad653216be5ea2a6c4f">catena::REST::SocketWriter</a>, and <a class="el" href="classcatena_1_1REST_1_1SSEWriter.html#a29d3f4ef2e18f3e46a20a5213e78f411">catena::REST::SSEWriter</a>.</p>
 
 </div>
 </div>
