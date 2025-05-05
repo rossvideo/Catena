@@ -104,7 +104,8 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             context_.AsyncNotifyWhenDone(this);
             try {
                 // Setting up the client's authorizer.
-                initAuthz_(getJWSToken_(), service_->authorizationEnabled());
+                std::string jwsToken = service_->authorizationEnabled() ? getJWSToken_() : "";
+                initAuthz_(jwsToken, service_->authorizationEnabled());
                 // Cancels all open connections if shutdown signal is sent.
                 shutdownSignalId_ = shutdownSignal_.connect([this](){
                     context_.TryCancel();
