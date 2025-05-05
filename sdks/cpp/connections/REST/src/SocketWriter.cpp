@@ -21,8 +21,7 @@ void SocketWriter::write(const google::protobuf::Message& msg) {
         }
     // Error
     } else {
-        catena::Empty empty;
-        finish(empty, catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
+        finish(catena::Empty(), catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
     }
 }
 
@@ -49,9 +48,6 @@ void SocketWriter::finish(const google::protobuf::Message& msg, const catena::ex
     headers << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
             << "Content-Type: application/json\r\n"
             << CORS_ << "\r\n"
-            << "Content-Length: " << response_.length() << "\r\n"
-            << "Connection: close\r\n"
-            << "\r\n"
             << response_;
 
     boost::asio::write(socket_, boost::asio::buffer(headers.str()));
