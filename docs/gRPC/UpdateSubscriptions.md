@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # UpdateSubscriptions
 Updates a client's subscriptions, affecting the output of the Connect and DeviceRequest RPCs on detail_level SUBSCRIPTIONS.
@@ -31,6 +33,6 @@ message ComponentParam {
 
 <div style="text-align: center">
 
-[Next Page: GetParam](gRPCDocs/GetParam.html)
+[Next Page: GetParam](gRPC/GetParam.html)
 
 </div>

@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # Connect
 Connects a client to a service for updates on value changes.
@@ -51,6 +53,6 @@ message PushUpdates {
 
 <div style="text-align: center">
 
-[Next Page: AddLanguage](gRPCDocs/AddLanguage.html)
+[Next Page: AddLanguage](gRPC/AddLanguage.html)
 
 </div>

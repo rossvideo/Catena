@@ -1,4 +1,6 @@
-![Alt](images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # Testing Catena using Postman 
 This is a quick guide on how to use Postman to run test with Catena. For a more detailed documentation, go to the [learning center](https://learning.postman.com/docs/introduction/overview/) on the Postman website.

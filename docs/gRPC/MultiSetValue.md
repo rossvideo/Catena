@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # MultiSetValue
 Sets the value of multiple parameters within a device model.
@@ -25,6 +27,6 @@ This gRPC returns nothing.
 
 <div style="text-align: center">
 
-[Next Page: UpdateSubscriptions](gRPCDocs/UpdateSubscriptions.html)
+[Next Page: UpdateSubscriptions](gRPC/UpdateSubscriptions.html)
 
 </div>

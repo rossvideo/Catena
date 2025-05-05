@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # GetValue
 Gets the value of a parameter within a device model.
@@ -55,6 +57,6 @@ message Value {
 
 <div style="text-align: center">
 
-[Next Page: MultiSetValue](gRPCDocs/MultiSetValue.html)
+[Next Page: MultiSetValue](gRPC/MultiSetValue.html)
 
 </div>

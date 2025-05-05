@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # BasicParamInfoRequest
 Gets a parameter's basic information from the device model connected to the specified slot
@@ -37,6 +39,6 @@ message BasicParamInfo {
 
 <div style="text-align: center">
 
-[Next Page: SetValue](gRPCDocs/SetValue.html)
+[Next Page: SetValue](gRPC/SetValue.html)
 
 </div>

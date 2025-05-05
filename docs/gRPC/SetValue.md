@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # SetValue
 Sets the value of a parameter within a device model.
@@ -24,6 +26,6 @@ This gRPC returns nothing.
 
 <div style="text-align: center">
 
-[Next Page: GetValue](gRPCDocs/GetValue.html)
+[Next Page: GetValue](gRPC/GetValue.html)
 
 </div>
