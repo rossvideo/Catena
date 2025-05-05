@@ -42,12 +42,13 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to add/remove from client's subscriptions
+      description: The slot of the device model containing the parameters to 
+        add/remove from client's subscriptions
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: oid
-      in: path
+      in: query
       required: true
       description: The path to the parameter within the device model to get
       schema:
@@ -63,40 +64,19 @@ get:
             $ref: "./Messages.yaml#/$defs/component_param"
 
           example:
-            - {
-                "slot": 1,
-                "oid": "/text_box"
-              }
-            - {
-                "oid": "text_box",
-                "param": {
-                  "oid_aliases": [],
-                  "client_hints": {},
-                  "commands": {},
-                  "params": {},
-                  "name": {
-                    "display_strings": {
-                      "en": "Text Box",
-                      "fr": "Boîte de Texte",
-                      "es": "Caja de Texto"
-                    }
-                  },
-                  "type": "STRING",
-                  "read_only": false,
-                  "widget": "",
-                  "precision": 0,
-                  "value": {
-                    "string_value": "Hello, World!"
-                  },
-                  "constraint": null,
-                  "max_length": 0,
-                  "total_length": 0,
-                  "access_scope": "",
-                  "response": false,
-                  "help": null,
-                  "import": null,
-                  "minimal_set": false,
-                  "stateless": false,
-                  "template_oid": ""
+            {
+              "oid": "text_box",
+              "param": {
+                "name": {
+                  "displayStrings": {
+                    "en": "Text Box",
+                    "es": "Caja de Texto",
+                    "fr": "Boîte de Texte"
+                  }
+                },
+                "type": "STRING",
+                "value": {
+                  "stringValue": "Hello, World!"
                 }
               }
+            }

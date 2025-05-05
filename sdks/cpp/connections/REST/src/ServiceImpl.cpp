@@ -5,6 +5,7 @@ using catena::REST::CatenaServiceImpl;
 
 // RPCs
 #include <controllers/Connect.h>
+#include <controllers/GetParam.h>
 #include <controllers/MultiSetValue.h>
 #include <controllers/SetValue.h>
 #include <controllers/DeviceRequest.h>
@@ -13,6 +14,9 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/AddLanguage.h>
 #include <controllers/LanguagePackRequest.h>
 #include <controllers/ListLanguages.h>
+#include <controllers/BasicParamInfoRequest.h>
+#include <controllers/UpdateSubscriptions.h>
+#include <controllers/ExecuteCommand.h>
 
 using catena::REST::Connect;
 
@@ -29,30 +33,34 @@ void expandEnvVariables(std::string &str) {
     }
 }
 
-CatenaServiceImpl::CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz, uint16_t port)
+CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
       dm_{dm},
       EOPath_{EOPath},
       port_{port},
       authorizationEnabled_{authz},
       acceptor_{io_context_, tcp::endpoint(tcp::v4(), port)},
-      router_{Router::getInstance()} {
-
+      router_{Router::getInstance()},
+      subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {
     if (authorizationEnabled_) {
         std::cout<<"Authorization enabled."<<std::endl;
     }
 
     // Initializing the routes for router_.
 
-    router_.addProduct("GET/v1/Connect",                Connect::makeOne);
-    router_.addProduct("GET/v1/DeviceRequest",          DeviceRequest::makeOne);
-    router_.addProduct("GET/v1/GetPopulatedSlots",      GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/v1/GetValue",               GetValue::makeOne);
-    router_.addProduct("PUT/v1/MultiSetValue",          MultiSetValue::makeOne);
-    router_.addProduct("PUT/v1/SetValue",               SetValue::makeOne);
-    router_.addProduct("GET/v1/LanguagePackRequest",    LanguagePackRequest::makeOne);
-    router_.addProduct("GET/v1/ListLanguages",          ListLanguages::makeOne);
-    router_.addProduct("PUT/v1/AddLanguage",            AddLanguage::makeOne);
+    router_.addProduct("GET/v1/connect",                    Connect::makeOne);
+    router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
+    router_.addProduct("PUT/v1/execute-command",            ExecuteCommand::makeOne);
+    router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
+    router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);
+    router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
+    router_.addProduct("PUT/v1/set-value",                  SetValue::makeOne);
+    router_.addProduct("GET/v1/get-param",                  GetParam::makeOne);
+    router_.addProduct("GET/v1/language-pack-request",      LanguagePackRequest::makeOne);
+    router_.addProduct("GET/v1/list-languages",             ListLanguages::makeOne);
+    router_.addProduct("PUT/v1/add-language",               AddLanguage::makeOne);
+    router_.addProduct("GET/v1/basic-param-info-request",   BasicParamInfoRequest::makeOne);
+    router_.addProduct("PUT/v1/update-subscriptions",       UpdateSubscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.
@@ -76,13 +84,13 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context;
+                    SocketReader context(*subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
-                    std::string rpcKey = context.method() + context.rpc();
-                    // Returning options to the client if required.
+                    std::string rpcKey = context.method() + context.service();
+                    // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        SocketWriter writer(socket);
-                        writer.writeOptions();
+                        catena::exception_with_status rc("", catena::StatusCode::OK);
+                        SocketWriter(socket, context.origin()).write(rc);
                     // Otherwise routing to rpc.
                     } else if (router_.canMake(rpcKey)) {
                         std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);

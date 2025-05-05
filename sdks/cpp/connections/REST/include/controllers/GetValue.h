@@ -45,7 +45,7 @@
 #include <rpc/TimeNow.h>
 #include <Status.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
 #include <Enums.h>
@@ -64,7 +64,7 @@ namespace REST {
 class GetValue : public ICallData {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
-    using Device = catena::common::Device;
+    using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
@@ -74,7 +74,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to get the value from.
      */ 
-    GetValue(tcp::socket& socket, ISocketReader& context, Device& dm);
+    GetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief GetValue's main process.
      */
@@ -90,7 +90,7 @@ class GetValue : public ICallData {
      * @param context The SocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new GetValue(socket, context, dm);
     }
   private:
@@ -100,7 +100,7 @@ class GetValue : public ICallData {
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
      * @param ok The status of the RPC (open or closed).
      */
-    inline void writeConsole(CallStatus status, bool ok) const override {
+    inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "GetValue::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
@@ -122,20 +122,7 @@ class GetValue : public ICallData {
     /**
      * @brief The device to set values of.
      */
-    Device& dm_;
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
-
-    /**
-     * @brief The slot of the device to get the value from.
-     */
-    int slot_;
-    /**
-     * @brief The oid of the param to get the value from.
-     */
-    std::string oid_;
+    IDevice& dm_;
 
     /**
      * @brief ID of the GetValue object

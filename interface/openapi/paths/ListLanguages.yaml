@@ -58,4 +58,4 @@ get:
               lanugages:
                 title: String_Array
                 type: string_array
-          example: ["en", "fr", "es"]
+          example: {"languages": ["en", "fr", "es"]}

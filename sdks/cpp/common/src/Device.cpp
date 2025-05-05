@@ -165,38 +165,38 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
 
 catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    auto foundPack = language_packs_.find(languageId);
-    // ERROR: Did not find the pack.
-    if (foundPack == language_packs_.end()) {
-        return catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+    // Check if language pack exists.
+    if (!language_packs_.contains(languageId)) {
+        ans = catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+    } else {
+        // Setting the code and transferring language pack info.
+        pack.set_language(languageId);
+        auto languagePack = pack.mutable_language_pack();
+        language_packs_.at(languageId)->toProto(*languagePack);
     }
-    // Setting the code and transfering language pack info.
-    pack.set_language(languageId);
-    auto languagePack = pack.mutable_language_pack();
-    foundPack->second->toProto(*languagePack);
-    // Returning an OK status.
-    return catena::exception_with_status("", catena::StatusCode::OK);
+    return ans;
 }
 
 catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
     // Admin scope required.
     if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
-        return catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
+        ans = catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
     } else {
         auto& name = language.language_pack().name();
         auto& id = language.id();
         // Making sure LanguagePack is properly formatted.
         if (name.empty() || id.empty()) {
-            return catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
+            ans = catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
+        } else {
+            // added_packs_ here to maintain ownership in device scope.
+            added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
+            language_packs_[id]->fromProto(language.language_pack());      
+            // Pushing update to connect gRPC.
+            ComponentLanguagePack pack;
+            ans = getLanguagePack(id, pack);
+            languageAddedPushUpdate.emit(pack);
         }
-        // added_packs_ here to maintain ownership in device scope.
-        added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
-        language_packs_[id]->fromProto(language.language_pack());      
-        // Pushing update to connect gRPC.
-        ComponentLanguagePack pack;
-        ans = getLanguagePack(id, pack);
-        languageAddedPushUpdate.emit(pack);
     }
     return ans;
 }
@@ -392,14 +392,17 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
     return std::move(handle_.promise().deviceMessage); 
 }
 
-Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
     // Call the overloaded version with an explicitly constructed empty vector
-    static const std::vector<std::string> empty_vector;
-    return getComponentSerializer(authz, empty_vector, shallow);
+    static const std::set<std::string> empty_set;
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, empty_set, shallow));
 }
 
-Device::DeviceSerializer Device::getComponentSerializer(Authorizer& authz, const std::vector<std::string>& subscribed_oids, bool shallow) const {
-    std::cout << "getComponentSerializer received vector size: " << subscribed_oids.size() << std::endl;
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow) const {
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribed_oids, shallow));
+}
+
+Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow) const {
     catena::DeviceComponent component{};
     
     // Send basic device information first

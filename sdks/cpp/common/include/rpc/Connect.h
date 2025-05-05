@@ -43,8 +43,9 @@
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <Authorization.h>
+#include <ISubscriptionManager.h>
 #include "IConnect.h"
 
 #include <interface/device.pb.h>
@@ -73,14 +74,12 @@ class Connect : public IConnect {
      * @param dm The device manager.
      * @param authz true if authorization is enabled, false otherwise.
      * @param jwsToken The client's JWS token.
+     * @param subscriptionManager The subscription manager.
      */
-    Connect(Device& dm, bool authz, const std::string& jwsToken) : dm_{dm} {
-        if (authz) {
-            sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
-            authz_ = sharedAuthz_.get();
-        } else {
-            authz_ = &catena::common::Authorizer::kAuthzDisabled;
-        }
+    Connect(IDevice& dm, ISubscriptionManager& subscriptionManager) : 
+        dm_{dm}, 
+        subscriptionManager_{subscriptionManager},
+        detailLevel_{catena::Device_DetailLevel_UNSET} {
     }
     /**
      * @brief Connect does not have copy semantics
@@ -107,7 +106,7 @@ class Connect : public IConnect {
      * @param idx - The index of the value to update
      * @param p - The parameter to update
      */
-    void updateResponse(const std::string& oid, size_t idx, const IParam* p) override {
+    void updateResponse_(const std::string& oid, size_t idx, const IParam* p) override {
         try {
             // If Connect was cancelled, notify client and end process
             if (this->isCancelled()) {
@@ -115,53 +114,52 @@ class Connect : public IConnect {
                 this->cv_.notify_one();
                 return;
             }
-            
+
+            if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
+                return;
+            }
+
+            // Get all subscribed OIDs
+            auto subscribedOids = this->subscriptionManager_.getAllSubscribedOids(this->dm_);
+
             // Check if we should process this update based on detail level
             bool should_update = false;
-            switch (this->detailLevel_) {
-                case catena::Device_DetailLevel_FULL:
+            
+            // Map of detail levels to their update logic
+            const std::unordered_map<catena::Device_DetailLevel, std::function<void()>> detailLevelMap {
+                {catena::Device_DetailLevel_FULL, [&]() {
                     // Always update for FULL detail level
                     should_update = true;
-                    break;
-                    
-                // case catena::Device_DetailLevel_SUBSCRIPTIONS:
-                //     // Update if OID is subscribed or in minimal set
-                //     {
-                //         auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                //         should_update = p->getDescriptor().minimalSet() || 
-                //                       (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
-                //     }
-                //     break;
-                    
-                case catena::Device_DetailLevel_MINIMAL:
+                }},
+                {catena::Device_DetailLevel_MINIMAL, [&]() {
                     // For MINIMAL, only update if it's in the minimal set
                     should_update = p->getDescriptor().minimalSet();
-                    break;
-                    
-                case catena::Device_DetailLevel_COMMANDS:
+                }},
+                {catena::Device_DetailLevel_SUBSCRIPTIONS, [&]() {
+                    // Update if OID is subscribed or in minimal set
+                    should_update = p->getDescriptor().minimalSet() || 
+                           (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
+                }},
+                {catena::Device_DetailLevel_COMMANDS, [&]() {
                     // For COMMANDS, only update command parameters
                     should_update = p->getDescriptor().isCommand();
-                    break;
-                    
-                case catena::Device_DetailLevel_NONE:
+                }},
+                {catena::Device_DetailLevel_NONE, [&]() {
                     // Don't send any updates
                     should_update = false;
-                    break;
-                    
-                default:
-                    std::cout << "Unknown detail level: " << detailLevel_ << std::endl;
-                    // Don't send any updates
-                    should_update = false;
-                    break;
+                }}
+            };
+
+            if (detailLevelMap.contains(this->detailLevel_)) {
+                detailLevelMap.at(this->detailLevel_)();
+            } else {
+                should_update = false;
             }
     
             if (!should_update) {
                 return;
             }
     
-            if (this->authz_ != &catena::common::Authorizer::kAuthzDisabled && !this->authz_->readAuthz(*p)) {
-                return;
-            }
     
             this->res_.mutable_value()->set_oid(oid);
             this->res_.mutable_value()->set_element_index(idx);
@@ -186,7 +184,7 @@ class Connect : public IConnect {
      * 
      * @param l The added ComponentLanguagePack emitted by device.
      */
-    void updateResponse(const Device::ComponentLanguagePack& l) override {
+    void updateResponse_(const IDevice::ComponentLanguagePack& l) override {
         try {
             // If Connect was cancelled, notify client and end process.
             if (this->isCancelled()){
@@ -211,6 +209,20 @@ class Connect : public IConnect {
     }
 
     /**
+     * @brief Sets up the authorizer object with the jwsToken.
+     * @param jwsToken The jwsToken to use for authorization.
+     * @param authz true if authorization is enabled, false otherwise.
+     */
+    void initAuthz_(const std::string& jwsToken, bool authz = false) override {
+        if (authz) {
+            sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken);
+            authz_ = sharedAuthz_.get();
+        } else {
+            authz_ = &catena::common::Authorizer::kAuthzDisabled;
+        }
+    }
+
+    /**
      * @brief Shared ptr to maintain ownership of authorizer.
      */
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
@@ -221,13 +233,13 @@ class Connect : public IConnect {
     /**
      * @brief The connected device.
      */
-    Device& dm_;
+    IDevice& dm_;
     /**
      * @brief Bool indicating whether the child has an update to write.
      */
     bool hasUpdate_ = false;
     /**
-     * @brief A condition vairable used to wait for an update.
+     * @brief A condition variable used to wait for an update.
      */
     std::condition_variable cv_;
     /**
@@ -241,7 +253,11 @@ class Connect : public IConnect {
     /**
      * @brief The detail level of the response.
      */
-    int detailLevel_;
+    catena::Device_DetailLevel detailLevel_;
+    /**
+     * @brief The subscription manager.
+     */
+    ISubscriptionManager& subscriptionManager_;
     /**
      * @brief The user agent of the client.
      * 

@@ -6,37 +6,21 @@ using catena::REST::LanguagePackRequest;
 // Initializes the object counter for LanguagePackRequest to 0.
 int LanguagePackRequest::objectCounter_ = 0;
 
-LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, ISocketReader& context, Device& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, dm_{dm}, ok_{true} {
+LanguagePackRequest::LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
-    writeConsole(CallStatus::kCreate, socket_.is_open());
-    // Parsing fields and assigning to respective variables.
-    try {
-        std::unordered_map<std::string, std::string> fields = {
-            {"language", ""},
-            {"slot", ""}
-        };
-        context.fields(fields);
-        slot_ = fields.at("slot") != "" ? std::stoi(fields.at("slot")) : 0;
-        language_ = fields.at("language");
-    // Parse error
-    } catch (...) {
-        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
-        ok_ = false;
-    }
+    writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
 void LanguagePackRequest::proceed() {
-    if (!ok_) { return; }
-    writeConsole(CallStatus::kProcess, socket_.is_open());
+    writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     // Getting the requested language pack.
     catena::DeviceComponent_ComponentLanguagePack ans;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
-        Device::LockGuard lg(dm_);
-        rc = dm_.getLanguagePack(language_, ans);
+        std::lock_guard lg(dm_.mutex());
+        rc = dm_.getLanguagePack(context_.fields("language"), ans);
     // ERROR
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
@@ -51,6 +35,6 @@ void LanguagePackRequest::proceed() {
 }
 
 void LanguagePackRequest::finish() {
-    writeConsole(CallStatus::kFinish, socket_.is_open());
+    writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
 }

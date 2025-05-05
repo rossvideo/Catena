@@ -1,14 +1,22 @@
 
 #include <SocketReader.h>
+#include "ServiceImpl.h"
 using catena::REST::SocketReader;
+
+namespace catena {
+namespace REST {
+
+SocketReader::SocketReader(catena::common::ISubscriptionManager& subscriptionManager) 
+    : subscriptionManager_(subscriptionManager) {}
 
 void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
     method_ = "";
-    rpc_ = "";
-    req_ = "";
+    endpoint_ = "";
     jwsToken_ = "";
+    origin_ = "";
     jsonBody_ = "";
+    detailLevel_ = Device_DetailLevel_UNSET;
     authorizationEnabled_ = authz;
 
     // Reading the headers.
@@ -16,64 +24,64 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     boost::asio::read_until(socket, buffer, "\r\n\r\n");
     std::istream header_stream(&buffer);
 
-    // Getting the first line from the stream (URL).
+    // Getting the first line from the stream (URL), splitting, and parsing.
     std::string header;
     std::getline(header_stream, header);
-    // For loops used for (probably negligible) performance boost.
-    // Parsing URL for method_.
-    std::size_t i = 0;
-    for (; i < header.length(); i += 1) {
-        if (header[i] == ' ') { break; }
-        method_ += header[i];
-    }
-    // Parsing URL for rpc_.
-    bool started = false;
-    uint16_t slashNum = 0;
-    for (; i < header.length(); i += 1) {
-        if (started) {
-            if (header[i] == '/') {
-                slashNum += 1;
-            }
-            if (slashNum == 3 || header[i] == ' ') {
-                i += 1;
-                break;
-            }
-            rpc_ += header[i];
+    std::string url, httpVersion;
+    std::istringstream(header) >> method_ >> url >> httpVersion;
+    url_view u(url);
+
+    // Extracting endpoint_ and slot_ from the url (ex: v1/GetValue/{slot}).
+    // Slot is not needed for GetPopulatedSlots and Connect.
+    std::string path = u.path();
+    try {
+        if (path.find("connect") != std::string::npos ||
+            path.find("get-populated-slots") != std::string::npos) {
+            endpoint_ = path;
         } else {
-            if (header[i] == '/') {
-                started = true;
-                i -= 1;
-            }
+            std::size_t pos = path.find_last_of('/');
+            endpoint_ = path.substr(0, pos);
+            slot_ = std::stoi(path.substr(pos + 1));
         }
+    } catch (...) {
+        throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);
     }
-    // Parse fields until " http/..."
-    for (; i < header.length(); i += 1) {
-        if (header[i] == ' ') {
-            break;
-        }
-        req_ += header[i];
+
+    // Parsing query parameters.
+    for (auto element : u.encoded_params()) {
+        fields_[(std::string)element.key] = element.value;
     }
     
     // Looping through headers to retrieve JWS token and json body len.
     std::size_t contentLength = 0;
     while(std::getline(header_stream, header) && header != "\r") {
         // authz=false once found to avoid further str comparisons.
-        if (authz && header.starts_with("Authorization: Bearer ")) {
+        if (authz && jwsToken_.empty() && header.starts_with("Authorization: Bearer ")) {
             jwsToken_ = header.substr(std::string("Authorization: Bearer ").length());
             // Removing newline.
             jwsToken_.erase(jwsToken_.length() - 1);
             authz = false;
         }
         // Getting origin
-        else if (header.starts_with("Origin: ")) {
+        else if (origin_.empty() && header.starts_with("Origin: ")) {
             origin_ = header.substr(std::string("Origin: ").length());
         }
-        // Getting user-agent
-        else if (header.starts_with("User-Agent: ")) {
-            userAgent_ = header.substr(std::string("User-Agent: ").length());
+        // Getting language
+        else if (language_.empty() && header.starts_with("Language: ")) {
+            language_ = header.substr(std::string("Language: ").length());
+            language_.erase(language_.length() - 1); // Removing newline.
+        }
+        // Getting detail level from header
+        else if (detailLevel_ == Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
+            std::string dl = header.substr(std::string("Detail-Level: ").length());
+            dl.erase(dl.length() - 1); // Removing newline
+            auto& dlMap = catena::common::DetailLevel().getReverseMap();
+            if (dlMap.contains(dl)) {
+                detailLevel_ = dlMap.at(dl);
+            }
         }
         // Getting body content-Length
-        else if (header.starts_with("Content-Length: ")) {
+        else if (contentLength == 0 && header.starts_with("Content-Length: ")) {
             contentLength = stoi(header.substr(std::string("Content-Length: ").length()));
         }
     }
@@ -88,32 +96,11 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             jsonBody_.resize(contentLength);
         }
     }
-}
-
-void SocketReader::fields(std::unordered_map<std::string, std::string>& fieldMap) const {
-    std::string request = req_;
-    if (fieldMap.size() == 0) {
-        throw catena::exception_with_status("No fields found", catena::StatusCode::INVALID_ARGUMENT);
-    } else {
-        std::string fieldName = "";
-        for (auto& [nextField, value] : fieldMap) {
-            // If not the first iteration, find next field and get value of the current one.
-            if (fieldName != "") {
-                std::size_t end = request.find("/" + nextField + "/");
-                if (end == std::string::npos) {
-                    throw catena::exception_with_status("Could not find field " + nextField, catena::StatusCode::INVALID_ARGUMENT);
-                }
-                fieldMap.at(fieldName) = request.substr(0, end);
-            }
-            // Update for the next iteration.
-            fieldName = nextField;
-            std::size_t start = request.find("/" + fieldName + "/") + fieldName.size() + 2;
-            if (start == std::string::npos) {
-                throw catena::exception_with_status("Could not find field " + fieldName, catena::StatusCode::INVALID_ARGUMENT);
-            }
-            request = request.substr(start);
-        }
-        // We assume the last field is until the end of the request.
-        fieldMap.at(fieldName) = request.substr(0, request.find(" HTTP/1.1"));
+    // Setting detail level to NONE if not set.
+    if (detailLevel_ == Device_DetailLevel_UNSET) {
+        detailLevel_ = catena::Device_DetailLevel_NONE;
     }
 }
+
+}; // Namespace REST
+}; // Namespace catena

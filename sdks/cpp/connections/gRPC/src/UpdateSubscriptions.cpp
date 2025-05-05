@@ -33,7 +33,6 @@
 
 // connections/gRPC
 #include <UpdateSubscriptions.h>
-#include <SubscriptionManager.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -50,7 +49,7 @@ using catena::common::Path;
 
 int CatenaServiceImpl::UpdateSubscriptions::objectCounter_ = 0;
 
-CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -89,7 +88,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 catena::common::Authorizer* authz;
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
@@ -102,7 +101,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 // Process removed OIDs
                 for (const auto& oid : req_.removed_oids()) {     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
-                    if (!service_->subscriptionManager_.removeSubscription(oid, dm_, rc)) {
+                    if (!service_->getSubscriptionManager().removeSubscription(oid, dm_, rc)) {
                         throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
                     }
                 }
@@ -112,7 +111,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
                     
                     catena::exception_with_status rc{"", catena::StatusCode::OK};
-                    if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                    if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
                         throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                     }
                     
@@ -120,7 +119,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 
                 // Now that all subscriptions are processed, send current values for all subscribed parameters
                 try {
-                    sendSubscribedParameters(*authz);
+                    sendSubscribedParameters_(*authz);
                 } catch (const catena::exception_with_status& e) {
                     std::cout << "Error getting subscribed parameters: " << e.what() << std::endl;
                     // Don't throw here - we still want to finish the request successfully
@@ -192,11 +191,11 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
     }
 }
 
-void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::common::Authorizer& authz) {
+void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
     // Get all subscribed OIDs from the manager
-    const auto& subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+    const auto& subscribedOids = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
     std::cout << "Got " << subscribedOids.size() << " subscribed OIDs" << std::endl;
     
     // Process each subscribed OID
@@ -204,7 +203,7 @@ void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters(catena::co
         std::cout << "Processing subscribed OID: " << oid << std::endl;
         std::unique_ptr<IParam> param;
         {
-            Device::LockGuard lg(dm_);
+            std::lock_guard lg(dm_.mutex());
             param = dm_.getParam(oid, rc);
         }
         

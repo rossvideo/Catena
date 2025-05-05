@@ -34,9 +34,9 @@
 using namespace catena::common;
 using catena::common::LanguagePackTag;
 
-LanguagePack::LanguagePack(const std::string& languageCode, const std::string& name, ListInitializer list, Device& dev)
+LanguagePack::LanguagePack(const std::string& languageCode, const std::string& name, ListInitializer list, IDevice& dev)
     : name_{name}, words_(list.begin(), list.end()) {
-    dev.addItem<LanguagePackTag>(languageCode, this);
+    dev.addItem(languageCode, this);
 }
 
 void LanguagePack::fromProto(const catena::LanguagePack& pack) {

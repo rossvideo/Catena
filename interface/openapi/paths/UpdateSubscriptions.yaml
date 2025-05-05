@@ -35,14 +35,16 @@
 #
 
 put:
-  summary: Updates a client's subscriptions, affecting the output of the Connect and DeviceRequest RPCs on detail_level SUBSCRIPTIONS.
+  summary: Updates a client's subscriptions, affecting the output of the
+    Connect and DeviceRequest RPCs on detail_level SUBSCRIPTIONS.
   operationId: UpdateSubscriptions
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to add/remove from client's subscriptions
+      description: The slot of the device model containing the parameters to
+        add/remove from client's subscriptions
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
@@ -74,7 +76,8 @@ put:
         application/json:
           schema:
             title: Component Param
-            description: A parameter and the slot of the device manager it was recieved from
+            description: A parameter and the slot of the device manager it was
+              recieved from
             type: object
             properties:
               slot:
@@ -82,7 +85,8 @@ put:
               # Problems linking param
               param:
                 title: Parameter
-                description: Defines the type, value, constraints, UI, access modes and configuration options of a parameter.
+                description: Defines the type, value, constraints, UI, access
+                  modes and configuration options of a parameter.
                 type: object
 
           example:

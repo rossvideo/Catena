@@ -42,6 +42,10 @@
 #include <boost/asio/ssl.hpp>
 using boost::asio::ip::tcp;
 
+//common
+#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
+
 #include <string>
 #include <unordered_map>
  
@@ -77,39 +81,48 @@ class ISocketReader {
     /**
      * @brief Returns the rpc of the request.
      */
-    virtual const std::string& rpc() const = 0;
+    virtual const std::string& service() const = 0;
     /**
-     * @brief Parsed req_ for fields.
-     * 
-     * @param fields A map continaing the fields to parse and an empty
-     * string to place the parsed field in.
-     * fields is order dependent. The keys must be placed in the same order
-     * in which they appear in the URL. Additionally, the last field is
-     * assumed to be until the end of the request unless specified
-     * otherwise.
+     * @brief Returns the slot of the device to make the API call on.
      */
-    virtual void fields(std::unordered_map<std::string, std::string>& fieldMap) const = 0;
+    virtual uint32_t slot() const = 0;
+    /**
+     * @brief Returns the field "key" queried from the URL, or an empty sting
+     * if it does not exist.
+     * 
+     * @param key The name of the field to retrieve.
+     */
+    virtual const std::string& fields(const std::string& key) const = 0;
     /**
      * @brief Returns the client's jws token.
      */
     virtual const std::string& jwsToken() const = 0;
     /**
-     * @brief Returns the json body of the request, which may be empty.
-     */
-    virtual const std::string& jsonBody() const = 0;
-    /**
      * @brief Returns the origin of the request.
      */
     virtual const std::string& origin() const = 0;
     /**
-     * @brief Returns the agent used to send the request.
+     * @brief Returns the language to return the resposne in.
      */
-    virtual const std::string& userAgent() const = 0;
+    virtual const std::string& language() const = 0;
+    /**
+     * @brief Returns the detail level to return the response in.
+     */
+    virtual catena::Device_DetailLevel detailLevel() const = 0;
+    /**
+     * @brief Returns the json body of the request, which may be empty.
+     */
+    virtual const std::string& jsonBody() const = 0;
 
     /**
      * @brief Returns true if authorization is enabled.
      */
     virtual bool authorizationEnabled() const = 0;
+
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    virtual catena::common::ISubscriptionManager& getSubscriptionManager() = 0;
 };
  
 }; // Namespace REST

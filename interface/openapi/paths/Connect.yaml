@@ -39,23 +39,24 @@ get:
   operationId: Connect
 
   parameters:
-    - name: language
-      in: path
+    - name: Language
+      in: header
       required: false
-      description: The langauge code specifiying what language to recieve updates in
+      description: The langauge code specifiying what language to recieve 
+        updates in
       schema:
         type: string
       default: en
 
-    - name: detail_level
-      in: path
+    - name: Detail-Level
+      in: header
       required: false
       description: The level of detail to connect in
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
 
     - name: user_agent
-      in: path
+      in: query
       required: false
       description: The user agent of the client connecting to the service
       schema:
@@ -63,7 +64,7 @@ get:
       default: ""
 
     - name: force_connection
-      in: path
+      in: query
       required: false
       description: Optional flag to force a connection
       schema:
@@ -72,9 +73,12 @@ get:
 
   responses:
     "200":
-      description: A stream of push updates from the server
+      description: A stream of push updates from the server. These updates are
+        sent as server-sent events and have stringified JSON in their data
+        field. This JSON contains a slot number and the data associated with
+        that slot.
       content:
-        application/json:
+        text/event-stream:
           schema:
             title: PushUpdates
             description: An update from the server
@@ -153,3 +157,6 @@ get:
 
               slots_removed:
                 $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
+          example:
+            'data: { "slot": 1} data: { "slot": 1, "value": {  "oid": 
+            "/counter",  "value": {   "int32Value": 2  } }}'

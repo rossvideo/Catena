@@ -31,7 +31,7 @@
 
 #include <ParamDescriptor.h>
 #include <Authorization.h>  
-#include <Device.h>
+#include <IDevice.h>
 
 
 using catena::common::ParamDescriptor;
@@ -89,9 +89,8 @@ void ParamDescriptor::toProto(catena::BasicParamInfo &paramInfo, Authorizer& aut
 }
 
 const std::string& ParamDescriptor::name(const std::string& language) const { 
-    auto it = name_.displayStrings().find(language);
-    if (it != name_.displayStrings().end()) {
-        return it->second;
+    if (name_.displayStrings().contains(language)) {
+        return name_.displayStrings().at(language);
     } else {
         static const std::string empty;
         return empty;

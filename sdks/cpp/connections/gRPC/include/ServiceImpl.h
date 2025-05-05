@@ -44,12 +44,13 @@
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <Authorization.h>
 
 // gRPC interface
 #include <interface/service.grpc.pb.h>
 #include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 #include <grpcpp/grpcpp.h>
 #include <jwt-cpp/jwt.h>
@@ -63,7 +64,7 @@ using grpc::ServerAsyncResponseWriter;
 using grpc::Status;
 using grpc::ServerCompletionQueue;
 
-using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 
 /**
@@ -87,7 +88,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
+    CatenaServiceImpl(ServerCompletionQueue* cq, IDevice& dm, std::string& EOPath, bool authz);
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -104,11 +105,6 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief CallData states.
      */
     enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
-
-    /**
-     * @brief The subscription manager for handling parameter subscriptions
-     */
-    catena::common::SubscriptionManager subscriptionManager_;
 
   /*
    * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
@@ -137,7 +133,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
          * @throw Throws a Catena::exception_with_status UNAUTHENTICATED if a
          * JWS bearer token is not found.
          */
-        std::string getJWSToken() const;
+        std::string getJWSToken_() const;
         /**
          * @brief The context of the gRPC command.
          */
@@ -164,7 +160,7 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
     /**
      * @brief The device to implement Catena services to
      */
-    Device &dm_;
+    IDevice& dm_;
     /**
      * @brief The path to the external object
      */
@@ -173,6 +169,10 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief Flag to enable authorization
      */
     bool authorizationEnabled_;
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
     /**
      * @brief Returns the current time as a string including microseconds.
      */
@@ -193,6 +193,11 @@ class CatenaServiceImpl : public catena::CatenaService::AsyncService {
      * @brief Flag to set authorization as enabled or disabled
      */
     inline bool authorizationEnabled() const { return authorizationEnabled_; }
+    /**
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
+     */
+    inline catena::common::ISubscriptionManager& getSubscriptionManager() { return *subscriptionManager_; }
 
     //Forward declarations of CallData classes for their respective RPC
     class GetPopulatedSlots;

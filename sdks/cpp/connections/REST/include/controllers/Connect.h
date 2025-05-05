@@ -46,10 +46,10 @@
 #include <rpc/TimeNow.h>
 #include <Status.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <utils.h>
 #include <Authorization.h>
-#include <Enums.h>
+#include <SubscriptionManager.h>
 
 // Connections/REST
 #include "interface/ISocketReader.h"
@@ -65,7 +65,7 @@ namespace REST {
 class Connect : public ICallData, public catena::common::Connect {
   public:
     // Specifying which Device and IParam to use (defaults to catena::...)
-    using Device = catena::common::Device;
+    using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
@@ -75,7 +75,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */ 
-    Connect(tcp::socket& socket, ISocketReader& context, Device& dm);
+    Connect(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * Connect main process
      */
@@ -91,7 +91,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new Connect(socket, context, dm);
     }
     
@@ -107,7 +107,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
      * @param ok The status of the RPC (open or closed).
      */
-    inline void writeConsole(CallStatus status, bool ok) const override {
+    inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "Connect::proceed[" << objectId_ << "]: "
                 << catena::common::timeNow() << " status: "
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
@@ -125,16 +125,18 @@ class Connect : public ICallData, public catena::common::Connect {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    ChunkedWriter writer_;
+    SSEWriter writer_;
+    /**
+     * @brief The mutex to for locking the object while writing
+     */
+    /**
+     * @brief The SocketReader object for reading the request.
+     */
+    SocketReader& context_;
     /**
      * @brief The mutex to for locking the object while writing
      */
     std::mutex mtx_;
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
-
     /**
      * @brief Id of operation waiting for valueSetByClient to be emitted.
      * Used when ending the connection.

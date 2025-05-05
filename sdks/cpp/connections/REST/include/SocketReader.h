@@ -32,6 +32,7 @@
  * @file SocketReader.h
  * @brief Helper class used to read from a socket using boost.
  * @author benjamin.whitten@rossvideo.com
+ * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -39,6 +40,8 @@
 
 // common
 #include <Status.h>
+#include <Enums.h>
+#include <ISubscriptionManager.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -46,7 +49,9 @@
 // boost
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/url.hpp>
 using boost::asio::ip::tcp;
+using namespace boost::urls;
 
 #include <string>
 #include <iostream>
@@ -54,11 +59,19 @@ using boost::asio::ip::tcp;
 namespace catena {
 namespace REST {
 
+// Forward declaration
+class CatenaServiceImpl;
+
 /**
  * @brief Helper class used to read from a socket using boost.
  */
 class SocketReader : public ISocketReader {
   public:
+    /**
+     * @brief Constructor for the SocketReader class.
+     * @param subscriptionManager The subscription manager to use.
+     */
+    SocketReader(catena::common::ISubscriptionManager& subscriptionManager);
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -71,38 +84,50 @@ class SocketReader : public ISocketReader {
      */
     const std::string& method() const override { return method_; }
     /**
-     * @brief Returns the rpc of the request.
+     * @brief Returns the REST endpoint of the request (/v1/GetValue, etc.)
      */
-    const std::string& rpc() const override { return rpc_; }
+    const std::string& service() const override { return endpoint_; }
     /**
-     * @brief Parsed req_ for fields.
-     * 
-     * @param fields A map continaing the fields to parse and an empty
-     * string to place the parsed field in.
-     * fields is order dependent. The keys must be placed in the same order
-     * in which they appear in the URL. Additionally, the last field is
-     * assumed to be until the end of the request unless specified
-     * otherwise.
-     * 
-     * @todo Update once URL format is finalized.
+     * @brief Returns the slot of the device to make the API call on.
      */
-    void fields(std::unordered_map<std::string, std::string>& fieldMap) const override;
+    uint32_t slot() const override { return slot_; };
+    /**
+     * @brief Returns the field "key" queried from the URL, or an empty sting
+     * if it does not exist.
+     * 
+     * @param key The name of the field to retrieve.
+     */
+    const std::string& fields(const std::string& key) const override {
+      if (fields_.contains(key)) {
+        return fields_.at(key);
+      } else {
+        return fieldNotFound;
+      }
+    }
     /**
      * @brief Returns the client's jws token.
      */
     const std::string& jwsToken() const override { return jwsToken_; }
     /**
-     * @brief Returns the json body of the request, which may be empty.
-     */
-    const std::string& jsonBody() const override { return jsonBody_; }
-    /**
      * @brief Returns the origin of the request.
      */
     const std::string& origin() const override { return origin_; }
     /**
-     * @brief Returns the agent used to send the request.
+     * @brief Returns the language to return the resposne in.
      */
-    const std::string& userAgent() const override { return userAgent_; }
+    const std::string& language() const override { return language_; };
+    /**
+     * @brief Returns the detail level to return the response in.
+     */
+    catena::Device_DetailLevel detailLevel() const override { return detailLevel_; };
+    /**
+     * @brief Returns the json body of the request, which may be empty.
+     */
+    const std::string& jsonBody() const override { return jsonBody_; }
+    /**
+     * @brief Returns a reference to the subscription manager
+     */
+    catena::common::ISubscriptionManager& getSubscriptionManager() override { return subscriptionManager_; }
 
     /**
      * @brief Returns true if authorization is enabled.
@@ -115,13 +140,13 @@ class SocketReader : public ISocketReader {
      */
     std::string method_ = "";
     /**
-     * @brief The rpc of the request (/v1/GetValue, etc.)
+     * @brief The REST endpoint being accessed (/v1/GetValue, etc.)
      */
-    std::string rpc_ = "";
+    std::string endpoint_ = "";
     /**
-     * @brief The request string (bit after "method .../rpc_").
+     * @brief The slot of the device to make the API call on.
      */
-    std::string req_ = "";
+    uint32_t slot_;
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */
@@ -135,9 +160,26 @@ class SocketReader : public ISocketReader {
      */
     std::string origin_ = "";
     /**
-     * @brief The agent the request was sent from.
+     * @brief The language to return the response in.
      */
-    std::string userAgent_ = "";
+    std::string language_ = "";
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    catena::common::ISubscriptionManager& subscriptionManager_;
+    /**
+     * @brief The detail level to return the response in.
+     */
+    catena::Device_DetailLevel detailLevel_;
+    /**
+     * @brief A map of fields queried from the URL.
+     */
+    std::unordered_map<std::string, std::string> fields_;
+    /**
+     * @brief An empty string var to return if the field is not found.
+     * Exists to avoid scope issues.
+     */
+    std::string fieldNotFound = "";
     /**
      * @brief True if authorization is enabled.
      */

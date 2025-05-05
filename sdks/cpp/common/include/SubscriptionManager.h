@@ -42,20 +42,21 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <Device.h>
+#include <IDevice.h>
 #include <IParam.h>
 #include <ParamVisitor.h>
+#include <ISubscriptionManager.h>
 
 namespace catena {
 namespace common {
 
-using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 
 /**
  * @brief Class for managing parameter subscriptions in Catena
  */
-class SubscriptionManager {
+class SubscriptionManager : public ISubscriptionManager {
 public:
     /**
      * @brief Constructor
@@ -69,7 +70,7 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
+    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Remove an OID subscription
@@ -78,33 +79,21 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid, Device& dm, exception_with_status& rc);
+    bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::vector<std::string>& getAllSubscribedOids(Device& dm);
-
-    /**
-     * @brief Get all unique subscriptions
-     * @return Reference to the set of unique subscriptions
-     */
-    const std::set<std::string>& getUniqueSubscriptions();
-
-    /**
-     * @brief Get all wildcard subscriptions
-     * @return Reference to the set of wildcard subscriptions (OIDs ending with "/*")
-     */
-    const std::set<std::string>& getWildcardSubscriptions();
+    const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
 
     /**
      * @brief Check if an OID is a wildcard subscription
      * @param oid The OID to check
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
-    static bool isWildcard(const std::string& oid);
+    bool isWildcard(const std::string& oid) override;
 
 private:
     /**
@@ -126,7 +115,7 @@ private:
              * @brief Constructor for the SubscriptionVisitor class
              * @param oids The vector of subscribed OIDs
              */
-            explicit SubscriptionVisitor(std::vector<std::string>& oids) : oids_(oids) {}
+            explicit SubscriptionVisitor(std::set<std::string>& oids) : oids_(oids) {}
             
             /**
              * @brief Visit a parameter
@@ -134,7 +123,7 @@ private:
              * @param path The path of the parameter
              */
             void visit(catena::common::IParam* param, const std::string& path) override {
-                oids_.push_back(path);
+                oids_.insert(path);
             }
             
             /**
@@ -149,30 +138,19 @@ private:
             /**
              * @brief The vector of subscribed OIDs within the visitor
              */
-            std::vector<std::string>& oids_;
+            std::set<std::string>& oids_;
     };
 
-
     /**
-     * @brief Set of unique subscriptions
-         */
-    std::set<std::string> uniqueSubscriptions_; 
-
-    /**
-     * @brief Set of wildcard subscriptions
+     * @brief Set of all active subscriptions (unique and expanded wildcards)
      */
-    std::set<std::string> wildcardSubscriptions_;
-
-    /**
-     * @brief Vector of all subscribed OIDs
-     */
-    std::vector<std::string> allSubscribedOids_;
+    std::set<std::string> subscriptions_;
 
     /**
      * @brief Update the combined list of all subscribed OIDs
      * @param dm The device model to use for expanding wildcard subscriptions
      */
-    void updateAllSubscribedOids_(Device& dm);
+    void updateAllSubscribedOids_(IDevice& dm);
 };
 
 } // namespace common

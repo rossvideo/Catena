@@ -35,6 +35,7 @@
 // connections/gRPC
 #include <Connect.h>
 
+
 // type aliases
 using catena::common::ParamTag;
 using catena::common::Path;
@@ -55,10 +56,10 @@ int CatenaServiceImpl::Connect::objectCounter_ = 0;
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, Device &dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
-        status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-            std::cout << "Calling registerItem with: " << this << std::endl;
+CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
+    : service_{service}, writer_(&context_),
+        status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
+        catena::common::Connect(dm, service->getSubscriptionManager()) {
     service->registerItem(this);
     objectId_ = objectCounter_++;
     proceed(service, ok);  // start the process
@@ -88,6 +89,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * from the service.
          */ 
         case CallStatus::kCreate:
+            std::cout << "Transitioning from kCreate to kProcess" << std::endl;
             status_ = CallStatus::kProcess;
             service_->RequestConnect(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
             break;
@@ -96,58 +98,50 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            std::cout << "In kProcess state, setting up connections" << std::endl;
             // Used to serve other clients while processing.
             new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
-            // Cancels all open connections if shutdown signal is sent.
-            shutdownSignalId_ = shutdownSignal_.connect([this](){
-                context_.TryCancel();
-                hasUpdate_ = true;
-                this->cv_.notify_one();
-            });
-            // Waiting for a value set by server to be sent to execute code.
-            valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse(oid, idx, p);
-            });
-
-            // Waiting for a value set by client to be sent to execute code.
-            valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                updateResponse(oid, idx, p);
-            });
-
-            // Waiting for a language to be added to execute code.
-            languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const Device::ComponentLanguagePack& l) {
-                try {
-                    // If Connect was cancelled, notify client and end process.
-                    if (this->context_.IsCancelled()){
-                        this->hasUpdate_ = true;
-                        this->cv_.notify_one();
-                        return;
-                    }
-                    // Returning if authorization is enabled and the client does not have monitor scope.
-                    if (service_->authorizationEnabled()) {
-                        catena::common::Authorizer authz{getJWSToken()};
-                        if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kMonitor))) {
-                            return;
-                        }
-                    }
-                    // Updating res_'s device_component and pushing update.
-                    auto pack = this->res_.mutable_device_component()->mutable_language_pack();
-                    pack->set_language(l.language());
-                    pack->mutable_language_pack()->CopyFrom(l.language_pack());
-                    this->hasUpdate_ = true;
+            try {
+                // Setting up the client's authorizer.
+                initAuthz_(getJWSToken_(), service_->authorizationEnabled());
+                // Cancels all open connections if shutdown signal is sent.
+                shutdownSignalId_ = shutdownSignal_.connect([this](){
+                    context_.TryCancel();
+                    hasUpdate_ = true;
                     this->cv_.notify_one();
-                } catch(catena::exception_with_status& why){
-                    // if an error is thrown, no update is pushed to the client
-                }
-            });
+                });
+                // Waiting for a value set by server to be sent to execute code.
+                valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                    updateResponse_(oid, idx, p);
+                });
 
-            // send client a empty update with slot of the device
-            {
-                status_ = CallStatus::kWrite;
-                catena::PushUpdates populatedSlots;
-                populatedSlots.set_slot(dm_.slot());
-                writer_.Write(populatedSlots, this);
+                // Waiting for a value set by client to be sent to execute code.
+                valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+                    updateResponse_(oid, idx, p);
+                });
+
+                // Waiting for a language to be added to execute code.
+                languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
+                    updateResponse_(l);
+                });
+
+                // Set detail level from request
+                detailLevel_ = req_.detail_level();
+                dm_.detail_level(req_.detail_level());
+
+                // send client a empty update with slot of the device
+                {
+                    std::cout << "Transitioning from kProcess to kWrite" << std::endl;
+                    status_ = CallStatus::kWrite;
+                    catena::PushUpdates populatedSlots;
+                    populatedSlots.set_slot(dm_.slot());
+                    writer_.Write(populatedSlots, this);
+                }
+            } catch (catena::exception_with_status& rc) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
+                writer_.Finish(errorStatus, this);
             }
             break;
         /**
@@ -155,7 +149,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
-            // Waiting until there is an update to proceed.
+            std::cout << "In kWrite state, waiting for updates" << std::endl;
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
@@ -167,6 +161,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
+                std::cout << "Writing update to client" << std::endl;
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
@@ -191,99 +186,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
     }
 }
 
-/**
- * Updates the response message with parameter values and handles authorization checks.
- */
-void CatenaServiceImpl::Connect::updateResponse(const std::string& oid, size_t idx, const IParam* p) {
-    try {
-        // If Connect was cancelled, notify client and end process
-        if (this->context_.IsCancelled()) {
-            this->hasUpdate_ = true;
-            this->cv_.notify_one();
-            return;
-        }
-        
-        // Check if we should process this update based on detail level
-        bool should_update = false;
-        switch (req_.detail_level()) {
-            case catena::Device_DetailLevel_FULL:
-                // Always update for FULL detail level
-                should_update = true;
-                break;
-                
-            case catena::Device_DetailLevel_SUBSCRIPTIONS:
-                // Update if OID is subscribed or in minimal set
-                {
-                    auto subscribedOids = service_->subscriptionManager_.getAllSubscribedOids(dm_);
-                    should_update = p->getDescriptor().minimalSet();
-                    
-                    // Check for exact match or wildcard match
-                    for (const auto& subscribedOid : subscribedOids) {
-                        if (subscribedOid == oid) {
-                            should_update = true;
-                            break;
-                        }
-                        // Check for wildcard match (ends with /*)
-                        if (subscribedOid.length() >= 2 && 
-                            subscribedOid.substr(subscribedOid.length() - 2) == "/*" &&
-                            oid.find(subscribedOid.substr(0, subscribedOid.length() - 2)) == 0) {
-                            should_update = true;
-                            break;
-                        }
-                    }
-                }
-                break;
-                
-            case catena::Device_DetailLevel_MINIMAL:
-                // For MINIMAL, only update if it's in the minimal set
-                should_update = p->getDescriptor().minimalSet();
-                break;
-                
-            case catena::Device_DetailLevel_COMMANDS:
-                // For COMMANDS, only update command parameters
-                should_update = p->getDescriptor().isCommand();
-                break;
-                
-            case catena::Device_DetailLevel_NONE:
-                // Don't send any updates
-                should_update = false;
-                break;
-                
-            default:
-                std::cout << "Unknown detail level: " << req_.detail_level() << std::endl;
-                return;
-        }
-
-        if (!should_update) {
-            return;
-        }
-
-        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-        catena::common::Authorizer* authz;
-        if (service_->authorizationEnabled()) {
-            sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
-            authz = sharedAuthz.get();
-        } else {
-            authz = &catena::common::Authorizer::kAuthzDisabled;
-        }
-
-        if (service_->authorizationEnabled() && !authz->readAuthz(*p)) {
-            return;
-        }
-
-        this->res_.mutable_value()->set_oid(oid);
-        this->res_.mutable_value()->set_element_index(idx);
-        
-        catena::Value* value = this->res_.mutable_value()->mutable_value();
-
-        catena::exception_with_status rc{"", catena::StatusCode::OK};
-        rc = p->toProto(*value, *authz);
-        //If the param conversion was successful, send the update
-        if (rc.status == catena::StatusCode::OK) {
-            this->hasUpdate_ = true;
-            this->cv_.notify_one();
-        }
-    } catch(catena::exception_with_status& why) {
-        // if an error is thrown, no update is pushed to the client
-    }
+// Returns true if the connection has been cancelled.
+bool CatenaServiceImpl::Connect::isCancelled() {
+    return context_.IsCancelled();
 }

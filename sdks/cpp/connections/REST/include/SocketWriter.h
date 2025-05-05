@@ -51,6 +51,7 @@ using boost::asio::ip::tcp;
 
 // common
 #include <Status.h>
+#include <utils.h>
 
 namespace catena {
 namespace REST {
@@ -70,9 +71,8 @@ class SocketWriter : public ISocketWriter {
     SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket} {
       CORS_ = "Access-Control-Allow-Origin: " + origin + "\r\n"
               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
+              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
               "Access-Control-Allow-Credentials: true\r\n";
-      response_ = "";
     }
     /**
      * @brief Adds the protobuf message to the end of response in JSON format.
@@ -97,21 +97,12 @@ class SocketWriter : public ISocketWriter {
      * finish().
      */
     void finish(google::protobuf::Message& msg);
-    /**
-     * @brief Writes a response to the client detaining their options.
-     * Used when method = OPTIONS.
-     */
-    void writeOptions() override;
 
-  protected:
+  private:
     /**
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
-    /**
-     * @brief The response to write to the socket.
-     */
-    std::string response_;
     /**
      * @brief CORS headers used for all responses.
      * Access-Control-Allow-Origin,
@@ -121,76 +112,74 @@ class SocketWriter : public ISocketWriter {
      */
     std::string CORS_;
     /**
+     * @brief The response to write to the socket.
+     */
+    std::string response_ = "";
+    /**
      * @brief Flag indicating whether the response is a multi-part response.
      * 
      * Used to determine formatting when finish() is called.
      */
     bool multi_ = false;
-    /**
-     * @brief Maps catena::StatusCode to HTTP status codes.
-     */
-    const std::map<catena::StatusCode, int> codeMap_ {
-    {catena::StatusCode::OK,                  200},
-    {catena::StatusCode::CANCELLED,           410},
-    {catena::StatusCode::UNKNOWN,             404},
-    {catena::StatusCode::INVALID_ARGUMENT,    406},
-    {catena::StatusCode::DEADLINE_EXCEEDED,   408},
-    {catena::StatusCode::NOT_FOUND,           410},
-    {catena::StatusCode::ALREADY_EXISTS,      409},
-    {catena::StatusCode::PERMISSION_DENIED,   401},
-    {catena::StatusCode::UNAUTHENTICATED,     407},
-    {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
-    {catena::StatusCode::FAILED_PRECONDITION, 412},
-    {catena::StatusCode::ABORTED,             10},  // TODO
-    {catena::StatusCode::OUT_OF_RANGE,        416},
-    {catena::StatusCode::UNIMPLEMENTED,       501},
-    {catena::StatusCode::INTERNAL,            500},
-    {catena::StatusCode::UNAVAILABLE,         503},
-    {catena::StatusCode::DATA_LOSS,           15},  // TODO
-    {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
-    };
 };
 
 /**
- * @brief Helper class used to write to a socket using boost.
- * 
- * Subclass for chunked encoding (Stream response).
+ * @brief Helper class to write Server Sent Events to a socket using boost.
  */
-class ChunkedWriter : public SocketWriter {
+class SSEWriter : public ISocketWriter {
   public:
-    // Using parent constructor
-    using SocketWriter::SocketWriter;
-    ChunkedWriter(tcp::socket& socket, const std::string& origin = "*", const std::string& userAgent = "")
-      : SocketWriter{socket, origin}, userAgent_{userAgent} {}
     /**
-     * @brief Writes a protobuf message to socket in JSON format.
+     * @brief Constructor for SSEWriter.
+     * @param socket The socket to write to.
+     * @param origin The origin of the request.
+     */
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*");
+    /**
+     * @brief Writes a protobuf message to the socket as an SSE.
      * @param msg The protobuf message to write as JSON.
      */
     void write(google::protobuf::Message& msg) override;
     /**
-     * @brief Writes an error message to the socket.
+     * @brief Writes an error message to the socket as an SSE.
      * @param err The catena::exception_with_status.
      */
     void write(catena::exception_with_status& err) override;
     /**
-     * @brief Finishes the chunked writing process.
+     * @brief Finishes the writing process.
+     * 
+     * Does nothing in SSE.
      */
-    void finish() override;
+    void finish() override {}
 
   private:
     /**
-     * @brief Writes headers to the socket in chuncked encoding format.
-     * @param status The catena::exception_with_status of the operation.
+     * @brief The socket to write to.
      */
-    void writeHeaders(catena::exception_with_status& status);
-    /**
-     * @brief Indicates whether the writer has written headers or not. 
-     */
-    bool hasHeaders_ = false;
-    /**
-     * @brief The agent the request was sent from.
-     */
-    std::string userAgent_ = "";
+    tcp::socket& socket_;
+};
+
+/**
+ * @brief Maps catena::StatusCode to HTTP status codes.
+ */
+const std::map<catena::StatusCode, int> codeMap_ {
+  {catena::StatusCode::OK,                  200},
+  {catena::StatusCode::CANCELLED,           410},
+  {catena::StatusCode::UNKNOWN,             404},
+  {catena::StatusCode::INVALID_ARGUMENT,    406},
+  {catena::StatusCode::DEADLINE_EXCEEDED,   408},
+  {catena::StatusCode::NOT_FOUND,           410},
+  {catena::StatusCode::ALREADY_EXISTS,      409},
+  {catena::StatusCode::PERMISSION_DENIED,   401},
+  {catena::StatusCode::UNAUTHENTICATED,     407},
+  {catena::StatusCode::RESOURCE_EXHAUSTED,  8},   // TODO
+  {catena::StatusCode::FAILED_PRECONDITION, 412},
+  {catena::StatusCode::ABORTED,             10},  // TODO
+  {catena::StatusCode::OUT_OF_RANGE,        416},
+  {catena::StatusCode::UNIMPLEMENTED,       501},
+  {catena::StatusCode::INTERNAL,            500},
+  {catena::StatusCode::UNAVAILABLE,         503},
+  {catena::StatusCode::DATA_LOSS,           15},  // TODO
+  {catena::StatusCode::DO_NOT_USE,          -1},  // TODO
 };
 
 }; // Namespace REST

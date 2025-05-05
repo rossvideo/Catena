@@ -43,7 +43,7 @@
 #include <ServiceImpl.h>
 #include <atomic>
 #include <mutex>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 
 /**
  * @brief CallData class for the UpdateSubscriptions RPC
@@ -57,7 +57,7 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @param dm The device model
          * @param ok Flag indicating if initialization was successful
          */
-        UpdateSubscriptions(CatenaServiceImpl *service, Device &dm, bool ok);
+        UpdateSubscriptions(CatenaServiceImpl *service, IDevice& dm, bool ok);
 
         /**
          * @brief Manages the steps of the UpdateSubscriptions gRPC command
@@ -72,14 +72,14 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
          * @param baseOid The base OID 
          * @param authz The authorizer to use for access control
          */
-        void processSubscription(const std::string& baseOid, catena::common::Authorizer& authz);
+        void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
 
 
         /**
          * @brief Helper method to send all currently subscribed parameters
          * @param authz The authorizer to use for access control
          */
-        void sendSubscribedParameters(catena::common::Authorizer& authz);
+        void sendSubscribedParameters_(catena::common::Authorizer& authz);
 
         /**
          * @brief Parent CatenaServiceImpl.
@@ -130,7 +130,7 @@ class CatenaServiceImpl::UpdateSubscriptions : public CallData {
         /**
          * @brief The device to get the value from.
          */
-        Device &dm_;
+        IDevice& dm_;
 
         /**
          * @brief The object's unique id counter.

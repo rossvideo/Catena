@@ -48,7 +48,7 @@ namespace REST {
  */
 class SetValue : public MultiSetValue {
   // Specifying which Device and IParam to use (defaults to catena::...)
-  using Device = catena::common::Device;
+  using IDevice = catena::common::IDevice;
   using IParam = catena::common::IParam;
 
   public:
@@ -59,7 +59,7 @@ class SetValue : public MultiSetValue {
      * @param context The ISocketReader object.
      * @param dm The device to set the value of.
      */ 
-    SetValue(tcp::socket& socket, ISocketReader& context, Device& dm);
+    SetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
     /**
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
@@ -67,7 +67,7 @@ class SetValue : public MultiSetValue {
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, Device& dm) {
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
       return new SetValue(socket, context, dm);
     }
   private:
@@ -75,7 +75,7 @@ class SetValue : public MultiSetValue {
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
      */
-    bool toMulti() override;
+    bool toMulti_() override;
 
     /**
      * @brief The total # of SetValue objects.

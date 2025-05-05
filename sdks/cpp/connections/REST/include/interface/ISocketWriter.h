@@ -78,11 +78,6 @@ class ISocketWriter {
      */
     virtual void write(catena::exception_with_status& err) = 0;
     /**
-     * @brief Writes a response to the client detaining their options.
-     * Used when method = OPTIONS.
-     */
-    virtual void writeOptions() = 0;
-    /**
      * @brief Finishes writing process.
      */
     virtual void finish() = 0;

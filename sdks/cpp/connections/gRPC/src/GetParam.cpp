@@ -52,7 +52,7 @@ int CatenaServiceImpl::GetParam::objectCounter_ = 0;
  * then starts the process.
  */
 
-CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::GetParam::GetParam(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -106,7 +106,7 @@ void CatenaServiceImpl::GetParam::proceed(CatenaServiceImpl *service, bool ok) {
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;

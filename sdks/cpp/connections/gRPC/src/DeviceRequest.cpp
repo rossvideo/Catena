@@ -33,6 +33,7 @@
 
 // connections/gRPC
 #include <DeviceRequest.h>
+#include <ISubscriptionManager.h>
 
 // type aliases
 using catena::common::ParamTag;
@@ -52,7 +53,7 @@ int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, Device &dm, bool ok)
+CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
@@ -100,29 +101,29 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 dm_.detail_level(req_.detail_level());
                 
                 // Get service subscriptions from the manager
-                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+                subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
                 
                 // If this request has subscriptions, add them
                 if (!req_.subscribed_oids().empty()) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
                         catena::exception_with_status rc{"", catena::StatusCode::OK};
-                        if (!service_->subscriptionManager_.addSubscription(oid, dm_, rc)) {
+                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
                             throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                         } else {
-                            rpc_subscriptions_.push_back(oid);
+                            rpc_subscriptions_.insert(oid);
                         }
                     }
                 }
                 
                 // Get final list of subscriptions for this response
-                subscribed_oids_ = service_->subscriptionManager_.getAllSubscribedOids(dm_);
+                subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
                 
                 //Handle authorization
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken());
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
@@ -164,7 +165,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 try {     
                     catena::DeviceComponent component{};
                     {
-                        Device::LockGuard lg(dm_);
+                        std::lock_guard lg(dm_.mutex());
                         component = serializer_->getNext();
                     }
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;

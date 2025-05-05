@@ -137,7 +137,7 @@ void statusUpdateExample(){
 
         // this is the "receiving end" of the status update example
         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-            if (handlers.find(oid) != handlers.end()) {
+            if (handlers.contains(oid)) {
                 handlers[oid](oid, p, idx);
             }
         });
@@ -157,7 +157,7 @@ void statusUpdateExample(){
             // update the counter once per second, and emit the event
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {
-                Device::LockGuard lg(dm); 
+                std::lock_guard lg(dm.mutex());
                 counter.get()++;
                 std::cout << counter.getOid() << " set to " << counter.get() << '\n';
                 dm.valueSetByServer.emit("/counter", &counter, 0);

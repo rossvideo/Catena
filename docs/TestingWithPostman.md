@@ -4,14 +4,31 @@
 This is a quick guide on how to use Postman to run test with Catena. For a more detailed documentation, go to the [learning center](https://learning.postman.com/docs/introduction/overview/) on the Postman website.
 
 ## How to set up Postman
-1. Follow [this guide](https://learning.postman.com/docs/getting-started/installation/installation-and-updates/) to install Postman on your device.
-2. Once installed open Postman and create a new request by selecting "new" then selecting "gRPC". 
-3. Go to the "Service definition" tab and select "Import a .proto file" and import Catena's service.proto file from the interface subdirectory. 
-4. Select "Enter URL" and add the IP and port that the service is running on.
-5. Select the method you want to test.
-6. Write the message for your request then click invoke.
+Follow [this guide](https://learning.postman.com/docs/getting-started/installation/installation-and-updates/) to install Postman on your device.
+
+### Sending a gRPC using Postman
+1. Once installed open Postman and create a new request by selecting "new" then selecting "gRPC". 
+2. Go to the "Service definition" tab and select "Import a .proto file" and import Catena's service.proto file from the interface subdirectory. 
+3. Select "Enter URL" and add the IP and port that the service is running on.
+4. Select the method you want to test.
+5. Write the message for your request then click invoke.
 
 ![Alt](images/Postman%20guide%20example.png) 
+
+> For more information on the REST API calls, see [gRPC]()
+
+### Sending a REST API call using Postman
+1. Once installed open Postman and create a new request by selecting "new" then selecting "HTTP". 
+2. Go to the "URL" tab and enter the IP and port of that the service is running on followed by "v1/endpoint-to-call/slot"
+    1. **Note that the connect and get-populated-slots API calls require the slot to not be defined.*
+3. Go to the "Method" dropdown and select the correct method for your API call.
+4. If the API call requires the "Detail_Level" or "Language" headers, click on the "Headers" tab and enter them there.
+6. If the API call requires a JSON body, click on the "Body" tab and enter it there.
+5. Click invoke.
+
+![Alt](images/Postman%20guide%20example%20REST.png) 
+
+> For more information on the REST API calls, see the [OpenAPI docs]()
 
 ## Enabling Secure Comms
 
@@ -43,3 +60,9 @@ This is a quick guide on how to use Postman to run test with Catena. For a more 
 2. Create a [JSON web token](https://jwt.io/) and paste it into the token field.
 
 ![Alt](images/Postman%20Authorization.PNG)
+
+<div style="text-align: center">
+
+[Next Page: Supported gRPC Services](gRPC.html)
+
+</div>

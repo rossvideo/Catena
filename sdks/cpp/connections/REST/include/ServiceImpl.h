@@ -32,7 +32,8 @@
  * @file ServiceImpl
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
- * @copyright Copyright © 2024 Ross Video Ltd
+ * @author zuhayr.sarker@rossvideo.com
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
@@ -42,10 +43,9 @@
 #include <vdk/signals.h>
 #include <patterns/GenericFactory.h>
 #include <IParam.h>
-#include <Device.h>
 #include <Authorization.h>
 #include <Enums.h>
-
+#include <ISubscriptionManager.h>
 // REST
 #include <interface/IServiceImpl.h>
 #include <interface/ICallData.h>
@@ -64,7 +64,7 @@ using boost::asio::ip::tcp;
 
 using catena::REST::SocketReader;
 using catena::REST::SocketWriter;
-using catena::REST::ChunkedWriter;
+using catena::REST::SSEWriter;
 
 namespace catena {
 /**
@@ -78,7 +78,7 @@ namespace REST {
 class CatenaServiceImpl : public catena::REST::IServiceImpl {
 
   // Specifying which Device and IParam to use (defaults to catena::...)
-  using Device = catena::common::Device;
+  using IDevice = catena::common::IDevice;
   using IParam = catena::common::IParam;
 
   public:
@@ -90,7 +90,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @param authz Flag to enable authorization.
      * @param port The port to listen on. Default is 443.
      */
-    explicit CatenaServiceImpl(Device &dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
+    explicit CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz = false, uint16_t port = 443);
 
     /**
      * @brief Returns the API's version.
@@ -109,8 +109,13 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      * @brief Returns true if authorization is enabled.
      */
     bool authorizationEnabled() override { return authorizationEnabled_; };
-    
+
   private:
+    /**
+     * @brief The subscription manager for handling parameter subscriptions
+     */
+    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
+
     /**
      * @brief Returns true if port_ is already in use.
      * 
@@ -137,7 +142,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     /**
      * @brief The device to implement Catena services to
      */
-    Device& dm_;
+    IDevice& dm_;
     /**
      * @brief The path to the external object
      */
@@ -163,8 +168,8 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
                                                     tcp::socket&,
-                                                    ISocketReader&,
-                                                    Device&>;
+                                                    SocketReader&,
+                                                    IDevice&>;
     /**
      * @brief Creating an ICallData factory for handling RPC routing.
      */
