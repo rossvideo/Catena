@@ -9,7 +9,8 @@ style="width: 100%;" alt="Catena Logo" />
 <h1 id="devicerequest">DeviceRequest</h1>
 <p>The DeviceRequest gRPC returns a stream of components from the device
 manager at the specified slot. Which components are retrieved depends on
-the specified detail_level. ### IN</p>
+the specified detail_level.</p>
+<h3 id="in">IN</h3>
 <pre><code>message DeviceRequestPayload {
   uint32 slot = 1;                     /* Uniquely identifies the device at
                                         * node scope. */
