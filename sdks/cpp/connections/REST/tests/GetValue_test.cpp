@@ -45,9 +45,10 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <IDevice.h>
-using catena::common::Authorizer;
 #include "controllers/GetValue.h"
 #include "interface/ISocketReader.h"
+
+using namespace catena::common;
 
 // Mocking the SocketReader interface
 class MockSocketReader : public catena::REST::ISocketReader {
@@ -62,7 +63,7 @@ class MockSocketReader : public catena::REST::ISocketReader {
     MOCK_METHOD(const std::string&, language, (), (const, override));
     MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
     MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
-    MOCK_METHOD(catena::common::ISubscriptionManager&, getSubscriptionManager, (), (override));
+    MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
 
     const std::string& fields(const std::string& key) {
@@ -79,7 +80,7 @@ class MockSocketReader : public catena::REST::ISocketReader {
 };
 
 // Mocking the Device interface
-class MockDevice : public catena::common::IDevice {
+class MockDevice : public IDevice {
   public:
     MOCK_METHOD(void, slot, (const uint32_t slot), (override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
@@ -92,23 +93,31 @@ class MockDevice : public catena::common::IDevice {
     MOCK_METHOD(uint32_t, default_total_length, (), (const, override));
     MOCK_METHOD(void, set_default_max_length, (const uint32_t default_max_length), (override));
     MOCK_METHOD(void, set_default_total_length, (const uint32_t default_total_length), (override));
-    MOCK_METHOD(void, toProto, (catena::Device& dst, catena::common::Authorizer& authz, bool shallow), (const, override));
+    MOCK_METHOD(void, toProto, (catena::Device& dst, Authorizer& authz, bool shallow), (const, override));
     MOCK_METHOD(void, toProto, (catena::LanguagePacks& packs), (const, override));
     MOCK_METHOD(void, toProto, (catena::LanguageList& list), (const, override));
-    MOCK_METHOD(catena::exception_with_status, addLanguage, (catena::AddLanguagePayload& language, catena::common::Authorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, addLanguage, (catena::AddLanguagePayload& language, Authorizer& authz), (override));
     MOCK_METHOD(catena::exception_with_status, getLanguagePack, (const std::string& languageId, ComponentLanguagePack& pack), (const, override));
-    
-
-    catena::exception_with_status getValue(const std::string& jptr, catena::Value& value, catena::common::Authorizer& authz) const {
-        catena::exception_with_status rc("OK", catena::StatusCode::OK);
-        if (jptr != "/text_box") {
-            rc = catena::exception_with_status("Invalid OID", catena::StatusCode::INVALID_ARGUMENT);
-        } else {
-            auto status = google::protobuf::util::JsonStringToMessage(absl::string_view("{\n \"stringValue\": \"Hello, World!\"\n}"), &value);
-        }
-        return rc;
-    }
-
+    class MockDeviceSerializer : public IDeviceSerializer {
+      public:
+        MOCK_METHOD(bool, hasMore, (), (const, override));
+        MOCK_METHOD(catena::DeviceComponent, getNext, (), (override));
+    };
+    MOCK_METHOD(std::unique_ptr<IDeviceSerializer>, getComponentSerializer, (Authorizer& authz, bool shallow), (const, override));
+    MOCK_METHOD(std::unique_ptr<IDeviceSerializer>, getComponentSerializer, (Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow), (const, override));
+    MOCK_METHOD(void, addItem, (const std::string& key, IParam* item), (override));
+    MOCK_METHOD(void, addItem, (const std::string& key, IConstraint* item), (override));
+    MOCK_METHOD(void, addItem, (const std::string& key, IMenuGroup* item), (override));
+    MOCK_METHOD(void, addItem, (const std::string& key, ILanguagePack* item), (override));
+    MOCK_METHOD(std::unique_ptr<IParam>, getParam, (const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz), (const, override));
+    MOCK_METHOD(std::unique_ptr<IParam>, getParam, (Path& path, catena::exception_with_status& status, Authorizer& authz), (const, override));
+    MOCK_METHOD(std::vector<std::unique_ptr<IParam>>, getTopLevelParams, (catena::exception_with_status& status, Authorizer& authz), (const, override));
+    MOCK_METHOD(std::unique_ptr<IParam>, getCommand, (const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz), (const, override));
+    MOCK_METHOD(bool, tryMultiSetValue, (catena::MultiSetValuePayload src, catena::exception_with_status& ans, Authorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, commitMultiSetValue, (catena::MultiSetValuePayload src, Authorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, setValue, (const std::string& jptr, catena::Value& src, Authorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, getValue, (const std::string& jptr, catena::Value& value, Authorizer& authz), (const, override));
+    MOCK_METHOD(bool, shouldSendParam, (const IParam& param, bool is_subscribed, Authorizer& authz), (const, override));
 };
 
 // Fixture
@@ -135,7 +144,7 @@ class RESTGetValueTests : public ::testing::Test {
     MockDevice dm;
 };
 
-TEST_F(RESTGetValueTests, GetValue_constructor) {
+TEST_F(RESTGetValueTests, GetValue_create) {
     // Creating GetValue object.
     catena::REST::GetValue getValue(serverSocket, context, dm);
 }
