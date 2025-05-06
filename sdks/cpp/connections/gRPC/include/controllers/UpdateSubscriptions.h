@@ -44,7 +44,6 @@
 #include <ISubscriptionManager.h>
 
 // connections/gRPC
-#include "interface/IServiceImpl.h"
 #include "CallData.h"
 
 namespace catena {
@@ -85,11 +84,6 @@ class UpdateSubscriptions : public CallData {
      * @param authz The authorizer to use for access control
      */
     void sendSubscribedParameters_(catena::common::Authorizer& authz);
-
-    /**
-     * @brief Parent CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
 
     /**
      * @brief The context of the gRPC command (ServerContext) for use in 

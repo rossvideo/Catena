@@ -51,7 +51,7 @@ using catena::common::Path;
 int UpdateSubscriptions::objectCounter_ = 0;
 
 UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+    : CallData(service), dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;

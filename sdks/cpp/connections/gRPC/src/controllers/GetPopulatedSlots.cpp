@@ -53,7 +53,7 @@ int GetPopulatedSlots::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetPopulatedSlots
  * object, then starts the process.
  */
-GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
+GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok): CallData(service), dm_{dm}, responder_(&context_),
               status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);

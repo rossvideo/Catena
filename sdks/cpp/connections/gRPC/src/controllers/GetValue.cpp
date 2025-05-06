@@ -52,7 +52,7 @@ int GetValue::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetValue object, 
  * then starts the process.
  */
-GetValue::GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok) : service_{service}, dm_{dm}, responder_(&context_), 
+GetValue::GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok) : CallData(service), dm_{dm}, responder_(&context_), 
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);

@@ -57,7 +57,7 @@ MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok)
 }
 
 MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok, int objectId)
-    : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
+    : CallData(service), dm_{dm}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
 void MultiSetValue::request_() {

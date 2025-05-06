@@ -40,7 +40,6 @@
 #pragma once
 
 // connections/gRPC
-#include "interface/IServiceImpl.h"
 #include "CallData.h"
 
 // common
@@ -89,11 +88,6 @@ class BasicParamInfoRequest : public CallData {
      * @param length - The length of the array.
      */
     void updateArrayLengths_(const std::string& array_name, uint32_t length);
-
-    /**
-     * @brief Parent CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
 
     /**
      * @brief The client's scopes.

@@ -41,7 +41,6 @@
 #pragma once
 
 // connections/gRPC
-#include "interface/IServiceImpl.h"
 #include "CallData.h"
 
 namespace catena {
@@ -69,10 +68,6 @@ class ExecuteCommand : public CallData {
     void proceed(bool ok) override;
 
   private:
-    /**
-     * @brief Pointer to CatenaServiceImpl
-     */
-    ICatenaServiceImpl *service_;
     /**
      * @brief Request payload for command
      */

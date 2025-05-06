@@ -36,7 +36,7 @@ using catena::gRPC::LanguagePackRequest;
 int LanguagePackRequest::objectCounter_ = 0;
 
 LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
     proceed(ok);

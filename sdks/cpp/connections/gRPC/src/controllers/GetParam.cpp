@@ -54,7 +54,7 @@ int GetParam::objectCounter_ = 0;
  */
 
 GetParam::GetParam(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+    : CallData(service), dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;

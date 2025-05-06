@@ -54,7 +54,7 @@ int ExternalObjectRequest::objectCounter_ = 0;
  * ExternalObjectRequest object, then starts the process
  */
 ExternalObjectRequest::ExternalObjectRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+    : CallData(service), dm_{dm}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;

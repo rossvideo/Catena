@@ -57,7 +57,7 @@ int catena::gRPC::Connect::objectCounter_ = 0;
  * then starts the process.
  */
 catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, writer_(&context_),
+    : CallData(service), writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
         catena::common::Connect(dm, service->getSubscriptionManager()) {
     service_->registerItem(this);

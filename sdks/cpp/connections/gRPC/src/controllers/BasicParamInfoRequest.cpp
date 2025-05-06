@@ -54,7 +54,7 @@ using catena::common::Authorizer;
 int BasicParamInfoRequest::objectCounter_ = 0;
 
 BasicParamInfoRequest::BasicParamInfoRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+    : CallData(service), dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;

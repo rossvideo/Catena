@@ -43,7 +43,6 @@
 #pragma once
 
 // connections/gRPC
-#include "interface/IServiceImpl.h"
 #include "CallData.h"
 
 namespace catena {
@@ -114,10 +113,6 @@ class MultiSetValue : public CallData {
      * @brief Name of childclass to specify gRPC in console notifications.
      */
     std::string typeName;
-    /**
-     * @brief Parent CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
     /**
      * @brief Server request as a MultiSetValuePayload if not already.
      */

@@ -54,7 +54,7 @@ int ExecuteCommand::objectCounter_ = 0;
  * object, then starts the process
  */
 ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, stream_(&context_),
+    : CallData(service), dm_{dm}, stream_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;

@@ -41,7 +41,6 @@
 #pragma once
 
 // connections/gRPC
-#include "interface/IServiceImpl.h"
 #include "CallData.h"
 
 namespace catena {
@@ -72,10 +71,6 @@ class GetPopulatedSlots : public CallData{
         void proceed(bool ok) override;
 
     private:
-        /**
-         * @brief Parent CatenaServiceImpl.
-         */
-        ICatenaServiceImpl *service_;
         /**
          * @brief Server request (empty).
          */

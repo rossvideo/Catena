@@ -41,7 +41,6 @@
 #pragma once
 
 // connections/gRPC
-#include "interface/IServiceImpl.h"
 #include "CallData.h"
 
 // common
@@ -83,10 +82,6 @@ class Connect : public CallData, public catena::common::Connect {
     bool isCancelled() override;
 
   private:
-    /**
-     * @brief Parent CatenaServiceImpl.
-     */
-    ICatenaServiceImpl *service_;
     /**
      * @brief Server request (Info on connection).
      */

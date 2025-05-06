@@ -38,6 +38,7 @@
 #pragma once
 
 // gRPC/interface
+#include "interface/IServiceImpl.h"
 #include "interface/ICallData.h"
 
 // common
@@ -66,6 +67,10 @@ enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 class CallData : public ICallData {
   protected:
     /**
+     * @brief CallData constructor which initializes service_.
+     */
+    CallData(ICatenaServiceImpl *service): service_(service) {}
+    /**
      * @brief Extracts the JWS Bearer token from the server context's
      * client metadata.
      * @param rc The exception_with_status object to set if an error occurs.
@@ -73,13 +78,13 @@ class CallData : public ICallData {
      */
     std::string getJWSToken_(catena::exception_with_status& rc) const override {
         std::string jwsToken = "";  
-        if (authorizationEnabled_) {
+        if (service_->authorizationEnabled()) {
             // Getting client metadata from context.
             auto clientMeta = &context_.client_metadata();
             if (clientMeta != nullptr) {
                 // Getting authorization data (JWS bearer token) from client metadata.
                 auto authData = clientMeta->find("authorization");
-                if (authData != clientMeta->end() || authData->second.starts_with("Bearer ")) {
+                if (authData != clientMeta->end() && authData->second.starts_with("Bearer ")) {
                     // Getting token (after "bearer") and returning as an std::string.
                     auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
                     jwsToken = std::string(tokenSubStr.begin(), tokenSubStr.end());
@@ -98,9 +103,9 @@ class CallData : public ICallData {
      */
     ServerContext context_;
     /**
-     * @brief True if authorization is enabled.
+     * @brief Pointer to CatenaServiceImpl
      */
-    bool authorizationEnabled_;
+    ICatenaServiceImpl *service_;
 };
 
 };
