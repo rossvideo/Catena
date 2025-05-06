@@ -53,6 +53,6 @@ message PushUpdates {
 
 <div style="text-align: center">
 
-[Next Page: AddLanguage](../AddLanguage.html)
+[Next Page: AddLanguage](AddLanguage.html)
 
 </div>

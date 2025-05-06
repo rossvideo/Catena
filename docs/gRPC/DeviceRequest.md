@@ -4,6 +4,7 @@
 
 # DeviceRequest
 The DeviceRequest gRPC returns a stream of components from the device manager at the specified slot. Which components are retrieved depends on the specified detail_level.
+
 ### IN
 ```
 message DeviceRequestPayload {
@@ -18,6 +19,7 @@ message DeviceRequestPayload {
                                         * UpdateSubscriptionsPayload) */
 }
 ```
+
 ### OUT
 A stream of DeviceComponents.
 ```

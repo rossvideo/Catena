@@ -46,7 +46,8 @@ message Value {
 
     StructList struct_array_values = 10;
 
-    DataPayload data_payload = 11; // Used for commands that accept or return data blobs
+    DataPayload data_payload = 11; /* Used for commands that accept or return
+                                    * data blobs */
 
     StructVariantValue struct_variant_value = 12;
 
