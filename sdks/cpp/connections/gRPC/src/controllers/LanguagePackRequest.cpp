@@ -28,77 +28,68 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
-#include <GetPopulatedSlots.h>
+#include <controllers/LanguagePackRequest.h>
+using catena::gRPC::LanguagePackRequest;
 
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
+// Initializes the object counter for LanguagePackRequest to 0.
+int LanguagePackRequest::objectCounter_ = 0;
 
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
-
-// Initializes the object counter for GetPopulatedSlots to 0.
-int CatenaServiceImpl::GetPopulatedSlots::objectCounter_ = 0;
-
-/**
- * Constructor which initializes and registers the current GetPopulatedSlots
- * object, then starts the process.
- */
-CatenaServiceImpl::GetPopulatedSlots::GetPopulatedSlots(CatenaServiceImpl *service, IDevice& dm, bool ok): service_{service}, dm_{dm}, responder_(&context_),
-              status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed(ok);
 }
-// Manages gRPC command execution process using the state variable status.
-void CatenaServiceImpl::GetPopulatedSlots::proceed(CatenaServiceImpl *service, bool ok) {
-    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
 
+void LanguagePackRequest::proceed(bool ok) {
+    std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: " << timeNow()
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
     if(!ok){
         status_ = CallStatus::kFinish;
     }
-
     switch(status_){
         /** 
          * kCreate: Updates status to kProcess and requests the
-         * GetPopulatedSlots command from the service.
+         * LanguagePackRequest command from the service.
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestGetPopulatedSlots(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            service_->RequestLanguagePackRequest(&context_, &req_, &responder_, service_->cq(), service_->cq(), this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
-            {
-                // Used to serve other clients while processing.
-                new GetPopulatedSlots(service_, dm_, ok);
-                context_.AsyncNotifyWhenDone(this);
-                catena::SlotList ans;
-                ans.add_slots(dm_.slot());
+            // Used to serve other clients while processing.
+            new LanguagePackRequest(service_, dm_, ok);
+            context_.AsyncNotifyWhenDone(this);
+            try { // Getting and returning the requested language.
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
+                std::lock_guard lg(dm_.mutex());
+                catena::DeviceComponent_ComponentLanguagePack ans;
+                rc = dm_.getLanguagePack(req_.language(), ans);
                 status_ = CallStatus::kFinish;
-                responder_.Finish(ans, Status::OK, this);
+                if (rc.status == catena::StatusCode::OK) {
+                    responder_.Finish(ans, Status::OK, this);
+                } else { // Error, end process.
+                    responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                }
+            } catch (...) { // Error, end process.
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
+                responder_.FinishWithError(errorStatus, this);
             }
-        break;
+            break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:

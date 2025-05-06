@@ -40,64 +40,73 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "interface/IServiceImpl.h"
+#include "CallData.h"
+
+namespace catena {
+namespace gRPC {
 
 /**
 * @brief CallData class for the GetValue RPC
 */
-class CatenaServiceImpl::GetValue : public CallData{
-    public:
-        /**
-         * @brief Constructor for the CallData class of the GetValue
-         * gRPC. Calls proceed() once initialized.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        GetValue(CatenaServiceImpl *service, IDevice& dm, bool ok);
-        /**
-         * @brief Manages the steps of the GetValue gRPC command
-         * through the state variable status. Returns the value of the
-         * parameter specified by the user.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
-         */
-        void proceed(CatenaServiceImpl *service, bool ok) override;
+class GetValue : public CallData{
+  public:
+    /**
+     * @brief Constructor for the CallData class of the GetValue
+     * gRPC. Calls proceed() once initialized.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param dm - Address of the device to get the value from.
+     * @param ok - Flag to check if the command was successfully executed.
+     */ 
+    GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    /**
+     * @brief Manages the steps of the GetValue gRPC command
+     * through the state variable status. Returns the value of the
+     * parameter specified by the user.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param ok - Flag to check if the command was successfully executed.
+     */
+    void proceed(bool ok) override;
 
-    private:
-        /**
-         * @brief Parent CatenaServiceImpl.
-         */
-        CatenaServiceImpl *service_;
-        /**
-         * @brief Server request (Info on value to get).
-         */
-        catena::GetValuePayload req_;
-        /**
-         * @brief Server response (The requested value).
-         */
-        catena::Value res_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        ServerAsyncResponseWriter<::catena::Value> responder_;
-        /**
-         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
-         */
-        CallStatus status_;
-        /**
-         * @brief The device to get the value from.
-         */
-        IDevice& dm_;
-        /**
-         * @brief The object's unique id.
-         */
-        int objectId_;
-        /**
-         * @brief The total # of GetValue objects.
-         */
-        static int objectCounter_;
+  private:
+    /**
+     * @brief Parent CatenaServiceImpl.
+     */
+    ICatenaServiceImpl *service_;
+    /**
+     * @brief Server request (Info on value to get).
+     */
+    catena::GetValuePayload req_;
+    /**
+     * @brief Server response (The requested value).
+     */
+    catena::Value res_;
+    /**
+     * @brief gRPC async response writer.
+     */
+    ServerAsyncResponseWriter<::catena::Value> responder_;
+    /**
+     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     */
+    CallStatus status_;
+    /**
+     * @brief The device to get the value from.
+     */
+    IDevice& dm_;
+    /**
+     * @brief The object's unique id.
+     */
+    int objectId_;
+    /**
+     * @brief The total # of GetValue objects.
+     */
+    static int objectCounter_;
 };
+
+}; // namespace gRPC
+}; // namespace catena

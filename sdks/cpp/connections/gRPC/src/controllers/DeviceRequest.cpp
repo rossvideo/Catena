@@ -32,8 +32,10 @@
 #include <Tags.h>
 
 // connections/gRPC
-#include <DeviceRequest.h>
+#include <controllers/DeviceRequest.h>
 #include <ISubscriptionManager.h>
+
+using catena::gRPC::DeviceRequest;
 
 // type aliases
 using catena::common::ParamTag;
@@ -47,28 +49,28 @@ using catena::common::Path;
 #include <filesystem>
 
 // Counter for generating unique object IDs - static, so initializes at start
-int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
+int DeviceRequest::objectCounter_ = 0;
 
 /** 
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
+DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // start the process
+    proceed(ok);  // start the process
 }
 
 /** 
  * Manages gRPC command execution process by transitioning between states and
  * handling errors and responses accordingly 
  */
-void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
+void DeviceRequest::proceed(bool ok) {
     std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
     
     // If the process is cancelled, finish the process
     if(!ok){
@@ -80,8 +82,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
     switch (status_) {
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
-                                            this);
+            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq(), service_->cq(), this);
             break;
 
         /**
@@ -123,7 +124,8 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
                 if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
+                    catena::exception_with_status rc{"", catena::StatusCode::OK};
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_(rc));
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
@@ -195,7 +197,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
         case CallStatus::kFinish:
             std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
             //shutdownSignal.disconnect(shutdownSignalId_);
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
 
         // Throws an error if the state is not recognized

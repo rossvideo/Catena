@@ -57,6 +57,7 @@
 using grpc::Server;
 
 using namespace catena::common;
+using catena::gRPC::CatenaServiceImpl;
 
 Server *globalServer = nullptr;
 std::atomic<bool> globalLoop = true;
@@ -112,7 +113,7 @@ void RunRPCServer(std::string addr)
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
 
-        builder.AddListeningPort(addr, catena::getServerCredentials());
+        builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);

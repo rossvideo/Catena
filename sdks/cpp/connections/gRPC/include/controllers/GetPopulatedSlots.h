@@ -31,8 +31,8 @@
  */
 
 /**
- * @file ExecuteCommand.h
- * @brief Implements Catena gRPC ExecuteCommand
+ * @file GetPopulatedSlots.h
+ * @brief Implements Catena gRPC GetPopulatedSlots
  * @author john.naylor@rossvideo.com
  * @author john.danen@rossvideo.com
  * @author isaac.robert@rossvideo.com
@@ -40,62 +40,73 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "interface/IServiceImpl.h"
+#include "CallData.h"
+
+namespace catena {
+namespace gRPC {
 
 /**
-* @brief CallData class for the ExecuteCommand RPC
+* @brief CallData class for the GetPopulatedSlots RPC
 */
-class CatenaServiceImpl::ExecuteCommand : public CallData {
+class GetPopulatedSlots : public CallData{
     public:
         /**
-         * @brief Constructor for ExecuteCommand class
+         * @brief Constructor for the CallData class of the GetPopulatedSlots
+         * gRPC. Calls proceed() once initialized.
          *
-         * @param service the service to which the command wll be executed
-         * @param dm the device to execute the command to
-         * @param ok flag to check if command was successfully executed 
-         */
-        ExecuteCommand(CatenaServiceImpl *service, IDevice& dm, bool ok);
+         * @param service - Pointer to the parent CatenaServiceImpl.
+         * @param dm - Address of the device to get the populated slots of.
+         * @param ok - Flag to check if the command was successfully executed.
+         */ 
+        GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok);
         /**
-         * @brief Manages gRPC command execution through a state machine
-         *
-         * @param service the service to which the command wll be executed
-         * @param ok flag to check if command was successfully executed        
-         */
-        void proceed(CatenaServiceImpl *service, bool ok) override;
+        * @brief Manages the steps of the GetPopulatedSlots gRPC command
+        * through the state variable status. Returns the number of populated
+        * slots to the client.
+        *
+        * @param service - Pointer to the parent CatenaServiceImpl.
+        * @param ok - Flag to check if the command was successfully executed.
+        */
+        void proceed(bool ok) override;
 
     private:
         /**
-         * @brief Pointer to CatenaServiceImpl
+         * @brief Parent CatenaServiceImpl.
          */
-        CatenaServiceImpl *service_;
+        ICatenaServiceImpl *service_;
         /**
-         * @brief Request payload for command
+         * @brief Server request (empty).
          */
-        catena::ExecuteCommandPayload req_;
+        catena::Empty req_;
         /**
-         * @brief Response payload for command
+         * @brief Server response (list of populated slots).
          */
-        catena::CommandResponse res_;
+        catena::SlotList res_;
         /**
-         * @brief Stream for reading and writing gRPC messages
+         * @brief gRPC async response writer.
          */
-        grpc::ServerAsyncReaderWriter<catena::CommandResponse, catena::ExecuteCommandPayload> stream_;
+        ServerAsyncResponseWriter<::catena::SlotList> responder_;
         /**
-         * @brief Represents the current status of the command execution
-         * (kCreate, kProcess, kFinish, etc.)
+         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
          */
         CallStatus status_;
         /**
-         * @brief Reference to the device to execute the command to
+         * @brief The device to get the populated slots of.
          */
         IDevice& dm_;
         /**
-         * @brief Unique identifier for command object
+         * @brief The object's unique id.
          */
         int objectId_;
         /**
-         * @brief Counter to generate unique object IDs for each new object
+         * @brief The total # of GetPopulatedSlots objects.
          */
         static int objectCounter_;
 };
+
+}; // namespace gRPC
+}; // namespace catena

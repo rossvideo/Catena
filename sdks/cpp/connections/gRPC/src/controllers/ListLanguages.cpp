@@ -29,19 +29,20 @@
  */
 
 // connections/gRPC
-#include <ListLanguages.h>
+#include <controllers/ListLanguages.h>
+using catena::gRPC::ListLanguages;
 
 // Initializes the object counter for SetValue to 0.
-int CatenaServiceImpl::ListLanguages::objectCounter_ = 0;
+int ListLanguages::objectCounter_ = 0;
 
-CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, IDevice& dm, bool ok)
+ListLanguages::ListLanguages(ICatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed(ok);
 }
 
-void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool ok) {
+void ListLanguages::proceed(bool ok) {
     std::cout << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
@@ -55,7 +56,7 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestListLanguages(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            service_->RequestListLanguages(&context_, &req_, &responder_, service_->cq(), service_->cq(), this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
@@ -83,7 +84,7 @@ void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kFinish:
             std::cout << "ListLanguages[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:

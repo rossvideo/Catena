@@ -28,23 +28,50 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// common
+#include <Tags.h>
+
 // connections/gRPC
-#include <AddLanguage.h>
+#include <controllers/MultiSetValue.h>
+using catena::gRPC::MultiSetValue;
 
-// Initializes the object counter for AddLanguage to 0.
-int CatenaServiceImpl::AddLanguage::objectCounter_ = 0;
+// type aliases
+using catena::common::ParamTag;
+using catena::common::Path;
 
-CatenaServiceImpl::AddLanguage::AddLanguage(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    objectId_ = objectCounter_++;
-    service->registerItem(this);
-    proceed(service, ok);
+#include <iostream>
+#include <thread>
+#include <fstream>
+#include <vector>
+#include <iterator>
+#include <filesystem>
+
+// Initializes the object counter for SetValue to 0.
+int MultiSetValue::objectCounter_ = 0;
+
+MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : MultiSetValue(service, dm, ok, objectCounter_++) {
+    typeName = "MultiSetValue";
+    service_->registerItem(this);
+    proceed(ok);
 }
 
-void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok) { 
-    std::cout << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
+MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok, int objectId)
+    : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
+    status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
+
+void MultiSetValue::request_() {
+    service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq(), service_->cq(), this);
+}
+
+void MultiSetValue::create_(bool ok) {
+    new MultiSetValue(service_, dm_, ok);
+}
+
+void MultiSetValue::proceed(bool ok) { 
+    std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
     
     if(!ok){
         status_ = CallStatus::kFinish;
@@ -52,12 +79,12 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
     
     switch (status_) {
         /** 
-         * kCreate: Updates status to kProcess and requests the AddLanguage
+         * kCreate: Updates status to kProcess and requests the SetValue
          * command from the service.
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestAddLanguage(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            request_();
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
@@ -65,24 +92,38 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new AddLanguage(service_, dm_, ok);
+            create_(ok);
             context_.AsyncNotifyWhenDone(this);
             try {
+                // Convert to MultiSetValuePayload if not already.
+                toMulti_();
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                // If authorization is enabled, check the client's scopes.
-                if(service->authorizationEnabled()) {
-                    catena::common::Authorizer authz{getJWSToken_()};
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.addLanguage(req_, authz);
+                /**
+                 * Creating authorization object depending on client scopes.
+                 * Shared ptr to maintain lifetime of object. Raw ptr ensures
+                 * kAUthzDisabled is not deleted when out of scope.
+                 */
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_(rc));
+                    authz = sharedAuthz.get();
                 } else {
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.addLanguage(req_, catena::common::Authorizer::kAuthzDisabled);
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
-                status_ = CallStatus::kFinish;
+                // Locking device and setting value(s).
+                std::lock_guard lg(dm_.mutex());
+                // Trying and commiting the multiSetValue.
+                if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
+                    dm_.commitMultiSetValue(reqs_, *authz);
+                }
                 if (rc.status == catena::StatusCode::OK) {
-                    responder_.Finish(res_, Status::OK, this);
-                } else { // Error, end process.
-                    responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(catena::Empty{}, Status::OK, this);
+                } else {
+                    errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+                    status_ = CallStatus::kFinish;
+                    responder_.Finish(::catena::Empty{}, errorStatus_, this);
                 }
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
@@ -90,9 +131,9 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
                 grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
                 responder_.FinishWithError(errorStatus, this);
             } catch (...) { // Error, end process.
+                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                responder_.FinishWithError(errorStatus, this);
+                responder_.Finish(::catena::Empty{}, errorStatus_, this);
             }
             break;
         /**
@@ -100,8 +141,8 @@ void CatenaServiceImpl::AddLanguage::proceed(CatenaServiceImpl *service, bool ok
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "AddLanguage[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            std::cout << typeName << "[" << objectId_ << "] finished\n";
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:

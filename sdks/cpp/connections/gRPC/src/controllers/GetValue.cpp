@@ -31,7 +31,8 @@
 // common
 #include <Tags.h>
 
-#include <GetValue.h>
+#include <controllers/GetValue.h>
+using catena::gRPC::GetValue;
 
 // type aliases
 using catena::common::ParamTag;
@@ -45,21 +46,21 @@ using catena::common::Path;
 #include <filesystem>
 
 // Initializes the object counter for GetValue to 0.
-int CatenaServiceImpl::GetValue::objectCounter_ = 0;
+int GetValue::objectCounter_ = 0;
 
 /**
  * Constructor which initializes and registers the current GetValue object, 
  * then starts the process.
  */
-CatenaServiceImpl::GetValue::GetValue(CatenaServiceImpl *service, IDevice& dm, bool ok) : service_{service}, dm_{dm}, responder_(&context_), 
+GetValue::GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok) : service_{service}, dm_{dm}, responder_(&context_), 
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed(ok);
 }
 
 // Manages gRPC command execution process using the state variable status.
-void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
+void GetValue::proceed( bool ok) {
     std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                 << std::endl;
@@ -79,7 +80,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
              * output variable req_ gives us the OID of the object the user
              * wants the value of.
              */
-            service_->RequestGetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            service_->RequestGetValue(&context_, &req_, &responder_, service_->cq(), service_->cq(), this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
@@ -93,8 +94,8 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
                 catena::Value ans;
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 // If authorization is enabled, check the client's scopes.
-                if(service->authorizationEnabled()) {
-                    catena::common::Authorizer authz{getJWSToken_()};
+                if(service_->authorizationEnabled()) {
+                    catena::common::Authorizer authz{getJWSToken_(rc)};
                     std::lock_guard lg(dm_.mutex());
                     rc = dm_.getValue(req_.oid(), ans, authz);
                 } else {
@@ -125,7 +126,7 @@ void CatenaServiceImpl::GetValue::proceed(CatenaServiceImpl *service, bool ok) {
          */
         case CallStatus::kFinish:
             std::cout << "GetValue[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:

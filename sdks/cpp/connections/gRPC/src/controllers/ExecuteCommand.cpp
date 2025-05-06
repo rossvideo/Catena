@@ -32,7 +32,8 @@
 #include <Tags.h>
 
 // connections/gRPC
-#include <ExecuteCommand.h>
+#include <controllers/ExecuteCommand.h>
+using catena::gRPC::ExecuteCommand;
 
 // type aliases
 using catena::common::ParamTag;
@@ -46,25 +47,25 @@ using catena::common::Path;
 #include <filesystem>
 
 //Counter for generating unique object IDs - static, so initializes at start
-int CatenaServiceImpl::ExecuteCommand::objectCounter_ = 0;
+int ExecuteCommand::objectCounter_ = 0;
 
 /** 
  * Constructor which initializes and registers the current ExecuteCommand
  * object, then starts the process
  */
-CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, IDevice& dm, bool ok)
+ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok)
     : service_{service}, dm_{dm}, stream_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // Start the process
+    proceed(ok);  // Start the process
 }
 
 /**
  * Manages gRPC command execution process by transitioning between states and
  * handling errors and responses accordingly 
  */
-void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool ok) {
+void ExecuteCommand::proceed(bool ok) {
     std::cout << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                 << std::endl;
@@ -83,7 +84,7 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
          */
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestExecuteCommand(&context_, &stream_, service_->cq_, service_->cq_, this);
+            service_->RequestExecuteCommand(&context_, &stream_, service_->cq(), service_->cq(), this);
             break;
 
         /**
@@ -111,7 +112,7 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
             // Check if authorization is enabled
             try {
                 if (service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{getJWSToken_()};
+                    catena::common::Authorizer authz{getJWSToken_(rc)};
                     command = dm_.getCommand(req_.oid(), rc, authz);
                 } else {
                     command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
@@ -163,7 +164,7 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
          */
         case CallStatus::kFinish:
             std::cout << "ExecuteCommand[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
 
         // Throws an error if the state is not recognized
