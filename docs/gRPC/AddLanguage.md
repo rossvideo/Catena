@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # AddLanguage
 Adds a language pack to a device model. This gRPC requires admin write if authorization is enabled.
@@ -28,6 +30,6 @@ This gRPC returns nothing.
 
 <div style="text-align: center">
 
-[Next Page: LanguagePackRequest](gRPCDocs/LanguagePackRequest.html)
+[Next Page: LanguagePackRequest](LanguagePackRequest.html)
 
 </div>

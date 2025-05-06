@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # ExternalObjectRequest
 Gets an external object from the service.
@@ -46,6 +48,6 @@ message DataPayload {
 
 <div style="text-align: center">
 
-[Next Page: BasicParamInfoRequest](gRPCDocs/BasicParamInfoRequest.html)
+[Next Page: BasicParamInfoRequest](BasicParamInfoRequest.html)
 
 </div>

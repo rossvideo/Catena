@@ -1,7 +1,10 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # DeviceRequest
 The DeviceRequest gRPC returns a stream of components from the device manager at the specified slot. Which components are retrieved depends on the specified detail_level.
+
 ### IN
 ```
 message DeviceRequestPayload {
@@ -16,6 +19,7 @@ message DeviceRequestPayload {
                                         * UpdateSubscriptionsPayload) */
 }
 ```
+
 ### OUT
 A stream of DeviceComponents.
 ```
@@ -100,6 +104,6 @@ message DeviceComponent {
 
 <div style="text-align: center">
 
-[Next Page: GetPopulatedSlots](gRPCDocs/GetPopulatedSlots.html)
+[Next Page: GetPopulatedSlots](GetPopulatedSlots.html)
 
 </div>

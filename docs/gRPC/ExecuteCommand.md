@@ -1,4 +1,6 @@
-![Alt](../images/Catena%20Logo_PMS2191%20&%20White.png)
+::: {.image-wrapper style="background-color: black; padding: 5px;"}
+![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+:::
 
 # ExecuteCommand
 Executes a command on the device model connected to the specified slot.
@@ -39,6 +41,6 @@ message Exception {
 
 <div style="text-align: center">
 
-[Next Page: ExecuteCommand](gRPCDocs/ExternalObjectRequest.html)
+[Next Page: ExecuteCommand](ExternalObjectRequest.html)
 
 </div>
