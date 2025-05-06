@@ -53,13 +53,15 @@
 using catena::common::ParamTag;
 using catena::common::Path;
 
-
 #include <iostream>
 #include <thread>
 #include <fstream>
 #include <vector>
 #include <iterator>
 #include <filesystem>
+
+// Defining the port flag from SharedFlags.h
+ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
 grpc::Status JWTAuthMetadataProcessor::Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
                          OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) {

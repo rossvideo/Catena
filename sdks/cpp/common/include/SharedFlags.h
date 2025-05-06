@@ -37,6 +37,8 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 #include <absl/flags/flag.h>
 
 /**
@@ -93,6 +95,7 @@ extern absl::Flag<std::string> FLAGS_static_root;
  * @brief the default max length for array and string params, default is 1024.
  */
 extern absl::Flag<uint32_t> FLAGS_default_max_array_size;
+
 /**
  * @brief the default total length for string array params, default is 1024.
  */

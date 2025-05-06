@@ -39,7 +39,6 @@ set(sources
     "src/ExternalObjectRequest.cpp"
     "src/BasicParamInfoRequest.cpp"
     "src/ExecuteCommand.cpp"
-    "src/SharedFlags.cpp"
     "src/ServiceCredentials.cpp"
     "src/MultiSetValue.cpp"
     "src/AddLanguage.cpp"
