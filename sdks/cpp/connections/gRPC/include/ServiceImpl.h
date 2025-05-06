@@ -125,11 +125,11 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
     /**
      * @brief Returns a pointer to the server's completion queue.
      */
-    grpc::ServerCompletionQueue* cq() override { return cq_; };
+    grpc::ServerCompletionQueue* cq() override { return cq_; }
     /**
      * @brief Returns the EOPath.
      */
-    const std::string& EOPath() override { return EOPath_; };
+    const std::string& EOPath() override { return EOPath_; }
     /**
      * @brief Registers a CallData object into the registry
      * @param cd The CallData object to register
