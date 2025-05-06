@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -71,10 +71,10 @@ class MultiSetValue : public ICallData {
      * @brief Constructor for the MultiSetValue RPC.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to set the value(s) of.
      */ 
-    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief MultiSetValue main process.
      */
@@ -87,21 +87,21 @@ class MultiSetValue : public ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new MultiSetValue(socket, context, dm);
     }
   protected:
     /**
      * @brief Constructor for child SetValue RPCs. Does not call proceed().
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to set the value(s) of.
      * @param objectId The object's unique id.
      */
-    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm, int objectId);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId);
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
@@ -125,9 +125,9 @@ class MultiSetValue : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

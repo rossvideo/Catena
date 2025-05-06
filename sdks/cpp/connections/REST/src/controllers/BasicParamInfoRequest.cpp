@@ -47,7 +47,7 @@ using catena::common::IDevice;
 // Initializes the object counter for BasicParamInfoRequest to 0.
 int BasicParamInfoRequest::objectCounter_ = 0;
 
-BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, ok_{true}, recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());

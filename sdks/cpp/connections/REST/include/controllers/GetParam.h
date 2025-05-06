@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -71,10 +71,10 @@ class GetParam : public ICallData {
      * @brief Constructor for the GetValue RPC.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to get the value from.
      */ 
-    GetParam(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    GetParam(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief GetValue's main process.
      */
@@ -87,10 +87,10 @@ class GetParam : public ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new GetParam(socket, context, dm);
     }
   private:
@@ -112,9 +112,9 @@ class GetParam : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

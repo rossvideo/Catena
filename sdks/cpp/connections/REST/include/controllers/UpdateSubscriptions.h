@@ -46,9 +46,9 @@
 #include <rpc/TimeNow.h>
 
 // Connections/REST
-#include <SocketReader.h>
+#include "interface/ISocketReader.h"
 #include <SocketWriter.h>
-#include <interface/ICallData.h>
+#include "interface/ICallData.h"
 
 namespace catena {
 namespace REST {
@@ -68,7 +68,7 @@ public:
      * @param context The socket reader context
      * @param dm The device model
      */
-    UpdateSubscriptions(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
 
     /**
      * @brief Processes the UpdateSubscriptions request
@@ -84,10 +84,10 @@ public:
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
         return new UpdateSubscriptions(socket, context, dm);
     }
 
@@ -124,9 +124,9 @@ private:
     tcp::socket& socket_;
 
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
 
     /**
      * @brief The SocketWriter object for writing to socket_.
