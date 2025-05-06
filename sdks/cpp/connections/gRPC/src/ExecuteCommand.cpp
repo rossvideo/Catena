@@ -108,12 +108,6 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
                     res_ = command->executeCommand(req_.value());
                     status_ = CallStatus::kWrite; 
                 }
-                // If the command is not found, return an error
-                if (command == nullptr) {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                    break;
-                }
             // ERROR
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);
