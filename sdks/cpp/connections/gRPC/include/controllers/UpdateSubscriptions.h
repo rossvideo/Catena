@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2025 Ross Video Ltd
  *

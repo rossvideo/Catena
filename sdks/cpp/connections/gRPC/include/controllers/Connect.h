@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -39,6 +37,8 @@
  * @date 2024-06-08
  * @copyright Copyright © 2024 Ross Video Ltd
  */
+
+#pragma once
 
 // connections/gRPC
 #include "interface/IServiceImpl.h"
