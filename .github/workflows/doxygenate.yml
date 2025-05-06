@@ -43,10 +43,9 @@ jobs:
                       filename=$(basename "$file" .md)
                       pandoc "$file" -o "sdks/cpp/build/github-pages/$filename.html"
                   done
-                  mkdir -p sdks/cpp/build/github-pages/gRPC
                   for file in docs/gRPC/*.md; do
                       filename=$(basename "$file" .md)
-                      pandoc "$file" -o "sdks/cpp/build/github-pages/gRPC/$filename.html"
+                      pandoc "$file" -o "sdks/cpp/build/github-pages/$filename.html"
                   done
                   mkdir -p sdks/cpp/build/github-pages/images
                   for file in docs/images/*; do
