@@ -1,5 +1,5 @@
 ::: {.image-wrapper style="background-color: black; padding: 5px;"}
-![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+![Catena Logo](../images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
 :::
 
 # SetValue
@@ -26,6 +26,6 @@ This gRPC returns nothing.
 
 <div style="text-align: center">
 
-[Next Page: GetValue](gRPC/GetValue.html)
+[Next Page: GetValue](GetValue.html)
 
 </div>

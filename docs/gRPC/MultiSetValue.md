@@ -1,5 +1,5 @@
 ::: {.image-wrapper style="background-color: black; padding: 5px;"}
-![Catena Logo](images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
+![Catena Logo](../images/Catena%20Logo_PMS2191%20&%20White.png){style="width: 100%;"}
 :::
 
 # MultiSetValue
@@ -27,6 +27,6 @@ This gRPC returns nothing.
 
 <div style="text-align: center">
 
-[Next Page: UpdateSubscriptions](gRPC/UpdateSubscriptions.html)
+[Next Page: UpdateSubscriptions](UpdateSubscriptions.html)
 
 </div>
