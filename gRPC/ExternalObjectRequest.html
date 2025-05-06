@@ -1,0 +1,49 @@
+<div class="image-wrapper"
+style="background-color: black; padding: 5px;">
+<figure>
+<img src="../images/Catena%20Logo_PMS2191%20&amp;%20White.png"
+style="width: 100%;" alt="Catena Logo" />
+<figcaption aria-hidden="true">Catena Logo</figcaption>
+</figure>
+</div>
+<h1 id="externalobjectrequest">ExternalObjectRequest</h1>
+<p>Gets an external object from the service.</p>
+<h3 id="in">IN</h3>
+<pre><code>message ExternalObjectRequestPayload {
+  uint32 slot = 1; // Uniquely identifies the device at node scope.
+  string oid = 2;  // ID of external object being requested
+}</code></pre>
+<h3 id="out">OUT</h3>
+<p>An ExternalObjectPayload.</p>
+<pre><code>message ExternalObjectPayload {
+  bool cachable = 1;       /* If false, do not cache the external object
+                            * payload */
+  DataPayload payload = 2; 
+}
+
+// When streamed, only the payload field will be used after the first message.
+message DataPayload {
+  enum PayloadEncoding {
+    UNCOMPRESSED = 0;
+    GZIP = 1;
+    DEFLATE = 2;
+  }
+
+  map&lt;string, string&gt; metadata = 1;     /* information about the payload to be
+                                         * interpreted by the client (e.g.
+                                         * mime-type, filename, etc.) */
+  bytes digest = 2;                     /* SHA-256 digest of the payload -
+                                         * flags the recipient to respond with
+                                         * proceed flag set to true/false to
+                                         * resume or cancel payload data */
+  PayloadEncoding payload_encoding = 3;
+
+  oneof kind {
+    string url = 4;    // URL containing data for the payload
+    bytes payload = 5; // Data for the payload
+  }
+}</code></pre>
+<div style="text-align: center">
+<p><a href="BasicParamInfoRequest.html">Next Page:
+BasicParamInfoRequest</a></p>
+</div>

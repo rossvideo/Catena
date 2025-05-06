@@ -1,0 +1,36 @@
+<div class="image-wrapper"
+style="background-color: black; padding: 5px;">
+<figure>
+<img src="../images/Catena%20Logo_PMS2191%20&amp;%20White.png"
+style="width: 100%;" alt="Catena Logo" />
+<figcaption aria-hidden="true">Catena Logo</figcaption>
+</figure>
+</div>
+<h1 id="languagepackrequest">LanguagePackRequest</h1>
+<p>Returns a language pack from the device model.</p>
+<h3 id="in">IN</h3>
+<pre><code>/* LanguagePackRequestPayload
+ * Requests a language pack from the device. */
+message LanguagePackRequestPayload {
+  uint32 slot = 1;     // Uniquely identifies the device at node scope.
+  string language = 2; // e.g. &quot;es&quot; Global Spanish.
+}</code></pre>
+<h3 id="out">OUT</h3>
+<p>The requested lanuage pack as a ComponentLanguagePack.</p>
+<pre><code>/* A language pack. */
+message ComponentLanguagePack {
+  string language = 1;            /* Language string is the language code that
+                                   * identifies the language e.g. en-uk */
+  LanguagePack language_pack = 2;
+}
+
+/* Language Pack
+ * A map of string identifiers, e.g. &quot;greeting&quot; to strings which are all
+ * in the same language. */
+message LanguagePack {
+  string name = 1;               // e.g. &quot;Global Spanish&quot;
+  map&lt;string, string&gt; words = 2; // e.g. &quot;greeting&quot; -&gt; &quot;Hola&quot;
+}</code></pre>
+<div style="text-align: center">
+<p><a href="ListLanguages.html">Next Page: ListLanguages</a></p>
+</div>
