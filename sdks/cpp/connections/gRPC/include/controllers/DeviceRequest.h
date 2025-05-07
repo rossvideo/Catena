@@ -69,14 +69,6 @@ class DeviceRequest : public CallData {
 
   private:
     /**
-     * @brief A list of scopes that the client has access to
-     */
-    std::vector<std::string> clientScopes_;
-    /**
-     * @brief Unique pointer to the Authorizer object
-     */
-    std::unique_ptr<catena::common::Authorizer> authz_ = nullptr;
-    /**
      * @brief Request payload for device
      */
     catena::DeviceRequestPayload req_;

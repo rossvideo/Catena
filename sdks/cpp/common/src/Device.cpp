@@ -423,7 +423,8 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
 
     // Error if trying to use SUBSCRIPTIONS mode with subscriptions disabled
     // Note: If subscriptions are added through an RPC anyway, this error will not be thrown.
-    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_ && subscribed_oids.empty()) {
+    // if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_ && subscribed_oids.empty()) {
+    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
     }
 
