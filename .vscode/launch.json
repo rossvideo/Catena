@@ -238,6 +238,7 @@
       "type": "pickString",
       "options": [
         //"api_only", // unimplemented
+        "asset_request_REST",
         "status_update_REST",
         "status_update_REST_JSON",
         "use_commands_REST",

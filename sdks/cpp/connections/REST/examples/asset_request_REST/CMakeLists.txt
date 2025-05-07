@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -28,45 +28,37 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-#
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
-# Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
-#
+cmake_minimum_required(VERSION 3.20)
 
-get:
-  summary: Gets a list of slot numbers that are occupied by a device
-  description: Retrieves a list of slot numbers that are occupied by a device.
+get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+project(${TARGET} C CXX)
 
-  operationId: Devices
+add_executable(${TARGET})
 
-  # default security is read-only
+include (${CATENA_CPP_ROOT_DIR}/CatenaCodegen.cmake)
 
-  tags:
-    - Discovery
+generate_catena_device(
+    DEVICE_MODEL_JSON ${CMAKE_CURRENT_SOURCE_DIR}/device.asset_request.json
+    TARGET ${TARGET}
+)
 
-  responses:
-    "200":
-      description: A list of the slot numbers that are occupied by a device
-      content:
-        application/json:
-          schema:
-            $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
-  
-          example: { "slots": [2,3,5,7,11] }
-    
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
-          
-    "401":
-      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+target_include_directories(${TARGET}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CATENA_CPP_ROOT_DIR}/common/include
+)
 
-    "403":
-      $ref: '../openapi.yaml#/components/responses/Forbidden'
+target_sources(${TARGET}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TARGET}.cpp>  
+)
 
-    "404":
-      $ref: '../openapi.yaml#/components/responses/NotFound'
+target_link_libraries(${TARGET}
+    catena_connections_REST
+    absl::flags_parse
+)
 
-    "503":
-      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-  
+target_compile_features(${TARGET}
+    PUBLIC
+        cxx_std_20
+) 

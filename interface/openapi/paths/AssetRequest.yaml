@@ -29,14 +29,14 @@
 #
 
 #
-# OpenAPI documentation of the ExternalObjectRequest RPC for the Catena REST API
+# OpenAPI documentation of the AssetRequest RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
 get:
   summary: Gets an external object from the server
-  operationId: ExternalObjectRequest
+  operationId: AssetRequest
 
   parameters:
     - name: slot
