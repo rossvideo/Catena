@@ -47,6 +47,8 @@ void SocketWriter::finish(const google::protobuf::Message& msg, const catena::ex
     std::stringstream headers;
     headers << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
             << "Content-Type: application/json\r\n"
+            << "Content-Length: " << response_.length() << "\r\n"
+            << "Connection: close\r\n"
             << CORS_ << "\r\n"
             << response_;
 
