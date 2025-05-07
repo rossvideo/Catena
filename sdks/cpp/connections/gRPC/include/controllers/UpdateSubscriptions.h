@@ -78,18 +78,11 @@ class UpdateSubscriptions : public CallData {
      */
     void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
 
-
     /**
      * @brief Helper method to send all currently subscribed parameters
      * @param authz The authorizer to use for access control
      */
     void sendSubscribedParameters_(catena::common::Authorizer& authz);
-
-    /**
-     * @brief The context of the gRPC command (ServerContext) for use in 
-     * _responder and other gRPC objects/functions.
-     */
-    ServerContext context_;
 
     /**
      * @brief The client's scopes.
