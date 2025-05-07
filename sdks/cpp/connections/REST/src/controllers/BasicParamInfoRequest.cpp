@@ -58,26 +58,12 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, SocketReader& 
         // Get recursive from query parameters - presence means true
         recursive_ = context.hasField("recursive");
 
-
-        // Get oid_prefix from JSON body if present, otherwise from query parameters
-        if (!context_.jsonBody().empty()) {
-            absl::Status status = google::protobuf::util::JsonStringToMessage(
-                absl::string_view(context_.jsonBody()), &req_);
-            if (!status.ok()) {
-                rc_ = catena::exception_with_status("Failed to parse BasicParamInfoRequestPayload: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
-                finish();
-                return;
-            }
-            // Set oid_prefix from JSON body
-            oid_prefix_ = req_.oid_prefix().empty() ? "" : req_.oid_prefix();
+        // Get oid_prefix from query parameters
+        std::string oid_prefix_value = context.fields("oid_prefix");
+        if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
+            oid_prefix_ = "";
         } else {
-            // Fall back to query parameters if no JSON body
-            std::string oid_prefix_value = context.fields("oid_prefix");
-            if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
-                oid_prefix_ = "";
-            } else {
-                oid_prefix_ = "/" + oid_prefix_value;
-            }
+            oid_prefix_ = "/" + oid_prefix_value;
         }
     // Parse error
     } catch (...) {

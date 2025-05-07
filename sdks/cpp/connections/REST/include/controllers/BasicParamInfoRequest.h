@@ -152,11 +152,6 @@ class BasicParamInfoRequest : public ICallData {
     IDevice& dm_;
 
     /**
-     * @brief The request payload from JSON body
-     */
-    catena::BasicParamInfoRequestPayload req_;
-    
-    /**
      * @brief The oid prefix to get parameter info for.
      */
     std::string oid_prefix_;

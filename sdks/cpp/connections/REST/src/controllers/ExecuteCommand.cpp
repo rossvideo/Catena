@@ -19,8 +19,8 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDev
         // Initialize the request
         req_.set_slot(context_.slot());
         req_.set_oid("/" + context_.fields("oid"));
-        req_.set_respond(context_.fields("respond") == "true");
-        req_.set_proceed(context_.fields("proceed") == "true");
+        req_.set_respond(context_.hasField("respond"));
+        req_.set_proceed(context_.hasField("proceed"));
 
         // Parse JSON body if present
         if (!context_.jsonBody().empty()) {
@@ -72,11 +72,7 @@ void ExecuteCommand::proceed() {
 
         // Only write response if respond is true
         if (req_.respond()) {
-            if (rc.status == catena::StatusCode::OK) {
-                writer_.write(res);
-            } else {
-                writer_.finish(res, rc);
-            }
+            writer_.finish(res, rc);
         }
     } catch (catena::exception_with_status& err) {
         if (req_.respond()) {

@@ -50,26 +50,21 @@ get:
     - name: recursive
       in: query
       required: false
-      description: Whether to recursively get info for all children
+      description: Optional flag to recursively get info for all children. The 
+        presence of this parameter enables recursion, regardless of its value. 
+        (The value is ignored; any value such as "true" will have the same 
+        effect.)
       schema:
-        type: boolean
-      default: false
+        type: string
+        enum: ["true"]
 
-  requestBody:
-    required: false
-    description: Optional JSON body containing the oid_prefix
-    content:
-      application/json:
-        schema:
-          type: object
-          properties:
-            oid_prefix:
-              type: string
-              description: The prefix of the OID to get info for
-              default: ""
-        example: {
-          "oid_prefix": "text_box"
-        }
+    - name: oid_prefix
+      in: query
+      required: false
+      description: The prefix of the OID to get info for
+      schema:
+        type: string
+      default: ""
 
   responses:
     "200":
