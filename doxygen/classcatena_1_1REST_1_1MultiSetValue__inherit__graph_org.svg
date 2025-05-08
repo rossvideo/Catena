@@ -11,7 +11,7 @@
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="ICallData class for the MultiSetValue REST controller.">
+<g id="a_Node000001"><a xlink:title="Generic ICallData class for the SetValue and MultiSetValue REST RPCs.">
 <polygon fill="#999999" stroke="#666666" points="153,-74 0,-74 0,-55 153,-55 153,-74"/>
 <text text-anchor="middle" x="76.5" y="-62" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::MultiSetValue</text>
 </a>
@@ -20,7 +20,7 @@
 <!-- Node3 -->
 <g id="Node000003" class="node">
 <title>Node3</title>
-<g id="a_Node000003"><a xlink:href="classcatena_1_1REST_1_1SetValue.html" target="_top" xlink:title="ICallData class for the SetValue REST controller.">
+<g id="a_Node000003"><a xlink:href="classcatena_1_1REST_1_1SetValue.html" target="_top" xlink:title="ICallData class for the SetValue REST RPC.">
 <polygon fill="white" stroke="#666666" points="140.5,-19 12.5,-19 12.5,0 140.5,0 140.5,-19"/>
 <text text-anchor="middle" x="76.5" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::SetValue</text>
 </a>
@@ -38,7 +38,7 @@
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1ICallData.html" target="_top" xlink:title="Interface class for REST API controllers.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1ICallData.html" target="_top" xlink:title="Interface class for the REST API RPCs.">
 <polygon fill="white" stroke="#666666" points="142,-129 11,-129 11,-110 142,-110 142,-129"/>
 <text text-anchor="middle" x="76.5" y="-117" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::ICallData</text>
 </a>

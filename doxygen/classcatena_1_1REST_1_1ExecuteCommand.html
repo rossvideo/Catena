@@ -97,11 +97,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1ExecuteCommand.
   <div class="headertitle"><div class="title">catena::REST::ExecuteCommand Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
-
-<p>Controller class for handling <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> requests.  
- <a href="classcatena_1_1REST_1_1ExecuteCommand.html#details">More...</a></p>
-
-<p><code>#include &lt;<a class="el" href="REST_2include_2controllers_2ExecuteCommand_8h_source.html">ExecuteCommand.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for catena::REST::ExecuteCommand:</div>
 <div class="dyncontent">
@@ -115,14 +110,14 @@ Collaboration diagram for catena::REST::ExecuteCommand:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab3518c3e03686aa23e0ec8d5d9af8266" id="r_ab3518c3e03686aa23e0ec8d5d9af8266"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html#ab3518c3e03686aa23e0ec8d5d9af8266">ExecuteCommand</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:ab3518c3e03686aa23e0ec8d5d9af8266"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a> controller.  <br /></td></tr>
+<tr class="memitem:ab3518c3e03686aa23e0ec8d5d9af8266" id="r_ab3518c3e03686aa23e0ec8d5d9af8266"><td class="memItemLeft" align="right" valign="top"><a id="ab3518c3e03686aa23e0ec8d5d9af8266" name="ab3518c3e03686aa23e0ec8d5d9af8266"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ExecuteCommand</b> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
 <tr class="separator:ab3518c3e03686aa23e0ec8d5d9af8266"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e34f0a06c9031559191c119ab371833" id="r_a0e34f0a06c9031559191c119ab371833"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html#a0e34f0a06c9031559191c119ab371833">proceed</a> () override</td></tr>
-<tr class="memdesc:a0e34f0a06c9031559191c119ab371833"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a>'s main process.  <br /></td></tr>
+<tr class="memdesc:a0e34f0a06c9031559191c119ab371833"><td class="mdescLeft">&#160;</td><td class="mdescRight">The RPC's main process.  <br /></td></tr>
 <tr class="separator:a0e34f0a06c9031559191c119ab371833"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aafddb314b7aaee910f1fb16ebc9bfc95" id="r_aafddb314b7aaee910f1fb16ebc9bfc95"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html#aafddb314b7aaee910f1fb16ebc9bfc95">finish</a> () override</td></tr>
-<tr class="memdesc:aafddb314b7aaee910f1fb16ebc9bfc95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a> process.  <br /></td></tr>
+<tr class="memdesc:aafddb314b7aaee910f1fb16ebc9bfc95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the RPC.  <br /></td></tr>
 <tr class="separator:aafddb314b7aaee910f1fb16ebc9bfc95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
@@ -130,60 +125,10 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3d47c5c985f0caf8b37609b6369eb487" id="r_a3d47c5c985f0caf8b37609b6369eb487"><td class="memItemLeft" align="right" valign="top"><a id="a3d47c5c985f0caf8b37609b6369eb487" name="a3d47c5c985f0caf8b37609b6369eb487"></a>
 static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>makeOne</b> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
 <tr class="separator:a3d47c5c985f0caf8b37609b6369eb487"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7eb167220d42d3d58694569d9c76a6b" id="r_af7eb167220d42d3d58694569d9c76a6b"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html#af7eb167220d42d3d58694569d9c76a6b">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:af7eb167220d42d3d58694569d9c76a6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
-<tr class="separator:af7eb167220d42d3d58694569d9c76a6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Controller class for handling <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> requests. </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ab3518c3e03686aa23e0ec8d5d9af8266" name="ab3518c3e03686aa23e0ec8d5d9af8266"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3518c3e03686aa23e0ec8d5d9af8266">&#9670;&#160;</a></span>ExecuteCommand()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">catena::REST::ExecuteCommand::ExecuteCommand </td>
-          <td>(</td>
-          <td class="paramtype">tcp::socket &amp;&#160;</td>
-          <td class="paramname"><em>socket</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td>
-          <td class="paramname"><em>context</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a> controller. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to execute the command on. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="aafddb314b7aaee910f1fb16ebc9bfc95" name="aafddb314b7aaee910f1fb16ebc9bfc95"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aafddb314b7aaee910f1fb16ebc9bfc95">&#9670;&#160;</a></span>finish()</h2>
@@ -208,61 +153,9 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Finishes the <a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a> process. </p>
+<p>Finishes the RPC. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#ab996fd53aed2f9ee46536cb6da16f68d">catena::REST::ICallData</a>.</p>
-
-</div>
-</div>
-<a id="af7eb167220d42d3d58694569d9c76a6b" name="af7eb167220d42d3d58694569d9c76a6b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af7eb167220d42d3d58694569d9c76a6b">&#9670;&#160;</a></span>makeOne()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> * catena::REST::ExecuteCommand::makeOne </td>
-          <td>(</td>
-          <td class="paramtype">tcp::socket &amp;&#160;</td>
-          <td class="paramname"><em>socket</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;&#160;</td>
-          <td class="paramname"><em>context</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
-          <td class="paramname"><em>dm</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Creates a new controller object for use with GenericFactory. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">socket</td><td>The socket to write the response stream to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. </td></tr>
-    <tr><td class="paramname">dm</td><td>The device to connect to. </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
@@ -289,7 +182,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classcatena_1_1REST_1_1ExecuteCommand.html" title="Controller class for handling ExecuteCommand REST requests.">ExecuteCommand</a>'s main process. </p>
+<p>The RPC's main process. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a4672626b422b580fa4b9bad98db4205e">catena::REST::ICallData</a>.</p>
 
