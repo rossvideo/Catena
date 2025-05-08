@@ -18,7 +18,7 @@ message ExecuteCommandPayload {
 ```
 
 ### OUT
-Either a value, exception, boolean, or nothing.
+A stream of values, exceptions, or nothing.
 ```
 /* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
@@ -28,7 +28,6 @@ message CommandResponse {
     Value response = 2;
     Exception exception = 3;  /* This is for Server/Device error executing the
                                * command. */
-    bool proceed = 4;         // Used to short circuit sending payloads 
   }
 }
 
