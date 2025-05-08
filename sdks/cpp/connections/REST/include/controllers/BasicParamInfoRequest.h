@@ -44,7 +44,7 @@
  
 // Connections/REST
 #include "ServiceImpl.h"
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 #include <IDevice.h>
@@ -71,10 +71,10 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * initialized.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::IDevice& dm);
+    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, catena::common::IDevice& dm);
     
     /**
      * @brief BasicParamInfoRequest's main process.
@@ -90,10 +90,10 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, catena::common::IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, catena::common::IDevice& dm) {
       return new BasicParamInfoRequest(socket, context, dm);
     }
     
@@ -131,9 +131,9 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     tcp::socket& socket_;
     
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     
     /**
      * @brief The SSEWriter object for writing to socket_.

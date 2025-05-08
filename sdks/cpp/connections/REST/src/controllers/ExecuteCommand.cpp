@@ -10,7 +10,7 @@ using catena::common::IParam;
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
 
-ExecuteCommand::ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
