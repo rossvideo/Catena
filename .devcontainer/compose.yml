@@ -7,3 +7,15 @@ services:
     image: ghcr.io/rossvideo/catena-toolchain-cpp:latest
     env_file: toolchain-cpp.env
 
+  catena-sdk:
+    build:
+      context: .
+      dockerfile: devcontainer.dockerfile
+    image: ghcr.io/rossvideo/catena-sdk:latest
+    env_file: devcontainer.env
+
+  catena:
+    build:
+      context: .
+      dockerfile: compiled.dockerfile
+    image: ghcr.io/rossvideo/catena:latest
