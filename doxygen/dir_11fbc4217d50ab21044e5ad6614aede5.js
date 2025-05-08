@@ -28,7 +28,6 @@ var dir_11fbc4217d50ab21044e5ad6614aede5 =
     [ "PolyglotText.h", "PolyglotText_8h.html", "PolyglotText_8h" ],
     [ "RangeConstraint.h", "RangeConstraint_8h.html", "RangeConstraint_8h" ],
     [ "ReflectionMacros.h", "ReflectionMacros_8h.html", "ReflectionMacros_8h" ],
-    [ "SharedFlags.h", "SharedFlags_8h.html", "SharedFlags_8h" ],
     [ "Status.h", "Status_8h.html", "Status_8h" ],
     [ "StructInfo.h", "StructInfo_8h.html", "StructInfo_8h" ],
     [ "SubscriptionManager.h", "SubscriptionManager_8h.html", "SubscriptionManager_8h" ],
