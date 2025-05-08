@@ -28,23 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
 #include <controllers/SetValue.h>
 using catena::gRPC::SetValue;
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 // Initializes the object counter for SetValue to 0.
 int SetValue::objectCounter_ = 0;

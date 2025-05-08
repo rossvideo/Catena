@@ -44,8 +44,11 @@
 #include "CallData.h"
 
 // common
-#include <ISubscriptionManager.h>
 #include <rpc/Connect.h>
+#include <Enums.h>
+
+// std
+#include <condition_variable>
 
 namespace catena {
 namespace gRPC {

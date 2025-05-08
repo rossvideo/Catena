@@ -40,9 +40,10 @@
 
 #pragma once
 
+// gRPC
 #include "interface/IServiceImpl.h"
 
-// gRPC
+// gRPC controllers
 #include <controllers/GetPopulatedSlots.h>
 #include <controllers/GetValue.h>
 #include <controllers/SetValue.h>
@@ -65,17 +66,20 @@
 #include <IDevice.h>
 #include <Authorization.h>
 #include <SharedFlags.h>
+#include <ISubscriptionManager.h>
+
+// std
+#include <iostream>
+#include <thread>
+#include <fstream>
+#include <vector>
+#include <iterator>
+#include <filesystem>
+#include <chrono>
 
 // gRPC interface
 #include <interface/service.grpc.pb.h>
-#include <SubscriptionManager.h>
-#include <ISubscriptionManager.h>
-
 #include <grpcpp/grpcpp.h>
-// #include <jwt-cpp/jwt.h>
-
-#include <condition_variable>
-#include <chrono>
 
 using grpc::ServerContext;
 using grpc::ServerAsyncWriter;

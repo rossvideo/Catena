@@ -63,8 +63,8 @@ class ICallData {
     /**
      * @brief Extracts the JWS Bearer token from the server context's
      * client metadata.
-     * @param rc The exception_with_status object to set if an error occurs.
      * @return The JWS Bearer token as a string.
+     * @throw catena::exception_with_status if the token is not found.
      */
     virtual std::string jwsToken_() const = 0;
 };

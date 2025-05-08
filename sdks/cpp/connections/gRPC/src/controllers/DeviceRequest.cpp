@@ -28,25 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
 #include <controllers/DeviceRequest.h>
-#include <ISubscriptionManager.h>
-
 using catena::gRPC::DeviceRequest;
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 // Counter for generating unique object IDs - static, so initializes at start
 int DeviceRequest::objectCounter_ = 0;
@@ -112,9 +96,7 @@ void DeviceRequest::proceed(bool ok) {
                 if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
-                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
-                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
-                        }
+                        service_->getSubscriptionManager().addSubscription(oid, dm_, rc);
                     }
                     // Get service subscriptions from the manager
                     subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);

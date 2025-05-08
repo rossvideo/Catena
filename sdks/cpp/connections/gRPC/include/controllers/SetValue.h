@@ -41,7 +41,6 @@
 
 // connections/gRPC
 #include "controllers/MultiSetValue.h"
-#include "CallData.h"
 
 namespace catena {
 namespace gRPC {

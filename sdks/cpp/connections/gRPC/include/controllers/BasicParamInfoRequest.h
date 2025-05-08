@@ -29,8 +29,8 @@
  */
 
 /**
- * @file GetParam.h
- * @brief Implements Catena gRPC GetParam
+ * @file BasicParamInfoRequest.h
+ * @brief Implements Catena gRPC BasicParamInfoRequest
  * @author john.naylor@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-02-06
@@ -44,6 +44,12 @@
 
 // common
 #include <ParamVisitor.h>
+
+// type aliases
+using catena::common::Path;
+using catena::common::ParamVisitor;
+using catena::common::IParam;
+using catena::common::Authorizer;
 
 namespace catena {
 namespace gRPC {

@@ -29,7 +29,7 @@
  */
 
 /**
- * @file ICallData.h
+ * @file CallData.h
  * @brief Base class for gRPC CallData classes which defines getJWSToken_().
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -51,7 +51,11 @@ using grpc::ServerAsyncWriter;
 using grpc::ServerAsyncResponseWriter;
 using grpc::Status;
 using grpc::ServerCompletionQueue;
- 
+
+// std
+#include <vector>
+#include <mutex>
+
 namespace catena {
 namespace gRPC {
  
@@ -62,7 +66,7 @@ enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
 
 /**
  * @brief Abstract base class for the CallData classes which defines the
- * getJSWToken_ class.
+ * jwsToken_ class.
  */
 class CallData : public ICallData {
   protected:
@@ -73,8 +77,8 @@ class CallData : public ICallData {
     /**
      * @brief Extracts the JWS Bearer token from the server context's
      * client metadata.
-     * @param rc The exception_with_status object to set if an error occurs.
      * @return The JWS Bearer token as a string.
+     * @throw catena::exception_with_status if the token is not found.
      */
     std::string jwsToken_() const override {
         std::string jwsToken = "";  

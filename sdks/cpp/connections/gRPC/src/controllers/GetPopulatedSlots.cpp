@@ -28,23 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
 #include <controllers/GetPopulatedSlots.h>
 using catena::gRPC::GetPopulatedSlots;
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 // Initializes the object counter for GetPopulatedSlots to 0.
 int GetPopulatedSlots::objectCounter_ = 0;

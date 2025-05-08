@@ -28,23 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
 #include <controllers/ExecuteCommand.h>
 using catena::gRPC::ExecuteCommand;
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 //Counter for generating unique object IDs - static, so initializes at start
 int ExecuteCommand::objectCounter_ = 0;

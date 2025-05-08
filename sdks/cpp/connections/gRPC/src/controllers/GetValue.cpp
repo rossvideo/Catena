@@ -28,22 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
+// connections/gRPC
 #include <controllers/GetValue.h>
 using catena::gRPC::GetValue;
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 // Initializes the object counter for GetValue to 0.
 int GetValue::objectCounter_ = 0;

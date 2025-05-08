@@ -43,6 +43,9 @@
 // connections/gRPC
 #include "CallData.h"
 
+// common
+#include <ISubscriptionManager.h>
+
 namespace catena {
 namespace gRPC {
 

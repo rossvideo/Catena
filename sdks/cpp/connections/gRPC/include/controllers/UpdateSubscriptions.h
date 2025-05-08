@@ -39,12 +39,11 @@
 
 #pragma once
 
-#include <atomic>
-#include <mutex>
-#include <ISubscriptionManager.h>
-
 // connections/gRPC
 #include "CallData.h"
+
+// common
+#include <ISubscriptionManager.h>
 
 namespace catena {
 namespace gRPC {

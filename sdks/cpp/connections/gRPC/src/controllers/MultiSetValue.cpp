@@ -28,23 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
 #include <controllers/MultiSetValue.h>
 using catena::gRPC::MultiSetValue;
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
 
 // Initializes the object counter for SetValue to 0.
 int MultiSetValue::objectCounter_ = 0;

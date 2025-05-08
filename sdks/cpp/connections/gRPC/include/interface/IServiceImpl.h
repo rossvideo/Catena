@@ -48,10 +48,10 @@
 
 using namespace catena::common;
 
+namespace catena {
 /**
  * @brief Namespace containing classes relating to the gRPC API.
  */
-namespace catena {
 namespace gRPC {
 
 /**
