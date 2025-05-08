@@ -57,7 +57,7 @@ var sectionId = 'dynsection-1';
 <!-- Node1 -->
 <g id="Node000001" class="node">
 <title>Node1</title>
-<g id="a_Node000001"><a xlink:title="ICallData class for the MultiSetValue REST controller.">
+<g id="a_Node000001"><a xlink:title="Generic ICallData class for the SetValue and MultiSetValue REST RPCs.">
 <polygon fill="#999999" stroke="#666666" points="578,-75 425,-75 425,-56 578,-56 578,-75"/>
 <text text-anchor="middle" x="501.5" y="-63" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::MultiSetValue</text>
 </a>
@@ -66,7 +66,7 @@ var sectionId = 'dynsection-1';
 <!-- Node2 -->
 <g id="Node000002" class="node">
 <title>Node2</title>
-<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1ICallData.html" target="_top" xlink:title="Interface class for REST API controllers.">
+<g id="a_Node000002"><a xlink:href="classcatena_1_1REST_1_1ICallData.html" target="_top" xlink:title="Interface class for the REST API RPCs.">
 <polygon fill="white" stroke="#666666" points="331,-130 200,-130 200,-111 331,-111 331,-130"/>
 <text text-anchor="middle" x="265.5" y="-118" font-family="Helvetica,sans-Serif" font-size="10.00">catena::REST::ICallData</text>
 </a>

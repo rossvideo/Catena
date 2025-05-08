@@ -12,7 +12,7 @@
 <area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="3220,243,2755,247,2118,259,1802,268,1523,281,1307,296,1230,306,1180,316,1127,336,1076,363,996,418,993,414,1074,359,1125,331,1179,311,1230,300,1306,291,1523,275,1802,263,2118,253,2755,242,3220,237"/>
 <area shape="rect" id="Node000006" href="$IDevice_8h.html" title="Interface for device." alt="" coords="2299,313,2494,368"/>
 <area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="3221,254,2494,332,2494,326,3220,249"/>
-<area shape="rect" id="Node000010" href="$connections_2REST_2include_2controllers_2Connect_8h.html" title="Implements REST Connect controller." alt="" coords="3477,731,3729,786"/>
+<area shape="rect" id="Node000010" href="$connections_2REST_2include_2controllers_2Connect_8h.html" title="Implements REST Connect RPC." alt="" coords="3477,731,3729,786"/>
 <area shape="poly" id="edge88_Node000003_Node000010" title=" " alt="" coords="3344,278,3353,313,3364,388,3367,448,3376,505,3387,536,3404,572,3439,621,3481,664,3524,701,3563,729,3560,733,3521,705,3477,668,3435,624,3400,575,3382,538,3371,506,3361,448,3358,388,3347,314,3339,279"/>
 <area shape="rect" id="Node000026" href="$gRPC_2include_2ServiceImpl_8h.html" title="Implements Catena gRPC request handlers." alt="" coords="4261,731,4476,786"/>
 <area shape="poly" id="edge96_Node000003_Node000026" title=" " alt="" coords="3442,241,3550,249,3678,262,3815,282,3951,311,4026,330,4085,348,4140,373,4206,414,4266,457,4306,500,4335,551,4359,621,4370,680,4372,731,4367,731,4364,680,4354,622,4331,553,4302,503,4262,461,4203,418,4137,378,4083,353,4025,335,3949,316,3814,287,3677,267,3549,254,3442,246"/>
@@ -20,25 +20,25 @@
 <area shape="poly" id="edge85_Node000003_Node000042" title=" " alt="" coords="3443,263,3477,283,3504,312,3518,337,3527,365,3533,422,3529,476,3521,519,3516,518,3524,476,3528,422,3522,366,3513,339,3500,315,3473,288,3440,268"/>
 <area shape="rect" id="Node000013" href="$REST_2include_2ServiceImpl_8h_source.html" title=" " alt="" coords="3955,731,4169,786"/>
 <area shape="poly" id="edge86_Node000003_Node000013" title=" " alt="" coords="3443,250,3620,276,3827,312,3927,334,4018,359,4095,385,4150,414,4228,471,4261,500,4288,532,4306,565,4314,600,4309,638,4288,678,4264,703,4235,723,4203,738,4170,748,4169,743,4202,733,4233,718,4261,699,4284,674,4304,636,4309,601,4302,567,4284,535,4257,504,4225,475,4147,418,4093,390,4017,364,3926,340,3826,318,3619,281,3442,256"/>
-<area shape="rect" id="Node000015" href="$REST_2include_2controllers_2AddLanguage_8h.html" title="Implements REST AddLanguage controller." alt="" coords="2436,731,2723,786"/>
+<area shape="rect" id="Node000015" href="$REST_2include_2controllers_2AddLanguage_8h.html" title="Implements REST AddLanguage RPC." alt="" coords="2436,731,2723,786"/>
 <area shape="poly" id="edge87_Node000003_Node000015" title=" " alt="" coords="3331,280,3324,324,3310,375,3289,426,3257,472,3214,508,3152,545,3075,582,2990,618,2814,684,2665,734,2663,729,2812,679,2988,614,3073,577,3149,540,3211,504,3253,469,3284,424,3305,373,3318,323,3325,279"/>
-<area shape="rect" id="Node000017" href="$REST_2include_2controllers_2DeviceRequest_8h.html" title="Implements REST DeviceRequest controller." alt="" coords="3156,731,3453,786"/>
+<area shape="rect" id="Node000017" href="$REST_2include_2controllers_2DeviceRequest_8h.html" title="Implements REST DeviceRequest RPC." alt="" coords="3156,731,3453,786"/>
 <area shape="poly" id="edge89_Node000003_Node000017" title=" " alt="" coords="3413,271,3436,289,3454,312,3472,354,3477,391,3470,428,3454,472,3443,488,3430,498,3417,506,3404,520,3372,576,3346,635,3314,732,3309,730,3341,633,3367,574,3400,517,3414,502,3427,494,3439,485,3449,469,3465,427,3472,391,3467,355,3449,315,3432,293,3410,275"/>
-<area shape="rect" id="Node000018" href="$REST_2include_2controllers_2GetParam_8h.html" title="Implements REST GetParam controller." alt="" coords="321,731,584,786"/>
+<area shape="rect" id="Node000018" href="$REST_2include_2controllers_2GetParam_8h_source.html" title=" " alt="" coords="321,731,584,786"/>
 <area shape="poly" id="edge90_Node000003_Node000018" title=" " alt="" coords="3220,243,2677,249,1925,263,1557,273,1240,285,1008,299,936,307,898,316,849,338,812,362,798,377,788,395,782,416,779,442,779,548,774,584,760,616,738,644,711,669,679,690,644,707,573,734,571,729,642,702,676,685,707,665,734,641,755,613,769,582,774,547,774,442,776,415,783,392,794,374,808,358,847,334,896,311,935,302,1008,294,1240,279,1557,267,1925,258,2677,244,3220,238"/>
-<area shape="rect" id="Node000019" href="$REST_2include_2controllers_2GetPopulatedSlots_8h.html" title="Implements REST GetPopulatedSlots controller." alt="" coords="1567,724,1842,793"/>
+<area shape="rect" id="Node000019" href="$REST_2include_2controllers_2GetPopulatedSlots_8h.html" title="Implements REST GetPopulatedSlots RPC." alt="" coords="1567,724,1842,793"/>
 <area shape="poly" id="edge91_Node000003_Node000019" title=" " alt="" coords="3220,244,2824,253,2300,268,1815,289,1639,302,1534,316,1483,325,1433,330,1341,340,1304,351,1276,370,1266,383,1258,399,1251,442,1251,547,1253,560,1259,573,1282,598,1317,622,1361,646,1466,688,1574,721,1572,726,1464,693,1359,651,1314,627,1279,602,1255,575,1248,562,1246,548,1246,442,1253,397,1261,380,1272,366,1302,346,1340,335,1432,325,1483,320,1534,311,1638,297,1814,284,2300,263,2824,248,3220,239"/>
-<area shape="rect" id="Node000020" href="$REST_2include_2controllers_2GetValue_8h.html" title="Implements REST GetValue controller." alt="" coords="1866,731,2125,786"/>
+<area shape="rect" id="Node000020" href="$REST_2include_2controllers_2GetValue_8h.html" title="Implements REST GetValue RPC." alt="" coords="1866,731,2125,786"/>
 <area shape="poly" id="edge92_Node000003_Node000020" title=" " alt="" coords="3220,244,2792,255,2513,267,2222,283,1944,306,1702,335,1603,353,1522,373,1463,394,1442,406,1428,418,1420,430,1418,442,1421,455,1428,469,1460,504,1509,541,1572,577,1643,614,1794,679,1923,729,1921,734,1792,684,1641,618,1569,582,1506,545,1456,508,1424,472,1416,457,1413,442,1415,428,1424,414,1439,401,1460,389,1521,368,1602,348,1702,330,1943,301,2222,278,2513,261,2792,250,3220,238"/>
-<area shape="rect" id="Node000021" href="$REST_2include_2controllers_2LanguagePackRequest_8h.html" title="Implements REST LanguagePackRequest controller." alt="" coords="1263,724,1543,793"/>
+<area shape="rect" id="Node000021" href="$REST_2include_2controllers_2LanguagePackRequest_8h.html" title="Implements REST LanguagePackRequest RPC." alt="" coords="1263,724,1543,793"/>
 <area shape="poly" id="edge93_Node000003_Node000021" title=" " alt="" coords="3220,243,2752,249,2121,262,1815,272,1553,284,1362,298,1303,307,1273,316,1238,341,1216,367,1204,399,1201,442,1201,547,1204,576,1214,603,1228,628,1247,651,1291,691,1338,722,1335,726,1288,695,1243,655,1224,631,1209,605,1199,577,1195,547,1195,442,1199,398,1211,364,1234,337,1270,311,1302,302,1362,293,1552,278,1815,266,2121,257,2751,244,3220,238"/>
-<area shape="rect" id="Node000022" href="$REST_2include_2controllers_2ListLanguages_8h.html" title="Implements REST ListLanguages controller." alt="" coords="5,731,297,786"/>
+<area shape="rect" id="Node000022" href="$REST_2include_2controllers_2ListLanguages_8h_source.html" title=" " alt="" coords="5,731,297,786"/>
 <area shape="poly" id="edge94_Node000003_Node000022" title=" " alt="" coords="3220,243,2683,251,1928,266,1214,287,952,301,798,316,731,323,663,324,599,323,540,325,489,333,469,341,451,352,436,368,426,387,419,412,417,442,417,548,412,582,399,613,379,641,354,665,294,705,233,734,231,729,292,701,350,661,375,637,394,610,407,580,411,547,411,442,414,411,421,385,432,364,447,348,466,336,488,328,539,319,599,318,663,319,730,318,798,311,952,296,1213,282,1928,260,2683,246,3220,238"/>
-<area shape="rect" id="Node000023" href="$REST_2include_2controllers_2MultiSetValue_8h.html" title="Implements REST MultiSetValue controller." alt="" coords="608,731,897,786"/>
+<area shape="rect" id="Node000023" href="$REST_2include_2controllers_2MultiSetValue_8h.html" title="Implements REST MultiSetValue RPC." alt="" coords="608,731,897,786"/>
 <area shape="poly" id="edge95_Node000003_Node000023" title=" " alt="" coords="3220,243,2733,249,2061,261,1726,271,1429,283,1199,298,1118,307,1064,316,997,331,945,346,922,356,900,371,878,391,855,418,833,451,821,481,816,510,814,539,814,602,809,637,798,677,771,732,766,730,793,675,804,636,808,601,809,539,810,510,816,479,828,448,851,414,874,387,897,367,920,352,943,341,996,326,1063,311,1117,301,1199,293,1429,278,1726,266,2061,256,2733,243,3220,238"/>
 <area shape="poly" id="edge82_Node000003_Node000047" title=" " alt="" coords="3443,240,3695,249,4002,264,4276,284,4375,297,4432,311,4452,323,4464,336,4491,366,4551,414,4548,418,4487,370,4460,339,4448,327,4430,316,4374,302,4276,290,4002,269,3695,254,3443,245"/>
 <area shape="poly" id="edge83_Node000003_Node000051" title=" " alt="" coords="3443,238,3639,243,3898,255,4189,277,4337,292,4482,311,4501,314,4500,319,4482,316,4337,297,4189,282,3897,261,3639,249,3443,243"/>
-<area shape="rect" id="Node000005" href="$REST_2include_2controllers_2ExecuteCommand_8h.html" title="Implements REST ExecuteCommand controller." alt="" coords="922,731,1239,786"/>
+<area shape="rect" id="Node000005" href="$REST_2include_2controllers_2ExecuteCommand_8h.html" title="Implements the ExecuteCommand REST API." alt="" coords="922,731,1239,786"/>
 <area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="979,483,1073,730,1068,732,974,485"/>
 <area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="2285,345,2063,348,1763,359,1422,381,1248,398,1078,419,1060,422,1059,416,1078,413,1248,392,1422,376,1763,354,2063,343,2285,339"/>
 <area shape="rect" id="Node000007" href="$IParamVisitor_8h.html" title="Implements Catena IParamVisitor." alt="" coords="2459,416,2654,471"/>
@@ -54,7 +54,7 @@
 <area shape="rect" id="Node000041" href="$ISubscriptionManager_8h.html" title="Interface for managing parameter subscriptions in Catena." alt="" coords="3873,416,4102,471"/>
 <area shape="poly" id="edge29_Node000006_Node000041" title=" " alt="" coords="2508,345,3009,372,3665,413,3873,429,3872,435,3664,419,3008,378,2507,350"/>
 <area shape="poly" id="edge66_Node000006_Node000042" title=" " alt="" coords="2508,342,2699,349,2927,362,3144,383,3233,397,3300,413,3352,435,3402,462,3481,516,3478,521,3399,467,3350,440,3299,419,3232,402,3144,389,2927,368,2698,355,2507,347"/>
-<area shape="rect" id="Node000014" href="$ICallData_8h.html" title="Interface class for REST controllers." alt="" coords="2035,621,2283,676"/>
+<area shape="rect" id="Node000014" href="$ICallData_8h.html" title="Interface class for REST RPCs." alt="" coords="2035,621,2283,676"/>
 <area shape="poly" id="edge78_Node000006_Node000014" title=" " alt="" coords="2345,378,2323,397,2304,418,2279,458,2268,494,2256,532,2234,575,2191,623,2187,619,2229,572,2251,529,2263,493,2275,456,2300,414,2320,393,2342,374"/>
 <area shape="poly" id="edge67_Node000006_Node000015" title=" " alt="" coords="2396,382,2398,425,2406,470,2438,548,2480,621,2523,684,2559,729,2555,733,2519,687,2475,624,2433,551,2401,471,2392,425,2391,382"/>
 <area shape="poly" id="edge70_Node000006_Node000017" title=" " alt="" coords="2508,341,2710,348,2944,360,3054,370,3147,382,3218,396,3242,405,3257,414,3273,438,3285,472,3300,562,3306,657,3308,731,3302,731,3301,657,3294,563,3280,474,3268,440,3253,418,3239,409,3216,401,3147,387,3053,375,2944,366,2710,353,2508,347"/>
@@ -79,7 +79,7 @@
 <area shape="poly" id="edge63_Node000006_Node000048" title=" " alt="" coords="2286,351,1999,375,1826,394,1653,419,1642,421,1641,415,1652,413,1825,389,1998,370,2286,346"/>
 <area shape="rect" id="Node000049" href="$RangeConstraint_8h.html" title="A constraint that checks if a value is within a range." alt="" coords="1665,416,1862,471"/>
 <area shape="poly" id="edge64_Node000006_Node000049" title=" " alt="" coords="2286,357,2093,383,1874,419,1863,421,1862,416,1874,413,2093,378,2285,352"/>
-<area shape="rect" id="Node000050" href="$IServiceImpl_8h.html" title="Interface for the REST API implementation." alt="" coords="4005,621,4274,676"/>
+<area shape="rect" id="Node000050" href="$IServiceImpl_8h.html" title="Implements REST API." alt="" coords="4005,621,4274,676"/>
 <area shape="poly" id="edge79_Node000006_Node000050" title=" " alt="" coords="2508,340,2907,345,3428,357,3678,367,3891,379,4044,395,4091,404,4116,414,4134,437,4147,463,4154,491,4158,520,4156,576,4149,622,4143,621,4151,576,4153,520,4149,492,4142,465,4130,439,4112,418,4090,409,4043,400,3890,385,3678,372,3428,363,2907,351,2508,346"/>
 <area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="2662,472,2819,516,2817,521,2661,477"/>
 <area shape="poly" id="edge9_Node000008_Node000009" title=" " alt="" coords="3022,558,3604,631,3603,636,3021,564"/>
@@ -142,7 +142,7 @@
 <area shape="poly" id="edge48_Node000014_Node000022" title=" " alt="" coords="2022,655,1645,664,1151,678,664,699,462,712,309,727,263,734,262,729,308,721,462,707,664,694,1151,673,1645,658,2022,650"/>
 <area shape="poly" id="edge49_Node000014_Node000023" title=" " alt="" coords="2022,654,1807,659,1530,672,1221,693,910,727,866,734,865,729,910,721,1220,688,1530,666,1807,654,2021,649"/>
 <area shape="poly" id="edge51_Node000014_Node000025" title=" " alt="" coords="2297,663,2504,689,2734,721,2778,729,2778,734,2734,727,2503,694,2297,668"/>
-<area shape="rect" id="Node000024" href="$REST_2include_2controllers_2SetValue_8h.html" title="Implements REST SetValue controller." alt="" coords="625,841,881,896"/>
+<area shape="rect" id="Node000024" href="$REST_2include_2controllers_2SetValue_8h.html" title="Implements REST SetValue RPC." alt="" coords="625,841,881,896"/>
 <area shape="poly" id="edge50_Node000023_Node000024" title=" " alt="" coords="755,800,755,841,750,841,750,800"/>
 <area shape="poly" id="edge58_Node000044_Node000045" title=" " alt="" coords="1989,484,1991,518,1986,519,1983,485"/>
 <area shape="poly" id="edge80_Node000050_Node000013" title=" " alt="" coords="4114,689,4083,733,4079,730,4110,686"/>
