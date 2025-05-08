@@ -30,7 +30,7 @@
 
 /**
  * @file ExecuteCommand.h
- * @brief Implements the ExecuteCommand REST API
+ * @brief Implements REST ExecuteCommand controller.
  * @author zuhayr.sarker@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -56,18 +56,60 @@ namespace REST {
 
 using catena::common::IParam;
 using catena::common::IDevice;
+using catena::common::timeNow;
 
+/**
+ * @brief Controller class for handling ExecuteCommand REST requests.
+ */
 class ExecuteCommand : public ICallData {
   public:
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
         return new ExecuteCommand(socket, context, dm);
     }
 
+    /**
+     * @brief Constructor for the ExecuteCommand controller.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object.
+     * @param dm The device to execute the command on.
+     */ 
     ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    
+    /**
+     * @brief ExecuteCommand's main process.
+     */
     void proceed() override;
+    
+    /**
+     * @brief Finishes the ExecuteCommand process
+     */
     void finish() override;
+    
+    /**
+     * @brief Creates a new controller object for use with GenericFactory.
+     * 
+     * @param socket The socket to write the response stream to.
+     * @param context The SocketReader object.
+     * @param dm The device to connect to.
+     */
+    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+      return new ExecuteCommand(socket, context, dm);
+    }
+    
+
 
   private:
+      /**
+     * @brief Writes the current state of the request to the console.
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
+     */
+    inline void writeConsole_(CallStatus status, bool ok) const override {
+      std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
+                << timeNow() << " status: "<< static_cast<int>(status)
+                <<", ok: "<< std::boolalpha << ok << std::endl;
+    }
     /**
      * @brief The number of ExecuteCommand objects created.
      */
@@ -100,19 +142,6 @@ class ExecuteCommand : public ICallData {
      * @brief The OID of the parameter to connect to.
      */
     std::string oid_;
-
-    /**
-     * @brief Helper function to write status messages to the API console.
-     * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
-     */
-    inline void writeConsole_(CallStatus status, bool ok) const override {
-        std::cout << "ExecuteCommand::proceed[" << objectId_ << "]: "
-                  << catena::common::timeNow() << " status: "
-                  << static_cast<int>(status) << ", ok: " << std::boolalpha << ok
-                  << std::endl;
-    }
 };
 
 } // namespace REST

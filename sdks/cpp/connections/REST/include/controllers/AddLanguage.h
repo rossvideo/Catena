@@ -30,7 +30,7 @@
 
 /**
  * @file AddLanguage.h
- * @brief Implements REST AddLanguage RPC.
+ * @brief Implements REST AddLanguage controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -58,7 +58,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the AddLanguage REST RPC.
+ * @brief ICallData class for the AddLanguage REST controller.
  */
 class AddLanguage : public ICallData {
   public:
@@ -67,7 +67,7 @@ class AddLanguage : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the AddLanguage RPC.
+     * @brief Constructor for the AddLanguage controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
@@ -83,7 +83,7 @@ class AddLanguage : public ICallData {
      */
     void finish() override;
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -96,8 +96,8 @@ class AddLanguage : public ICallData {
     /**
      * @brief Helper function to write status messages to the API console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "AddLanguage::proceed[" << objectId_ << "]: "
