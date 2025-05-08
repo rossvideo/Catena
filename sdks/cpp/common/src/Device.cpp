@@ -392,11 +392,11 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
     return std::move(handle_.promise().deviceMessage); 
 }
 
-std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow) const {
-    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribed_oids, dl, shallow));
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribedOids, dl, shallow));
 }
 
-Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow) const {
+Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow) const {
     // Sanitizing if trying to use SUBSCRIPTIONS mode with subscriptions disabled
     if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
@@ -417,20 +417,20 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
 
     if (dl != catena::Device_DetailLevel_NONE) {
         // // Helper function to check if an OID is subscribed
-        auto is_subscribed = [&subscribed_oids, dl, this](const std::string& param_name) {
+        auto isSubscribed = [&subscribedOids, dl, this](const std::string& paramName) {
             if (dl != catena::Device_DetailLevel_SUBSCRIPTIONS) {
                 return true;
             } else {
                 // Check each subscription for exact or wildcard matches
-                for (const auto& subscription_oid : subscribed_oids) {
+                for (const auto& subscribedOid : subscribedOids) {
                     // Remove leading slash
-                    std::string oid = subscription_oid.substr(1);
+                    std::string oid = subscribedOid.substr(1);
                     // Check for exact match.
-                    if (param_name == oid) {
+                    if (paramName == oid) {
                         return true;
                     }
                     // Check for wildcard match (ends with *)
-                    if (!oid.empty() && oid.back() == '*' && param_name.find(oid.substr(0, oid.size() - 1)) == 0) {
+                    if (!oid.empty() && oid.back() == '*' && paramName.find(oid.substr(0, oid.size() - 1)) == 0) {
                         return true;
                     }
                 }
@@ -443,10 +443,10 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
             dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
             
             // Send menus
-            for (const auto& [group_name, menu_group] : menu_groups_) {
-                for (const auto& [name, menu] : *menu_group->menus()) {
-                    std::string oid = group_name + "/" + name;
-                    if (is_subscribed(oid)) {
+            for (const auto& [groupGame, menuGroup] : menu_groups_) {
+                for (const auto& [name, menu] : *menuGroup->menus()) {
+                    std::string oid = groupGame + "/" + name;
+                    if (isSubscribed(oid)) {
                         co_yield component;
                         component.Clear();
                         ::catena::Menu* dstMenu = component.mutable_menu()->mutable_menu();
@@ -457,19 +457,19 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
             }
 
             // Send language packs
-            for (const auto& [language, language_pack] : language_packs_) {
-                if (is_subscribed(language)) {
+            for (const auto& [language, languagePack] : language_packs_) {
+                if (isSubscribed(language)) {
                     co_yield component;
                     component.Clear();
                     ::catena::LanguagePack* dstPack = component.mutable_language_pack()->mutable_language_pack();
-                    language_pack->toProto(*dstPack);
+                    languagePack->toProto(*dstPack);
                     component.mutable_language_pack()->set_language(language);
                 }
             }
 
             // Send constraints
             for (const auto& [name, constraint] : constraints_) {
-                if (is_subscribed(name)) {
+                if (isSubscribed(name)) {
                     co_yield component;
                     component.Clear();
                     ::catena::Constraint* dstConstraint = component.mutable_shared_constraint()->mutable_constraint();
@@ -485,7 +485,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
                 if (authz.readAuthz(*param) &&
                     ((dl == catena::Device_DetailLevel_FULL) ||
                      (param->getDescriptor().minimalSet()) ||
-                     (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name)))) {
+                     (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && isSubscribed(name)))) {
                     co_yield component;
                     component.Clear();
                     ::catena::Param* dstParam = component.mutable_param()->mutable_param();
