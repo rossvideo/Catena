@@ -19,7 +19,7 @@ slot.</p>
   bool proceed = 5; // Used to short circuit sending payloads 
 }</code></pre>
 <h3 id="out">OUT</h3>
-<p>A stream of values, exceptions, or nothing.</p>
+<p>Either a value, exception, boolean, or nothing.</p>
 <pre><code>/* When streamed, only the response field will be used after the first message. */
 message CommandResponse {
   oneof kind {
@@ -28,6 +28,7 @@ message CommandResponse {
     Value response = 2;
     Exception exception = 3;  /* This is for Server/Device error executing the
                                * command. */
+    bool proceed = 4;         // Used to short circuit sending payloads 
   }
 }
 
