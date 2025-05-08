@@ -92,7 +92,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1BasicParamInfoR
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classcatena_1_1REST_1_1BasicParamInfoRequest-members.html">List of all members</a>  </div>
@@ -100,7 +99,7 @@ $(document).ready(function(){initNavTree('classcatena_1_1REST_1_1BasicParamInfoR
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller.  
+<p>CallData class for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> RPC.  
  <a href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="REST_2include_2controllers_2BasicParamInfoRequest_8h_source.html">BasicParamInfoRequest.h</a>&gt;</code></p>
@@ -115,41 +114,32 @@ Collaboration diagram for catena::REST::BasicParamInfoRequest:</div>
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1REST_1_1BasicParamInfoRequest__coll__graph.svg" width="202" height="124"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:ac523004ac1d451ea3a667e60b33d521e" id="r_ac523004ac1d451ea3a667e60b33d521e"><td class="memItemLeft" align="right" valign="top"><a id="ac523004ac1d451ea3a667e60b33d521e" name="ac523004ac1d451ea3a667e60b33d521e"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>IDevice</b> = <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></td></tr>
-<tr class="separator:ac523004ac1d451ea3a667e60b33d521e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a079b96f35cdb5376ac6e6b5cc3b7ea2b" id="r_a079b96f35cdb5376ac6e6b5cc3b7ea2b"><td class="memItemLeft" align="right" valign="top"><a id="a079b96f35cdb5376ac6e6b5cc3b7ea2b" name="a079b96f35cdb5376ac6e6b5cc3b7ea2b"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>IParam</b> = <a class="el" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></td></tr>
-<tr class="separator:a079b96f35cdb5376ac6e6b5cc3b7ea2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af0e1d604b3bd924214549bb38e030a3b" id="r_af0e1d604b3bd924214549bb38e030a3b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#af0e1d604b3bd924214549bb38e030a3b">BasicParamInfoRequest</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:af0e1d604b3bd924214549bb38e030a3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a> controller.  <br /></td></tr>
-<tr class="separator:af0e1d604b3bd924214549bb38e030a3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a547d923ab6c4df714c816976ccccb5bb" id="r_a547d923ab6c4df714c816976ccccb5bb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#a547d923ab6c4df714c816976ccccb5bb">BasicParamInfoRequest</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a> &amp;dm)</td></tr>
+<tr class="memdesc:a547d923ab6c4df714c816976ccccb5bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a> RPC. Calls <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#af0790c78e054b8bcd7673af13f830324" title="BasicParamInfoRequest&#39;s main process.">proceed()</a> once initialized.  <br /></td></tr>
+<tr class="separator:a547d923ab6c4df714c816976ccccb5bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0790c78e054b8bcd7673af13f830324" id="r_af0790c78e054b8bcd7673af13f830324"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#af0790c78e054b8bcd7673af13f830324">proceed</a> () override</td></tr>
-<tr class="memdesc:af0790c78e054b8bcd7673af13f830324"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a>'s main process.  <br /></td></tr>
+<tr class="memdesc:af0790c78e054b8bcd7673af13f830324"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a>'s main process.  <br /></td></tr>
 <tr class="separator:af0790c78e054b8bcd7673af13f830324"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ecab815da15e684730e068b888fda32" id="r_a5ecab815da15e684730e068b888fda32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#a5ecab815da15e684730e068b888fda32">finish</a> () override</td></tr>
-<tr class="memdesc:a5ecab815da15e684730e068b888fda32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a> process.  <br /></td></tr>
+<tr class="memdesc:a5ecab815da15e684730e068b888fda32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a> process.  <br /></td></tr>
 <tr class="separator:a5ecab815da15e684730e068b888fda32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ab4d1f5ce13a0f4d947e5650009814253" id="r_ab4d1f5ce13a0f4d947e5650009814253"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#ab4d1f5ce13a0f4d947e5650009814253">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm)</td></tr>
-<tr class="memdesc:ab4d1f5ce13a0f4d947e5650009814253"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new controller object for use with GenericFactory.  <br /></td></tr>
-<tr class="separator:ab4d1f5ce13a0f4d947e5650009814253"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab519a38a31c9d23ff78246a207996e1" id="r_aab519a38a31c9d23ff78246a207996e1"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#aab519a38a31c9d23ff78246a207996e1">makeOne</a> (tcp::socket &amp;socket, <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;context, <a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a> &amp;dm)</td></tr>
+<tr class="memdesc:aab519a38a31c9d23ff78246a207996e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new rpc object for use with GenericFactory.  <br /></td></tr>
+<tr class="separator:aab519a38a31c9d23ff78246a207996e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller. </p>
+<div class="textblock"><p>CallData class for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> RPC. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="af0e1d604b3bd924214549bb38e030a3b" name="af0e1d604b3bd924214549bb38e030a3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af0e1d604b3bd924214549bb38e030a3b">&#9670;&#160;</a></span>BasicParamInfoRequest()</h2>
+<a id="a547d923ab6c4df714c816976ccccb5bb" name="a547d923ab6c4df714c816976ccccb5bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a547d923ab6c4df714c816976ccccb5bb">&#9670;&#160;</a></span>BasicParamInfoRequest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -163,13 +153,13 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td>
           <td class="paramname"><em>context</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a> &amp;&#160;</td>
           <td class="paramname"><em>dm</em>&#160;</td>
         </tr>
         <tr>
@@ -180,11 +170,11 @@ Additional Inherited Members</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a> controller. </p>
+<p>Constructor for the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a> RPC. Calls <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html#af0790c78e054b8bcd7673af13f830324" title="BasicParamInfoRequest&#39;s main process.">proceed()</a> once initialized. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
     <tr><td class="paramname">dm</td><td>The device to get the parameter info from. </td></tr>
   </table>
   </dd>
@@ -216,14 +206,14 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Finishes the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a> process. </p>
+<p>Finishes the <a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a> process. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#ab996fd53aed2f9ee46536cb6da16f68d">catena::REST::ICallData</a>.</p>
 
 </div>
 </div>
-<a id="ab4d1f5ce13a0f4d947e5650009814253" name="ab4d1f5ce13a0f4d947e5650009814253"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab4d1f5ce13a0f4d947e5650009814253">&#9670;&#160;</a></span>makeOne()</h2>
+<a id="aab519a38a31c9d23ff78246a207996e1" name="aab519a38a31c9d23ff78246a207996e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab519a38a31c9d23ff78246a207996e1">&#9670;&#160;</a></span>makeOne()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -240,13 +230,13 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html">SocketReader</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td>
           <td class="paramname"><em>context</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a> &amp;&#160;</td>
           <td class="paramname"><em>dm</em>&#160;</td>
         </tr>
         <tr>
@@ -262,11 +252,11 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Creates a new controller object for use with GenericFactory. </p>
+<p>Creates a new rpc object for use with GenericFactory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write the response stream to. </td></tr>
-    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1SocketReader.html" title="Helper class used to read from a socket using boost.">SocketReader</a> object. </td></tr>
+    <tr><td class="paramname">context</td><td>The <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html" title="Interface for the SocketReader class.">ISocketReader</a> object. </td></tr>
     <tr><td class="paramname">dm</td><td>The device to connect to. </td></tr>
   </table>
   </dd>
@@ -297,7 +287,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="ICallData class for the BasicParamInfoRequest REST controller.">BasicParamInfoRequest</a>'s main process. </p>
+<p><a class="el" href="classcatena_1_1REST_1_1BasicParamInfoRequest.html" title="CallData class for the BasicParamInfoRequest REST RPC.">BasicParamInfoRequest</a>'s main process. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ICallData.html#a4672626b422b580fa4b9bad98db4205e">catena::REST::ICallData</a>.</p>
 
