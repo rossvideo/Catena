@@ -39,6 +39,7 @@ set(sources
     "src/MenuGroup.cpp"
     "src/ParamVisitor.cpp"
     "src/SubscriptionManager.cpp"
+    "src/SharedFlags.cpp"
 )
 
 # conditionally make for gRPC

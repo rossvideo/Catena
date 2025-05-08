@@ -33,7 +33,6 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <SharedFlags.h>
 #include <ServiceCredentials.h>
 
 // protobuf interface

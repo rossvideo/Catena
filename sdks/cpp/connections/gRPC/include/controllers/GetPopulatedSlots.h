@@ -84,7 +84,12 @@ class GetPopulatedSlots : public CallData{
          */
         ServerAsyncResponseWriter<::catena::SlotList> responder_;
         /**
-         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+         * @brief gRPC async response writer.
+         */
+        ServerAsyncWriter<catena::CommandResponse> writer_;
+        /**
+         * @brief Represents the current status of the command execution
+         * (kCreate, kProcess, kFinish, etc.)
          */
         CallStatus status_;
         /**

@@ -30,7 +30,7 @@
 
 /**
  * @file GetPopulatedSlots.h
- * @brief Implements REST GetPopulatedSlots RPC.
+ * @brief Implements REST GetPopulatedSlots controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
  
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the GetPopulatedSlots REST RPC.
+ * @brief ICallData class for the GetPopulatedSlots REST controller.
  */
 class GetPopulatedSlots : public ICallData {
   public:
@@ -68,37 +68,39 @@ class GetPopulatedSlots : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the GetPopulatedSlots RPC.
+     * @brief Constructor for the GetPopulatedSlots controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object. Here to maintain consistency.
-     * @param dm The device to get the slot of.
+     * @param context The ISocketReader object.
+     * @param dm The device to get the populated slots of.
      */ 
-    GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief GetPopulatedSlots's main process.
      */
     void proceed() override;
+    
     /**
      * @brief Finishes the GetPopulatedSlots process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new GetPopulatedSlots(socket, context, dm);
     }
   private:
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "Connect::proceed[" << objectId_ << "]: "

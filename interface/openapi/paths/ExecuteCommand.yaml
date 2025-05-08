@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -57,19 +57,25 @@ put:
     - name: respond
       in: query
       required: false
-      description: Optional flag to supress the server's response
+      description: Optional flag to suppress the server's response. The 
+        presence of this parameter suppresses the response, regardless of 
+        its value. (The value is ignored; any value such as "true" will 
+        have the same effect.)
       schema:
-        type: boolean
-      default: true
+        type: string
+        enum: ["true"]
     
     - name: proceed
       in: query
       required: false
-      description: Optional flag indicate whether to send the response instead
-         as the 'DataPayload' variant of the 'Value' message
+      description: Optional flag to indicate whether to send the response 
+        as the 'DataPayload' variant of the 'Value' message. The presence 
+        of this parameter enables this behavior, regardless of its value. 
+        (The value is ignored; any value such as "true" will have the same 
+        effect.)
       schema:
-        type: boolean
-      default: false
+        type: string
+        enum: ["true"]
     
   requestBody:
     required: false
@@ -96,9 +102,5 @@ put:
               - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
               
               - $ref: "./Messages.yaml#/$defs/exception"
-
-              - title: Proceed
-                description: Used to short circuit sending payloads
-                type: boolean
 
           example: {boolean_value: true}

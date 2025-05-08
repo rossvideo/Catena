@@ -64,6 +64,7 @@
 #include <IParam.h>
 #include <IDevice.h>
 #include <Authorization.h>
+#include <SharedFlags.h>
 
 // gRPC interface
 #include <interface/service.grpc.pb.h>

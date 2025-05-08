@@ -48,6 +48,9 @@ using catena::gRPC::CatenaServiceImpl;
 #include <iterator>
 #include <filesystem>
 
+// Defining the port flag from SharedFlags.h
+ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
+
 CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std::string& EOPath, bool authz)
         : cq_{cq}, 
           dm_{dm}, 

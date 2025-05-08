@@ -117,11 +117,11 @@ void DeviceRequest::proceed(bool ok) {
                         }
                     }
                     // Get service subscriptions from the manager
-                    subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
+                    subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
                 }
 
                 // Getting the serializer object.
-                serializer_ = dm_.getComponentSerializer(*authz_, subscribed_oids_, dl, shallowCopy);
+                serializer_ = dm_.getComponentSerializer(*authz_, subscribedOids_, dl, shallowCopy);
 
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {

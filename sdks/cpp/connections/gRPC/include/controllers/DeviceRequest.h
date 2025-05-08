@@ -102,6 +102,10 @@ class DeviceRequest : public CallData {
      */
     catena::common::Authorizer* authz_;
     /**
+     * @brief The set of subscribed OIDs.
+     */
+    std::set<std::string> subscribedOids_;
+    /**
      * @brief Unique identifier for device request object
      */
     int objectId_;
@@ -109,19 +113,6 @@ class DeviceRequest : public CallData {
      * @brief Counter to generate unique object IDs for each new object
      */
     static int objectCounter_;
-    /**
-     * @brief Unique identifier for the shutdown signal
-     */
-    unsigned int shutdownSignalId_;
-    /**
-     * @brief The set of subscribed OIDs.
-     */
-    std::set<std::string> subscribed_oids_;
-
-    /**
-     * @brief The set of RPC-specific subscriptions to track what this RPC has added.
-     */
-    std::set<std::string> rpc_subscriptions_;
 };
 
 }; // namespace gRPC

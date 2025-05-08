@@ -6,7 +6,7 @@ using catena::REST::DeviceRequest;
 // Initializes the object counter for Connect to 0.
 int DeviceRequest::objectCounter_ = 0;
 
-DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -17,34 +17,31 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice
 void DeviceRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
     try {
-        // controls whether shallow copy or deep copy is used
-        bool shallowCopy = true;
+        bool shallowCopy = true; // controls whether shallow copy or deep copy is used
+        catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
+        
+        // Setting up authorizer object.
         if (context_.authorizationEnabled()) {
+            // Authorizer throws an error if invalid jws token so no need to handle rc.
             sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
             authz = sharedAuthz.get();
         } else {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
-               
-        auto& subscriptionManager = context_.getSubscriptionManager();
-        subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
 
-        // Set the detail level on the device
-        // dm_.detail_level(context_.detailLevel());
+        // req_.detail_level defaults to FULL
         catena::Device_DetailLevel dl = context_.detailLevel();
 
-        // If we're in SUBSCRIPTIONS mode, we'll send minimal set if no subscriptions
-        // if (context_.detailLevel() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-        //     if (subscribedOids_.empty()) {
-        //         serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
-        //     } else {
-        //         serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
-        //     }
-        // } else {
-        //     serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
-        // }
+        // Getting subscribed oids if dl == SUBSCRIPTIONS.
+        if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+            auto& subscriptionManager = context_.getSubscriptionManager();
+            subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
+        }
+
+        // Getting the serializer object.
+        serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, dl, shallowCopy);
 
         // Getting each component and writing to the stream.
         while (serializer_->hasMore()) {
@@ -56,21 +53,18 @@ void DeviceRequest::proceed() {
             }
             writer_.write(component);
         }
-        writer_.finish();
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {
-        writer_.write(err);
-        writer_.finish();
+        writer_.finish(catena::Empty(), err);
     } catch (...) {
         catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
-        writer_.write(err);
-        writer_.finish();
+        writer_.finish(catena::Empty(), err);
     }
 }
 
 void DeviceRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
 }

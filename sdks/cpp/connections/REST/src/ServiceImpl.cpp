@@ -3,7 +3,7 @@
 #include <ServiceImpl.h>
 using catena::REST::CatenaServiceImpl;
 
-// RPCs
+// REST controllers
 #include <controllers/Connect.h>
 #include <controllers/GetParam.h>
 #include <controllers/MultiSetValue.h>
@@ -20,7 +20,8 @@ using catena::REST::CatenaServiceImpl;
 
 using catena::REST::Connect;
 
-#include "absl/flags/flag.h"
+// Defining the port flag from SharedFlags.h
+ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
 // expand env variables
 void expandEnvVariables(std::string &str) {
@@ -74,10 +75,10 @@ void CatenaServiceImpl::run() {
         // Waiting for a connection.
         tcp::socket socket(io_context_);
         acceptor_.accept(socket);
-        // Once a conections is made, increment activeRPCs and handle async.
+        // Once a connection is made, increment activeRequests and handle async.
         {
-        std::lock_guard<std::mutex> lock(activeRpcMutex_);
-        activeRpcs_ += 1;
+            std::lock_guard<std::mutex> lock(activeRequestMutex_);
+            activeRequests_ += 1;
         }
         std::thread([this, socket = std::move(socket)]() mutable {
             catena::exception_with_status rc("", catena::StatusCode::OK);
@@ -86,21 +87,28 @@ void CatenaServiceImpl::run() {
                     // Reading from the socket.
                     SocketReader context(*subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
-                    std::string rpcKey = context.method() + context.service();
+                    std::string requestKey = context.method() + context.service();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        catena::exception_with_status rc("", catena::StatusCode::OK);
-                        SocketWriter(socket, context.origin()).write(rc);
-                    // Otherwise routing to rpc.
-                    } else if (router_.canMake(rpcKey)) {
-                        std::unique_ptr<ICallData> rpc = router_.makeProduct(rpcKey, socket, context, dm_);
-                        rpc->proceed();
-                        rpc->finish();
+                        SocketWriter(socket, context.origin()).finish(catena::Empty(), rc);
+                    // Otherwise routing to request.
+                    } else if (router_.canMake(requestKey)) {
+                        std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dm_);
+                        request->proceed();
+                        request->finish();
                     // ERROR
-                    } else {
-                        rc = catena::exception_with_status("RPC " + rpcKey + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
+                    } else { 
+                        rc = catena::exception_with_status("Request " + requestKey + " does not exist", catena::StatusCode::INVALID_ARGUMENT);
                     }
                 // ERROR
+                } catch (const catena::exception_with_status& e) {
+                    rc = std::move(catena::exception_with_status(e.what(), e.status)); 
+                } catch (const std::invalid_argument& e) {
+                    rc = catena::exception_with_status(e.what(), catena::StatusCode::INVALID_ARGUMENT);
+                } catch (const std::runtime_error& e) {
+                    rc = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+                } catch (const std::exception& e) {
+                    rc = catena::exception_with_status(e.what(), catena::StatusCode::UNKNOWN);
                 } catch (...) {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
@@ -109,28 +117,28 @@ void CatenaServiceImpl::run() {
             }
             // Writing to socket if there was an error.
             if (rc.status != catena::StatusCode::OK) {
-                // Try ensures that we don't fail to decrement active RPCs.
+                // Try ensures that we don't fail to decrement active requests.
                 try {
                     SocketWriter writer(socket);
-                    writer.write(rc);
+                    writer.finish(catena::Empty(), rc);
                 } catch (...) {}
             }
-            // rpc completed. Decrementing activeRPCs.
+            // request completed. Decrementing activeRequests.
             {
-            std::lock_guard<std::mutex> lock(activeRpcMutex_);
-            activeRpcs_ -= 1;
-            std::cout<<"Active RPCs remaining: "<<activeRpcs_<<std::endl;
+                std::lock_guard<std::mutex> lock(activeRequestMutex_);
+                activeRequests_ -= 1;
+                std::cout<<"Active requests remaining: "<<activeRequests_<<std::endl;
             }
         }).detach();
     }
     
-    // shutdown_ is true. Send shutdown signal and wait for active RPCs.
+    // shutdown_ is true. Send shutdown signal and wait for active requests.
     Connect::shutdownSignal_.emit();
-    while(activeRpcs_ > 0) {
+    while(activeRequests_ > 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    // Once active RPCs are done, close the acceptor and io_context.
+    // Once active requests are done, close the acceptor and io_context.
     io_context_.stop();
     acceptor_.close();
 }

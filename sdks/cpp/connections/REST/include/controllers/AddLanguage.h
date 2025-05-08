@@ -30,7 +30,7 @@
 
 /**
  * @file AddLanguage.h
- * @brief Implements REST AddLanguage RPC.
+ * @brief Implements REST AddLanguage controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -50,7 +50,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -58,7 +58,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the AddLanguage REST RPC.
+ * @brief ICallData class for the AddLanguage REST controller.
  */
 class AddLanguage : public ICallData {
   public:
@@ -67,13 +67,13 @@ class AddLanguage : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the AddLanguage RPC.
+     * @brief Constructor for the AddLanguage controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to add the language pack to.
      */ 
-    AddLanguage(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    AddLanguage(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief AddLanguage's main process.
      */
@@ -83,21 +83,21 @@ class AddLanguage : public ICallData {
      */
     void finish() override;
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new AddLanguage(socket, context, dm);
     }
   private:
     /**
      * @brief Helper function to write status messages to the API console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "AddLanguage::proceed[" << objectId_ << "]: "
@@ -111,9 +111,9 @@ class AddLanguage : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

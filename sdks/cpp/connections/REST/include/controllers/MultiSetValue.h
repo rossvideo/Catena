@@ -30,7 +30,7 @@
 
 /**
  * @file MultiSetValue.h
- * @brief Implements REST MultiSetValue RPC.
+ * @brief Implements REST MultiSetValue controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -51,7 +51,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -59,7 +59,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Generic ICallData class for the SetValue and MultiSetValue REST RPCs.
+ * @brief ICallData class for the MultiSetValue REST controller.
  */
 class MultiSetValue : public ICallData {
   public:
@@ -68,40 +68,42 @@ class MultiSetValue : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the MultiSetValue RPC.
+     * @brief Constructor for the MultiSetValue controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
-     * @param dm The device to set the value(s) of.
+     * @param context The ISocketReader object.
+     * @param dm The device to set values on.
      */ 
-    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
-     * @brief MultiSetValue main process.
+     * @brief MultiSetValue's main process.
      */
     void proceed() override;
+    
     /**
      * @brief Finishes the MultiSetValue process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new MultiSetValue(socket, context, dm);
     }
   protected:
     /**
-     * @brief Constructor for child SetValue RPCs. Does not call proceed().
+     * @brief Constructor for child SetValue rest endpoints. Does not call proceed().
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to set the value(s) of.
      * @param objectId The object's unique id.
      */
-    MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm, int objectId);
+    MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId);
     /**
      * @brief Converts the jsonPayload_ to MultiSetValuePayload reqs_.
      * @returns True if successful.
@@ -125,9 +127,9 @@ class MultiSetValue : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
@@ -136,13 +138,14 @@ class MultiSetValue : public ICallData {
      * @brief The device to set values of.
      */
     IDevice& dm_;
+
     /**
-     * @brief The MultiSetValuePayload extracted from jsonPayload_.
+     * @brief The MultiSetValuePayload from the request.
      */
     catena::MultiSetValuePayload reqs_;
 
     /**
-     * @brief ID of the (Multi)SetValue object
+     * @brief ID of the MultiSetValue object
      */
     int objectId_;
   private:

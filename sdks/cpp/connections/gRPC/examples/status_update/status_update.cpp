@@ -45,7 +45,6 @@
 #include <ParamWithValue.h>
 
 // connections/gRPC
-#include <SharedFlags.h>
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
 
