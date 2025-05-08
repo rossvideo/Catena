@@ -198,15 +198,12 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~Device</b> ()=def
 <tr class="memitem:adf56f7bf11b8ab6ad93d04cd91ca0bdf" id="r_adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#adf56f7bf11b8ab6ad93d04cd91ca0bdf">getLanguagePack</a> (const std::string &amp;languageId, ComponentLanguagePack &amp;pack) const override</td></tr>
 <tr class="memdesc:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds and returns a language pack based on languageId.  <br /></td></tr>
 <tr class="separator:adf56f7bf11b8ab6ad93d04cd91ca0bdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf5ab667c7654abd79976f342f429779" id="r_aaf5ab667c7654abd79976f342f429779"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#aaf5ab667c7654abd79976f342f429779">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, bool shallow=false) const override</td></tr>
-<tr class="memdesc:aaf5ab667c7654abd79976f342f429779"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
-<tr class="separator:aaf5ab667c7654abd79976f342f429779"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4af444b377089de944b9a88d698c9bea" id="r_a4af444b377089de944b9a88d698c9bea"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a4af444b377089de944b9a88d698c9bea">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const override</td></tr>
-<tr class="memdesc:a4af444b377089de944b9a88d698c9bea"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
-<tr class="separator:a4af444b377089de944b9a88d698c9bea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a118ab830a381bf5aef5c455fada25209" id="r_a118ab830a381bf5aef5c455fada25209"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a118ab830a381bf5aef5c455fada25209">getDeviceSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribed_oids, bool shallow=false) const</td></tr>
-<tr class="memdesc:a118ab830a381bf5aef5c455fada25209"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object.  <br /></td></tr>
-<tr class="separator:a118ab830a381bf5aef5c455fada25209"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae707cba9c53ad81f345d056b16414c1c" id="r_ae707cba9c53ad81f345d056b16414c1c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#ae707cba9c53ad81f345d056b16414c1c">getComponentSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribedOids, catena::Device_DetailLevel dl, bool shallow=false) const override</td></tr>
+<tr class="memdesc:ae707cba9c53ad81f345d056b16414c1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a serializer for the device  <br /></td></tr>
+<tr class="separator:ae707cba9c53ad81f345d056b16414c1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b6295c039a7456cbde189190e50ab65" id="r_a3b6295c039a7456cbde189190e50ab65"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html">DeviceSerializer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a3b6295c039a7456cbde189190e50ab65">getDeviceSerializer</a> (<a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz, const std::set&lt; std::string &gt; &amp;subscribedOids, catena::Device_DetailLevel dl, bool shallow=false) const</td></tr>
+<tr class="memdesc:a3b6295c039a7456cbde189190e50ab65"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object.  <br /></td></tr>
+<tr class="separator:a3b6295c039a7456cbde189190e50ab65"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d2603a512258a9650f6f2d44e9d57ea" id="r_a5d2603a512258a9650f6f2d44e9d57ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Device.html#a5d2603a512258a9650f6f2d44e9d57ea">addItem</a> (const std::string &amp;key, <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *item) override</td></tr>
 <tr class="memdesc:a5d2603a512258a9650f6f2d44e9d57ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device. Overload for parameters and commands.  <br /></td></tr>
 <tr class="separator:a5d2603a512258a9650f6f2d44e9d57ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -770,56 +767,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="aaf5ab667c7654abd79976f342f429779" name="aaf5ab667c7654abd79976f342f429779"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf5ab667c7654abd79976f342f429779">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html">IDeviceSerializer</a> &gt; catena::common::Device::getComponentSerializer </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
-          <td class="paramname"><em>authz</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>shallow</em> = <code>false</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get a serializer for the device </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">authz</td><td>the authorizer object containing the scopes of the client </td></tr>
-    <tr><td class="paramname">shallow</td><td>if true, the device will be returned in parts, otherwise the whole device will be returned in one message </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a9dda7d427d095d9f4d7fc46a57664d58">catena::common::IDevice</a>.</p>
-
-</div>
-</div>
-<a id="a4af444b377089de944b9a88d698c9bea" name="a4af444b377089de944b9a88d698c9bea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4af444b377089de944b9a88d698c9bea">&#9670;&#160;</a></span>getComponentSerializer() <span class="overload">[2/2]</span></h2>
+<a id="ae707cba9c53ad81f345d056b16414c1c" name="ae707cba9c53ad81f345d056b16414c1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae707cba9c53ad81f345d056b16414c1c">&#9670;&#160;</a></span>getComponentSerializer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -837,7 +786,13 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::set&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>subscribed_oids</em>, </td>
+          <td class="paramname"><em>subscribedOids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">catena::Device_DetailLevel&#160;</td>
+          <td class="paramname"><em>dl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -861,15 +816,16 @@ Here is the caller graph for this function:</div>
 <p>get a serializer for the device </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">clientScopes</td><td>the scopes of the client </td></tr>
+    <tr><td class="paramname">authz</td><td>The authorizer object containing the scopes of the client </td></tr>
+    <tr><td class="paramname">dl</td><td>The detail level to retrieve information in. </td></tr>
+    <tr><td class="paramname">subscribedOids</td><td>the oids of the subscribed parameters </td></tr>
     <tr><td class="paramname">shallow</td><td>if true, the device will be returned in parts, otherwise the whole device will be returned in one message </td></tr>
-    <tr><td class="paramname">subscribed_oids</td><td>the oids of the subscribed parameters </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a0398fec0c5c326bcb6b6ee4f9e4ccd96">catena::common::IDevice</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IDevice.html#a02c4d9fea9e09915d7f609510fdaf7c9">catena::common::IDevice</a>.</p>
 
 </div>
 </div>
@@ -902,8 +858,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a118ab830a381bf5aef5c455fada25209" name="a118ab830a381bf5aef5c455fada25209"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a118ab830a381bf5aef5c455fada25209">&#9670;&#160;</a></span>getDeviceSerializer()</h2>
+<a id="a3b6295c039a7456cbde189190e50ab65" name="a3b6295c039a7456cbde189190e50ab65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b6295c039a7456cbde189190e50ab65">&#9670;&#160;</a></span>getDeviceSerializer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -918,7 +874,13 @@ Here is the caller graph for this function:</div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::set&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>subscribed_oids</em>, </td>
+          <td class="paramname"><em>subscribedOids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">catena::Device_DetailLevel&#160;</td>
+          <td class="paramname"><em>dl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -937,10 +899,10 @@ Here is the caller graph for this function:</div>
 <p>This is a helper function for the shared <a class="el" href="classcatena_1_1common_1_1IDevice.html" title="Interface class for Device.">IDevice</a> function getComponentSerializer to return a <a class="el" href="classcatena_1_1common_1_1Device_1_1DeviceSerializer.html" title="DeviceSerializer is a coroutine that serializes the device into a stream of DeviceComponents This str...">DeviceSerializer</a> object. It can be used on its own if calling from a <a class="el" href="classcatena_1_1common_1_1Device.html" title="Implements the Device interface defined in the protobuf.">Device</a> object. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">clientScopes</td><td>the scopes of the client </td></tr>
-    <tr><td class="paramname">subscribed_oids</td><td>the oids of the subscribed parameters </td></tr>
+    <tr><td class="paramname">authz</td><td>The authorizer object containing the scopes of the client </td></tr>
+    <tr><td class="paramname">subscribedOids</td><td>the oids of the subscribed parameters </td></tr>
+    <tr><td class="paramname">dl</td><td>The detail level to retrieve information in. </td></tr>
     <tr><td class="paramname">shallow</td><td>if true, the device will be returned in parts, otherwise the whole device will be returned in one message </td></tr>
-    <tr><td class="paramname">subscribed_oids</td><td>the oids of the subscribed parameters </td></tr>
   </table>
   </dd>
 </dl>

@@ -111,8 +111,7 @@ var NAVTREE =
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", null ],
-        [ "Typedefs", "functions_type.html", null ],
-        [ "Enumerations", "functions_enum.html", null ]
+        [ "Typedefs", "functions_type.html", null ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -130,12 +129,13 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Authorization_8h.html",
-"classCatenaServiceImpl_1_1DeviceRequest.html#a4f083c0c58ce9dfc997c05fb5b86cdc9",
-"classcatena_1_1REST_1_1MultiSetValue.html#a7a946af4fc7bf144592643f36baca1db",
-"classcatena_1_1common_1_1IDevice.html#a0398fec0c5c326bcb6b6ee4f9e4ccd96",
-"classcatena_1_1common_1_1NamedChoiceConstraint.html#ab1e9dafaea9c2de1b4423eb1adf4d2e3",
-"classcatena_1_1common_1_1SubscriptionManager.html#a4ceb1e4a68377276123b3a6e582a1ec3",
-"md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2linux__toolchain.html#autotoc_md22"
+"classcatena_1_1REST_1_1CatenaServiceImpl.html#a53b64ee00ea531c01e11ae45b00b00db",
+"classcatena_1_1common_1_1Connect.html#a4755edff6106c38156a0fcc3e00dde50",
+"classcatena_1_1common_1_1IParam.html#a487044851ec828b06464c8990fd0add1",
+"classcatena_1_1common_1_1ParamWithValue.html#a86ef1ea785b8edcbcff5e2aa99e231f0",
+"classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#a2417ed1c44519895bcfc41d2e5e4df8a",
+"functions_b.html",
+"structcatena_1_1common_1_1ParamTag.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -1,5 +1,6 @@
 var ServiceCredentials_8h =
 [
-    [ "expandEnvVariables", "ServiceCredentials_8h.html#aa3ce72179203719924c0cff74fd3f82c", null ],
-    [ "getServerCredentials", "ServiceCredentials_8h.html#a989cc41eb5054f4902e9bf6a66334373", null ]
+    [ "catena::gRPC::JWTAuthMetadataProcessor", "classcatena_1_1gRPC_1_1JWTAuthMetadataProcessor.html", null ],
+    [ "expandEnvVariables", "ServiceCredentials_8h.html#ae07a5b524f1a6a880828efbd0aca097e", null ],
+    [ "getServerCredentials", "ServiceCredentials_8h.html#a9b53e73aad0b588c282703d12e831a9e", null ]
 ];
