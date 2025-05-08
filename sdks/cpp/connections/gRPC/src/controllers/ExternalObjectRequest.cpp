@@ -127,6 +127,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                 
                 catena::ExternalObjectPayload obj;
                 obj.mutable_payload()->set_payload(file_data.data(), file_data.size()); 
+                //obj.mutable_payload()->set_meta(file.);
 
                 //For now we are sending the whole file in one go
                 std::cout << "ExternalObjectRequest[" << objectId_ << "] sent\n";
