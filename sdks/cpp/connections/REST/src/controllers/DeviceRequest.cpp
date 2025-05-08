@@ -55,21 +55,18 @@ void DeviceRequest::proceed() {
             }
             writer_.write(component);
         }
-        writer_.finish();
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {
-        writer_.write(err);
-        writer_.finish();
+        writer_.finish(catena::Empty(), err);
     } catch (...) {
         catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
-        writer_.write(err);
-        writer_.finish();
+        writer_.finish(catena::Empty(), err);
     }
 }
 
 void DeviceRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
 }

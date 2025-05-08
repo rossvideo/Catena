@@ -13,7 +13,7 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
-    forceConnection_ = context.fields("force_connection") == "true";
+    forceConnection_ = context.hasField("force_connection");
 }
 
 void Connect::proceed() {
@@ -49,7 +49,7 @@ void Connect::proceed() {
         writer_.write(populatedSlots);
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
-        writer_.write(err);
+        writer_.finish(catena::Empty(), err);
         shutdown_ = true;
     }
 
@@ -84,7 +84,7 @@ void Connect::finish() {
     } catch (...) {}
     // Finishing and closing the socket.
     if (socket_.is_open()) {
-        writer_.finish();
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";

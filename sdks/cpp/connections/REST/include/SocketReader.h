@@ -80,7 +80,7 @@ class SocketReader : public ISocketReader {
      */
     void read(tcp::socket& socket, bool authz = false) override;
     /**
-     * @brief Returns the method of the request.
+     * @brief Returns the HTTP method of the request.
      */
     const std::string& method() const override { return method_; }
     /**
@@ -91,6 +91,14 @@ class SocketReader : public ISocketReader {
      * @brief Returns the slot of the device to make the API call on.
      */
     uint32_t slot() const override { return slot_; };
+    /**
+     * @brief Returns true if the field exists in the URL, regardless of its value.
+     * 
+     * @param key The name of the field to check.
+     */
+    bool hasField(const std::string& key) const override {
+      return fields_.contains(key);
+    }
     /**
      * @brief Returns the field "key" queried from the URL, or an empty sting
      * if it does not exist.

@@ -54,7 +54,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief Controller class for handling UpdateSubscriptions requests
+ * @brief ICallData class for the UpdateSubscriptions REST controller.
  */
 class UpdateSubscriptions : public ICallData {
 public:
@@ -63,25 +63,26 @@ public:
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the UpdateSubscriptions controller
-     * @param socket The TCP socket for the connection
-     * @param context The socket reader context
-     * @param dm The device model
-     */
+     * @brief Constructor for the UpdateSubscriptions controller.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object.
+     * @param dm The device to update subscriptions on.
+     */ 
     UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
-
+    
     /**
-     * @brief Processes the UpdateSubscriptions request
+     * @brief UpdateSubscriptions's main process.
      */
     void proceed() override;
-
+    
     /**
-     * @brief Finishes the UpdateSubscriptions process
+     * @brief Finishes the UpdateSubscriptions process.
      */
     void finish() override;
-
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -131,7 +132,7 @@ private:
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<SSEWriter> writer_{nullptr};
 
     /**
      * @brief The request payload
@@ -177,6 +178,11 @@ private:
      * @brief The device model
      */
     IDevice& dm_;
+    
+    /**
+     * @brief The error status
+     */
+    catena::exception_with_status rc_;
 };
 
 } // namespace REST 

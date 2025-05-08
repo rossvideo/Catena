@@ -10,7 +10,7 @@
 
  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -30,7 +30,10 @@
 namespace catena {
 
 /**
- * @brief Status Code - reproduced from google's grpc project.
+ * @brief Status Code - reproduced from google's grpc project and extended for REST.
+ * 
+ * Codes 0-16 are compatible with gRPC. Codes mapped to HTTP status codes are 
+ * REST-specific and should not be used in gRPC contexts.
  * 
  * The license for this code is Apache 2.0 which permits redistribution
  * and modification. The original code is available at: https://github.com/grpc/grpc
@@ -156,7 +159,47 @@ enum StatusCode {
   DATA_LOSS = 15,
 
   /// Force users to include a default branch:
-  DO_NOT_USE = -1
+  DO_NOT_USE = -1,
+
+  // --- REST-specific status codes (do not use in gRPC) ---
+  /**
+   * The following codes are intended for REST/HTTP APIs only and do not map to 
+   * gRPC status codes. Use these codes to represent HTTP-specific conditions.
+   */
+  /// The request has succeeded and a new resource has been created as a result.
+  CREATED = 201,
+
+  /// The request has been accepted for processing, but the processing has not
+  /// yet been completed.
+  ACCEPTED = 202,
+
+  /// The server successfully processed the request and is not returning any
+  /// content in the response.
+  NO_CONTENT = 204,
+
+  /// The request was well-formed but was unable to be followed due to semantic
+  /// errors in the request.
+  UNPROCESSABLE_ENTITY = 422,
+
+  /// The method is not allowed for the requested resource.
+  METHOD_NOT_ALLOWED = 405,
+
+  /// The request could not be completed due to a conflict.
+  CONFLICT = 409,
+
+  /// The user has sent too many requests in a given amount of time.
+  TOO_MANY_REQUESTS = 429,
+
+  /// The server was acting as a gateway/proxy and received an invalid response
+  /// from the upstream server.
+  BAD_GATEWAY = 502,
+
+  /// The server is not ready to handle the request.
+  SERVICE_UNAVAILABLE = 503,
+
+  /// The server was acting as a gateway/proxy and did not receive a timely
+  /// response from the upstream server.
+  GATEWAY_TIMEOUT = 504,
 };
 
 /**
