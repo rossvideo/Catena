@@ -46,6 +46,8 @@
 #include <Authorization.h>
 #include <Enums.h>
 #include <ISubscriptionManager.h>
+#include <SharedFlags.h>
+
 // REST
 #include <interface/IServiceImpl.h>
 #include <interface/ICallData.h>
@@ -178,15 +180,3 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
 
 }; // namespace REST
 }; // namespace catena
-
-// flags for the API
-// flags.h
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-
-// Declare flags for the API
-ABSL_DECLARE_FLAG(std::string, certs);
-ABSL_DECLARE_FLAG(uint16_t, port);
-ABSL_DECLARE_FLAG(bool, mutual_authc);
-ABSL_DECLARE_FLAG(bool, authz);
-ABSL_DECLARE_FLAG(std::string, static_root);

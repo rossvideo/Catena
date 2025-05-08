@@ -20,7 +20,8 @@ using catena::REST::CatenaServiceImpl;
 
 using catena::REST::Connect;
 
-#include "absl/flags/flag.h"
+// Defining the port flag from SharedFlags.h
+ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
 // expand env variables
 void expandEnvVariables(std::string &str) {
