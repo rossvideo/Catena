@@ -77,7 +77,7 @@ class BasicParamInfoRequest : public ICallData {
      * @param context The ISocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
      * @brief BasicParamInfoRequest's main process.

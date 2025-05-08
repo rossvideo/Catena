@@ -71,10 +71,10 @@ class ExecuteCommand : public ICallData {
      * @brief Constructor for the ExecuteCommand controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to execute the command on.
      */ 
-    ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
      * @brief ExecuteCommand's main process.

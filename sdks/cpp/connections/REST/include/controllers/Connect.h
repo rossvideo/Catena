@@ -131,7 +131,7 @@ class Connect : public ICallData, public catena::common::Connect {
     /**
      * @brief The SocketReader object for reading the request.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The mutex to for locking the object while writing
      */
