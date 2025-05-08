@@ -29,8 +29,8 @@
  */
 
 /**
- * @file ListLanguagess.h
- * @brief Implements REST ListLanguages RPC.
+ * @file ListLanguages.h
+ * @brief Implements REST ListLanguages controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -50,7 +50,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -58,7 +58,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the ListLanguages REST RPC.
+ * @brief ICallData class for the ListLanguages REST controller.
  */
 class ListLanguages : public ICallData {
   public:
@@ -67,37 +67,41 @@ class ListLanguages : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the ListLanguages RPC.
+     * @brief Constructor for the ListLanguages controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
-     * @param dm The device to get the value from.
+     * @param context The ISocketReader object.
+     * @param dm The device to list languages from.
      */ 
-    ListLanguages(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    ListLanguages(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief ListLanguages's main process.
      */
     void proceed() override;
+    
     /**
      * @brief Finishes the ListLanguages process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new ListLanguages(socket, context, dm);
     }
+    
+
   private:
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "ListLanguages::proceed[" << objectId_ << "]: "
@@ -105,21 +109,20 @@ class ListLanguages : public ICallData {
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
-
     /**
      * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
     SocketWriter writer_;
     /**
-     * @brief The device to list languges of.
+     * @brief The device to list languages from.
      */
     IDevice& dm_;
 

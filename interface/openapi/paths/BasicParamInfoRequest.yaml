@@ -36,32 +36,35 @@
 #
 
 get:
-  summary: Gets a parameter's basic information from the device model plugged into the specified slot
+  summary: Gets information about parameters within a device model
   operationId: BasicParamInfoRequest
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the object from
+      description: The slot of the device model containing the parameters to get info for
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
+    - name: recursive
+      in: query
+      required: false
+      description: Optional flag to recursively get info for all children. The 
+        presence of this parameter enables recursion, regardless of its value. 
+        (The value is ignored; any value such as "true" will have the same 
+        effect.)
+      schema:
+        type: string
+        enum: ["true"]
 
     - name: oid_prefix
       in: query
       required: false
-      description: Uniquely identifies the starting parameter relative to device.params. Specifying "" selects all top-level parameters
+      description: The prefix of the OID to get info for
       schema:
         type: string
       default: ""
-    
-    - name: recursive
-      in: query
-      required: false
-      description: Optional flag to indicate whether to include all child parameters or not.
-      schema:
-        type: boolean
-      default: false
 
   responses:
     "200":
@@ -69,6 +72,7 @@ get:
         Returns a stream of basic information about the specified parameter(s).
         The response is a sequence of JSON objects, each containing information about a single parameter.
         Each object in the stream has the following structure:
+        
       content:
         application/json:
           schema:

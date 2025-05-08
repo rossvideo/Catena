@@ -6,7 +6,7 @@ using catena::REST::GetPopulatedSlots;
 // Initializes the object counter for GetPopulatedSlots to 0.
 int GetPopulatedSlots::objectCounter_ = 0;
 
-GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+GetPopulatedSlots::GetPopulatedSlots(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -19,10 +19,10 @@ void GetPopulatedSlots::proceed() {
         SlotList slotList;
         slotList.add_slots(dm_.slot());
         // Writing response.
-        writer_.finish(slotList);
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
     } catch (...) {
         catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-        writer_.write(rc);
+        writer_.finish(catena::Empty(), rc);
     }
 }
 

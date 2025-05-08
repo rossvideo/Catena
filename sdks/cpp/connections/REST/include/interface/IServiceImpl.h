@@ -30,7 +30,7 @@
 
 /**
  * @file IServiceImpl.h
- * @brief Implements REST API
+ * @brief Interface for the REST API implementation
  * @author Benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2024 Ross Video Ltd
  */
@@ -82,7 +82,7 @@ class IServiceImpl {
      */
     virtual void run() = 0;
     /**
-     * @brief Shuts down an running API. This should only be called sometime
+     * @brief Shuts down the running API server. This should only be called some time.
      * after a call to run().
      */
     virtual void Shutdown() = 0;
