@@ -15,7 +15,8 @@ var classcatena_1_1common_1_1IDevice =
     [ "detail_level", "classcatena_1_1common_1_1IDevice.html#a01f4337f08896e3add24fdf57ec6afb3", null ],
     [ "detail_level", "classcatena_1_1common_1_1IDevice.html#afb60030c822f844ea26021c88e561e87", null ],
     [ "getCommand", "classcatena_1_1common_1_1IDevice.html#accf44b99feeb6eb71ea40c2e151890a5", null ],
-    [ "getComponentSerializer", "classcatena_1_1common_1_1IDevice.html#a02c4d9fea9e09915d7f609510fdaf7c9", null ],
+    [ "getComponentSerializer", "classcatena_1_1common_1_1IDevice.html#a9dda7d427d095d9f4d7fc46a57664d58", null ],
+    [ "getComponentSerializer", "classcatena_1_1common_1_1IDevice.html#a0398fec0c5c326bcb6b6ee4f9e4ccd96", null ],
     [ "getDefaultScope", "classcatena_1_1common_1_1IDevice.html#a35c2f0ae42226e16579d8b54214d368b", null ],
     [ "getLanguagePack", "classcatena_1_1common_1_1IDevice.html#ad6c4856988084e9f0b71b9fca4cb1c63", null ],
     [ "getParam", "classcatena_1_1common_1_1IDevice.html#a758a5060fde67304ed1a371318d38432", null ],
@@ -34,6 +35,7 @@ var classcatena_1_1common_1_1IDevice =
     [ "toProto", "classcatena_1_1common_1_1IDevice.html#a20b966db2c4deee23e2da500be62fe4e", null ],
     [ "toProto", "classcatena_1_1common_1_1IDevice.html#a87aeb86d17cd61768f1868531d70d607", null ],
     [ "tryMultiSetValue", "classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91", null ],
+    [ "commandExecuted", "classcatena_1_1common_1_1IDevice.html#a85b7ac338ac4f79a77c3dfa17d4bd677", null ],
     [ "languageAddedPushUpdate", "classcatena_1_1common_1_1IDevice.html#a8cde56145c5a266af663e44ef3837f6f", null ],
     [ "valueSetByClient", "classcatena_1_1common_1_1IDevice.html#a5883fe4192ce2646f2322598e0b670f9", null ],
     [ "valueSetByServer", "classcatena_1_1common_1_1IDevice.html#a465b1d568c090e5486e2dfce6b00b35f", null ]

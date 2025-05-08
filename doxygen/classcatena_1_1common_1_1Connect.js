@@ -13,6 +13,7 @@ var classcatena_1_1common_1_1Connect =
     [ "detailLevel_", "classcatena_1_1common_1_1Connect.html#a7a879b1ef16b80e48af3a923012bd28b", null ],
     [ "dm_", "classcatena_1_1common_1_1Connect.html#a953f719fae8bdae4bf6153e9bf664cad", null ],
     [ "forceConnection_", "classcatena_1_1common_1_1Connect.html#a4755edff6106c38156a0fcc3e00dde50", null ],
+    [ "hasCommandUpdate_", "classcatena_1_1common_1_1Connect.html#a8e615f1490b76ac275c8e1400656df1e", null ],
     [ "hasUpdate_", "classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c", null ],
     [ "language_", "classcatena_1_1common_1_1Connect.html#a017fd071366adf86a7e0d90c64aa10d2", null ],
     [ "res_", "classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5", null ],
