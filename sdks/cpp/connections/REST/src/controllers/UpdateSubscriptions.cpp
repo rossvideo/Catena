@@ -51,7 +51,7 @@ UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, ISocketReader& con
     : socket_(socket),
       context_(context),
       dm_(dm),
-      writer_(socket, context.origin()) {
+      rc_("", catena::StatusCode::OK) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     try {
@@ -60,12 +60,15 @@ UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, ISocketReader& con
             absl::Status status = google::protobuf::util::JsonStringToMessage(
                 absl::string_view(context_.jsonBody()), &req_);
             if (!status.ok()) {
-                throw catena::exception_with_status("Failed to parse UpdateSubscriptionsPayload: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
+                rc_ = catena::exception_with_status("Failed to parse UpdateSubscriptionsPayload: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
+                finish();
+                return;
             }
         }
     } catch (...) {
-        catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
+        rc_ = catena::exception_with_status("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
+        finish();
+        return;
     }
 }
 
@@ -73,6 +76,7 @@ void UpdateSubscriptions::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
     try {
+        //I don't think authz is currently used in this controller
         catena::common::Authorizer* authz;
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         if (context_.authorizationEnabled()) {
@@ -82,97 +86,37 @@ void UpdateSubscriptions::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
 
-        // Clear any existing responses
-        responses_.clear();
-        current_response_ = 0;
-
         // Process removed OIDs
         for (const auto& oid : req_.removed_oids()) {     
-            catena::exception_with_status rc{"", catena::StatusCode::OK};
-            if (!context_.getSubscriptionManager().removeSubscription(oid, dm_, rc)) {
-                throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
+            if (!context_.getSubscriptionManager().removeSubscription(oid, dm_, rc_)) {
+                break;
             }
         }
 
         // Process added OIDs
         for (const auto& oid : req_.added_oids()) {
-            std::cout << "Adding subscription for OID: " << oid << std::endl;
-            
-            catena::exception_with_status rc{"", catena::StatusCode::OK};
-            if (!context_.getSubscriptionManager().addSubscription(oid, dm_, rc)) {
-                throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+            if (!context_.getSubscriptionManager().addSubscription(oid, dm_, rc_)) {
+                break;
             }
-        }
-
-        // Now that all subscriptions are processed, send current values for all subscribed parameters
-        try {
-            sendSubscribedParameters_(*authz);
-        } catch (const catena::exception_with_status& e) {
-            std::cout << "Error getting subscribed parameters: " << e.what() << std::endl;
-            // Don't throw here - we still want to finish the request successfully
-            responses_.clear();
-        }
-
-        // If we have responses, start writing them
-        if (!responses_.empty()) {
-            writer_lock_.lock();
-            writeConsole_(CallStatus::kWrite, true);
-            for (auto& response : responses_) {
-                writer_.write(response);
-            }
-            writer_lock_.unlock();
-        } else {
-            std::cout << "No responses to send, finishing..." << std::endl;
         }
 
     } catch (const catena::exception_with_status& e) {
-        std::cout << "Error processing subscriptions: " << e.what() << std::endl;
-        finish();
+        rc_ = catena::exception_with_status(e.what(), e.status);
     } catch (const std::exception& e) {
-        std::cout << "Unknown error processing subscriptions: " << e.what() << std::endl;
-        finish();
+        rc_ = catena::exception_with_status(e.what(), catena::StatusCode::UNKNOWN);
     }
+
+    finish();
 }
 
 void UpdateSubscriptions::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    writer_.finish();
-    socket_.close();
-}
-
-void UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& authz) {
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
     
-    // Get all subscribed OIDs from the manager
-    const auto& subscribedOids = context_.getSubscriptionManager().getAllSubscribedOids(dm_);
-    std::cout << "Got " << subscribedOids.size() << " subscribed OIDs" << std::endl;
-    
-    // Process each subscribed OID
-    for (const auto& oid : subscribedOids) {
-        std::cout << "Processing subscribed OID: " << oid << std::endl;
-        std::unique_ptr<IParam> param;
-        {
-            std::lock_guard lg(dm_.mutex());
-            param = dm_.getParam(oid, rc);
-        }
-        
-        if (rc.status != catena::StatusCode::OK) {
-            std::cout << "Error getting parameter: " << rc.what() << std::endl;
-            throw catena::exception_with_status("Failed to get parameter for OID: " + oid, rc.status);
-        }
-        
-        if (!param) {
-            std::cout << "Parameter not found: " << oid << std::endl;
-            throw catena::exception_with_status("Parameter not found for OID: " + oid, 
-                                              catena::StatusCode::NOT_FOUND);
-        }
-
-        catena::DeviceComponent_ComponentParam response;
-        response.set_oid(oid);
-        param->toProto(*response.mutable_param(), authz);
-        responses_.push_back(response);
-        std::cout << "Added response for OID: " << oid << std::endl;
+    if (!writer_) {
+        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_);
     }
+    socket_.close();
 }
 
 } // namespace catena::REST 

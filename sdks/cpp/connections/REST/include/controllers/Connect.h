@@ -30,7 +30,7 @@
 
 /**
  * @file Connect.h
- * @brief Implements REST Connect RPC.
+ * @brief Implements REST Connect controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -60,7 +60,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the Connect REST RPC.
+ * @brief ICallData class for the Connect REST controller.
  */
 class Connect : public ICallData, public catena::common::Connect {
   public:
@@ -69,7 +69,7 @@ class Connect : public ICallData, public catena::common::Connect {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the Connect RPC.
+     * @brief Constructor for the Connect controller.
      *
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -77,15 +77,17 @@ class Connect : public ICallData, public catena::common::Connect {
      */ 
     Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
-     * Connect main process
+     * @brief Connect's main process.
      */
     void proceed() override;
+    
     /**
-     * Finishes the Connect process by disconnecting listeners.
+     * @brief Finishes the Connect process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
@@ -104,8 +106,8 @@ class Connect : public ICallData, public catena::common::Connect {
     /**
      * @brief Helper function to write status messages to the API console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "Connect::proceed[" << objectId_ << "]: "
@@ -114,7 +116,7 @@ class Connect : public ICallData, public catena::common::Connect {
                 << std::endl;
     }
     /**
-     * @brief Returns true if the RPC was cancelled.
+     * @brief Returns true if the request was cancelled.
      */
     inline bool isCancelled() override { return !this->socket_.is_open(); }
 
@@ -126,9 +128,6 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief The SocketWriter object for writing to socket_.
      */
     SSEWriter writer_;
-    /**
-     * @brief The mutex to for locking the object while writing
-     */
     /**
      * @brief The ISocketReader object for reading the request.
      */
