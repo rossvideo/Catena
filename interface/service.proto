@@ -37,7 +37,7 @@ service CatenaService {
 
   rpc GetPopulatedSlots(catena.Empty) returns (SlotList);
 
-  rpc ExecuteCommand(stream ExecuteCommandPayload) returns (stream CommandResponse);
+  rpc ExecuteCommand(ExecuteCommandPayload) returns (stream CommandResponse);
 
   rpc ExternalObjectRequest(ExternalObjectRequestPayload) returns (stream ExternalObjectPayload);
 

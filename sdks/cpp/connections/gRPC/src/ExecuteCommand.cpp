@@ -53,7 +53,7 @@ int CatenaServiceImpl::ExecuteCommand::objectCounter_ = 0;
  * object, then starts the process
  */
 CatenaServiceImpl::ExecuteCommand::ExecuteCommand(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, stream_(&context_),
+    : service_{service}, dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service->registerItem(this);
     objectId_ = objectCounter_++;
@@ -83,78 +83,62 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
          */
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestExecuteCommand(&context_, &stream_, service_->cq_, service_->cq_, this);
+            service_->RequestExecuteCommand(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
             break;
-
         /**
          * Processes the command by reading the initial request from the client
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new ExecuteCommand(service_, dm_, ok);
-            /** 
-             * ExecuteCommand RPC always begins with reading initial request
-             * from client
-             */
-            status_ = CallStatus::kRead;
-            stream_.Read(&req_, this);
-            break;
-
-        /** 
-         * Reads the command request from the client and transitions to kRead.
-         * Should always tranistion to this state after calling stream_.Read()
-         */
-        case CallStatus::kRead:
-        {
+            new ExecuteCommand(service_, dm_, ok); // to serve other clients
+            context_.AsyncNotifyWhenDone(this);
+            { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            std::unique_ptr<IParam> command = nullptr;
-            // Check if authorization is enabled
             try {
+                std::unique_ptr<IParam> command = nullptr;
+                // Getting the command.
                 if (service_->authorizationEnabled()) {
                     catena::common::Authorizer authz{getJWSToken_()};
                     command = dm_.getCommand(req_.oid(), rc, authz);
                 } else {
                     command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
                 }
-            // Likely authentication error, end process.
+                // Executing the command if found.
+                if (command != nullptr) {
+                    res_ = command->executeCommand(req_.value());
+                    status_ = CallStatus::kWrite; 
+                }
+            // ERROR
             } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (...) {
+                rc = catena::exception_with_status("unknown error", catena::StatusCode::INTERNAL);
+            }
+            // Ending process if an error occured, falling through otherwise.
+            if (rc.status != catena::StatusCode::OK) {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                stream_.Finish(errorStatus, this);
+                writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                 break;
             }
-
-            // If the command is not found, return an error
-            if (command == nullptr) {
-                status_ = CallStatus::kFinish;
-                stream_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
-                break;
-            }
-            // Execute the command
-            res_ = command->executeCommand(req_.value());
-            /**
-             * @todo: Implement streaming response
-             * For now we are not streaming the response so we can finish the
-             * call
-             */
-            status_ = CallStatus::kPostWrite; 
-            stream_.Write(res_, this);
-            break;
-        }
+            } // rc scope
 
         /**
-         * Status after reading the request, which transitions to kRead to
-         * handle subsequent requests
+         * Writes the response to the client by sending the external object and
+         * then continues to kPostWrite or kFinish
          */
         case CallStatus::kWrite:
-            status_ = CallStatus::kRead;
-            stream_.Read(&req_, this);
+            /*
+             * Currently only sends on response to the client. Add stream
+             * ability later.
+             */
+            writer_.Write(res_, this);
+            status_ = CallStatus::kPostWrite;
             break;
 
         // Status after finishing writing the response, transitions to kFinish
         case CallStatus::kPostWrite:
             status_ = CallStatus::kFinish;
-            stream_.Finish(Status::OK, this);
+            writer_.Finish(Status::OK, this);
             break;
 
         /**
@@ -170,6 +154,6 @@ void CatenaServiceImpl::ExecuteCommand::proceed(CatenaServiceImpl *service, bool
         default:
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
-            stream_.Finish(errorStatus, this);
+            writer_.Finish(errorStatus, this);
     }
 }

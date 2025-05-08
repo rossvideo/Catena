@@ -103,8 +103,4 @@ put:
               
               - $ref: "./Messages.yaml#/$defs/exception"
 
-              - title: Proceed
-                description: Used to short circuit sending payloads
-                type: boolean
-
           example: {boolean_value: true}

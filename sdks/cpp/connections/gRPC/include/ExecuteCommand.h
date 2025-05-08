@@ -78,9 +78,9 @@ class CatenaServiceImpl::ExecuteCommand : public CallData {
          */
         catena::CommandResponse res_;
         /**
-         * @brief Stream for reading and writing gRPC messages
+         * @brief gRPC async response writer.
          */
-        grpc::ServerAsyncReaderWriter<catena::CommandResponse, catena::ExecuteCommandPayload> stream_;
+        ServerAsyncWriter<catena::CommandResponse> writer_;
         /**
          * @brief Represents the current status of the command execution
          * (kCreate, kProcess, kFinish, etc.)
