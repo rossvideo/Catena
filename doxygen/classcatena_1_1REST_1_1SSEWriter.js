@@ -1,7 +1,6 @@
 var classcatena_1_1REST_1_1SSEWriter =
 [
-    [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html#a149db75604725f4a1d99592d5311d49a", null ],
-    [ "finish", "classcatena_1_1REST_1_1SSEWriter.html#a4efc1ab69a62d9b89bc34c32d1bf4a45", null ],
-    [ "write", "classcatena_1_1REST_1_1SSEWriter.html#aeba94fa327ba30ef3d336c30f16320eb", null ],
-    [ "write", "classcatena_1_1REST_1_1SSEWriter.html#a1563491b348dd9c5dffa5c831c8b0cfd", null ]
+    [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html#a7f2e506e5641eac4dcf355b7e46545f9", null ],
+    [ "finish", "classcatena_1_1REST_1_1SSEWriter.html#ac187e7d92383147e0b7d2ae2e2ec4484", null ],
+    [ "write", "classcatena_1_1REST_1_1SSEWriter.html#a29d3f4ef2e18f3e46a20a5213e78f411", null ]
 ];

@@ -16,7 +16,7 @@ var searchData=
   ['socketreader_13',['SocketReader',['../classcatena_1_1REST_1_1SocketReader.html#a32d89f4614711ffeee041d3b8e14cbe4',1,'catena::REST::SocketReader']]],
   ['socketwriter_14',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a',1,'catena::REST::SocketWriter']]],
   ['split_15',['split',['../namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb',1,'catena']]],
-  ['ssewriter_16',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html#a149db75604725f4a1d99592d5311d49a',1,'catena::REST::SSEWriter']]],
+  ['ssewriter_16',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html#a7f2e506e5641eac4dcf355b7e46545f9',1,'catena::REST::SSEWriter']]],
   ['stream_5fif_5fpossible_17',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
   ['subs_18',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
   ['subscriptionmanager_19',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b',1,'catena::common::SubscriptionManager']]],
