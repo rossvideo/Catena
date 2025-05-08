@@ -1,14 +1,29 @@
 var hierarchy =
 [
     [ "catena::CatenaService::AsyncService", null, [
-      [ "catena::gRPC::ICatenaServiceImpl", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html", [
-        [ "catena::gRPC::CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html", null ]
-      ] ]
+      [ "CatenaServiceImpl", "classCatenaServiceImpl.html", null ]
     ] ],
     [ "grpc::AuthMetadataProcessor", null, [
-      [ "catena::gRPC::JWTAuthMetadataProcessor", "classcatena_1_1gRPC_1_1JWTAuthMetadataProcessor.html", null ]
+      [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
     ] ],
     [ "catena::common::Authorizer", "classcatena_1_1common_1_1Authorizer.html", null ],
+    [ "CatenaServiceImpl::CallData", "classCatenaServiceImpl_1_1CallData.html", [
+      [ "CatenaServiceImpl::AddLanguage", "classCatenaServiceImpl_1_1AddLanguage.html", null ],
+      [ "CatenaServiceImpl::BasicParamInfoRequest", "classCatenaServiceImpl_1_1BasicParamInfoRequest.html", null ],
+      [ "CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
+      [ "CatenaServiceImpl::DeviceRequest", "classCatenaServiceImpl_1_1DeviceRequest.html", null ],
+      [ "CatenaServiceImpl::ExecuteCommand", "classCatenaServiceImpl_1_1ExecuteCommand.html", null ],
+      [ "CatenaServiceImpl::ExternalObjectRequest", "classCatenaServiceImpl_1_1ExternalObjectRequest.html", null ],
+      [ "CatenaServiceImpl::GetParam", "classCatenaServiceImpl_1_1GetParam.html", null ],
+      [ "CatenaServiceImpl::GetPopulatedSlots", "classCatenaServiceImpl_1_1GetPopulatedSlots.html", null ],
+      [ "CatenaServiceImpl::GetValue", "classCatenaServiceImpl_1_1GetValue.html", null ],
+      [ "CatenaServiceImpl::LanguagePackRequest", "classCatenaServiceImpl_1_1LanguagePackRequest.html", null ],
+      [ "CatenaServiceImpl::ListLanguages", "classCatenaServiceImpl_1_1ListLanguages.html", null ],
+      [ "CatenaServiceImpl::MultiSetValue", "classCatenaServiceImpl_1_1MultiSetValue.html", [
+        [ "CatenaServiceImpl::SetValue", "classCatenaServiceImpl_1_1SetValue.html", null ]
+      ] ],
+      [ "CatenaServiceImpl::UpdateSubscriptions", "classCatenaServiceImpl_1_1UpdateSubscriptions.html", null ]
+    ] ],
     [ "catena::common::CommandTag", "structcatena_1_1common_1_1CommandTag.html", null ],
     [ "catena::common::ConstraintTag", "structcatena_1_1common_1_1ConstraintTag.html", null ],
     [ "catena::common::EmptyValue", "structcatena_1_1common_1_1EmptyValue.html", null ],
@@ -23,25 +38,6 @@ var hierarchy =
       [ "catena::meta::NthElementT< L, 0 >", "classcatena_1_1meta_1_1NthElementT_3_01L_00_010_01_4.html", null ]
     ] ],
     [ "catena::meta::FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
-    [ "catena::gRPC::ICallData", "classcatena_1_1gRPC_1_1ICallData.html", [
-      [ "catena::gRPC::CallData", "classcatena_1_1gRPC_1_1CallData.html", [
-        [ "catena::gRPC::AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", null ],
-        [ "catena::gRPC::BasicParamInfoRequest", "classcatena_1_1gRPC_1_1BasicParamInfoRequest.html", null ],
-        [ "catena::gRPC::Connect", "classcatena_1_1gRPC_1_1Connect.html", null ],
-        [ "catena::gRPC::DeviceRequest", "classcatena_1_1gRPC_1_1DeviceRequest.html", null ],
-        [ "catena::gRPC::ExecuteCommand", "classcatena_1_1gRPC_1_1ExecuteCommand.html", null ],
-        [ "catena::gRPC::ExternalObjectRequest", "classcatena_1_1gRPC_1_1ExternalObjectRequest.html", null ],
-        [ "catena::gRPC::GetParam", "classcatena_1_1gRPC_1_1GetParam.html", null ],
-        [ "catena::gRPC::GetPopulatedSlots", "classcatena_1_1gRPC_1_1GetPopulatedSlots.html", null ],
-        [ "catena::gRPC::GetValue", "classcatena_1_1gRPC_1_1GetValue.html", null ],
-        [ "catena::gRPC::LanguagePackRequest", "classcatena_1_1gRPC_1_1LanguagePackRequest.html", null ],
-        [ "catena::gRPC::ListLanguages", "classcatena_1_1gRPC_1_1ListLanguages.html", null ],
-        [ "catena::gRPC::MultiSetValue", "classcatena_1_1gRPC_1_1MultiSetValue.html", [
-          [ "catena::gRPC::SetValue", "classcatena_1_1gRPC_1_1SetValue.html", null ]
-        ] ],
-        [ "catena::gRPC::UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", null ]
-      ] ]
-    ] ],
     [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
       [ "catena::REST::AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", null ],
       [ "catena::REST::BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", null ],
@@ -60,8 +56,8 @@ var hierarchy =
     ] ],
     [ "catena::common::IConnect", "classcatena_1_1common_1_1IConnect.html", [
       [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
-        [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
-        [ "catena::gRPC::Connect", "classcatena_1_1gRPC_1_1Connect.html", null ]
+        [ "CatenaServiceImpl::Connect", "classCatenaServiceImpl_1_1Connect.html", null ],
+        [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ]
       ] ]
     ] ],
     [ "catena::common::IConstraint", "classcatena_1_1common_1_1IConstraint.html", [
@@ -113,7 +109,7 @@ var hierarchy =
     [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "catena::common::Path", "classcatena_1_1common_1_1Path.html", null ],
-    [ "catena::gRPC::PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", null ],
+    [ "catena::PeerInfo", "classcatena_1_1PeerInfo.html", null ],
     [ "catena::meta::PopFrontT< L >", "classcatena_1_1meta_1_1PopFrontT.html", null ],
     [ "catena::meta::PopFrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1PopFrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
     [ "catena::common::Device::DeviceSerializer::promise_type", "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html", null ],
@@ -131,7 +127,7 @@ var hierarchy =
       [ "catena::patterns::GenericFactory< P, K, Ms >", "classcatena_1_1patterns_1_1GenericFactory.html", null ]
     ] ],
     [ "catena::patterns::Singleton< PeerManager >", "classcatena_1_1patterns_1_1Singleton.html", [
-      [ "catena::gRPC::PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", null ]
+      [ "catena::PeerManager", "classcatena_1_1PeerManager.html", null ]
     ] ],
     [ "catena::common::StructInfo< T >", "structcatena_1_1common_1_1StructInfo.html", null ],
     [ "std::true_type", null, [

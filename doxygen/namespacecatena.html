@@ -107,9 +107,6 @@ Namespaces</h2></td></tr>
 <tr class="memitem:namespacecatena_1_1common" id="r_namespacecatena_1_1common"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1common.html">common</a></td></tr>
 <tr class="memdesc:namespacecatena_1_1common"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functionality that can be shared between the different connection management types. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:namespacecatena_1_1gRPC" id="r_namespacecatena_1_1gRPC"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1gRPC.html">gRPC</a></td></tr>
-<tr class="memdesc:namespacecatena_1_1gRPC"><td class="mdescLeft">&#160;</td><td class="mdescRight">Namespace containing classes relating to the <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> API. <br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:namespacecatena_1_1meta" id="r_namespacecatena_1_1meta"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1meta.html">meta</a></td></tr>
 <tr class="memdesc:namespacecatena_1_1meta"><td class="mdescLeft">&#160;</td><td class="mdescRight">A collection of classes for compile-time type manipulation, type traits and concept checking. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,7 +120,13 @@ Namespaces</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A std::runtime_error with a <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> StatusCode. This struct cannot be copied.  <a href="structcatena_1_1exception__with__status.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.  <a href="structcatena_1_1exception__with__status.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1PeerInfo.html">PeerInfo</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Holds information about connected Peers.  <a href="classcatena_1_1PeerInfo.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1PeerManager.html">PeerManager</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles connections to Peers.  <a href="classcatena_1_1PeerManager.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -179,6 +182,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a72711cdba4d85a76051ad05cd6c582fb" id="r_a72711cdba4d85a76051ad05cd6c582fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#a72711cdba4d85a76051ad05cd6c582fb">split</a> (std::vector&lt; std::string &gt; &amp;out, const std::string &amp;str, const std::string &amp;delim)</td></tr>
 <tr class="memdesc:a72711cdba4d85a76051ad05cd6c582fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Splits a string int a vector of strings based on a delimiter.  <br /></td></tr>
 <tr class="separator:a72711cdba4d85a76051ad05cd6c582fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3ce72179203719924c0cff74fd3f82c" id="r_aa3ce72179203719924c0cff74fd3f82c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#aa3ce72179203719924c0cff74fd3f82c">expandEnvVariables</a> (std::string &amp;str)</td></tr>
+<tr class="memdesc:aa3ce72179203719924c0cff74fd3f82c"><td class="mdescLeft">&#160;</td><td class="mdescRight">expands any environment variables in str.  <br /></td></tr>
+<tr class="separator:aa3ce72179203719924c0cff74fd3f82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a989cc41eb5054f4902e9bf6a66334373" id="r_a989cc41eb5054f4902e9bf6a66334373"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt;::grpc::ServerCredentials &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena.html#a989cc41eb5054f4902e9bf6a66334373">getServerCredentials</a> ()</td></tr>
+<tr class="memdesc:a989cc41eb5054f4902e9bf6a66334373"><td class="mdescLeft">&#160;</td><td class="mdescRight">sets up a ServerCredentials object from the cli flags  <br /></td></tr>
+<tr class="separator:a989cc41eb5054f4902e9bf6a66334373"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>top level namespace for Catena. Functionality at this scope includes the protoc generated classes. Most everything else is in child namespaces such as common, meta, etc. </p>
@@ -196,7 +205,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Status Code - reproduced from google's grpc project and extended for <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a>. </p>
-<p>Codes 0-16 are compatible with <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a>. Codes mapped to HTTP status codes are REST-specific and should not be used in <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> contexts.</p>
+<p>Codes 0-16 are compatible with gRPC. Codes mapped to HTTP status codes are REST-specific and should not be used in gRPC contexts.</p>
 <p>The license for this code is Apache 2.0 which permits redistribution and modification. The original code is available at: <a href="https://github.com/grpc/grpc">https://github.com/grpc/grpc</a></p>
 <p>The governing license is available here: <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
 <p>The intent here is to re-use the grpc status codes without creating a dependency on the grpc project. The risk of the values of these codes changing is low, but if it does happen, we can always update this file. </p>
@@ -244,7 +253,7 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f" name="a8883f03e942ef610b66860d5b52f8d85a6bc18fb128049a978291c7688d57456f"></a>DO_NOT_USE&#160;</td><td class="fielddoc"><p>Force users to include a default branch: </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85af5ae6e1ca9fd3829acb25e84162b1fd8" name="a8883f03e942ef610b66860d5b52f8d85af5ae6e1ca9fd3829acb25e84162b1fd8"></a>CREATED&#160;</td><td class="fielddoc"><p>The request has succeeded and a new resource has been created as a result. </p>
-<p>The following codes are intended for REST/HTTP APIs only and do not map to <a class="el" href="namespacecatena_1_1gRPC.html" title="Namespace containing classes relating to the gRPC API.">gRPC</a> status codes. Use these codes to represent HTTP-specific conditions. </p>
+<p>The following codes are intended for REST/HTTP APIs only and do not map to gRPC status codes. Use these codes to represent HTTP-specific conditions. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb" name="a8883f03e942ef610b66860d5b52f8d85a37725e080fa541b79a5397e8e1942feb"></a>ACCEPTED&#160;</td><td class="fielddoc"><p>The request has been accepted for processing, but the processing has not yet been completed. </p>
 </td></tr>
@@ -269,6 +278,53 @@ Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="aa3ce72179203719924c0cff74fd3f82c" name="aa3ce72179203719924c0cff74fd3f82c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3ce72179203719924c0cff74fd3f82c">&#9670;&#160;</a></span>expandEnvVariables()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void catena::expandEnvVariables </td>
+          <td>(</td>
+          <td class="paramtype">std::string &amp;&#160;</td>
+          <td class="paramname"><em>str</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>expands any environment variables in str. </p>
+<p>N.B. this is done in-place and the value of str is likely different after execution.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">str</td><td>the string in which to expand any environment variables it contains. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a989cc41eb5054f4902e9bf6a66334373" name="a989cc41eb5054f4902e9bf6a66334373"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a989cc41eb5054f4902e9bf6a66334373">&#9670;&#160;</a></span>getServerCredentials()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt;::grpc::ServerCredentials &gt; catena::getServerCredentials </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>sets up a ServerCredentials object from the cli flags </p>
+<dl class="section return"><dt>Returns</dt><dd>initialized ServerCredentials </dd></dl>
+
+</div>
+</div>
 <a id="a274b596fd164b9f6c1ec6dfe8c278efc" name="a274b596fd164b9f6c1ec6dfe8c278efc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a274b596fd164b9f6c1ec6dfe8c278efc">&#9670;&#160;</a></span>readFile()</h2>
 

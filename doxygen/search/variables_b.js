@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['typename_0',['typeName',['../classcatena_1_1gRPC_1_1MultiSetValue.html#aa713bfcd30e6ca136179e7c0c9218462',1,'catena::gRPC::MultiSetValue']]]
+  ['typename_0',['typeName',['../classCatenaServiceImpl_1_1MultiSetValue.html#a069e868f31c114d8d5f02beb294a97c5',1,'CatenaServiceImpl::MultiSetValue']]]
 ];

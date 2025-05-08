@@ -1,4 +1,4 @@
 var ExternalObjectRequest_8h =
 [
-    [ "catena::gRPC::ExternalObjectRequest", "classcatena_1_1gRPC_1_1ExternalObjectRequest.html", "classcatena_1_1gRPC_1_1ExternalObjectRequest" ]
+    [ "CatenaServiceImpl::ExternalObjectRequest", "classCatenaServiceImpl_1_1ExternalObjectRequest.html", "classCatenaServiceImpl_1_1ExternalObjectRequest" ]
 ];

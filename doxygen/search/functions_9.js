@@ -1,12 +1,12 @@
 var searchData=
 [
   ['idevice_0',['IDevice',['../classcatena_1_1common_1_1IDevice.html#ac71fc03628cf95184ea9f4c0bd761a65',1,'catena::common::IDevice']]],
-  ['init_1',['init',['../classcatena_1_1gRPC_1_1ICatenaServiceImpl.html#ac9251728c70d03cb52e2396b47688189',1,'catena::gRPC::ICatenaServiceImpl::init()'],['../classcatena_1_1gRPC_1_1CatenaServiceImpl.html#ad3900e792aeac053792435323e2f9d15',1,'catena::gRPC::CatenaServiceImpl::init()']]],
+  ['init_1',['init',['../classCatenaServiceImpl.html#a277195cdaaad6fc8b70dabc27a322103',1,'CatenaServiceImpl']]],
   ['initauthz_5f_2',['initauthz_',['../classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904',1,'catena::common::Connect::initAuthz_()'],['../classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb',1,'catena::common::IConnect::initAuthz_()']]],
   ['initial_5fsuspend_3',['initial_suspend',['../structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html#a167543a006ad9001a8f5bed5c1fd57b0',1,'catena::common::Device::DeviceSerializer::promise_type']]],
   ['iparam_4',['IParam',['../classcatena_1_1common_1_1IParam.html#a6c58f51d423fb45ec1f4886fd193d35e',1,'catena::common::IParam']]],
   ['isarraytype_5',['isarraytype',['../classcatena_1_1common_1_1IParam.html#a3df0c29a015ceab195e6dafd17fae0b0',1,'catena::common::IParam::isArrayType()'],['../classcatena_1_1common_1_1ParamWithValue.html#a5657a8fc5c8d8b6f21c59bc9888bd954',1,'catena::common::ParamWithValue::isArrayType()']]],
-  ['iscancelled_6',['iscancelled',['../classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd',1,'catena::common::IConnect::isCancelled()'],['../classcatena_1_1gRPC_1_1Connect.html#aa028904826f9554475810ce7dead6ee9',1,'catena::gRPC::Connect::isCancelled()']]],
+  ['iscancelled_6',['iscancelled',['../classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd',1,'catena::common::IConnect::isCancelled()'],['../classCatenaServiceImpl_1_1Connect.html#a983d5b6b4f0be4d85702537302d305f8',1,'CatenaServiceImpl::Connect::isCancelled()']]],
   ['iscommand_7',['isCommand',['../classcatena_1_1common_1_1ParamDescriptor.html#a6ca1484257859b619af0472163bd11d2',1,'catena::common::ParamDescriptor']]],
   ['isocketwriter_8',['ISocketWriter',['../classcatena_1_1REST_1_1ISocketWriter.html#a69830f9da3cd89430fec17d1e66576eb',1,'catena::REST::ISocketWriter']]],
   ['isrange_9',['isrange',['../classcatena_1_1common_1_1IConstraint.html#a589ef8199e9fbd757c37bf90f8065b51',1,'catena::common::IConstraint::isRange()'],['../classcatena_1_1common_1_1NamedChoiceConstraint.html#a67d9dd285c27e6b495b042db321dc503',1,'catena::common::NamedChoiceConstraint::isRange()'],['../classcatena_1_1common_1_1PicklistConstraint.html#a20bedc1867175b3c93b3c4e8bca149bd',1,'catena::common::PicklistConstraint::isRange()'],['../classcatena_1_1common_1_1RangeConstraint.html#a30eab6bd50b7f30557e46f5d3c31036a',1,'catena::common::RangeConstraint::isRange()']]],

@@ -38,29 +38,6 @@ var annotated_dup =
         [ "StructInfo", "structcatena_1_1common_1_1StructInfo.html", null ],
         [ "SubscriptionManager", "classcatena_1_1common_1_1SubscriptionManager.html", "classcatena_1_1common_1_1SubscriptionManager" ]
       ] ],
-      [ "gRPC", "namespacecatena_1_1gRPC.html", [
-        [ "AddLanguage", "classcatena_1_1gRPC_1_1AddLanguage.html", "classcatena_1_1gRPC_1_1AddLanguage" ],
-        [ "BasicParamInfoRequest", "classcatena_1_1gRPC_1_1BasicParamInfoRequest.html", "classcatena_1_1gRPC_1_1BasicParamInfoRequest" ],
-        [ "CallData", "classcatena_1_1gRPC_1_1CallData.html", "classcatena_1_1gRPC_1_1CallData" ],
-        [ "CatenaServiceImpl", "classcatena_1_1gRPC_1_1CatenaServiceImpl.html", "classcatena_1_1gRPC_1_1CatenaServiceImpl" ],
-        [ "Connect", "classcatena_1_1gRPC_1_1Connect.html", "classcatena_1_1gRPC_1_1Connect" ],
-        [ "DeviceRequest", "classcatena_1_1gRPC_1_1DeviceRequest.html", "classcatena_1_1gRPC_1_1DeviceRequest" ],
-        [ "ExecuteCommand", "classcatena_1_1gRPC_1_1ExecuteCommand.html", "classcatena_1_1gRPC_1_1ExecuteCommand" ],
-        [ "ExternalObjectRequest", "classcatena_1_1gRPC_1_1ExternalObjectRequest.html", "classcatena_1_1gRPC_1_1ExternalObjectRequest" ],
-        [ "GetParam", "classcatena_1_1gRPC_1_1GetParam.html", "classcatena_1_1gRPC_1_1GetParam" ],
-        [ "GetPopulatedSlots", "classcatena_1_1gRPC_1_1GetPopulatedSlots.html", "classcatena_1_1gRPC_1_1GetPopulatedSlots" ],
-        [ "GetValue", "classcatena_1_1gRPC_1_1GetValue.html", "classcatena_1_1gRPC_1_1GetValue" ],
-        [ "ICallData", "classcatena_1_1gRPC_1_1ICallData.html", "classcatena_1_1gRPC_1_1ICallData" ],
-        [ "ICatenaServiceImpl", "classcatena_1_1gRPC_1_1ICatenaServiceImpl.html", "classcatena_1_1gRPC_1_1ICatenaServiceImpl" ],
-        [ "JWTAuthMetadataProcessor", "classcatena_1_1gRPC_1_1JWTAuthMetadataProcessor.html", null ],
-        [ "LanguagePackRequest", "classcatena_1_1gRPC_1_1LanguagePackRequest.html", "classcatena_1_1gRPC_1_1LanguagePackRequest" ],
-        [ "ListLanguages", "classcatena_1_1gRPC_1_1ListLanguages.html", "classcatena_1_1gRPC_1_1ListLanguages" ],
-        [ "MultiSetValue", "classcatena_1_1gRPC_1_1MultiSetValue.html", "classcatena_1_1gRPC_1_1MultiSetValue" ],
-        [ "PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", "classcatena_1_1gRPC_1_1PeerInfo" ],
-        [ "PeerManager", "classcatena_1_1gRPC_1_1PeerManager.html", "classcatena_1_1gRPC_1_1PeerManager" ],
-        [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
-        [ "UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", "classcatena_1_1gRPC_1_1UpdateSubscriptions" ]
-      ] ],
       [ "meta", "namespacecatena_1_1meta.html", [
         [ "FrontT", "classcatena_1_1meta_1_1FrontT.html", null ],
         [ "FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
@@ -105,6 +82,10 @@ var annotated_dup =
         [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ],
         [ "UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", "classcatena_1_1REST_1_1UpdateSubscriptions" ]
       ] ],
-      [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ]
-    ] ]
+      [ "exception_with_status", "structcatena_1_1exception__with__status.html", null ],
+      [ "PeerInfo", "classcatena_1_1PeerInfo.html", "classcatena_1_1PeerInfo" ],
+      [ "PeerManager", "classcatena_1_1PeerManager.html", "classcatena_1_1PeerManager" ]
+    ] ],
+    [ "CatenaServiceImpl", "classCatenaServiceImpl.html", "classCatenaServiceImpl" ],
+    [ "JWTAuthMetadataProcessor", "classJWTAuthMetadataProcessor.html", null ]
 ];
