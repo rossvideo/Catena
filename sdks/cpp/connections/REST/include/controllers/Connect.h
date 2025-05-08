@@ -129,7 +129,7 @@ class Connect : public ICallData, public catena::common::Connect {
      */
     SSEWriter writer_;
     /**
-     * @brief The SocketReader object for reading the request.
+     * @brief The ISocketReader object for reading the request.
      */
     ISocketReader& context_;
     /**
