@@ -3,7 +3,7 @@
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
-void SocketWriter::write(google::protobuf::Message& msg) {
+void SocketWriter::write(const google::protobuf::Message& msg) {
     // Adds a JSON message to the end of the response.
     // Converting the value to JSON.
     std::string jsonOutput;
@@ -21,69 +21,58 @@ void SocketWriter::write(google::protobuf::Message& msg) {
         }
     // Error
     } else {
-        catena::exception_with_status err("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
-        write(err);
+        finish(catena::Empty(), catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
     }
 }
 
-void SocketWriter::write(catena::exception_with_status& err) {
-    // Writes an error message to the socket.
-    // Clearing response_ and gettinge errCode.
-    std::string response_ = err.what();
-    int errCode;
+
+void SocketWriter::finish(const google::protobuf::Message& msg, const catena::exception_with_status& err) {
+    if (err.status == catena::StatusCode::OK) {
+        // Success case - write the message
+        write(msg);
+    }
+    
+    // Finishes the writing process with an error message.
+    auto httpStatus = codeMap_.at(err.status);
+    
+    //If response is empty but status is ok, set rc to 204
     if (response_.empty() && err.status == catena::StatusCode::OK) {
-        errCode = 204;
-    } else {
-        errCode = codeMap_.at(err.status);
+        httpStatus = codeMap_.at(catena::StatusCode::NO_CONTENT);
     }
-    // Returning the response.
-    std::string headers = "HTTP/1.1 " + std::to_string(errCode) + " " + err.what() + "\r\n"
-                          "Content-Type: text/plain\r\n"
-                          "Content-Length: " + std::to_string(response_.size()) + "\r\n" +
-                          CORS_ +
-                          "Connection: close\r\n\r\n";
-    boost::asio::write(socket_, boost::asio::buffer(headers + response_));
-}
 
-void SocketWriter::finish() {
-    // Finishes the writing process by writing response to socket.
-    if (!response_.empty()) {
-        // Format in a list if this is a multi-part response.
-        if (multi_) {
-            response_ = "{\"response\":[" + response_ + "]}";
-        }
-        // Set headers and write the response.
-        std::string headers = "HTTP/1.1 200 OK\r\n"
-                              "Content-Type: application/json\r\n"
-                              "Content-Length: " + std::to_string(response_.size()) + "\r\n" +
-                              CORS_ +
-                              "Connection: close\r\n\r\n";
-        boost::asio::write(socket_, boost::asio::buffer(headers + response_));
+    if (!response_.empty() && multi_) {
+        response_ = "{\"response\":[" + response_ + "]}";
     }
+
+    std::stringstream headers;
+    headers << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
+            << "Content-Type: application/json\r\n"
+            << "Content-Length: " << response_.length() << "\r\n"
+            << "Connection: close\r\n"
+            << CORS_ << "\r\n"
+            << response_;
+
+    boost::asio::write(socket_, boost::asio::buffer(headers.str()));
 }
 
-void SocketWriter::finish(google::protobuf::Message& msg) {
-    // Finishes the writing process by writing a message to the socket.
-    write(msg);
-    finish();
+
+SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin, const catena::exception_with_status& err) : socket_{socket} {
+    auto httpStatus = codeMap_.at(err.status);
+    std::stringstream headers;
+    headers << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
+            << "Content-Type: text/event-stream\r\n"
+            << "Cache-Control: no-cache\r\n"
+            << "Connection: keep-alive\r\n"
+            << "Access-Control-Allow-Origin: " << origin << "\r\n"
+            << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+            << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+            << "Access-Control-Allow-Credentials: true\r\n"
+            << "\r\n";
+
+    boost::asio::write(socket_, boost::asio::buffer(headers.str()));
 }
 
-
-
-SSEWriter::SSEWriter(tcp::socket& socket, const std::string& origin)
-    : socket_{socket} {
-    // Writing the headers.
-    std::string headers = "HTTP/1.1 200\r\n"
-                          "Content-Type: text/event-stream\r\n"
-                          "Access-Control-Allow-Origin: " + origin + "\r\n"
-                          "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                          "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With\r\n"
-                          "Access-Control-Allow-Credentials: true\r\n"
-                          "Connection: keep-alive\r\n\r\n";
-    boost::asio::write(socket_, boost::asio::buffer(headers));
-}
-
-void SSEWriter::write(google::protobuf::Message& msg) {   
+void SSEWriter::write(const google::protobuf::Message& msg) {   
     // Converting the value to JSON.
     std::string jsonOutput;
     google::protobuf::util::JsonPrintOptions options; // Default options
@@ -94,13 +83,14 @@ void SSEWriter::write(google::protobuf::Message& msg) {
         boost::asio::write(socket_, boost::asio::buffer("data: " + jsonOutput + "\n\n"));
     // Error, writting error to the client.
     } else {
-        catena::exception_with_status err("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT);
-        write(err);
+        finish(catena::Empty(), catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
     }
 }
 
-void SSEWriter::write(catena::exception_with_status& err) {
+void SSEWriter::finish(const google::protobuf::Message& msg, const catena::exception_with_status& err) {
     // Writing error message.
-    std::string errMsg = err.what();
-    boost::asio::write(socket_, boost::asio::buffer("data: " + std::to_string(codeMap_.at(err.status)) + " " + errMsg + "\n\n"));
+    auto httpStatus = codeMap_.at(err.status);
+    std::stringstream headers;
+    headers << "data: " << httpStatus.second << " " << err.what() << "\n\n";
+    boost::asio::write(socket_, boost::asio::buffer(headers.str()));
 }

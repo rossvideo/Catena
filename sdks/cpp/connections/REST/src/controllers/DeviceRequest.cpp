@@ -6,7 +6,7 @@ using catena::REST::DeviceRequest;
 // Initializes the object counter for Connect to 0.
 int DeviceRequest::objectCounter_ = 0;
 
-DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -55,21 +55,18 @@ void DeviceRequest::proceed() {
             }
             writer_.write(component);
         }
-        writer_.finish();
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {
-        writer_.write(err);
-        writer_.finish();
+        writer_.finish(catena::Empty(), err);
     } catch (...) {
         catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
-        writer_.write(err);
-        writer_.finish();
+        writer_.finish(catena::Empty(), err);
     }
 }
 
 void DeviceRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    writer_.finish();
     std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
 }

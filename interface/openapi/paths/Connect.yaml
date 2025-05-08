@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -66,10 +66,13 @@ get:
     - name: force_connection
       in: query
       required: false
-      description: Optional flag to force a connection
+      description: Optional flag to force a connection. The presence of this 
+        parameter forces the connection, regardless of its value. (The value 
+        is ignored; any value assigned such as "true" will have the same 
+        effect.)
       schema:
-        type: boolean
-      default: false
+        type: string
+        enum: ["true"]
 
   responses:
     "200":

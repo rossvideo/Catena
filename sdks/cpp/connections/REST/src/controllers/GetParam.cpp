@@ -6,7 +6,7 @@ using catena::REST::GetParam;
 // Initializes the object counter for GetParam to 0.
 int GetParam::objectCounter_ = 0;
 
-GetParam::GetParam(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+GetParam::GetParam(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -43,11 +43,7 @@ void GetParam::proceed() {
     }
 
     // Finishing by writing answer to client.
-    if (rc.status == catena::StatusCode::OK) {
-        writer_.finish(ans);
-    } else {
-        writer_.write(rc);
-    }
+    writer_.finish(ans, rc);
 }
 
 void GetParam::finish() {

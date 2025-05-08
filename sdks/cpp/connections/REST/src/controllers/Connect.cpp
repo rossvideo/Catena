@@ -6,14 +6,14 @@ using catena::REST::Connect;
 // Initializes the object counter for Connect to 0.
 int Connect::objectCounter_ = 0;
 
-Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, context_{context},
     catena::common::Connect(dm, context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
-    forceConnection_ = context.fields("force_connection") == "true";
+    forceConnection_ = context.hasField("force_connection");
 
     // Set detail level from context
     detailLevel_ = context_.detailLevel();
@@ -57,7 +57,7 @@ void Connect::proceed() {
         writer_.write(populatedSlots);
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
-        writer_.write(err);
+        writer_.finish(catena::Empty(), err);
         shutdown_ = true;
     }
 
@@ -93,7 +93,7 @@ void Connect::finish() {
     } catch (...) {}
     // Finishing and closing the socket.
     if (socket_.is_open()) {
-        writer_.finish();
+        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";
