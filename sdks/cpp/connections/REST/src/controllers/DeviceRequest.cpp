@@ -17,33 +17,31 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, SocketReader& context, IDevice
 void DeviceRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
     try {
-        // controls whether shallow copy or deep copy is used
-        bool shallowCopy = true;
+        bool shallowCopy = true; // controls whether shallow copy or deep copy is used
+        catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
+        
+        // Setting up authorizer object.
         if (context_.authorizationEnabled()) {
+            // Authorizer throws an error if invalid jws token so no need to handle rc.
             sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
             authz = sharedAuthz.get();
         } else {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
-               
-        auto& subscriptionManager = context_.getSubscriptionManager();
-        subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
 
-        // Set the detail level on the device
-        dm_.detail_level(context_.detailLevel());
+        // req_.detail_level defaults to FULL
+        catena::Device_DetailLevel dl = context_.detailLevel();
 
-        // If we're in SUBSCRIPTIONS mode, we'll send minimal set if no subscriptions
-        if (context_.detailLevel() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-            if (subscribedOids_.empty()) {
-                serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
-            } else {
-                serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
-            }
-        } else {
-            serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
+        // Getting subscribed oids if dl == SUBSCRIPTIONS.
+        if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+            auto& subscriptionManager = context_.getSubscriptionManager();
+            subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
         }
+
+        // Getting the serializer object.
+        serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, dl, shallowCopy);
 
         // Getting each component and writing to the stream.
         while (serializer_->hasMore()) {

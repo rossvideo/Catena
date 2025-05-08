@@ -70,14 +70,6 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          */
         CatenaServiceImpl *service_;
         /**
-         * @brief A list of scopes that the client has access to
-         */
-        std::vector<std::string> clientScopes_;
-        /**
-         * @brief Unique pointer to the Authorizer object
-         */
-        std::unique_ptr<catena::common::Authorizer> authz_ = nullptr;
-        /**
          * @brief Request payload for device
          */
         catena::DeviceRequestPayload req_;
@@ -100,6 +92,21 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          */
         IDevice& dm_;
         /**
+         * @brief Shared ptr to the authorizer object so that we can maintain
+         * ownership of raw ptr throughout call lifetime without use of "new"
+         * keyword. 
+         */
+        std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
+        /**
+         * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
+         * case of kAuthzDisabled.
+         */
+        catena::common::Authorizer* authz_;
+        /**
+         * @brief The set of subscribed OIDs.
+         */
+        std::set<std::string> subscribedOids_;
+        /**
          * @brief Unique identifier for device request object
          */
         int objectId_;
@@ -107,18 +114,4 @@ class CatenaServiceImpl::DeviceRequest : public CallData {
          * @brief Counter to generate unique object IDs for each new object
          */
         static int objectCounter_;
-        /**
-         * @brief Unique identifier for the shutdown signal
-         */
-        unsigned int shutdownSignalId_;
-        /**
-         * @brief The set of subscribed OIDs.
-         */
-        std::set<std::string> subscribed_oids_;
-
-        /**
-         * @brief The set of RPC-specific subscriptions to track what this RPC has added.
-         */
-        std::set<std::string> rpc_subscriptions_;
-
 };

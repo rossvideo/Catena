@@ -353,36 +353,28 @@ class Device : public IDevice {
          */
         catena::DeviceComponent getNext() override;
     };
-
     /**
      * @brief get a serializer for the device
-     * @param authz the authorizer object containing the scopes of the client
-     * @param shallow if true, the device will be returned in parts, otherwise
-     * the whole device will be returned in one message
-     * @return a DeviceSerializer object
-     */
-    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, bool shallow = false) const override;
-    /**
-     * @brief get a serializer for the device
-     * @param clientScopes the scopes of the client
-     * @param shallow if true, the device will be returned in parts, otherwise
-     * the whole device will be returned in one message
+     * @param authz The authorizer object containing the scopes of the client
+     * @param dl The detail level to retrieve information in.
      * @param subscribed_oids the oids of the subscribed parameters
+     * @param shallow if true, the device will be returned in parts, otherwise
+     * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow = false) const override;
+    std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow = false) const override;
     /**
      * @brief This is a helper function for the shared IDevice function
      * getComponentSerializer to return a DeviceSerializer object. It can be
      * used on its own if calling from a Device object.
      * 
-     * @param clientScopes the scopes of the client
+     * @param authz The authorizer object containing the scopes of the client
      * @param subscribed_oids the oids of the subscribed parameters
+     * @param dl The detail level to retrieve information in.
      * @param shallow if true, the device will be returned in parts, otherwise
      * the whole device will be returned in one message
-     * @param subscribed_oids the oids of the subscribed parameters
      */
-    DeviceSerializer getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow = false) const;
+    DeviceSerializer getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow = false) const;
     /**
      * @brief add an item to one of the collections owned by the device.
      * Overload for parameters and commands.

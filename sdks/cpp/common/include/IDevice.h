@@ -225,22 +225,14 @@ class IDevice {
 
     /**
      * @brief get a serializer for the device
-     * @param authz the authorizer object containing the scopes of the client
-     * @param shallow if true, the device will be returned in parts, otherwise
-     * the whole device will be returned in one message
-     * @return a DeviceSerializer object
-     */
-    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, bool shallow = false) const = 0;
-
-    /**
-     * @brief get a serializer for the device
-     * @param authz the authorizer object containing the scopes of the client
+     * @param authz The authorizer object containing the scopes of the client
+     * @param dl The detail level to retrieve information in.
      * @param subscribed_oids the oids of the subscribed parameters
      * @param shallow if true, the device will be returned in parts, otherwise
      * the whole device will be returned in one message
      * @return a DeviceSerializer object
      */
-    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow = false) const = 0;
+    virtual std::unique_ptr<IDeviceSerializer> getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow = false) const = 0;
 
     /**
      * @brief add an item to one of the collections owned by the device.
