@@ -6,7 +6,7 @@ using catena::REST::Connect;
 // Initializes the object counter for Connect to 0.
 int Connect::objectCounter_ = 0;
 
-Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, shutdown_{false}, context_{context},
     catena::common::Connect(dm, context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;

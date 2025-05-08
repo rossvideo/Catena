@@ -56,18 +56,18 @@ class SetValue : public MultiSetValue {
      * @brief Constructor for the SetValue RPC.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to set the value of.
      */ 
-    SetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    SetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new SetValue(socket, context, dm);
     }
   private:

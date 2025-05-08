@@ -52,7 +52,7 @@
 #include <SubscriptionManager.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -72,10 +72,10 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief Constructor for the Connect RPC.
      *
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */ 
-    Connect(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * Connect main process
      */
@@ -88,10 +88,10 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new Connect(socket, context, dm);
     }
     
@@ -130,9 +130,9 @@ class Connect : public ICallData, public catena::common::Connect {
      * @brief The mutex to for locking the object while writing
      */
     /**
-     * @brief The SocketReader object for reading the request.
+     * @brief The ISocketReader object for reading the request.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The mutex to for locking the object while writing
      */
