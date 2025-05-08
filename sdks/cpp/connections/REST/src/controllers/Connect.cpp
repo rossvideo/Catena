@@ -14,6 +14,10 @@ Connect::Connect(tcp::socket& socket, SocketReader& context, IDevice& dm) :
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
     forceConnection_ = context.fields("force_connection") == "true";
+
+    // Set detail level from context
+    detailLevel_ = context_.detailLevel();
+    dm_.detail_level(detailLevel_);
 }
 
 void Connect::proceed() {
@@ -40,9 +44,13 @@ void Connect::proceed() {
         languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
             updateResponse_(l);
         });
-        // Set detail level from context
-        detailLevel_ = context_.detailLevel();
-        dm_.detail_level(detailLevel_);
+        // Waiting for a command to be executed to execute code.
+        commandExecutedId_ = dm_.commandExecuted.connect([this](const std::string& oid, const IParam* command, const int32_t idx) {
+            if (detailLevel_ == catena::Device_DetailLevel_COMMANDS) {
+                hasCommandUpdate_ = true;
+                updateResponse_(oid, idx, command);
+            }
+        });
         // send client an empty update with slot of the device
         catena::PushUpdates populatedSlots;
         populatedSlots.set_slot(dm_.slot());
@@ -80,6 +88,7 @@ void Connect::finish() {
         dm_.valueSetByClient.disconnect(valueSetByClientId_);
         dm_.valueSetByServer.disconnect(valueSetByServerId_);
         dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+        dm_.commandExecuted.disconnect(commandExecutedId_);
     // Listener not yet initialized.
     } catch (...) {}
     // Finishing and closing the socket.

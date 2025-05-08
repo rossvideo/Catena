@@ -388,6 +388,12 @@ class IDevice {
     vdk::signal<void(const ComponentLanguagePack&)> languageAddedPushUpdate;
 
     /**
+     * @brief signal emitted when a command is executed.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> commandExecuted;
+
+    /**
      * @brief signal emitted when a value is set by the server, or business
      * logic.
      * Intended recipient is the connection manager.

@@ -141,8 +141,9 @@ class Connect : public IConnect {
                            (std::find(subscribedOids.begin(), subscribedOids.end(), oid) != subscribedOids.end());
                 }},
                 {catena::Device_DetailLevel_COMMANDS, [&]() {
-                    // For COMMANDS, only update command parameters
-                    should_update = p->getDescriptor().isCommand();
+                    // For COMMANDS, only update if triggered by a command
+                    should_update = hasCommandUpdate_ || p->getDescriptor().isCommand();
+                    hasCommandUpdate_ = false;
                 }},
                 {catena::Device_DetailLevel_NONE, [&]() {
                     // Don't send any updates
@@ -270,6 +271,10 @@ class Connect : public IConnect {
      * No idea what this is used for and if its even needed here.
      */
     bool forceConnection_;
+    /**
+     * @brief Flag indicating if the last update was triggered by a command.
+     */
+    bool hasCommandUpdate_ = false;
 };
 
 }; // common

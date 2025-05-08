@@ -152,6 +152,7 @@ void defineCommands() {
             std::lock_guard lg(dm.mutex());
             state = "playing";
             dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+            dm.commandExecuted.emit("/play", stateParam.get(), 0);
         }
         
         std::cout << "video is " << state << "\n";
@@ -177,6 +178,7 @@ void defineCommands() {
             std::lock_guard lg(dm.mutex());
             state = "paused";
             dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+            dm.commandExecuted.emit("/pause", stateParam.get(), 0);
         }
 
         std::cout << "video is " << state << "\n";

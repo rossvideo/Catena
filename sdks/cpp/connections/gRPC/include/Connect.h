@@ -124,6 +124,11 @@ class CatenaServiceImpl::Connect : public CallData, public catena::common::Conne
          * emitted. Used when ending the connection.
          */
         unsigned int languageAddedId_;
+        /**
+         * @brief Id of operation waiting for commandExecuted to be emitted.
+         * Used when ending the connection.
+         */
+        unsigned int commandExecutedId_;
   
         /**
          * @brief Signal emitted in the case of an error which requires the all

@@ -127,6 +127,14 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
                     updateResponse_(l);
                 });
 
+                // Waiting for a command to be executed to execute code.
+                commandExecutedId_ = dm_.commandExecuted.connect([this](const std::string& oid, const IParam* command, const int32_t idx) {
+                    if (detailLevel_ == catena::Device_DetailLevel_COMMANDS) {
+                        hasCommandUpdate_ = true;
+                        updateResponse_(oid, idx, command);
+                    }
+                });
+
                 // Set detail level from request
                 detailLevel_ = req_.detail_level();
                 dm_.detail_level(req_.detail_level());
@@ -177,6 +185,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             dm_.valueSetByClient.disconnect(valueSetByClientId_);
             dm_.valueSetByServer.disconnect(valueSetByServerId_);
             dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+            dm_.commandExecuted.disconnect(commandExecutedId_);
             service->deregisterItem(this);
             break;
         // default: Error, end process.

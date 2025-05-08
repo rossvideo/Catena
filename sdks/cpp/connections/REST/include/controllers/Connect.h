@@ -157,6 +157,10 @@ class Connect : public ICallData, public catena::common::Connect {
     */
     unsigned int shutdownSignalId_;
     /**
+     * @brief ID of the command executed signal for the Connect object
+     */
+    unsigned int commandExecutedId_;
+    /**
      * @brief Flag to indicate when the shutdown signal has been recieved.
      */
     bool shutdown_;
