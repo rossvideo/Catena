@@ -6,7 +6,7 @@ using catena::REST::SetValue;
 // Initializes the object counter for SetValue to 0.
 int SetValue::objectCounter_ = 0;
 
-SetValue::SetValue(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+SetValue::SetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }

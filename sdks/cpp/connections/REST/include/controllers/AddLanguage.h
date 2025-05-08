@@ -50,7 +50,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -70,10 +70,10 @@ class AddLanguage : public ICallData {
      * @brief Constructor for the AddLanguage RPC.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to add the language pack to.
      */ 
-    AddLanguage(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    AddLanguage(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief AddLanguage's main process.
      */
@@ -86,10 +86,10 @@ class AddLanguage : public ICallData {
      * @brief Creates a new rpc object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new AddLanguage(socket, context, dm);
     }
   private:
@@ -111,9 +111,9 @@ class AddLanguage : public ICallData {
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */

@@ -47,7 +47,7 @@ namespace catena::REST {
 
 int UpdateSubscriptions::objectCounter_ = 0;
 
-UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, SocketReader& context, IDevice& dm)
+UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm)
     : socket_(socket),
       context_(context),
       dm_(dm),

@@ -38,9 +38,9 @@
 #pragma once
 
 // connections/REST
-#include <interface/ICallData.h> 
-#include <SocketReader.h>
+#include "interface/ISocketReader.h"
 #include <SocketWriter.h>
+#include "interface/ICallData.h"
 
 // common
 #include <Device.h>
@@ -59,11 +59,11 @@ using catena::common::IDevice;
 
 class ExecuteCommand : public ICallData {
   public:
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
         return new ExecuteCommand(socket, context, dm);
     }
 
-    ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     void proceed() override;
     void finish() override;
 
@@ -85,9 +85,9 @@ class ExecuteCommand : public ICallData {
      */
     SocketWriter writer_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The device to connect to.
      */
