@@ -67,8 +67,8 @@ CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, IDev
  */
 void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
     std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
     
     // If the process is cancelled, finish the process
     if(!ok){
@@ -80,8 +80,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
     switch (status_) {
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
-                                            this);
+            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
             break;
 
         /**
@@ -91,51 +90,36 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
         case CallStatus::kProcess:
             new DeviceRequest(service_, dm_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
-            // shutdownSignalId_ = shutdownSignal.connect([this](){
-            //     context_.TryCancel();
-            //     std::cout << "DeviceRequest[" << objectId_ << "] cancelled\n";
-            // });
-            {
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-                dm_.detail_level(req_.detail_level());
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 
-                // Get service subscriptions from the manager
-                subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
-                
-                // If this request has subscriptions, add them
-                if (!req_.subscribed_oids().empty()) {
-                    // Add new subscriptions to both the manager and our tracking list
-                    for (const auto& oid : req_.subscribed_oids()) {
-                        catena::exception_with_status rc{"", catena::StatusCode::OK};
-                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
-                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
-                        } else {
-                            rpc_subscriptions_.insert(oid);
-                        }
-                    }
-                }
-                
-                // Get final list of subscriptions for this response
-                subscribed_oids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
-                
-                //Handle authorization
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
+                // Setting up authorizer object.
                 if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
-                    authz = sharedAuthz.get();
+                    // Authorizer throws an error if invalid jws token so no need to handle rc.
+                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(getJWSToken_());
+                    authz_ = sharedAuthz_.get();
                 } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
                 }
 
-                // If we're in SUBSCRIPTIONS mode and have no subscriptions, we'll still send minimal set
-                if (dm_.subscriptions() && subscribed_oids_.empty() && 
-                    req_.detail_level() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                    serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
-                } else {
-                    serializer_ = dm_.getComponentSerializer(*authz, subscribed_oids_, shallowCopy);
+                // req_.detail_level defaults to FULL
+                catena::Device_DetailLevel dl = req_.detail_level();
+
+                // Getting subscribed oids if dl == SUBSCRIPTIONS.
+                if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+                    // Add new subscriptions to both the manager and our tracking list
+                    for (const auto& oid : req_.subscribed_oids()) {
+                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
+                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                        }
+                    }
+                    // Get service subscriptions from the manager
+                    subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
                 }
+
+                // Getting the serializer object.
+                serializer_ = dm_.getComponentSerializer(*authz_, subscribedOids_, dl, shallowCopy);
 
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
@@ -143,7 +127,11 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
                 writer_.Finish(errorStatus, this);
                 break;
-            }
+            } catch (...) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
+                writer_.Finish(errorStatus, this);
+                break;
             }
             status_ = CallStatus::kWrite;
             // fall thru to start writing
@@ -194,8 +182,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kFinish:
             std::cout << "DeviceRequest[" << objectId_ << "] finished\n";
-            //shutdownSignal.disconnect(shutdownSignalId_);
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
 
         // Throws an error if the state is not recognized
