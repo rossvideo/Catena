@@ -63,10 +63,10 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
 
     // Check for duplicate subscription
     if (!isWildcard(oid) && subscriptions_.find(oid) != subscriptions_.end()) {
-        rc = catena::exception_with_status("Subscription already exists for OID: " + oid,
-                                         catena::StatusCode::NO_CONTENT);
+        // rc = catena::exception_with_status("Subscription already exists for OID: " + oid,
+        //                                  catena::StatusCode::NO_CONTENT);
         subscriptionLock_.unlock();
-        return false;
+        return true;
     }
 
     if (isWildcard(oid)) {
@@ -117,10 +117,10 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm
             }
         }
         if (!found) {
-            rc = catena::exception_with_status("Subscription not found for OID: " + oid, 
-                                             catena::StatusCode::NOT_FOUND);
+            // rc = catena::exception_with_status("Subscription not found for OID: " + oid, 
+            //                                  catena::StatusCode::NOT_FOUND);
             subscriptionLock_.unlock();
-            return false;
+            return true;
         }
         subscriptionLock_.unlock();
         return true;

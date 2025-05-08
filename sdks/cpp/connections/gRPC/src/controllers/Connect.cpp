@@ -102,7 +102,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
             context_.AsyncNotifyWhenDone(this);
             try {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
-                initAuthz_(getJWSToken_(rc), service_->authorizationEnabled());
+                initAuthz_(jwsToken_(), service_->authorizationEnabled());
                 // Cancels all open connections if shutdown signal is sent.
                 shutdownSignalId_ = shutdownSignal_.connect([this](){
                     context_.TryCancel();

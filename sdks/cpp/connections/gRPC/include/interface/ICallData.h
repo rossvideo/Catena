@@ -46,6 +46,9 @@
 namespace catena {
 namespace gRPC {
 
+/**
+ * @brief Interface class for gRPC CallData classes.
+ */
 class ICallData {
   public:
     /**
@@ -63,7 +66,7 @@ class ICallData {
      * @param rc The exception_with_status object to set if an error occurs.
      * @return The JWS Bearer token as a string.
      */
-    virtual std::string getJWSToken_(catena::exception_with_status& rc) const = 0;
+    virtual std::string jwsToken_() const = 0;
 };
 
 };

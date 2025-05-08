@@ -53,12 +53,13 @@ int GetPopulatedSlots::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetPopulatedSlots
  * object, then starts the process.
  */
-GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok): CallData(service), dm_{dm}, responder_(&context_),
-              status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
     proceed(ok);
 }
+
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
     std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: " << timeNow()

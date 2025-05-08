@@ -90,7 +90,7 @@ void UpdateSubscriptions::proceed(bool ok) {
                 catena::common::Authorizer* authz;
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_(rc));
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;

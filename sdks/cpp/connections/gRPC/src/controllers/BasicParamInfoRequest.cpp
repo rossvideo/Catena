@@ -94,7 +94,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
                 std::shared_ptr<Authorizer> sharedAuthz;
                 Authorizer* authz;
                 if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<Authorizer>(getJWSToken_(rc));
+                    sharedAuthz = std::make_shared<Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &Authorizer::kAuthzDisabled;

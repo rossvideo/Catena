@@ -99,7 +99,7 @@ void DeviceRequest::proceed(bool ok) {
                 // Setting up authorizer object.
                 if (service_->authorizationEnabled()) {
                     // Authorizer throws an error if invalid jws token so no need to handle rc.
-                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(getJWSToken_(rc));
+                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
                     authz_ = sharedAuthz_.get();
                 } else {
                     authz_ = &catena::common::Authorizer::kAuthzDisabled;

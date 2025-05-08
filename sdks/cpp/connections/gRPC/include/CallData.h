@@ -76,7 +76,7 @@ class CallData : public ICallData {
      * @param rc The exception_with_status object to set if an error occurs.
      * @return The JWS Bearer token as a string.
      */
-    std::string getJWSToken_(catena::exception_with_status& rc) const override {
+    std::string jwsToken_() const override {
         std::string jwsToken = "";  
         if (service_->authorizationEnabled()) {
             // Getting client metadata from context.
@@ -89,10 +89,10 @@ class CallData : public ICallData {
                     auto tokenSubStr = authData->second.substr(std::string("Bearer ").length());
                     jwsToken = std::string(tokenSubStr.begin(), tokenSubStr.end());
                 } else {
-                    rc = catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
+                    throw catena::exception_with_status("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
                 }
             } else {
-                rc = catena::exception_with_status("Client metadata not found", catena::StatusCode::UNAUTHENTICATED);
+                throw catena::exception_with_status("Client metadata not found", catena::StatusCode::UNAUTHENTICATED);
             }
         }
         return jwsToken;

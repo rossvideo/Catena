@@ -50,60 +50,56 @@ namespace gRPC {
 * @brief CallData class for the GetPopulatedSlots RPC
 */
 class GetPopulatedSlots : public CallData{
-    public:
-        /**
-         * @brief Constructor for the CallData class of the GetPopulatedSlots
-         * gRPC. Calls proceed() once initialized.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the populated slots of.
-         * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok);
-        /**
-        * @brief Manages the steps of the GetPopulatedSlots gRPC command
-        * through the state variable status. Returns the number of populated
-        * slots to the client.
-        *
-        * @param service - Pointer to the parent CatenaServiceImpl.
-        * @param ok - Flag to check if the command was successfully executed.
-        */
-        void proceed(bool ok) override;
+  public:
+    /**
+     * @brief Constructor for the CallData class of the GetPopulatedSlots
+     * gRPC. Calls proceed() once initialized.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param dm - Address of the device to get the populated slots of.
+     * @param ok - Flag to check if the command was successfully executed.
+     */ 
+    GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    /**
+    * @brief Manages the steps of the GetPopulatedSlots gRPC command
+    * through the state variable status. Returns the number of populated
+    * slots to the client.
+    *
+    * @param service - Pointer to the parent CatenaServiceImpl.
+    * @param ok - Flag to check if the command was successfully executed.
+    */
+    void proceed(bool ok) override;
 
-    private:
-        /**
-         * @brief Server request (empty).
-         */
-        catena::Empty req_;
-        /**
-         * @brief Server response (list of populated slots).
-         */
-        catena::SlotList res_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        ServerAsyncResponseWriter<::catena::SlotList> responder_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        ServerAsyncWriter<catena::CommandResponse> writer_;
-        /**
-         * @brief Represents the current status of the command execution
-         * (kCreate, kProcess, kFinish, etc.)
-         */
-        CallStatus status_;
-        /**
-         * @brief The device to get the populated slots of.
-         */
-        IDevice& dm_;
-        /**
-         * @brief The object's unique id.
-         */
-        int objectId_;
-        /**
-         * @brief The total # of GetPopulatedSlots objects.
-         */
-        static int objectCounter_;
+  private:
+    /**
+     * @brief Server request (empty).
+     */
+    catena::Empty req_;
+    /**
+     * @brief Server response (list of populated slots).
+     */
+    catena::SlotList res_;
+    /**
+     * @brief gRPC async response writer.
+     */
+    ServerAsyncResponseWriter<::catena::SlotList> responder_;
+    /**
+     * @brief Represents the current status of the command execution
+     * (kCreate, kProcess, kFinish, etc.)
+     */
+    CallStatus status_;
+    /**
+     * @brief The device to get the populated slots of.
+     */
+    IDevice& dm_;
+    /**
+     * @brief The object's unique id.
+     */
+    int objectId_;
+    /**
+     * @brief The total # of GetPopulatedSlots objects.
+     */
+    static int objectCounter_;
 };
 
 }; // namespace gRPC

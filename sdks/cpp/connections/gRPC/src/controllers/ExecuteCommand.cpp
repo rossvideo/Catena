@@ -99,7 +99,7 @@ void ExecuteCommand::proceed(bool ok) {
                 std::unique_ptr<IParam> command = nullptr;
                 // Getting the command.
                 if (service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{getJWSToken_(rc)};
+                    catena::common::Authorizer authz{jwsToken_()};
                     command = dm_.getCommand(req_.oid(), rc, authz);
                 } else {
                     command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
