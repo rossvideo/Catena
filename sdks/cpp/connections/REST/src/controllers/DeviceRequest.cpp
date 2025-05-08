@@ -32,18 +32,19 @@ void DeviceRequest::proceed() {
         subscribedOids_ = subscriptionManager.getAllSubscribedOids(dm_);
 
         // Set the detail level on the device
-        dm_.detail_level(context_.detailLevel());
+        // dm_.detail_level(context_.detailLevel());
+        catena::Device_DetailLevel dl = context_.detailLevel();
 
         // If we're in SUBSCRIPTIONS mode, we'll send minimal set if no subscriptions
-        if (context_.detailLevel() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-            if (subscribedOids_.empty()) {
-                serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
-            } else {
-                serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
-            }
-        } else {
-            serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
-        }
+        // if (context_.detailLevel() == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+        //     if (subscribedOids_.empty()) {
+        //         serializer_ = dm_.getComponentSerializer(*authz, shallowCopy);
+        //     } else {
+        //         serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
+        //     }
+        // } else {
+        //     serializer_ = dm_.getComponentSerializer(*authz, subscribedOids_, shallowCopy);
+        // }
 
         // Getting each component and writing to the stream.
         while (serializer_->hasMore()) {

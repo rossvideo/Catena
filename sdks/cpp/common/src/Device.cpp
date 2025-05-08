@@ -392,19 +392,13 @@ catena::DeviceComponent Device::DeviceSerializer::getNext() {
     return std::move(handle_.promise().deviceMessage); 
 }
 
-std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, bool shallow) const {
-    // Call the overloaded version with an explicitly constructed empty vector
-    static const std::set<std::string> empty_set;
-    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, empty_set, shallow));
+std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow) const {
+    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribed_oids, dl, shallow));
 }
 
-std::unique_ptr<Device::IDeviceSerializer> Device::getComponentSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow) const {
-    return std::make_unique<Device::DeviceSerializer>(getDeviceSerializer(authz, subscribed_oids, shallow));
-}
-
-Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow) const {
+Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const std::set<std::string>& subscribed_oids, catena::Device_DetailLevel dl, bool shallow) const {
     // Sanitizing if trying to use SUBSCRIPTIONS mode with subscriptions disabled
-    if (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
+    if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && !subscriptions_) {
         throw catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::INVALID_ARGUMENT);
     }
     
@@ -421,10 +415,10 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
         dst->add_access_scopes(scope);
     }
 
-    if (detail_level_ != catena::Device_DetailLevel_NONE) {
+    if (dl != catena::Device_DetailLevel_NONE) {
         // // Helper function to check if an OID is subscribed
-        auto is_subscribed = [&subscribed_oids, this](const std::string& param_name) {
-            if (detail_level_ != catena::Device_DetailLevel_SUBSCRIPTIONS) {
+        auto is_subscribed = [&subscribed_oids, dl, this](const std::string& param_name) {
+            if (dl != catena::Device_DetailLevel_SUBSCRIPTIONS) {
                 return true;
             } else {
                 // Check each subscription for exact or wildcard matches
@@ -445,8 +439,8 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
         };
 
         // // Only send non-minimal items in FULL mode or if explicitly subscribed in SUBSCRIPTION mode
-        if (detail_level_ == catena::Device_DetailLevel_FULL || 
-            detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+        if (dl == catena::Device_DetailLevel_FULL || 
+            dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
             
             // Send menus
             for (const auto& [group_name, menu_group] : menu_groups_) {
@@ -486,12 +480,12 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
         }
 
         // Send parameters if authorized, and either in the minimal set or if subscribed to
-        if (detail_level_ != catena::Device_DetailLevel_COMMANDS) {
+        if (dl != catena::Device_DetailLevel_COMMANDS) {
             for (const auto& [name, param] : params_) {
                 if (authz.readAuthz(*param) &&
-                    ((detail_level_ == catena::Device_DetailLevel_FULL) ||
+                    ((dl == catena::Device_DetailLevel_FULL) ||
                      (param->getDescriptor().minimalSet()) ||
-                     (detail_level_ == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name)))) {
+                     (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && is_subscribed(name)))) {
                     co_yield component;
                     component.Clear();
                     ::catena::Param* dstParam = component.mutable_param()->mutable_param();

@@ -91,6 +91,17 @@ class DeviceRequest : public CallData {
      */
     IDevice& dm_;
     /**
+     * @brief Shared ptr to the authorizer object so that we can maintain
+     * ownership of raw ptr throughout call lifetime without use of "new"
+     * keyword. 
+     */
+    std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
+    /**
+     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
+     * case of kAuthzDisabled.
+     */
+    catena::common::Authorizer* authz_;
+    /**
      * @brief Unique identifier for device request object
      */
     int objectId_;
