@@ -43,7 +43,7 @@ void GetParam::proceed() {
     }
 
     // Finishing by writing answer to client.
-    writer_.finish(ans, rc);
+    writer_.sendResponse(ans, rc);
 }
 
 void GetParam::finish() {

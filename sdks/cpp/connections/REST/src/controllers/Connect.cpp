@@ -14,6 +14,10 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
     forceConnection_ = context.hasField("force_connection");
+
+    // Set detail level from context
+    detailLevel_ = context_.detailLevel();
+    dm_.detail_level(detailLevel_);
 }
 
 void Connect::proceed() {
@@ -40,16 +44,13 @@ void Connect::proceed() {
         languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
             updateResponse_(l);
         });
-        // Set detail level from context
-        detailLevel_ = context_.detailLevel();
-        dm_.detail_level(detailLevel_);
-        // send client an empty update with slot of the device
+        // Send client an empty update with slot of the device
         catena::PushUpdates populatedSlots;
         populatedSlots.set_slot(dm_.slot());
-        writer_.write(populatedSlots);
+        writer_.sendResponse(populatedSlots, catena::exception_with_status("", catena::StatusCode::OK));
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
-        writer_.finish(catena::Empty(), err);
+        writer_.sendResponse(catena::Empty(), err);
         shutdown_ = true;
     }
 
@@ -63,7 +64,7 @@ void Connect::proceed() {
         try {
             if (socket_.is_open() && !shutdown_) {
                 res_.set_slot(dm_.slot());
-                writer_.write(res_);
+                writer_.sendResponse(res_, catena::exception_with_status("", catena::StatusCode::OK));
             }
         // A little scuffed but I have no idea how else to detect disconnect.
         } catch (...) {
@@ -84,7 +85,7 @@ void Connect::finish() {
     } catch (...) {}
     // Finishing and closing the socket.
     if (socket_.is_open()) {
-        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
+        writer_.sendResponse(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
         socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";

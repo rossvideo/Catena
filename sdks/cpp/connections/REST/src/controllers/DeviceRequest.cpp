@@ -51,16 +51,16 @@ void DeviceRequest::proceed() {
             std::lock_guard lg(dm_.mutex());
             component = serializer_->getNext();
             }
-            writer_.write(component);
+            writer_.sendResponse(component, rc);
         }
-        writer_.finish(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
+        writer_.sendResponse(catena::Empty(), rc);
         
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {
-        writer_.finish(catena::Empty(), err);
+        writer_.sendResponse(catena::Empty(), err);
     } catch (...) {
         catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
-        writer_.finish(catena::Empty(), err);
+        writer_.sendResponse(catena::Empty(), err);
     }
 }
 

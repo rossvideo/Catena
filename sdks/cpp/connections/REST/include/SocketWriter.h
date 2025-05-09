@@ -76,17 +76,11 @@ class SocketWriter : public ISocketWriter {
     }
 
     /**
-     * @brief Adds the protobuf message to the end of response in JSON format.
-     * @param msg The protobuf message to add as JSON.
-     */
-    void write(const google::protobuf::Message& msg) override;
-
-    /**
      * @brief Finishes writing the HTTP response.
      * @param msg The protobuf message to write (if status is OK)
      * @param err The error status to finish with. If status is OK, writes the message, otherwise writes the error.
      */
-    void finish(const google::protobuf::Message& msg = catena::Empty(), const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
+    void sendResponse(const google::protobuf::Message& msg = catena::Empty(), const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
 
   private:
     /**
@@ -122,28 +116,29 @@ class SSEWriter : public ISocketWriter {
      * @brief Constructor for SSEWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
-     * @param err The catena::exception_with_status for initialization.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin = "*", const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK));
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin} {}
 
     /**
-     * @brief Writes a protobuf message to the socket as an SSE.
+     * @brief Sends a response as a Server-Sent Event.
      * @param msg The protobuf message to write as JSON.
+     * @param err The error status to finish with.
      */
-    void write(const google::protobuf::Message& msg) override;
-
-    /**
-     * @brief Finishes the SSE stream.
-     * @param msg The protobuf message to write (if status is OK)
-     * @param err The error status to finish with. If status is OK, writes the message, otherwise writes the error.
-     */
-    void finish(const google::protobuf::Message& msg = catena::Empty(), const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
+    void sendResponse(const google::protobuf::Message& msg, const catena::exception_with_status& err) override;
 
   private:
     /**
      * @brief The socket to write to.
      */
     tcp::socket& socket_;
+    /**
+     * @brief The origin for CORS headers.
+     */
+    std::string origin_;
+    /**
+     * @brief The response to write to the socket.
+     */
+    std::string response_ = "";
 };
 
 /**
