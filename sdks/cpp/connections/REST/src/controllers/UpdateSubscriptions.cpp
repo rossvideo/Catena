@@ -113,7 +113,7 @@ void UpdateSubscriptions::proceed() {
 void UpdateSubscriptions::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
-    writer_.sendResponse(catena::Empty(), rc_);
+    writer_.sendResponse(rc_);
     socket_.close();
 }
 

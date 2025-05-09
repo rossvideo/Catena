@@ -54,7 +54,7 @@ void MultiSetValue::proceed() {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     // Writing response.
-    writer_.sendResponse(catena::Empty(), rc);
+    writer_.sendResponse(rc);
 }
 
 void MultiSetValue::finish() {

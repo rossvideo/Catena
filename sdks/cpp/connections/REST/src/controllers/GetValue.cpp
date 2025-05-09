@@ -33,7 +33,7 @@ void GetValue::proceed() {
     }
 
     // Finishing by writing answer to client.
-    writer_.sendResponse(ans, rc);
+    writer_.sendResponse(rc, ans);
 }
 
 void GetValue::finish() {

@@ -47,10 +47,10 @@ void Connect::proceed() {
         // Send client an empty update with slot of the device
         catena::PushUpdates populatedSlots;
         populatedSlots.set_slot(dm_.slot());
-        writer_.sendResponse(populatedSlots, catena::exception_with_status("", catena::StatusCode::OK));
+        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), populatedSlots);
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
-        writer_.sendResponse(catena::Empty(), err);
+        writer_.sendResponse(err);
         shutdown_ = true;
     }
 
@@ -64,7 +64,7 @@ void Connect::proceed() {
         try {
             if (socket_.is_open() && !shutdown_) {
                 res_.set_slot(dm_.slot());
-                writer_.sendResponse(res_, catena::exception_with_status("", catena::StatusCode::OK));
+                writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
             }
         // A little scuffed but I have no idea how else to detect disconnect.
         } catch (...) {
@@ -85,7 +85,7 @@ void Connect::finish() {
     } catch (...) {}
     // Finishing and closing the socket.
     if (socket_.is_open()) {
-        writer_.sendResponse(catena::Empty(), catena::exception_with_status("", catena::StatusCode::OK));
+        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
         socket_.close();
     }
     std::cout << "Connect[" << objectId_ << "] finished\n";

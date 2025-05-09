@@ -68,19 +68,14 @@ class SocketWriter : public ISocketWriter {
      * @param socket The socket to write to.
      * @param origin The origin of the request.
      */
-    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket} {
-      CORS_ = "Access-Control-Allow-Origin: " + origin + "\r\n"
-              "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-              "Access-Control-Allow-Credentials: true\r\n";
-    }
+    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin} {}
 
     /**
      * @brief Finishes writing the HTTP response.
      * @param msg The protobuf message to write (if status is OK)
      * @param err The error status to finish with. If status is OK, writes the message, otherwise writes the error.
      */
-    void sendResponse(const google::protobuf::Message& msg = catena::Empty(), const catena::exception_with_status& err = catena::exception_with_status("", catena::StatusCode::OK)) override;
+    void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
 
   private:
     /**
@@ -88,23 +83,9 @@ class SocketWriter : public ISocketWriter {
      */
     tcp::socket& socket_;
     /**
-     * @brief CORS headers used for all responses.
-     * Access-Control-Allow-Origin,
-     * Access-Control-Allow-Methods,
-     * Access-Control-Allow-Headers
-     * Access-Control-Allow-Credentials
+     * @brief The origin of the request.
      */
-    std::string CORS_;
-    /**
-     * @brief The response to write to the socket.
-     */
-    std::string response_ = "";
-    /**
-     * @brief Flag indicating whether the response is a multi-part response.
-     * 
-     * Used to determine formatting when finish() is called.
-     */
-    bool multi_ = false;
+    std::string origin_;
 };
 
 /**
@@ -117,14 +98,14 @@ class SSEWriter : public ISocketWriter {
      * @param socket The socket to write to.
      * @param origin The origin of the request.
      */
-    SSEWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin} {}
+    SSEWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin}, headers_sent_{false} {}
 
     /**
      * @brief Sends a response as a Server-Sent Event.
      * @param msg The protobuf message to write as JSON.
      * @param err The error status to finish with.
      */
-    void sendResponse(const google::protobuf::Message& msg, const catena::exception_with_status& err) override;
+    void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg = catena::Empty()) override;
 
   private:
     /**
@@ -132,47 +113,46 @@ class SSEWriter : public ISocketWriter {
      */
     tcp::socket& socket_;
     /**
-     * @brief The origin for CORS headers.
+     * @brief The origin of the request.
      */
     std::string origin_;
     /**
-     * @brief The response to write to the socket.
+     * @brief Whether the headers have been sent.
      */
-    std::string response_ = "";
+    bool headers_sent_;
 };
 
 /**
  * @brief Maps catena::StatusCode to HTTP status codes and reasons.
  */
 const std::map<catena::StatusCode, std::pair<int, std::string>> codeMap_ {
-  {catena::StatusCode::OK,                  {200, "OK"}},
-  {catena::StatusCode::CANCELLED,           {400, "Cancelled"}},
-  {catena::StatusCode::UNKNOWN,             {500, "Internal Server Error"}},
-  {catena::StatusCode::INVALID_ARGUMENT,    {400, "Bad Request"}},
-  {catena::StatusCode::DEADLINE_EXCEEDED,   {408, "Request Timeout"}},
-  {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
-  {catena::StatusCode::ALREADY_EXISTS,      {409, "Conflict"}},
-  {catena::StatusCode::PERMISSION_DENIED,   {403, "Forbidden"}},
-  {catena::StatusCode::UNAUTHENTICATED,     {401, "Unauthorized"}},
-  {catena::StatusCode::RESOURCE_EXHAUSTED,  {429, "Too Many Requests"}},
-  {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},
-  {catena::StatusCode::ABORTED,             {409, "Conflict"}},
-  {catena::StatusCode::OUT_OF_RANGE,        {416, "Range Not Satisfiable"}},
-  {catena::StatusCode::UNIMPLEMENTED,       {501, "Not Implemented"}},
-  {catena::StatusCode::INTERNAL,            {500, "Internal Server Error"}},
-  {catena::StatusCode::UNAVAILABLE,         {503, "Service Unavailable"}},
-  {catena::StatusCode::DATA_LOSS,           {500, "Internal Server Error"}},
-  {catena::StatusCode::DO_NOT_USE,          {500, "Internal Server Error"}},
-  {catena::StatusCode::CREATED,             {201, "Created"}},
-  {catena::StatusCode::ACCEPTED,            {202, "Accepted"}},
-  {catena::StatusCode::NO_CONTENT,          {204, "No Content"}},
-  {catena::StatusCode::UNPROCESSABLE_ENTITY,{422, "Unprocessable Entity"}},
-  {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
-  {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
-  {catena::StatusCode::TOO_MANY_REQUESTS,   {429, "Too Many Requests"}},
-  {catena::StatusCode::BAD_GATEWAY,         {502, "Bad Gateway"}},
-  {catena::StatusCode::SERVICE_UNAVAILABLE, {503, "Service Unavailable"}},
-  {catena::StatusCode::GATEWAY_TIMEOUT,     {504, "Gateway Timeout"}},
+    {catena::StatusCode::OK,                  {200, "OK"}},
+    {catena::StatusCode::CREATED,             {201, "Created"}},
+    {catena::StatusCode::ACCEPTED,            {202, "Accepted"}},
+    {catena::StatusCode::NO_CONTENT,          {204, "No Content"}},
+    {catena::StatusCode::CANCELLED,           {400, "Cancelled"}},
+    {catena::StatusCode::INVALID_ARGUMENT,    {400, "Bad Request"}},
+    {catena::StatusCode::UNAUTHENTICATED,     {401, "Unauthorized"}},
+    {catena::StatusCode::PERMISSION_DENIED,   {403, "Forbidden"}},
+    {catena::StatusCode::NOT_FOUND,           {404, "Not Found"}},
+    {catena::StatusCode::METHOD_NOT_ALLOWED,  {405, "Method Not Allowed"}},
+    {catena::StatusCode::CONFLICT,            {409, "Conflict"}},
+    {catena::StatusCode::ALREADY_EXISTS,      {409, "Conflict"}},
+    {catena::StatusCode::ABORTED,             {409, "Conflict"}},
+    {catena::StatusCode::FAILED_PRECONDITION, {412, "Precondition Failed"}},
+    {catena::StatusCode::UNPROCESSABLE_ENTITY,{422, "Unprocessable Entity"}},
+    {catena::StatusCode::RESOURCE_EXHAUSTED,  {429, "Too Many Requests"}},
+    {catena::StatusCode::TOO_MANY_REQUESTS,   {429, "Too Many Requests"}},
+    {catena::StatusCode::OUT_OF_RANGE,        {416, "Range Not Satisfiable"}},
+    {catena::StatusCode::BAD_GATEWAY,         {502, "Bad Gateway"}},
+    {catena::StatusCode::UNIMPLEMENTED,       {501, "Not Implemented"}},
+    {catena::StatusCode::INTERNAL,            {500, "Internal Server Error"}},
+    {catena::StatusCode::UNKNOWN,             {500, "Internal Server Error"}},
+    {catena::StatusCode::DATA_LOSS,           {500, "Internal Server Error"}},
+    {catena::StatusCode::DO_NOT_USE,          {500, "Internal Server Error"}},
+    {catena::StatusCode::SERVICE_UNAVAILABLE, {503, "Service Unavailable"}},
+    {catena::StatusCode::UNAVAILABLE,         {503, "Service Unavailable"}},
+    {catena::StatusCode::GATEWAY_TIMEOUT,     {504, "Gateway Timeout"}},
 };
 
 }; // Namespace REST

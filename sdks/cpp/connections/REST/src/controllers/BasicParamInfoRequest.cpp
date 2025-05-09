@@ -188,7 +188,7 @@ void BasicParamInfoRequest::finish() {
     
     writer_lock_.lock();
     for (auto& response : responses_) {
-        writer_.sendResponse(response, rc_);
+        writer_.sendResponse(rc_, response);
     }
     writer_lock_.unlock();
     
