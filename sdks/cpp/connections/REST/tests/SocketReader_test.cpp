@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the SocketWriter.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/04/15
+ * @date 25/05/09
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -51,7 +51,7 @@ namespace fs = std::filesystem;
 
 // Fixture
 class RESTSocketReaderTests : public ::testing::Test {
-    protected:
+  protected:
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
         tcp::socket clientSocket(io_context);
@@ -99,17 +99,23 @@ class RESTSocketReaderTests : public ::testing::Test {
     std::string jsonBody = "{\n  test_body\n}";
 };
 
-// Testing SocketReader with authorization disabled.
+/*
+ * ============================================================================
+ *                             SSEWriter tests
+ * ============================================================================
+ * 
+ * TEST 1 - Reading from socket with authz disabled.
+ */
 TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
     // Reading the request from the serverSocket.
     socketReader.read(serverSocket, false);
     // Checking answers.
-    EXPECT_EQ(socketReader.method(),               method    );
-    EXPECT_EQ(socketReader.service(),              service   );
-    EXPECT_EQ(socketReader.slot(),                 slot      );
+    EXPECT_EQ(socketReader.method(),                 method  );
+    EXPECT_EQ(socketReader.service(),                service );
+    EXPECT_EQ(socketReader.slot(),                   slot    );
     for (auto [key, value] : fields) {
-        EXPECT_EQ(socketReader.hasField(key),       true     );
-        EXPECT_EQ(socketReader.fields(key),         value    );
+        EXPECT_EQ(socketReader.hasField(key),        true    );
+        EXPECT_EQ(socketReader.fields(key),          value   );
     }
     EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
     EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
@@ -119,17 +125,19 @@ TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
     EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
 }
 
-// Testing SocketReader with authorization enabled.
+/* 
+ * TEST 2 - Reading from socket with authz enabled.
+ */
 TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
     // Reading the request from the serverSocket.
     socketReader.read(serverSocket, true);
     // Checking answers.
-    EXPECT_EQ(socketReader.method(),               method    );
-    EXPECT_EQ(socketReader.service(),              service   );
-    EXPECT_EQ(socketReader.slot(),                 slot      );
+    EXPECT_EQ(socketReader.method(),                 method  );
+    EXPECT_EQ(socketReader.service(),                service );
+    EXPECT_EQ(socketReader.slot(),                   slot    );
     for (auto [key, value] : fields) {
-        EXPECT_EQ(socketReader.hasField(key),       true     );
-        EXPECT_EQ(socketReader.fields(key),         value    );
+        EXPECT_EQ(socketReader.hasField(key),        true    );
+        EXPECT_EQ(socketReader.fields(key),          value   );
     }
     EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
     EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
@@ -138,9 +146,3 @@ TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
     EXPECT_EQ(socketReader.origin(),                 origin  );
     EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
 }
-
-// Testing to make sure SocketReader saved the Sub Manager.
-// TEST_F(RESTSocketReaderTests, SocketReader_GetSubManager) {
-//     // Checking answers.
-//     EXPECT_EQ(socketReader.getSubscriptionManager(), sm);
-// }

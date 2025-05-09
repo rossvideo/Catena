@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the GetValue.cpp file.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/04/15
+ * @date 25/05/09
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -57,6 +57,7 @@ class MockSocketReader : public catena::REST::ISocketReader {
     MOCK_METHOD(const std::string&, method, (), (const, override));
     MOCK_METHOD(const std::string&, service, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
+    MOCK_METHOD(bool, hasField, (const std::string& key), (const, override));
     MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));
     MOCK_METHOD(const std::string&, jwsToken, (), (const, override));
     MOCK_METHOD(const std::string&, origin, (), (const, override));
@@ -69,7 +70,7 @@ class MockSocketReader : public catena::REST::ISocketReader {
     const std::string& fields(const std::string& key) {
         return fields_.at(key);
     }
-    const std::string& jwsToken() { return " "; }
+    const std::string& jwsToken() { return fieldNotFound; }
     bool authorizationEnabled() { return false; }
 
   private:
@@ -103,8 +104,7 @@ class MockDevice : public IDevice {
         MOCK_METHOD(bool, hasMore, (), (const, override));
         MOCK_METHOD(catena::DeviceComponent, getNext, (), (override));
     };
-    MOCK_METHOD(std::unique_ptr<IDeviceSerializer>, getComponentSerializer, (Authorizer& authz, bool shallow), (const, override));
-    MOCK_METHOD(std::unique_ptr<IDeviceSerializer>, getComponentSerializer, (Authorizer& authz, const std::set<std::string>& subscribed_oids, bool shallow), (const, override));
+    MOCK_METHOD(std::unique_ptr<IDeviceSerializer>, getComponentSerializer, (Authorizer& authz, const std::set<std::string>& subscribedOids, catena::Device_DetailLevel dl, bool shallow), (const, override));
     MOCK_METHOD(void, addItem, (const std::string& key, IParam* item), (override));
     MOCK_METHOD(void, addItem, (const std::string& key, IConstraint* item), (override));
     MOCK_METHOD(void, addItem, (const std::string& key, IMenuGroup* item), (override));
@@ -124,9 +124,6 @@ class MockDevice : public IDevice {
 class RESTGetValueTests : public ::testing::Test {
   protected:
     void SetUp() override {
-        clientSocket = tcp::socket(io_context);
-        serverSocket = tcp::socket(io_context);
-        acceptor = tcp::acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
         // Linking client and server sockets.
         clientSocket.connect(acceptor.local_endpoint());
         acceptor.accept(serverSocket);
@@ -137,15 +134,14 @@ class RESTGetValueTests : public ::testing::Test {
     }
 
     boost::asio::io_context io_context;
-    tcp::socket clientSocket;
-    tcp::socket serverSocket;
-    tcp::acceptor acceptor;
+    tcp::socket clientSocket{io_context};
+    tcp::socket serverSocket{io_context};
+    tcp::acceptor acceptor{io_context, tcp::endpoint(tcp::v4(), 0)};
     MockSocketReader context;
     MockDevice dm;
 };
 
 TEST_F(RESTGetValueTests, GetValue_create) {
-    // Creating GetValue object.
-    catena::REST::GetValue getValue(serverSocket, context, dm);
+    // TODO
 }
  
