@@ -75,7 +75,7 @@ class RESTSocketWriterTests : public ::testing::Test {
     }
 
     // Returns what the expected answer for should look like for the SocketWriter.
-    inline std::string expected(const std::string& jsonBody, const catena::exception_with_status& rc) {
+    inline std::string expected(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
                "Content-Type: application/json\r\n"
@@ -87,7 +87,7 @@ class RESTSocketWriterTests : public ::testing::Test {
     }
 
     // Returns what the expected answer for should look like for the SSEWriter.
-    inline std::string expectedSSE(const std::vector<std::string> msgs, const catena::exception_with_status& rc) {
+    inline std::string expectedSSE(const catena::exception_with_status& rc, const std::vector<std::string> msgs = {}) {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         // Compiling body response from messages.
         std::string body = "";
@@ -134,7 +134,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
     std::string jsonBody;
     google::protobuf::util::JsonPrintOptions options; // Default options
     auto status = google::protobuf::util::MessageToJsonString(msg, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expected(jsonBody, rc));
+    EXPECT_EQ(readResponse(), expected(rc, jsonBody));
 }
 
 /* 
@@ -151,7 +151,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write204) {
     writer.finish(msg, rc);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expected("", rc));
+    EXPECT_EQ(readResponse(), expected(rc));
 }
 
 /* 
@@ -168,7 +168,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
     writer.finish(msg, rc);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expected("", rc));
+    EXPECT_EQ(readResponse(), expected(rc));
 }
 
 
@@ -198,7 +198,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
     }
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expectedSSE(msgs, rc));
+    EXPECT_EQ(readResponse(), expectedSSE(rc, msgs));
 }
 
 /* 
@@ -207,7 +207,6 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
 TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
     // msg variables.
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    std::vector<std::string> msgs = {};
     catena::Empty emptyMsg = catena::Empty();
 
     // Initializing SSEWriter with serverSocket and writing error.
@@ -215,7 +214,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
     writer.finish(emptyMsg, rc);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expectedSSE(msgs, rc));
+    EXPECT_EQ(readResponse(), expectedSSE(rc));
 }
 
 /* 
@@ -241,5 +240,5 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
     writer.finish(emptyMsg, err);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expectedSSE(msgs, rc));
+    EXPECT_EQ(readResponse(), expectedSSE(rc, msgs));
 }

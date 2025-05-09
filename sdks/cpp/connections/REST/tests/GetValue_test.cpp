@@ -47,11 +47,13 @@
 #include <IDevice.h>
 #include "controllers/GetValue.h"
 #include "interface/ISocketReader.h"
+#include "SocketWriter.h"
 
 using namespace catena::common;
+using namespace catena::REST;
 
 // Mocking the SocketReader interface
-class MockSocketReader : public catena::REST::ISocketReader {
+class MockSocketReader : public ISocketReader {
   public:
     MOCK_METHOD(void, read, (tcp::socket& socket, bool authz), (override));
     MOCK_METHOD(const std::string&, method, (), (const, override));
@@ -66,18 +68,6 @@ class MockSocketReader : public catena::REST::ISocketReader {
     MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
     MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-
-    const std::string& fields(const std::string& key) {
-        return fields_.at(key);
-    }
-    const std::string& jwsToken() { return fieldNotFound; }
-    bool authorizationEnabled() { return false; }
-
-  private:
-    std::unordered_map<std::string, std::string> fields_ = {
-        {"oid", "/text_box"},
-    };
-    std::string fieldNotFound = "";
 };
 
 // Mocking the Device interface
@@ -127,21 +117,257 @@ class RESTGetValueTests : public ::testing::Test {
         // Linking client and server sockets.
         clientSocket.connect(acceptor.local_endpoint());
         acceptor.accept(serverSocket);
+
+        // Redirecting cout to a stringstream for testing.
+        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
+
+        // Setting expectations of 1 call to the constructor and one to origin().
+        EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
+        getValue = GetValue::makeOne(serverSocket, context, dm);
     }
 
     void TearDown() override {
+        std::cout.rdbuf(oldCout); // Restoring cout
         // Cleanup code here
+        if (getValue) {
+            delete getValue;
+        }
     }
 
+    // Returns what the writer wrote to the client socket.
+    // *Note: This only reads a limited amount of data (up to 4096 bytes). This
+    // suffices for testing, mostly because I don't feel like making it dynamic.
+    std::string readResponse() {
+        boost::asio::streambuf buffer;
+        boost::asio::read_until(clientSocket, buffer, "\r\n\r\n");
+        std::istream response_stream(&buffer);
+        return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
+    }
+
+    // Returns what the expected answer for should look like for the SocketWriter.
+    inline std::string expected(const catena::exception_with_status& rc, const catena::Value& val = catena::Value()) {
+        http_exception_with_status httpStatus = codeMap_.at(rc.status);
+        std::string jsonBody;
+        if (httpStatus.first < 300) {
+            google::protobuf::util::JsonPrintOptions options; // Default options
+            auto status = google::protobuf::util::MessageToJsonString(val, &jsonBody, options);
+        }
+        return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
+               "Content-Type: application/json\r\n"
+               "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n"
+               "Connection: close\r\n" +
+               "Access-Control-Allow-Origin: " + origin + "\r\n"
+               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+               "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+               "Access-Control-Allow-Credentials: true\r\n"
+               "\r\n" +
+               jsonBody;
+    }
+
+    std::string origin = "*";
+    std::stringstream MockConsole;
+    std::streambuf* oldCout;
     boost::asio::io_context io_context;
     tcp::socket clientSocket{io_context};
     tcp::socket serverSocket{io_context};
     tcp::acceptor acceptor{io_context, tcp::endpoint(tcp::v4(), 0)};
     MockSocketReader context;
     MockDevice dm;
+    catena::REST::ICallData* getValue = nullptr;
 };
 
+/*
+ * ============================================================================
+ *                               GetValue tests
+ * ============================================================================
+ * 
+ * TEST 1 - Creating a GetValue object with makeOne.
+ */
 TEST_F(RESTGetValueTests, GetValue_create) {
-    // TODO
+    // Making sure getValue is created from the SetUp step.
+    ASSERT_TRUE(getValue);
 }
- 
+
+/* 
+ * TEST 2 - Normal case for GetValue proceed().
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedNormal) {
+    // Setting up the returnVal to test with.
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    std::string mockOid = "/test_oid";
+
+    // Defining mock functions
+    // authz = false, fields("oid") = "/text_oid"
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    // dm.getValue()
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            value.CopyFrom(returnVal);
+            return catena::exception_with_status(rc.what(), rc.status);
+        }));
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expected(rc, returnVal));
+}
+
+/* 
+ * TEST 3 - dm.getValue() returns an catena::exception_with_status.
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedErrReturnCatena) {
+    // Setting up the returnVal to test with.
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
+    std::string mockOid = "/invalid_oid";
+
+    // Defining mock functions
+    // authz = false, fields("oid") = "/text_oid"
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    // dm.getValue()
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            return catena::exception_with_status(rc.what(), rc.status);
+        }));
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expected(rc));
+}
+
+/* 
+ * TEST 4 - GetValue with authz on and valid token.
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedAuthzValid) {
+    // Setting up the returnVal to test with.
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    std::string mockOid = "/test_oid";
+    /* Authz just tests for a properly encrypted token, proxy handles authz.
+     * This is a random RSA token I made jwt.io it is not a security risk I
+     * swear. */
+    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
+                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
+                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
+                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
+                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
+                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
+                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
+                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
+                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
+                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
+                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
+                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+
+    // Defining mock functions
+    // authz = false, fields("oid") = "/text_oid"
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
+    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    // dm.getValue()
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            value.CopyFrom(returnVal);
+            return catena::exception_with_status(rc.what(), rc.status);
+        }));
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expected(rc, returnVal));
+}
+
+/* 
+ * TEST 5 - GetValue with authz on and an invalid token.
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedAuthzInvalid) {
+    // Setting up the returnVal to test with.
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
+    // Not a token so it should get rejected by the authorizer.
+    std::string mockToken = "THIS SHOULD NOT PARSE";
+
+    // Defining mock functions
+    // authz = false, fields("oid") = "/text_oid"
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
+    // Should NOT make it this far.
+    EXPECT_CALL(context, fields("oid")).Times(0);
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expected(rc, returnVal));
+}
+
+/* 
+ * TEST 6 - dm.getValue() throws a catena::exception_with_status.
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedErrThrowCatena) {
+    // Setting up the returnVal to test with.
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
+    std::string mockOid = "/invalid_oid";
+
+    // Defining mock functions
+    // authz = false, fields("oid") = "/text_oid"
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    // dm.getValue()
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            throw catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expected(rc));
+}
+
+/* 
+ * TEST 7 - dm.getValue() throws an std::runtime_error.
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedErrThrowUnknown) {
+    // Setting up the returnVal to test with.
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("", catena::StatusCode::UNKNOWN);
+    std::string mockOid = "/invalid_oid";
+
+    // Defining mock functions
+    // authz = false, fields("oid") = "/text_oid"
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    // dm.getValue()
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+            throw std::runtime_error("Unknown error");
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expected(rc));
+}
+
+/* 
+ * TEST 8 - Writing to console with GetValue finish().
+ */
+TEST_F(RESTGetValueTests, GetValue_finish) {
+    // Calling finish and expecting the console output.
+    getValue->finish();
+    // Idk why I cant use .contains() here :/
+    ASSERT_TRUE(MockConsole.str().find("GetValue[7] finished\n") != std::string::npos);
+}
