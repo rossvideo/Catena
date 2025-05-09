@@ -178,8 +178,6 @@ void BasicParamInfoRequest::proceed() {
     } catch (...) {
         rc_ = catena::exception_with_status("Unknown error in BasicParamInfoRequest", catena::StatusCode::UNKNOWN);
     }
-
-    finish();
 }
 
 void BasicParamInfoRequest::finish() {

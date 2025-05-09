@@ -53,7 +53,6 @@ void DeviceRequest::proceed() {
             }
             writer_.sendResponse(rc, component);
         }
-        writer_.sendResponse(rc);
         
     // ERROR: Write to stream and end call.
     } catch (catena::exception_with_status& err) {

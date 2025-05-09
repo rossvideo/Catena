@@ -17,21 +17,26 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
 
     // Convert message to JSON
     std::string jsonOutput = "";
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = MessageToJsonString(msg, &jsonOutput, options);
+    // Check if message is not Empty so we don't send empty body
+    if (typeid(msg) != typeid(catena::Empty)) {
+        google::protobuf::util::JsonPrintOptions options; // Default options
+        auto status = MessageToJsonString(msg, &jsonOutput, options);
 
-    if (!status.ok()) {
-        //If conversion fails, this error maps to bad request
-        httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
-        jsonOutput = "";
-    }
+        if (!status.ok()) {
+            //If conversion fails, this error maps to bad request
+            httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
+            jsonOutput = "";
+        }
 
-    // Only write response if we have valid data
-    if (httpStatus.first < 300 && !jsonOutput.empty()) {
-        response << "Content-Length: " << jsonOutput.length() << "\r\n\r\n"
-                << jsonOutput;
-        boost::asio::write(socket_, boost::asio::buffer(response.str()));
+        if (httpStatus.first < 300 && !jsonOutput.empty()) {
+            response << "Content-Length: " << jsonOutput.length() << "\r\n\r\n"
+                    << jsonOutput;
+        }
+    } else {
+        response << "\r\n";
     }
+    
+    boost::asio::write(socket_, boost::asio::buffer(response.str()));
 }
 
 void SSEWriter::sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg) {
@@ -52,13 +57,21 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
     }
 
     //Convert message to JSON
-    std::string jsonOutput;
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = MessageToJsonString(msg, &jsonOutput, options);
+    std::string jsonOutput = "";
+    if (typeid(msg) != typeid(catena::Empty)) {
+        google::protobuf::util::JsonPrintOptions options; // Default options
+        auto status = MessageToJsonString(msg, &jsonOutput, options);
 
-    // Only send SSE event if we have valid data
-    if (httpStatus.first < 300 && status.ok() && !jsonOutput.empty()) {
-        response << "data: " << jsonOutput << "\n\n";
+        if (!status.ok()) {
+            //If conversion fails, this error maps to bad request
+            httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
+            jsonOutput = "";
+        }
+
+        // Only send SSE event if we have valid data
+        if (httpStatus.first < 300 && status.ok() && !jsonOutput.empty()) {
+            response << "data: " << jsonOutput << "\n\n";
+        }
     }
 
     boost::asio::write(socket_, boost::asio::buffer(response.str()));
