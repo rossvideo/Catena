@@ -2,36 +2,12 @@
 using catena::REST::SocketWriter;
 using catena::REST::SSEWriter;
 
-// void SocketWriter::write(const google::protobuf::Message& msg) {
-//     // Adds a JSON message to the end of the response.
-//     // Converting the value to JSON.
-//     std::string jsonOutput;
-//     google::protobuf::util::JsonPrintOptions options; // Default options
-//     auto status = MessageToJsonString(msg, &jsonOutput, options);
-    
-//     // Adding JSON obj to response_ if conversion was successful.
-//     if (status.ok()) {
-//         if (response_.empty()) {
-//             response_ = jsonOutput;
-//         } else {
-//             // add comma
-//             response_ += "," + jsonOutput;
-//             multi_ = true;
-//         }
-//     // Error
-//     } else {
-//         finish(catena::Empty(), catena::exception_with_status("Failed to convert protobuf to JSON", catena::StatusCode::INVALID_ARGUMENT));
-//     }
-// }
-
-
 void SocketWriter::sendResponse(const google::protobuf::Message& msg, const catena::exception_with_status& err) {
     // Converting the value to JSON.
     std::string jsonOutput;
     google::protobuf::util::JsonPrintOptions options; // Default options
     auto status = MessageToJsonString(msg, &jsonOutput, options);
     auto httpStatus = codeMap_.at(err.status);
-
 
     // Adding JSON obj to response_ if conversion was successful.
     if (status.ok()) {
