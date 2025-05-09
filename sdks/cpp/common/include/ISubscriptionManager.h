@@ -62,18 +62,20 @@ public:
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
+     * @param authz The authorizer to use
      * @return true if the subscription was added, false if it already existed
      */
-    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) = 0;
+    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz) = 0;
 
     /**
      * @brief Remove an OID subscription
      * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*")
      * @param dm The device model to use
      * @param rc The status code to return if the operation fails
+     * @param authz The authorizer to use
      * @return true if the subscription was removed, false if it didn't exist
      */
-    virtual bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) = 0;
+    virtual bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz) = 0;
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions

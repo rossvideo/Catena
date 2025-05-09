@@ -139,7 +139,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
                         // If recursive is true, collect all parameter info recursively through visitor pattern
                         if (req_.recursive()) {
                             BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor);
+                            ParamVisitor::traverseParams(param.get(), req_.oid_prefix(), dm_, visitor, *authz);
                         }
 
                         // Begin writing responses back to the client
@@ -178,7 +178,7 @@ void BasicParamInfoRequest::proceed(bool ok) {
                             
                             // Collect all parameter info recursively through visitor pattern
                             BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
-                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
+                            ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor, *authz);
                         }
                         
                         // Begin writing responses back to the client

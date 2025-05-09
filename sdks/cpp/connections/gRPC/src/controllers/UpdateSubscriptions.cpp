@@ -86,7 +86,8 @@ void UpdateSubscriptions::proceed(bool ok) {
                 
                 // Process removed OIDs
                 for (const auto& oid : req_.removed_oids()) {     
-                    if (!service_->getSubscriptionManager().removeSubscription(oid, dm_, rc)) {
+                    catena::exception_with_status rc{"", catena::StatusCode::OK};
+                    if (!service_->getSubscriptionManager().removeSubscription(oid, dm_, rc, *authz)) {
                         throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
                     }
                 }
@@ -95,7 +96,8 @@ void UpdateSubscriptions::proceed(bool ok) {
                 for (const auto& oid : req_.added_oids()) {
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
                     
-                    if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
+                    catena::exception_with_status rc{"", catena::StatusCode::OK};
+                    if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc, *authz)) {
                         throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                     }
                     

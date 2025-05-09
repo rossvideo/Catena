@@ -96,7 +96,9 @@ void DeviceRequest::proceed(bool ok) {
                 if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
-                        service_->getSubscriptionManager().addSubscription(oid, dm_, rc);
+                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc, *authz_)) {
+                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                        }
                     }
                     // Get service subscriptions from the manager
                     subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);

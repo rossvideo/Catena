@@ -88,14 +88,14 @@ void UpdateSubscriptions::proceed() {
 
         // Process removed OIDs
         for (const auto& oid : req_.removed_oids()) {     
-            if (!context_.getSubscriptionManager().removeSubscription(oid, dm_, rc_)) {
+            if (!context_.getSubscriptionManager().removeSubscription(oid, dm_, rc_, *authz)) {
                 break;
             }
         }
 
         // Process added OIDs
         for (const auto& oid : req_.added_oids()) {
-            if (!context_.getSubscriptionManager().addSubscription(oid, dm_, rc_)) {
+            if (!context_.getSubscriptionManager().addSubscription(oid, dm_, rc_, *authz)) {
                 break;
             }
         }
