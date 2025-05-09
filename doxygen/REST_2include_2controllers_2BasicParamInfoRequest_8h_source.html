@@ -187,7 +187,7 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2BasicParam
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    </div>
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    ISocketReader&amp; context_;</div>
 <div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    </div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    SSEWriter writer_;</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>    std::unique_ptr&lt;SSEWriter&gt; writer_{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    </div>
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    <a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> rc_;</div>
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>

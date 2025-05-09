@@ -1,5 +1,11 @@
 var NAVTREEINDEX7 =
 {
+"structcatena_1_1common_1_1ParamTag.html":[8,0,0,0,26],
+"structcatena_1_1common_1_1ParamTag.html":[10,0,0,0,26],
+"structcatena_1_1common_1_1StructInfo.html":[10,0,0,0,33],
+"structcatena_1_1common_1_1StructInfo.html":[8,0,0,0,33],
+"structcatena_1_1exception__with__status.html":[10,0,0,5],
+"structcatena_1_1exception__with__status.html":[8,0,0,5],
 "structcatena_1_1meta_1_1is__streamable.html":[8,0,0,2,2],
 "structcatena_1_1meta_1_1is__streamable.html":[10,0,0,2,2],
 "structcatena_1_1meta_1_1is__streamable_3_01T_00_01std_1_1void__t_3_01decltype_07std_1_1cout_3_3_f018ad5e508e96c26725f0228af2f889.html":[10,0,0,2,3],
