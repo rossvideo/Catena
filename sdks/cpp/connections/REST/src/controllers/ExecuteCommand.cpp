@@ -10,7 +10,7 @@ using catena::common::IParam;
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
 
-ExecuteCommand::ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -19,8 +19,8 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevi
         // Initialize the request
         req_.set_slot(context_.slot());
         req_.set_oid("/" + context_.fields("oid"));
-        req_.set_respond(context_.fields("respond") == "true");
-        req_.set_proceed(context_.fields("proceed") == "true");
+        req_.set_respond(context_.hasField("respond"));
+        req_.set_proceed(context_.hasField("proceed"));
 
         // Parse JSON body if present
         if (!context_.jsonBody().empty()) {
@@ -38,7 +38,8 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, SocketReader& context, IDevi
         }
     } catch (...) {
         catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        writer_.write(err);
+        catena::Empty empty;
+        writer_.finish(empty, err);
     }
 }
 
@@ -60,7 +61,8 @@ void ExecuteCommand::proceed() {
         // If the command is not found, return an error
         if (command == nullptr) {
             if (req_.respond()) {
-                writer_.write(rc);
+                catena::Empty empty;
+                writer_.finish(empty, rc);
             }
             return;
         }
@@ -70,20 +72,16 @@ void ExecuteCommand::proceed() {
 
         // Only write response if respond is true
         if (req_.respond()) {
-            if (rc.status == catena::StatusCode::OK) {
-                writer_.finish(res);
-            } else {
-                writer_.write(rc);
-            }
+            writer_.finish(res, rc);
         }
     } catch (catena::exception_with_status& err) {
         if (req_.respond()) {
-            writer_.write(err);
+            writer_.finish(catena::Empty(), err);
         }
     } catch (...) {
         if (req_.respond()) {
             catena::exception_with_status err("Unknown error", catena::StatusCode::UNKNOWN);
-            writer_.write(err);
+            writer_.finish(catena::Empty(), err);
         }
     }
 }

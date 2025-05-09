@@ -49,6 +49,30 @@ namespace fs = std::filesystem;
 
 #include "SocketReader.h"
 
+// Fixture
+class RESTGetValueTests : public ::testing::Test {
+    protected:
+    void SetUp() override {
+        clientSocket = tcp::socket(io_context);
+        serverSocket = tcp::socket(io_context);
+        acceptor = tcp::acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
+        // Linking client and server sockets.
+        clientSocket.connect(acceptor.local_endpoint());
+        acceptor.accept(serverSocket);
+    }
+  
+    void TearDown() override {
+        // Cleanup code here
+    }
+  
+    boost::asio::io_context io_context;
+    tcp::socket clientSocket;
+    tcp::socket serverSocket;
+    tcp::acceptor acceptor;
+    MockSocketReader context;
+    MockDevice dm;
+};
+
 // Writes a request to and returns server socket for SocketReader tests.
 std::unique_ptr<tcp::socket> mockServerSocket() {
     boost::asio::io_context io_context;

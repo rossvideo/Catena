@@ -65,13 +65,6 @@
 
 using namespace catena::common;
 
-// set up the command line parameters
-ABSL_FLAG(uint16_t, port, 443, "Catena REST API port");
-ABSL_FLAG(std::string, certs, "${HOME}/test_certs", "path/to/certs/files");
-ABSL_FLAG(bool, mutual_authc, false, "use this to require client to authenticate");
-ABSL_FLAG(bool, authz, false, "use OAuth token authorization");
-ABSL_FLAG(std::string, static_root, getenv("HOME"), "Specify the directory to search for external objects");
-
 catena::REST::CatenaServiceImpl *globalApi = nullptr;
 std::atomic<bool> globalLoop = true;
 

@@ -30,7 +30,7 @@
 
 /**
  * @file SetValue.h
- * @brief Implements REST SetValue RPC.
+ * @brief Implements REST SetValue controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -44,7 +44,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the SetValue REST RPC.
+ * @brief ICallData class for the SetValue REST controller.
  */
 class SetValue : public MultiSetValue {
   // Specifying which Device and IParam to use (defaults to catena::...)
@@ -53,21 +53,21 @@ class SetValue : public MultiSetValue {
 
   public:
     /**
-     * @brief Constructor for the SetValue RPC.
+     * @brief Constructor for the SetValue controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
-     * @param dm The device to set the value of.
+     * @param dm The device to set the value in.
      */ 
-    SetValue(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    SetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new rest object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
      * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new SetValue(socket, context, dm);
     }
   private:

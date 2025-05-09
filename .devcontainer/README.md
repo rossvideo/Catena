@@ -28,35 +28,12 @@ The version of each tool is defined in [toolchain-cpp.env](https://github.com/ro
 code --install-extension ms-vscode-remote.remote-containers
 ```
 
-3. Generate GitHub personal accesss token
-
-Request to be in rossvideo github group and set up SSO
-Navigate to user settings in github  
-Developer settings  
-Personal access token  
-Tokens (classic)  
-Generate new token (classic)  
-Use passkey  
-Enable read:packages  
-Generate token  
-Save key somewhere  
-Navigate back to Tokens (classic)  
-Configure SSO -> rossvideo -> Authorize  
-
-4. Run Powershell script to generate WSL ubuntu instance and setup docker
+3. Run Powershell script to generate WSL ubuntu instance and setup docker
 ```sh
 .\wsl.ps1 $USERNAME $GITHUB_SIGNING_NAME $ROSS_EMAIL
 ```
 
-5. Login to docker using the generated key
-
-From inside the Cursor terminal
-```sh
-echo $KEY | docker login ghcr.io -u $USERNAME --password-stdin
-```
-where KEY is the token you made and USERNAME is your github 
-
-6. Setup docker inside WSL
+4. Setup docker inside WSL
 
 From inside Cursor,
 ```sh

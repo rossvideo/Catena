@@ -38,12 +38,24 @@
 
 // protobuf interface
 #include <interface/service.grpc.pb.h>
-
+#include <grpcpp/grpcpp.h>
+#include <jwt-cpp/jwt.h>
 
 #include <string>
 #include <memory>
 
 namespace catena {
+namespace gRPC {
+
+/**
+ * @brief UNUSED. Will probably be removed at later date.
+ */
+class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
+    public:
+        grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
+                             OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override;
+};
+    
 
 /**
  * @brief expands any environment variables in str.
@@ -62,4 +74,5 @@ void expandEnvVariables(std::string &str);
  */
 std::shared_ptr<::grpc::ServerCredentials> getServerCredentials();
 
+} // namespace gRPC
 } // namespace catena

@@ -10,7 +10,7 @@ The recommended process is hopefully simple:
 2. Create two files: `device_model.cpp` and `CMakeLists.txt`. `device_model.cpp` can be left empty for now.
 3. Include the `.../common/include` directory in your `CMakeList.txt` file using `target_include_directories()`.
 4. Place the three of these files together in a directory `device_model` and include it as a subdirectory in the parent directory's `CMakeLists.txt` file.
-5. Build Catena following the steps documented [here](../sdks/cpp/docs/cpp_sdk_main_page.md). If the CMake file has been configured correctly, this should generate your device's code and create an executable named after your folder.
+5. Build Catena following the steps documented [here](doxygen/index.html). If the CMake file has been configured correctly, this should generate your device's code and create an executable named after your folder.
 6. In your build folder, use `./path/to/your/device/folder/folderName` to run your model. This should do nothing at the moment.
 7. If working, add your buisness logic to `device_model.cpp`.
 

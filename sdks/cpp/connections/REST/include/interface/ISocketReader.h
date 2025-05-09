@@ -75,17 +75,23 @@ class ISocketReader {
      */
     virtual void read(tcp::socket& socket, bool authz = false) = 0;
     /**
-     * @brief Returns the method of the request.
+     * @brief Returns the HTTP method of the request.
      */
     virtual const std::string& method() const = 0;
     /**
-     * @brief Returns the rpc of the request.
+     * @brief Returns the REST endpoint of the request.
      */
     virtual const std::string& service() const = 0;
     /**
      * @brief Returns the slot of the device to make the API call on.
      */
     virtual uint32_t slot() const = 0;
+    /**
+     * @brief Returns true if the field exists in the URL, regardless of its value.
+     * 
+     * @param key The name of the field to check.
+     */
+    virtual bool hasField(const std::string& key) const = 0;
     /**
      * @brief Returns the field "key" queried from the URL, or an empty sting
      * if it does not exist.
@@ -102,7 +108,7 @@ class ISocketReader {
      */
     virtual const std::string& origin() const = 0;
     /**
-     * @brief Returns the language to return the resposne in.
+     * @brief Returns the language to return the response in.
      */
     virtual const std::string& language() const = 0;
     /**

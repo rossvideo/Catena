@@ -50,6 +50,8 @@
 #include <string>
 
 namespace catena {
+namespace gRPC {
+
 /**
  * @brief Holds information about connected Peers.
  */
@@ -119,4 +121,6 @@ class PeerInfo {
     grpc::ServerContext* context_; /**< the peer's connection context*/
     Writer* writer_;               /**< the peer's writer, could be nullptr if one hasn't been connected */
 };
-}  // namespace catena
+
+}; // namespace gRPC
+}; // namespace catena
