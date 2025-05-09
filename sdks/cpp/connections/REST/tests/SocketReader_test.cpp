@@ -50,91 +50,97 @@ namespace fs = std::filesystem;
 #include "SocketReader.h"
 
 // Fixture
-class RESTGetValueTests : public ::testing::Test {
+class RESTSocketReaderTests : public ::testing::Test {
     protected:
+    // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
-        clientSocket = tcp::socket(io_context);
-        serverSocket = tcp::socket(io_context);
-        acceptor = tcp::acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
+        tcp::socket clientSocket(io_context);
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
         // Linking client and server sockets.
-        clientSocket.connect(acceptor.local_endpoint());
-        acceptor.accept(serverSocket);
+        serverSocket.connect(acceptor.local_endpoint());
+        acceptor.accept(clientSocket);
+        // Compiling fields
+        std::string fieldsStr = "";
+        for (auto [key, value] : fields) {
+            if (!fieldsStr.empty()) {
+                fieldsStr += "&";
+            }
+            fieldsStr += key + "=" + value;
+        }
+        // Writing request to server.
+        std::string request = method + " " + service + "/" + std::to_string(slot) + "?" + fieldsStr + " HTTP/1.1\n"
+                            "Origin: " + origin + "\n"
+                            "User-Agent: test_agent\n"
+                            "Authorization: Bearer " + jwsToken + " \n"
+                            "Content-Length: " + std::to_string(jsonBody.length()) + "\n"
+                            "\r\n" + jsonBody + "\n"
+                            "\r\n\r\n";
+        boost::asio::write(clientSocket, boost::asio::buffer(request));
     }
   
-    void TearDown() override {
-        // Cleanup code here
-    }
-  
+    void TearDown() override { /* Cleanup code here */ }
+    
     boost::asio::io_context io_context;
-    tcp::socket clientSocket;
-    tcp::socket serverSocket;
-    tcp::acceptor acceptor;
-    MockSocketReader context;
-    MockDevice dm;
+    tcp::socket serverSocket{io_context};
+    catena::common::SubscriptionManager sm;    
+    catena::REST::SocketReader socketReader{sm};
+
+    // Test request data
+    std::string method = "PUT";
+    std::string service = "/v1/test-call";
+    uint32_t slot = 1;
+    // Should NOT have a field called "doesNotExist".
+    std::unordered_map<std::string, std::string> fields = {
+        {"testField1", "1"},
+        {"testField2", "2"}
+    };
+    std::string jwsToken = "test_bearer";
+    std::string origin = "test_origin";
+    std::string jsonBody = "{\n  test_body\n}";
 };
 
-// Writes a request to and returns server socket for SocketReader tests.
-std::unique_ptr<tcp::socket> mockServerSocket() {
-    boost::asio::io_context io_context;
-    tcp::socket serverSocket(io_context);
-    tcp::socket clientSocket(io_context);
-    tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
-    // Linking client and server sockets.
-    serverSocket.connect(acceptor.local_endpoint());
-    acceptor.accept(clientSocket);
-    // Writing request to server.
-    std::string request = "PUT /v1/test-call/1?testField1=1&testField2=2 HTTP/1.1\n"
-                          "Origin: test_origin\n"
-                          "User-Agent: test_agent\n"
-                          "Authorization: Bearer test_bearer \n"
-                          "Content-Length: 15\n"
-                          "\r\n"
-                          "{\n"
-                          "  test_body\n"
-                          "}\n"
-                          "\r\n\r\n";
-    boost::asio::write(clientSocket, boost::asio::buffer(request));
-
-    // Returning the serverSocket.
-    return std::make_unique<tcp::socket>(std::move(serverSocket));
-}
-
 // Testing SocketReader with authorization disabled.
-TEST(REST_API_tests, SocketReader_NormalCase) {
-    auto serverSocket = mockServerSocket();
-    // Creating a SocketReader and reading the request.
-    catena::common::SubscriptionManager sm;    
-    catena::REST::SocketReader socketReader(sm);
-    socketReader.read(*serverSocket, false);
+TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
+    // Reading the request from the serverSocket.
+    socketReader.read(serverSocket, false);
     // Checking answers.
-    EXPECT_EQ(socketReader.method(),               "PUT"              );
-    EXPECT_EQ(socketReader.service(),             "/v1/test-call"     );
-    EXPECT_EQ(socketReader.slot(),                 1                  );
-    EXPECT_EQ(socketReader.fields("testField1"),   "1"                );
-    EXPECT_EQ(socketReader.fields("testField2"),   "2"                );
-    EXPECT_EQ(socketReader.fields("testField3"),   ""                 );
-    EXPECT_EQ(socketReader.authorizationEnabled(), false              );
-    EXPECT_EQ(socketReader.jwsToken(),             ""                 );
-    EXPECT_EQ(socketReader.origin(),               "test_origin"      );
-    EXPECT_EQ(socketReader.jsonBody(),             "{\n  test_body\n}");
+    EXPECT_EQ(socketReader.method(),               method    );
+    EXPECT_EQ(socketReader.service(),              service   );
+    EXPECT_EQ(socketReader.slot(),                 slot      );
+    for (auto [key, value] : fields) {
+        EXPECT_EQ(socketReader.hasField(key),       true     );
+        EXPECT_EQ(socketReader.fields(key),         value    );
+    }
+    EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
+    EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
+    EXPECT_EQ(socketReader.authorizationEnabled(),   false   );
+    EXPECT_EQ(socketReader.jwsToken(),               ""      );
+    EXPECT_EQ(socketReader.origin(),                 origin  );
+    EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
 }
 
 // Testing SocketReader with authorization enabled.
-TEST(REST_API_tests, SocketReader_AuthzCase) {
-    auto serverSocket = mockServerSocket();
-    // Creating a SocketReader and reading the request.
-    catena::common::SubscriptionManager sm;    
-    catena::REST::SocketReader socketReader(sm);
-    socketReader.read(*serverSocket, true);
+TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
+    // Reading the request from the serverSocket.
+    socketReader.read(serverSocket, true);
     // Checking answers.
-    EXPECT_EQ(socketReader.method(),               "PUT"              );
-    EXPECT_EQ(socketReader.service(),             "/v1/test-call"     );
-    EXPECT_EQ(socketReader.slot(),                 1                  );
-    EXPECT_EQ(socketReader.fields("testField1"),   "1"                );
-    EXPECT_EQ(socketReader.fields("testField2"),   "2"                );
-    EXPECT_EQ(socketReader.fields("testField3"),   ""                 );
-    EXPECT_EQ(socketReader.authorizationEnabled(), true               );
-    EXPECT_EQ(socketReader.jwsToken(),             "test_bearer"      );
-    EXPECT_EQ(socketReader.origin(),               "test_origin"      );
-    EXPECT_EQ(socketReader.jsonBody(),             "{\n  test_body\n}");
+    EXPECT_EQ(socketReader.method(),               method    );
+    EXPECT_EQ(socketReader.service(),              service   );
+    EXPECT_EQ(socketReader.slot(),                 slot      );
+    for (auto [key, value] : fields) {
+        EXPECT_EQ(socketReader.hasField(key),       true     );
+        EXPECT_EQ(socketReader.fields(key),         value    );
+    }
+    EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
+    EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
+    EXPECT_EQ(socketReader.authorizationEnabled(),   true    );
+    EXPECT_EQ(socketReader.jwsToken(),               jwsToken);
+    EXPECT_EQ(socketReader.origin(),                 origin  );
+    EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
 }
+
+// Testing to make sure SocketReader saved the Sub Manager.
+// TEST_F(RESTSocketReaderTests, SocketReader_GetSubManager) {
+//     // Checking answers.
+//     EXPECT_EQ(socketReader.getSubscriptionManager(), sm);
+// }
