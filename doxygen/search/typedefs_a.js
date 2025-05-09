@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['writer_0',['Writer',['../classcatena_1_1PeerInfo.html#a68defdeb7150aa515a6196ebc6498023',1,'catena::PeerInfo']]]
+  ['writer_0',['Writer',['../classcatena_1_1gRPC_1_1PeerInfo.html#a878029a8603b7c2f957c54d6324f2c3d',1,'catena::gRPC::PeerInfo']]]
 ];
