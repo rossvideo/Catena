@@ -21,7 +21,7 @@
 #include <thread>
 #include <atomic>
 
-using catena::PeerInfo;
+using catena::gRPC::PeerInfo;
 using catena::common::IParam;
 //using catena::ParamIndex;
 

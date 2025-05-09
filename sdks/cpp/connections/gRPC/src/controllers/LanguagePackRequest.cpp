@@ -29,19 +29,20 @@
  */
 
 // connections/gRPC
-#include <LanguagePackRequest.h>
+#include <controllers/LanguagePackRequest.h>
+using catena::gRPC::LanguagePackRequest;
 
 // Initializes the object counter for LanguagePackRequest to 0.
-int CatenaServiceImpl::LanguagePackRequest::objectCounter_ = 0;
+int LanguagePackRequest::objectCounter_ = 0;
 
-CatenaServiceImpl::LanguagePackRequest::LanguagePackRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+LanguagePackRequest::LanguagePackRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed(ok);
 }
 
-void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service, bool ok) {
+void LanguagePackRequest::proceed(bool ok) {
     std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
@@ -55,7 +56,7 @@ void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service,
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestLanguagePackRequest(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            service_->RequestLanguagePackRequest(&context_, &req_, &responder_, service_->cq(), service_->cq(), this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
@@ -88,7 +89,7 @@ void CatenaServiceImpl::LanguagePackRequest::proceed(CatenaServiceImpl *service,
          */
         case CallStatus::kFinish:
             std::cout << "LanguagePackRequest[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:

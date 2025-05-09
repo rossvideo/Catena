@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -38,58 +36,62 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "CallData.h"
+
+namespace catena {
+namespace gRPC {
 
 /**
 * @brief CallData class for the LanguagePackRequest RPC
 */
-class CatenaServiceImpl::LanguagePackRequest : public CallData {
-    public:
-        /**
-         * @brief Constructor for the CallData class of the LanguagePackRequest
-         * gRPC. Calls proceed() once initialized.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        LanguagePackRequest(CatenaServiceImpl *service, IDevice& dm, bool ok);
-        /**
-         * @brief Manages the steps of the LanguagePackRequest command through
-         * the state variable status.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
-         */
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-    private:
-        /**
-         * @brief Parent CatenaServiceImpl.
-         */
-        CatenaServiceImpl *service_;
-        /**
-         * @brief Server request (slot, languageId).
-         */
-        catena::LanguagePackRequestPayload req_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        grpc::ServerAsyncResponseWriter<::catena::DeviceComponent_ComponentLanguagePack> responder_;
-        /**
-         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
-         */
-        CallStatus status_;
-        /**
-         * @brief The device containing the language we are requesting.
-         */
-        IDevice& dm_;
-        /**
-         * @brief The object's unique id.
-         */
-        int objectId_;
-        /**
-         * @brief The total # of LanguagePackRequest objects.
-         */
-        static int objectCounter_;
+class LanguagePackRequest : public CallData {
+  public:
+    /**
+     * @brief Constructor for the CallData class of the LanguagePackRequest
+     * gRPC. Calls proceed() once initialized.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param dm - Address of the device to get the value from.
+     * @param ok - Flag to check if the command was successfully executed.
+     */ 
+    LanguagePackRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    /**
+     * @brief Manages the steps of the LanguagePackRequest command through
+     * the state variable status.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param ok - Flag to check if the command was successfully executed.
+     */
+    void proceed(bool ok) override;
+  private:
+    /**
+     * @brief Server request (slot, languageId).
+     */
+    catena::LanguagePackRequestPayload req_;
+    /**
+     * @brief gRPC async response writer.
+     */
+    grpc::ServerAsyncResponseWriter<::catena::DeviceComponent_ComponentLanguagePack> responder_;
+    /**
+     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     */
+    CallStatus status_;
+    /**
+     * @brief The device containing the language we are requesting.
+     */
+    IDevice& dm_;
+    /**
+     * @brief The object's unique id.
+     */
+    int objectId_;
+    /**
+     * @brief The total # of LanguagePackRequest objects.
+     */
+    static int objectCounter_;
 };
+
+}; // namespace gRPC
+}; // namespace catena

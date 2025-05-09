@@ -59,7 +59,7 @@ using catena::common::IDevice;
 using catena::common::timeNow;
 
 /**
- * @brief Controller class for handling ExecuteCommand REST requests.
+ * @brief ICallData class for the ExecuteCommand REST controller.
  */
 class ExecuteCommand : public ICallData {
   public:

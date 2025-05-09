@@ -32,7 +32,8 @@
 #include <Tags.h>
 
  // connections/gRPC
-#include <ExternalObjectRequest.h>
+#include <controllers/ExternalObjectRequest.h>
+using catena::gRPC::ExternalObjectRequest;
 
 // type aliases
 using catena::common::ParamTag;
@@ -46,25 +47,25 @@ using catena::common::Path;
 #include <filesystem>
 
 // Counter for generating unique object IDs - static, so initializes at start
-int CatenaServiceImpl::ExternalObjectRequest::objectCounter_ = 0;
+int ExternalObjectRequest::objectCounter_ = 0;
 
 /** 
  * Constructor which initializes and registers the current
  * ExternalObjectRequest object, then starts the process
  */
-CatenaServiceImpl::ExternalObjectRequest::ExternalObjectRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+ExternalObjectRequest::ExternalObjectRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, writer_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // start the process
+    proceed(ok);  // start the process
 }
 
 /** 
  * Manages gRPC command execution process by transitioning between states and
  * handling errors and responses accordingly 
  */
-void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *service, bool ok) {
+void ExternalObjectRequest::proceed(bool ok) {
     std::cout << "ExternalObjectRequest proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                 << std::endl;
@@ -83,7 +84,7 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
          */
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestExternalObjectRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_,
+            service_->RequestExternalObjectRequest(&context_, &req_, &writer_, service_->cq(), service_->cq(),
                                             this);
             break;
 
@@ -104,7 +105,7 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
         case CallStatus::kWrite:
             try {
                 std::cout << "sending external object " << req_.oid() <<"\n";
-                std::string path = service_->EOPath_;
+                std::string path = service_->EOPath();
                 path.append(req_.oid());
 
                 // Check if the file exists
@@ -154,7 +155,7 @@ void CatenaServiceImpl::ExternalObjectRequest::proceed(CatenaServiceImpl *servic
          */
         case CallStatus::kFinish:
             std::cout << "ExternalObjectRequest[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
 
         // Throws an error if the state is not recognized

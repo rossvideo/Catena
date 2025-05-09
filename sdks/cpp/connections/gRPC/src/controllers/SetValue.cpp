@@ -28,42 +28,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
-#include <SetValue.h>
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
+#include <controllers/SetValue.h>
+using catena::gRPC::SetValue;
 
 // Initializes the object counter for SetValue to 0.
-int CatenaServiceImpl::SetValue::objectCounter_ = 0;
+int SetValue::objectCounter_ = 0;
 
-CatenaServiceImpl::SetValue::SetValue(CatenaServiceImpl *service, IDevice& dm, bool ok)
+SetValue::SetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok)
     : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "SetValue";
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed( ok);
 }
 
-void CatenaServiceImpl::SetValue::request_() {
-    service_->RequestSetValue(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+void SetValue::request_() {
+    service_->RequestSetValue(&context_, &req_, &responder_, service_->cq(), service_->cq(), this);
 }
 
-void CatenaServiceImpl::SetValue::create_(CatenaServiceImpl *service, IDevice& dm, bool ok) {
-    new SetValue(service, dm, ok);
+void SetValue::create_(bool ok) {
+    new SetValue(service_, dm_, ok);
 }
 
-void CatenaServiceImpl::SetValue::toMulti_() {
+void SetValue::toMulti_() {
     reqs_.set_slot(req_.slot());
     reqs_.add_values()->CopyFrom(req_.value());
 }

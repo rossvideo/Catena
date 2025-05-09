@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ross Video Ltd
+ * Copyright 2025 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,50 +29,45 @@
  */
 
 /**
- * @file ServiceCredentials.h
- * @brief A collection of functions to set up grpc::ServerCredentials object
- * and expand envrionment variables in str.
- * @copyright Copyright © 2024 Ross Video Ltd
- * @author Unknown
+ * @file ICallData.h
+ * @brief Interface class for gRPC CallData classes.
+ * @author benjamin.whitten@rossvideo.com
+ * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-// protobuf interface
-#include <interface/service.grpc.pb.h>
-#include <grpcpp/grpcpp.h>
-#include <jwt-cpp/jwt.h>
+#pragma once
 
+// common
+#include <Status.h>
+
+// std
 #include <string>
-#include <memory>
 
 namespace catena {
 namespace gRPC {
 
 /**
- * @brief UNUSED. Will probably be removed at later date.
+ * @brief Interface class for gRPC CallData classes.
  */
-class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
-    public:
-        grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
-                             OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override;
+class ICallData {
+  public:
+    /**
+     * @brief Proceed function to be implemented by the CallData classes.
+     */
+    virtual void proceed(bool ok) = 0;
+    /**
+     * @brief Destructor for the CallData class.
+     */
+    virtual ~ICallData() {}
+  protected:
+    /**
+     * @brief Extracts the JWS Bearer token from the server context's
+     * client metadata.
+     * @return The JWS Bearer token as a string.
+     * @throw catena::exception_with_status if the token is not found.
+     */
+    virtual std::string jwsToken_() const = 0;
 };
-    
 
-/**
- * @brief expands any environment variables in str.
- * 
- * N.B. this is done in-place and the value of str is likely different after execution.
- * 
- * @param str the string in which to expand any environment variables it contains.
- */
-void expandEnvVariables(std::string &str);
-
-
-/**
- * @brief sets up a ServerCredentials object from the cli flags
- * 
- * @return initialized ServerCredentials
- */
-std::shared_ptr<::grpc::ServerCredentials> getServerCredentials();
-
-} // namespace gRPC
-} // namespace catena
+};
+};

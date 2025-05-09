@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -39,56 +37,63 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 // connections/gRPC
-#include <ServiceImpl.h>
-#include <MultiSetValue.h>
+#include "controllers/MultiSetValue.h"
+
+namespace catena {
+namespace gRPC {
 
 /**
 * @brief CallData class for the SetValue RPC
 */
-class CatenaServiceImpl::SetValue : public MultiSetValue {
-    public:
-        /**
-         * @brief Constructor for the CallData class of the SetValue
-         * gRPC. Calls proceed() once initialized.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        SetValue(CatenaServiceImpl *service, IDevice& dm, bool ok);
-    private:
-        /**
-         * @brief Requests Set Value from the system and adds the request to
-         * the MultiSetValuePayload in MultiSetValue.
-         * 
-         * Helper function to allow reuse of MultiSetValue's proceed().
-         */
-        void request_() override;
-        /**
-         * @brief Creates a new SetValue object to serve other clients while
-         * processing.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         *  
-         * Helper function to allow reuse of MultiSetValue's proceed().
-         */ 
-        void create_(CatenaServiceImpl *service, IDevice& dm, bool ok) override;
-        /**
-         * @brief Converts req_ to a MultiSetValuePayload reqs_.
-         *  
-         * Helper function to allow reuse of MultiSetValue's proceed().
-         */
-        void toMulti_() override;
+class SetValue : public MultiSetValue {
+  public:
+    /**
+     * @brief Constructor for the CallData class of the SetValue
+     * gRPC. Calls proceed() once initialized.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param dm - Address of the device to get the value from.
+     * @param ok - Flag to check if the command was successfully executed.
+     */ 
+    SetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+  private:
+    /**
+     * @brief Requests Set Value from the system and adds the request to
+     * the MultiSetValuePayload in MultiSetValue.
+     * 
+     * Helper function to allow reuse of MultiSetValue's proceed().
+     */
+    void request_() override;
+    /**
+     * @brief Creates a new SetValue object to serve other clients while
+     * processing.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param dm - Address of the device to get the value from.
+     * @param ok - Flag to check if the command was successfully executed.
+     *  
+     * Helper function to allow reuse of MultiSetValue's proceed().
+     */ 
+    void create_(bool ok) override;
+    /**
+     * @brief Converts req_ to a MultiSetValuePayload reqs_.
+     *  
+     * Helper function to allow reuse of MultiSetValue's proceed().
+     */
+    void toMulti_() override;
 
-        /**
-         * @brief The SetValuePayload recieved from request().
-         */
-        catena::SingleSetValuePayload req_;
-        /**
-         * @brief The total # of SetValue objects.
-         */
-        static int objectCounter_;
+    /**
+     * @brief The SetValuePayload recieved from request().
+     */
+    catena::SingleSetValuePayload req_;
+    /**
+     * @brief The total # of SetValue objects.
+     */
+    static int objectCounter_;
 };
+
+}; // namespace gRPC
+}; // namespace catena

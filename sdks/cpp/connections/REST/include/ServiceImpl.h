@@ -29,7 +29,7 @@
  */
 
 /**
- * @file ServiceImpl
+ * @file ServiceImpl.h
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com

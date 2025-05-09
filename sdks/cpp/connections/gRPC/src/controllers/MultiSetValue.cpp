@@ -28,46 +28,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
-#include <MultiSetValue.h>
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
+#include <controllers/MultiSetValue.h>
+using catena::gRPC::MultiSetValue;
 
 // Initializes the object counter for SetValue to 0.
-int CatenaServiceImpl::MultiSetValue::objectCounter_ = 0;
+int MultiSetValue::objectCounter_ = 0;
 
-CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDevice& dm, bool ok)
+MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok)
     : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "MultiSetValue";
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed(ok);
 }
 
-CatenaServiceImpl::MultiSetValue::MultiSetValue(CatenaServiceImpl *service, IDevice& dm, bool ok, int objectId)
-    : service_{service}, dm_{dm}, objectId_(objectId), responder_(&context_),
+MultiSetValue::MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok, int objectId)
+    : CallData(service), dm_{dm}, objectId_(objectId), responder_(&context_),
     status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {}
 
-void CatenaServiceImpl::MultiSetValue::request_() {
-    service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq_, service_->cq_, this);
+void MultiSetValue::request_() {
+    service_->RequestMultiSetValue(&context_, &reqs_, &responder_, service_->cq(), service_->cq(), this);
 }
 
-void CatenaServiceImpl::MultiSetValue::create_(CatenaServiceImpl *service, IDevice& dm, bool ok) {
-    new MultiSetValue(service, dm, ok);
+void MultiSetValue::create_(bool ok) {
+    new MultiSetValue(service_, dm_, ok);
 }
 
-void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool ok) { 
+void MultiSetValue::proceed(bool ok) { 
     std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                 << std::endl;
@@ -91,11 +78,12 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            create_(service_, dm_, ok);
+            create_(ok);
             context_.AsyncNotifyWhenDone(this);
             try {
                 // Convert to MultiSetValuePayload if not already.
                 toMulti_();
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 /**
                  * Creating authorization object depending on client scopes.
                  * Shared ptr to maintain lifetime of object. Raw ptr ensures
@@ -103,14 +91,13 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
                  */
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
-                if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
                 // Locking device and setting value(s).
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 std::lock_guard lg(dm_.mutex());
                 // Trying and commiting the multiSetValue.
                 if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
@@ -141,7 +128,7 @@ void CatenaServiceImpl::MultiSetValue::proceed(CatenaServiceImpl *service, bool 
          */
         case CallStatus::kFinish:
             std::cout << typeName << "[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:
