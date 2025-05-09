@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -40,62 +38,66 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "CallData.h"
+
+namespace catena {
+namespace gRPC {
 
 /**
 * @brief CallData class for the ExecuteCommand RPC
 */
-class CatenaServiceImpl::ExecuteCommand : public CallData {
-    public:
-        /**
-         * @brief Constructor for ExecuteCommand class
-         *
-         * @param service the service to which the command wll be executed
-         * @param dm the device to execute the command to
-         * @param ok flag to check if command was successfully executed 
-         */
-        ExecuteCommand(CatenaServiceImpl *service, IDevice& dm, bool ok);
-        /**
-         * @brief Manages gRPC command execution through a state machine
-         *
-         * @param service the service to which the command wll be executed
-         * @param ok flag to check if command was successfully executed        
-         */
-        void proceed(CatenaServiceImpl *service, bool ok) override;
+class ExecuteCommand : public CallData {
+  public:
+    /**
+     * @brief Constructor for ExecuteCommand class
+     *
+     * @param service the service to which the command wll be executed
+     * @param dm the device to execute the command to
+     * @param ok flag to check if command was successfully executed 
+     */
+    ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    /**
+     * @brief Manages gRPC command execution through a state machine
+     *
+     * @param service the service to which the command wll be executed
+     * @param ok flag to check if command was successfully executed        
+     */
+    void proceed(bool ok) override;
 
-    private:
-        /**
-         * @brief Pointer to CatenaServiceImpl
-         */
-        CatenaServiceImpl *service_;
-        /**
-         * @brief Request payload for command
-         */
-        catena::ExecuteCommandPayload req_;
-        /**
-         * @brief Response payload for command
-         */
-        catena::CommandResponse res_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        ServerAsyncWriter<catena::CommandResponse> writer_;
-        /**
-         * @brief Represents the current status of the command execution
-         * (kCreate, kProcess, kFinish, etc.)
-         */
-        CallStatus status_;
-        /**
-         * @brief Reference to the device to execute the command to
-         */
-        IDevice& dm_;
-        /**
-         * @brief Unique identifier for command object
-         */
-        int objectId_;
-        /**
-         * @brief Counter to generate unique object IDs for each new object
-         */
-        static int objectCounter_;
+  private:
+    /**
+     * @brief Request payload for command
+     */
+    catena::ExecuteCommandPayload req_;
+    /**
+     * @brief Response payload for command
+     */
+    catena::CommandResponse res_;
+    /**
+     * @brief gRPC async response writer.
+     */
+    ServerAsyncWriter<catena::CommandResponse> writer_;
+    /**
+     * @brief Represents the current status of the command execution
+     * (kCreate, kProcess, kFinish, etc.)
+     */
+    CallStatus status_;
+    /**
+     * @brief Reference to the device to execute the command to
+     */
+    IDevice& dm_;
+    /**
+     * @brief Unique identifier for command object
+     */
+    int objectId_;
+    /**
+     * @brief Counter to generate unique object IDs for each new object
+     */
+    static int objectCounter_;
 };
+
+}; // namespace gRPC
+}; // namespace catena

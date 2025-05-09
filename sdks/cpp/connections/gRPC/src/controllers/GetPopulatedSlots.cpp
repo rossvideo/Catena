@@ -29,61 +29,64 @@
  */
 
 // connections/gRPC
-#include <ListLanguages.h>
+#include <controllers/GetPopulatedSlots.h>
+using catena::gRPC::GetPopulatedSlots;
 
-// Initializes the object counter for SetValue to 0.
-int CatenaServiceImpl::ListLanguages::objectCounter_ = 0;
+// Initializes the object counter for GetPopulatedSlots to 0.
+int GetPopulatedSlots::objectCounter_ = 0;
 
-CatenaServiceImpl::ListLanguages::ListLanguages(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
+/**
+ * Constructor which initializes and registers the current GetPopulatedSlots
+ * object, then starts the process.
+ */
+GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, responder_(&context_), status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
-    service->registerItem(this);
-    proceed(service, ok);
+    service_->registerItem(this);
+    proceed(ok);
 }
 
-void CatenaServiceImpl::ListLanguages::proceed(CatenaServiceImpl *service, bool ok) {
-    std::cout << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: "
-              << std::boolalpha << ok << std::endl;
+// Manages gRPC command execution process using the state variable status.
+void GetPopulatedSlots::proceed( bool ok) {
+    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: " << timeNow()
+                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
+                << std::endl;
+
     if(!ok){
         status_ = CallStatus::kFinish;
     }
+
     switch(status_){
         /** 
-         * kCreate: Updates status to kProcess and requests the ListLanguages
-         * command from the service.
+         * kCreate: Updates status to kProcess and requests the
+         * GetPopulatedSlots command from the service.
          */ 
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestListLanguages(&context_, &req_, &responder_, service_->cq_, service_->cq_, this);
+            service_->RequestGetPopulatedSlots(&context_, &req_, &responder_, service_->cq(), service_->cq(), this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
-            // Used to serve other clients while processing.
-            new ListLanguages(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);
-            try { // Getting and returning languages.
-                std::lock_guard lg(dm_.mutex());
-                catena::LanguageList ans;
-                dm_.toProto(ans);
+            {
+                // Used to serve other clients while processing.
+                new GetPopulatedSlots(service_, dm_, ok);
+                context_.AsyncNotifyWhenDone(this);
+                catena::SlotList ans;
+                ans.add_slots(dm_.slot());
                 status_ = CallStatus::kFinish;
                 responder_.Finish(ans, Status::OK, this);
-            } catch (...) { // Error, end process.
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                responder_.FinishWithError(errorStatus, this);
             }
-            break;
+        break;
         /**
          * kFinish: Final step of gRPC is the deregister the item from
          * CatenaServiceImpl.
          */
         case CallStatus::kFinish:
-            std::cout << "ListLanguages[" << objectId_ << "] finished\n";
-            service->deregisterItem(this);
+            std::cout << "GetPopulatedSlots[" << objectId_ << "] finished\n";
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:

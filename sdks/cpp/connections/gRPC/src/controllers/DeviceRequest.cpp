@@ -28,44 +28,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
-#include <DeviceRequest.h>
-#include <ISubscriptionManager.h>
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
+#include <controllers/DeviceRequest.h>
+using catena::gRPC::DeviceRequest;
 
 // Counter for generating unique object IDs - static, so initializes at start
-int CatenaServiceImpl::DeviceRequest::objectCounter_ = 0;
+int DeviceRequest::objectCounter_ = 0;
 
 /** 
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-CatenaServiceImpl::DeviceRequest::DeviceRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // start the process
+    proceed(ok);  // start the process
 }
 
 /** 
  * Manages gRPC command execution process by transitioning between states and
  * handling errors and responses accordingly 
  */
-void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool ok) {
+void DeviceRequest::proceed(bool ok) {
     std::cout << "DeviceRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
@@ -80,7 +66,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
     switch (status_) {
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
-            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
+            service_->RequestDeviceRequest(&context_, &req_, &writer_, service_->cq(), service_->cq(), this);
             break;
 
         /**
@@ -97,7 +83,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 // Setting up authorizer object.
                 if (service_->authorizationEnabled()) {
                     // Authorizer throws an error if invalid jws token so no need to handle rc.
-                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(getJWSToken_());
+                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
                     authz_ = sharedAuthz_.get();
                 } else {
                     authz_ = &catena::common::Authorizer::kAuthzDisabled;
@@ -110,9 +96,7 @@ void CatenaServiceImpl::DeviceRequest::proceed(CatenaServiceImpl *service, bool 
                 if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
-                        if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
-                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
-                        }
+                        service_->getSubscriptionManager().addSubscription(oid, dm_, rc);
                     }
                     // Get service subscriptions from the manager
                     subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);

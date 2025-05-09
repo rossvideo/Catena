@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ross Video Ltd
+ * Copyright 2024 Ross Video Ltd
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,37 +28,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
-#include <UpdateSubscriptions.h>
+#include <controllers/UpdateSubscriptions.h>
+using catena::gRPC::UpdateSubscriptions;
 
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
+int UpdateSubscriptions::objectCounter_ = 0;
 
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
-#include <filesystem>
-#include <map>
-
-int CatenaServiceImpl::UpdateSubscriptions::objectCounter_ = 0;
-
-CatenaServiceImpl::UpdateSubscriptions::UpdateSubscriptions(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // start the process
+    proceed( ok);  // start the process
 }
 
-void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service, bool ok) {
-    if (!service)
+void UpdateSubscriptions::proceed(bool ok) {
+    if (!service_)
         return;
 
     std::cout << "UpdateSubscriptions proceed[" << objectId_ << "]: " << timeNow()
@@ -68,7 +53,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
     if(!ok) {
         std::cout << "UpdateSubscriptions[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
-        service->deregisterItem(this);
+        service_->deregisterItem(this);
         return;
     }
 
@@ -77,7 +62,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
             std::cout << "UpdateSubscriptions[" << objectId_ << "] entering kCreate state" << std::endl;
             status_ = CallStatus::kProcess;
             service_->RequestUpdateSubscriptions(&context_, &req_, &writer_, 
-                        service_->cq_, service_->cq_, this);
+                        service_->cq(), service_->cq(), this);
             break;
 
         case CallStatus::kProcess:
@@ -85,10 +70,11 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
             context_.AsyncNotifyWhenDone(this);
             
             try {
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 catena::common::Authorizer* authz;
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(getJWSToken_());
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &catena::common::Authorizer::kAuthzDisabled;
@@ -100,7 +86,6 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 
                 // Process removed OIDs
                 for (const auto& oid : req_.removed_oids()) {     
-                    catena::exception_with_status rc{"", catena::StatusCode::OK};
                     if (!service_->getSubscriptionManager().removeSubscription(oid, dm_, rc)) {
                         throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
                     }
@@ -110,7 +95,6 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
                 for (const auto& oid : req_.added_oids()) {
                     std::cout << "Adding subscription for OID: " << oid << std::endl;
                     
-                    catena::exception_with_status rc{"", catena::StatusCode::OK};
                     if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
                         throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
                     }
@@ -180,7 +164,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
         case CallStatus::kFinish:
             std::cout << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
 
         default:
@@ -191,7 +175,7 @@ void CatenaServiceImpl::UpdateSubscriptions::proceed(CatenaServiceImpl *service,
     }
 }
 
-void CatenaServiceImpl::UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& authz) {
+void UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& authz) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
     // Get all subscribed OIDs from the manager

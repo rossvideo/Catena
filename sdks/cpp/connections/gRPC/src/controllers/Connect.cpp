@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,49 +28,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-#include <Enums.h>
-
 // connections/gRPC
-#include <Connect.h>
-
-
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-using catena::common::Scopes;
-using catena::common::Scopes_e;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
+#include <controllers/Connect.h>
+using catena::gRPC::Connect;
 
 // Initializes the object counter for Connect to 0.
-int CatenaServiceImpl::Connect::objectCounter_ = 0;
+int catena::gRPC::Connect::objectCounter_ = 0;
 
 /**
  * Constructor which initializes and registers the current Connect object, 
  * then starts the process.
  */
-CatenaServiceImpl::Connect::Connect(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, writer_(&context_),
+catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish}, 
         catena::common::Connect(dm, service->getSubscriptionManager()) {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // start the process
+    proceed(ok);  // start the process
 }
 
 // Manages gRPC command execution process using the state variable status.
-void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
+void catena::gRPC::Connect::proceed(bool ok) {
     std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
                 << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
                 << std::endl;
-    
+
     /**
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
@@ -89,23 +72,20 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
          * from the service.
          */ 
         case CallStatus::kCreate:
-            std::cout << "Transitioning from kCreate to kProcess" << std::endl;
             status_ = CallStatus::kProcess;
-            service_->RequestConnect(&context_, &req_, &writer_, service_->cq_, service_->cq_, this);
+            service_->RequestConnect(&context_, &req_, &writer_, service_->cq(), service_->cq(), this);
             break;
         /**
          * kProcess: Processes the request asyncronously, updating status to
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
-            std::cout << "In kProcess state, setting up connections" << std::endl;
             // Used to serve other clients while processing.
             new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                // Setting up the client's authorizer.
-                std::string jwsToken = service_->authorizationEnabled() ? getJWSToken_() : "";
-                initAuthz_(jwsToken, service_->authorizationEnabled());
+                catena::exception_with_status rc{"", catena::StatusCode::OK};
+                initAuthz_(jwsToken_(), service_->authorizationEnabled());
                 // Cancels all open connections if shutdown signal is sent.
                 shutdownSignalId_ = shutdownSignal_.connect([this](){
                     context_.TryCancel();
@@ -177,7 +157,7 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
             dm_.valueSetByClient.disconnect(valueSetByClientId_);
             dm_.valueSetByServer.disconnect(valueSetByServerId_);
             dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
         // default: Error, end process.
         default:
@@ -188,6 +168,6 @@ void CatenaServiceImpl::Connect::proceed(CatenaServiceImpl *service, bool ok) {
 }
 
 // Returns true if the connection has been cancelled.
-bool CatenaServiceImpl::Connect::isCancelled() {
+bool catena::gRPC::Connect::isCancelled() {
     return context_.IsCancelled();
 }

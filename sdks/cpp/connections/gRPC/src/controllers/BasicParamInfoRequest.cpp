@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,40 +28,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// common
-#include <Tags.h>
-
 // connections/gRPC
-#include <BasicParamInfoRequest.h>
+#include <controllers/BasicParamInfoRequest.h>
+using catena::gRPC::BasicParamInfoRequest;
 
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-using catena::common::ParamVisitor;
-using catena::common::IParam;
-using catena::common::Authorizer;
+int BasicParamInfoRequest::objectCounter_ = 0;
 
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
-#include <filesystem>
-#include <map>
-
-int CatenaServiceImpl::BasicParamInfoRequest::objectCounter_ = 0;
-
-CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoRequest(CatenaServiceImpl *service, IDevice& dm, bool ok)
-    : service_{service}, dm_{dm}, writer_(&context_),
+BasicParamInfoRequest::BasicParamInfoRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
+    : CallData(service), dm_{dm}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
-    service->registerItem(this);
+    service_->registerItem(this);
     objectId_ = objectCounter_++;
-    proceed(service, ok);  // start the process
+    proceed(ok);  // start the process
 }
 
-void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *service, bool ok) {
-    if (!service)
+void BasicParamInfoRequest::proceed(bool ok) {
+    if (!service_)
         return;
 
     std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "]: " << timeNow()
@@ -71,7 +53,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
     if(!ok) {
         std::cout << "BasicParamInfoRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
-        service->deregisterItem(this);
+        service_->deregisterItem(this);
         return;
     }
 
@@ -79,7 +61,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
         case CallStatus::kCreate:
             status_ = CallStatus::kProcess;
             service_->RequestBasicParamInfoRequest(&context_, &req_, &writer_, 
-                        service_->cq_, service_->cq_, this);
+                        service_->cq(), service_->cq(), this);
             break;
 
         case CallStatus::kProcess:
@@ -92,8 +74,8 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 std::shared_ptr<Authorizer> sharedAuthz;
                 Authorizer* authz;
-                if (service->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<Authorizer>(getJWSToken_());
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<Authorizer>(jwsToken_());
                     authz = sharedAuthz.get();
                 } else {
                     authz = &Authorizer::kAuthzDisabled;
@@ -262,7 +244,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
         case CallStatus::kFinish:
             std::cout << "[" << objectId_ << "] finished with status: " 
                       << (context_.IsCancelled() ? "CANCELLED" : "OK") << "\n";
-            service->deregisterItem(this);
+            service_->deregisterItem(this);
             break;
 
         default:
@@ -277,7 +259,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::proceed(CatenaServiceImpl *servic
 /** Updates the array_length field in the protobuf responses
  * for all responses that contain array_name in their OID
  */
-void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
+void BasicParamInfoRequest::updateArrayLengths_(const std::string& array_name, uint32_t length) {
     if (length > 0) {
         for (auto it = responses_.rbegin(); it != responses_.rend(); ++it) {
             // Only update if the OID exactly matches the array name
@@ -289,7 +271,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::updateArrayLengths_(const std::st
 }
 
 // Helper method to add a parameter to the responses
-void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param, Authorizer& authz) {
+void BasicParamInfoRequest::addParamToResponses(IParam* param, Authorizer& authz) {
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();
@@ -297,7 +279,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::addParamToResponses(IParam* param
 }
 
 // Visits a parameter and adds it to the response vector
-void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
+void BasicParamInfoRequest::BasicParamInfoVisitor::visit(IParam* param, const std::string& path) {
     // Only add non-array parameters that aren't the top-most parameter
     bool isTopParameter = path == request_.req_.oid_prefix() || path == "/" + param->getOid();
     bool isArray = param->isArrayType();
@@ -309,7 +291,7 @@ void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visit(IPar
 }
 
 // Visits an array and updates the array length information
-void CatenaServiceImpl::BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
+void BasicParamInfoRequest::BasicParamInfoVisitor::visitArray(IParam* param, const std::string& path, uint32_t length) {
     // Only add array parameters that aren't the top-most parameter
     bool isTopParameter = path == request_.req_.oid_prefix() || path == "/" + param->getOid();
     if (isTopParameter) {

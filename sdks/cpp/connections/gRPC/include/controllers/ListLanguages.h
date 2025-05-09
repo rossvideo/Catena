@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -38,58 +36,62 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
 // connections/gRPC
-#include <ServiceImpl.h>
+#include "CallData.h"
+
+namespace catena {
+namespace gRPC {
 
 /**
 * @brief CallData class for the ListLanguages RPC
 */
-class CatenaServiceImpl::ListLanguages : public CallData {
-    public:
-        /**
-         * @brief Constructor for the CallData class of the ListLanguages gRPC.
-         * Calls proceed() once initialized.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param dm - Address of the device to get the value from.
-         * @param ok - Flag to check if the command was successfully executed.
-         */ 
-        ListLanguages(CatenaServiceImpl *service, IDevice& dm, bool ok);
-        /**
-         * @brief Manages the steps of the ListLanguages gRPC command through
-         * the state variable status.
-         *
-         * @param service - Pointer to the parent CatenaServiceImpl.
-         * @param ok - Flag to check if the command was successfully executed.
-         */
-        void proceed(CatenaServiceImpl *service, bool ok) override;
-    private:
-        /**
-         * @brief Parent CatenaServiceImpl.
-         */
-        CatenaServiceImpl *service_;
-        /**
-         * @brief Server request (the device's slot).
-         */
-        catena::Slot req_;
-        /**
-         * @brief gRPC async response writer.
-         */
-        grpc::ServerAsyncResponseWriter<::catena::LanguageList> responder_;
-        /**
-         * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
-         */
-        CallStatus status_;
-        /**
-         * @brief The device containing the languages to list.
-         */
-        IDevice& dm_;
-        /**
-         * @brief The object's unique id.
-         */
-        int objectId_;
-        /**
-         * @brief The total # of ListLanguages objects.
-         */
-        static int objectCounter_;
+class ListLanguages : public CallData {
+  public:
+    /**
+     * @brief Constructor for the CallData class of the ListLanguages gRPC.
+     * Calls proceed() once initialized.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param dm - Address of the device to get the value from.
+     * @param ok - Flag to check if the command was successfully executed.
+     */ 
+    ListLanguages(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    /**
+     * @brief Manages the steps of the ListLanguages gRPC command through
+     * the state variable status.
+     *
+     * @param service - Pointer to the parent CatenaServiceImpl.
+     * @param ok - Flag to check if the command was successfully executed.
+     */
+    void proceed(bool ok) override;
+  private:
+    /**
+     * @brief Server request (the device's slot).
+     */
+    catena::Slot req_;
+    /**
+     * @brief gRPC async response writer.
+     */
+    grpc::ServerAsyncResponseWriter<::catena::LanguageList> responder_;
+    /**
+     * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
+     */
+    CallStatus status_;
+    /**
+     * @brief The device containing the languages to list.
+     */
+    IDevice& dm_;
+    /**
+     * @brief The object's unique id.
+     */
+    int objectId_;
+    /**
+     * @brief The total # of ListLanguages objects.
+     */
+    static int objectCounter_;
 };
+
+}; // namespace gRPC
+}; // namespace catena
