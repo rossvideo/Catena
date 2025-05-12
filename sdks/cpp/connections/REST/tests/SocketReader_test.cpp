@@ -45,43 +45,27 @@
 // Common
 #include <SubscriptionManager.h>
 
+#include "testUtils.h"
+
 namespace fs = std::filesystem;
 
 #include "SocketReader.h"
 
 // Fixture
-class RESTSocketReaderTests : public ::testing::Test {
+class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
   protected:
+    // Defining the in/out sockets.
+    RESTSocketReaderTests() : SocketHelper(&clientSocket, &serverSocket) {}
+
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
-        tcp::socket clientSocket(io_context);
-        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 0));
-        // Linking client and server sockets.
-        serverSocket.connect(acceptor.local_endpoint());
-        acceptor.accept(clientSocket);
-        // Compiling fields
-        std::string fieldsStr = "";
-        for (auto [key, value] : fields) {
-            if (!fieldsStr.empty()) {
-                fieldsStr += "&";
-            }
-            fieldsStr += key + "=" + value;
-        }
-        // Writing request to server.
-        std::string request = method + " " + service + "/" + std::to_string(slot) + "?" + fieldsStr + " HTTP/1.1\n"
-                            "Origin: " + origin + "\n"
-                            "User-Agent: test_agent\n"
-                            "Authorization: Bearer " + jwsToken + " \n"
-                            "Content-Length: " + std::to_string(jsonBody.length()) + "\n"
-                            "\r\n" + jsonBody + "\n"
-                            "\r\n\r\n";
-        boost::asio::write(clientSocket, boost::asio::buffer(request));
+        origin = "test_origin";
+        writeRequest(method, service, slot, fields, jwsToken, jsonBody);
     }
   
     void TearDown() override { /* Cleanup code here */ }
     
-    boost::asio::io_context io_context;
-    tcp::socket serverSocket{io_context};
+    // SocketReader obj.
     catena::common::SubscriptionManager sm;    
     catena::REST::SocketReader socketReader{sm};
 
@@ -95,7 +79,6 @@ class RESTSocketReaderTests : public ::testing::Test {
         {"testField2", "2"}
     };
     std::string jwsToken = "test_bearer";
-    std::string origin = "test_origin";
     std::string jsonBody = "{\n  test_body\n}";
 };
 
