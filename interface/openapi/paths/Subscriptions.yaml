@@ -35,9 +35,9 @@
 #
 
 get:
-  summary: Get a parameter's value
+  summary: Get the current subscriptions
 
-  operationId: GetValue
+  operationId: GetSubscriptions
 
   parameters:
     - name: slot
@@ -46,28 +46,32 @@ get:
       description: The slot of the device model containing the parameters to get info for
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-   
-    - name: fqoid
-      in: query
-      required: false
-      description: Fully qualified OID of the parameter to get info for
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
+
+  
 
   responses:
     "200":
-      description: The parameter value
-        
+      description: Current subscriptions
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          
-          example:
-            {
-              "string_value": "Hello, World!"
-            }
+            type: object
+            properties:
+              oids:
+                type: array
+                items:
+                  type: string
+                  schema:
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+            additionalProperties: false 
+            example:
+              {
+                "oids": [
+                  "/ipv4",
+                  "/gateway",
+                  "/dns"
+                ]
+              }
 
     "500":
       $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
@@ -85,9 +89,9 @@ get:
       $ref: '../catena.openapi.yaml#/components/responses/ServiceUnavailable'
 
 put:
-  summary: Set a parameter's value
+  summary: Set the current subscriptions
 
-  operationId: SetValue
+  operationId: SetSubscriptions
 
   parameters:
     - name: slot
@@ -110,14 +114,33 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          type: object
+          properties:
+            added_oids:
+              type: array
+              items:
+                type: string
+                schema:
+                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+            removed_oids:
+              type: array
+              items:
+                type: string
+                schema:
+                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+          additionalProperties: false
+
         example:
           {
-            "string_value": "Hello, World!"
+            "added_oids": [
+              "/ipv4"
+            ],
+            "removed_oids": [
+              "/gateway"
+            ]
           }
 
   responses:
-
     "204":
       description: Empty response - everything is OK
 

@@ -36,7 +36,7 @@
 
 put:
   summary: Sets the values of multiple parameters idempotently - i.e. either all are set or none are
-  
+
   operationId: SetValues
 
   parameters:
@@ -55,40 +55,40 @@ put:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       default: ""
     
-    - body:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              type: object
-              properties:
-                fqoid:
-                  type: string
-                  description: Fully qualified OID of the parameter to get info for
-                  schema: 
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-                value:
-                  type: object
-                  schema:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-      example:
-        - fqoid: "/ipv4"
-          value:
-            string_value: "192.168.1.1"
-        - fqoid: "/gateway"
-          value:
-            string_value: "192.168.1.254"
-        - fqoid: "/subnet"
-          value:
-            string_value: "255.255.255.0"
-        - fqoid: "/dns"
-          value:
-            string_value: "8.8.8.8"
-        - fqoid: "/dns_alt"
-          value:
-            string_value: "8.8.4.4"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              fqoid:
+                type: string
+                description: Fully qualified OID of the parameter to get info for
+                schema: 
+                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+              value:
+                type: object
+                schema:
+                  $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+        example:
+          - fqoid: "/ipv4"
+            value:
+              string_value: "192.168.1.1"
+          - fqoid: "/gateway"
+            value:
+              string_value: "192.168.1.254"
+          - fqoid: "/subnet"
+            value:
+              string_value: "255.255.255.0"
+          - fqoid: "/dns"
+            value:
+              string_value: "8.8.8.8"
+          - fqoid: "/dns_alt"
+            value:
+              string_value: "8.8.4.4"
 
   responses:
     "204":
