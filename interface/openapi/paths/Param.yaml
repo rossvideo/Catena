@@ -80,16 +80,16 @@ get:
             }
 
     "401":
-      $ref: '../catena.openapi.yaml#/components/responses/Unauthorized'
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
     "403":
-      $ref: '../catena.openapi.yaml#/components/responses/Forbidden'
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
 
     "404":
-      $ref: '../catena.openapi.yaml#/components/responses/NotFound'
+      $ref: '../openapi.yaml#/components/responses/NotFound'
 
     "500":
-      $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
 
     "503":
-      $ref: '../catena.openapi.yaml#/components/responses/ServiceUnavailable'
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
