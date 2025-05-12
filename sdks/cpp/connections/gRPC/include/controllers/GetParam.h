@@ -73,10 +73,6 @@ class GetParam : public CallData {
     void proceed(bool ok) override;
 
   private:
-    /**
-     * @brief The client's scopes.
-     */
-    std::vector<std::string> clientScopes_;
 
     /**
      * @brief The request payload.
@@ -102,6 +98,11 @@ class GetParam : public CallData {
      * @brief The device to get the value from.
      */
     IDevice& dm_;
+
+    std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
+    catena::common::Authorizer* authz_;
+
+    std::vector<std::string> oids_;
 
     /**
      * @brief The object's unique id.

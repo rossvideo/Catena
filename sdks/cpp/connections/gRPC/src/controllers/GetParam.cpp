@@ -79,7 +79,36 @@ void GetParam::proceed( bool ok) {
          */
         case CallStatus::kProcess:
             new GetParam(service_, dm_, ok);
-            context_.AsyncNotifyWhenDone(this);  
+            context_.AsyncNotifyWhenDone(this);
+
+            {
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            try {
+                // Creating authorizer.
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                    authz_ = sharedAuthz_.get();
+                } else {
+                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
+                }
+
+                // Pushing the request oid to the back of oids_.
+                oids_.push_back(req_.oid());
+            
+            // Likely authentication error, end process.
+            } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status{err.what(), err.status};
+            } catch (...) {
+                rc = catena::exception_with_status{"unknown error", catena::StatusCode::UNKNOWN};
+            }
+
+            if (rc.status != catena::StatusCode::OK) {
+                status_ = CallStatus::kFinish;
+                grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
+                writer_.Finish(errorStatus, this);
+            }
+            }
+
             status_ = CallStatus::kWrite;
             // Falling through to kWrite.
 
@@ -89,6 +118,10 @@ void GetParam::proceed( bool ok) {
         case CallStatus::kWrite:
             try {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
+
+                std::string oid = oids_.pop_back();    
+                std::unique_ptr<IParam> param = dm_.getParam(req_.oid(), rc, *authz_);
+
                 // Creating authorizer.
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
                 catena::common::Authorizer* authz;
@@ -100,6 +133,12 @@ void GetParam::proceed( bool ok) {
                 }
                 // Getting the param.
                 std::unique_ptr<IParam> param = dm_.getParam(req_.oid(), rc, *authz);
+
+                if (param->isArrayType()) {
+                    // If the parameter is an array we need to get the child parameters as well.
+                    param->getDescriptor().getAllSubParams();
+                }
+
                 // If everything was successful, writing to the client.
                 if (rc.status == catena::StatusCode::OK && param) {
                     catena::DeviceComponent_ComponentParam response;
