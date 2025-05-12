@@ -502,7 +502,12 @@ class ParamWithValue : public catena::common::IParam {
 
         if (oid.empty()) {
             // we reached the end of the path, return the element
-            return std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+            auto param = std::make_unique<ParamWithValue<ElemType>>(value[oidIndex], descriptor_);
+            if (!authz.readAuthz(*param)) {
+                status = catena::exception_with_status("Not authorized to read param " + param->getOid(), catena::StatusCode::PERMISSION_DENIED);
+                return nullptr;
+            }
+            return param;
         } else {
             if constexpr (CatenaStruct<ElemType> || meta::IsVariant<ElemType>) {
                 // The path has more segments, keep recursing
@@ -538,6 +543,11 @@ class ParamWithValue : public catena::common::IParam {
         std::unique_ptr<IParam> ip = findParamByName_<U>(fields, oidStr);
         if (!ip) {
             status = catena::exception_with_status("Param " + oid.fqoid() + " does not exist", catena::StatusCode::NOT_FOUND);
+            return nullptr;
+        }
+
+        if (!authz.readAuthz(*ip)) {
+            status = catena::exception_with_status("Not authorized to read param " + ip->getOid(), catena::StatusCode::PERMISSION_DENIED);
             return nullptr;
         }
 
@@ -626,10 +636,15 @@ class ParamWithValue : public catena::common::IParam {
 
         if (oid.empty()) {
             // we reached the end of the path, return the element
-            return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
+            auto param = std::visit([&](auto& arg) -> std::unique_ptr<IParam> {
                 using V = std::decay_t<decltype(arg)>;
                 return std::make_unique<ParamWithValue<V>>(arg, descriptor_.getSubParam(oidStr));
             }, value);
+            if (!authz.readAuthz(*param)) {
+                status = catena::exception_with_status("Not authorized to read param " + param->getOid(), catena::StatusCode::PERMISSION_DENIED);
+                return nullptr;
+            }
+            return param;
         } else {
             // The path has more segments, keep recursing
             return std::visit([&](auto& arg) -> std::unique_ptr<IParam> {

@@ -83,9 +83,10 @@ void ParamVisitor::traverseParams(IParam* param, const std::string& path, IDevic
         
         // Get the child parameter
         auto sub_param = device.getParam(child_path.toString(), rc, authz);
-        if (!sub_param) {
-            std::cout << "getParam failed for: " << child_path.toString() << " rc: " << rc.status << std::endl;
-        }
+        // @todo: This will be turned into a return code in a future issue
+        // if (!sub_param) {   
+        //     std::cout << "DEBUG: getParam failed for: " << child_path.toString() << " rc: " << rc.status << std::endl;
+        // }
         
         // If child exists and we can access it, process it recursively
         if (rc.status == catena::StatusCode::OK && sub_param) {

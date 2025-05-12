@@ -79,12 +79,27 @@ void BasicParamInfoRequest::proceed() {
         std::unique_ptr<IParam> param;
         catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<Authorizer> sharedAuthz;
-        Authorizer* authz;
-        if (context_.authorizationEnabled()) {
-            sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
-            authz = sharedAuthz.get();
-        } else {
-            authz = &Authorizer::kAuthzDisabled;
+        Authorizer* authz = nullptr;
+
+        try {
+            if (context_.authorizationEnabled()) {
+                sharedAuthz = std::make_shared<Authorizer>(context_.jwsToken());
+                authz = sharedAuthz.get();
+            } else {
+                authz = &Authorizer::kAuthzDisabled;
+            }
+        } catch (const std::exception& e) {
+            rc_ = catena::exception_with_status("Authorization setup failed: " + std::string(e.what()), 
+                                              catena::StatusCode::UNAUTHENTICATED);
+            finish();
+            return;
+        }
+
+        if (!authz) {
+            rc_ = catena::exception_with_status("Failed to initialize authorization", 
+                                              catena::StatusCode::UNAUTHENTICATED);
+            finish();
+            return;
         }
 
         // Mode 1: Get all top-level parameters without recursion
@@ -175,8 +190,12 @@ void BasicParamInfoRequest::proceed() {
         }
     } catch (catena::exception_with_status& err) {
         rc_ = std::move(err);
+    } catch (const std::exception& e) {
+        rc_ = catena::exception_with_status("Unknown error in BasicParamInfoRequest: " + std::string(e.what()), 
+                                          catena::StatusCode::UNKNOWN);
     } catch (...) {
-        rc_ = catena::exception_with_status("Unknown error in BasicParamInfoRequest", catena::StatusCode::UNKNOWN);
+        rc_ = catena::exception_with_status("Unknown error in BasicParamInfoRequest", 
+                                          catena::StatusCode::UNKNOWN);
     }
 }
 
@@ -198,7 +217,12 @@ void BasicParamInfoRequest::addParamToResponses_(IParam* param, catena::common::
     responses_.emplace_back();
     auto& response = responses_.back();
     response.mutable_info();
-    param->toProto(response, authz);
+    auto rc = param->toProto(response, authz);
+    if (rc.status != catena::StatusCode::OK) {
+        // @todo: This will be turned into a return code in a future issue
+        std::cout << "DEBUG: Failed to convert param to proto: " << param->getOid() << " rc: " << rc.status << std::endl;
+        responses_.pop_back();  // Remove the failed response
+    }
 }
 
 // Updates the array_length field in the protobuf responses
