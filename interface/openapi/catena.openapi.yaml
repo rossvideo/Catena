@@ -81,8 +81,8 @@ paths:
   /device/{slot}/language-pack/{language-code}:
     $ref: './paths/LanguagePack.yaml'
 
-  # /device/{slot}/languages:
-  #   $ref: './paths/Languages.yaml'
+  /device/{slot}/languages:
+    $ref: './paths/Languages.yaml'
 
 components:
   responses:
