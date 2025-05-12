@@ -39,14 +39,6 @@ get:
   operationId: Connect
 
   parameters:
-    - name: Language
-      in: header
-      required: false
-      description: The langauge code specifiying what language to recieve 
-        updates in
-      schema:
-        type: string
-      default: en
 
     - name: Detail-Level
       in: header
@@ -83,83 +75,15 @@ get:
       content:
         text/event-stream:
           schema:
-            title: PushUpdates
-            description: An update from the server
-            type: object
-            properties:
-              slot:
-                $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-            oneOf:
-              value:
-                title: PushValue
-                description: Sent if a value was updated
-                type: object
-                properties:
-                  oid:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
-                  value:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-
-              device_component:
-                $ref: "./Messages.yaml#/$defs/device_component"
-
-              refused:
-                $ref: "./Messages.yaml#/$defs/exception"
-
-              invalidated_external_object_id:
-                title: String
-
-              trap_message:
-                title: TrapMessage
-                description: A message from the server
-                type: object
-                properties:
-                  trap_type:
-                    title: String
-                    type: string
-                  trap_data:
-                    title: String Array
-                    type: string_array
-
-              invalidate_device_model:
-                title: Boolean
-                description: A message from the server
-                type: bool
-
-              external_object:
-                title: PushExternalObject
-                description: A message from the server
-                type: object
-                properties:
-                  oid:
-                    $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-                  external_object:
-                    $ref: "./Messages.yaml#/$defs/external_object_payload"
-
-              remove_device_components:
-                title: RemoveComponents
-                description: A message from the server
-                type: object
-                oneOf:
-                  param:
-                    title: String Array
-                    type: string_array
-                  shared_constraint:
-                    title: String Array
-                    type: string_array
-                  menu:
-                    title: String Array
-                    type: string_array
-                  language_pack:
-                    title: String Array
-                    type: string_array
-
-              slots_added:
-                $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
-
-              slots_removed:
-                $ref: "../../../schema/catena.device_schema.json#/$defs/slot_list"
-          example:
-            'data: { "slot": 1} data: { "slot": 1, "value": {  "oid": 
-            "/counter",  "value": {   "int32Value": 2  } }}'
+            type: string
+            example: |
+              value: <stringified Value object>
+              exception: <stringified Exception object>
+              device_component: <stringified DeviceComponent object>
+              invalidated_external_object_id: <stringified invalidated_external_object_id object>
+              trap_message: <stringified TrapMessage object>
+              invalidate_device_model: <boolean>
+              remove_components: <stringified RemoveComponents object>
+              slots_added: <stringified SlotList object>
+              slots_removed: <stringified SlotList object>
+              done
