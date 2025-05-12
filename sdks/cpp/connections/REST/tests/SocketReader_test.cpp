@@ -45,7 +45,7 @@
 // Common
 #include <SubscriptionManager.h>
 
-#include "testUtils.h"
+#include "TestUtils.h"
 
 namespace fs = std::filesystem;
 

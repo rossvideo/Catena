@@ -99,21 +99,21 @@ class SocketHelper {
     }
 
     // Returns what an expect response from SocketWriter should look like.
-    inline std::string expectedWrite(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
+    inline std::string expectedResponse(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
-            "Content-Type: application/json\r\n"
-            "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n"
-            "Connection: close\r\n" +
-            "Access-Control-Allow-Origin: " + origin + "\r\n"
-            "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-            "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-            "Access-Control-Allow-Credentials: true\r\n\r\n" +
-            jsonBody;
+               "Content-Type: application/json\r\n"
+               "Connection: close\r\n"
+               "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n" // will = 0 in case of error or empty.
+               "Access-Control-Allow-Origin: " + origin + "\r\n"
+               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+               "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+               "Access-Control-Allow-Credentials: true\r\n\r\n" +
+               jsonBody;
     }
 
     // Returns what an expect response from SSEWriter should look like.
-    inline std::string expectedSSEWrite(const catena::exception_with_status& rc, const std::vector<std::string> msgs = {}) {
+    inline std::string expectedSSEResponse(const catena::exception_with_status& rc, const std::vector<std::string> msgs = {}) {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         // Compiling body response from messages.
         std::string jsonBody = "";
@@ -121,14 +121,14 @@ class SocketHelper {
             jsonBody += "data: " + msg + "\n\n";
         }
         return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
-            "Content-Type: text/event-stream\r\n"
-            "Cache-Control: no-cache\r\n"
-            "Connection: keep-alive\r\n" +
-            "Access-Control-Allow-Origin: " + origin + "\r\n"
-            "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-            "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-            "Access-Control-Allow-Credentials: true\r\n\r\n" +
-            jsonBody;
+               "Content-Type: text/event-stream\r\n"
+               "Cache-Control: no-cache\r\n"
+               "Connection: keep-alive\r\n"
+               "Access-Control-Allow-Origin: " + origin + "\r\n"
+               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+               "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+               "Access-Control-Allow-Credentials: true\r\n\r\n" +
+               jsonBody;
     }
 
     std::string origin = "*";

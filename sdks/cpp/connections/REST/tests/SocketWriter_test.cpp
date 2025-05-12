@@ -48,69 +48,21 @@
 
 #include <Status.h>
 
+#include "TestUtils.h"
+
 namespace fs = std::filesystem;
 
 #include "SocketWriter.h"
 using namespace catena::REST;
 
 // Fixture
-class RESTSocketWriterTests : public ::testing::Test {
+class RESTSocketWriterTests : public ::testing::Test, public SocketHelper {
   protected:
-    // Connecting sockets (write(server_socket) -> read(client_socket)).
-    void SetUp() override {
-        clientSocket.connect(acceptor.local_endpoint());
-        acceptor.accept(serverSocket);
-    }
+    RESTSocketWriterTests() : SocketHelper(&serverSocket, &clientSocket) {}
+  
+    void SetUp() override { /* Setup code here */ }
   
     void TearDown() override { /* Cleanup code here */ }
-
-    // Returns what the writer wrote to the client socket.
-    // *Note: This only reads a limited amount of data (up to 4096 bytes). This
-    // suffices for testing, mostly because I don't feel like making it dynamic.
-    std::string readResponse() {
-        boost::asio::streambuf buffer;
-        boost::asio::read_until(clientSocket, buffer, "\r\n\r\n");
-        std::istream response_stream(&buffer);
-        return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
-    }
-
-    // Returns what the expected answer for should look like for the SocketWriter.
-    inline std::string expected(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
-        http_exception_with_status httpStatus = codeMap_.at(rc.status);
-        return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
-               "Content-Type: application/json\r\n"
-               "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n"
-               "Connection: close\r\n" +
-               CORS +
-               "\r\n" +
-               jsonBody;
-    }
-
-    // Returns what the expected answer for should look like for the SSEWriter.
-    inline std::string expectedSSE(const catena::exception_with_status& rc, const std::vector<std::string> msgs = {}) {
-        http_exception_with_status httpStatus = codeMap_.at(rc.status);
-        // Compiling body response from messages.
-        std::string body = "";
-        for (std::string msg : msgs) {
-            body += "data: " + msg + "\n\n";
-        }
-        return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
-               "Content-Type: text/event-stream\r\n"
-               "Cache-Control: no-cache\r\n"
-               "Connection: keep-alive\r\n" +
-               CORS +
-               "\r\n" +
-               body;
-    }
-    
-    boost::asio::io_context io_context;
-    tcp::socket clientSocket{io_context};
-    tcp::socket serverSocket{io_context};
-    tcp::acceptor acceptor{io_context, tcp::endpoint(tcp::v4(), 0)};
-    std::string CORS = "Access-Control-Allow-Origin: *\r\n"
-                       "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                       "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                       "Access-Control-Allow-Credentials: true\r\n";
 };
 
 /*
@@ -128,13 +80,13 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
 
     // Initializing SocketWriter with serverSocket and writing message.
     SocketWriter writer(serverSocket);
-    writer.finish(msg, rc);
+    writer.sendResponse(rc, msg);
 
     // Reading from clientSocket and checking the response.
     std::string jsonBody;
     google::protobuf::util::JsonPrintOptions options; // Default options
     auto status = google::protobuf::util::MessageToJsonString(msg, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expected(rc, jsonBody));
+    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
 }
 
 /* 
@@ -143,15 +95,14 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write200) {
 TEST_F(RESTSocketWriterTests, SocketWriter_Write204) {
     // msg variables.
     catena::exception_with_status rc("", catena::StatusCode::NO_CONTENT);
-    catena::Value msg;
-    msg.set_string_value("Test string");
+    catena::Empty emptyMsg = catena::Empty();
 
     // Initializing SocketWriter with serverSocket and writing message.
     SocketWriter writer(serverSocket);
-    writer.finish(msg, rc);
+    writer.sendResponse(rc, emptyMsg);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expected(rc));
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
@@ -165,10 +116,10 @@ TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
 
     // Initializing SocketWriter with serverSocket and writing message.
     SocketWriter writer(serverSocket);
-    writer.finish(msg, rc);
+    writer.sendResponse(rc, msg);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expected(rc));
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 
@@ -194,11 +145,11 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
     for (std::string msgJson : msgs) {
         catena::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
-        writer.write(msg);
+        writer.sendResponse(rc, msg);
     }
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expectedSSE(rc, msgs));
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
 }
 
 /* 
@@ -211,10 +162,10 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
 
     // Initializing SSEWriter with serverSocket and writing error.
     SSEWriter writer(serverSocket);
-    writer.finish(emptyMsg, rc);
+    writer.sendResponse(rc);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expectedSSE(rc));
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc));
 }
 
 /* 
@@ -235,10 +186,10 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
     for (std::string msgJson : msgs) {
         catena::Value msg;
         auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
-        writer.write(msg);
+        writer.sendResponse(rc, msg);
     }
-    writer.finish(emptyMsg, err);
+    writer.sendResponse(rc, emptyMsg);
 
     // Reading from clientSocket and checking the response.
-    EXPECT_EQ(readResponse(), expectedSSE(rc, msgs));
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
 }

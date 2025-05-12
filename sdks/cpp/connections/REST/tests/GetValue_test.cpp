@@ -44,6 +44,8 @@
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
 
+#include "TestUtils.h"
+
 #include <IDevice.h>
 #include "controllers/GetValue.h"
 #include "interface/ISocketReader.h"
@@ -111,13 +113,11 @@ class MockDevice : public IDevice {
 };
 
 // Fixture
-class RESTGetValueTests : public ::testing::Test {
+class RESTGetValueTests : public ::testing::Test, public SocketHelper {
   protected:
-    void SetUp() override {
-        // Linking client and server sockets.
-        clientSocket.connect(acceptor.local_endpoint());
-        acceptor.accept(serverSocket);
+    RESTGetValueTests() : SocketHelper(&serverSocket, &clientSocket) {}
 
+    void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
@@ -133,44 +133,9 @@ class RESTGetValueTests : public ::testing::Test {
             delete getValue;
         }
     }
-
-    // Returns what the writer wrote to the client socket.
-    // *Note: This only reads a limited amount of data (up to 4096 bytes). This
-    // suffices for testing, mostly because I don't feel like making it dynamic.
-    std::string readResponse() {
-        boost::asio::streambuf buffer;
-        boost::asio::read_until(clientSocket, buffer, "\r\n\r\n");
-        std::istream response_stream(&buffer);
-        return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
-    }
-
-    // Returns what the expected answer for should look like for the SocketWriter.
-    inline std::string expected(const catena::exception_with_status& rc, const catena::Value& val = catena::Value()) {
-        http_exception_with_status httpStatus = codeMap_.at(rc.status);
-        std::string jsonBody;
-        if (httpStatus.first < 300) {
-            google::protobuf::util::JsonPrintOptions options; // Default options
-            auto status = google::protobuf::util::MessageToJsonString(val, &jsonBody, options);
-        }
-        return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
-               "Content-Type: application/json\r\n"
-               "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n"
-               "Connection: close\r\n" +
-               "Access-Control-Allow-Origin: " + origin + "\r\n"
-               "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-               "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-               "Access-Control-Allow-Credentials: true\r\n"
-               "\r\n" +
-               jsonBody;
-    }
-
-    std::string origin = "*";
     std::stringstream MockConsole;
     std::streambuf* oldCout;
-    boost::asio::io_context io_context;
-    tcp::socket clientSocket{io_context};
-    tcp::socket serverSocket{io_context};
-    tcp::acceptor acceptor{io_context, tcp::endpoint(tcp::v4(), 0)};
+    
     MockSocketReader context;
     MockDevice dm;
     catena::REST::ICallData* getValue = nullptr;
@@ -212,7 +177,11 @@ TEST_F(RESTGetValueTests, GetValue_proceedNormal) {
 
     // Calling proceed() and checking written response.
     getValue->proceed();
-    EXPECT_EQ(readResponse(), expected(rc, returnVal));
+
+    std::string jsonBody;
+    google::protobuf::util::JsonPrintOptions options; // Default options
+    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
+    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
 }
 
 /* 
@@ -238,7 +207,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrReturnCatena) {
 
     // Calling proceed() and checking written response.
     getValue->proceed();
-    EXPECT_EQ(readResponse(), expected(rc));
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
@@ -281,7 +250,11 @@ TEST_F(RESTGetValueTests, GetValue_proceedAuthzValid) {
 
     // Calling proceed() and checking written response.
     getValue->proceed();
-    EXPECT_EQ(readResponse(), expected(rc, returnVal));
+
+    std::string jsonBody;
+    google::protobuf::util::JsonPrintOptions options; // Default options
+    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
+    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
 }
 
 /* 
@@ -305,7 +278,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedAuthzInvalid) {
 
     // Calling proceed() and checking written response.
     getValue->proceed();
-    EXPECT_EQ(readResponse(), expected(rc, returnVal));
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
@@ -332,7 +305,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrThrowCatena) {
 
     // Calling proceed() and checking written response.
     getValue->proceed();
-    EXPECT_EQ(readResponse(), expected(rc));
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
@@ -359,7 +332,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrThrowUnknown) {
 
     // Calling proceed() and checking written response.
     getValue->proceed();
-    EXPECT_EQ(readResponse(), expected(rc));
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
