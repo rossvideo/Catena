@@ -60,8 +60,8 @@ paths:
   /device/{slot}/basic-param/stream/{fqoid}/stream:
     $ref: './paths/BasicParamStream.yaml'
 
-  # /device/{slot}/basic-param/{fqoid}:
-  #   $ref: './paths/BasicParam.yaml'
+  /device/{slot}/basic-param/{fqoid}:
+    $ref: './paths/BasicParam.yaml'
 
   # /device/{slot}/value/{fqoid}:
   #   $ref: './paths/Value.yaml'
