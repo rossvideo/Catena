@@ -86,7 +86,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns the REST endpoint of the request (/v1/GetValue, etc.)
      */
-    const std::string& service() const override { return endpoint_; }
+    const std::string& endpoint() const override { return endpoint_; }
     /**
      * @brief Returns the slot of the device to make the API call on.
      */
@@ -154,7 +154,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief The slot of the device to make the API call on.
      */
-    uint32_t slot_;
+    uint32_t slot_ = 0;
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */
