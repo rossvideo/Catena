@@ -64,8 +64,10 @@ RUN mkdir -p ~/Catena/sdks/cpp/build \
     && cd ~/Catena/sdks/cpp/build \
     && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp \
     && ninja
-    && gcovr --root=. --exclude-directories tests --exclude-unreachable-branches --gcov-ignore-parse-errors --print-summary --html-details=coverage.html --html=coverage.html --sonarqube=coverage.xml --xml=coverage.xml --lcov=coverage.info 
 
+RUN cd ~/Catena/
+    && mkdir -p coverage
+    && gcovr --root . --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=coverage/00index.html --html-details  --lcov=coverage/coverage.info --xml=coverage/coverage.xml
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
