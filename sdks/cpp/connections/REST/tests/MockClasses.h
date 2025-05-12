@@ -49,7 +49,7 @@ class MockSocketReader : public ISocketReader {
   public:
     MOCK_METHOD(void, read, (tcp::socket& socket, bool authz), (override));
     MOCK_METHOD(const std::string&, method, (), (const, override));
-    MOCK_METHOD(const std::string&, service, (), (const, override));
+    MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
     MOCK_METHOD(bool, hasField, (const std::string& key), (const, override));
     MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));

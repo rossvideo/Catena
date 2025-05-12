@@ -14,7 +14,9 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
         if (!status.ok()) {
-            //If conversion fails, this error maps to bad request
+            /* If conversion fails, this error maps to bad request.
+             * This should be impossible to get to without failing on function
+             * call first*/
             httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
             jsonOutput = "";
         }
@@ -45,7 +47,9 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
         if (!status.ok()) {
-            //If conversion fails, this error maps to bad request
+            /* If conversion fails, this error maps to bad request.
+             * This should be impossible to get to without failing on function
+             * call first*/
             httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
             jsonOutput = "";
         }

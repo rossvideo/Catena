@@ -103,7 +103,7 @@ TEST_F(RESTSocketWriterTests, SocketWriter_Write204) {
 }
 
 /* 
- * TEST 2 - SocketWriter writes an error.
+ * TEST 3 - SocketWriter writes an error.
  */
 TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
     // msg variables.
@@ -118,7 +118,6 @@ TEST_F(RESTSocketWriterTests, SocketWriter_WriteErr) {
     // Reading from clientSocket and checking the response.
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
-
 
 /*
  * ============================================================================
@@ -150,7 +149,49 @@ TEST_F(RESTSocketWriterTests, SSEWriter_Write200) {
 }
 
 /* 
- * TEST 2 - SSEWriter writes an error before its first message write.
+ * TEST 2 - SSEWriter writes an empty message.
+ */
+TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmpty) {
+    // msg variables.
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    std::vector<std::string> msgs = {};
+    catena::Empty emptyMsg = catena::Empty();
+
+    // Initializing SSEWriter with serverSocket and writing messages.
+    SSEWriter writer(serverSocket);
+    writer.sendResponse(rc, emptyMsg);
+
+    // Reading from clientSocket and checking the response.
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
+}
+
+/* 
+ * TEST 3 - SSEWriter writes an empty message in the middle of its process.
+ */
+TEST_F(RESTSocketWriterTests, SSEWriter_WriteEmptyEnd) {
+    // msg variables.
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    std::vector<std::string> msgs = {
+        "{\"stringValue\":\"Test string #1\"}",
+        "{\"float32Value\":2}"
+    };
+    catena::Empty emptyMsg = catena::Empty();
+
+    // Initializing SSEWriter with serverSocket and writing messages.
+    SSEWriter writer(serverSocket);
+    for (std::string msgJson : msgs) {
+        catena::Value msg;
+        auto status = google::protobuf::util::JsonStringToMessage(absl::string_view(msgJson), &msg);
+        writer.sendResponse(rc, msg);
+    }
+    writer.sendResponse(rc, emptyMsg);
+
+    // Reading from clientSocket and checking the response.
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, msgs));
+}
+
+/* 
+ * TEST 4 - SSEWriter writes an error before its first message write.
  */
 TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
     // msg variables.
@@ -166,7 +207,7 @@ TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrBegin) {
 }
 
 /* 
- * TEST 3 - SSEWriter writes an error in the middle of its process.
+ * TEST 5 - SSEWriter writes an error in the middle of its process.
  */
 TEST_F(RESTSocketWriterTests, SSEWriter_WriteErrEnd) {
     // msg variables.

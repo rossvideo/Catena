@@ -81,7 +81,7 @@ class ISocketReader {
     /**
      * @brief Returns the REST endpoint of the request.
      */
-    virtual const std::string& service() const = 0;
+    virtual const std::string& endpoint() const = 0;
     /**
      * @brief Returns the slot of the device to make the API call on.
      */

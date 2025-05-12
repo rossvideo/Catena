@@ -70,7 +70,9 @@ class SocketHelper {
     }
 
     // Writes a request to the writeSocket which can later be read by SocketReader.
-    void writeRequest(const std::string& method, const std::string& service, uint32_t slot, const std::unordered_map<std::string, std::string> fields, const std::string& jwsToken, const std::string& jsonBody) {
+    void writeRequest(const std::string& method, const std::string& endpoint, uint32_t slot,
+                      const std::unordered_map<std::string, std::string> fields, const std::string& jwsToken,
+                      const std::string& jsonBody, const std::string& detailLevel, const std::string& language) {
         // compiling fields:
         std::string fieldsStr = "";
         for (auto [fName, fValue] : fields) {
@@ -80,14 +82,21 @@ class SocketHelper {
                 fieldsStr += "&" + fName + "=" + fValue;
             }
         }
+        // Adding / to slot if not empty.
+        std::string slotStr = "";
+        if (!slot == 0) {
+            slotStr = "/" + std::to_string(slot);
+        }
         // Writing request to server.
-        std::string request = method + " " + service + "/" + std::to_string(slot) + fieldsStr + " HTTP/1.1\n"
-                                "Origin: " + origin + "\n"
-                                "User-Agent: test_agent\n"
-                                "Authorization: Bearer " + jwsToken + " \n"
-                                "Content-Length: " + std::to_string(jsonBody.length()) + "\n"
-                                "\r\n" + jsonBody + "\n"
-                                "\r\n\r\n";
+        std::string request = method + " " + endpoint + slotStr + fieldsStr + " HTTP/1.1\n"
+                              "Origin: " + origin + "\n"
+                              "User-Agent: test_agent\n"
+                              "Authorization: Bearer " + jwsToken + " \n"
+                              "Detail-Level: " + detailLevel + " \n"
+                              "Language: " + language + " \n"
+                              "Content-Length: " + std::to_string(jsonBody.length()) + "\n"
+                              "\r\n" + jsonBody + "\n"
+                              "\r\n\r\n";
         boost::asio::write(*writeSocket, boost::asio::buffer(request));
     }
 
