@@ -166,7 +166,7 @@ var NAVTREEINDEX0 =
 "SocketReader_8h.html":[11,0,1,1,0,3],
 "SocketReader_8h_source.html":[11,0,1,1,0,3],
 "SocketWriter_8h.html":[11,0,1,1,0,4],
-"SocketWriter_8h.html#a755f14a19efb0873a9603497ba6bd736":[11,0,1,1,0,4,2],
+"SocketWriter_8h.html#a8af25535c8f5625132fd95a8bec8a0a4":[11,0,1,1,0,4,2],
 "SocketWriter_8h_source.html":[11,0,1,1,0,4],
 "Status_8h.html":[11,0,0,0,29],
 "Status_8h.html#a8883f03e942ef610b66860d5b52f8d85":[11,0,0,0,29,2],

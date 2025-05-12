@@ -93,6 +93,7 @@ $(document).ready(function(){initNavTree('SocketWriter_8h.html',''); initResizab
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">SocketWriter.h File Reference</div></div>
 </div><!--header-->
@@ -138,11 +139,17 @@ Namespaces</h2></td></tr>
 <tr class="memdesc:namespacecatena_1_1REST"><td class="mdescLeft">&#160;</td><td class="mdescRight">Namespace for classes relating to handling <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API requests. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:a5e555d76c34cb97d33a4a9ddd5d67a75" id="r_a5e555d76c34cb97d33a4a9ddd5d67a75"><td class="memItemLeft" align="right" valign="top"><a id="a5e555d76c34cb97d33a4a9ddd5d67a75" name="a5e555d76c34cb97d33a4a9ddd5d67a75"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>catena::REST::http_exception_with_status</b> = std::pair&lt; int, std::string &gt;</td></tr>
+<tr class="separator:a5e555d76c34cb97d33a4a9ddd5d67a75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a755f14a19efb0873a9603497ba6bd736" id="r_a755f14a19efb0873a9603497ba6bd736"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, std::pair&lt; int, std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html#a755f14a19efb0873a9603497ba6bd736">catena::REST::codeMap_</a></td></tr>
-<tr class="memdesc:a755f14a19efb0873a9603497ba6bd736"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project and extended for REST.">catena::StatusCode</a> to HTTP status codes and reasons.  <br /></td></tr>
-<tr class="separator:a755f14a19efb0873a9603497ba6bd736"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8af25535c8f5625132fd95a8bec8a0a4" id="r_a8af25535c8f5625132fd95a8bec8a0a4"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, http_exception_with_status &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html#a8af25535c8f5625132fd95a8bec8a0a4">catena::REST::codeMap_</a></td></tr>
+<tr class="memdesc:a8af25535c8f5625132fd95a8bec8a0a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project and extended for REST.">catena::StatusCode</a> to HTTP status codes and reasons.  <br /></td></tr>
+<tr class="separator:a8af25535c8f5625132fd95a8bec8a0a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper class used to write to a socket using boost. </p>
