@@ -1,3 +1,4 @@
+#
 # Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
@@ -14,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -28,99 +29,56 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
+# OpenAPI documentation of the GetParam RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
-# Author: zuhayr.sarker@rossvideo.com
-# Date: 25/04/22
+# Date: 25/04/03
 #
 
 get:
-  summary: Get a parameter's value
-
-  operationId: GetValue
+  summary: Retrieves a parameter descriptor from the device model.
+  operationId: Param
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model containing the parameter to retrieve.
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-   
+
     - name: fqoid
       in: query
-      required: false
-      description: Fully qualified OID of the parameter to get info for
+      required: true
+      description: The fully qualified path to the parameter within the device model.
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
+      example: "/text_box"
 
   responses:
     "200":
-      description: The parameter value
-        
+      description: The parameter descriptor specified by `fqoid` within the device model.
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          
+            $ref: "./Messages.yaml#/$defs/component_param"
           example:
             {
-              "string_value": "Hello, World!"
+              "oid": "/text_box",
+              "param": {
+                "name": {
+                  "displayStrings": {
+                    "en": "Text Box",
+                    "es": "Caja de Texto",
+                    "fr": "Boîte de Texte"
+                  }
+                },
+                "type": "STRING",
+                "value": {
+                  "stringValue": "Hello, World!"
+                }
+              }
             }
 
-    "500":
-      $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
-          
-    "401":
-      $ref: '../catena.openapi.yaml#/components/responses/Unauthorized'
-
-    "403":
-      $ref: '../catena.openapi.yaml#/components/responses/Forbidden'
-
-    "404":
-      $ref: '../catena.openapi.yaml#/components/responses/NotFound'
-
-    "503":
-      $ref: '../catena.openapi.yaml#/components/responses/ServiceUnavailable'
-
-put:
-  summary: Set a parameter's value
-
-  operationId: SetValue
-
-  parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameters to get info for
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
-    - name: fqoid
-      in: query
-      required: false
-      description: Fully qualified OID of the parameter to get info for
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
-
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          {
-            "string_value": "Hello, World!"
-          }
-
-  responses:
-
-    "204":
-      description: Empty response - everything is OK
-          
     "401":
       $ref: '../catena.openapi.yaml#/components/responses/Unauthorized'
 
@@ -135,4 +93,3 @@ put:
 
     "503":
       $ref: '../catena.openapi.yaml#/components/responses/ServiceUnavailable'
-  
