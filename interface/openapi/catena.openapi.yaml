@@ -39,34 +39,82 @@ info:
   title: Catena API
   version: '1.0'
 servers:
-  - url: https://device.catenamedia.tv/v1
-  - url: http://localhost:443/v1
+  - url: https://device.catenamedia.tv:443/api/v1
+  - url: http://localhost:443/api/v1
 paths:
-  /device-request/{slot}:
-    $ref: './paths/DeviceRequest.yaml'
-  /get-populated-slots:
-    $ref: './paths/GetPopulatedSlots.yaml'
-  /execute-command/{slot}:
-    $ref: "./paths/ExecuteCommand.yaml"
-  /external-object-request/{slot}:
-    $ref: './paths/ExternalObjectRequest.yaml'
-  /basic-param-info-request/{slot}:
-    $ref: './paths/BasicParamInfoRequest.yaml'
-  /get-value/{slot}:
-    $ref: './paths/GetValue.yaml'
-  /set-value/{slot}:
-    $ref: './paths/SetValue.yaml'
-  /multi-set-value/{slot}:
-    $ref: './paths/MultiSetValue.yaml'
-  /update-subscriptions/{slot}:
-    $ref: './paths/UpdateSubscriptions.yaml'
-  /get-param/{slot}:
-    $ref: './paths/GetParam.yaml'
-  /connect:
-    $ref : './paths/Connect.yaml'
-  /add-language/{slot}:
-    $ref: './paths/AddLanguage.yaml'
-  /language-pack-request/{slot}:
-    $ref: './paths/LanguagePackRequest.yaml'
-  /list-languages/{slot}:
-    $ref: './paths/ListLanguages.yaml'
+  /devices:
+    $ref: './paths/Devices.yaml'
+
+  /device/{slot}:
+    $ref: './paths/Device.yaml'
+
+  # /device/{slot}/stream:
+  #   $ref: './paths/DeviceStream.yaml'
+
+  # /device/{slot}/command{fqoid}/stream:
+  #   $ref: './paths/CommandStream.yaml'
+
+  # /device/{slot}/asset/{fqoid}/stream:
+  #   $ref: './paths/AssetStream.yaml'
+
+  # /device/{slot}/basic-param/stream/{fqoid}/stream:
+  #   $ref: './paths/BasicParamStream.yaml'
+
+  # /device/{slot}/basic-param/{fqoid}:
+  #   $ref: './paths/BasicParam.yaml'
+
+  # /device/{slot}/value/{fqoid}:
+  #   $ref: './paths/Value.yaml'
+
+  # /device/{slot}/values:
+  #   $ref: './paths/Values.yaml'
+
+  # /device/{slot}/subscriptions:
+  #   $ref: './paths/Subscriptions.yaml'
+
+  # /device/{slot}/param/stream/{fqoid}:
+  #   $ref: './paths/ParamStream.yaml'
+
+  # /device/{slot}/connect:
+  #   $ref: './paths/Connect.yaml'
+
+  # /device/{slot}/language-pack/{language-code}:
+  #   $ref: './paths/LanguagePack.yaml'
+
+  # /device/{slot}/languages:
+  #   $ref: './paths/Languages.yaml'
+
+components:
+  responses:
+    "NotFound":
+      description: The requested resource was not found
+      content:
+        text/plain::
+          schema:
+            type: string
+          example: "The requested resource was not found"
+
+    "Unauthorized":
+      description: Unauthorized, access token is either missing or invalid
+      content:
+        text/plain::
+          schema:
+            type: string
+          example: "Access token is either missing or invalid, is user authenticated?"
+
+    "Forbidden":
+      description: Forbidden, insufficient permission for access
+      content:
+        text/plain::
+          schema:
+            type: string
+          example: "Permission denied"
+
+    "InternalServerError":
+      description: An error occurred while processing the request
+      content:
+        text/plain::
+          schema:
+            type: string
+          example: "An error occurred while processing the request"
+
