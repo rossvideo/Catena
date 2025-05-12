@@ -51,6 +51,7 @@ UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, ISocketReader& con
     : socket_(socket),
       context_(context),
       dm_(dm),
+      writer_(socket, context.origin()),
       rc_("", catena::StatusCode::OK) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -112,10 +113,7 @@ void UpdateSubscriptions::proceed() {
 void UpdateSubscriptions::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
-    
-    if (!writer_) {
-        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_);
-    }
+    writer_.sendResponse(rc_);
     socket_.close();
 }
 

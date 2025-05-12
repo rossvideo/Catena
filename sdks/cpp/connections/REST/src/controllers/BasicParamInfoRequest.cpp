@@ -48,7 +48,7 @@ using catena::common::IDevice;
 int BasicParamInfoRequest::objectCounter_ = 0;
 
 BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, context_{context}, dm_{dm}, 
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm},
     rc_("", catena::StatusCode::OK), recursive_{false} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
@@ -56,10 +56,10 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader&
     // Parsing fields and assigning to respective variables.
     try {
         // Get recursive from query parameters - presence means true
-        recursive_ = context.hasField("recursive");
+        recursive_ = context_.hasField("recursive");
 
         // Get oid_prefix from query parameters
-        std::string oid_prefix_value = context.fields("oid_prefix");
+        std::string oid_prefix_value = context_.fields("oid_prefix");
         if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
             oid_prefix_ = "";
         } else {
@@ -111,7 +111,6 @@ void BasicParamInfoRequest::proceed() {
                         }
                     }
                 }
-                finish();
             }
         }
         // Mode 2: Get a specific parameter and its children
@@ -141,12 +140,8 @@ void BasicParamInfoRequest::proceed() {
                     BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
                     ParamVisitor::traverseParams(param.get(), oid_prefix_, dm_, visitor);
                 }
-
-                // Write all responses to the client
-                finish();
             } else {
                 rc_ = catena::exception_with_status(rc.what(), rc.status);
-                finish();
             }
         }
         // Mode 3: Get all top-level parameters with recursion
@@ -176,15 +171,12 @@ void BasicParamInfoRequest::proceed() {
                     BasicParamInfoVisitor visitor(dm_, *authz, responses_, *this);
                     ParamVisitor::traverseParams(top_level_param.get(), "/" + top_level_param->getOid(), dm_, visitor);
                 }
-                finish();
             }
         }
     } catch (catena::exception_with_status& err) {
         rc_ = std::move(err);
-        finish();
     } catch (...) {
         rc_ = catena::exception_with_status("Unknown error in BasicParamInfoRequest", catena::StatusCode::UNKNOWN);
-        finish();
     }
 }
 
@@ -192,13 +184,9 @@ void BasicParamInfoRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "BasicParamInfoRequest[" << objectId_ << "] finished\n";
     
-    if (!writer_) {
-        writer_ = std::make_unique<SSEWriter>(socket_, context_.origin(), rc_);
-    }
-    
     writer_lock_.lock();
     for (auto& response : responses_) {
-        writer_->write(response);
+        writer_.sendResponse(rc_, response);
     }
     writer_lock_.unlock();
     
