@@ -30,7 +30,7 @@
 
 /**
  * @file LanguagePackRequest.h
- * @brief Implements REST LanguagePackRequest RPC.
+ * @brief Implements REST LanguagePackRequest controller.
  * @author benjamin.whitten@rossvideo.com
  * @copyright Copyright © 2025 Ross Video Ltd
  */
@@ -50,7 +50,7 @@
 #include <Enums.h>
 
 // Connections/REST
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 
@@ -58,7 +58,7 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the LanguagePackRequest REST RPC.
+ * @brief ICallData class for the LanguagePackRequest REST controller.
  */
 class LanguagePackRequest : public ICallData {
   public:
@@ -67,37 +67,41 @@ class LanguagePackRequest : public ICallData {
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the LanguagePackRequest RPC.
+     * @brief Constructor for the LanguagePackRequest controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
-     * @param dm The device to get the value from.
+     * @param context The ISocketReader object.
+     * @param dm The device to get the language pack from.
      */ 
-    LanguagePackRequest(tcp::socket& socket, SocketReader& context, IDevice& dm);
+    LanguagePackRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     /**
      * @brief LanguagePackRequest's main process.
      */
     void proceed() override;
+    
     /**
      * @brief Finishes the LanguagePackRequest process.
      */
     void finish() override;
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new LanguagePackRequest(socket, context, dm);
     }
+    
+
   private:
     /**
-     * @brief Helper function to write status messages to the API console.
+     * @brief Writes the current state of the request to the console.
      * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "LanguagePackRequest::proceed[" << objectId_ << "]: "
@@ -105,21 +109,20 @@ class LanguagePackRequest : public ICallData {
                 << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                 << std::endl;
     }
-
     /**
      * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
     SocketWriter writer_;
     /**
-     * @brief The device to set values of.
+     * @brief The device to get language pack from.
      */
     IDevice& dm_;
 

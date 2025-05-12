@@ -44,7 +44,7 @@
  
 // Connections/REST
 #include "ServiceImpl.h"
-#include "SocketReader.h"
+#include "interface/ISocketReader.h"
 #include "SocketWriter.h"
 #include "interface/ICallData.h"
 #include <IDevice.h>
@@ -62,19 +62,22 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief CallData class for the BasicParamInfoRequest REST RPC.
+ * @brief ICallData class for the BasicParamInfoRequest REST controller.
  */
-class BasicParamInfoRequest : public catena::REST::ICallData {
+class BasicParamInfoRequest : public ICallData {
   public:
+    // Specifying which Device and IParam to use (defaults to catena::...)
+    using IDevice = catena::common::IDevice;
+    using IParam = catena::common::IParam;
+
     /**
-     * @brief Constructor for the BasicParamInfoRequest RPC. Calls proceed() once
-     * initialized.
+     * @brief Constructor for the BasicParamInfoRequest controller.
      *
      * @param socket The socket to write the response to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to get the parameter info from.
      */ 
-    BasicParamInfoRequest(tcp::socket& socket, SocketReader& context, catena::common::IDevice& dm);
+    BasicParamInfoRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
      * @brief BasicParamInfoRequest's main process.
@@ -82,38 +85,36 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     void proceed() override;
     
     /**
-     * @brief Finishes the BasicParamInfoRequest process.
+     * @brief Finishes the BasicParamInfoRequest process
      */
     void finish() override;
     
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, catena::common::IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new BasicParamInfoRequest(socket, context, dm);
     }
     
+    
   private:
     /**
-     * @brief Helper function to write status messages to the API console.
-     * 
-     * @param status The current state of the RPC (kCreate, kFinish, etc.)
-     * @param ok The status of the RPC (open or closed).
+     * @brief Writes the current state of the request to the console.
+     * @param status The current state of the request (kCreate, kFinish, etc.)
+     * @param ok The status of the request (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
       std::cout << "BasicParamInfoRequest::proceed[" << objectId_ << "]: "
                 << timeNow() << " status: "<< static_cast<int>(status)
                 <<", ok: "<< std::boolalpha << ok << std::endl;
     }
-    
     /**
      * @brief Helper method to add a parameter to the responses
      * @param param The parameter to add
-     * @param authz The authorization object
      */
     void addParamToResponses_(IParam* param, catena::common::Authorizer& authz);
     
@@ -131,9 +132,9 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     tcp::socket& socket_;
     
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
     
     /**
      * @brief The SSEWriter object for writing to socket_.
@@ -141,14 +142,14 @@ class BasicParamInfoRequest : public catena::REST::ICallData {
     SSEWriter writer_;
     
     /**
+     * @brief The error status
+     */
+    catena::exception_with_status rc_;
+
+    /**
      * @brief The device to get parameter info from.
      */
-    catena::common::IDevice& dm_;
-    
-    /**
-     * @brief Flag indicating if the RPC is working correctly.
-     */
-    bool ok_;
+    IDevice& dm_;
 
     /**
      * @brief The oid prefix to get parameter info for.

@@ -45,7 +45,6 @@
 #include <ParamWithValue.h>
 
 // connections/gRPC
-#include <SharedFlags.h>
 #include <ServiceImpl.h>
 #include <ServiceCredentials.h>
 
@@ -71,6 +70,7 @@
 #include <functional>
 
 using grpc::Server;
+using catena::gRPC::CatenaServiceImpl;
 
 using namespace catena::common;
 
@@ -185,7 +185,7 @@ void RunRPCServer(std::string addr)
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
 
-        builder.AddListeningPort(addr, catena::getServerCredentials());
+        builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);

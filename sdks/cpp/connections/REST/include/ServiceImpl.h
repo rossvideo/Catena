@@ -29,7 +29,7 @@
  */
 
 /**
- * @file ServiceImpl
+ * @file ServiceImpl.h
  * @brief Implements REST API
  * @author Benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
@@ -46,6 +46,8 @@
 #include <Authorization.h>
 #include <Enums.h>
 #include <ISubscriptionManager.h>
+#include <SharedFlags.h>
+
 // REST
 #include <interface/IServiceImpl.h>
 #include <interface/ICallData.h>
@@ -124,7 +126,7 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     bool is_port_in_use_() const override;
 
     /**
-     * @brief Provides io functionality for tcp::sockets used in RPCs.
+     * @brief Provides io functionality for tcp::sockets used in requests.
      */
     boost::asio::io_context io_context_;
     /**
@@ -156,37 +158,25 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
      */
     bool shutdown_ = false;
     /**
-     * @brief Counter used to track number of active RPCs. Run() does not
-     * finish until this number is 0.
+     * @brief Counter used to track number of active requests. Run() does not
+     * return until this is 0.
      */
-    uint32_t activeRpcs_ = 0;
+    uint32_t activeRequests_ = 0;
     /**
-     * @brief Mutex for activeRpcs_ counter to avoid collisions.
+     * @brief Mutex for activeRequests_ counter to avoid collisions.
      */
-    std::mutex activeRpcMutex_;
+    std::mutex activeRequestMutex_;
 
     using Router = catena::patterns::GenericFactory<catena::REST::ICallData,
                                                     std::string,
                                                     tcp::socket&,
-                                                    SocketReader&,
+                                                    ISocketReader&,
                                                     IDevice&>;
     /**
-     * @brief Creating an ICallData factory for handling RPC routing.
+     * @brief Creating an ICallData factory for handling request routing.
      */
     Router& router_;
 };
 
 }; // namespace REST
 }; // namespace catena
-
-// flags for the API
-// flags.h
-#include "absl/flags/flag.h"
-#include "absl/flags/parse.h"
-
-// Declare flags for the API
-ABSL_DECLARE_FLAG(std::string, certs);
-ABSL_DECLARE_FLAG(uint16_t, port);
-ABSL_DECLARE_FLAG(bool, mutual_authc);
-ABSL_DECLARE_FLAG(bool, authz);
-ABSL_DECLARE_FLAG(std::string, static_root);

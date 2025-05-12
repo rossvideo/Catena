@@ -6,13 +6,13 @@ using catena::REST::MultiSetValue;
 // Initializes the object counter for MultiSetValue to 0.
 int MultiSetValue::objectCounter_ = 0;
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm) :
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     MultiSetValue(socket, context, dm, objectCounter_++) {
     typeName_ = "Multi";
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
 
-MultiSetValue::MultiSetValue(tcp::socket& socket, SocketReader& context, IDevice& dm, int objectId) :
+MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId) :
     socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
 bool MultiSetValue::toMulti_() {
@@ -54,12 +54,7 @@ void MultiSetValue::proceed() {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     // Writing response.
-    if (rc.status == catena::StatusCode::OK) {
-        catena::Empty ans = catena::Empty();
-        writer_.finish(ans);
-    } else {
-        writer_.write(rc);
-    }
+    writer_.sendResponse(rc);
 }
 
 void MultiSetValue::finish() {

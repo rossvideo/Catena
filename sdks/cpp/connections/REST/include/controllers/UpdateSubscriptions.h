@@ -46,15 +46,15 @@
 #include <rpc/TimeNow.h>
 
 // Connections/REST
-#include <SocketReader.h>
+#include "interface/ISocketReader.h"
 #include <SocketWriter.h>
-#include <interface/ICallData.h>
+#include "interface/ICallData.h"
 
 namespace catena {
 namespace REST {
 
 /**
- * @brief Controller class for handling UpdateSubscriptions requests
+ * @brief ICallData class for the UpdateSubscriptions REST controller.
  */
 class UpdateSubscriptions : public ICallData {
 public:
@@ -63,31 +63,32 @@ public:
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the UpdateSubscriptions controller
-     * @param socket The TCP socket for the connection
-     * @param context The socket reader context
-     * @param dm The device model
-     */
-    UpdateSubscriptions(tcp::socket& socket, SocketReader& context, IDevice& dm);
-
+     * @brief Constructor for the UpdateSubscriptions controller.
+     *
+     * @param socket The socket to write the response to.
+     * @param context The ISocketReader object.
+     * @param dm The device to update subscriptions on.
+     */ 
+    UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    
     /**
-     * @brief Processes the UpdateSubscriptions request
+     * @brief UpdateSubscriptions's main process.
      */
     void proceed() override;
-
+    
     /**
-     * @brief Finishes the UpdateSubscriptions process
+     * @brief Finishes the UpdateSubscriptions process.
      */
     void finish() override;
-
+    
     /**
-     * @brief Creates a new rpc object for use with GenericFactory.
+     * @brief Creates a new controller object for use with GenericFactory.
      * 
      * @param socket The socket to write the response stream to.
-     * @param context The SocketReader object.
+     * @param context The ISocketReader object.
      * @param dm The device to connect to.
      */
-    static ICallData* makeOne(tcp::socket& socket, SocketReader& context, IDevice& dm) {
+    static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
         return new UpdateSubscriptions(socket, context, dm);
     }
 
@@ -124,9 +125,9 @@ private:
     tcp::socket& socket_;
 
     /**
-     * @brief The SocketReader object.
+     * @brief The ISocketReader object.
      */
-    SocketReader& context_;
+    ISocketReader& context_;
 
     /**
      * @brief The SocketWriter object for writing to socket_.
@@ -177,6 +178,11 @@ private:
      * @brief The device model
      */
     IDevice& dm_;
+    
+    /**
+     * @brief The error status
+     */
+    catena::exception_with_status rc_;
 };
 
 } // namespace REST 

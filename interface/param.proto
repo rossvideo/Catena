@@ -327,6 +327,5 @@ message CommandResponse {
     Empty no_response = 1; // Server/Device does not have a response for the command.
     Value response = 2;
     Exception exception = 3;  // This is for Server/Device error executing the command.
-    bool proceed = 4; // Used to short circuit sending payloads 
   }
 }
