@@ -11,12 +11,10 @@ include_directories(${GTEST_INCLUDE_DIRS})
 set(SOURCES 	
     SocketReader_test.cpp
     SocketWriter_test.cpp    
-    ServiceImpl_test.cpp
     GetValue_test.cpp
 
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
-    ../src/ServiceImpl.cpp
     ../src/controllers/GetValue.cpp
 )	
 
