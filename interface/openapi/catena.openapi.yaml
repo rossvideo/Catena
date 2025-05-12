@@ -66,8 +66,8 @@ paths:
   /device/{slot}/value/{fqoid}:
     $ref: './paths/Value.yaml'
 
-  # /device/{slot}/values:
-  #   $ref: './paths/Values.yaml'
+  /device/{slot}/values:
+    $ref: './paths/Values.yaml'
 
   # /device/{slot}/subscriptions:
   #   $ref: './paths/Subscriptions.yaml'
