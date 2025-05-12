@@ -35,21 +35,21 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+ // gtest
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
-#include <filesystem>
-#include <fstream>
+
+// std
 #include <string>
-#include <tuple>
 
 // Common
 #include <SubscriptionManager.h>
 
+// Test helpers
 #include "SocketHelper.h"
 
-namespace fs = std::filesystem;
-
+// REST
 #include "SocketReader.h"
+using namespace catena::REST;
 
 // Fixture
 class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
@@ -67,7 +67,7 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
     
     // SocketReader obj.
     catena::common::SubscriptionManager sm;    
-    catena::REST::SocketReader socketReader{sm};
+    SocketReader socketReader{sm};
 
     // Test request data
     std::string method = "PUT";

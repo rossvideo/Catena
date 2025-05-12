@@ -35,23 +35,20 @@
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
+ // gtest
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
-#include <filesystem>
-#include <fstream>
+
+// std
 #include <string>
-#include <tuple>
 
 // protobuf
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
 
-#include <Status.h>
-
+// Test helpers
 #include "SocketHelper.h"
 
-namespace fs = std::filesystem;
-
+// REST
 #include "SocketWriter.h"
 using namespace catena::REST;
 
