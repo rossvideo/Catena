@@ -38,8 +38,7 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDev
         }
     } catch (...) {
         catena::exception_with_status err("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        catena::Empty empty;
-        writer_.finish(empty, err);
+        writer_.sendResponse(err);
     }
 }
 
@@ -61,8 +60,7 @@ void ExecuteCommand::proceed() {
         // If the command is not found, return an error
         if (command == nullptr) {
             if (req_.respond()) {
-                catena::Empty empty;
-                writer_.finish(empty, rc);
+                writer_.sendResponse(rc);
             }
             return;
         }
@@ -72,16 +70,16 @@ void ExecuteCommand::proceed() {
 
         // Only write response if respond is true
         if (req_.respond()) {
-            writer_.finish(res, rc);
+            writer_.sendResponse(rc, res);
         }
     } catch (catena::exception_with_status& err) {
         if (req_.respond()) {
-            writer_.finish(catena::Empty(), err);
+            writer_.sendResponse(err);
         }
     } catch (...) {
         if (req_.respond()) {
             catena::exception_with_status err("Unknown error", catena::StatusCode::UNKNOWN);
-            writer_.finish(catena::Empty(), err);
+            writer_.sendResponse(err);
         }
     }
 }
