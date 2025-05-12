@@ -44,7 +44,7 @@
 #include <interface/device.pb.h>
 #include <google/protobuf/util/json_util.h>
 
-#include "TestUtils.h"
+#include "SocketHelper.h"
 
 #include <IDevice.h>
 #include "controllers/GetValue.h"

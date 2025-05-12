@@ -29,8 +29,7 @@
  */
 
 /**
- * @brief A collection of utility functions for testing REST API calls, mostly
- * to do with reading/writing to sockets.
+ * @brief A utility class for using Sockets in REST API tests.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/05/12
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -53,6 +52,10 @@ using boost::asio::ip::tcp;
 #include "SocketWriter.h"
 using namespace catena::REST;
 
+/*
+ * SocketHelper class inherited by test fixtures to provide functions for
+ * writing, reading, and verifying requests and responses.
+ */
 class SocketHelper {
   protected:
     // Constructor to connecting sockets (write(in) -> read(out)).
