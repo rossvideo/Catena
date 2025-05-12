@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,52 +29,70 @@
 #
 
 #
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
+# OpenAPI documentation of the ExecuteCommand RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
-get:
-  summary: Gets a device model with a single request. Note that device models can be very large, 
-    and so clients should consider using the streaming endpoint instead.
-
-  operationId: DeviceRequest
+put:
+  summary: Execute a command on a device model
+  operationId: ExecuteCommand
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to request components from
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
-    - name: Detail-Level
-      in: header
-      required: false
-      description: The level of detail to request the device in
+
+    - name: fqoid
+      in: query
+      required: true
+      description: The fully qualified object ID of the command to execute
       schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      default: "pause"
+    
+    - name: respond
+      in: query
+      required: false
+      description: flag to suppress the server's response unless set to true
+      schema:
+        type: string
+        enum: ["true", "false"]
+        default: "false" # because protobuf defaults to false
+    
+    
+  requestBody:
+    required: false
+    description: Optional value to pass to the command if required
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+        example: {float32_value: 0.5}
 
-
+    
   responses:
     "200":
-      description: A device model
+      description: The server's response will either be a 'Value' or nothing if 
+        'respond' is false
       content:
         application/json:
           schema:
-            $ref: "../../../schema/catena.device_schema.json"
-  
-          example: 
-            { 
-              "device": {  
-                "slot": 1,  
-                "multiSetEnabled": true,
-                "subscriptions": true,
-                "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
-                "defaultScope": "st2138:op"
-              }
-            }
-    
+            oneOf:
+              - title: No Response
+                description: respond is false or server does not have a 
+                  response for the command
+
+              - $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+              
+              - $ref: "./Messages.yaml#/$defs/exception"
+
+          example: {int32_value: 1}
+
+
     "500":
       $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
           

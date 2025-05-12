@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,54 +29,45 @@
 #
 
 #
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
+# OpenAPI documentation of the ExecuteCommand RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
 get:
-  summary: Gets a device model with a single request. Note that device models can be very large, 
-    and so clients should consider using the streaming endpoint instead.
-
-  operationId: DeviceRequest
+  summary: get an asset, or a stream of assets from the device
+  operationId: AssetStream
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to request components from
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
-    - name: Detail-Level
-      in: header
-      required: false
-      description: The level of detail to request the device in
+
+    - name: fqoid
+      in: query
+      required: true
+      description: The fully qualified object ID of the command to execute
       schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
-
-
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "/image.png"
+    
+    
   responses:
     "200":
-      description: A device model
+      description: The server's response will either be a 'Value' or nothing if 
+        'respond' is false
       content:
-        application/json:
+        text/event-stream:
           schema:
-            $ref: "../../../schema/catena.device_schema.json"
-  
-          example: 
-            { 
-              "device": {  
-                "slot": 1,  
-                "multiSetEnabled": true,
-                "subscriptions": true,
-                "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
-                "defaultScope": "st2138:op"
-              }
-            }
-    
-    "500":
-      $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
+            type: string
+            example: |
+              <fqoid of asset 1>: <stringified ExternalObjectPayload>
+              <fqoid of asset n>: <stringified ExternalObjectPayload>
+              done
+      # ExternalObjectPayload doesn't yet have a schema, todo!
           
     "401":
       $ref: '../catena.openapi.yaml#/components/responses/Unauthorized'
@@ -86,6 +77,9 @@ get:
 
     "404":
       $ref: '../catena.openapi.yaml#/components/responses/NotFound'
+
+    "500":
+      $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
 
     "503":
       $ref: '../catena.openapi.yaml#/components/responses/ServiceUnavailable'

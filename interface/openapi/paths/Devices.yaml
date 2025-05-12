@@ -57,4 +57,10 @@ get:
 
     "403":
       $ref: '../catena.openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../catena.openapi.yaml#/components/responses/NotFound'
+
+    "503":
+      $ref: '../catena.openapi.yaml#/components/responses/ServiceUnavailable'
   

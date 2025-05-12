@@ -48,17 +48,17 @@ paths:
   /device/{slot}:
     $ref: './paths/Device.yaml'
 
-  # /device/{slot}/stream:
-  #   $ref: './paths/DeviceStream.yaml'
+  /device/{slot}/stream:
+    $ref: './paths/DeviceStream.yaml'
 
-  # /device/{slot}/command{fqoid}/stream:
-  #   $ref: './paths/CommandStream.yaml'
+  /device/{slot}/command/{fqoid}:
+    $ref: './paths/Command.yaml'
 
-  # /device/{slot}/asset/{fqoid}/stream:
-  #   $ref: './paths/AssetStream.yaml'
+  /device/{slot}/asset/{fqoid}/stream:
+    $ref: './paths/AssetStream.yaml'
 
-  # /device/{slot}/basic-param/stream/{fqoid}/stream:
-  #   $ref: './paths/BasicParamStream.yaml'
+  /device/{slot}/basic-param/stream/{fqoid}/stream:
+    $ref: './paths/BasicParamStream.yaml'
 
   # /device/{slot}/basic-param/{fqoid}:
   #   $ref: './paths/BasicParam.yaml'
@@ -86,7 +86,7 @@ paths:
 
 components:
   responses:
-    "NotFound":
+    "NotFound": # 404
       description: The requested resource was not found
       content:
         text/plain::
@@ -94,7 +94,7 @@ components:
             type: string
           example: "The requested resource was not found"
 
-    "Unauthorized":
+    "Unauthorized": # 401
       description: Unauthorized, access token is either missing or invalid
       content:
         text/plain::
@@ -102,7 +102,7 @@ components:
             type: string
           example: "Access token is either missing or invalid, is user authenticated?"
 
-    "Forbidden":
+    "Forbidden": # 403
       description: Forbidden, insufficient permission for access
       content:
         text/plain::
@@ -110,7 +110,7 @@ components:
             type: string
           example: "Permission denied"
 
-    "InternalServerError":
+    "InternalServerError": # 500
       description: An error occurred while processing the request
       content:
         text/plain::
@@ -118,3 +118,10 @@ components:
             type: string
           example: "An error occurred while processing the request"
 
+    "ServiceUnavailable": # 503
+      description: The service is temporarily unavailable
+      content:
+        text/plain::
+          schema:
+            type: string
+          example: "The service is temporarily unavailable"

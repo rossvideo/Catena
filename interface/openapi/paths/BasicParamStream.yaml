@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Ross Video Ltd
+# Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,52 +29,59 @@
 #
 
 #
-# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
+# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Author: zuhayr.sarker@rossvideo.com
+# Date: 25/04/22
 #
 
 get:
-  summary: Gets a device model with a single request. Note that device models can be very large, 
-    and so clients should consider using the streaming endpoint instead.
-
-  operationId: DeviceRequest
+  summary: Gets information about parameters within a device model
+  operationId: BasicParamStream
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to request components from
+      description: The slot of the device model containing the parameters to get info for
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
-    - name: Detail-Level
-      in: header
-      required: false
-      description: The level of detail to request the device in
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
 
+    - name: recursive
+      in: query
+      required: false
+      description: Optional flag to recursively get info for all children.
+      schema:
+        type: string
+        enum: ["true", "false"]
+        default: "false" # because protobuf defaults to false
+   
+    - name: oid_prefix
+      in: query
+      required: false
+      description: The prefix of the OID to get info for
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      default: ""
 
   responses:
     "200":
-      description: A device model
+      description: |
+        Returns a stream of basic information about the specified parameter(s).
+        The response is a sequence of stringified JSON objects, each containing information about a single parameter.
+        Each object in the stream has the following structure:
+        
       content:
-        application/json:
+        text/event-stream:
           schema:
-            $ref: "../../../schema/catena.device_schema.json"
-  
-          example: 
-            { 
-              "device": {  
-                "slot": 1,  
-                "multiSetEnabled": true,
-                "subscriptions": true,
-                "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
-                "defaultScope": "st2138:op"
-              }
-            }
-    
+            type: string
+          
+          example: |
+            <stringified {info: BasicParamInfo, array_length: 0}>
+            <stringified {info: BasicParamInfo, array_length: 1}>
+            <stringified {info: BasicParamInfo, array_length: 2}>
+            done
+
     "500":
       $ref: '../catena.openapi.yaml#/components/responses/InternalServerError'
           
