@@ -43,7 +43,7 @@ void AddLanguage::proceed() {
     }
 
     // Finishing by writing answer to client.
-    writer_.finish(catena::Empty(), rc);
+    writer_.sendResponse(rc);
 }
 
 void AddLanguage::finish() {

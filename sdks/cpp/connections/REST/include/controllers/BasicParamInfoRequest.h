@@ -139,7 +139,7 @@ class BasicParamInfoRequest : public ICallData {
     /**
      * @brief The SSEWriter object for writing to socket_.
      */
-    std::unique_ptr<SSEWriter> writer_{nullptr};
+    SSEWriter writer_;
     
     /**
      * @brief The error status

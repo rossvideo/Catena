@@ -68,16 +68,11 @@ class ISocketWriter {
     virtual ~ISocketWriter() = default;
 
     /**
-     * @brief Writes a protobuf message to socket in JSON format.
-     * @param msg The protobuf message to write as JSON.
-     */
-    virtual void write(const google::protobuf::Message& msg) = 0;
-
-    /**
      * @brief Finishes writing the HTTP response.
+     * @param msg The protobuf message to write as JSON.
      * @param err The error status to finish with.
      */
-    virtual void finish(const google::protobuf::Message& msg, const catena::exception_with_status& err) = 0;
+    virtual void sendResponse(const catena::exception_with_status& err, const google::protobuf::Message& msg) = 0;
 };
  
 }; // Namespace REST
