@@ -92,7 +92,6 @@ $(document).ready(function(){initNavTree('namespacecatena_1_1REST.html',''); ini
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">catena::REST Namespace Reference</div></div>
@@ -168,12 +167,6 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1REST_1_1ICallData.html" title="Interface class for REST API controllers.">ICallData</a> class for the <a class="el" href="classcatena_1_1REST_1_1UpdateSubscriptions.html" title="ICallData class for the UpdateSubscriptions REST controller.">UpdateSubscriptions</a> <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> controller.  <a href="classcatena_1_1REST_1_1UpdateSubscriptions.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a5e555d76c34cb97d33a4a9ddd5d67a75" id="r_a5e555d76c34cb97d33a4a9ddd5d67a75"><td class="memItemLeft" align="right" valign="top"><a id="a5e555d76c34cb97d33a4a9ddd5d67a75" name="a5e555d76c34cb97d33a4a9ddd5d67a75"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>http_exception_with_status</b> = std::pair&lt; int, std::string &gt;</td></tr>
-<tr class="separator:a5e555d76c34cb97d33a4a9ddd5d67a75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:a58c70401164afb6c66bd561a88da4009" id="r_a58c70401164afb6c66bd561a88da4009"><td class="memItemLeft" align="right" valign="top"><a id="a58c70401164afb6c66bd561a88da4009" name="a58c70401164afb6c66bd561a88da4009"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> { <br />
@@ -191,21 +184,21 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:a8af25535c8f5625132fd95a8bec8a0a4" id="r_a8af25535c8f5625132fd95a8bec8a0a4"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, http_exception_with_status &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html#a8af25535c8f5625132fd95a8bec8a0a4">codeMap_</a></td></tr>
-<tr class="memdesc:a8af25535c8f5625132fd95a8bec8a0a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project and extended for REST.">catena::StatusCode</a> to HTTP status codes and reasons.  <br /></td></tr>
-<tr class="separator:a8af25535c8f5625132fd95a8bec8a0a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a755f14a19efb0873a9603497ba6bd736" id="r_a755f14a19efb0873a9603497ba6bd736"><td class="memItemLeft" align="right" valign="top">const std::map&lt; <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, std::pair&lt; int, std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecatena_1_1REST.html#a755f14a19efb0873a9603497ba6bd736">codeMap_</a></td></tr>
+<tr class="memdesc:a755f14a19efb0873a9603497ba6bd736"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maps <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85" title="Status Code - reproduced from google&#39;s grpc project and extended for REST.">catena::StatusCode</a> to HTTP status codes and reasons.  <br /></td></tr>
+<tr class="separator:a755f14a19efb0873a9603497ba6bd736"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Namespace for classes relating to handling <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> API requests. </p>
 </div><h2 class="groupheader">Variable Documentation</h2>
-<a id="a8af25535c8f5625132fd95a8bec8a0a4" name="a8af25535c8f5625132fd95a8bec8a0a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8af25535c8f5625132fd95a8bec8a0a4">&#9670;&#160;</a></span>codeMap_</h2>
+<a id="a755f14a19efb0873a9603497ba6bd736" name="a755f14a19efb0873a9603497ba6bd736"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a755f14a19efb0873a9603497ba6bd736">&#9670;&#160;</a></span>codeMap_</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::map&lt;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, http_exception_with_status&gt; catena::REST::codeMap_</td>
+          <td class="memname">const std::map&lt;<a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85">catena::StatusCode</a>, std::pair&lt;int, std::string&gt; &gt; catena::REST::codeMap_</td>
         </tr>
       </table>
 </div><div class="memdoc">
