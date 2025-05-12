@@ -187,6 +187,7 @@
                   "common/examples/use_struct_arrays/device.AudioDeck.json",
                   "common/examples/import_params/device.import_params.json",
                   "common/examples/use_variants/device.use_variants.json",
+                  "connections/gRPC/examples/external_object_request/device.external_object_request.json",
                   "connections/gRPC/examples/status_update/device.status_update.json",
                   "connections/gRPC/examples/structs_with_authz/device.AudioDeck.json",
                   "connections/gRPC/examples/structs_with_authz_yaml/device.AudioDeck.yaml",
@@ -200,6 +201,7 @@
       "description": "Select service to run",
       "type": "pickString",
       "options": ["status_update",
+                  "external_object_request",
                   "structs_with_authz",
                   "structs_with_authz_yaml",
                   "use_commands"
