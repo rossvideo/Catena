@@ -123,9 +123,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a83236f1c3ab45215d0b34d4b6a2fa16e" id="r_a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a83236f1c3ab45215d0b34d4b6a2fa16e">method</a> () const override</td></tr>
 <tr class="memdesc:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
 <tr class="separator:a83236f1c3ab45215d0b34d4b6a2fa16e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3921e71d30efe16c287a51e3f8c32c92" id="r_a3921e71d30efe16c287a51e3f8c32c92"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a3921e71d30efe16c287a51e3f8c32c92">service</a> () const override</td></tr>
-<tr class="memdesc:a3921e71d30efe16c287a51e3f8c32c92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.)  <br /></td></tr>
-<tr class="separator:a3921e71d30efe16c287a51e3f8c32c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e84dc373e33e8e94713895f3ac4d76f" id="r_a0e84dc373e33e8e94713895f3ac4d76f"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a0e84dc373e33e8e94713895f3ac4d76f">endpoint</a> () const override</td></tr>
+<tr class="memdesc:a0e84dc373e33e8e94713895f3ac4d76f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.)  <br /></td></tr>
+<tr class="separator:a0e84dc373e33e8e94713895f3ac4d76f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa77a5dcf3caf0ae527fa88e73dc3fdf1" id="r_aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1">slot</a> () const override</td></tr>
 <tr class="memdesc:aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the slot of the device to make the API call on.  <br /></td></tr>
 <tr class="separator:aa77a5dcf3caf0ae527fa88e73dc3fdf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -255,6 +255,35 @@ Public Member Functions</h2></td></tr>
 <p>Returns the detail level to return the response in. </p>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a73e5c7392324c163c6053c62594738dd">catena::REST::ISocketReader</a>.</p>
+
+</div>
+</div>
+<a id="a0e84dc373e33e8e94713895f3ac4d76f" name="a0e84dc373e33e8e94713895f3ac4d76f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e84dc373e33e8e94713895f3ac4d76f">&#9670;&#160;</a></span>endpoint()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; catena::REST::SocketReader::endpoint </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.) </p>
+
+<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2b576f2353e31997d1def492e6bf76a2">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
@@ -548,35 +577,6 @@ Public Member Functions</h2></td></tr>
 </dl>
 
 <p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a6e3b104b6494845a0fe4dcb2df09d605">catena::REST::ISocketReader</a>.</p>
-
-</div>
-</div>
-<a id="a3921e71d30efe16c287a51e3f8c32c92" name="a3921e71d30efe16c287a51e3f8c32c92"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3921e71d30efe16c287a51e3f8c32c92">&#9670;&#160;</a></span>service()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::string &amp; catena::REST::SocketReader::service </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns the <a class="el" href="namespacecatena_1_1REST.html" title="Namespace for classes relating to handling REST API requests.">REST</a> endpoint of the request (/v1/GetValue, etc.) </p>
-
-<p>Implements <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a7cbf5596db249a0a47ea22171a4c3e80">catena::REST::ISocketReader</a>.</p>
 
 </div>
 </div>
