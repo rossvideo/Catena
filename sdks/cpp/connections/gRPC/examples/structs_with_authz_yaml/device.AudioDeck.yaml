@@ -17,15 +17,15 @@ params:
       frequency: 
         type: FLOAT32
         name: {display_strings: {en: Frequency}}
-        access_scope: op
+        access_scope: st2138:op
       gain: 
         type: FLOAT32
         name: {display_strings: {en: Gain}}
-        access_scope: cfg
+        access_scope: st2138:cfg
       q_factor: 
         type: FLOAT32
         name: {display_strings: {en: Q Factor}}
-        access_scope: adm
+        access_scope: st2138:adm
 
   # Template struct containing an array (STRUCT containing STRUCT_ARRAY)
   audio_channel: 
