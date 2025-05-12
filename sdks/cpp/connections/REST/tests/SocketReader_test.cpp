@@ -60,26 +60,64 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
     // Writes a request to a socket to later be read by the SocketReader.
     void SetUp() override {
         origin = "test_origin";
-        writeRequest(method, service, slot, fields, jwsToken, jsonBody);
+        // Making sure the reader properly adds the subscriptions manager.
+        EXPECT_EQ(&socketReader.getSubscriptionManager(), &sm);
     }
   
     void TearDown() override { /* Cleanup code here */ }
-    
+
+    /*
+     * Since all of the tests are essentially the write->read->validate, here
+     * is all the steps compiled. Diferences between tests will come from
+     * setting the member variables of the fixture.
+     */
+    void TestSocketReader() {
+        // Write
+        writeRequest(method, endpoint, slot, fields,
+                     jwsToken, jsonBody, dl, language);
+        
+        // Read
+        socketReader.read(serverSocket, authz);
+        
+        // Validate
+        // Updating jwsToken and DetailLevel
+        if (!authz) { jwsToken = ""; }
+        auto& dlMap = catena::common::DetailLevel().getForwardMap();
+        // Checking answers.
+        EXPECT_EQ(socketReader.method(),                 method  );
+        EXPECT_EQ(socketReader.endpoint(),               endpoint);
+        EXPECT_EQ(socketReader.slot(),                   slot    );
+        for (auto [key, value] : fields) {
+            EXPECT_EQ(socketReader.hasField(key),        true    );
+            EXPECT_EQ(socketReader.fields(key),          value   );
+        }
+        EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
+        EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
+        EXPECT_EQ(socketReader.authorizationEnabled(),   authz   );
+        EXPECT_EQ(socketReader.jwsToken(),               jwsToken);
+        EXPECT_EQ(socketReader.origin(),                 origin  );
+        EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
+        EXPECT_EQ(dlMap.at(socketReader.detailLevel()),  dl      );
+        EXPECT_EQ(socketReader.language(),               language);
+    }
+
     // SocketReader obj.
     catena::common::SubscriptionManager sm;    
     SocketReader socketReader{sm};
-
     // Test request data
     std::string method = "PUT";
-    std::string service = "/v1/test-call";
+    std::string endpoint = "/v1/test-call";
     uint32_t slot = 1;
-    // Should NOT have a field called "doesNotExist".
     std::unordered_map<std::string, std::string> fields = {
         {"testField1", "1"},
         {"testField2", "2"}
+        // DO NOT ADD A FIELD CALLED "doesNotExist".
     };
+    bool authz = false;
     std::string jwsToken = "test_bearer";
     std::string jsonBody = "{\n  test_body\n}";
+    std::string dl = "FULL";
+    std::string language = "test_language";
 };
 
 /*
@@ -90,42 +128,53 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
  * TEST 1 - Reading from socket with authz disabled.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
-    // Reading the request from the serverSocket.
-    socketReader.read(serverSocket, false);
-    // Checking answers.
-    EXPECT_EQ(socketReader.method(),                 method  );
-    EXPECT_EQ(socketReader.service(),                service );
-    EXPECT_EQ(socketReader.slot(),                   slot    );
-    for (auto [key, value] : fields) {
-        EXPECT_EQ(socketReader.hasField(key),        true    );
-        EXPECT_EQ(socketReader.fields(key),          value   );
-    }
-    EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
-    EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
-    EXPECT_EQ(socketReader.authorizationEnabled(),   false   );
-    EXPECT_EQ(socketReader.jwsToken(),               ""      );
-    EXPECT_EQ(socketReader.origin(),                 origin  );
-    EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
+    // Authz false by default.
+    TestSocketReader();
 }
 
 /* 
  * TEST 2 - Reading from socket with authz enabled.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
-    // Reading the request from the serverSocket.
-    socketReader.read(serverSocket, true);
-    // Checking answers.
-    EXPECT_EQ(socketReader.method(),                 method  );
-    EXPECT_EQ(socketReader.service(),                service );
-    EXPECT_EQ(socketReader.slot(),                   slot    );
-    for (auto [key, value] : fields) {
-        EXPECT_EQ(socketReader.hasField(key),        true    );
-        EXPECT_EQ(socketReader.fields(key),          value   );
-    }
-    EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
-    EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
-    EXPECT_EQ(socketReader.authorizationEnabled(),   true    );
-    EXPECT_EQ(socketReader.jwsToken(),               jwsToken);
-    EXPECT_EQ(socketReader.origin(),                 origin  );
-    EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
+    // Setting authz to true and calling validate.
+    authz = true;
+    TestSocketReader();
+}
+
+/* 
+ * TEST 3 - Reading connect from socket (No slot required)
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_NoSlotConnect) {
+    // Connect does not require a slot specified.
+    endpoint = "/v1/connect";
+    slot = 0;
+    TestSocketReader();
+}
+
+/* 
+ * TEST 4 - Reading get-populated-slots from socket (No slot required)
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_NoSlotGetPopulatedSlots) {
+    // GetPopulatedSlots does not require a slot specified.
+    endpoint = "/v1/get-populated-slots";
+    slot = 0;
+    TestSocketReader();
+}
+
+/* 
+ * TEST 5 - Reading request from socket with no slot specified (Error).
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_NoSlotError) {
+    // All other calls require a slot specified.
+    slot = 0;
+    ASSERT_THROW(TestSocketReader(), catena::exception_with_status);
+}
+
+/* 
+ * TEST 6 - Reading request from socket with no slot specified.
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
+    // Setting json body to just a string of 10000 'a's.
+    jsonBody = std::string(10000, 'a');
+    TestSocketReader();
 }
