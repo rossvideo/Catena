@@ -3,7 +3,23 @@
 
 cd ~/Catena/sdks/cpp/build
 ninja
-ctest
+# Check for -V argument
+verbose=false
+for arg in "$@"; do
+  if [ "$arg" == "-V"  or "$arg" == "--verbose"  or "$arg" == "-v" ]; then
+    verbose=true
+    break
+  fi
+done
+
+# Run tests with verbose output if -V flag is present
+if [ "$verbose" = true ]; then
+  ctest -V
+else
+  ctest
+fi
+
+
 
 cd ~/Catena/
 
