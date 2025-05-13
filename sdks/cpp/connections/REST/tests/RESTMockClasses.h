@@ -30,6 +30,7 @@
 
 /**
  * @brief A collection of mock classes used across the REST tests.
+ * @author benjamin.whitten@rossvideo.com
  * @author zuhayr.sarker@rossvideo.com
  * @date 25/05/13
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -39,7 +40,7 @@
 
 #include <gmock/gmock.h>
 #include <interface/ISocketReader.h>
-#include <SubscriptionManager.h>
+#include <ISubscriptionManager.h>
 #include <IDevice.h>
 
 using namespace catena::REST;
