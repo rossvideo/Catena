@@ -120,7 +120,7 @@ components:
     "Forbidden": # 403
       description: Forbidden, insufficient permission for access
       content:
-        text/plain::
+        text/plain:
           schema:
             type: string
           example: "Permission denied"
