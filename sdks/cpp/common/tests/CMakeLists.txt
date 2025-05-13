@@ -31,8 +31,6 @@ target_link_libraries(${This} PUBLIC
     gmock
     gmock_main
     ${common_lib}
-    GTest::gmock
-    GTest::gmock_main
 )
 
 add_test(
