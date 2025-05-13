@@ -48,7 +48,8 @@
 
 // Test helpers
 #include "SocketHelper.h"
-#include "MockClasses.h"
+#include "RESTMockClasses.h"
+#include "../../common/tests/CommonMockClasses.h"
 
 // REST
 #include "controllers/GetValue.h"

@@ -7,6 +7,7 @@ include_directories(../src)
 
 include_directories(../include)	
 include_directories(${GTEST_INCLUDE_DIRS})	
+include_directories(../../common/tests)
 
 set(SOURCES 	
     SocketReader_test.cpp
