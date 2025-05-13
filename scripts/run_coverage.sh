@@ -6,7 +6,7 @@ ninja
 # Check for -V argument
 verbose=false
 for arg in "$@"; do
-  if [ "$arg" == "-V"  or "$arg" == "--verbose"  or "$arg" == "-v" ]; then
+  if [[ "$arg" == "-V"  || "$arg" == "--verbose"  || "$arg" == "-v" ]]; then
     verbose=true
     break
   fi
