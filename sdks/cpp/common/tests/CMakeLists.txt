@@ -4,6 +4,8 @@ set(This common_unit_tests)
 
 find_package(GTest REQUIRED)
 include_directories(../src)
+include_directories(../include)
+include_directories(${GTEST_INCLUDE_DIRS})
 
 # set up link libs, prefer gRPC if enabled
 set(common_lib)
@@ -17,8 +19,6 @@ else()
     endif(REST_enabled)
 endif(gRPC_enabled)
 
-
-
 set(SOURCES 
     utils_test.cpp
 )
@@ -29,6 +29,8 @@ target_link_libraries(${This} PUBLIC
     ${GTEST_LIBRARIES}
     ${GTEST_MAIN_LIBRARIES}
     ${common_lib}
+    GTest::gmock
+    GTest::gmock_main
 )
 
 add_test(
