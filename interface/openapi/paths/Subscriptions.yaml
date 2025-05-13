@@ -93,6 +93,19 @@ put:
 
   operationId: SetSubscriptions
 
+  # at least one scope with read access is required.
+  # even though this is a write operation, it's purpose is to change which
+  # parameters are subscribed to, so it's read-like in that sense.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:adm
+    - oauth2:
+      - st2138:mon
+
   parameters:
     - name: slot
       in: path
@@ -101,13 +114,10 @@ put:
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
   
-    - name: fqoid
-      in: query
-      required: false
-      description: Fully qualified OID of the parameter to get info for
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
+  tags:
+    - Parameters
+    - Subscriptions
+
 
   requestBody:
     required: true

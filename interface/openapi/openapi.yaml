@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -41,6 +41,19 @@ info:
 servers:
   - url: https://device.catenamedia.tv:443/api/v1
   - url: http://localhost:443/api/v1
+
+# default endpoint security is that at least one read scope is required.
+# the permissions in the security array are ORed together.
+security:
+  - oauth2:
+    - st2138:op
+  - oauth2:
+    - st2138:cfg
+  - oauth2:
+    - st2138:adm
+  - oauth2:
+    - st2138:mon
+
 paths:
   /devices:
     $ref: './paths/Devices.yaml'
@@ -85,7 +98,9 @@ paths:
     $ref: './paths/Languages.yaml'
 
 components:
+
   responses:
+
     "NotFound": # 404
       description: The requested resource was not found
       content:
@@ -125,3 +140,21 @@ components:
           schema:
             type: string
           example: "The service is temporarily unavailable"
+
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://device.catenamedia.tv/api/v1/oauth2/token
+          scopes:
+            st2138:op: Read only access to operate a device
+            st2138:op:w: Read and write access to operate a device
+            st2138:cfg: Read only access to configure a device
+            st2138:cfg:w: Read and write access to configure a device
+            st2138:adm: Read only access to administer a device
+            st2138:adm:w: Read and write access to administer a device
+            st2138:mon: Read only access to monitor a device
+            st2138:mon:w: Read and write access to monitor a device
+          
+            

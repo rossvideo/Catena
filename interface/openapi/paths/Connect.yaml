@@ -38,6 +38,18 @@ get:
   summary: Connects a client to a service for updates on value changes.
   operationId: Connect
 
+  # at least one scope with read access is required.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:adm
+    - oauth2:
+      - st2138:mon
+
+
   parameters:
 
     - name: Detail-Level
@@ -65,6 +77,9 @@ get:
       schema:
         type: string
         enum: ["true"]
+
+  tags:
+    - Updates  
 
   responses:
     "200":

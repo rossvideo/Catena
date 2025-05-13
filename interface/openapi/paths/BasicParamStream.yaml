@@ -39,6 +39,17 @@ get:
   summary: Gets information about parameters within a device model
   operationId: BasicParamStream
 
+  # at least one scope with read access is required.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:adm
+    - oauth2:
+      - st2138:mon
+
   parameters:
     - name: slot
       in: path
@@ -56,13 +67,17 @@ get:
         enum: ["true", "false"]
         default: "false" # because protobuf defaults to false
    
-    - name: oid_prefix
-      in: query
+    - name: fqoid
+      in: path
       required: false
       description: The prefix of the OID to get info for
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       default: ""
+
+  tags:
+    - Parameters
+    - Subscriptions
 
   responses:
     "200":

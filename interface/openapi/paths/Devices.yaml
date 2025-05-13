@@ -36,8 +36,12 @@
 
 get:
   summary: Gets a list of slot numbers that are occupied by a device
+  description: Retrieves a list of slot numbers that are occupied by a device.
+
   operationId: Devices
 
+  tags:
+    - Discovery
 
   responses:
     "200":

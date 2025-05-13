@@ -38,6 +38,17 @@ put:
   summary: Execute a command on a device model
   operationId: ExecuteCommand
 
+  # at least one scope with write access is required.
+  security:
+    - oauth2:
+      - st2138:op:w
+    - oauth2: 
+      - st2138:cfg:w
+    - oauth2:
+      - st2138:adm:w
+    - oauth2:
+      - st2138:mon:w
+
   parameters:
     - name: slot
       in: path
@@ -47,7 +58,7 @@ put:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: fqoid
-      in: query
+      in: path
       required: true
       description: The fully qualified object ID of the command to execute
       schema:
@@ -62,7 +73,9 @@ put:
         type: string
         enum: ["true", "false"]
         default: "false" # because protobuf defaults to false
-    
+
+  tags:
+    - Commands
     
   requestBody:
     required: false

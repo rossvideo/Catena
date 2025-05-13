@@ -54,6 +54,9 @@ get:
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
 
+  tags:
+    - Discovery
+
   responses:
     "200":
       description: A stream of device components from the device in the

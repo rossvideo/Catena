@@ -39,6 +39,17 @@ get:
 
   operationId: GetValue
 
+  # at least one scope with read access is required.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:mon
+    - oauth2:
+      - st2138:adm
+
   parameters:
     - name: slot
       in: path
@@ -48,12 +59,15 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
    
     - name: fqoid
-      in: query
-      required: false
+      in: path
+      required: true
       description: Fully qualified OID of the parameter to get info for
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       default: ""
+
+  tags:
+    - Parameters
 
   responses:
     "200":
@@ -89,6 +103,17 @@ put:
 
   operationId: SetValue
 
+  # at least one scope with write access is required.
+  security:
+    - oauth2:
+      - st2138:op:w
+    - oauth2:
+      - st2138:cfg:w
+    - oauth2:
+      - st2138:adm:w
+    - oauth2:
+      - st2138:mon:w
+
   parameters:
     - name: slot
       in: path
@@ -98,12 +123,15 @@ put:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
   
     - name: fqoid
-      in: query
-      required: false
+      in: path
+      required: true
       description: Fully qualified OID of the parameter to get info for
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       default: ""
+
+  tags:
+    - Parameters
 
   requestBody:
     required: true

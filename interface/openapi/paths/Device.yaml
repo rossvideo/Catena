@@ -55,6 +55,8 @@ get:
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
 
+  tags:
+    - Discovery
 
   responses:
     "200":

@@ -38,6 +38,17 @@ get:
   summary: Gets a list of language codes that are supported by the device model
   operationId: Languages
 
+  # at least one scope with read access is required.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:mon
+    - oauth2:
+      - st2138:adm
+
   parameters:
     - name: slot
       in: query
@@ -46,6 +57,9 @@ get:
       schema:
         type: integer
       example: 1  
+
+  tags:
+    - Languages
 
   responses:
     "200":

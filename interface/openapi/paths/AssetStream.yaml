@@ -38,6 +38,17 @@ get:
   summary: get an asset, or a stream of assets from the device
   operationId: AssetStream
 
+  # at least one scope with read access is required.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:adm
+    - oauth2:
+      - st2138:mon
+
   parameters:
     - name: slot
       in: path
@@ -47,13 +58,15 @@ get:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: fqoid
-      in: query
+      in: path
       required: true
       description: The fully qualified object ID of the command to execute
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       example: "/image.png"
-    
+
+  tags:
+    - Assets
     
   responses:
     "200":
@@ -83,4 +96,3 @@ get:
 
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-      
