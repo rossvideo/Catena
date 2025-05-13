@@ -16,6 +16,11 @@ for arg in "$@"; do
   fi
 done
 
+#check if coverage directory exists
+if [ ! -d "coverage" ]; then
+  mkdir -p coverage
+fi
+
 # Conditionally generate HTML report
 if [ "$html_report" = true ]; then
   gcovr --root ~/Catena --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=coverage/index.html --html-details --lcov=coverage/coverage.info --xml=coverage/coverage.xml
