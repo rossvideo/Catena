@@ -67,7 +67,7 @@ class RESTGetValueTests : public ::testing::Test, public SocketHelper {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
-        // Setting expectations of 1 call to the constructor and one to origin().
+        // Creating getValue object.
         EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
         getValue = GetValue::makeOne(serverSocket, context, dm);
     }

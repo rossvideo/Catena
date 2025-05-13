@@ -13,10 +13,14 @@ set(SOURCES
     SocketReader_test.cpp
     SocketWriter_test.cpp    
     GetValue_test.cpp
+    LanguagePackRequest_test.cpp
+    ListLanguages_test.cpp
 
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
     ../src/controllers/GetValue.cpp
+    ../src/controllers/LanguagePackRequest.cpp
+    ../src/controllers/ListLanguages.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
