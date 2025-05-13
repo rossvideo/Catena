@@ -48,7 +48,8 @@
 
 // Test helpers
 #include "SocketHelper.h"
-#include "MockClasses.h"
+#include "RESTMockClasses.h"
+#include "../../common/tests/CommonMockClasses.h"
 
 // REST
 #include "controllers/LanguagePackRequest.h"
@@ -104,7 +105,7 @@ TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_create) {
 /* 
  * TEST 2 - Normal case for LanguagePackRequest proceed().
  */
-TEST_F(RESTLanguagePackRequestTests, ListLanguages_proceedNormal) {
+TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
     // Setting up the returnVal to test with.
     catena::DeviceComponent_ComponentLanguagePack returnVal;
     catena::exception_with_status rc("", catena::StatusCode::OK);
@@ -135,7 +136,7 @@ TEST_F(RESTLanguagePackRequestTests, ListLanguages_proceedNormal) {
 /* 
  * TEST 3 - dm.getLanguagePack() returns an error.
  */
-TEST_F(RESTLanguagePackRequestTests, ListLanguages_proceedErrReturn) {
+TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
     // Setting up the returnVal to test with.
     catena::exception_with_status rc("Language pack not found", catena::StatusCode::NOT_FOUND);
 
@@ -157,7 +158,7 @@ TEST_F(RESTLanguagePackRequestTests, ListLanguages_proceedErrReturn) {
 /* 
  * TEST 4 - dm.getLanguagePack() throws an error.
  */
-TEST_F(RESTLanguagePackRequestTests, ListLanguages_proceedErrThrow) {
+TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
     // Setting up the returnVal to test with.
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
 

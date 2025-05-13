@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,40 +29,24 @@
  */
 
 /**
- * @brief A colleciton of mock classes used across the REST API tests.
+ * @brief A collection of mock classes used across the REST tests.
  * @author benjamin.whitten@rossvideo.com
- * @date 25/05/12
+ * @author zuhayr.sarker@rossvideo.com
+ * @date 25/05/13
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
 #pragma once
 
-#include <gmock/gmock.h>
-#include "interface/ISocketReader.h"
 #include <IDevice.h>
+#include <IParam.h>
+#include <Status.h>
+#include <Authorization.h>
+#include <gmock/gmock.h>
 
-using namespace catena::REST;
 using namespace catena::common;
 
-// Mocking the SocketReader interface
-class MockSocketReader : public ISocketReader {
-  public:
-    MOCK_METHOD(void, read, (tcp::socket& socket, bool authz), (override));
-    MOCK_METHOD(const std::string&, method, (), (const, override));
-    MOCK_METHOD(const std::string&, endpoint, (), (const, override));
-    MOCK_METHOD(uint32_t, slot, (), (const, override));
-    MOCK_METHOD(bool, hasField, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));
-    MOCK_METHOD(const std::string&, jwsToken, (), (const, override));
-    MOCK_METHOD(const std::string&, origin, (), (const, override));
-    MOCK_METHOD(const std::string&, language, (), (const, override));
-    MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
-    MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
-    MOCK_METHOD(ISubscriptionManager&, getSubscriptionManager, (), (override));
-    MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
-};
-  
-// Mocking the Device interface
+// Mock IDevice for testing
 class MockDevice : public IDevice {
   public:
     MOCK_METHOD(void, slot, (const uint32_t slot), (override));

@@ -32,6 +32,9 @@ project(Catena_cpp VERSION 0.0.1 LANGUAGES C CXX)
 get_filename_component(CATENA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
 set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_compile_options(--coverage)
+add_link_options(--coverage)
+
 # enable testing
 enable_testing()
 
