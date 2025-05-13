@@ -73,3 +73,11 @@ buildNumber.properties
 .classpath
 
 package-lock.json
+
+# Coverage output
+coverage/
+*.gcda
+*.gcno
+*.info
+*.html
+*.xml
