@@ -67,7 +67,7 @@ RUN mkdir -p ~/Catena/sdks/cpp/build \
 
 RUN cd ~/Catena/
     && mkdir -p coverage
-    && gcovr --root . --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=coverage/00index.html --html-details  --lcov=coverage/coverage.info --xml=coverage/coverage.xml
+    && gcovr --root . --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=coverage/index.html --html-details  --lcov=coverage/coverage.info --xml=coverage/coverage.xml
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
