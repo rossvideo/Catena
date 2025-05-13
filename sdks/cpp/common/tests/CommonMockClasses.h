@@ -6,7 +6,6 @@
 #include <Authorization.h>
 #include <gmock/gmock.h>
 
-using namespace catena;
 using namespace catena::common;
 
 // Mock IDevice for testing
