@@ -122,10 +122,11 @@ class SSEWriter : public ISocketWriter {
     bool headers_sent_;
 };
 
+using http_exception_with_status = std::pair<int, std::string>;
 /**
  * @brief Maps catena::StatusCode to HTTP status codes and reasons.
  */
-const std::map<catena::StatusCode, std::pair<int, std::string>> codeMap_ {
+const std::map<catena::StatusCode, http_exception_with_status> codeMap_ {
     {catena::StatusCode::OK,                  {200, "OK"}},
     {catena::StatusCode::CREATED,             {201, "Created"}},
     {catena::StatusCode::ACCEPTED,            {202, "Accepted"}},
