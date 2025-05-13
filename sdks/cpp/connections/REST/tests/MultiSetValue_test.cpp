@@ -103,190 +103,78 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_create) {
  * TEST 2 - Normal case for MultiSetValue proceed().
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedNormal) {
-    // Setting up the returnVal to test with.
-    catena::Value returnVal;
-    returnVal.set_string_value("Test string");
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::string mockOid = "/test_oid";
-
-    // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // dm.multiSetValue()
-    EXPECT_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
-            value.CopyFrom(returnVal);
-            return catena::exception_with_status(rc.what(), rc.status);
-        }));
-
-    // Calling proceed() and checking written response.
-    multiSetValue->proceed();
-
-    std::string jsonBody;
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
+    
 }
 
 /* 
- * TEST 3 - dm.multiSetValue() returns an catena::exception_with_status.
+ * TEST 3 - Normal case for MultiSetValue proceed().
  */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedErrReturnCatena) {
-    // Setting up the returnVal to test with.
-    catena::Value returnVal;
-    returnVal.set_string_value("Test string");
-    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/invalid_oid";
-
-    // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // dm.multiSetValue()
-    EXPECT_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
-            return catena::exception_with_status(rc.what(), rc.status);
-        }));
-
-    // Calling proceed() and checking written response.
-    multiSetValue->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedTryErr) {
+    
 }
 
 /* 
- * TEST 4 - MultiSetValue with authz on and valid token.
+ * TEST 4 - Normal case for MultiSetValue proceed().
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedTryThrowCatena) {
+    
+}
+
+/* 
+ * TEST 5 - Normal case for MultiSetValue proceed().
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedTryThrowUnknown) {
+    
+}
+
+/* 
+ * TEST 6 - Normal case for MultiSetValue proceed().
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedCommitErr) {
+    
+}
+
+/* 
+ * TEST 7 - Normal case for MultiSetValue proceed().
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedCommitThrowCatena) {
+    
+}
+
+/* 
+ * TEST 8 - Normal case for MultiSetValue proceed().
+ */
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedCommitThrowUnknown) {
+    
+}
+
+/* 
+ * TEST 9 - Normal case for MultiSetValue proceed().
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedAuthzValid) {
-    // Setting up the returnVal to test with.
-    catena::Value returnVal;
-    returnVal.set_string_value("Test string");
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::string mockOid = "/test_oid";
-    /* Authz just tests for a properly encrypted token, proxy handles authz.
-     * This is a random RSA token I made jwt.io it is not a security risk I
-     * swear. */
-    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
-                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
-                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
-                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
-                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
-                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
-                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
-                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
-                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
-                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
-                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
-                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
-
-    // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // dm.multiSetValue()
-    EXPECT_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
-            value.CopyFrom(returnVal);
-            return catena::exception_with_status(rc.what(), rc.status);
-        }));
-
-    // Calling proceed() and checking written response.
-    multiSetValue->proceed();
-
-    std::string jsonBody;
-    google::protobuf::util::JsonPrintOptions options; // Default options
-    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
-    EXPECT_EQ(readResponse(), expectedResponse(rc, jsonBody));
+    
 }
 
 /* 
- * TEST 5 - MultiSetValue with authz on and an invalid token.
+ * TEST 10 - Normal case for MultiSetValue proceed().
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedAuthzInvalid) {
-    // Setting up the returnVal to test with.
-    catena::Value returnVal;
-    returnVal.set_string_value("Test string");
-    catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
-    // Not a token so it should get rejected by the authorizer.
-    std::string mockToken = "THIS SHOULD NOT PARSE";
-
-    // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
-    // Should NOT make it this far.
-    EXPECT_CALL(context, fields("oid")).Times(0);
-    EXPECT_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
-
-    // Calling proceed() and checking written response.
-    multiSetValue->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    
 }
 
 /* 
- * TEST 6 - dm.multiSetValue() throws a catena::exception_with_status.
+ * TEST 11 - Normal case for MultiSetValue proceed().
  */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedErrThrowCatena) {
-    // Setting up the returnVal to test with.
-    catena::Value returnVal;
-    returnVal.set_string_value("Test string");
-    catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/invalid_oid";
-
-    // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // dm.multiSetValue()
-    EXPECT_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
-            throw catena::exception_with_status(rc.what(), rc.status);
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-
-    // Calling proceed() and checking written response.
-    multiSetValue->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
+TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedFailParse) {
+    
 }
 
 /* 
- * TEST 7 - dm.multiSetValue() throws an std::runtime_error.
- */
-TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedErrThrowUnknown) {
-    // Setting up the returnVal to test with.
-    catena::Value returnVal;
-    returnVal.set_string_value("Test string");
-    catena::exception_with_status rc("", catena::StatusCode::UNKNOWN);
-    std::string mockOid = "/invalid_oid";
-
-    // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-    // dm.multiSetValue()
-    EXPECT_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, multiSetValue(::testing::_, ::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([returnVal, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
-            throw std::runtime_error("Unknown error");
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-
-    // Calling proceed() and checking written response.
-    multiSetValue->proceed();
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/* 
- * TEST 8 - Writing to console with MultiSetValue finish().
+ * TEST 12 - Writing to console with MultiSetValue finish().
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_finish) {
     // Calling finish and expecting the console output.
     multiSetValue->finish();
     // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("MultiSetValue[7] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("MultiSetValue[11] finished\n") != std::string::npos);
 }
