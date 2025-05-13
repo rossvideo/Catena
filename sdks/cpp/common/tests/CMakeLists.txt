@@ -25,11 +25,11 @@ set(SOURCES
 
 add_executable(${This} ${SOURCES})
 
-target_link_libraries(${This} PUBLIC
-    ${GTEST_BOTH_LIBRARIES}	
-    GTest::GTest	
-    GTest::Main	
-    GTest::gmock	
+target_link_libraries(${This} PRIVATE
+    ${GTEST_BOTH_LIBRARIES}
+    GTest::GTest
+    GTest::Main
+    GTest::gmock
     GTest::gmock_main
     ${common_lib}
 )
