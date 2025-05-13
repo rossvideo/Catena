@@ -7,7 +7,7 @@ using catena::REST::ListLanguages;
 int ListLanguages::objectCounter_ = 0;
 
 ListLanguages::ListLanguages(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket}, context_{context}, dm_{dm} {
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
