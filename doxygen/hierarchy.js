@@ -44,7 +44,6 @@ var hierarchy =
     ] ],
     [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
       [ "catena::REST::AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", null ],
-      [ "catena::REST::AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", null ],
       [ "catena::REST::BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", null ],
       [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
       [ "catena::REST::DeviceRequest", "classcatena_1_1REST_1_1DeviceRequest.html", null ],

@@ -46,7 +46,7 @@
   </g>
 </defs>
 <script type="application/ecmascript">
-var viewWidth = 3178;
+var viewWidth = 2943;
 var viewHeight = 291;
 var sectionId = 'dynsection-1';
 </script>
@@ -58,10 +58,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000001" class="node">
 <title>Node1</title>
 <g id="a_Node000001"><a xlink:title="Interface for the SocketReader class.">
-<polygon fill="#999999" stroke="#666666" points="1652.5,-283 1442.5,-283 1442.5,-242 1652.5,-242 1652.5,-283"/>
-<text text-anchor="start" x="1450.5" y="-271" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1450.5" y="-260" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1547.5" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/interface/ISocketReader.h</text>
+<polygon fill="#999999" stroke="#666666" points="1535.5,-283 1325.5,-283 1325.5,-242 1535.5,-242 1535.5,-283"/>
+<text text-anchor="start" x="1333.5" y="-271" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1333.5" y="-260" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1430.5" y="-249" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/interface/ISocketReader.h</text>
 </a>
 </g>
 </g>
@@ -80,8 +80,8 @@ var sectionId = 'dynsection-1';
 <g id="edge1_Node000001_Node000002" class="edge">
 <title>Node1&#45;&gt;Node2</title>
 <g id="a_edge1_Node000001_Node000002"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1431.88,-260.31C1145.93,-256.82 411.27,-244.29 169.5,-206 160.94,-204.64 152.03,-202.75 143.3,-200.6"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1432.23,-263.82 1442.27,-260.44 1432.32,-256.82 1432.23,-263.82"/>
+<path fill="none" stroke="#63b8ff" d="M1315.13,-259.81C1047,-255.33 388.07,-241.03 169.5,-206 160.94,-204.63 152.04,-202.72 143.31,-200.57"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1315.22,-263.31 1325.27,-259.98 1315.33,-256.31 1315.22,-263.31"/>
 </a>
 </g>
 </g>
@@ -100,19 +100,20 @@ var sectionId = 'dynsection-1';
 <g id="edge5_Node000001_Node000005" class="edge">
 <title>Node1&#45;&gt;Node5</title>
 <g id="a_edge5_Node000001_Node000005"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1431.83,-262.06C1224.71,-261.69 777.25,-254.67 403.5,-206 392.58,-204.58 381.17,-202.67 369.94,-200.55"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1432.1,-265.56 1442.11,-262.07 1432.11,-258.56 1432.1,-265.56"/>
+<path fill="none" stroke="#63b8ff" d="M1315.24,-261.21C1124.53,-259.41 731.65,-250.07 402.5,-206 391.78,-204.56 380.58,-202.67 369.54,-200.56"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1315.25,-264.71 1325.29,-261.3 1315.32,-257.71 1315.25,-264.71"/>
 </a>
 </g>
 </g>
 <!-- Node6 -->
 <g id="Node000006" class="node">
 <title>Node6</title>
-<g id="a_Node000006"><a xlink:href="AssetRequest_8h.html" target="_top" xlink:title="Implements REST AssetRequest controller.">
-<polygon fill="white" stroke="#666666" points="628.5,-200.5 412.5,-200.5 412.5,-159.5 628.5,-159.5 628.5,-200.5"/>
-<text text-anchor="start" x="420.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="420.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="520.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/AssetRequest.h</text>
+<g id="a_Node000006"><a xlink:href="REST_2include_2controllers_2BasicParamInfoRequest_8h.html" target="_top" xlink:title="Implements REST BasicParamInfoRequest controller.">
+<polygon fill="white" stroke="#666666" points="609,-206 412,-206 412,-154 609,-154 609,-206"/>
+<text text-anchor="start" x="420" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="420" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="start" x="420" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/BasicParam</text>
+<text text-anchor="middle" x="510.5" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">InfoRequest.h</text>
 </a>
 </g>
 </g>
@@ -120,20 +121,19 @@ var sectionId = 'dynsection-1';
 <g id="edge6_Node000001_Node000006" class="edge">
 <title>Node1&#45;&gt;Node6</title>
 <g id="a_edge6_Node000001_Node000006"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1432.09,-259.98C1258.79,-256.46 921.38,-244.76 637.5,-206 626.8,-204.54 615.62,-202.64 604.59,-200.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1432.18,-263.48 1442.25,-260.18 1432.32,-256.49 1432.18,-263.48"/>
+<path fill="none" stroke="#63b8ff" d="M1315.1,-259.47C1156.92,-255.36 864.27,-243 617.5,-206 614.76,-205.59 612,-205.15 609.21,-204.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1315.23,-262.98 1325.32,-259.73 1315.41,-255.98 1315.23,-262.98"/>
 </a>
 </g>
 </g>
 <!-- Node7 -->
 <g id="Node000007" class="node">
 <title>Node7</title>
-<g id="a_Node000007"><a xlink:href="REST_2include_2controllers_2BasicParamInfoRequest_8h.html" target="_top" xlink:title="Implements REST BasicParamInfoRequest controller.">
-<polygon fill="white" stroke="#666666" points="844,-206 647,-206 647,-154 844,-154 844,-206"/>
-<text text-anchor="start" x="655" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="655" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="start" x="655" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/BasicParam</text>
-<text text-anchor="middle" x="745.5" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">InfoRequest.h</text>
+<g id="a_Node000007"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements REST Connect controller.">
+<polygon fill="white" stroke="#666666" points="816,-200.5 627,-200.5 627,-159.5 816,-159.5 816,-200.5"/>
+<text text-anchor="start" x="635" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="635" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="721.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/Connect.h</text>
 </a>
 </g>
 </g>
@@ -141,19 +141,19 @@ var sectionId = 'dynsection-1';
 <g id="edge7_Node000001_Node000007" class="edge">
 <title>Node1&#45;&gt;Node7</title>
 <g id="a_edge7_Node000001_Node000007"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1432.23,-257.58C1293.85,-251.66 1055.09,-237.57 852.5,-206 849.77,-205.57 847,-205.12 844.21,-204.63"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1432.29,-261.09 1442.43,-258.01 1432.59,-254.09 1432.29,-261.09"/>
+<path fill="none" stroke="#63b8ff" d="M1315.21,-255.99C1192.81,-248.96 994.04,-234.18 824.5,-206 815.33,-204.48 805.77,-202.58 796.34,-200.52"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1315.17,-259.49 1325.35,-256.56 1315.56,-252.5 1315.17,-259.49"/>
 </a>
 </g>
 </g>
 <!-- Node8 -->
 <g id="Node000008" class="node">
 <title>Node8</title>
-<g id="a_Node000008"><a xlink:href="connections_2REST_2include_2controllers_2Connect_8h.html" target="_top" xlink:title="Implements REST Connect controller.">
-<polygon fill="white" stroke="#666666" points="1051,-200.5 862,-200.5 862,-159.5 1051,-159.5 1051,-200.5"/>
-<text text-anchor="start" x="870" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="870" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="956.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/Connect.h</text>
+<g id="a_Node000008"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements REST DeviceRequest controller.">
+<polygon fill="white" stroke="#666666" points="1057,-200.5 834,-200.5 834,-159.5 1057,-159.5 1057,-200.5"/>
+<text text-anchor="start" x="842" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="842" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="945.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/DeviceRequest.h</text>
 </a>
 </g>
 </g>
@@ -161,19 +161,19 @@ var sectionId = 'dynsection-1';
 <g id="edge8_Node000001_Node000008" class="edge">
 <title>Node1&#45;&gt;Node8</title>
 <g id="a_edge8_Node000001_Node000008"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1432.18,-252.47C1332.93,-243.73 1186.12,-228.48 1059.5,-206 1050.62,-204.42 1041.37,-202.54 1032.21,-200.51"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1431.97,-255.97 1442.24,-253.35 1432.58,-249 1431.97,-255.97"/>
+<path fill="none" stroke="#63b8ff" d="M1315.16,-245.49C1243.45,-235.15 1149.43,-220.88 1066.5,-206 1057.1,-204.31 1047.32,-202.46 1037.56,-200.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1314.73,-248.97 1325.13,-246.92 1315.73,-242.04 1314.73,-248.97"/>
 </a>
 </g>
 </g>
 <!-- Node9 -->
 <g id="Node000009" class="node">
 <title>Node9</title>
-<g id="a_Node000009"><a xlink:href="REST_2include_2controllers_2DeviceRequest_8h.html" target="_top" xlink:title="Implements REST DeviceRequest controller.">
-<polygon fill="white" stroke="#666666" points="1292,-200.5 1069,-200.5 1069,-159.5 1292,-159.5 1292,-200.5"/>
-<text text-anchor="start" x="1077" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1077" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1180.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/DeviceRequest.h</text>
+<g id="a_Node000009"><a xlink:href="REST_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements REST ExecuteCommand controller.">
+<polygon fill="white" stroke="#666666" points="1313.5,-200.5 1075.5,-200.5 1075.5,-159.5 1313.5,-159.5 1313.5,-200.5"/>
+<text text-anchor="start" x="1083.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1083.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1194.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/ExecuteCommand.h</text>
 </a>
 </g>
 </g>
@@ -181,19 +181,19 @@ var sectionId = 'dynsection-1';
 <g id="edge9_Node000001_Node000009" class="edge">
 <title>Node1&#45;&gt;Node9</title>
 <g id="a_edge9_Node000001_Node000009"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1448.3,-239.74C1392.57,-227.52 1323.57,-212.38 1269.57,-200.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1447.67,-243.19 1458.19,-241.91 1449.17,-236.35 1447.67,-243.19"/>
+<path fill="none" stroke="#63b8ff" d="M1363.35,-238.59C1328.12,-226.58 1285.42,-212.01 1251.78,-200.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1362.48,-241.99 1373.07,-241.91 1364.74,-235.37 1362.48,-241.99"/>
 </a>
 </g>
 </g>
 <!-- Node10 -->
 <g id="Node000010" class="node">
 <title>Node10</title>
-<g id="a_Node000010"><a xlink:href="REST_2include_2controllers_2ExecuteCommand_8h.html" target="_top" xlink:title="Implements REST ExecuteCommand controller.">
-<polygon fill="white" stroke="#666666" points="1548.5,-200.5 1310.5,-200.5 1310.5,-159.5 1548.5,-159.5 1548.5,-200.5"/>
-<text text-anchor="start" x="1318.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1318.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1429.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/ExecuteCommand.h</text>
+<g id="a_Node000010"><a xlink:href="REST_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements REST GetParam controller.">
+<polygon fill="white" stroke="#666666" points="1529,-200.5 1332,-200.5 1332,-159.5 1529,-159.5 1529,-200.5"/>
+<text text-anchor="start" x="1340" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1340" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1430.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetParam.h</text>
 </a>
 </g>
 </g>
@@ -201,19 +201,20 @@ var sectionId = 'dynsection-1';
 <g id="edge10_Node000001_Node000010" class="edge">
 <title>Node1&#45;&gt;Node10</title>
 <g id="a_edge10_Node000001_Node000010"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1510.18,-236.04C1493.47,-224.64 1474.07,-211.4 1458.48,-200.77"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1508.4,-239.06 1518.63,-241.81 1512.35,-233.28 1508.4,-239.06"/>
+<path fill="none" stroke="#63b8ff" d="M1430.5,-231.37C1430.5,-221.1 1430.5,-209.9 1430.5,-200.67"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1427,-231.6 1430.5,-241.6 1434,-231.6 1427,-231.6"/>
 </a>
 </g>
 </g>
 <!-- Node11 -->
 <g id="Node000011" class="node">
 <title>Node11</title>
-<g id="a_Node000011"><a xlink:href="REST_2include_2controllers_2GetParam_8h.html" target="_top" xlink:title="Implements REST GetParam controller.">
-<polygon fill="white" stroke="#666666" points="1764,-200.5 1567,-200.5 1567,-159.5 1764,-159.5 1764,-200.5"/>
-<text text-anchor="start" x="1575" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1575" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="1665.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetParam.h</text>
+<g id="a_Node000011"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements REST GetPopulatedSlots controller.">
+<polygon fill="white" stroke="#666666" points="1753.5,-206 1547.5,-206 1547.5,-154 1753.5,-154 1753.5,-206"/>
+<text text-anchor="start" x="1555.5" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1555.5" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="start" x="1555.5" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetPopulated</text>
+<text text-anchor="middle" x="1650.5" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">Slots.h</text>
 </a>
 </g>
 </g>
@@ -221,20 +222,19 @@ var sectionId = 'dynsection-1';
 <g id="edge11_Node000001_Node000011" class="edge">
 <title>Node1&#45;&gt;Node11</title>
 <g id="a_edge11_Node000001_Node000011"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1584.82,-236.04C1601.53,-224.64 1620.93,-211.4 1636.52,-200.77"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1582.65,-233.28 1576.37,-241.81 1586.6,-239.06 1582.65,-233.28"/>
+<path fill="none" stroke="#63b8ff" d="M1493.61,-238.41C1521.28,-228.28 1553.82,-216.38 1582.07,-206.04"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1492.23,-235.19 1484.04,-241.91 1494.63,-241.76 1492.23,-235.19"/>
 </a>
 </g>
 </g>
 <!-- Node12 -->
 <g id="Node000012" class="node">
 <title>Node12</title>
-<g id="a_Node000012"><a xlink:href="REST_2include_2controllers_2GetPopulatedSlots_8h.html" target="_top" xlink:title="Implements REST GetPopulatedSlots controller.">
-<polygon fill="white" stroke="#666666" points="1988.5,-206 1782.5,-206 1782.5,-154 1988.5,-154 1988.5,-206"/>
-<text text-anchor="start" x="1790.5" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="1790.5" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="start" x="1790.5" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetPopulated</text>
-<text text-anchor="middle" x="1885.5" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">Slots.h</text>
+<g id="a_Node000012"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements REST GetValue controller.">
+<polygon fill="white" stroke="#666666" points="1965.5,-200.5 1771.5,-200.5 1771.5,-159.5 1965.5,-159.5 1965.5,-200.5"/>
+<text text-anchor="start" x="1779.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1779.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="1868.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetValue.h</text>
 </a>
 </g>
 </g>
@@ -242,19 +242,20 @@ var sectionId = 'dynsection-1';
 <g id="edge12_Node000001_Node000012" class="edge">
 <title>Node1&#45;&gt;Node12</title>
 <g id="a_edge12_Node000001_Node000012"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1639.61,-239.56C1683.74,-229.05 1736.76,-216.43 1782.25,-205.59"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1638.67,-236.19 1629.75,-241.91 1640.29,-243 1638.67,-236.19"/>
+<path fill="none" stroke="#63b8ff" d="M1545.99,-244.11C1609.98,-234 1690.85,-220.42 1762.5,-206 1770.84,-204.32 1779.53,-202.46 1788.17,-200.53"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1545.2,-240.69 1535.87,-245.71 1546.29,-247.61 1545.2,-240.69"/>
 </a>
 </g>
 </g>
 <!-- Node13 -->
 <g id="Node000013" class="node">
 <title>Node13</title>
-<g id="a_Node000013"><a xlink:href="REST_2include_2controllers_2GetValue_8h.html" target="_top" xlink:title="Implements REST GetValue controller.">
-<polygon fill="white" stroke="#666666" points="2200.5,-200.5 2006.5,-200.5 2006.5,-159.5 2200.5,-159.5 2200.5,-200.5"/>
-<text text-anchor="start" x="2014.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2014.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2103.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/GetValue.h</text>
+<g id="a_Node000013"><a xlink:href="REST_2include_2controllers_2LanguagePackRequest_8h.html" target="_top" xlink:title="Implements REST LanguagePackRequest controller.">
+<polygon fill="white" stroke="#666666" points="2193.5,-206 1983.5,-206 1983.5,-154 2193.5,-154 2193.5,-206"/>
+<text text-anchor="start" x="1991.5" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="1991.5" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="start" x="1991.5" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/LanguagePack</text>
+<text text-anchor="middle" x="2088.5" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">Request.h</text>
 </a>
 </g>
 </g>
@@ -262,20 +263,19 @@ var sectionId = 'dynsection-1';
 <g id="edge13_Node000001_Node000013" class="edge">
 <title>Node1&#45;&gt;Node13</title>
 <g id="a_edge13_Node000001_Node000013"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1662.64,-250.79C1753.87,-241.46 1884.35,-226.26 1997.5,-206 2006.43,-204.4 2015.74,-202.52 2024.97,-200.53"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1662.15,-247.32 1652.55,-251.81 1662.85,-254.29 1662.15,-247.32"/>
+<path fill="none" stroke="#63b8ff" d="M1545.67,-253.59C1656.12,-245.1 1827.35,-229.56 1974.5,-206 1977.4,-205.54 1980.34,-205.04 1983.3,-204.53"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1545.21,-250.11 1535.5,-254.36 1545.74,-257.09 1545.21,-250.11"/>
 </a>
 </g>
 </g>
 <!-- Node14 -->
 <g id="Node000014" class="node">
 <title>Node14</title>
-<g id="a_Node000014"><a xlink:href="REST_2include_2controllers_2LanguagePackRequest_8h.html" target="_top" xlink:title="Implements REST LanguagePackRequest controller.">
-<polygon fill="white" stroke="#666666" points="2428.5,-206 2218.5,-206 2218.5,-154 2428.5,-154 2428.5,-206"/>
-<text text-anchor="start" x="2226.5" y="-194" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2226.5" y="-183" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="start" x="2226.5" y="-172" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/LanguagePack</text>
-<text text-anchor="middle" x="2323.5" y="-161" font-family="Helvetica,sans-Serif" font-size="10.00">Request.h</text>
+<g id="a_Node000014"><a xlink:href="REST_2include_2controllers_2ListLanguages_8h.html" target="_top" xlink:title="Implements REST ListLanguages controller.">
+<polygon fill="white" stroke="#666666" points="2431,-200.5 2212,-200.5 2212,-159.5 2431,-159.5 2431,-200.5"/>
+<text text-anchor="start" x="2220" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2220" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2321.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/ListLanguages.h</text>
 </a>
 </g>
 </g>
@@ -283,19 +283,19 @@ var sectionId = 'dynsection-1';
 <g id="edge14_Node000001_Node000014" class="edge">
 <title>Node1&#45;&gt;Node14</title>
 <g id="a_edge14_Node000001_Node000014"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1662.79,-256.46C1795.3,-249.6 2019.02,-234.74 2209.5,-206 2212.41,-205.56 2215.35,-205.09 2218.31,-204.6"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1662.43,-252.98 1652.62,-256.98 1662.79,-259.97 1662.43,-252.98"/>
+<path fill="none" stroke="#63b8ff" d="M1545.79,-258.08C1697.13,-252.47 1970.79,-238.52 2202.5,-206 2213.16,-204.5 2224.3,-202.61 2235.3,-200.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1545.42,-254.59 1535.55,-258.45 1545.67,-261.58 1545.42,-254.59"/>
 </a>
 </g>
 </g>
 <!-- Node15 -->
 <g id="Node000015" class="node">
 <title>Node15</title>
-<g id="a_Node000015"><a xlink:href="REST_2include_2controllers_2ListLanguages_8h.html" target="_top" xlink:title="Implements REST ListLanguages controller.">
-<polygon fill="white" stroke="#666666" points="2666,-200.5 2447,-200.5 2447,-159.5 2666,-159.5 2666,-200.5"/>
-<text text-anchor="start" x="2455" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2455" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2556.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/ListLanguages.h</text>
+<g id="a_Node000015"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue controller.">
+<polygon fill="white" stroke="#666666" points="2666,-200.5 2449,-200.5 2449,-159.5 2666,-159.5 2666,-200.5"/>
+<text text-anchor="start" x="2457" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2457" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2557.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/MultiSetValue.h</text>
 </a>
 </g>
 </g>
@@ -303,48 +303,28 @@ var sectionId = 'dynsection-1';
 <g id="edge15_Node000001_Node000015" class="edge">
 <title>Node1&#45;&gt;Node15</title>
 <g id="a_edge15_Node000001_Node000015"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1663.03,-259.63C1833.28,-255.66 2161.25,-243.43 2437.5,-206 2448.38,-204.53 2459.75,-202.62 2470.96,-200.52"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1662.71,-256.13 1652.8,-259.86 1662.87,-263.13 1662.71,-256.13"/>
+<path fill="none" stroke="#63b8ff" d="M1545.87,-260.98C1734.03,-258.84 2118.31,-249.01 2440.5,-206 2451.31,-204.56 2462.61,-202.65 2473.73,-200.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1545.65,-257.49 1535.69,-261.09 1545.73,-264.49 1545.65,-257.49"/>
 </a>
 </g>
 </g>
-<!-- Node16 -->
-<g id="Node000016" class="node">
-<title>Node16</title>
-<g id="a_Node000016"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue controller.">
-<polygon fill="white" stroke="#666666" points="2901,-200.5 2684,-200.5 2684,-159.5 2901,-159.5 2901,-200.5"/>
-<text text-anchor="start" x="2692" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2692" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2792.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/MultiSetValue.h</text>
+<!-- Node17 -->
+<g id="Node000017" class="node">
+<title>Node17</title>
+<g id="a_Node000017"><a xlink:href="REST_2include_2controllers_2UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements Catena REST UpdateSubscriptions.">
+<polygon fill="white" stroke="#666666" points="2934.5,-200.5 2684.5,-200.5 2684.5,-159.5 2934.5,-159.5 2934.5,-200.5"/>
+<text text-anchor="start" x="2692.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2692.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2809.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/UpdateSubscriptions.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node16 -->
-<g id="edge16_Node000001_Node000016" class="edge">
-<title>Node1&#45;&gt;Node16</title>
-<g id="a_edge16_Node000001_Node000016"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1662.75,-261.95C1867.49,-261.38 2307.69,-254.02 2675.5,-206 2686.42,-204.57 2697.83,-202.67 2709.06,-200.54"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1662.58,-258.45 1652.59,-261.97 1662.59,-265.45 1662.58,-258.45"/>
-</a>
-</g>
-</g>
-<!-- Node18 -->
-<g id="Node000018" class="node">
-<title>Node18</title>
-<g id="a_Node000018"><a xlink:href="REST_2include_2controllers_2UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements Catena REST UpdateSubscriptions.">
-<polygon fill="white" stroke="#666666" points="3169.5,-200.5 2919.5,-200.5 2919.5,-159.5 3169.5,-159.5 3169.5,-200.5"/>
-<text text-anchor="start" x="2927.5" y="-188.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2927.5" y="-177.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3044.5" y="-166.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/UpdateSubscriptions.h</text>
-</a>
-</g>
-</g>
-<!-- Node1&#45;&gt;Node18 -->
-<g id="edge18_Node000001_Node000018" class="edge">
-<title>Node1&#45;&gt;Node18</title>
-<g id="a_edge18_Node000001_Node000018"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1662.92,-262.38C1898.33,-262.95 2450.5,-258 2910.5,-206 2923.08,-204.58 2936.26,-202.66 2949.23,-200.51"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1662.64,-258.88 1652.63,-262.35 1662.62,-265.88 1662.64,-258.88"/>
+<!-- Node1&#45;&gt;Node17 -->
+<g id="edge17_Node000001_Node000017" class="edge">
+<title>Node1&#45;&gt;Node17</title>
+<g id="a_edge17_Node000001_Node000017"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M1546.12,-261.73C1766.55,-260.98 2261.85,-253.57 2675.5,-206 2687.96,-204.57 2701.01,-202.66 2713.86,-200.53"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1545.82,-258.23 1535.83,-261.76 1545.84,-265.23 1545.82,-258.23"/>
 </a>
 </g>
 </g>
@@ -397,23 +377,23 @@ var sectionId = 'dynsection-1';
 </a>
 </g>
 </g>
-<!-- Node17 -->
-<g id="Node000017" class="node">
-<title>Node17</title>
-<g id="a_Node000017"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue controller.">
-<polygon fill="white" stroke="#666666" points="2888.5,-118 2696.5,-118 2696.5,-77 2888.5,-77 2888.5,-118"/>
-<text text-anchor="start" x="2704.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2704.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2792.5" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/SetValue.h</text>
+<!-- Node16 -->
+<g id="Node000016" class="node">
+<title>Node16</title>
+<g id="a_Node000016"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue controller.">
+<polygon fill="white" stroke="#666666" points="2653.5,-118 2461.5,-118 2461.5,-77 2653.5,-77 2653.5,-118"/>
+<text text-anchor="start" x="2469.5" y="-106" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2469.5" y="-95" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2557.5" y="-84" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/SetValue.h</text>
 </a>
 </g>
 </g>
-<!-- Node16&#45;&gt;Node17 -->
-<g id="edge17_Node000016_Node000017" class="edge">
-<title>Node16&#45;&gt;Node17</title>
-<g id="a_edge17_Node000016_Node000017"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2792.5,-148.87C2792.5,-138.6 2792.5,-127.4 2792.5,-118.17"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2789,-149.1 2792.5,-159.1 2796,-149.1 2789,-149.1"/>
+<!-- Node15&#45;&gt;Node16 -->
+<g id="edge16_Node000015_Node000016" class="edge">
+<title>Node15&#45;&gt;Node16</title>
+<g id="a_edge16_Node000015_Node000016"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2557.5,-148.87C2557.5,-138.6 2557.5,-127.4 2557.5,-118.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2554,-149.1 2557.5,-159.1 2561,-149.1 2554,-149.1"/>
 </a>
 </g>
 </g>
