@@ -1,4 +1,3 @@
-#
 # Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
@@ -15,7 +14,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,44 +28,78 @@
 #
 
 #
-# OpenAPI documentation of the LanguagePackRequest RPC for the Catena REST API
+# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Author: zuhayr.sarker@rossvideo.com
+# Date: 25/04/22
 #
 
 get:
-  summary: Returns a language pack from the device model.
-  operationId: LanguagePackRequest
+  summary: |
+    Gets information about a parameter within a device model. 
+    Because this is a unary request, recursive queries are not supported.
+
+  operationId: BasicParam
+
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the language pack from
+      description: The slot of the device model containing the parameters to get info for
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: language
+   
+    - name: fqoid
       in: path
       required: true
-      description: The id of the language pack to get from the device model
+      description: Fully qualified OID of the parameter to get info for
       schema:
-        type: string
-      example: "en"
-  
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      default: ""
+
+  tags:
+    - Parameters
+    - Subscriptions
+
   responses:
     "200":
-      description: The language pack specified by the id within the device model
+      description: |
+        Returns a the information about the parameter specified by the fqoid.
+        
       content:
         application/json:
           schema:
-            $ref: "./Messages.yaml#/$defs/component_language_pack"
-          example: {
-              "language": "en",
-              "language_pack": {
-                "words": {
-                  "greeting": "Hello",
-                  "parting": "Goodbye"
+            $ref: "../../../schema/catena.param_schema.json#/$defs/basic_param_info"
+          
+          example:
+            {
+              "info": {
+                "oid": "text_box",
+                "name": {
+                  "display_strings": {
+                    "en": "Text Box",
+                    "fr": "Boîte de Texte",
+                    "es": "Caja de Texto"
+                  }
                 },
-                "name": "English"
+                "type": "STRING",
+                "template_oid": ""
               }
             }
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+          
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

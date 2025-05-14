@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Ross Video Ltd
+# Copyright 2024 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -29,44 +29,67 @@
 #
 
 #
-# OpenAPI documentation of the LanguagePackRequest RPC for the Catena REST API
+# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
 get:
-  summary: Returns a language pack from the device model.
-  operationId: LanguagePackRequest
+  summary: Gets a device model with a single request. Note that device models can be very large, 
+    and so clients should consider using the streaming endpoint instead.
+
+  operationId: DeviceRequest
+
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the language pack from
+      description: The slot of the device model to request components from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: language
-      in: path
-      required: true
-      description: The id of the language pack to get from the device model
-      schema:
-        type: string
-      example: "en"
   
+    - name: Detail-Level
+      in: header
+      required: false
+      description: The level of detail to request the device in
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
+
+  tags:
+    - Discovery
+
   responses:
     "200":
-      description: The language pack specified by the id within the device model
+      description: A device model
       content:
         application/json:
           schema:
-            $ref: "./Messages.yaml#/$defs/component_language_pack"
-          example: {
-              "language": "en",
-              "language_pack": {
-                "words": {
-                  "greeting": "Hello",
-                  "parting": "Goodbye"
-                },
-                "name": "English"
+            $ref: "../../../schema/catena.device_schema.json"
+  
+          example: 
+            { 
+              "device": {  
+                "slot": 1,  
+                "multiSetEnabled": true,
+                "subscriptions": true,
+                "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+                "defaultScope": "st2138:op"
               }
             }
+    
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+          
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
