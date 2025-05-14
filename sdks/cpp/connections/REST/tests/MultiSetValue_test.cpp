@@ -85,6 +85,12 @@ class RESTMultiSetValueTests : public ::testing::Test, public SocketHelper {
     MockSocketReader context;
     MockDevice dm;
     catena::REST::ICallData* multiSetValue = nullptr;
+
+    std::mutex mockMutex;
+    std::string jsonBody = "{\"values\":["
+                           "{\"oid\":\"/text_box\",\"value\":{\"string_value\":\"test value 1\"}},"
+                           "{\"oid\":\"/text_box\",\"value\":{\"string_value\":\"test value 2\"}}"
+                           "]}";
 };
 
 /*
@@ -103,70 +109,235 @@ TEST_F(RESTMultiSetValueTests, MultiSetValue_create) {
  * TEST 2 - Normal case for MultiSetValue proceed().
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedNormal) {
-    
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 3 - Normal case for MultiSetValue proceed().
+ * TEST 3 - trySetValue returns an error.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedTryErr) {
-    
+    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([&rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, Authorizer &authz) -> bool {
+            ans = catena::exception_with_status(rc.what(), rc.status);
+            return false;
+        }));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 4 - Normal case for MultiSetValue proceed().
+ * TEST 4 - trySetValue throws a catena::exception_with_status.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedTryThrowCatena) {
-    
+    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([&rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, Authorizer &authz) -> bool {
+            throw catena::exception_with_status(rc.what(), rc.status);
+            return true;
+        }));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 5 - Normal case for MultiSetValue proceed().
+ * TEST 5 - trySetValue throws an std::runtime_error.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedTryThrowUnknown) {
-    
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([&rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, Authorizer &authz) -> bool {
+            throw std::runtime_error(rc.what());
+            return true;
+        }));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 6 - Normal case for MultiSetValue proceed().
+ * TEST 6 - commitSetValue returns an error.
+ * This should not be possible in a normal run.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedCommitErr) {
-    
+    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 7 - Normal case for MultiSetValue proceed().
+ * TEST 7 - commitSetValue throws a catena::exception_with_status.
+ * This should not be possible in a normal run.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedCommitThrowCatena) {
-    
+    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([&rc](catena::MultiSetValuePayload src, Authorizer &authz) -> catena::exception_with_status {
+            throw catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 8 - Normal case for MultiSetValue proceed().
+ * TEST 8 - commitSetValue throws an std::runtime_error.
+ * This should not be possible in a normal run.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedCommitThrowUnknown) {
-    
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([&rc](catena::MultiSetValuePayload src, Authorizer &authz) -> catena::exception_with_status {
+            throw std::runtime_error(rc.what());
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 9 - Normal case for MultiSetValue proceed().
+ * TEST 9 - MultiSetValue with authz on and an valid token.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedAuthzValid) {
-    
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    /* Authz just tests for a properly encrypted token, proxy handles authz.
+     * This is a random RSA token I made jwt.io it is not a security risk I
+     * swear. */
+    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
+                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
+                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
+                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
+                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
+                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
+                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
+                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
+                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
+                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
+                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
+                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(catena::exception_with_status(rc.what(), rc.status)));
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 10 - Normal case for MultiSetValue proceed().
+ * TEST 10 - MultiSetValue with authz on and an invalid token.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedAuthzInvalid) {
-    
+    catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
+    // Not a token so it should get rejected by the authorizer.
+    std::string mockToken = "THIS SHOULD NOT PARSE";
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
+    EXPECT_CALL(dm, mutex()).Times(0);
+    EXPECT_CALL(dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
+    EXPECT_CALL(dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(0);
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 11 - Normal case for MultiSetValue proceed().
+ * TEST 11 - MultiSetValue toMulti fails to parse the JSON.
  */
 TEST_F(RESTMultiSetValueTests, MultiSetValue_proceedFailParse) {
-    
+    catena::exception_with_status rc("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
+    jsonBody = "Not a JSON string";
+
+    // Defining mock functions
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
+    EXPECT_CALL(context, authorizationEnabled()).Times(0);
+
+    multiSetValue->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
