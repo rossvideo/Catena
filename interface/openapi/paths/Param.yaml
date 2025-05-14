@@ -29,44 +29,72 @@
 #
 
 #
-# OpenAPI documentation of the LanguagePackRequest RPC for the Catena REST API
+# OpenAPI documentation of the GetParam RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
 get:
-  summary: Returns a language pack from the device model.
-  operationId: LanguagePackRequest
+  summary: Retrieves a parameter descriptor from the device model.
+  operationId: Param
+
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the language pack from
+      description: The slot of the device model containing the parameter to retrieve.
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: language
+    - name: fqoid
       in: path
       required: true
-      description: The id of the language pack to get from the device model
+      description: The fully qualified path to the parameter within the device model.
       schema:
-        type: string
-      example: "en"
-  
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "/text_box"
+
+  tags:
+    - Parameters
+
   responses:
     "200":
-      description: The language pack specified by the id within the device model
+      description: The parameter descriptor specified by `fqoid` within the device model.
       content:
         application/json:
           schema:
-            $ref: "./Messages.yaml#/$defs/component_language_pack"
-          example: {
-              "language": "en",
-              "language_pack": {
-                "words": {
-                  "greeting": "Hello",
-                  "parting": "Goodbye"
+            $ref: "./Messages.yaml#/$defs/component_param"
+          example:
+            {
+              "oid": "/text_box",
+              "param": {
+                "name": {
+                  "displayStrings": {
+                    "en": "Text Box",
+                    "es": "Caja de Texto",
+                    "fr": "Boîte de Texte"
+                  }
                 },
-                "name": "English"
+                "type": "STRING",
+                "value": {
+                  "stringValue": "Hello, World!"
+                }
               }
             }
+
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

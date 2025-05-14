@@ -29,59 +29,76 @@
 #
 
 #
-# OpenAPI documentation of the Connect RPC for the Catena REST API
+# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Author: zuhayr.sarker@rossvideo.com
+# Date: 25/04/22
 #
 
 get:
-  summary: Connects a client to a service for updates on value changes.
-  operationId: Connect
+  summary: Gets information about parameters within a device model
+  operationId: BasicParamStream
 
   # default security is read-only
-
+  
   parameters:
-
-    - name: Detail-Level
-      in: header
-      required: false
-      description: The level of detail to connect in
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model containing the parameters to get info for
       schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/detail_level"
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: force_connection
+    - name: recursive
       in: query
       required: false
-      description: Optional flag to force a connection. The presence of this 
-        parameter forces the connection, regardless of its value. (The value 
-        is ignored; any value assigned such as "true" will have the same 
-        effect.)
+      description: Optional flag to recursively get info for all children.
       schema:
         type: string
-        enum: ["true"]
+        enum: ["true", "false"]
+        default: "false" # because protobuf defaults to false
+   
+    - name: fqoid
+      in: path
+      required: false
+      description: The prefix of the OID to get info for
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      default: ""
 
   tags:
-    - Updates  
+    - Parameters
+    - Subscriptions
 
   responses:
     "200":
       description: |
-       A stream of push updates from the server. These updates are
-        sent as server-sent events and have stringified JSON in their data
-        field. This JSON contains a slot number and the data associated with
-        that slot.
+        Returns a stream of basic information about the specified parameter(s).
+        The response is a sequence of stringified JSON objects, each containing information about a single parameter.
+        Each object in the stream has the following structure:
+        
       content:
         text/event-stream:
           schema:
             type: string
-            example: |
-              value: <stringified Value object>
-              exception: <stringified Exception object>
-              device_component: <stringified DeviceComponent object>
-              invalidated_external_object_id: <stringified invalidated_external_object_id object>
-              trap_message: <stringified TrapMessage object>
-              invalidate_device_model: <boolean>
-              remove_components: <stringified RemoveComponents object>
-              slots_added: <stringified SlotList object>
-              slots_removed: <stringified SlotList object>
-              done
+          
+          example: |
+            <stringified {info: BasicParamInfo, array_length: 0}>
+            <stringified {info: BasicParamInfo, array_length: 1}>
+            <stringified {info: BasicParamInfo, array_length: 2}>
+            done
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+          
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

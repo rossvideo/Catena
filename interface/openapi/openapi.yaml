@@ -1,0 +1,164 @@
+#
+# Copyright 2025 Ross Video Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# OpenAPI documentation of the RPCs for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
+openapi: '3.0.3'
+info:
+  title: Catena API
+  version: '1.0'
+servers:
+  - url: https://device.catenamedia.tv:443/api/v1
+  - url: http://localhost:443/api/v1
+
+# default endpoint security is that at least one read scope is required.
+# the permissions in the security array are ORed together.
+# this setting is overridden for endpoints that require different permissions.
+security:
+  - oauth2:
+    - st2138:op
+  - oauth2:
+    - st2138:cfg
+  - oauth2:
+    - st2138:adm
+  - oauth2:
+    - st2138:mon
+
+paths:
+  /devices:
+    $ref: './paths/Devices.yaml'
+
+  /device/{slot}:
+    $ref: './paths/Device.yaml'
+
+  /device/{slot}/stream:
+    $ref: './paths/DeviceStream.yaml'
+
+  /device/{slot}/command/{fqoid}:
+    $ref: './paths/Command.yaml'
+
+  /device/{slot}/asset/{fqoid}:
+    $ref: './paths/Asset.yaml'
+
+  /device/{slot}/asset/{fqoid}/stream:
+    $ref: './paths/AssetStream.yaml'
+
+  /device/{slot}/basic-param/stream/{fqoid}/stream:
+    $ref: './paths/BasicParamStream.yaml'
+
+  /device/{slot}/basic-param/{fqoid}:
+    $ref: './paths/BasicParam.yaml'
+
+  /device/{slot}/value/{fqoid}:
+    $ref: './paths/Value.yaml'
+
+  /device/{slot}/values:
+    $ref: './paths/Values.yaml'
+
+  /device/{slot}/subscriptions:
+    $ref: './paths/Subscriptions.yaml'
+
+  /device/{slot}/param/{fqoid}:
+    $ref: './paths/Param.yaml'
+
+  /device/{slot}/connect:
+    $ref: './paths/Connect.yaml'
+
+  /device/{slot}/language-pack/{language-code}:
+    $ref: './paths/LanguagePack.yaml'
+
+  /device/{slot}/languages:
+    $ref: './paths/Languages.yaml'
+
+components:
+
+  responses:
+
+    "NotFound": # 404
+      description: The requested resource was not found
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: "The requested resource was not found"
+
+    "Unauthorized": # 401
+      description: Unauthorized, access token is either missing or invalid
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: "Access token is either missing or invalid, is user authenticated?"
+
+    "Forbidden": # 403
+      description: Forbidden, insufficient permission for access
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: "Permission denied"
+
+    "InternalServerError": # 500
+      description: An error occurred while processing the request
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: "An error occurred while processing the request"
+
+    "ServiceUnavailable": # 503
+      description: The service is temporarily unavailable
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: "The service is temporarily unavailable"
+
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://device.catenamedia.tv/api/v1/oauth2/token
+          scopes:
+            st2138:op: Read only access to operate a device
+            st2138:op:w: Read and write access to operate a device
+            st2138:cfg: Read only access to configure a device
+            st2138:cfg:w: Read and write access to configure a device
+            st2138:adm: Read only access to administer a device
+            st2138:adm:w: Read and write access to administer a device
+            st2138:mon: Read only access to monitor a device
+            st2138:mon:w: Read and write access to monitor a device
+          
+            

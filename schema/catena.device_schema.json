@@ -57,6 +57,14 @@
   "required": ["slot"],
   "additionalProperties": false,
   "$defs": {
+    "external_object_payload": {
+      "title": "External Object Payload",
+      "description": "A payload for an external object",
+      "type": "object",
+      "properties": {
+        "data": { "type": "string" }
+      }
+    },
     "menu_groups": {
       "title": "Menu Groups",
       "description": "An operationally logical grouping of menus.",
