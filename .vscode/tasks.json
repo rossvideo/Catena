@@ -28,7 +28,7 @@
         {
             "label": "Generate Coverage",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/sdks/cpp/build && mkdir -p ${workspaceFolder}/coverage && gcovr --root ${workspaceFolder} --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=${workspaceFolder}/coverage/index.html --html-details --lcov=${workspaceFolder}/coverage/coverage.info --xml=${workspaceFolder}/coverage/coverage.xml --gcov-ignore-errors=no_working_dir_found --object-directory=. --gcov-object-directory=.",
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -36,14 +36,21 @@
             "problemMatcher": []
         },
         {
-            "label": "Clean Coverage",
+            "label": "Generate Coverage with HTML",
             "type": "shell",
-            "command": "cd ${workspaceFolder} && find . -name '*.gcov' -delete && find . -name '*.gcda' -delete && find . -name '*.gcno' -delete && rm -rf coverage",
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --html && cd coverage && echo 'Starting server...' && echo 'Coverage report available at: http://0.0.0.0:8000/index.html' && echo 'Press Ctrl+C to stop the server' && python3 -m http.server 8000",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "echo": true,
+                "focus": true
+            },
+            "isBackground": true
         },
         {
             "label": "Run Ninja",
