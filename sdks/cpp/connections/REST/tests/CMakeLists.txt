@@ -16,6 +16,8 @@ set(SOURCES
     AddLanguage_test.cpp
     LanguagePackRequest_test.cpp
     ListLanguages_test.cpp
+    MultiSetValue_test.cpp
+    SetValue_test.cpp
 
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
@@ -23,6 +25,8 @@ set(SOURCES
     ../src/controllers/AddLanguage.cpp
     ../src/controllers/LanguagePackRequest.cpp
     ../src/controllers/ListLanguages.cpp
+    ../src/controllers/MultiSetValue.cpp
+    ../src/controllers/SetValue.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
