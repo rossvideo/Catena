@@ -126,6 +126,11 @@ class ISocketReader {
     virtual bool authorizationEnabled() const = 0;
 
     /**
+     * @brief Returns the path to the external object.
+     */
+    virtual const std::string& EOPath() const = 0;
+
+    /**
      * @brief Returns a reference to the subscription manager
      */
     virtual catena::common::ISubscriptionManager& getSubscriptionManager() = 0;

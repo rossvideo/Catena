@@ -9,6 +9,7 @@ using catena::REST::CatenaServiceImpl;
 #include <controllers/MultiSetValue.h>
 #include <controllers/SetValue.h>
 #include <controllers/DeviceRequest.h>
+#include <controllers/AssetRequest.h>
 #include <controllers/GetValue.h>
 #include <controllers/GetPopulatedSlots.h>
 #include <controllers/AddLanguage.h>
@@ -52,6 +53,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("GET/v1/connect",                    Connect::makeOne);
     router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
     router_.addProduct("PUT/v1/execute-command",            ExecuteCommand::makeOne);
+    router_.addProduct("GET/v1/asset-request",              AssetRequest::makeOne);
     router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
     router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);
     router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
@@ -85,7 +87,7 @@ void CatenaServiceImpl::run() {
             if (!shutdown_) {
                 try {
                     // Reading from the socket.
-                    SocketReader context(*subscriptionManager_);
+                    SocketReader context(*subscriptionManager_, EOPath_);
                     context.read(socket, authorizationEnabled_);
                     std::string requestKey = context.method() + context.endpoint();
                     // Returning empty response with options to the client if required.

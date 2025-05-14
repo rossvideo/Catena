@@ -70,8 +70,9 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Constructor for the SocketReader class.
      * @param subscriptionManager The subscription manager to use.
+     * @param EOPath The path to external objects
      */
-    SocketReader(catena::common::ISubscriptionManager& subscriptionManager);
+    SocketReader(catena::common::ISubscriptionManager& subscriptionManager, const std::string& EOPath = "");
     /**
      * @brief Populates variables using information read from the inputted
      * socket.
@@ -140,7 +141,12 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() const override { return authorizationEnabled_; };
+    bool authorizationEnabled() const override { return authorizationEnabled_; };\
+
+    /**
+     * @brief Returns the path to the external object.
+     */
+    const std::string& EOPath() const override { return EOPath_; }  
 
   private:
     /**
@@ -192,6 +198,10 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
+    /**
+     * @brief The path to the external object.
+     */
+    std::string EOPath_ = ""; 
 };
 
 }; // Namespace REST
