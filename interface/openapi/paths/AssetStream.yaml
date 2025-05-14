@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,44 +29,61 @@
 #
 
 #
-# OpenAPI documentation of the LanguagePackRequest RPC for the Catena REST API
+# OpenAPI documentation of the ExecuteCommand RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
 get:
-  summary: Returns a language pack from the device model.
-  operationId: LanguagePackRequest
+  summary: get an asset, or a stream of assets from the device
+  operationId: AssetStream
+
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model to get the language pack from
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: language
+    - name: fqoid
       in: path
       required: true
-      description: The id of the language pack to get from the device model
+      description: The fully qualified object ID of the asset to get
       schema:
-        type: string
-      example: "en"
-  
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "image.png"
+
+  tags:
+    - Assets
+    
   responses:
     "200":
-      description: The language pack specified by the id within the device model
+      description: The server's response will be a stream of ExternalObjectPayload  objects
+        'respond' is false
       content:
-        application/json:
+        text/event-stream:
           schema:
-            $ref: "./Messages.yaml#/$defs/component_language_pack"
-          example: {
-              "language": "en",
-              "language_pack": {
-                "words": {
-                  "greeting": "Hello",
-                  "parting": "Goodbye"
-                },
-                "name": "English"
-              }
-            }
+            type: string
+            example: |
+              <fqoid of asset 1>: <stringified ExternalObjectPayload>
+              <fqoid of asset n>: <stringified ExternalObjectPayload>
+              done
+      # ExternalObjectPayload doesn't yet have a schema, todo!
+          
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

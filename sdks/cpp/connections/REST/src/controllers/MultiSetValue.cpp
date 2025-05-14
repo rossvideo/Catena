@@ -13,7 +13,7 @@ MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevic
 }
 
 MultiSetValue::MultiSetValue(tcp::socket& socket, ISocketReader& context, IDevice& dm, int objectId) :
-    socket_{socket}, writer_{socket}, context_{context}, dm_{dm}, objectId_{objectId} {}
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm}, objectId_{objectId} {}
 
 bool MultiSetValue::toMulti_() {
     absl::Status status = google::protobuf::util::JsonStringToMessage(absl::string_view(context_.jsonBody()), &reqs_);
