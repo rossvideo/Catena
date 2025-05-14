@@ -28,8 +28,31 @@
         {
             "label": "Generate Coverage",
             "type": "shell",
-            "command": "cd ${workspaceFolder} && gcovr --root . --filter sdks/cpp -e '(.+/)?build/' -e '(.+/)?tests/' --html=coverage/index.html --html-details  --lcov=coverage/coverage.info --xml=coverage/coverage.xml",
-            "group": "build",
+            "command": "./scripts/run_coverage.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate Coverage with HTML",
+            "type": "shell",
+            "command": "./scripts/run_coverage.sh --html",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean Coverage",
+            "type": "shell",
+            "command": "cd ${workspaceFolder} && find . -name '*.gcov' -delete && find . -name '*.gcda' -delete && find . -name '*.gcno' -delete && rm -rf coverage",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": []
         },
         {
@@ -58,8 +81,9 @@
             //    - Build type from CMAKE_BUILD_TYPE env var
             //    - Connections from CONNECTIONS env var
             //    - Install prefix set to /usr/local/.local
+            //    - Coverage flags set for C++ and C
             // 6. Run ninja to build the project
-            "command": "cd ${workspaceFolder}/sdks/cpp && if [ -f build/build.ninja ]; then (cd build && ninja clean); fi && if [ ! -d build ]; then mkdir build; fi && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_INSTALL_PREFIX=/usr/local/.local .. && ninja",
+            "command": "cd ${workspaceFolder}/sdks/cpp && if [ -f build/build.ninja ]; then (cd build && ninja clean); fi && if [ ! -d build ]; then mkdir build; fi && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS=\"gRPC;REST\" -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local .. && ninja",
             "group": {
                 "kind": "build",
                 "isDefault": true
