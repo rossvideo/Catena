@@ -40,6 +40,8 @@ get:
 
   operationId: DeviceRequest
 
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path

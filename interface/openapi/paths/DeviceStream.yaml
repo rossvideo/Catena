@@ -39,6 +39,8 @@ get:
 
   operationId: DeviceStreamRequest
 
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path

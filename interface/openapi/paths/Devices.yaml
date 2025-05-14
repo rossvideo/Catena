@@ -40,6 +40,8 @@ get:
 
   operationId: Devices
 
+  # default security is read-only
+
   tags:
     - Discovery
 

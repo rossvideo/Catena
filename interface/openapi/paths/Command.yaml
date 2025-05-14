@@ -38,7 +38,7 @@ put:
   summary: Execute a command on a device model
   operationId: ExecuteCommand
 
-  # at least one scope with write access is required.
+  # Override default security, at least one scope with write access is required.
   security:
     - oauth2:
       - st2138:op:w

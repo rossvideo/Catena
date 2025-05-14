@@ -1,3 +1,4 @@
+#
 # Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,59 +29,49 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
+# OpenAPI documentation of the ExecuteCommand RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
-# Author: zuhayr.sarker@rossvideo.com
-# Date: 25/04/22
+# Date: 25/04/03
 #
 
 get:
-  summary: Get a language pack
+  summary: get an asset without streaming
+  operationId: GetAsset
 
-  operationId: GetLanguagePack
-
-  # default security is read-only
+  # default security is read-only 
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-   
-    - name: language-code
+
+    - name: fqoid
       in: path
       required: true
-      description: standard language code
+      description: The fully qualified object ID of the asset to get
       schema:
-        type: string
-      default: "en"
-      example: "es"
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "image.png"
 
   tags:
-    - Languages
-
+    - Assets
+    
   responses:
     "200":
-      description: The language pack
-        
+      description: The server's response will either be a 'Value' or nothing if 
+        'respond' is false
       content:
-        application/json:
+        text/event-stream:
           schema:
-            $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
-          
-          example:
-            {
-              "name": "Spanish",
-              "words": {
-                "greeting": "Hola",
-                "parting": "Adiós"
-              }
-            }
-
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+            type: string
+            example: |
+              <fqoid of asset 1>: <stringified ExternalObjectPayload>
+              <fqoid of asset n>: <stringified ExternalObjectPayload>
+              done
+      # ExternalObjectPayload doesn't yet have a schema, todo!
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
@@ -91,109 +82,56 @@ get:
     "404":
       $ref: '../openapi.yaml#/components/responses/NotFound'
 
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
 
 post:
-  summary: |
-    Add a new language pack to the device model. 
-    Attempts to overwrite an existing language pack will fail with 403 Forbidden.
+  summary: load an asset
+  operationId: LoadAsset
 
-  operationId: AddLanguagePack
-
-  # Admin scope with write access is required.
+  # Admin, Operator or Configure scope with write access is required.
   security:
       - oauth2:
         - st2138:adm:w
+      - oauth2:
+        - st2138:op:w
+      - oauth2:
+        - st2138:cfg:w
 
   tags:
-    - Languages
+    - Assets
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to get the value from 
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
-    - name: language-code
+
+    - name: fqoid
       in: path
-      required: true
-      description: standard language code
+      required: true  
+      description: The place to store the asset
       schema:
-        type: string
-      default: "" 
-      example: "fr"
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "image.png"
 
   requestBody:
     required: true
     content:
       application/json:
         schema:
-          $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
-        example:
-          {
-            "name": "French",
-            "words": {
-              "greeting": "Bonjour",
-              "parting": "Au revoir"
-            }
-          }
-
-  responses:
-
-    "204":
-      description: Empty response - everything is OK
-          
-    "401":
-      $ref: '../openapi.yaml#/components/responses/Unauthorized'
-
-    "403":
-      $ref: '../openapi.yaml#/components/responses/Forbidden'
-
-    "404":
-      $ref: '../openapi.yaml#/components/responses/NotFound'
-
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
-
-    "503":
-      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-  
-delete:
-  summary: |
-    Delete a language pack from the device model.
-    Only packs that are field upgrades can be deleted.
-    Attempts to delete a pack that was shipped with the device will fail with 403 Forbidden.
-
-  operationId: DeleteLanguagePack
-
-  # Admin scope with write access is required.
-  security:
-      - oauth2:
-        - st2138:adm:w
-
-  tags:
-    - Languages
-
-  parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameters to get info for
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
-    - name: language-code
-      in: path
-      required: true
-      example: "klingon"
+          $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
+          # E doesn't yet have a schema, todo!
 
   responses:
     "204":
       description: Empty response - everything is OK
-      
+
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
@@ -210,53 +148,49 @@ delete:
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
 
 put:
-  summary: |
-    Update a language pack in the device model.
-    Attempts to update a pack that was shipped with the device will fail with 403 Forbidden.
-    Only packs that are field upgrades can be updated.  
+  summary: Overwrite an asset
+  operationId: OverwriteAsset
 
-  operationId: UpdateLanguagePack
-
-  # Admin scope with write access is required.
+  # Admin, Operator or Configure scope with write access is required.
   security:
       - oauth2:
         - st2138:adm:w
+      - oauth2:
+        - st2138:op:w
+      - oauth2:
+        - st2138:cfg:w
 
   tags:
-    - Languages
+    - Assets
 
   parameters:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to get the value from 
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-    - name: language-code
+    - name: fqoid
       in: path
       required: true  
-      example: "klingon"
+      description: The place to store the asset
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "image.png"
 
   requestBody:
     required: true
     content:
-      application/json: 
+      application/json:
         schema:
-          $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
-        example:
-          {
-            "name": "Klingon",
-            "words": {
-              "greeting": "Qapla'",
-              "parting": "NuqneH"
-            }
-          }
+          $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
+          # external_object_payload doesn't yet have a schema, todo!
 
   responses:
     "204":
       description: Empty response - everything is OK
-      
+
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
@@ -272,3 +206,60 @@ put:
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
 
+delete:
+  summary: Delete an asset
+  operationId: DeleteAsset
+
+  # Admin, Operator or Configure scope with write access is required.
+  security:
+      - oauth2:
+        - st2138:adm:w
+      - oauth2:
+        - st2138:op:w
+      - oauth2:
+        - st2138:cfg:w
+  tags:
+    - Assets
+
+  parameters:
+    - name: slot
+      in: path
+      required: true  
+      description: The slot of the device model to get the value from 
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+
+    - name: fqoid
+      in: path      
+      required: true
+      description: The fully qualified object ID of the asset to delete
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      example: "image.png"
+  
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
+          # external_object_payload doesn't yet have a schema, todo!  
+
+  responses:
+    "204":
+      description: Empty response - everything is OK
+
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

@@ -44,6 +44,7 @@ servers:
 
 # default endpoint security is that at least one read scope is required.
 # the permissions in the security array are ORed together.
+# this setting is overridden for endpoints that require different permissions.
 security:
   - oauth2:
     - st2138:op
@@ -66,6 +67,9 @@ paths:
 
   /device/{slot}/command/{fqoid}:
     $ref: './paths/Command.yaml'
+
+  /device/{slot}/asset/{fqoid}:
+    $ref: './paths/Asset.yaml'
 
   /device/{slot}/asset/{fqoid}/stream:
     $ref: './paths/AssetStream.yaml'

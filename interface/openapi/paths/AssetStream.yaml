@@ -38,16 +38,7 @@ get:
   summary: get an asset, or a stream of assets from the device
   operationId: AssetStream
 
-  # at least one scope with read access is required.
-  security:
-    - oauth2:
-      - st2138:op
-    - oauth2:
-      - st2138:cfg
-    - oauth2:
-      - st2138:adm
-    - oauth2:
-      - st2138:mon
+  # default security is read-only
 
   parameters:
     - name: slot
@@ -60,7 +51,7 @@ get:
     - name: fqoid
       in: path
       required: true
-      description: The fully qualified object ID of the command to execute
+      description: The fully qualified object ID of the asset to get
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
       example: "/image.png"
@@ -70,7 +61,7 @@ get:
     
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if 
+      description: The server's response will be a stream of ExternalObjectPayload  objects
         'respond' is false
       content:
         text/event-stream:

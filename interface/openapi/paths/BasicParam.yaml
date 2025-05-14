@@ -41,16 +41,7 @@ get:
 
   operationId: BasicParam
 
-  # at least one scope with read access is required.
-  security:
-    - oauth2:
-      - st2138:op
-    - oauth2:
-      - st2138:cfg
-    - oauth2:
-      - st2138:adm
-    - oauth2:
-      - st2138:mon
+  # default security is read-only
 
   parameters:
     - name: slot

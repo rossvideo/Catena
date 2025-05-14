@@ -39,6 +39,8 @@ get:
 
   operationId: GetSubscriptions
 
+  # default security is read-only
+
   parameters:
     - name: slot
       in: path
@@ -47,7 +49,9 @@ get:
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
-  
+  tags:
+    - Subscriptions
+    - Parameters
 
   responses:
     "200":
@@ -93,18 +97,10 @@ put:
 
   operationId: SetSubscriptions
 
-  # at least one scope with read access is required.
-  # even though this is a write operation, it's purpose is to change which
-  # parameters are subscribed to, so it's read-like in that sense.
-  security:
-    - oauth2:
-      - st2138:op
-    - oauth2:
-      - st2138:cfg
-    - oauth2:
-      - st2138:adm
-    - oauth2:
-      - st2138:mon
+  # default security is read-only
+  # even though this is a write operation, its purpose is to change which
+  # parameters are subscribed, so it's read-like in that sense.
+
 
   parameters:
     - name: slot
