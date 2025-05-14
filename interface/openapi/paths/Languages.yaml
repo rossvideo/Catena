@@ -55,7 +55,7 @@ get:
       required: true
       description: slot number
       schema:
-        type: integer
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
       example: 1  
 
   tags:
