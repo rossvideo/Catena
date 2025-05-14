@@ -9,31 +9,29 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
     // Convert message to JSON
     std::string jsonOutput = "";
     // Check if message is not Empty so we don't send empty body
-    if (msg.GetTypeName() != "catena.Empty")  {
+    if (httpStatus.first < 300 && msg.GetTypeName() != "catena.Empty")  {
         google::protobuf::util::JsonPrintOptions options; // Default options
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
         if (!status.ok()) {
-            //If conversion fails, this error maps to bad request
+            /* If conversion fails, this error maps to bad request.
+             * This should be impossible to get to without failing on function
+             * call first*/
             httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
             jsonOutput = "";
         }
     }
 
-   // Write headers
+    // Forming response
     response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
-            << "Content-Type: application/json\r\n"
-            << "Connection: close\r\n"
-            << "Content-Length: " << jsonOutput.length() << "\r\n" // will = 0 in case of error or empty.
-            << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
-            << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-            << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-            << "Access-Control-Allow-Credentials: true\r\n\r\n";
-
-    // Only send event if we have valid data
-    if (httpStatus.first < 300 && !jsonOutput.empty()) {
-        response << jsonOutput << "\n\n";
-    }
+             << "Content-Type: application/json\r\n"
+             << "Connection: close\r\n"
+             << "Content-Length: " << jsonOutput.length() << "\r\n"
+             << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
+             << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+             << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+             << "Access-Control-Allow-Credentials: true\r\n\r\n"
+             << jsonOutput;
     
     boost::asio::write(socket_, boost::asio::buffer(response.str()));
 }
@@ -49,7 +47,9 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
         if (!status.ok()) {
-            //If conversion fails, this error maps to bad request
+            /* If conversion fails, this error maps to bad request.
+             * This should be impossible to get to without failing on function
+             * call first*/
             httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
             jsonOutput = "";
         }
@@ -58,13 +58,13 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
     // Send headers only once
     if (!headers_sent_) {
         response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
-                << "Content-Type: text/event-stream\r\n"
-                << "Cache-Control: no-cache\r\n"
-                << "Connection: keep-alive\r\n"
-                << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
-                << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                << "Access-Control-Allow-Credentials: true\r\n\r\n";
+                 << "Content-Type: text/event-stream\r\n"
+                 << "Cache-Control: no-cache\r\n"
+                 << "Connection: keep-alive\r\n"
+                 << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
+                 << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                 << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+                 << "Access-Control-Allow-Credentials: true\r\n\r\n";
         headers_sent_ = true;
     }
 

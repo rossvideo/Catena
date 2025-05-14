@@ -87,7 +87,7 @@ void CatenaServiceImpl::run() {
                     // Reading from the socket.
                     SocketReader context(*subscriptionManager_);
                     context.read(socket, authorizationEnabled_);
-                    std::string requestKey = context.method() + context.service();
+                    std::string requestKey = context.method() + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
                         // Set to 204 No Content if in OPTIONS.

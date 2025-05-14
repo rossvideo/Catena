@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Ross Video Ltd
+# Copyright 2024 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -15,7 +15,7 @@
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -29,44 +29,63 @@
 #
 
 #
-# OpenAPI documentation of the RPCs for the Catena REST API
+# OpenAPI documentation of the DeviceRequest RPC for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/04/03
 #
 
-openapi: '3.0.3'
-info:
-  title: Catena API
-  version: '1.0'
-servers:
-  - url: https://device.catenamedia.tv/v1
-  - url: http://localhost:443/v1
-paths:
-  /device-request/{slot}:
-    $ref: './paths/DeviceRequest.yaml'
-  /get-populated-slots:
-    $ref: './paths/GetPopulatedSlots.yaml'
-  /execute-command/{slot}:
-    $ref: "./paths/ExecuteCommand.yaml"
-  /external-object-request/{slot}:
-    $ref: './paths/ExternalObjectRequest.yaml'
-  /basic-param-info-request/{slot}:
-    $ref: './paths/BasicParamInfoRequest.yaml'
-  /get-value/{slot}:
-    $ref: './paths/GetValue.yaml'
-  /set-value/{slot}:
-    $ref: './paths/SetValue.yaml'
-  /multi-set-value/{slot}:
-    $ref: './paths/MultiSetValue.yaml'
-  /update-subscriptions/{slot}:
-    $ref: './paths/UpdateSubscriptions.yaml'
-  /get-param/{slot}:
-    $ref: './paths/GetParam.yaml'
-  /connect:
-    $ref : './paths/Connect.yaml'
-  /add-language/{slot}:
-    $ref: './paths/AddLanguage.yaml'
-  /language-pack-request/{slot}:
-    $ref: './paths/LanguagePackRequest.yaml'
-  /list-languages/{slot}:
-    $ref: './paths/ListLanguages.yaml'
+get:
+  summary: Gets a list of language codes that are supported by the device model
+  operationId: Languages
+
+  # at least one scope with read access is required.
+  security:
+    - oauth2:
+      - st2138:op
+    - oauth2:
+      - st2138:cfg
+    - oauth2:
+      - st2138:mon
+    - oauth2:
+      - st2138:adm
+
+  parameters:
+    - name: slot
+      in: path
+      required: true
+      description: slot number
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+      example: 1  
+
+  tags:
+    - Languages
+
+  responses:
+    "200":
+      description: A list of the language codes that are supported by the device model
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+ 
+  
+          example: { "languages": ["en", "fr", "es", "de"] }
+    
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+          
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
+  

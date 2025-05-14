@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.20)
 set(This common_unit_tests)
 
 find_package(GTest REQUIRED)
-include_directories(../src)
+include_directories(../src ../include)
+include_directories(${GTEST_INCLUDE_DIRS})
 
 # set up link libs, prefer gRPC if enabled
 set(common_lib)
@@ -17,17 +18,19 @@ else()
     endif(REST_enabled)
 endif(gRPC_enabled)
 
-
-
 set(SOURCES 
     utils_test.cpp
+    subscription_manager_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
 
-target_link_libraries(${This} PUBLIC
-    ${GTEST_LIBRARIES}
-    ${GTEST_MAIN_LIBRARIES}
+target_link_libraries(${This} PRIVATE
+    ${GTEST_BOTH_LIBRARIES}
+    GTest::GTest
+    GTest::Main
+    GTest::gmock
+    GTest::gmock_main
     ${common_lib}
 )
 
