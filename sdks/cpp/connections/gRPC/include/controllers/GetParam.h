@@ -102,8 +102,7 @@ class GetParam : public CallData {
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
     catena::common::Authorizer* authz_;
 
-    std::vector<std::string> oids_;
-
+    std::vector<const ParamDescriptor*> pds_;
     /**
      * @brief The object's unique id.
      */
