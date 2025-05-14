@@ -126,7 +126,7 @@ post:
       application/json:
         schema:
           $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
-          # E doesn't yet have a schema, todo!
+
 
   responses:
     "204":
@@ -185,7 +185,7 @@ put:
       application/json:
         schema:
           $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
-          # external_object_payload doesn't yet have a schema, todo!
+          # external_object_payload schema definition
 
   responses:
     "204":
@@ -243,7 +243,7 @@ delete:
       application/json:
         schema:
           $ref: "../../../schema/catena.device_schema.json#/$defs/external_object_payload"
-          # external_object_payload doesn't yet have a schema, todo!  
+          # external_object_payload schema definition  
 
   responses:
     "204":
