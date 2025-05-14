@@ -94,8 +94,8 @@ class SocketHelper {
                               "Authorization: Bearer " + jwsToken + " \n"
                               "Detail-Level: " + detailLevel + " \n"
                               "Language: " + language + " \n"
-                              "Content-Length: " + std::to_string(jsonBody.length()) + "\n"
-                              "\r\n" + jsonBody + "\n"
+                              "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
+                              + jsonBody + "\n"
                               "\r\n\r\n";
         boost::asio::write(*writeSocket, boost::asio::buffer(request));
     }
