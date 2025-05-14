@@ -108,7 +108,7 @@ components:
     "NotFound": # 404
       description: The requested resource was not found
       content:
-        text/plain::
+        text/plain:
           schema:
             type: string
           example: "The requested resource was not found"
@@ -116,7 +116,7 @@ components:
     "Unauthorized": # 401
       description: Unauthorized, access token is either missing or invalid
       content:
-        text/plain::
+        text/plain:
           schema:
             type: string
           example: "Access token is either missing or invalid, is user authenticated?"
@@ -132,7 +132,7 @@ components:
     "InternalServerError": # 500
       description: An error occurred while processing the request
       content:
-        text/plain::
+        text/plain:
           schema:
             type: string
           example: "An error occurred while processing the request"
@@ -140,7 +140,7 @@ components:
     "ServiceUnavailable": # 503
       description: The service is temporarily unavailable
       content:
-        text/plain::
+        text/plain:
           schema:
             type: string
           example: "The service is temporarily unavailable"
