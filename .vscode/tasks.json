@@ -28,7 +28,7 @@
         {
             "label": "Generate Coverage",
             "type": "shell",
-            "command": "./scripts/run_coverage.sh",
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -38,7 +38,7 @@
         {
             "label": "Generate Coverage with HTML",
             "type": "shell",
-            "command": "./scripts/run_coverage.sh --html",
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --html",
             "group": {
                 "kind": "build",
                 "isDefault": true
