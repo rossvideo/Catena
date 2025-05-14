@@ -51,7 +51,7 @@ get:
 
   parameters:
     - name: slot
-      in: query
+      in: path
       required: true
       description: slot number
       schema:

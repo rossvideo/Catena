@@ -54,7 +54,7 @@ get:
       description: The fully qualified object ID of the asset to get
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      example: "/image.png"
+      example: "image.png"
 
   tags:
     - Assets
