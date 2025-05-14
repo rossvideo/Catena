@@ -38,22 +38,19 @@
         {
             "label": "Generate Coverage with HTML",
             "type": "shell",
-            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --html",
+            "command": "cd ${workspaceFolder} && ./scripts/run_coverage.sh --html && cd coverage && echo 'Starting server...' && echo 'Coverage report available at: http://0.0.0.0:8000/index.html' && echo 'Press Ctrl+C to stop the server' && python3 -m http.server 8000",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
-        },
-        {
-            "label": "Clean Coverage",
-            "type": "shell",
-            "command": "cd ${workspaceFolder} && find . -name '*.gcov' -delete && find . -name '*.gcda' -delete && find . -name '*.gcno' -delete && rm -rf coverage",
-            "group": {
-                "kind": "build",
-                "isDefault": true
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "echo": true,
+                "focus": true
             },
-            "problemMatcher": []
+            "isBackground": true
         },
         {
             "label": "Run Ninja",
