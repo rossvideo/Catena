@@ -66,21 +66,8 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
   
     void TearDown() override { /* Cleanup code here */ }
 
-    /*
-     * Since all of the tests are essentially the write->read->validate, here
-     * is all the steps compiled. Diferences between tests will come from
-     * setting the member variables of the fixture.
-     */
-    void TestSocketReader() {
-        // Write
-        writeRequest(method, endpoint, slot, fields,
-                     jwsToken, jsonBody, dl, language);
-        
-        // Read
-        socketReader.read(serverSocket, authz);
-        
-        // Validate
-        // Updating jwsToken and DetailLevel
+    // Checks the fields read by the socketReader.
+    void testResults() {
         if (!authz) { jwsToken = ""; }
         auto& dlMap = catena::common::DetailLevel().getForwardMap();
         // Checking answers.
@@ -125,56 +112,92 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
  *                             SSEWriter tests
  * ============================================================================
  * 
- * TEST 1 - Reading from socket with authz disabled.
+ * TEST 1 - Initializing the SocketReader with subscriptionManager.
  */
-TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
-    // Authz false by default.
-    TestSocketReader();
+TEST_F(RESTSocketReaderTests, SocketReader_Create) {
+    // Testing socketReader creation from setUp() step.
 }
 
 /* 
- * TEST 2 - Reading from socket with authz enabled.
+ * TEST 2 - Reading from socket with authz disabled.
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
+    // Authz false by default.
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    socketReader.read(serverSocket, authz);
+    testResults();
+}
+
+/* 
+ * TEST 3 - Reading from socket with authz enabled.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
     // Setting authz to true and calling validate.
     authz = true;
-    TestSocketReader();
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    socketReader.read(serverSocket, authz);
+    testResults();
 }
 
 /* 
- * TEST 3 - Reading connect from socket (No slot required)
+ * TEST 4 - Reading connect from socket (No slot required)
  */
 TEST_F(RESTSocketReaderTests, SocketReader_NoSlotConnect) {
     // Connect does not require a slot specified.
     endpoint = "/v1/connect";
     slot = 0;
-    TestSocketReader();
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    socketReader.read(serverSocket, authz);
+    testResults();
 }
 
 /* 
- * TEST 4 - Reading get-populated-slots from socket (No slot required)
+ * TEST 5 - Reading get-populated-slots from socket (No slot required)
  */
 TEST_F(RESTSocketReaderTests, SocketReader_NoSlotGetPopulatedSlots) {
     // GetPopulatedSlots does not require a slot specified.
     endpoint = "/v1/get-populated-slots";
     slot = 0;
-    TestSocketReader();
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    socketReader.read(serverSocket, authz);
+    testResults();
 }
 
 /* 
- * TEST 5 - Reading request from socket with no slot specified (Error).
+ * TEST 6 - Reading request from socket with no slot specified (Error).
  */
 TEST_F(RESTSocketReaderTests, SocketReader_NoSlotError) {
     // All other calls require a slot specified.
     slot = 0;
-    ASSERT_THROW(TestSocketReader(), catena::exception_with_status);
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    ASSERT_THROW(socketReader.read(serverSocket, authz), catena::exception_with_status);
 }
 
 /* 
- * TEST 6 - Reading request from socket with no slot specified.
+ * TEST 7 - Reading a request from the socket with a long json body.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
     // Setting json body to just a string of 10000 'a's.
     jsonBody = std::string(10000, 'a');
-    TestSocketReader();
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    socketReader.read(serverSocket, authz);
+    testResults();
+}
+
+/* 
+ * TEST 8 - Reading request from socket with detail level unset.
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_DetailLevelUnset) {
+    dl = "";
+    writeRequest(method, endpoint, slot, fields,
+                 jwsToken, jsonBody, dl, language);
+    socketReader.read(serverSocket, authz);
+    dl = "NONE";
+    testResults();
 }
