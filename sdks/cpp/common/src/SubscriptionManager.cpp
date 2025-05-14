@@ -64,7 +64,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     // Check for duplicate subscription
     if (!isWildcard(oid) && subscriptions_.find(oid) != subscriptions_.end()) {
         rc = catena::exception_with_status("Subscription already exists for OID: " + oid,
-                                         catena::StatusCode::NO_CONTENT);
+                                         catena::StatusCode::ALREADY_EXISTS);
         subscriptionLock_.unlock();
         return false;
     }

@@ -43,7 +43,6 @@
 #include <IParam.h>
 #include <Status.h>
 #include <Authorization.h>
-#include <ISubscriptionManager.h>
 
 namespace catena {
 namespace common {
@@ -88,13 +87,31 @@ class MockDevice : public IDevice {
     MOCK_METHOD(bool, shouldSendParam, (const IParam& param, bool is_subscribed, Authorizer& authz), (const, override));
 };
 
-// Mock SubscriptionManager for testing
-class MockSubscriptionManager : public ISubscriptionManager {
+// Mock IParam for testing
+class MockParam : public IParam {
 public:
-    MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
-    MOCK_METHOD(bool, removeSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
-    MOCK_METHOD(const std::set<std::string>&, getAllSubscribedOids, (IDevice& dm), (override));
-    MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override)); //Currently untested
+    MOCK_METHOD(std::unique_ptr<IParam>, copy, (), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, Authorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, Authorizer& authz), (override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::Param& param, Authorizer& authz), (const, override));
+    MOCK_METHOD(catena::exception_with_status, toProto, (catena::BasicParamInfoResponse& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(ParamType, type, (), (const, override));
+    MOCK_METHOD(const std::string&, getOid, (), (const, override));
+    MOCK_METHOD(void, setOid, (const std::string& oid), (override));
+    MOCK_METHOD(bool, readOnly, (), (const, override));
+    MOCK_METHOD(void, readOnly, (bool flag), (override));
+    MOCK_METHOD(std::unique_ptr<IParam>, getParam, (Path& oid, Authorizer& authz, catena::exception_with_status& status), (override));
+    MOCK_METHOD(uint32_t, size, (), (const, override));
+    MOCK_METHOD(std::unique_ptr<IParam>, addBack, (Authorizer& authz, catena::exception_with_status& status), (override));
+    MOCK_METHOD(catena::exception_with_status, popBack, (Authorizer& authz), (override));
+    MOCK_METHOD(const IConstraint*, getConstraint, (), (const, override));
+    MOCK_METHOD(const std::string&, getScope, (), (const, override));
+    MOCK_METHOD(void, defineCommand, (std::function<catena::CommandResponse(catena::Value)> command), (override));
+    MOCK_METHOD(catena::CommandResponse, executeCommand, (const catena::Value& value), (const, override));
+    MOCK_METHOD(const ParamDescriptor&, getDescriptor, (), (const, override));
+    MOCK_METHOD(bool, isArrayType, (), (const, override));
+    MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans), (override));
+    MOCK_METHOD(void, resetValidate, (), (override));
 };
 
 } // namespace common
