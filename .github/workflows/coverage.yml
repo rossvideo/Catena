@@ -20,14 +20,16 @@ jobs:
       - name: Start Dev Container
         run: |
           docker run --rm -d --name catena-container \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace/Catena \
+            -v ${{ github.workspace }}:/home/catenauser/Catena \
+            -w /home/catenauser/Catena \
             catena-devcontainer \
             /bin/bash -c './scripts/run_coverage.sh'
-
+      - name: ls -la
+        run: ls -la
+        
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-xml
-          path: Catena/coverage/coverage.xml
+          path: coverage/coverage.xml
 
