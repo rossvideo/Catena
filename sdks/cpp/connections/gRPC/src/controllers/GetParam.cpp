@@ -119,8 +119,10 @@ void GetParam::proceed( bool ok) {
             pd->toProto(*response.mutable_param(), *authz_);
             // If param has children, add child oids to the oids_ vector.
             for (auto [oid, childDesc] : pd->getAllSubParams()) {
-                response.add_sub_params(oid);
-                pds_.push_back(childDesc);
+                if (authz_->readAuthz(*childDesc)) {
+                    pds_.push_back(childDesc);
+                    response.add_sub_params(oid);
+                }
             }
             // Write the param descriptor
             writer_.Write(response, this);
