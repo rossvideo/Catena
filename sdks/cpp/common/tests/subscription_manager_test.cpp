@@ -31,7 +31,7 @@
 /**
  * @brief This file is for testing the SubscriptionManager.cpp file.
  * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/05/14
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
@@ -53,31 +53,31 @@ protected:
         mockParam = std::make_unique<MockParam>();
         
         // Set up default mock behavior for device
-        ON_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+        EXPECT_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
+            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
 
         // Set up default behavior for mutex
         static std::mutex test_mutex;
-        ON_CALL(*device, mutex())
-            .WillByDefault(::testing::ReturnRef(test_mutex));
+        EXPECT_CALL(*device, mutex())
+            .WillRepeatedly(::testing::ReturnRef(test_mutex));
 
         // Set up default behavior for getParam
-        ON_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+        EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+            .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return std::make_unique<MockParam>();
             }));
 
         // Set up default behavior for subscriptions
-        ON_CALL(*device, subscriptions())
-            .WillByDefault(::testing::Return(true));
+        EXPECT_CALL(*device, subscriptions())
+            .WillRepeatedly(::testing::Return(true));
 
         // Set up default behavior for mockParam
         static std::string test_oid = "/test/param";
-        ON_CALL(*mockParam, getOid())
-            .WillByDefault(::testing::ReturnRef(test_oid));
+        EXPECT_CALL(*mockParam, getOid())
+            .WillRepeatedly(::testing::ReturnRef(test_oid));
     }
 
     std::unique_ptr<SubscriptionManager> manager;

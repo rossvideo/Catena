@@ -41,6 +41,7 @@
 #include <gmock/gmock.h>
 #include <IDevice.h>
 #include <IParam.h>
+#include <ParamDescriptor.h>
 #include <Status.h>
 #include <Authorization.h>
 
@@ -90,6 +91,17 @@ class MockDevice : public IDevice {
 // Mock IParam for testing
 class MockParam : public IParam {
 public:
+    MockParam() = default;
+    virtual ~MockParam() = default;
+
+    // Explicitly declare move semantics
+    MockParam(MockParam&&) = default;
+    MockParam& operator=(MockParam&&) = default;
+
+    // Explicitly delete copy semantics
+    MockParam(const MockParam&) = delete;
+    MockParam& operator=(const MockParam&) = delete;
+
     MOCK_METHOD(std::unique_ptr<IParam>, copy, (), (const, override));
     MOCK_METHOD(catena::exception_with_status, toProto, (catena::Value& dst, Authorizer& authz), (const, override));
     MOCK_METHOD(catena::exception_with_status, fromProto, (const catena::Value& src, Authorizer& authz), (override));
@@ -112,6 +124,36 @@ public:
     MOCK_METHOD(bool, isArrayType, (), (const, override));
     MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans), (override));
     MOCK_METHOD(void, resetValidate, (), (override));
+};
+
+/**
+ * @brief Mock implementation of ParamDescriptor for testing
+ */
+class MockParamDescriptor : public ParamDescriptor {
+public:
+    MockParamDescriptor() : ParamDescriptor(
+        catena::ParamType::STRING,        // type
+        {},                               // oid_aliases
+        {},                               // name
+        "",                               // widget
+        "",                               // scope
+        false,                            // read_only
+        "",                               // oid - empty by default
+        "",                               // template_oid
+        nullptr,                          // constraint
+        false,                            // isCommand
+        *static_cast<IDevice*>(nullptr),  // device - will be set in constructor
+        0,                                // max_length
+        0,                                // total_length
+        false,                            // minimal_set
+        nullptr                           // parent
+    ) {}
+
+    MOCK_METHOD((const std::string&), getOid, (), (const));
+    MOCK_METHOD(bool, readOnly, (), (const));
+    MOCK_METHOD((const std::string&), getScope, (), (const));
+    MOCK_METHOD(bool, minimalSet, (), (const));
+    MOCK_METHOD((const std::unordered_map<std::string, ParamDescriptor*>&), getAllSubParams, (), (const));
 };
 
 } // namespace common
