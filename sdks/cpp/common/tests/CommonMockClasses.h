@@ -126,9 +126,8 @@ public:
     MOCK_METHOD(void, resetValidate, (), (override));
 };
 
-/**
- * @brief Mock implementation of ParamDescriptor for testing
- */
+
+//Mock implementation of ParamDescriptor for testing
 class MockParamDescriptor : public ParamDescriptor {
 public:
     MockParamDescriptor() : ParamDescriptor(
