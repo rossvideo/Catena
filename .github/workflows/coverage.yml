@@ -1,0 +1,33 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Dev Container Image
+        run: |
+          docker build -f .devcontainer/devcontainer.dockerfile -t catena-devcontainer .
+
+      - name: Start Dev Container
+        run: |
+          docker run --rm -d --name catena-container \
+            -v ${{ github.workspace }}:/workspace \
+            -w /workspace/Catena \
+            catena-devcontainer \
+            /bin/bash -c './scripts/run_coverage.sh'
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-xml
+          path: coverage/coverage.xml
+
