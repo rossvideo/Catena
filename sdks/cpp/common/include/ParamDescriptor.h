@@ -113,7 +113,6 @@ class ParamDescriptor {
      * @param constraint the parameter's constraint
      * @param isCommand the parameter's command status
      * @param minimalSet the parameter's minimal set status
-     * @param minimalSet the parameter's minimal set status
      * @param dm the device that the parameter belongs to
      * @param parent the parent parameter
      */
