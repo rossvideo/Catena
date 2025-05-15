@@ -16,6 +16,7 @@ set(SOURCES
     AddLanguage_test.cpp
     LanguagePackRequest_test.cpp
     ListLanguages_test.cpp
+    GetPopulatedSlots_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
 
@@ -25,6 +26,7 @@ set(SOURCES
     ../src/controllers/AddLanguage.cpp
     ../src/controllers/LanguagePackRequest.cpp
     ../src/controllers/ListLanguages.cpp
+    ../src/controllers/GetPopulatedSlots.cpp
     ../src/controllers/MultiSetValue.cpp
     ../src/controllers/SetValue.cpp
 )	
