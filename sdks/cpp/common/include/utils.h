@@ -26,6 +26,7 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace catena {
 
@@ -42,6 +43,8 @@ std::string readFile(std::filesystem::path path);
 /**
  * @brief Substitutes all occurences of one char sequence in a string with
  * another.
+ * 
+ * Times out after 1000 iterations.
  *
  * @param str in/out the string to work on, done in place
  * @param seq in sequence to match
@@ -49,5 +52,15 @@ std::string readFile(std::filesystem::path path);
  */
 void subs(std::string &str, const std::string &seq, const std::string &rep);
 
+/**
+ * @brief Splits a string int a vector of strings based on a delimiter.
+ * 
+ * Times out after 1000 iterations.
+ * 
+ * @param out   io The vector to store the new split string in.
+ * @param str   in The string to split.
+ * @param delim in The character to split the string at.
+ */
+void split(std::vector<std::string>& out, const std::string& str, const std::string& delim);
 
 }  // namespace catena

@@ -27,31 +27,57 @@ endif(APPLE)
 
 set(target catena_connections_REST)
 set(REST_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(EXTERNAL_ROOT_DIR ${REST_ROOT_DIR}/external)
-set(CROW_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/crow)
 
-find_package(Boost 1.64 REQUIRED COMPONENTS system date_time)
+find_package(Boost 1.81 REQUIRED COMPONENTS system date_time url)
 
-set(sources "src/api.cpp")
+set(sources
+    "src/ServiceImpl.cpp"
+    "src/SocketReader.cpp"
+    "src/SocketWriter.cpp"
+    "src/controllers/Connect.cpp"
+    "src/controllers/DeviceRequest.cpp"
+    "src/controllers/ExecuteCommand.cpp"
+    "src/controllers/AssetRequest.cpp"
+    "src/controllers/GetPopulatedSlots.cpp"
+    "src/controllers/GetValue.cpp"
+    "src/controllers/MultiSetValue.cpp"
+    "src/controllers/SetValue.cpp"
+    "src/controllers/GetParam.cpp"
+    "src/controllers/AddLanguage.cpp"
+    "src/controllers/LanguagePackRequest.cpp"
+    "src/controllers/ListLanguages.cpp"
+    "src/controllers/BasicParamInfoRequest.cpp"
+    "src/controllers/UpdateSubscriptions.cpp"
+)
+
 add_library(${target} STATIC ${sources})
 
 find_package(jwt-cpp CONFIG REQUIRED)
 
-# Specify include directories
 include_directories(
-    ${CROW_ROOT_DIR}/include
     ${REST_ROOT_DIR}/include
     ${Boost_INCLUDE_DIRS}
 )
 
 message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 
-# Add Crow as a submodule
-add_subdirectory(${CROW_ROOT_DIR})
+target_include_directories(
+    ${target}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Catena_cpp>
+)
 
-# Link Crow and Boost.System to your target
-# todo: add jwt-cpp
-target_link_libraries(${target} PRIVATE Boost::system jwt-cpp::jwt-cpp catena_proto_common absl::flags_parse)
+# Link Boost.System to your target
+target_link_libraries(${target}
+    PUBLIC
+        proto_interface
+        Boost::system
+        Boost::url
+        jwt-cpp::jwt-cpp
+        catena_proto_common
+        absl::flags_parse
+)
 
 target_compile_features(${target} PUBLIC cxx_std_20)
 
@@ -68,4 +94,5 @@ install(TARGETS ${target}
 )
 
 add_subdirectory(examples)
-
+# make the unit tests
+add_subdirectory(tests)

@@ -33,7 +33,6 @@
 
 // connections/gRPC
 #include <ServiceImpl.h>
-#include <SharedFlags.h>
 #include <ServiceCredentials.h>
 
 // protobuf interface
@@ -58,6 +57,7 @@
 #include <signal.h>
 
 using grpc::Server;
+using catena::gRPC::CatenaServiceImpl;
 
 using namespace catena::common;
 
@@ -103,7 +103,7 @@ void statusUpdateExample(){
             // update the counter once per second, and emit the event
             std::this_thread::sleep_for(std::chrono::seconds(1));
             {
-                Device::LockGuard lg(dm); 
+                std::lock_guard lg(dm.mutex());
                 counter.get()++;
                 std::cout << counter.getOid() << " set to " << counter.get() << '\n';
                 dm.valueSetByServer.emit("/counter", &counter, 0);
@@ -126,7 +126,7 @@ void RunRPCServer(std::string addr)
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
 
-        builder.AddListeningPort(addr, catena::getServerCredentials());
+        builder.AddListeningPort(addr, catena::gRPC::getServerCredentials());
         std::unique_ptr<grpc::ServerCompletionQueue> cq = builder.AddCompletionQueue();
         std::string EOPath = absl::GetFlag(FLAGS_static_root);
         bool authz = absl::GetFlag(FLAGS_authz);

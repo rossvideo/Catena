@@ -10,8 +10,8 @@ The recommended process is hopefully simple:
 2. Create two files: `device_model.cpp` and `CMakeLists.txt`. `device_model.cpp` can be left empty for now.
 3. Include the `.../common/include` directory in your `CMakeList.txt` file using `target_include_directories()`.
 4. Place the three of these files together in a directory `device_model` and include it as a subdirectory in the parent directory's `CMakeLists.txt` file.
-5. Build Catena following the steps documented [here](../sdks/cpp/docs/cpp_sdk_main_page.md). If the CMake file has been configured correctly, this should generate your device's code.
-6. In your build folder, use `./path/to/your/device.json` to run your model. This should do nothing at the moment.
+5. Build Catena following the steps documented [here](doxygen/index.html). If the CMake file has been configured correctly, this should generate your device's code and create an executable named after your folder.
+6. In your build folder, use `./path/to/your/device/folder/folderName` to run your model. This should do nothing at the moment.
 7. If working, add your buisness logic to `device_model.cpp`.
 
 For example devices, see `sdks/cpp/common/examples`.
@@ -23,6 +23,9 @@ In the C++ SDK the DeviceModel provides a signals/slots mechanism to tell your b
 ![alt](images/Catena%20UML%20-%20Device%20Architecture.svg)
 
 ```cpp
+// Global boolean so we can eventually exit the loop below.
+bool globalLoop;
+
 // This is the business logic for the service
 // This simple example just increments a number every second,
 // and logs client updates
@@ -49,7 +52,7 @@ loop.detach();
 
 ## gRPC Connections
 Once you have generated a device following the steps above, you can make it a gRPC service by following the process below.
-1. Include the `.../connections/gRPC/include` directory in your `CMakeList.txt` file using `target_include_directories()`.
+1. Include the `catena_connections_grpc` library in your `CMakeList.txt` file using `target_link_libraries()`.
 2. Initialize a `CatenaServiceImpl` object with your generated device.
 3. Register this service with a `grpc::ServerBuilder` and build the server.
 4. Build Catena and run your server. 
@@ -61,7 +64,6 @@ For example devices with gRPC connections, see `sdks/cpp/connections/gRPC/exampl
 ```cpp
 using grpc::Server;
 Server *globalServer = nullptr;
-std::atomic<bool> globalLoop = true;
 
 // This initializes a gRPC Catena service with your device and builds a server.
 void RunRPCServer(std::string addr) {
@@ -85,6 +87,61 @@ void RunRPCServer(std::string addr) {
     server->Wait();
     cq->Shutdown();
     cq_thread.join();
+}
+
+// Handle SIGINT
+void handle_signal(int sig) {
+    std::thread t([sig]() {
+        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        if (globalServer != nullptr) {
+            // This call shuts down the server. This should be called at the
+            // end of all buisness logic.
+            globalServer->Shutdown();
+            globalServer = nullptr;
+        }
+    });
+    t.join();
+}
+```
+
+## REST Connections
+Alternatively, you can make it a REST service by following the process below.
+1. Include the `catena_connections_REST` library in your `CMakeList.txt` file using `target_link_libraries()`.
+2. Initialize a `catena::REST::CatenaServiceImpl` object with your generated device.
+3. Run you service with CatenaServiceImpl::Run()
+5. You should now be able to make various REST API calls to the server using Postman or openAPI.
+6. Coming soon ... use DashBoard beta to even get a GUI!
+
+For example devices with REST connections, see `sdks/cpp/connections/REST/examples`.
+
+```cpp
+using <ServiceImpl.h>
+catena::REST::CatenaServiceImpl *globalApi = nullptr;
+
+// This initializes a REST Catena service with your device.
+void RunRESTServer () {
+    // Getting flags from command line.
+    std::string EOPath = absl::GetFlag(FLAGS_static_root);
+    bool authorization = absl::GetFlag(FLAGS_authz);
+    uint16_t port = absl::GetFlag(FLAGS_port);
+    // Creating and running the REST service.
+    catena::REST::CatenaServiceImpl api(dm, EOPath, authorization, port);
+    globalApi = &api;
+    api.run();
+}
+
+// Handle SIGINT
+void handle_signal(int sig) {
+    std::thread t([sig]() {
+        std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
+        if (globalApi != nullptr) {
+            // This call shuts down the server. This should be called at the
+            // end of all buisness logic.
+            globalApi->Shutdown();
+            globalApi = nullptr;
+        }
+    });
+    t.join();
 }
 ```
 

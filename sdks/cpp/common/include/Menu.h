@@ -37,7 +37,7 @@
 #include <IMenu.h>
 
 // common
-#include <Device.h>
+#include <IDevice.h>
 #include <PolyglotText.h>
 
 // protobuf interface

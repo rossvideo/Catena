@@ -87,6 +87,11 @@ class Path {
      */
     static constexpr Index kError = kEnd - 1;
 
+    /**
+     * @brief used to signal no index
+     */
+    static constexpr Index kNone = kEnd - 2;
+
   public:
 
     Path() = default;
@@ -253,7 +258,7 @@ class Path {
             segments_.emplace_back(std::in_place_type<Index>, kEnd);
         } else {
             std::string str = segment;
-            escape(str);
+            escape_(str);
             segments_.emplace_back(std::in_place_type<std::string>, str);
         }
     }
@@ -276,7 +281,7 @@ class Path {
      *
      * @param str in|out
      */
-    void escape(std::string& str);
+    void escape_(std::string& str);
 
     /**
      * @brief replace ~0 and ~1 with ~ and /
@@ -284,7 +289,7 @@ class Path {
      * @param str
      * @return unescaped version of str
      */
-    std::string unescape(const std::string& str);
+    std::string unescape_(const std::string& str);
 };
 
 }  // namespace common

@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -40,21 +38,48 @@
  * @copyright Copyright © 2024 Ross Video Ltd
  */
 
+#pragma once
+
+// gRPC
+#include "interface/IServiceImpl.h"
+
+// gRPC controllers
+#include <controllers/GetPopulatedSlots.h>
+#include <controllers/GetValue.h>
+#include <controllers/SetValue.h>
+#include <controllers/MultiSetValue.h>
+#include <controllers/Connect.h>
+#include <controllers/DeviceRequest.h>
+#include <controllers/GetParam.h>
+#include <controllers/ExternalObjectRequest.h>
+#include <controllers/BasicParamInfoRequest.h>
+#include <controllers/ExecuteCommand.h>
+#include <controllers/AddLanguage.h>
+#include <controllers/ListLanguages.h>
+#include <controllers/LanguagePackRequest.h>
+#include <controllers/UpdateSubscriptions.h>
+
 // common
 #include <Status.h>
 #include <vdk/signals.h>
 #include <IParam.h>
-#include <Device.h>
+#include <IDevice.h>
 #include <Authorization.h>
+#include <SharedFlags.h>
+#include <ISubscriptionManager.h>
+
+// std
+#include <iostream>
+#include <thread>
+#include <fstream>
+#include <vector>
+#include <iterator>
+#include <filesystem>
+#include <chrono>
 
 // gRPC interface
 #include <interface/service.grpc.pb.h>
-
 #include <grpcpp/grpcpp.h>
-#include <jwt-cpp/jwt.h>
-
-#include <condition_variable>
-#include <chrono>
 
 using grpc::ServerContext;
 using grpc::ServerAsyncWriter;
@@ -62,22 +87,16 @@ using grpc::ServerAsyncResponseWriter;
 using grpc::Status;
 using grpc::ServerCompletionQueue;
 
-using catena::common::Device;
+using catena::common::IDevice;
 using catena::common::IParam;
 
-/**
- * @brief UNUSED. Will probably be removed at later date.
- */
-class JWTAuthMetadataProcessor : public grpc::AuthMetadataProcessor {
-public:
-    grpc::Status Process(const InputMetadata& auth_metadata, grpc::AuthContext* context, 
-                         OutputMetadata* consumed_auth_metadata, OutputMetadata* response_metadata) override;
-};
+namespace catena {
+namespace gRPC {
 
 /**
  * @brief Implements Catena gRPC request handlers.
  */
-class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
+class CatenaServiceImpl : public ICatenaServiceImpl {
   public:
     /**
      * @brief Constructor for the CatenaServiceImpl class.
@@ -86,63 +105,51 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, Device &dm, std::string& EOPath, bool authz);
+    CatenaServiceImpl(ServerCompletionQueue* cq, IDevice& dm, std::string& EOPath, bool authz);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
-    void init();
+    void init() override;
     /**
      * @brief Processes events in the server's completion queue.
      */
-    void processEvents();
+    void processEvents() override;
     /**
      * @brief Not implemented
      */
-    void shutdownServer();
+    void shutdownServer() override {};
     /**
-     * @brief CallData states.
+     * @brief Flag to set authorization as enabled or disabled
      */
-    enum class CallStatus { kCreate, kProcess, kRead, kWrite, kPostWrite, kFinish };
-
-  /*
-   * Protected so doxygen picks it up. Essentially private as CatenaServiceImpl
-   * cannot be inherited.
-   */
-  protected:
+    inline bool authorizationEnabled() const override { return authorizationEnabled_; }
     /**
-     * @brief Abstract base class for the CallData classes.
-     * Provides the proceed method
+     * @brief Get the subscription manager
+     * @return Reference to the subscription manager
      */
-    class CallData {
-      public:
-        /**
-         * @brief Proceed function to be implemented by the CallData classes.
-         */
-        virtual void proceed(CatenaServiceImpl *service, bool ok) = 0;
-        /**
-         * @brief Destructor for the CallData class.
-         */
-        virtual ~CallData() {}
-      protected:
-        /**
-         * @brief Extracts the JWS Bearer token from the server context's
-         * client metadata.
-         * @return The JWS Bearer token as a string.
-         * @throw Throws a Catena::exception_with_status UNAUTHENTICATED if a
-         * JWS bearer token is not found.
-         */
-        std::string getJWSToken() const;
-        /**
-         * @brief The context of the gRPC command.
-         */
-        ServerContext context_;
-    };
+    inline catena::common::ISubscriptionManager& getSubscriptionManager() override { return *subscriptionManager_; }
+    /**
+     * @brief Returns a pointer to the server's completion queue.
+     */
+    grpc::ServerCompletionQueue* cq() override { return cq_; }
+    /**
+     * @brief Returns the EOPath.
+     */
+    const std::string& EOPath() override { return EOPath_; }
+    /**
+     * @brief Registers a CallData object into the registry
+     * @param cd The CallData object to register
+     */
+    void registerItem(ICallData *cd) override;
+    /**
+     * @brief Deregisters a CallData object from registry
+     * @param cd The CallData object to deregister
+     */
+    void deregisterItem(ICallData *cd) override;
 
   private:
-
     // Aliases for special vectors and unique_ptrs.
-    using Registry = std::vector<std::unique_ptr<CatenaServiceImpl::CallData>>;
-    using RegistryItem = std::unique_ptr<CatenaServiceImpl::CallData>;
+    using Registry = std::vector<std::unique_ptr<ICallData>>;
+    using RegistryItem = std::unique_ptr<ICallData>;
     /**
      * @brief The registry of CallData objects
      */
@@ -158,7 +165,7 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
     /**
      * @brief The device to implement Catena services to
      */
-    Device &dm_;
+    IDevice& dm_;
     /**
      * @brief The path to the external object
      */
@@ -168,38 +175,10 @@ class CatenaServiceImpl final : public catena::CatenaService::AsyncService {
      */
     bool authorizationEnabled_;
     /**
-     * @brief Returns the current time as a string including microseconds.
+     * @brief The subscription manager for handling parameter subscriptions
      */
-    static std::string timeNow();
-
-  public:
-    /**
-     * @brief Registers a CallData object into the registry
-     * @param cd The CallData object to register
-     */
-    void registerItem(CallData *cd);
-    /**
-     * @brief Deregisters a CallData object from registry
-     * @param cd The CallData object to deregister
-     */
-    void deregisterItem(CallData *cd);
-    /**
-     * @brief Flag to set authorization as enabled or disabled
-     */
-    inline bool authorizationEnabled() const { return authorizationEnabled_; }
-
-    //Forward declarations of CallData classes for their respective RPC
-    class GetPopulatedSlots;
-    class GetValue;
-    class SetValue;
-    class MultiSetValue;
-    class Connect;
-    class DeviceRequest;
-    class ExternalObjectRequest;
-    class BasicParamInfoRequest;
-    class GetParam;
-    class ListLanguages;
-    class LanguagePackRequest;
-    class ExecuteCommand;
-    class AddLanguage;
+    std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
 };
+
+}; // namespace gRPC
+}; // namespace catena

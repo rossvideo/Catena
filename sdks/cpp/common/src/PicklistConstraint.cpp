@@ -39,10 +39,10 @@ using IParam = catena::common::IParam;
 using catena::common::PicklistConstraint;
 
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
-    bool shared, Device& dm)
+    bool shared, IDevice& dm)
     : choices_{init.begin(), init.end()}, 
     strict_{strict}, oid_{oid}, default_{*init.begin()}, shared_{shared} {
-    dm.addItem<common::ConstraintTag>(oid, this);
+    dm.addItem(oid, this);
 }
 
 PicklistConstraint::PicklistConstraint(ListInitializer init, bool strict, std::string oid, 
@@ -57,7 +57,7 @@ bool PicklistConstraint::satisfied(const catena::Value& src) const {
         return true;
     }
 
-    return choices_.find(src.string_value()) != choices_.end();
+    return choices_.contains(src.string_value());
 }
 
 /**

@@ -37,6 +37,9 @@ set(sources
     "src/PicklistConstraint.cpp"
     "src/Menu.cpp"
     "src/MenuGroup.cpp"
+    "src/ParamVisitor.cpp"
+    "src/SubscriptionManager.cpp"
+    "src/SharedFlags.cpp"
 )
 
 # conditionally make for gRPC
@@ -53,3 +56,5 @@ endif(REST_enabled)
 
 # make the examples
 add_subdirectory(examples)
+# make the unit tests
+add_subdirectory(tests)

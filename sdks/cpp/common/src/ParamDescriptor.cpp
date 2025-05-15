@@ -31,7 +31,7 @@
 
 #include <ParamDescriptor.h>
 #include <Authorization.h>  
-#include <Device.h>
+#include <IDevice.h>
 
 
 using catena::common::ParamDescriptor;
@@ -40,11 +40,16 @@ uint32_t ParamDescriptor::max_length() const {
     return (max_length_ > 0) ? max_length_ : dev_.get().default_max_length();
 }
 
+std::size_t ParamDescriptor::total_length() const {
+    return (total_length_ > 0) ? total_length_ : dev_.get().default_total_length();
+}
+
 void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     
     param.set_type(type_);
     param.set_read_only(read_only_);
     param.set_widget(widget_);
+    param.set_minimal_set(minimal_set_);
 
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);
@@ -84,9 +89,8 @@ void ParamDescriptor::toProto(catena::BasicParamInfo &paramInfo, Authorizer& aut
 }
 
 const std::string& ParamDescriptor::name(const std::string& language) const { 
-    auto it = name_.displayStrings().find(language);
-    if (it != name_.displayStrings().end()) {
-        return it->second;
+    if (name_.displayStrings().contains(language)) {
+        return name_.displayStrings().at(language);
     } else {
         static const std::string empty;
         return empty;

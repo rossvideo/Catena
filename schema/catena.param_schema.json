@@ -1107,9 +1107,16 @@
     },
     "template_oid": {
       "title": "Template Object ID",
-      "description": "JSON pointer to a parameter descriptor that to provide default information for all fields of this parameter.",
+      "description": "JSON pointer to a parameter descriptor that provides default information for all fields of this parameter.",
       "type": "string",
       "format": "json-pointer"
+    },
+    "fqoid": {
+      "title": "Fully Qualified Object ID",
+      "description": "The fully qualified object ID of a parameter, command, or external object.",
+      "$comment": "The pattern is a series of segments starting with a solidus / and containing a valid oid, an array index or the one-past-the-end index.",
+      "type": "string",
+      "pattern": "^((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)(\\/((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)){0,31}$"
     },
     "float32": {
       "type": "number",

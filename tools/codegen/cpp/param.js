@@ -143,6 +143,9 @@ class Descriptor {
       max_length: () => {
         return ("max_length" in desc) ? `${desc.max_length}` : "0";
       },
+      total_length: () => {
+        return ("total_length" in desc) ? `${desc.total_length}` : "0";
+      },
       minimal_set: () => {
         return ("minimal_set" in desc) ? `${desc.minimal_set}` : "false";
       }
@@ -190,6 +193,7 @@ class Param {
     this.value = desc.value;
     this.isCommand = isCommand;
     this.parent = parent;
+    this.minimal_set = desc.minimal_set === true;
 
     if ("constraint" in desc) {
       if (desc.constraint.ref_oid) {
@@ -212,6 +216,11 @@ class Param {
       // If param doesn't have a constraint, use the template's constraint
       if (this.constraint == undefined) {
         this.constraint = this.template_param.constraint;
+      }
+
+      // If minimal_set wasn't explicitly set in desc, inherit from template
+      if (desc.minimal_set === undefined && this.template_param.minimal_set) {
+        this.minimal_set = true;
       }
     }
 

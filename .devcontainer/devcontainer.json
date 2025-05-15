@@ -1,0 +1,46 @@
+{
+  "name": "Catena Development Container",
+  "build": {
+      "dockerfile": "devcontainer.dockerfile",
+      "context": ".",
+      "args": {
+        "USER_UID": "1000",  //export UID=$(id -u)
+        "USER_GID": "1000",  //export GID=$(id -g)
+        "USER_NAME": "${localEnv:USER}",
+        "IMAGE_TITLE": "Catena Development Container",
+        "IMAGE_DESCRIPTION": "Development container for Catena",
+        "IMAGE_VERSION": "1.0.0",
+        "IMAGE_VENDOR": "Ross Video",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CONNECTIONS": "gRPC"
+      }
+  },
+  "postCreateCommand": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME} && echo 'Docker setup complete, please restart the dev container!'",
+
+  
+  "runArgs": ["--env-file","./.devcontainer/devcontainer.env"],
+  "forwardPorts": [6254, 8000, 8080, 443],
+  "remoteUser": "${localEnv:USER}",
+  "workspaceFolder": "/home/${localEnv:USER}/Catena",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        }
+      }
+    }
+  },
+
+  "mounts": [
+    // Mount the build directory as a volume first so that it doesn't sync back to the host
+    "source=catena-build,target=/home/${localEnv:USER}/Catena/sdks/cpp/build,type=volume", 
+    // Then, mount the Catena directory so that we can sync other changes back to the host
+    "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind",
+    // the docker daemon
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ]
+}

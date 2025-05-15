@@ -51,6 +51,8 @@
 #include <string>
 
 namespace catena {
+namespace gRPC {
+
 /**
  * @brief Handles connections to Peers.
  */
@@ -141,4 +143,6 @@ class PeerManager : public catena::patterns::Singleton<PeerManager> {
   private:
     std::unordered_map<PeerID, PeerInfo> peers_;
 };
-}  // namespace catena
+
+}; // namespace gRPC
+}; // namespace catena

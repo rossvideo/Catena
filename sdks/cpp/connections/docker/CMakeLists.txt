@@ -65,3 +65,6 @@ execute_process (
 if (NOT result EQUAL 0)
     message(FATAL_ERROR "Failed to pull the envoy image")
 endif()
+
+# Make envoy_proxy image with entrypoint envoy/envoy_entrypoint.sh.
+make_image(catena_envoy ${CATENA_CPP_ROOT_DIR} "")

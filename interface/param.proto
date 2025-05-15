@@ -266,10 +266,14 @@ message BasicParamInfoRequestPayload {
 }
 
 message SetValuePayload {
+  string oid = 1;           // Uniquely identifies the param at device scope
+  uint32 element_index = 2; // When setting single elements of array parameters, the element in the array to update
+  Value value = 3;          // The value to apply
+}
+
+message SingleSetValuePayload {
   uint32 slot = 1;          // Uniquely identifies the device at node scope.
-  string oid = 2;           // Uniquely identifies the param at device scope
-  uint32 element_index = 3; // When setting single elements of array parameters, the element in the array to update
-  Value value = 4;          // The value to apply
+  SetValuePayload value = 2;       // The param oid and value to apply
 }
 
 message GetValuePayload {
@@ -278,7 +282,10 @@ message GetValuePayload {
   uint32 element_index = 3; // When requesting single elements of array parameters, the element in the array to get
 }
 
-message MultiSetValuePayload { repeated SetValuePayload values = 1; }
+message MultiSetValuePayload {
+  uint32 slot = 1;              // Uniquely identifies the device at node scope.
+  repeated SetValuePayload values = 2; // The param oids and values to apply
+}
 
 message UpdateSubscriptionsPayload {
   uint32 slot = 1;                  // Uniquely identifies the device at node scope.
@@ -320,6 +327,5 @@ message CommandResponse {
     Empty no_response = 1; // Server/Device does not have a response for the command.
     Value response = 2;
     Exception exception = 3;  // This is for Server/Device error executing the command.
-    bool proceed = 4; // Used to short circuit sending payloads 
   }
 }

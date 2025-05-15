@@ -1,0 +1,145 @@
+#
+# Copyright 2024 Ross Video Ltd
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# A collection of misc fields used > 1 time within the OpenAPI documentation of
+# the RPCs for the Catena REST API
+# Author: benjamin.whitten@rossvideo.com
+# Date: 25/04/03
+#
+
+$defs:
+
+  component_param:
+    title: Component Param
+    description: A parameter and the slot of the device manager it was recieved from
+    type: object
+    properties:
+      slot:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+      # Problems linking param
+      param:
+        title: Parameter
+        description: Defines the type, value, constraints, UI, access modes and configuration options of a parameter.
+        type: object
+
+  component_language_pack:
+    title: Component Language Pack
+    description: A language pack and the slot of the device manager it was recieved from
+    type: object
+    properties:
+      language:
+        title: String
+        description: The id of the language pack to get from the device model
+        type: string
+      language_pack:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/language_pack"
+
+  device_component:
+    title: DeviceComponent
+    description: The Device model broken into smaller pieces
+    type: object
+    oneOf:
+      # Problems linking device
+      - title: Device
+        description: Defines the properties of a device manager
+        type: object
+
+      - $ref: "#/$defs/component_param"
+
+      - title: Component Menu
+        description: A menu and the slot of the device manager it was recieved from
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          menu:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/menu"
+
+      - title: Component Constraint
+        description: A contraint and the slot of the device manager it was recieved from
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          constraint:
+            $ref: "../../../schema/catena.param_schema.json#/$defs/constraint"
+
+      - title: Component Command
+        description: A command and the slot of the device manager it was recieved from
+        type: object
+        properties:
+          slot:
+            $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
+          # Problems linking param
+          param:
+            title: Parameter
+            description: Defines the type, value, constraints, UI, access modes and configuration options of a parameter.
+            type: object
+
+      - $ref: "#/$defs/component_language_pack"
+  
+  exception:
+    title: Exception
+    description: The server's response is an exception
+    type: object
+    properties:
+      type:
+        title: String
+        type: string
+      # Problems linking PolyGlotText
+      error_message:
+        title: PolyGlot Text
+        description: Text that a client can display in one of multiple languages
+        type: object
+      details:
+        title: String
+        type: string
+
+  external_object_payload:
+    title: ExternalObjectPayload
+    type: object
+    properties:
+      cachable:
+        title: Boolean
+        type: boolean
+        description: Indicates whether the object is cachable or not
+      payload:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+
+  set_value_payload:
+    title: SetValuePayload
+    description: Contains a paremeter's oid and a value to set it to.
+    type: object
+    properties:
+      oid:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
+      value:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/value"

@@ -9,6 +9,7 @@
   "params": {
     "dashboard_UI": {
       "type": "STRING",
+      "minimal_set": true,
       "oid_aliases": ["0xFF0E"],
       "read_only": true,
       "value": { "string_value": "eo://use_commands.grid" }
