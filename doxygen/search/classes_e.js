@@ -9,5 +9,5 @@ var searchData=
   ['socketwriter_6',['SocketWriter',['../classcatena_1_1REST_1_1SocketWriter.html',1,'catena::REST']]],
   ['ssewriter_7',['SSEWriter',['../classcatena_1_1REST_1_1SSEWriter.html',1,'catena::REST']]],
   ['structinfo_8',['StructInfo',['../structcatena_1_1common_1_1StructInfo.html',1,'catena::common']]],
-  ['subscriptionmanager_9',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html',1,'catena::common']]]
+  ['subscriptionmanager_9',['subscriptionmanager',['../classcatena_1_1common_1_1SubscriptionManager.html',1,'catena::common::SubscriptionManager'],['../classcatena_1_1grpc_1_1SubscriptionManager.html',1,'catena::grpc::SubscriptionManager']]]
 ];

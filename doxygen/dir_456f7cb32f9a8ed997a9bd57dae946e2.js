@@ -6,5 +6,6 @@ var dir_456f7cb32f9a8ed997a9bd57dae946e2 =
     [ "PeerInfo.h", "PeerInfo_8h.html", "PeerInfo_8h" ],
     [ "PeerManager.h", "PeerManager_8h.html", "PeerManager_8h" ],
     [ "ServiceCredentials.h", "ServiceCredentials_8h.html", "ServiceCredentials_8h" ],
-    [ "ServiceImpl.h", "gRPC_2include_2ServiceImpl_8h.html", "gRPC_2include_2ServiceImpl_8h" ]
+    [ "ServiceImpl.h", "gRPC_2include_2ServiceImpl_8h.html", "gRPC_2include_2ServiceImpl_8h" ],
+    [ "SubscriptionManager.h", "connections_2gRPC_2include_2SubscriptionManager_8h.html", "connections_2gRPC_2include_2SubscriptionManager_8h" ]
 ];
