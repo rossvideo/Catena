@@ -117,11 +117,13 @@ void GetParam::proceed( bool ok) {
             pds_.pop_back();
             response.set_oid(pd->getOid());
             pd->toProto(*response.mutable_param(), *authz_);
-            writer_.Write(response, this);
             // If param has children, add child oids to the oids_ vector.
             for (auto [oid, childDesc] : pd->getAllSubParams()) {
+                response.add_sub_params(oid);
                 pds_.push_back(childDesc);
             }
+            // Write the param descriptor
+            writer_.Write(response, this);
             // If there is no more to write, change to kPostWrite.
             if (pds_.empty()) {
                 status_ = CallStatus::kPostWrite;
