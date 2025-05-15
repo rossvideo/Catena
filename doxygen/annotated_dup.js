@@ -61,9 +61,6 @@ var annotated_dup =
         [ "SetValue", "classcatena_1_1gRPC_1_1SetValue.html", "classcatena_1_1gRPC_1_1SetValue" ],
         [ "UpdateSubscriptions", "classcatena_1_1gRPC_1_1UpdateSubscriptions.html", "classcatena_1_1gRPC_1_1UpdateSubscriptions" ]
       ] ],
-      [ "grpc", null, [
-        [ "SubscriptionManager", "classcatena_1_1grpc_1_1SubscriptionManager.html", "classcatena_1_1grpc_1_1SubscriptionManager" ]
-      ] ],
       [ "meta", "namespacecatena_1_1meta.html", [
         [ "FrontT", "classcatena_1_1meta_1_1FrontT.html", null ],
         [ "FrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1FrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
