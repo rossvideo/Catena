@@ -29,5 +29,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-xml
-          path: coverage/coverage.xml
+          path: Catena/coverage/coverage.xml
 
