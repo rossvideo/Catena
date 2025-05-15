@@ -19,7 +19,7 @@ jobs:
 
       - name: Start Dev Container
         run: |
-          docker run -rm -d --name catena-container \
+          docker run --rm -d --name catena-container \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace/Catena \
             catena-devcontainer \
