@@ -204,6 +204,7 @@ TEST_F(SubscriptionManagerTest, IsWildcard) {
 
 // Test wildcard subscription expansion
 TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
+    std::cout << "\n=== WildcardSubscriptionExpansion test started ===\n" << std::endl;
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
     // Store OIDs as class members to return references
@@ -235,14 +236,8 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
             
             // For wildcard paths, return the base path parameter
             if (fqoid == "/test/*") {
-                std::cout << "DEBUG: Returning base path parameter for wildcard" << std::endl;
                 auto param = std::make_unique<MockParam>();
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(test_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*root.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(false));
+                setupMockParam(param.get(), test_oid, *root.descriptor);
                 status = catena::exception_with_status("", catena::StatusCode::OK);
                 return param;
             }
@@ -250,42 +245,22 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
             auto param = std::make_unique<MockParam>();
             
             if (fqoid == test_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(test_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*root.descriptor));
+                setupMockParam(param.get(), test_oid, *root.descriptor);
             } else if (fqoid == nested_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(nested_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*nested.descriptor));
+                setupMockParam(param.get(), nested_oid, *nested.descriptor);
             } else if (fqoid == deeper_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(deeper_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*deeper.descriptor));
+                setupMockParam(param.get(), deeper_oid, *deeper.descriptor);
             } else if (fqoid == param1_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(param1_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*param1.descriptor));
+                setupMockParam(param.get(), param1_oid, *param1.descriptor);
             } else if (fqoid == param2_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(param2_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*param2.descriptor));
+                setupMockParam(param.get(), param2_oid, *param2.descriptor);
             } else if (fqoid == param3_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(param3_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*param3.descriptor));
+                setupMockParam(param.get(), param3_oid, *param3.descriptor);
             } else {
                 std::cout << "DEBUG: Invalid path: " << fqoid << std::endl;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
-            EXPECT_CALL(*param, isArrayType())
-                .WillRepeatedly(::testing::Return(false));
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return param;
         }));
@@ -293,7 +268,6 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
     // Set up device to return all mock parameters for getTopLevelParams
     EXPECT_CALL(*device, getTopLevelParams(::testing::Matcher<catena::exception_with_status&>(::testing::_), ::testing::Matcher<Authorizer&>(::testing::_)))
         .WillRepeatedly(::testing::Invoke([root, test_oid](catena::exception_with_status& status, Authorizer& authz) -> std::vector<std::unique_ptr<IParam>> {
-            std::cout << "DEBUG: getTopLevelParams called" << std::endl;
             std::vector<std::unique_ptr<IParam>> params;
             auto param = std::make_unique<MockParam>();
             EXPECT_CALL(*param, getOid())
@@ -324,6 +298,8 @@ TEST_F(SubscriptionManagerTest, WildcardSubscriptionExpansion) {
     EXPECT_TRUE(oids.find("/test/param1") != oids.end());
     EXPECT_TRUE(oids.find("/test/nested/param2") != oids.end());
     EXPECT_TRUE(oids.find("/test/nested/deeper/param3") != oids.end());
+
+    std::cout << "\n=== WildcardSubscriptionExpansion test completed ===\n" << std::endl;
 }
 
 // @todo Test removing a wildcard subscription

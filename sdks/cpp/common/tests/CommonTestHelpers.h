@@ -70,5 +70,26 @@ public:
     }
 };
 
+/**
+ * @brief Helper function to set up common mock parameter expectations
+ * @param param The mock parameter to set up
+ * @param oid The OID to return
+ * @param descriptor The descriptor to return
+ * @param isArray Whether this is an array type (defaults to false)
+ * @param size The array size if it's an array type (defaults to 0)
+ */
+inline void setupMockParam(MockParam* param, const std::string& oid, const ParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0) {
+    EXPECT_CALL(*param, getOid())
+        .WillRepeatedly(::testing::ReturnRef(oid));
+    EXPECT_CALL(*param, getDescriptor())
+        .WillRepeatedly(::testing::ReturnRef(descriptor));
+    EXPECT_CALL(*param, isArrayType())
+        .WillRepeatedly(::testing::Return(isArray));
+    if (isArray) {
+        EXPECT_CALL(*param, size())
+            .WillRepeatedly(::testing::Return(size));
+    }
+}
+
 } // namespace common
 } // namespace catena 

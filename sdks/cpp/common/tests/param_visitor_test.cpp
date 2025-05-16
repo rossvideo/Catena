@@ -228,6 +228,8 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
 
 //Test visiting a parameter with array elements
 TEST_F(ParamVisitorTest, VisitArrayElements) {
+    std::cout << "\n=== VisitArrayElements test started ===" << std::endl;
+
     // Set up mock param to be an array type
     std::string array_oid = "/test/array";
     std::string element_param = "param";  // Parameter name for array elements
@@ -259,51 +261,16 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
             auto param = std::make_unique<MockParam>();
             
             if (fqoid == array_oid + "/0/" + element_param) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(fqoid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*element_param0.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(false));
-            }
-            else if (fqoid == array_oid + "/1/" + element_param) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(fqoid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*element_param1.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(false));
-            }
-            else if (fqoid == array_oid + "/0") {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(fqoid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*element0.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(false));
-            }
-            // Check if this is the second array element (e.g., /test/array/1)
-            else if (fqoid == array_oid + "/1") {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(fqoid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*element1.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(false));
-            }
-            // Check if this is the array root (e.g., /test/array)
-            else if (fqoid == array_oid) {
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(array_oid));
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*array_root.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(true));
-                EXPECT_CALL(*param, size())
-                    .WillRepeatedly(::testing::Return(2));
-            }
-            // Any other path should be rejected
-            else {
+                setupMockParam(param.get(), fqoid, *element_param0.descriptor);
+            } else if (fqoid == array_oid + "/1/" + element_param) {
+                setupMockParam(param.get(), fqoid, *element_param1.descriptor);
+            } else if (fqoid == array_oid + "/0") {
+                setupMockParam(param.get(), fqoid, *element0.descriptor);
+            } else if (fqoid == array_oid + "/1") {
+                setupMockParam(param.get(), fqoid, *element1.descriptor);
+            } else if (fqoid == array_oid) {
+                setupMockParam(param.get(), array_oid, *array_root.descriptor, true, 2);
+            } else {
                 std::cout << "DEBUG TEST: Rejecting invalid path: " << fqoid << std::endl;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
@@ -315,12 +282,12 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     MockParamVisitor visitor;
     ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor);
     
-    std::cout << "\nVisited paths:" << std::endl;
+    std::cout << "\nDEBUG: Visited paths:" << std::endl;
     for (size_t i = 0; i < visitor.visitedPaths.size(); ++i) {
         std::cout << "  " << i << ": " << visitor.visitedPaths[i] << std::endl;
     }
     
-    std::cout << "\nVisited arrays:" << std::endl;
+    std::cout << "\nDEBUG: Visited arrays:" << std::endl;
     for (size_t i = 0; i < visitor.visitedArrays.size(); ++i) {
         std::cout << "  " << i << ": path=" << visitor.visitedArrays[i].first 
                   << ", length=" << visitor.visitedArrays[i].second << std::endl;
@@ -335,5 +302,5 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     EXPECT_EQ(visitor.visitedArrays.size(), 1);  // Should have one array visit
     EXPECT_EQ(visitor.visitedArrays[0].first, array_oid);  // Array path
     EXPECT_EQ(visitor.visitedArrays[0].second, 2);  // Array length
-    std::cout << "\n=== VisitArrayElements test completed ===" << std::endl;
+    std::cout << "\n=== VisitArrayElements test completed ===\n" << std::endl;
 } 
