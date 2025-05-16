@@ -188,8 +188,8 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
         .WillRepeatedly(::testing::ReturnRef(parent_oid));
 
     // Set up the subParams maps as static to ensure they live throughout the test
-    static std::unordered_map<std::string, ParamDescriptor*> parent_subParams;
-    static std::unordered_map<std::string, ParamDescriptor*> nested_subParams;
+    static std::unordered_map<std::string, IParamDescriptor*> parent_subParams;
+    static std::unordered_map<std::string, IParamDescriptor*> nested_subParams;
     
     // Set up the hierarchy
     parent_subParams[nested_oid] = nested_descriptor.get();
@@ -268,7 +268,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     element_param_descriptor0->setOid(element_param_oid0);
     EXPECT_CALL(*element_param_descriptor0, getOid())
         .WillRepeatedly(::testing::ReturnRef(element_param_oid0));
-    std::unordered_map<std::string, ParamDescriptor*> empty_subParams0;;
+    std::unordered_map<std::string, IParamDescriptor*> empty_subParams0;;
     EXPECT_CALL(*element_param_descriptor0, getAllSubParams())
         .WillRepeatedly(::testing::ReturnRef(empty_subParams0));
 
@@ -278,7 +278,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     element_param_descriptor1->setOid(element_param_oid1);
     EXPECT_CALL(*element_param_descriptor1, getOid())
         .WillRepeatedly(::testing::ReturnRef(element_param_oid1));
-    std::unordered_map<std::string, ParamDescriptor*> empty_subParams1;
+    std::unordered_map<std::string, IParamDescriptor*> empty_subParams1;
     EXPECT_CALL(*element_param_descriptor1, getAllSubParams())
         .WillRepeatedly(::testing::ReturnRef(empty_subParams1));
 
@@ -290,7 +290,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
         .WillRepeatedly(::testing::ReturnRef(array_element_oid0));
     
     // Set up subparams map for first array element
-    std::unordered_map<std::string, ParamDescriptor*> element_subParams0;
+    std::unordered_map<std::string, IParamDescriptor*> element_subParams0;
     element_subParams0[element_param] = element_param_descriptor0.get();
     array_element_descriptor0->addSubParam(element_param, element_param_descriptor0.get());
     EXPECT_CALL(*array_element_descriptor0, getAllSubParams())
@@ -304,14 +304,14 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
         .WillRepeatedly(::testing::ReturnRef(array_element_oid1));
     
     // Set up subparams map for second array element
-    std::unordered_map<std::string, ParamDescriptor*> element_subParams1;
+    std::unordered_map<std::string, IParamDescriptor*> element_subParams1;
     element_subParams1[element_param] = element_param_descriptor1.get();
     array_element_descriptor1->addSubParam(element_param, element_param_descriptor1.get());
     EXPECT_CALL(*array_element_descriptor1, getAllSubParams())
         .WillRepeatedly(::testing::ReturnRef(element_subParams1));
 
     // Set up test_descriptor to have no subparams
-    std::unordered_map<std::string, ParamDescriptor*> array_root_subParams;
+    std::unordered_map<std::string, IParamDescriptor*> array_root_subParams;
     test_descriptor.setOid(array_oid);
     EXPECT_CALL(test_descriptor, getOid())
         .WillRepeatedly(::testing::ReturnRef(array_oid));
