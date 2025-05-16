@@ -168,12 +168,12 @@ class ParamDescriptor : public IParamDescriptor {
     /**
      * @brief return true if the parameter has a template oid
      */
-    bool hasTemplateOid() const override;
+    bool hasTemplateOid() const override { return !template_oid_.empty(); };
 
     /**
      * @brief get the parameter's template oid
      */
-    const std::string& templateOid() const override;
+    const std::string& templateOid() const override { return template_oid_;};
 
     /**
      * @brief return the readOnly status of the parameter
