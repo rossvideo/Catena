@@ -21,21 +21,16 @@ jobs:
            -t catena-devcontainer .
 
           echo "-----------------0"
-          container_id=$(docker run -d --name catena-container \
-            -v ${{ github.workspace }}:/home/catenauser/Catena \
-            catena-devcontainer \
-            /bin/bash -c './scripts/run_coverage.sh')
-          echo "container_id: $container_id"
-          docker wait "$container_id"
-          docker logs "$container_id"
-          docker rm "$container_id"
+          
+          docker run --rm -v ${{ github.workspace }}:/workspace catena-devcontainer \
+            /bin/bash -c "cp -r coverage /workspace/coverage"
 
           echo "---------------1"
           ls -la
 
           echo "---------------2"
           ls -la ${{ github.workspace }}
-          
+
           echo "---------------3"
           ls -la ${{ github.workspace }}/coverage
           

@@ -66,8 +66,7 @@ RUN mkdir -p ~/Catena/sdks/cpp/build \
     && ninja
 
 RUN cd ~/Catena/ \
-    && ./scripts/run_coverage.sh --html --verbose \
-    && ls -la coverage
+    && ./scripts/run_coverage.sh --html --verbose
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
