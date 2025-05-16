@@ -37,10 +37,12 @@
 
 #include <gtest/gtest.h>
 #include "CommonMockClasses.h"
+#include "CommonTestHelpers.h"
 #include <IDevice.h>
 #include <IParam.h>
-#include <ParamVisitor.h>
 #include <Status.h>
+#include <Authorization.h>
+#include <ParamVisitor.h>
 
 using namespace catena::common;
 
@@ -164,52 +166,25 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
     std::string full_nested_oid = parent_oid + "/" + nested_oid;
     std::string full_nested2_oid = full_nested_oid + "/" + nested2_oid;
     
-    // Create descriptors as class members to ensure they live throughout the test
-    auto nested_descriptor = std::make_shared<MockParamDescriptor>();
-    nested_descriptor->setOid(full_nested_oid); 
-    EXPECT_CALL(*nested_descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(full_nested_oid));
-
-    auto nested2_descriptor = std::make_shared<MockParamDescriptor>();
-    nested2_descriptor->setOid(full_nested2_oid);
-    EXPECT_CALL(*nested2_descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(full_nested2_oid));
+    // Create descriptors using the helper
+    auto parent = ParamHierarchyBuilder::createDescriptor(parent_oid);
+    auto nested = ParamHierarchyBuilder::createDescriptor(full_nested_oid);
+    auto nested2 = ParamHierarchyBuilder::createDescriptor(full_nested2_oid);
     
-    // Set up parent param and descriptor
-    test_descriptor.setOid(parent_oid);  // Set the OID for test_descriptor
-    test_descriptor.addSubParam(nested_oid, nested_descriptor.get());  // Add nested as subparam to parent
-    nested_descriptor->addSubParam(nested2_oid, nested2_descriptor.get());  // Add nested2 as subparam to nested
+    // Set up the parameter hierarchy
+    ParamHierarchyBuilder::addChild(parent, nested_oid, nested);
+    ParamHierarchyBuilder::addChild(nested, nested2_oid, nested2);
 
     EXPECT_CALL(*mockParam, isArrayType())
         .WillRepeatedly(::testing::Return(false));
     EXPECT_CALL(*mockParam, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(test_descriptor));
+        .WillRepeatedly(::testing::ReturnRef(*parent.descriptor));
     EXPECT_CALL(*mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(parent_oid));
 
-    // Set up the subParams maps as static to ensure they live throughout the test
-    static std::unordered_map<std::string, ParamDescriptor*> parent_subParams;
-    static std::unordered_map<std::string, ParamDescriptor*> nested_subParams;
-    
-    // Set up the hierarchy
-    parent_subParams[nested_oid] = nested_descriptor.get();
-    nested_subParams[nested2_oid] = nested2_descriptor.get();
-
-    // Set up test_descriptor to return parent_subParams
-    EXPECT_CALL(test_descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(parent_subParams));
-
-    // Set up nested_descriptor to return nested_subParams
-    EXPECT_CALL(*nested_descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(nested_subParams));
-
-    // Set up nested2_descriptor to return empty subParams
-    EXPECT_CALL(*nested2_descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(nested_subParams));  // Empty map for leaf node
-
     // Set up device to return different params based on the path
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([this, nested_descriptor, nested2_descriptor, full_nested_oid, full_nested2_oid](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([parent, nested, nested2, full_nested_oid, full_nested2_oid](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             
             if (fqoid == full_nested2_oid) {
@@ -217,7 +192,7 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(full_nested2_oid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*nested2_descriptor));
+                    .WillRepeatedly(::testing::ReturnRef(*nested2.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             } else if (fqoid == full_nested_oid) {
@@ -225,7 +200,7 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(full_nested_oid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*nested_descriptor));
+                    .WillRepeatedly(::testing::ReturnRef(*nested.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             } else {
@@ -233,7 +208,7 @@ TEST_F(ParamVisitorTest, VisitNestedParams) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(parent_oid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(test_descriptor));
+                    .WillRepeatedly(::testing::ReturnRef(*parent.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             }
@@ -256,67 +231,17 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     // Set up mock param to be an array type
     std::string array_oid = "/test/array";
     std::string element_param = "param";  // Parameter name for array elements
-    test_descriptor.setOid(array_oid);  // Set the OID for test_descriptor
 
-    std::cout << "\n=== Starting VisitArrayElements test ===" << std::endl;
-    std::cout << "Array OID: " << array_oid << std::endl;
-    std::cout << "Element param name: " << element_param << std::endl;
+    // Create descriptors using the helper
+    auto array_root = ParamHierarchyBuilder::createDescriptor(array_oid);
+    auto element0 = ParamHierarchyBuilder::createDescriptor(array_oid + "/0");
+    auto element1 = ParamHierarchyBuilder::createDescriptor(array_oid + "/1");
+    auto element_param0 = ParamHierarchyBuilder::createDescriptor(array_oid + "/0/" + element_param);
+    auto element_param1 = ParamHierarchyBuilder::createDescriptor(array_oid + "/1/" + element_param);
 
-    // Create descriptor for first array element parameter
-    auto element_param_descriptor0 = std::make_shared<MockParamDescriptor>();
-    std::string element_param_oid0 = array_oid + "/0/" + element_param;
-    element_param_descriptor0->setOid(element_param_oid0);
-    EXPECT_CALL(*element_param_descriptor0, getOid())
-        .WillRepeatedly(::testing::ReturnRef(element_param_oid0));
-    std::unordered_map<std::string, ParamDescriptor*> empty_subParams0;;
-    EXPECT_CALL(*element_param_descriptor0, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(empty_subParams0));
-
-    // Create descriptor for second array element parameter
-    auto element_param_descriptor1 = std::make_shared<MockParamDescriptor>();
-    std::string element_param_oid1 = array_oid + "/1/" + element_param;
-    element_param_descriptor1->setOid(element_param_oid1);
-    EXPECT_CALL(*element_param_descriptor1, getOid())
-        .WillRepeatedly(::testing::ReturnRef(element_param_oid1));
-    std::unordered_map<std::string, ParamDescriptor*> empty_subParams1;
-    EXPECT_CALL(*element_param_descriptor1, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(empty_subParams1));
-
-    // Descriptor for first array element
-    auto array_element_descriptor0 = std::make_shared<MockParamDescriptor>();
-    std::string array_element_oid0 = array_oid + "/0";
-    array_element_descriptor0->setOid(array_element_oid0);
-    EXPECT_CALL(*array_element_descriptor0, getOid())
-        .WillRepeatedly(::testing::ReturnRef(array_element_oid0));
-    
-    // Set up subparams map for first array element
-    std::unordered_map<std::string, ParamDescriptor*> element_subParams0;
-    element_subParams0[element_param] = element_param_descriptor0.get();
-    array_element_descriptor0->addSubParam(element_param, element_param_descriptor0.get());
-    EXPECT_CALL(*array_element_descriptor0, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(element_subParams0));
-
-    // Descriptor for second array element
-    auto array_element_descriptor1 = std::make_shared<MockParamDescriptor>();
-    std::string array_element_oid1 = array_oid + "/1";
-    array_element_descriptor1->setOid(array_element_oid1);
-    EXPECT_CALL(*array_element_descriptor1, getOid())
-        .WillRepeatedly(::testing::ReturnRef(array_element_oid1));
-    
-    // Set up subparams map for second array element
-    std::unordered_map<std::string, ParamDescriptor*> element_subParams1;
-    element_subParams1[element_param] = element_param_descriptor1.get();
-    array_element_descriptor1->addSubParam(element_param, element_param_descriptor1.get());
-    EXPECT_CALL(*array_element_descriptor1, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(element_subParams1));
-
-    // Set up test_descriptor to have no subparams
-    std::unordered_map<std::string, ParamDescriptor*> array_root_subParams;
-    test_descriptor.setOid(array_oid);
-    EXPECT_CALL(test_descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(array_oid));
-    EXPECT_CALL(test_descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(array_root_subParams));
+    // Set up the parameter hierarchy
+    ParamHierarchyBuilder::addChild(element0, element_param, element_param0);
+    ParamHierarchyBuilder::addChild(element1, element_param, element_param1);
 
     // Set up mock param to be an array type
     EXPECT_CALL(*mockParam, isArrayType())
@@ -324,21 +249,20 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     EXPECT_CALL(*mockParam, size())
         .WillRepeatedly(::testing::Return(2));
     EXPECT_CALL(*mockParam, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(test_descriptor));
+        .WillRepeatedly(::testing::ReturnRef(*array_root.descriptor));
     EXPECT_CALL(*mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(array_oid));
 
     // Set up device to return array elements with proper descriptors
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-        .WillRepeatedly(::testing::Invoke([this, array_oid, element_param, array_element_descriptor0, array_element_descriptor1, element_param_descriptor0, element_param_descriptor1, &array_root_subParams](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([array_root, element0, element1, element_param0, element_param1, array_oid, element_param](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
             auto param = std::make_unique<MockParam>();
             
-            // Check if this is an array element parameter (e.g., /test/array/0/param)
             if (fqoid == array_oid + "/0/" + element_param) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(fqoid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*element_param_descriptor0));
+                    .WillRepeatedly(::testing::ReturnRef(*element_param0.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             }
@@ -346,16 +270,15 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(fqoid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*element_param_descriptor1));
+                    .WillRepeatedly(::testing::ReturnRef(*element_param1.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             }
-            // Check if this is the first array element (e.g., /test/array/0)
             else if (fqoid == array_oid + "/0") {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(fqoid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*array_element_descriptor0));
+                    .WillRepeatedly(::testing::ReturnRef(*element0.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             }
@@ -364,7 +287,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(fqoid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*array_element_descriptor1));
+                    .WillRepeatedly(::testing::ReturnRef(*element1.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(false));
             }
@@ -373,7 +296,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
                 EXPECT_CALL(*param, getOid())
                     .WillRepeatedly(::testing::ReturnRef(array_oid));
                 EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(test_descriptor));
+                    .WillRepeatedly(::testing::ReturnRef(*array_root.descriptor));
                 EXPECT_CALL(*param, isArrayType())
                     .WillRepeatedly(::testing::Return(true));
                 EXPECT_CALL(*param, size())
