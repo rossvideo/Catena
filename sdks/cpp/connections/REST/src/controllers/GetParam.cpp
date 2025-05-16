@@ -71,7 +71,7 @@ void GetParam::proceed() {
             remainingParams.pop_back();
 
             // Making sure currentPD didn't get randomly deleted or smt.
-            if (!currentPD) {
+            if (currentPD) {
                 // Adding sub parameters to remainingParams tracker.
                 for (auto [oid, pd] : currentPD->getAllSubParams()) {
                     if (authz->readAuthz(*pd)) {
@@ -83,7 +83,7 @@ void GetParam::proceed() {
                         }
                     }
                 }
-                
+
                 // Stream behaviour
                 if (stream_) {
                     // Setting and writing new response before clearing for next.
