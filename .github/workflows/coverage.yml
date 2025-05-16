@@ -38,6 +38,10 @@ jobs:
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report-xml
-          path: coverage/coverage.xml
+          name: coverage-report
+          path:
+            - coverage/index.html
+            - coverage/index.css
+            - coverage/coverage.xml
+            - coverage/coverage.info
 
