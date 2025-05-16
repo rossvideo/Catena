@@ -61,4 +61,5 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
     MOCK_METHOD(catena::common::ISubscriptionManager&, getSubscriptionManager, (), (override));
     MOCK_METHOD(bool, authorizationEnabled, (), (const, override));
+    MOCK_METHOD(const std::string&, EOPath, (), (const, override));
 }; 

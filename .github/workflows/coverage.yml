@@ -1,0 +1,47 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Dev Container Image
+        run: |
+          docker buildx build \
+           -f .devcontainer/devcontainer.dockerfile \
+           --build-arg CONNECTIONS='gRPC;REST' \
+           --build-arg CMAKE_BUILD_TYPE='Debug' \
+           -t catena-devcontainer .
+
+          echo "-----------------0"
+          
+          container_id=$(docker run -d --name catena-container catena-devcontainer)
+          echo "container_id: $container_id"
+          echo "copying coverage"
+          docker cp $container_id:/home/catenauser/Catena/coverage ${{ github.workspace }}/coverage
+          echo " removing container"
+          docker rm $container_id
+
+          ls -la ${{ github.workspace }}/coverage
+
+          
+
+        
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage/index.html
+            coverage/index.css
+            coverage/coverage.xml
+            coverage/coverage.info
+

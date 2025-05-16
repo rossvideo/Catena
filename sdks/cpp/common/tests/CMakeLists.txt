@@ -21,6 +21,7 @@ endif(gRPC_enabled)
 set(SOURCES 
     utils_test.cpp
     subscription_manager_test.cpp
+    param_visitor_test.cpp
 )
 
 add_executable(${This} ${SOURCES})

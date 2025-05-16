@@ -37,6 +37,7 @@ set(sources
     "src/controllers/Connect.cpp"
     "src/controllers/DeviceRequest.cpp"
     "src/controllers/ExecuteCommand.cpp"
+    "src/controllers/AssetRequest.cpp"
     "src/controllers/GetPopulatedSlots.cpp"
     "src/controllers/GetValue.cpp"
     "src/controllers/MultiSetValue.cpp"
