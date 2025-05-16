@@ -22,18 +22,17 @@ jobs:
 
           echo "-----------------0"
           
-          docker run --rm -v ${{ github.workspace }}:/workspace catena-devcontainer \
-            /bin/bash -c "cp -r coverage /workspace/coverage"
+          container_id=$(docker run -d --name catena-container catena-devcontainer)
+          echo "container_id: $container_id"
+          echo "copying coverage"
+          docker cp $container_id:/home/catenauser/Catena/coverage ${{ github.workspace }}/coverage
+          echo " removing container"
+          docker rm $container_id
 
-          echo "---------------1"
-          ls -la
-
-          echo "---------------2"
-          ls -la ${{ github.workspace }}
-
-          echo "---------------3"
           ls -la ${{ github.workspace }}/coverage
+
           
+
         
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
