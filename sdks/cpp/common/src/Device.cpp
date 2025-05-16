@@ -486,7 +486,13 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
 
             // Without values.
             // for (const auto& [name, param] : params_) {
-            //     pds.push_back(&param->getDescriptor());
+            //     if (authz.readAuthz(*param) &&
+            //         ((dl == catena::Device_DetailLevel_FULL) ||
+            //         (param->getDescriptor().minimalSet()) ||
+            //         (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && isSubscribed(param->getOid())))) {
+
+            //         pds.push_back(&param->getDescriptor());
+            //     }
             // }
 
             // With values
@@ -511,21 +517,16 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
             while (!pds.empty()) {
                 auto pd = pds.back();
                 pds.pop_back();
-                if (authz.readAuthz(*pd) &&
-                    ((dl == catena::Device_DetailLevel_FULL) ||
-                     (pd->minimalSet()) ||
-                     (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && isSubscribed(pd->getOid())))) {
-                    co_yield component;
-                    component.Clear();
-                    ::catena::Param* dstParam = component.mutable_param()->mutable_param();
-                    pd->toProto(*dstParam, authz);
-                    component.mutable_param()->set_oid(pd->getOid());
-                    // Adding sub params to the params list.
-                    for (auto [name, subpd] : pd->getAllSubParams()) {
-                        if (authz.readAuthz(*subpd)) {
-                            pds.push_back(subpd);
-                            component.mutable_param()->add_sub_params(name);
-                        }
+                co_yield component;
+                component.Clear();
+                ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+                pd->toProto(*dstParam, authz);
+                component.mutable_param()->set_oid(pd->getOid());
+                // Adding sub params to the params list.
+                for (auto [name, subpd] : pd->getAllSubParams()) {
+                    if (authz.readAuthz(*subpd)) {
+                        pds.push_back(subpd);
+                        component.mutable_param()->add_sub_params(name);
                     }
                 }
             }
