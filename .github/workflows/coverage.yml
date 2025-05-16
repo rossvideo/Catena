@@ -3,7 +3,8 @@ name: Coverage
 on:
   push:
     branches:
-      - test
+      - main
+      - develop
 
 jobs:
   test-and-coverage:
