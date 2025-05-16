@@ -83,17 +83,27 @@ void GetParam::proceed( bool ok) {
 
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            // Creating authorizer.
-            if (service_->authorizationEnabled()) {
-                sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                authz_ = sharedAuthz_.get();
-            } else {
-                authz_ = &catena::common::Authorizer::kAuthzDisabled;
+            std::unique_ptr<IParam> param = nullptr;
+            try {
+                // Creating authorizer.
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                    authz_ = sharedAuthz_.get();
+                } else {
+                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
+                }
+                // Getting the param.
+                std::lock_guard lg(dm_.mutex());
+                param = dm_.getParam(req_.oid(), rc, *authz_);
+            // ERROR
+            } catch (catena::exception_with_status& err) {
+                rc = catena::exception_with_status(err.what(), err.status);
+            } catch (...) {
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
-            // Getting the param.
-            std::unique_ptr<IParam> param = dm_.getParam(req_.oid(), rc, *authz_);
             // Everything went well, fall through to kWrite.
             if (param && rc.status == catena::StatusCode::OK) {
+                param->toProto(*res_.mutable_param(), *authz_); // <-- Remove this to get without value.
                 pds_.push_back(&param->getDescriptor());
                 status_ = CallStatus::kWrite;
             // Error along the way, finish call with error.
@@ -111,27 +121,34 @@ void GetParam::proceed( bool ok) {
         case CallStatus::kWrite:
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
-            catena::DeviceComponent_ComponentParam response;
             // Getting and writing param descriptor.
-            auto pd = std::move(pds_.back());
-            pds_.pop_back();
-            response.set_oid(pd->getOid());
-            pd->toProto(*response.mutable_param(), *authz_);
-            // If param has children, add child oids to the oids_ vector.
-            for (auto [oid, childDesc] : pd->getAllSubParams()) {
-                if (authz_->readAuthz(*childDesc)) {
-                    pds_.push_back(childDesc);
-                    response.add_sub_params(oid);
-                }
+            const ParamDescriptor* pd = nullptr;
+            while (!pd && !pds_.empty()) {
+                pd = std::move(pds_.back());
+                pds_.pop_back();
             }
-            // Write the param descriptor
-            writer_.Write(response, this);
+            // Processing the param descriptor.
+            if (pd) {
+                res_.set_oid(pd->getOid());
+                pd->toProto(*res_.mutable_param(), *authz_);
+                // If param has children, add child oids to the oids_ vector.
+                for (auto [oid, childDesc] : pd->getAllSubParams()) {
+                    if (authz_->readAuthz(*childDesc)) {
+                        pds_.push_back(childDesc);
+                        res_.add_sub_params(oid);
+                    }
+                }
+                // Write the param descriptor
+                writer_.Write(res_, this);
+                res_.Clear();
+            }
             // If there is no more to write, change to kPostWrite.
             if (pds_.empty()) {
                 status_ = CallStatus::kPostWrite;
             }
+            // If pd then we wrote and can break, otherwise we fall through.
+            if (pd) { break; }
             }
-            break;
 
         /*
          * kPostWrite: Finish writing the response to the client.

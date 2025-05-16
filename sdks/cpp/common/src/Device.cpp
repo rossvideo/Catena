@@ -483,8 +483,30 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
         if (dl != catena::Device_DetailLevel_COMMANDS) {
             // Temp vector of params descriptors.
             std::vector<const ParamDescriptor*> pds;
+
+            // Without values.
+            // for (const auto& [name, param] : params_) {
+            //     pds.push_back(&param->getDescriptor());
+            // }
+
+            // With values
             for (const auto& [name, param] : params_) {
-                pds.push_back(&param->getDescriptor());
+                if (authz.readAuthz(*param) &&
+                    ((dl == catena::Device_DetailLevel_FULL) ||
+                     (param->getDescriptor().minimalSet()) ||
+                     (dl == catena::Device_DetailLevel_SUBSCRIPTIONS && isSubscribed(param->getOid())))) {
+                    co_yield component;
+                    component.Clear();
+                    ::catena::Param* dstParam = component.mutable_param()->mutable_param();
+                    param->toProto(*dstParam, authz);
+                    component.mutable_param()->set_oid(name);
+                    for (auto [name, subpd] : param->getDescriptor().getAllSubParams()) {
+                        if (authz.readAuthz(*subpd)) {
+                            pds.push_back(subpd);
+                            component.mutable_param()->add_sub_params(name);
+                        }
+                    }
+                }
             }
             while (!pds.empty()) {
                 auto pd = pds.back();

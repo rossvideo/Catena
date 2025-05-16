@@ -78,11 +78,10 @@ class GetParam : public CallData {
      * @brief The request payload.
      */
     catena::GetParamPayload req_;
-
     /**
-     * @brief The response payload.
+     * @brief The component param to write to the client.
      */
-    catena::PushUpdates res_;
+    catena::DeviceComponent_ComponentParam res_;
 
     /**
      * @brief gRPC async response writer.
@@ -99,10 +98,23 @@ class GetParam : public CallData {
      */
     IDevice& dm_;
 
+    /**
+     * @brief Shared ptr to the authorizer object so that we can maintain
+     * ownership of raw ptr throughout call lifetime without use of "new"
+     * keyword. 
+     */
     std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
+    /**
+     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
+     * case of kAuthzDisabled.
+     */
     catena::common::Authorizer* authz_;
 
+    /**
+     * @brief A collection of param descriptors to be processed and written.
+     */
     std::vector<const ParamDescriptor*> pds_;
+
     /**
      * @brief The object's unique id.
      */

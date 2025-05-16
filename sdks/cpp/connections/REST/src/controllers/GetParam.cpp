@@ -58,7 +58,7 @@ void GetParam::proceed() {
 
         // Adding top parameter to the response (WITH VALUE).
         ans.set_oid(param->getOid());
-        param->toProto(*ans.mutable_param(), *authz);
+        param->toProto(*ans.mutable_param(), *authz); // <-- Remove this to get without value.
         remainingParams.push_back(std::make_pair(&param->getDescriptor(), ans.mutable_param()));
 
         // Processing top parameter and its sub parameters.
