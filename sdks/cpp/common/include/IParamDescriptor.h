@@ -41,21 +41,7 @@
 //common
 #include <Tags.h>
 #include <IParam.h>
-// #include <IConstraint.h>
 #include <PolyglotText.h>
-
-// // meta
-// #include <meta/IsVector.h>
-
-// // protobuf interface
-// #include <interface/param.pb.h>
-
-// #include <vector>
-// #include <string>
-// #include <unordered_map>
-// #include <type_traits>
-// #include <algorithm>
-// #include <cassert>
 
 namespace catena {
 namespace common {

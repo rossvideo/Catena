@@ -1,5 +1,3 @@
-#pragma once
-
 /*
  * Copyright 2024 Ross Video Ltd
  *
@@ -38,15 +36,16 @@
  * @date 2024-08-20
  */
 
+#pragma once
+
 //common
 #include <Tags.h>
 #include <IParam.h>
 #include <IConstraint.h>
 #include <PolyglotText.h>
 #include <IParamDescriptor.h>
-
-// meta
-#include <meta/IsVector.h>
+#include <IDevice.h>
+#include <Authorization.h>  
 
 // protobuf interface
 #include <interface/param.pb.h>
@@ -54,9 +53,6 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <type_traits>
-#include <algorithm>
-#include <cassert>
 
 namespace catena {
 namespace common {
