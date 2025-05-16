@@ -14,7 +14,10 @@ jobs:
 
       - name: Build Dev Container Image
         run: |
-          docker build -f .devcontainer/devcontainer.dockerfile --env-file .devcontainer/devcontainer.env -t catena-devcontainer .
+          docker build \
+            -f .devcontainer/devcontainer.dockerfile \
+            $(cat .devcontainer/devcontainer.env | sed 's/^/--build-arg /') \
+            -t catena-devcontainer .
           echo "-----------------0"
           container_id=$(docker run -d --name catena-container \
             -v ${{ github.workspace }}:/home/catenauser/Catena \
