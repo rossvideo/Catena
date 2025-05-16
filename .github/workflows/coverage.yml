@@ -24,8 +24,16 @@ jobs:
             -w /home/catenauser/Catena \
             catena-devcontainer \
             /bin/bash -c './scripts/run_coverage.sh'
-      - name: ls -la
-        run: ls -la
+            
+      - name: tests commands
+        run: |
+          echo "---------------1"
+          ls -la
+          echo "---------------2"
+          ls -la ${{ github.workspace }}
+          echo "---------------3"
+          ls -la ${{ github.workspace }}/coverage
+          
         
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
