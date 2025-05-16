@@ -15,19 +15,33 @@ jobs:
 
       - name: Build Dev Container Image
         run: |
-          docker build -f .devcontainer/devcontainer.dockerfile -t catena-devcontainer .
+          docker buildx build \
+           -f .devcontainer/devcontainer.dockerfile \
+           --build-arg CONNECTIONS='gRPC;REST' \
+           --build-arg CMAKE_BUILD_TYPE='Debug' \
+           -t catena-devcontainer .
 
-      - name: Start Dev Container
-        run: |
-          docker run --rm -d --name catena-container \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace/Catena \
-            catena-devcontainer \
-            /bin/bash -c './scripts/run_coverage.sh'
+          echo "-----------------0"
+          
+          container_id=$(docker run -d --name catena-container catena-devcontainer)
+          echo "container_id: $container_id"
+          echo "copying coverage"
+          docker cp $container_id:/home/catenauser/Catena/coverage ${{ github.workspace }}/coverage
+          echo " removing container"
+          docker rm $container_id
 
+          ls -la ${{ github.workspace }}/coverage
+
+          
+
+        
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report-xml
-          path: coverage/coverage.xml
+          name: coverage-report
+          path: |
+            coverage/index.html
+            coverage/index.css
+            coverage/coverage.xml
+            coverage/coverage.info
 
