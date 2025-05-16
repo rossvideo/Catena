@@ -31,10 +31,9 @@
 /**
  * @brief This file is for testing the SubscriptionManager.cpp file.
  * @author zuhayr.sarker@rossvideo.com
- * @date 25/05/13
+ * @date 25/05/14
  * @copyright Copyright © 2025 Ross Video Ltd
  */
-
 
 #include <gtest/gtest.h>
 #include "CommonMockClasses.h"
@@ -42,51 +41,53 @@
 #include <IParam.h>
 #include <Status.h>
 #include <Authorization.h>
+#include <SubscriptionManager.h>
 
 using namespace catena::common;
 
 class SubscriptionManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        manager = std::make_unique<MockSubscriptionManager>();
+        manager = std::make_unique<SubscriptionManager>();
         device = std::make_unique<MockDevice>();
+        mockParam = std::make_unique<MockParam>();
         
         // Set up default mock behavior for device
-        ON_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
+        EXPECT_CALL(*device, getValue(::testing::_, ::testing::_, ::testing::_))
+            .WillRepeatedly(::testing::Invoke([](const std::string& jptr, catena::Value& value, Authorizer& authz) -> catena::exception_with_status {
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
 
-        // Set up default mock behavior for subscription manager
-        ON_CALL(*manager, addSubscription(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-                rc = catena::exception_with_status("", catena::StatusCode::OK);
-                return true;
+        // Set up default behavior for mutex
+        static std::mutex test_mutex;
+        EXPECT_CALL(*device, mutex())
+            .WillRepeatedly(::testing::ReturnRef(test_mutex));
+
+        // Set up default behavior for getParam
+        EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+            .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::make_unique<MockParam>();
             }));
-        ON_CALL(*manager, removeSubscription(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-                rc = catena::exception_with_status("", catena::StatusCode::OK);
-                return true;
-            }));
-        static std::set<std::string> empty_set;
-        ON_CALL(*manager, getAllSubscribedOids(::testing::_))
-            .WillByDefault(::testing::ReturnRef(empty_set));
+
+        // Set up default behavior for subscriptions
+        EXPECT_CALL(*device, subscriptions())
+            .WillRepeatedly(::testing::Return(true));
+
+        // Set up default behavior for mockParam
+        static std::string test_oid = "/test/param";
+        EXPECT_CALL(*mockParam, getOid())
+            .WillRepeatedly(::testing::ReturnRef(test_oid));
     }
 
-    std::unique_ptr<MockSubscriptionManager> manager;
+    std::unique_ptr<SubscriptionManager> manager;
     std::unique_ptr<MockDevice> device;
+    std::unique_ptr<MockParam> mockParam;
 };
 
 // Test adding a new subscription
 TEST_F(SubscriptionManagerTest, AddNewSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Set up expectations
-    EXPECT_CALL(*manager, addSubscription("/test/param", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::OK);
-            return true;
-        }));
     
     // Test adding a new subscription
     EXPECT_TRUE(manager->addSubscription("/test/param", *device, rc));
@@ -96,17 +97,6 @@ TEST_F(SubscriptionManagerTest, AddNewSubscription) {
 // Test adding a duplicate subscription
 TEST_F(SubscriptionManagerTest, AddDuplicateSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Set up expectations
-    EXPECT_CALL(*manager, addSubscription("/test/param", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::OK);
-            return true;
-        }))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::ALREADY_EXISTS);
-            return false;
-        }));
     
     // Add initial subscription
     manager->addSubscription("/test/param", *device, rc);
@@ -120,18 +110,6 @@ TEST_F(SubscriptionManagerTest, AddDuplicateSubscription) {
 TEST_F(SubscriptionManagerTest, RemoveExistingSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
-    // Set up expectations
-    EXPECT_CALL(*manager, addSubscription("/test/param", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::OK);
-            return true;
-        }));
-    EXPECT_CALL(*manager, removeSubscription("/test/param", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::OK);
-            return true;
-        }));
-    
     // Add a subscription first
     manager->addSubscription("/test/param", *device, rc);
     
@@ -144,13 +122,6 @@ TEST_F(SubscriptionManagerTest, RemoveExistingSubscription) {
 TEST_F(SubscriptionManagerTest, RemoveNonExistentSubscription) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     
-    // Set up expectations
-    EXPECT_CALL(*manager, removeSubscription("/test/param", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::NOT_FOUND);
-            return false;
-        }));
-    
     // Try to remove a subscription that doesn't exist
     EXPECT_FALSE(manager->removeSubscription("/test/param", *device, rc));
     EXPECT_EQ(rc.status, catena::StatusCode::NOT_FOUND);
@@ -159,22 +130,6 @@ TEST_F(SubscriptionManagerTest, RemoveNonExistentSubscription) {
 // Test getting all subscribed OIDs
 TEST_F(SubscriptionManagerTest, GetAllSubscribedOids) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    
-    // Set up expectations
-    EXPECT_CALL(*manager, addSubscription("/test/param1", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::OK);
-            return true;
-        }));
-    EXPECT_CALL(*manager, addSubscription("/test/param2", ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string& oid, IDevice& dm, catena::exception_with_status& rc) -> bool {
-            rc = catena::exception_with_status("", catena::StatusCode::OK);
-            return true;
-        }));
-    
-    static std::set<std::string> expected_oids = {"/test/param1", "/test/param2"};
-    EXPECT_CALL(*manager, getAllSubscribedOids(::testing::_))
-        .WillOnce(::testing::ReturnRef(expected_oids));
     
     // Add some subscriptions
     manager->addSubscription("/test/param1", *device, rc);
