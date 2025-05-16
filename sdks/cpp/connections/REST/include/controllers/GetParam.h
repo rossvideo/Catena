@@ -95,8 +95,6 @@ class GetParam : public ICallData {
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new GetParam(socket, context, dm);
     }
-    
-
 
   private:
     /**
@@ -127,6 +125,12 @@ class GetParam : public ICallData {
      * @brief The device to set values of.
      */
     IDevice& dm_;
+
+    /**
+     * @brief Flag to determine whether to stream the response or not.
+     * 
+     * Will be replaced later once SocketReader has been updated.
+     */
     bool stream_ = true;
 
     /**
