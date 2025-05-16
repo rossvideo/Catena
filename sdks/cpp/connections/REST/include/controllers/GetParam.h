@@ -122,11 +122,12 @@ class GetParam : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SocketWriter writer_;
+    std::unique_ptr<ISocketWriter> writer_;
     /**
      * @brief The device to set values of.
      */
     IDevice& dm_;
+    bool stream_ = true;
 
     /**
      * @brief ID of the GetParam object
