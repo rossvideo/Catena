@@ -14,10 +14,12 @@ jobs:
 
       - name: Build Dev Container Image
         run: |
-          docker build \
-            -f .devcontainer/devcontainer.dockerfile \
-            $(cat .devcontainer/devcontainer.env | sed 's/^/--build-arg /') \
-            -t catena-devcontainer .
+          docker buildx build \
+           -f .devcontainer/devcontainer.dockerfile \
+           --build-arg CONNECTIONS='gRPC;REST' \
+           --build-arg CMAKE_BUILD_TYPE='Debug' \
+           -t catena-devcontainer .
+
           echo "-----------------0"
           container_id=$(docker run -d --name catena-container \
             -v ${{ github.workspace }}:/home/catenauser/Catena \
@@ -27,10 +29,13 @@ jobs:
           docker wait "$container_id"
           docker logs "$container_id"
           docker rm "$container_id"
+
           echo "---------------1"
           ls -la
+
           echo "---------------2"
           ls -la ${{ github.workspace }}
+          
           echo "---------------3"
           ls -la ${{ github.workspace }}/coverage
           
