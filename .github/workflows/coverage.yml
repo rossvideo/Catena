@@ -39,9 +39,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path:
-            - coverage/index.html
-            - coverage/index.css
-            - coverage/coverage.xml
-            - coverage/coverage.info
+          path: |
+            coverage/index.html
+            coverage/index.css
+            coverage/coverage.xml
+            coverage/coverage.info
 
