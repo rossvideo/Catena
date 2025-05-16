@@ -43,33 +43,6 @@
 namespace catena {
 namespace common {
 
-// Helper class for setting up parameter hierarchies in tests
-class ParamHierarchyBuilder {
-public:
-    struct DescriptorInfo {
-        std::shared_ptr<MockParamDescriptor> descriptor;
-        std::unordered_map<std::string, ParamDescriptor*> subParams;
-    };
-
-    // Creates a descriptor with the given OID and sets up its mock behavior
-    static DescriptorInfo createDescriptor(const std::string& oid) {
-        DescriptorInfo info;
-        info.descriptor = std::make_shared<MockParamDescriptor>();
-        info.descriptor->setOid(oid);
-        EXPECT_CALL(*info.descriptor, getOid())
-            .WillRepeatedly(::testing::ReturnRef(oid));
-        EXPECT_CALL(*info.descriptor, getAllSubParams())
-            .WillRepeatedly(::testing::ReturnRef(info.subParams));
-        return info;
-    }
-
-    // Adds a child parameter to a parent descriptor
-    static void addChild(DescriptorInfo& parent, const std::string& name, DescriptorInfo& child) {
-        parent.descriptor->addSubParam(name, child.descriptor.get());
-        parent.subParams[name] = child.descriptor.get();
-    }
-};
-
 /**
  * @brief Helper function to set up common mock parameter expectations
  * @param param The mock parameter to set up
@@ -90,6 +63,42 @@ inline void setupMockParam(MockParam* param, const std::string& oid, const Param
             .WillRepeatedly(::testing::Return(size));
     }
 }
+
+// Helper class for setting up parameter hierarchies in tests
+class ParamHierarchyBuilder {
+public:
+    struct DescriptorInfo {
+        std::shared_ptr<MockParamDescriptor> descriptor;
+        std::unordered_map<std::string, ParamDescriptor*> subParams;
+    };
+
+    /**
+     * @brief Creates a descriptor with the given OID and sets up its mock behavior
+     * @param oid The OID to return
+     * @return A DescriptorInfo struct containing the descriptor and its sub-parameters
+     */
+    static DescriptorInfo createDescriptor(const std::string& oid) {
+        DescriptorInfo info;
+        info.descriptor = std::make_shared<MockParamDescriptor>();
+        info.descriptor->setOid(oid);
+        EXPECT_CALL(*info.descriptor, getOid())
+            .WillRepeatedly(::testing::ReturnRef(oid));
+        EXPECT_CALL(*info.descriptor, getAllSubParams())
+            .WillRepeatedly(::testing::ReturnRef(info.subParams));
+        return info;
+    }
+
+    /**
+     * @brief Adds a child parameter to a parent descriptor
+     * @param parent The parent descriptor
+     * @param name The name of the child parameter
+     * @param child The child descriptor
+     */
+    static void addChild(DescriptorInfo& parent, const std::string& name, DescriptorInfo& child) {
+        parent.descriptor->addSubParam(name, child.descriptor.get());
+        parent.subParams[name] = child.descriptor.get();
+    }
+};
 
 } // namespace common
 } // namespace catena 
