@@ -14,15 +14,16 @@ jobs:
 
       - name: Build Dev Container Image
         run: |
-          docker build -f .devcontainer/devcontainer.dockerfile -t catena-devcontainer .
+          docker build -f .devcontainer/devcontainer.dockerfile --env-file .devcontainer/devcontainer.env -t catena-devcontainer .
           echo "-----------------0"
-          container_id=$(docker run --rm -d --name catena-container \
+          container_id=$(docker run -d --name catena-container \
             -v ${{ github.workspace }}:/home/catenauser/Catena \
-            -w /home/catenauser/Catena \
             catena-devcontainer \
             /bin/bash -c './scripts/run_coverage.sh')
           echo "container_id: $container_id"
           docker wait "$container_id"
+          docker logs "$container_id"
+          docker rm "$container_id"
           echo "---------------1"
           ls -la
           echo "---------------2"
