@@ -65,19 +65,21 @@ public:
 
     /**
      * @brief Add an OID subscription
-     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
+     * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/\\*")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
+     * @note the star in the oid is escaped as "\\*" to prevent clang's nested comment warning.
      */
     bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Remove an OID subscription
-     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/*")
+     * @param oid The OID to unsubscribe from (can be either a unique OID or a wildcard like "/param/\\*")
      * @param dm The device model to use
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
+     * @note the star in the oid is escaped as "\\*" to prevent clang's nested comment warning.
      */
     bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
 
@@ -89,9 +91,10 @@ public:
     const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
 
     /**
-     * @brief Check if an OID is a wildcard subscription
+     * @brief Check if an OID is a wildcard subscription    
      * @param oid The OID to check
-     * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
+     * @return true if the OID is greater than or equal to 2 characters and ends with "/\\*"
+     * @note the star in the oid is escaped as "\\*" to prevent clang's nested comment warning.
      */
     bool isWildcard(const std::string& oid) override;
 
