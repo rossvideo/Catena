@@ -41,6 +41,7 @@
 
 using namespace catena::common;
 
+// A collection of valid tokens with one scope each.
 const std::unordered_map<std::string, std::string> testTokens {
     {Scopes().getForwardMap().at(Scopes_e::kMonitor),        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ"},
     {Scopes().getForwardMap().at(Scopes_e::kOperate),        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMjJ9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o"},
@@ -52,16 +53,6 @@ const std::unordered_map<std::string, std::string> testTokens {
     {Scopes().getForwardMap().at(Scopes_e::kAdmin)   + ":w", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtOnciLCJpYXQiOjE1MTYyMzkwMjJ9.WrWmmNhw3EZ6AzZAytgZbvb_9NFL3_YtSSsZibW1P0w"}
 };
 
-// Fixture
-class AuthorizationTests : public ::testing::Test {
-  public:
-    void SetUp() override {}
-
-    void TearDown() override {}
-
-    const std::unordered_map<catena::common::Scopes_e, std::string>* scopeMap = &Scopes().getForwardMap();
-};
-
 /*
  * ============================================================================
  *                               Authorizer tests
@@ -69,7 +60,7 @@ class AuthorizationTests : public ::testing::Test {
  * 
  * TEST 1 - Creating an authorizer object with a valid JWS token.
  */
-TEST_F(AuthorizationTests, Authz_createValid) {
+TEST(AuthorizationTests, Authz_createValid) {
     // Valid tokens.
     for (auto& [currentScope, currentToken] : testTokens) {
         EXPECT_NO_THROW(Authorizer authz(currentToken));
@@ -79,7 +70,7 @@ TEST_F(AuthorizationTests, Authz_createValid) {
 /* 
  * TEST 2 - Failing to create an authorizer object with a invalid JWS token.
  */
-TEST_F(AuthorizationTests, Authz_createInvalid) {
+TEST(AuthorizationTests, Authz_createInvalid) {
     // Invalid token.
     std::string invalid_token = "This is not a valid token";
     EXPECT_THROW(Authorizer authz(invalid_token), catena::exception_with_status);
@@ -88,13 +79,13 @@ TEST_F(AuthorizationTests, Authz_createInvalid) {
 /* 
  * TEST 3 - Testing hasAuthz().
  */
-TEST_F(AuthorizationTests, Authz_hasAuthz) {   
+TEST(AuthorizationTests, Authz_hasAuthz) {   
     for (auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing hasAuthz.
         for (std::string priviledge : {"", ":w"}) {
-            for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+            for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
                 if (scopeStr + priviledge == currentScope) {
                     EXPECT_TRUE(authz->hasAuthz(scopeStr + priviledge));
                 } else {
@@ -109,14 +100,14 @@ TEST_F(AuthorizationTests, Authz_hasAuthz) {
 /* 
  * TEST 4 - Testing readAuthz().
  */
-TEST_F(AuthorizationTests, Authz_readAuthz) {
+TEST(AuthorizationTests, Authz_readAuthz) {
     MockParam param;
     MockParamDescriptor pd;
     for (auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing readAuthz(param).
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             if (scopeStr == currentScope || scopeStr + ":w" == currentScope) {
@@ -134,7 +125,7 @@ TEST_F(AuthorizationTests, Authz_readAuthz) {
 /* 
  * TEST 5 - Testing writeAuthz().
  */
-TEST_F(AuthorizationTests, Authz_writeAuthz) {
+TEST(AuthorizationTests, Authz_writeAuthz) {
     MockParam param;
     MockParamDescriptor pd;
     for (auto& [currentScope, currentToken] : testTokens) {
@@ -142,7 +133,7 @@ TEST_F(AuthorizationTests, Authz_writeAuthz) {
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing writeAuthz(param).
         for (bool rOnly : {false, true}) {
-            for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+            for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
                 EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
                 EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
                 if (!rOnly) {
@@ -165,20 +156,23 @@ TEST_F(AuthorizationTests, Authz_writeAuthz) {
 /* 
  * TEST 6 - Testing authorizer with no scope.
  */
-TEST_F(AuthorizationTests, Authz_scopeNone) {
-    std::string noScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+TEST(AuthorizationTests, Authz_scopeNone) {
+    std::string noScope = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMj"
+                          "M0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2M"
+                          "jM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw"
+                          "5c";
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(noScope));
     MockParam param;
     MockParamDescriptor pd;
     // hasAuthz should always return false if client has no scopes.
     for (std::string priviledge : {"", ":w"}) {
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_FALSE(authz->hasAuthz(scopeStr + priviledge));
         }
     }
     // readAuthz() should always return false if client has no scopes.
-    for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+    for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_FALSE(authz->readAuthz(param));
@@ -186,7 +180,7 @@ TEST_F(AuthorizationTests, Authz_scopeNone) {
     }
     // writeAuthz() should always return false if client has no scopes.
     for (bool rOnly : {false, true}) {
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             if (!rOnly) {
@@ -202,18 +196,18 @@ TEST_F(AuthorizationTests, Authz_scopeNone) {
 /* 
  * TEST 7 - Testing kAuthzDisabled.
  */
-TEST_F(AuthorizationTests, Authz_disabled) {
+TEST(AuthorizationTests, Authz_disabled) {
     Authorizer* authz = &Authorizer::kAuthzDisabled;
     MockParam param;
     MockParamDescriptor pd;
     // hasAuthz should always return true.
     for (std::string priviledge : {"", ":w"}) {
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_TRUE(authz->hasAuthz(scopeStr + priviledge));
         }
     }
     // readAuthz() should always return true.
-    for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+    for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_TRUE(authz->readAuthz(param));
@@ -221,7 +215,7 @@ TEST_F(AuthorizationTests, Authz_disabled) {
     }
     // writeAuthz() should return true if the param is not read only.
     for (bool rOnly : {false, true}) {
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             if (rOnly) {
@@ -240,17 +234,22 @@ TEST_F(AuthorizationTests, Authz_disabled) {
 /* 
  * TEST 8 - Testing authorizer with multiple scopes.
  */
-TEST_F(AuthorizationTests, Authz_scopeMulti) {
+TEST(AuthorizationTests, Authz_scopeMulti) {
     // This token has st2138:mon and st2138:op:w scopes.
-    std::string multiScopes = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIHN0MjEzODpvcDp3IiwiaWF0IjoxNTE2MjM5MDIyfQ.Z8upjHhZWKBlZ-yUcu7FFlJPby_C4jB9Bnk-DGxoQyM";
+    std::string multiScopes = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOi"
+                              "IxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
+                              "GUiOiJzdDIxMzg6bW9uIHN0MjEzODpvcDp3IiwiaWF0Ijox"
+                              "NTE2MjM5MDIyfQ.Z8upjHhZWKBlZ-yUcu7FFlJPby_C4jB9"
+                              "Bnk-DGxoQyM";
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(multiScopes));
     MockParam param;
     MockParamDescriptor pd;
     // hasAuthz should return true if it has the correct scope.
     for (std::string priviledge : {"", ":w"}) {
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
-            if (scopeStr + priviledge == scopeMap->at(Scopes_e::kMonitor) || scopeStr + priviledge == scopeMap->at(Scopes_e::kOperate) + ":w") {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
+            if (scopeStr + priviledge == Scopes().getForwardMap().at(Scopes_e::kMonitor)
+                || scopeStr + priviledge == Scopes().getForwardMap().at(Scopes_e::kOperate) + ":w") {
                 EXPECT_TRUE(authz->hasAuthz(scopeStr + priviledge));
             } else {
                 EXPECT_FALSE(authz->hasAuthz(scopeStr + priviledge));
@@ -258,10 +257,11 @@ TEST_F(AuthorizationTests, Authz_scopeMulti) {
         }
     }
     // readAuthz() should return true if the scope is op or mon.
-    for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+    for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
-        if (scopeStr == scopeMap->at(Scopes_e::kMonitor) || scopeStr == scopeMap->at(Scopes_e::kOperate)) {
+        if (scopeStr == Scopes().getForwardMap().at(Scopes_e::kMonitor)
+            || scopeStr == Scopes().getForwardMap().at(Scopes_e::kOperate)) {
             EXPECT_TRUE(authz->readAuthz(param));
             EXPECT_TRUE(authz->readAuthz(pd));
         } else {
@@ -271,14 +271,14 @@ TEST_F(AuthorizationTests, Authz_scopeMulti) {
     }
     // writeAuthz() should return true if the scope is op and param is not read-only.
     for (bool rOnly : {false, true}) {
-        for (auto& [scopeEnum, scopeStr]: *scopeMap) {
+        for (auto& [scopeEnum, scopeStr]: Scopes().getForwardMap()) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             if (!rOnly) {
                 EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
                 EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             }
-            if (scopeStr == scopeMap->at(Scopes_e::kOperate) && !rOnly) {
+            if (scopeStr == Scopes().getForwardMap().at(Scopes_e::kOperate) && !rOnly) {
                 EXPECT_TRUE(authz->writeAuthz(param));
                 EXPECT_TRUE(authz->writeAuthz(pd));
             } else {
