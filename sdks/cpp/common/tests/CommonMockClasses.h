@@ -130,25 +130,6 @@ public:
 //Mock implementation of ParamDescriptor for testing
 class MockParamDescriptor : public IParamDescriptor {
   public:
-    
-    // MockParamDescriptor() : ParamDescriptor(
-    //     catena::ParamType::STRING,        // type
-    //     {},                               // oid_aliases
-    //     {},                               // name
-    //     "",                               // widget
-    //     "",                               // scope
-    //     false,                            // read_only
-    //     "",                               // oid - empty by default
-    //     "",                               // template_oid
-    //     nullptr,                          // constraint
-    //     false,                            // isCommand
-    //     *static_cast<IDevice*>(nullptr),  // device - will be set in constructor
-    //     0,                                // max_length
-    //     0,                                // total_length
-    //     false,                            // minimal_set
-    //     nullptr                           // parent
-    // ) {}
-
     MOCK_METHOD(ParamType, type, (), (const, override));
     MOCK_METHOD(const PolyglotText::DisplayStrings&, name, (), (const, override));
     MOCK_METHOD((const std::string&), getOid, (), (const, override));
