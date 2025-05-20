@@ -41,7 +41,7 @@
 #include <gmock/gmock.h>
 #include <IDevice.h>
 #include <IParam.h>
-#include <ParamDescriptor.h>
+#include <IParamDescriptor.h>
 #include <Status.h>
 #include <Authorization.h>
 
@@ -120,7 +120,7 @@ public:
     MOCK_METHOD(const std::string&, getScope, (), (const, override));
     MOCK_METHOD(void, defineCommand, (std::function<catena::CommandResponse(catena::Value)> command), (override));
     MOCK_METHOD(catena::CommandResponse, executeCommand, (const catena::Value& value), (const, override));
-    MOCK_METHOD(const ParamDescriptor&, getDescriptor, (), (const, override));
+    MOCK_METHOD(const IParamDescriptor&, getDescriptor, (), (const, override));
     MOCK_METHOD(bool, isArrayType, (), (const, override));
     MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans), (override));
     MOCK_METHOD(void, resetValidate, (), (override));
@@ -128,31 +128,31 @@ public:
 
 
 //Mock implementation of ParamDescriptor for testing
-class MockParamDescriptor : public ParamDescriptor {
-public:
-    MockParamDescriptor() : ParamDescriptor(
-        catena::ParamType::STRING,        // type
-        {},                               // oid_aliases
-        {},                               // name
-        "",                               // widget
-        "",                               // scope
-        false,                            // read_only
-        "",                               // oid - empty by default
-        "",                               // template_oid
-        nullptr,                          // constraint
-        false,                            // isCommand
-        *static_cast<IDevice*>(nullptr),  // device - will be set in constructor
-        0,                                // max_length
-        0,                                // total_length
-        false,                            // minimal_set
-        nullptr                           // parent
-    ) {}
-
-    MOCK_METHOD((const std::string&), getOid, (), (const));
-    MOCK_METHOD(bool, readOnly, (), (const));
-    MOCK_METHOD((const std::string&), getScope, (), (const));
-    MOCK_METHOD(bool, minimalSet, (), (const));
-    MOCK_METHOD((const std::unordered_map<std::string, ParamDescriptor*>&), getAllSubParams, (), (const));
+class MockParamDescriptor : public IParamDescriptor {
+  public:
+    MOCK_METHOD(ParamType, type, (), (const, override));
+    MOCK_METHOD(const PolyglotText::DisplayStrings&, name, (), (const, override));
+    MOCK_METHOD((const std::string&), getOid, (), (const, override));
+    MOCK_METHOD(void, setOid, (const std::string& oid), (override));
+    MOCK_METHOD(bool, hasTemplateOid, (), (const, override));
+    MOCK_METHOD((const std::string&), templateOid, (), (const, override));
+    MOCK_METHOD(bool, readOnly, (), (const, override));
+    MOCK_METHOD(void, readOnly, (bool flag), (override));
+    MOCK_METHOD((const std::string&), getScope, (), (const, override));
+    MOCK_METHOD(bool, minimalSet, (), (const, override));
+    MOCK_METHOD(void, setMinimalSet, (bool flag), (override));
+    MOCK_METHOD(uint32_t, max_length, (), (const, override));
+    MOCK_METHOD(std::size_t, total_length, (), (const, override));
+    MOCK_METHOD(void, toProto, (catena::Param& param, Authorizer& authz), (const, override));
+    MOCK_METHOD(void, toProto, (catena::BasicParamInfo& paramInfo, Authorizer& authz), (const, override));
+    MOCK_METHOD(const std::string&, name, (const std::string& language), (const, override));
+    MOCK_METHOD(void, addSubParam, (const std::string& oid, IParamDescriptor* item), (override));
+    MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));
+    MOCK_METHOD((const std::unordered_map<std::string, IParamDescriptor*>&), getAllSubParams, (), (const, override));
+    MOCK_METHOD(const catena::common::IConstraint*, getConstraint, (), (const, override));
+    MOCK_METHOD(void, defineCommand, (std::function<catena::CommandResponse(catena::Value)> commandImpl), (override));
+    MOCK_METHOD(catena::CommandResponse, executeCommand, (catena::Value value), (override));
+    MOCK_METHOD(bool, isCommand, (), (const, override));
 };
 
 } // namespace common

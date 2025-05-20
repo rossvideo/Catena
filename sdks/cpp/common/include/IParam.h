@@ -38,7 +38,7 @@ namespace catena {
 namespace common { 
 
   class Authorizer;
-  class ParamDescriptor;  
+  class IParamDescriptor;  
 
 /**
  * @brief IParam is the interface for business logic and connection logic to interact with parameters
@@ -184,7 +184,7 @@ class IParam {
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
      */
-    virtual const ParamDescriptor& getDescriptor() const = 0;
+    virtual const IParamDescriptor& getDescriptor() const = 0;
 
     /**
      * @brief Check if the parameter is an array type

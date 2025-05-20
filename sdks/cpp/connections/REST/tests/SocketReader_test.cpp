@@ -62,6 +62,7 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
         origin = "test_origin";
         // Making sure the reader properly adds the subscriptions manager.
         EXPECT_EQ(&socketReader.getSubscriptionManager(), &sm);
+        EXPECT_EQ(socketReader.EOPath(), EOPath);
     }
   
     void TearDown() override { /* Cleanup code here */ }
@@ -89,8 +90,9 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
     }
 
     // SocketReader obj.
-    catena::common::SubscriptionManager sm;    
-    SocketReader socketReader{sm};
+    catena::common::SubscriptionManager sm;
+    std::string EOPath = "/test/eo/path";
+    SocketReader socketReader{sm, EOPath};
     // Test request data
     std::string method = "PUT";
     std::string endpoint = "/v1/test-call";
