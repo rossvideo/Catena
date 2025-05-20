@@ -90,12 +90,6 @@ class IServiceImpl {
      * @brief Returns true if authorization is enabled.
      */
     virtual bool authorizationEnabled() = 0;
-    
-  private:
-    /**
-     * @brief Returns true if port_ is already in use.
-     */
-    virtual bool is_port_in_use_() const = 0;
 };
 
 };  // namespace REST

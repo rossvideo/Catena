@@ -24,16 +24,16 @@ using catena::REST::Connect;
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 443, "Catena REST service port");
 
-// expand env variables
-void expandEnvVariables(std::string &str) {
-    static std::regex env{"\\$\\{([^}]+)\\}"};
-    std::smatch match;
-    while (std::regex_search(str, match, env)) {
-        const char *s = getenv(match[1].str().c_str());
-        const std::string var(s == nullptr ? "" : s);
-        str.replace(match[0].first, match[0].second, var);
-    }
-}
+// expand env variables (UNUSED)
+// void expandEnvVariables(std::string &str) {
+//     static std::regex env{"\\$\\{([^}]+)\\}"};
+//     std::smatch match;
+//     while (std::regex_search(str, match, env)) {
+//         const char *s = getenv(match[1].str().c_str());
+//         const std::string var(s == nullptr ? "" : s);
+//         str.replace(match[0].first, match[0].second, var);
+//     }
+// }
 
 CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool authz, uint16_t port)
     : version_{"1.0.0"},
@@ -154,12 +154,13 @@ void CatenaServiceImpl::Shutdown() {
     dummySocket.connect(tcp::endpoint(tcp::v4(), port_));
 };
 
-bool CatenaServiceImpl::is_port_in_use_() const {
-    try {
-        boost::asio::io_context io_context;
-        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));
-        return false;  // Port is not in use
-    } catch (const boost::system::system_error& e) {
-        return true;  // Port is in use
-    }
-}
+// (UNUSED)
+// bool CatenaServiceImpl::is_port_in_use_() const {
+//     try {
+//         boost::asio::io_context io_context;
+//         tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), port_));
+//         return false;  // Port is not in use
+//     } catch (const boost::system::system_error& e) {
+//         return true;  // Port is in use
+//     }
+// }

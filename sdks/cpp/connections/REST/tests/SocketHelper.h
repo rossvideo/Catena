@@ -61,9 +61,9 @@ class SocketHelper {
     // Constructor to connecting sockets (write(in) -> read(out)).
     SocketHelper(tcp::socket* in, tcp::socket* out) : writeSocket(in), readSocket(out) {
         // Neither can be nullptr.
-        if (!writeSocket || !readSocket) {
-            throw std::invalid_argument("SocketHelper: Both sockets must be provided.");
-        }
+        // if (!writeSocket || !readSocket) {
+        //     throw std::invalid_argument("SocketHelper: Both sockets must be provided.");
+        // }
         // Connecting sockets (write(in) -> read(out)).
         readSocket->connect(acceptor.local_endpoint());
         acceptor.accept(*writeSocket);

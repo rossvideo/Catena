@@ -119,13 +119,6 @@ class CatenaServiceImpl : public catena::REST::IServiceImpl {
     std::unique_ptr<catena::common::ISubscriptionManager> subscriptionManager_;
 
     /**
-     * @brief Returns true if port_ is already in use.
-     * 
-     * Currently unused.
-     */
-    bool is_port_in_use_() const override;
-
-    /**
      * @brief Provides io functionality for tcp::sockets used in requests.
      */
     boost::asio::io_context io_context_;

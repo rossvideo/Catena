@@ -19,6 +19,8 @@ set(SOURCES
     GetPopulatedSlots_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
+    ServiceImpl_test.cpp
+    BPIF_test.cpp
 
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
@@ -29,6 +31,8 @@ set(SOURCES
     ../src/controllers/GetPopulatedSlots.cpp
     ../src/controllers/MultiSetValue.cpp
     ../src/controllers/SetValue.cpp
+    ../src/ServiceImpl.cpp
+    ../src/controllers/BasicParamInfoRequest.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
