@@ -60,21 +60,6 @@ class AuthorizationTests : public ::testing::Test {
     void TearDown() override {}
 
     const std::unordered_map<catena::common::Scopes_e, std::string>* scopeMap = &Scopes().getForwardMap();
-
-    // JWS tokens for testing.
-    // Single scope tokens.
-    // std::string mon_r = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uIiwiaWF0IjoxNTE2MjM5MDIyfQ.YkqS7hCxstpXulFnR98q0m088pUj6Cnf5vW6xPX8aBQ";
-    // std::string mon_w = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOnciLCJpYXQiOjE1MTYyMzkwMjJ9.QTHN7uqmk_jR2nVumyee3gMki-47tKOm_R0jnhT8Tpk";
-    // std::string op_r = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3AiLCJpYXQiOjE1MTYyMzkwMjJ9.lduNvr6tEaLFeIYR4bH5tC55WUSDBEe5PFz9rvGRD3o";
-    // std::string op_w = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6b3A6dyIsImlhdCI6MTUxNjIzOTAyMn0.SNndYRi4apWLZfp-BoosQtmDDNFInVcMCMuh7djz-QI";
-    // std::string cfg_r = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnIiwiaWF0IjoxNTE2MjM5MDIyfQ.n1dZJ01l8z4urxFUsSbUoaSJgflK828BHSLcxqTxOf4";
-    // std::string cfg_w = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6Y2ZnOnciLCJpYXQiOjE1MTYyMzkwMjJ9.ty50rEHLJUlseD_6bj7KrmCm9NXVwHjbTAv1u392HCs";
-    // std::string adm_r = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtIiwiaWF0IjoxNTE2MjM5MDIyfQ.nqkypNl8hTMWC8zF1aIA_CvsfoOdbZrYpr9JN4T4sDs";
-    // std::string adm_w = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6YWRtOnciLCJpYXQiOjE1MTYyMzkwMjJ9.WrWmmNhw3EZ6AzZAytgZbvb_9NFL3_YtSSsZibW1P0w";
-    // // All scope token.
-    // std::string all_p = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMn0.hpsNiexvLM9WmEAbGZ_5haDadSG3rgs-32NrpahIGvc";
-    // // Invalid token.
-    // std::string invalid_token = "This is not a valid token";
 };
 
 /*
@@ -126,16 +111,20 @@ TEST_F(AuthorizationTests, Authz_hasAuthz) {
  */
 TEST_F(AuthorizationTests, Authz_readAuthz) {
     MockParam param;
+    MockParamDescriptor pd;
     for (auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
         // Testing readAuthz(param).
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
             EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+            EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             if (scopeStr == currentScope || scopeStr + ":w" == currentScope) {
                 EXPECT_TRUE(authz->readAuthz(param));
+                EXPECT_TRUE(authz->readAuthz(pd));
             } else {
                 EXPECT_FALSE(authz->readAuthz(param));
+                EXPECT_FALSE(authz->readAuthz(pd));
             }
         }
         if (authz) { delete authz; }
@@ -147,6 +136,7 @@ TEST_F(AuthorizationTests, Authz_readAuthz) {
  */
 TEST_F(AuthorizationTests, Authz_writeAuthz) {
     MockParam param;
+    MockParamDescriptor pd;
     for (auto& [currentScope, currentToken] : testTokens) {
         Authorizer* authz = nullptr;
         EXPECT_NO_THROW(authz = new Authorizer(currentToken));
@@ -154,13 +144,17 @@ TEST_F(AuthorizationTests, Authz_writeAuthz) {
         for (bool rOnly : {false, true}) {
             for (auto& [scopeEnum, scopeStr]: *scopeMap) {
                 EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
+                EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
                 if (!rOnly) {
                     EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+                    EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
                 }
                 if (scopeStr + ":w" == currentScope && !rOnly) {
                     EXPECT_TRUE(authz->writeAuthz(param));
+                    EXPECT_TRUE(authz->writeAuthz(pd));
                 } else {
                     EXPECT_FALSE(authz->writeAuthz(param));
+                    EXPECT_FALSE(authz->writeAuthz(pd));
                 }
             }
         }
@@ -176,6 +170,7 @@ TEST_F(AuthorizationTests, Authz_scopeNone) {
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(noScope));
     MockParam param;
+    MockParamDescriptor pd;
     // hasAuthz should always return false if client has no scopes.
     for (std::string priviledge : {"", ":w"}) {
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
@@ -185,16 +180,21 @@ TEST_F(AuthorizationTests, Authz_scopeNone) {
     // readAuthz() should always return false if client has no scopes.
     for (auto& [scopeEnum, scopeStr]: *scopeMap) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+        EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_FALSE(authz->readAuthz(param));
+        EXPECT_FALSE(authz->readAuthz(pd));
     }
     // writeAuthz() should always return false if client has no scopes.
     for (bool rOnly : {false, true}) {
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
+            EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             if (!rOnly) {
                 EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+                EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             }
             EXPECT_FALSE(authz->writeAuthz(param));
+            EXPECT_FALSE(authz->writeAuthz(pd));
         }
     }
 }
@@ -205,6 +205,7 @@ TEST_F(AuthorizationTests, Authz_scopeNone) {
 TEST_F(AuthorizationTests, Authz_disabled) {
     Authorizer* authz = &Authorizer::kAuthzDisabled;
     MockParam param;
+    MockParamDescriptor pd;
     // hasAuthz should always return true.
     for (std::string priviledge : {"", ":w"}) {
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
@@ -214,17 +215,23 @@ TEST_F(AuthorizationTests, Authz_disabled) {
     // readAuthz() should always return true.
     for (auto& [scopeEnum, scopeStr]: *scopeMap) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+        EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         EXPECT_TRUE(authz->readAuthz(param));
+        EXPECT_TRUE(authz->readAuthz(pd));
     }
     // writeAuthz() should return true if the param is not read only.
     for (bool rOnly : {false, true}) {
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
+            EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             if (rOnly) {
                 EXPECT_FALSE(authz->writeAuthz(param));
+                EXPECT_FALSE(authz->writeAuthz(pd));
             } else {
                 EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+                EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
                 EXPECT_TRUE(authz->writeAuthz(param));
+                EXPECT_TRUE(authz->writeAuthz(pd));
             }
         }
     }
@@ -239,6 +246,7 @@ TEST_F(AuthorizationTests, Authz_scopeMulti) {
     Authorizer* authz = nullptr;
     EXPECT_NO_THROW(authz = new Authorizer(multiScopes));
     MockParam param;
+    MockParamDescriptor pd;
     // hasAuthz should return true if it has the correct scope.
     for (std::string priviledge : {"", ":w"}) {
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
@@ -252,23 +260,30 @@ TEST_F(AuthorizationTests, Authz_scopeMulti) {
     // readAuthz() should return true if the scope is op or mon.
     for (auto& [scopeEnum, scopeStr]: *scopeMap) {
         EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+        EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
         if (scopeStr == scopeMap->at(Scopes_e::kMonitor) || scopeStr == scopeMap->at(Scopes_e::kOperate)) {
             EXPECT_TRUE(authz->readAuthz(param));
+            EXPECT_TRUE(authz->readAuthz(pd));
         } else {
             EXPECT_FALSE(authz->readAuthz(param));
+            EXPECT_FALSE(authz->readAuthz(pd));
         }
     }
     // writeAuthz() should return true if the scope is op and param is not read-only.
     for (bool rOnly : {false, true}) {
         for (auto& [scopeEnum, scopeStr]: *scopeMap) {
             EXPECT_CALL(param, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
+            EXPECT_CALL(pd, readOnly()).Times(1).WillOnce(::testing::Return(rOnly));
             if (!rOnly) {
                 EXPECT_CALL(param, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
+                EXPECT_CALL(pd, getScope()).Times(1).WillOnce(::testing::ReturnRef(scopeStr));
             }
             if (scopeStr == scopeMap->at(Scopes_e::kOperate) && !rOnly) {
                 EXPECT_TRUE(authz->writeAuthz(param));
+                EXPECT_TRUE(authz->writeAuthz(pd));
             } else {
                 EXPECT_FALSE(authz->writeAuthz(param));
+                EXPECT_FALSE(authz->writeAuthz(pd));
             }
         }
     }
