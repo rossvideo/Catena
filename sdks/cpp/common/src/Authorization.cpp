@@ -76,7 +76,7 @@ bool Authorizer::readAuthz(const IParam& param) const {
     return hasAuthz(scope) || writeAuthz(param);
 }
 
-bool Authorizer::readAuthz(const ParamDescriptor& pd) const {
+bool Authorizer::readAuthz(const IParamDescriptor& pd) const {
     const std::string& scope = pd.getScope();
     return hasAuthz(scope) || writeAuthz(pd);
 }
@@ -94,7 +94,7 @@ bool Authorizer::writeAuthz(const IParam& param) const {
     return hasAuthz(scope);
 }
 
-bool Authorizer::writeAuthz(const ParamDescriptor& pd) const {
+bool Authorizer::writeAuthz(const IParamDescriptor& pd) const {
     if (pd.readOnly()) {
         return false;
     }
