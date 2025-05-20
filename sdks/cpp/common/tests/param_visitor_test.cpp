@@ -254,6 +254,10 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
     std::string array_oid = "/test/array";
     std::string element_param = "param";  // Parameter name for array elements
 
+    std::cout << "\n=== Starting VisitArrayElements test ===" << std::endl;
+    std::cout << "Array OID: " << array_oid << std::endl;
+    std::cout << "Element param name: " << element_param << std::endl;
+
     // Create descriptor for first array element parameter
     auto element_param_descriptor0 = std::make_shared<MockParamDescriptor>();
     std::string element_param_oid0 = array_oid + "/0/" + element_param;
@@ -366,6 +370,7 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
             }
             // Any other path should be rejected
             else {
+                std::cout << "DEBUG TEST: Rejecting invalid path: " << fqoid << std::endl;
                 status = catena::exception_with_status("Invalid path", catena::StatusCode::NOT_FOUND);
                 return nullptr;
             }
@@ -375,6 +380,17 @@ TEST_F(ParamVisitorTest, VisitArrayElements) {
 
     MockParamVisitor visitor;
     ParamVisitor::traverseParams(mockParam.get(), array_oid, *device, visitor);
+
+    std::cout << "\nVisited paths:" << std::endl;
+    for (size_t i = 0; i < visitor.visitedPaths.size(); ++i) {
+        std::cout << "  " << i << ": " << visitor.visitedPaths[i] << std::endl;
+    }
+
+    std::cout << "\nVisited arrays:" << std::endl;
+    for (size_t i = 0; i < visitor.visitedArrays.size(); ++i) {
+        std::cout << "  " << i << ": path=" << visitor.visitedArrays[i].first 
+                  << ", length=" << visitor.visitedArrays[i].second << std::endl;
+    }
     
     EXPECT_EQ(visitor.visitedPaths.size(), 5);  // Root + 2 array elements + 2 element params
     EXPECT_EQ(visitor.visitedPaths[0], array_oid);  // First path should be array root
