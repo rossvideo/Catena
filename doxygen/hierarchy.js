@@ -88,9 +88,6 @@ var hierarchy =
     [ "catena::common::IParam", "classcatena_1_1common_1_1IParam.html", [
       [ "catena::common::ParamWithValue< T >", "classcatena_1_1common_1_1ParamWithValue.html", null ]
     ] ],
-    [ "catena::common::IParamDescriptor", "classcatena_1_1common_1_1IParamDescriptor.html", [
-      [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ]
-    ] ],
     [ "catena::common::IParamVisitor", "classcatena_1_1common_1_1IParamVisitor.html", [
       [ "catena::common::ParamVisitor", "classcatena_1_1common_1_1ParamVisitor.html", null ]
     ] ],
@@ -114,6 +111,7 @@ var hierarchy =
     [ "catena::common::MenuGroupTag", "structcatena_1_1common_1_1MenuGroupTag.html", null ],
     [ "catena::common::MenuTag", "structcatena_1_1common_1_1MenuTag.html", null ],
     [ "catena::meta::NthElementT< L, N >", "classcatena_1_1meta_1_1NthElementT.html", null ],
+    [ "catena::common::ParamDescriptor", "classcatena_1_1common_1_1ParamDescriptor.html", null ],
     [ "catena::common::ParamTag", "structcatena_1_1common_1_1ParamTag.html", null ],
     [ "catena::common::Path", "classcatena_1_1common_1_1Path.html", null ],
     [ "catena::gRPC::PeerInfo", "classcatena_1_1gRPC_1_1PeerInfo.html", null ],

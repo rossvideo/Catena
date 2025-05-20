@@ -102,16 +102,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1ParamDescript
  <a href="classcatena_1_1common_1_1ParamDescriptor.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ParamDescriptor_8h_source.html">ParamDescriptor.h</a>&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for catena::common::ParamDescriptor:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor__inherit__graph.svg" width="262" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
-<div class="dynheader">
-Collaboration diagram for catena::common::ParamDescriptor:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor__coll__graph.svg" width="262" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
@@ -145,109 +135,97 @@ Public Member Functions</h2></td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamDescriptor</b> ()=default</td></tr>
 <tr class="memdesc:a9fadb899e7f0c34da75efd76b716e92a"><td class="mdescLeft">&#160;</td><td class="mdescRight">default destructor <br /></td></tr>
 <tr class="separator:a9fadb899e7f0c34da75efd76b716e92a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b043f51cb65bf5642bf5965f7124cd4" id="r_a3b043f51cb65bf5642bf5965f7124cd4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a3b043f51cb65bf5642bf5965f7124cd4">ParamDescriptor</a> (catena::ParamType <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a542de6f36c9ad1c127da0cbf2ea29697">type</a>, const OidAliases &amp;oid_aliases, const PolyglotText::ListInitializer <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#afea65cb575500e6aa77583364d5aa929">name</a>, const std::string &amp;widget, const std::string &amp;scope, bool read_only, const std::string &amp;oid, const std::string &amp;template_oid, <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *constraint, bool <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a71e3b0347b9c41f60333c1e796ed1f66">isCommand</a>, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, uint32_t <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#add722f779f675431c804cabcaefb9518">max_length</a>, std::size_t <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a99eea1df94eefcdb9b67e9f56255c120">total_length</a>, bool minimal_set, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> *parent)</td></tr>
-<tr class="memdesc:a3b043f51cb65bf5642bf5965f7124cd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">the main constructor  <br /></td></tr>
-<tr class="separator:a3b043f51cb65bf5642bf5965f7124cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a542de6f36c9ad1c127da0cbf2ea29697" id="r_a542de6f36c9ad1c127da0cbf2ea29697"><td class="memItemLeft" align="right" valign="top">ParamType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a542de6f36c9ad1c127da0cbf2ea29697">type</a> () const override</td></tr>
-<tr class="memdesc:a542de6f36c9ad1c127da0cbf2ea29697"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter type  <br /></td></tr>
-<tr class="separator:a542de6f36c9ad1c127da0cbf2ea29697"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afea65cb575500e6aa77583364d5aa929" id="r_afea65cb575500e6aa77583364d5aa929"><td class="memItemLeft" align="right" valign="top">const PolyglotText::DisplayStrings &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#afea65cb575500e6aa77583364d5aa929">name</a> () const override</td></tr>
-<tr class="memdesc:afea65cb575500e6aa77583364d5aa929"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter name  <br /></td></tr>
-<tr class="separator:afea65cb575500e6aa77583364d5aa929"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6629d79cbf059f6144137a3d7631c34" id="r_ab6629d79cbf059f6144137a3d7631c34"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ab6629d79cbf059f6144137a3d7631c34">getOid</a> () const override</td></tr>
-<tr class="memdesc:ab6629d79cbf059f6144137a3d7631c34"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter oid  <br /></td></tr>
-<tr class="separator:ab6629d79cbf059f6144137a3d7631c34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfc7265238384584b1010d38dbe174de" id="r_abfc7265238384584b1010d38dbe174de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#abfc7265238384584b1010d38dbe174de">setOid</a> (const std::string &amp;oid) override</td></tr>
-<tr class="memdesc:abfc7265238384584b1010d38dbe174de"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the parameter oid  <br /></td></tr>
-<tr class="separator:abfc7265238384584b1010d38dbe174de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a144abac5962ba34fa5affd26f6a93785" id="r_a144abac5962ba34fa5affd26f6a93785"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a144abac5962ba34fa5affd26f6a93785">hasTemplateOid</a> () const override</td></tr>
-<tr class="memdesc:a144abac5962ba34fa5affd26f6a93785"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if the parameter has a template oid  <br /></td></tr>
-<tr class="separator:a144abac5962ba34fa5affd26f6a93785"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8a5e7c9e58775d62a71d4f38cf0873c" id="r_ae8a5e7c9e58775d62a71d4f38cf0873c"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ae8a5e7c9e58775d62a71d4f38cf0873c">templateOid</a> () const override</td></tr>
-<tr class="memdesc:ae8a5e7c9e58775d62a71d4f38cf0873c"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter's template oid  <br /></td></tr>
-<tr class="separator:ae8a5e7c9e58775d62a71d4f38cf0873c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c6abbba98f0eb2e4f99ab051341c249" id="r_a1c6abbba98f0eb2e4f99ab051341c249"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a1c6abbba98f0eb2e4f99ab051341c249">readOnly</a> () const override</td></tr>
-<tr class="memdesc:a1c6abbba98f0eb2e4f99ab051341c249"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the readOnly status of the parameter  <br /></td></tr>
-<tr class="separator:a1c6abbba98f0eb2e4f99ab051341c249"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a318e77afa7093262a879c4228e66a5dd" id="r_a318e77afa7093262a879c4228e66a5dd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a318e77afa7093262a879c4228e66a5dd">readOnly</a> (bool flag) override</td></tr>
-<tr class="memdesc:a318e77afa7093262a879c4228e66a5dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the readOnly status of the parameter  <br /></td></tr>
-<tr class="separator:a318e77afa7093262a879c4228e66a5dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e267cc819e31ca4b940d9cc60a022bb" id="r_a4e267cc819e31ca4b940d9cc60a022bb"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a4e267cc819e31ca4b940d9cc60a022bb">getScope</a> () const override</td></tr>
-<tr class="memdesc:a4e267cc819e31ca4b940d9cc60a022bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the access scope of the parameter  <br /></td></tr>
-<tr class="separator:a4e267cc819e31ca4b940d9cc60a022bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add31947f6660315d28e10fd564ef75f3" id="r_add31947f6660315d28e10fd564ef75f3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#add31947f6660315d28e10fd564ef75f3">minimalSet</a> () const override</td></tr>
-<tr class="memdesc:add31947f6660315d28e10fd564ef75f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the minimal set status of the parameter  <br /></td></tr>
-<tr class="separator:add31947f6660315d28e10fd564ef75f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6622daa80d065a0544e1931e23def5ea" id="r_a6622daa80d065a0544e1931e23def5ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a6622daa80d065a0544e1931e23def5ea">setMinimalSet</a> (bool flag) override</td></tr>
-<tr class="memdesc:a6622daa80d065a0544e1931e23def5ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the minimal set status of the parameter  <br /></td></tr>
-<tr class="separator:a6622daa80d065a0544e1931e23def5ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add722f779f675431c804cabcaefb9518" id="r_add722f779f675431c804cabcaefb9518"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#add722f779f675431c804cabcaefb9518">max_length</a> () const override</td></tr>
-<tr class="memdesc:add722f779f675431c804cabcaefb9518"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the max length of the array/string parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#".  <br /></td></tr>
-<tr class="separator:add722f779f675431c804cabcaefb9518"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a99eea1df94eefcdb9b67e9f56255c120" id="r_a99eea1df94eefcdb9b67e9f56255c120"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a99eea1df94eefcdb9b67e9f56255c120">total_length</a> () const override</td></tr>
-<tr class="memdesc:a99eea1df94eefcdb9b67e9f56255c120"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the total length of the string_array parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#".  <br /></td></tr>
-<tr class="separator:a99eea1df94eefcdb9b67e9f56255c120"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a1a03ff4ba15c7b1bd086d6395315db" id="r_a7a1a03ff4ba15c7b1bd086d6395315db"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a7a1a03ff4ba15c7b1bd086d6395315db">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:a7a1a03ff4ba15c7b1bd086d6395315db"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
-<tr class="separator:a7a1a03ff4ba15c7b1bd086d6395315db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af6ad5eeb4ec1f5c901d883ebc696e5a8" id="r_af6ad5eeb4ec1f5c901d883ebc696e5a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#af6ad5eeb4ec1f5c901d883ebc696e5a8">toProto</a> (catena::BasicParamInfo &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const override</td></tr>
-<tr class="memdesc:af6ad5eeb4ec1f5c901d883ebc696e5a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
-<tr class="separator:af6ad5eeb4ec1f5c901d883ebc696e5a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a157db36f837904b8fd93db03c24e0a80" id="r_a157db36f837904b8fd93db03c24e0a80"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a157db36f837904b8fd93db03c24e0a80">name</a> (const std::string &amp;language) const override</td></tr>
-<tr class="memdesc:a157db36f837904b8fd93db03c24e0a80"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter name by language  <br /></td></tr>
-<tr class="separator:a157db36f837904b8fd93db03c24e0a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac399b9689cf78a01b38bd3b40e8d79a5" id="r_ac399b9689cf78a01b38bd3b40e8d79a5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ac399b9689cf78a01b38bd3b40e8d79a5">addSubParam</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> *item) override</td></tr>
-<tr class="memdesc:ac399b9689cf78a01b38bd3b40e8d79a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device  <br /></td></tr>
-<tr class="separator:ac399b9689cf78a01b38bd3b40e8d79a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73de60d8381a45bfc2d71858ba00f647" id="r_a73de60d8381a45bfc2d71858ba00f647"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a73de60d8381a45bfc2d71858ba00f647">getSubParam</a> (const std::string &amp;oid) const override</td></tr>
-<tr class="memdesc:a73de60d8381a45bfc2d71858ba00f647"><td class="mdescLeft">&#160;</td><td class="mdescRight">gets a sub parameter's paramDescriptor  <br /></td></tr>
-<tr class="separator:a73de60d8381a45bfc2d71858ba00f647"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c86d47f1b677bd12c3842200eaaa028" id="r_a8c86d47f1b677bd12c3842200eaaa028"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; std::string, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a8c86d47f1b677bd12c3842200eaaa028">getAllSubParams</a> () const override</td></tr>
-<tr class="memdesc:a8c86d47f1b677bd12c3842200eaaa028"><td class="mdescLeft">&#160;</td><td class="mdescRight">return all sub parameters  <br /></td></tr>
-<tr class="separator:a8c86d47f1b677bd12c3842200eaaa028"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82f28c8094816bb002621ccb19386d96" id="r_a82f28c8094816bb002621ccb19386d96"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a82f28c8094816bb002621ccb19386d96">getConstraint</a> () const override</td></tr>
-<tr class="memdesc:a82f28c8094816bb002621ccb19386d96"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid  <br /></td></tr>
-<tr class="separator:a82f28c8094816bb002621ccb19386d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7376df47ed0a1379daf14338a5de798d" id="r_a7376df47ed0a1379daf14338a5de798d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a7376df47ed0a1379daf14338a5de798d">defineCommand</a> (std::function&lt; catena::CommandResponse(catena::Value)&gt; commandImpl) override</td></tr>
-<tr class="memdesc:a7376df47ed0a1379daf14338a5de798d"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
-<tr class="separator:a7376df47ed0a1379daf14338a5de798d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a827a364fad98e4be5afea425884df9e4" id="r_a827a364fad98e4be5afea425884df9e4"><td class="memItemLeft" align="right" valign="top">catena::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a827a364fad98e4be5afea425884df9e4">executeCommand</a> (catena::Value value) override</td></tr>
-<tr class="memdesc:a827a364fad98e4be5afea425884df9e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
-<tr class="separator:a827a364fad98e4be5afea425884df9e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71e3b0347b9c41f60333c1e796ed1f66" id="r_a71e3b0347b9c41f60333c1e796ed1f66"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a71e3b0347b9c41f60333c1e796ed1f66">isCommand</a> () const override</td></tr>
-<tr class="memdesc:a71e3b0347b9c41f60333c1e796ed1f66"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if this is a command parameter  <br /></td></tr>
-<tr class="separator:a71e3b0347b9c41f60333c1e796ed1f66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcatena_1_1common_1_1IParamDescriptor')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">catena::common::IParamDescriptor</a></td></tr>
-<tr class="memitem:a62737aebbb5c5513e786563c23adce67 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor" id="r_a62737aebbb5c5513e786563c23adce67"><td class="memItemLeft" align="right" valign="top">
-&#160;</td><td class="memItemRight" valign="bottom"><b>IParamDescriptor</b> ()=default</td></tr>
-<tr class="memdesc:a62737aebbb5c5513e786563c23adce67 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> does not have a default constructor. <br /></td></tr>
-<tr class="separator:a62737aebbb5c5513e786563c23adce67 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a49d2a836fc6361fde23660d9cd441a37 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor" id="r_a49d2a836fc6361fde23660d9cd441a37"><td class="memItemLeft" align="right" valign="top">
-&#160;</td><td class="memItemRight" valign="bottom"><b>IParamDescriptor</b> (<a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;value)=delete</td></tr>
-<tr class="memdesc:a49d2a836fc6361fde23660d9cd441a37 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> does not have copy semantics. <br /></td></tr>
-<tr class="separator:a49d2a836fc6361fde23660d9cd441a37 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42cfc389d10cb32fbe6608d6fa0f12cc inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor" id="r_a42cfc389d10cb32fbe6608d6fa0f12cc"><td class="memItemLeft" align="right" valign="top">
-<a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;value)=delete</td></tr>
-<tr class="memdesc:a42cfc389d10cb32fbe6608d6fa0f12cc inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> does not have copy semantics. <br /></td></tr>
-<tr class="separator:a42cfc389d10cb32fbe6608d6fa0f12cc inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeab5f714f96cb2b9f62909a2c6faec93 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor" id="r_aeab5f714f96cb2b9f62909a2c6faec93"><td class="memItemLeft" align="right" valign="top">
-&#160;</td><td class="memItemRight" valign="bottom"><b>IParamDescriptor</b> (<a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&amp;value)=default</td></tr>
-<tr class="memdesc:aeab5f714f96cb2b9f62909a2c6faec93 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> has move semantics. <br /></td></tr>
-<tr class="separator:aeab5f714f96cb2b9f62909a2c6faec93 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6474988a891d1b2208b3ec42df9fca5 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor" id="r_ac6474988a891d1b2208b3ec42df9fca5"><td class="memItemLeft" align="right" valign="top">
-<a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&amp;value)=default</td></tr>
-<tr class="memdesc:ac6474988a891d1b2208b3ec42df9fca5 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> has move semantics. <br /></td></tr>
-<tr class="separator:ac6474988a891d1b2208b3ec42df9fca5 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a639dfd9045d66fe2f84020957d317dc3 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor" id="r_a639dfd9045d66fe2f84020957d317dc3"><td class="memItemLeft" align="right" valign="top">
-virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamDescriptor</b> ()=default</td></tr>
-<tr class="memdesc:a639dfd9045d66fe2f84020957d317dc3 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="mdescLeft">&#160;</td><td class="mdescRight">default destructor <br /></td></tr>
-<tr class="separator:a639dfd9045d66fe2f84020957d317dc3 inherit pub_methods_classcatena_1_1common_1_1IParamDescriptor"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10aeac7b50e01ae0fb859e467c42ca79" id="r_a10aeac7b50e01ae0fb859e467c42ca79"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a10aeac7b50e01ae0fb859e467c42ca79">ParamDescriptor</a> (catena::ParamType <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a21eefbf9f878c111010b246c92ef9bd6">type</a>, const OidAliases &amp;oid_aliases, const PolyglotText::ListInitializer <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a807233f784b77a9c85904b8569e9442d">name</a>, const std::string &amp;widget, const std::string &amp;scope, bool read_only, const std::string &amp;oid, const std::string &amp;<a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a3a73b4e0f40c23c0a5d594b133256dab">template_oid</a>, <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *constraint, bool <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a6ca1484257859b619af0472163bd11d2">isCommand</a>, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, uint32_t <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#adb7dd3894cca91946bb849b4227f7bc1">max_length</a>, std::size_t <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ad3fb42e97cb4be764d4e5826034d5dfa">total_length</a>, bool minimal_set, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> *parent)</td></tr>
+<tr class="memdesc:a10aeac7b50e01ae0fb859e467c42ca79"><td class="mdescLeft">&#160;</td><td class="mdescRight">the main constructor  <br /></td></tr>
+<tr class="separator:a10aeac7b50e01ae0fb859e467c42ca79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21eefbf9f878c111010b246c92ef9bd6" id="r_a21eefbf9f878c111010b246c92ef9bd6"><td class="memItemLeft" align="right" valign="top"><a id="a21eefbf9f878c111010b246c92ef9bd6" name="a21eefbf9f878c111010b246c92ef9bd6"></a>
+ParamType&#160;</td><td class="memItemRight" valign="bottom"><b>type</b> () const</td></tr>
+<tr class="memdesc:a21eefbf9f878c111010b246c92ef9bd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter type <br /></td></tr>
+<tr class="separator:a21eefbf9f878c111010b246c92ef9bd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a807233f784b77a9c85904b8569e9442d" id="r_a807233f784b77a9c85904b8569e9442d"><td class="memItemLeft" align="right" valign="top"><a id="a807233f784b77a9c85904b8569e9442d" name="a807233f784b77a9c85904b8569e9442d"></a>
+const PolyglotText::DisplayStrings &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>name</b> () const</td></tr>
+<tr class="memdesc:a807233f784b77a9c85904b8569e9442d"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter name <br /></td></tr>
+<tr class="separator:a807233f784b77a9c85904b8569e9442d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afad5b36761f61bbd3e043f26a0f767af" id="r_afad5b36761f61bbd3e043f26a0f767af"><td class="memItemLeft" align="right" valign="top"><a id="afad5b36761f61bbd3e043f26a0f767af" name="afad5b36761f61bbd3e043f26a0f767af"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getOid</b> () const</td></tr>
+<tr class="memdesc:afad5b36761f61bbd3e043f26a0f767af"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter oid <br /></td></tr>
+<tr class="separator:afad5b36761f61bbd3e043f26a0f767af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81457e74f713979e1335cf9ea89d2590" id="r_a81457e74f713979e1335cf9ea89d2590"><td class="memItemLeft" align="right" valign="top"><a id="a81457e74f713979e1335cf9ea89d2590" name="a81457e74f713979e1335cf9ea89d2590"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setOid</b> (const std::string &amp;oid)</td></tr>
+<tr class="memdesc:a81457e74f713979e1335cf9ea89d2590"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the parameter oid <br /></td></tr>
+<tr class="separator:a81457e74f713979e1335cf9ea89d2590"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66ecd99a0574d3d765a918c1997bf173" id="r_a66ecd99a0574d3d765a918c1997bf173"><td class="memItemLeft" align="right" valign="top"><a id="a66ecd99a0574d3d765a918c1997bf173" name="a66ecd99a0574d3d765a918c1997bf173"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>has_template_oid</b> () const</td></tr>
+<tr class="memdesc:a66ecd99a0574d3d765a918c1997bf173"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if the parameter has a template oid <br /></td></tr>
+<tr class="separator:a66ecd99a0574d3d765a918c1997bf173"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a73b4e0f40c23c0a5d594b133256dab" id="r_a3a73b4e0f40c23c0a5d594b133256dab"><td class="memItemLeft" align="right" valign="top"><a id="a3a73b4e0f40c23c0a5d594b133256dab" name="a3a73b4e0f40c23c0a5d594b133256dab"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>template_oid</b> () const</td></tr>
+<tr class="memdesc:a3a73b4e0f40c23c0a5d594b133256dab"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter's template oid <br /></td></tr>
+<tr class="separator:a3a73b4e0f40c23c0a5d594b133256dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2295c848506d6ef6c0a492101bade47" id="r_ae2295c848506d6ef6c0a492101bade47"><td class="memItemLeft" align="right" valign="top"><a id="ae2295c848506d6ef6c0a492101bade47" name="ae2295c848506d6ef6c0a492101bade47"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>readOnly</b> () const</td></tr>
+<tr class="memdesc:ae2295c848506d6ef6c0a492101bade47"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the readOnly status of the parameter <br /></td></tr>
+<tr class="separator:ae2295c848506d6ef6c0a492101bade47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe18d380497132f06e6eef76f4de7b12" id="r_afe18d380497132f06e6eef76f4de7b12"><td class="memItemLeft" align="right" valign="top"><a id="afe18d380497132f06e6eef76f4de7b12" name="afe18d380497132f06e6eef76f4de7b12"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>readOnly</b> (bool flag)</td></tr>
+<tr class="memdesc:afe18d380497132f06e6eef76f4de7b12"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the readOnly status of the parameter <br /></td></tr>
+<tr class="separator:afe18d380497132f06e6eef76f4de7b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec354874d4dce6d545a57f7e55fb35e6" id="r_aec354874d4dce6d545a57f7e55fb35e6"><td class="memItemLeft" align="right" valign="top"><a id="aec354874d4dce6d545a57f7e55fb35e6" name="aec354874d4dce6d545a57f7e55fb35e6"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getScope</b> () const</td></tr>
+<tr class="memdesc:aec354874d4dce6d545a57f7e55fb35e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the access scope of the parameter <br /></td></tr>
+<tr class="separator:aec354874d4dce6d545a57f7e55fb35e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3359048d338b4a6b8202e85852d44d66" id="r_a3359048d338b4a6b8202e85852d44d66"><td class="memItemLeft" align="right" valign="top"><a id="a3359048d338b4a6b8202e85852d44d66" name="a3359048d338b4a6b8202e85852d44d66"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>minimalSet</b> () const</td></tr>
+<tr class="memdesc:a3359048d338b4a6b8202e85852d44d66"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the minimal set status of the parameter <br /></td></tr>
+<tr class="separator:a3359048d338b4a6b8202e85852d44d66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f592d84249581464ef366b9d5c63e85" id="r_a3f592d84249581464ef366b9d5c63e85"><td class="memItemLeft" align="right" valign="top"><a id="a3f592d84249581464ef366b9d5c63e85" name="a3f592d84249581464ef366b9d5c63e85"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setMinimalSet</b> (bool flag)</td></tr>
+<tr class="memdesc:a3f592d84249581464ef366b9d5c63e85"><td class="mdescLeft">&#160;</td><td class="mdescRight">set the minimal set status of the parameter <br /></td></tr>
+<tr class="separator:a3f592d84249581464ef366b9d5c63e85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb7dd3894cca91946bb849b4227f7bc1" id="r_adb7dd3894cca91946bb849b4227f7bc1"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#adb7dd3894cca91946bb849b4227f7bc1">max_length</a> () const</td></tr>
+<tr class="memdesc:adb7dd3894cca91946bb849b4227f7bc1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the max length of the array/string parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#".  <br /></td></tr>
+<tr class="separator:adb7dd3894cca91946bb849b4227f7bc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3fb42e97cb4be764d4e5826034d5dfa" id="r_ad3fb42e97cb4be764d4e5826034d5dfa"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ad3fb42e97cb4be764d4e5826034d5dfa">total_length</a> () const</td></tr>
+<tr class="memdesc:ad3fb42e97cb4be764d4e5826034d5dfa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the total length of the string_array parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#".  <br /></td></tr>
+<tr class="separator:ad3fb42e97cb4be764d4e5826034d5dfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94d24721c91733e999ec6d09a7e14431" id="r_a94d24721c91733e999ec6d09a7e14431"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a94d24721c91733e999ec6d09a7e14431">toProto</a> (catena::Param &amp;param, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const</td></tr>
+<tr class="memdesc:a94d24721c91733e999ec6d09a7e14431"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
+<tr class="separator:a94d24721c91733e999ec6d09a7e14431"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3343ab73c25d3ef01f34a68a0699cb27" id="r_a3343ab73c25d3ef01f34a68a0699cb27"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a3343ab73c25d3ef01f34a68a0699cb27">toProto</a> (catena::BasicParamInfo &amp;paramInfo, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz) const</td></tr>
+<tr class="memdesc:a3343ab73c25d3ef01f34a68a0699cb27"><td class="mdescLeft">&#160;</td><td class="mdescRight">serialize param meta data in to protobuf message  <br /></td></tr>
+<tr class="separator:a3343ab73c25d3ef01f34a68a0699cb27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa31fe849571714cd05a78b77802ae4e3" id="r_aa31fe849571714cd05a78b77802ae4e3"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#aa31fe849571714cd05a78b77802ae4e3">name</a> (const std::string &amp;language) const</td></tr>
+<tr class="memdesc:aa31fe849571714cd05a78b77802ae4e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter name by language  <br /></td></tr>
+<tr class="separator:aa31fe849571714cd05a78b77802ae4e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbd43f226aa1753c32bcca3612dff9ad" id="r_acbd43f226aa1753c32bcca3612dff9ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#acbd43f226aa1753c32bcca3612dff9ad">addSubParam</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> *item)</td></tr>
+<tr class="memdesc:acbd43f226aa1753c32bcca3612dff9ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">add an item to one of the collections owned by the device  <br /></td></tr>
+<tr class="separator:acbd43f226aa1753c32bcca3612dff9ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88a322427c672526be583b45537bcefd" id="r_a88a322427c672526be583b45537bcefd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a88a322427c672526be583b45537bcefd">getSubParam</a> (const std::string &amp;oid) const</td></tr>
+<tr class="memdesc:a88a322427c672526be583b45537bcefd"><td class="mdescLeft">&#160;</td><td class="mdescRight">gets a sub parameter's paramDescriptor  <br /></td></tr>
+<tr class="separator:a88a322427c672526be583b45537bcefd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a864ef1f4b779557df4fb4777bdd815e3" id="r_a864ef1f4b779557df4fb4777bdd815e3"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; std::string, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a864ef1f4b779557df4fb4777bdd815e3">getAllSubParams</a> () const</td></tr>
+<tr class="memdesc:a864ef1f4b779557df4fb4777bdd815e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">return all sub parameters  <br /></td></tr>
+<tr class="separator:a864ef1f4b779557df4fb4777bdd815e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfe3255b12ee972d93d1bb600929f54d" id="r_acfe3255b12ee972d93d1bb600929f54d"><td class="memItemLeft" align="right" valign="top"><a id="acfe3255b12ee972d93d1bb600929f54d" name="acfe3255b12ee972d93d1bb600929f54d"></a>
+const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getConstraint</b> () const</td></tr>
+<tr class="memdesc:acfe3255b12ee972d93d1bb600929f54d"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid <br /></td></tr>
+<tr class="separator:acfe3255b12ee972d93d1bb600929f54d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed2c80304563784791e58602b351012a" id="r_aed2c80304563784791e58602b351012a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#aed2c80304563784791e58602b351012a">defineCommand</a> (std::function&lt; catena::CommandResponse(catena::Value)&gt; commandImpl)</td></tr>
+<tr class="memdesc:aed2c80304563784791e58602b351012a"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
+<tr class="separator:aed2c80304563784791e58602b351012a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f89d3f807dd8e0f32df333571060b4c" id="r_a1f89d3f807dd8e0f32df333571060b4c"><td class="memItemLeft" align="right" valign="top">catena::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a1f89d3f807dd8e0f32df333571060b4c">executeCommand</a> (catena::Value value)</td></tr>
+<tr class="memdesc:a1f89d3f807dd8e0f32df333571060b4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
+<tr class="separator:a1f89d3f807dd8e0f32df333571060b4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ca1484257859b619af0472163bd11d2" id="r_a6ca1484257859b619af0472163bd11d2"><td class="memItemLeft" align="right" valign="top"><a id="a6ca1484257859b619af0472163bd11d2" name="a6ca1484257859b619af0472163bd11d2"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCommand</b> () const</td></tr>
+<tr class="memdesc:a6ca1484257859b619af0472163bd11d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if this is a command parameter <br /></td></tr>
+<tr class="separator:a6ca1484257859b619af0472163bd11d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> provides information about a parameter. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a3b043f51cb65bf5642bf5965f7124cd4" name="a3b043f51cb65bf5642bf5965f7124cd4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b043f51cb65bf5642bf5965f7124cd4">&#9670;&#160;</a></span>ParamDescriptor()</h2>
+<a id="a10aeac7b50e01ae0fb859e467c42ca79" name="a10aeac7b50e01ae0fb859e467c42ca79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10aeac7b50e01ae0fb859e467c42ca79">&#9670;&#160;</a></span>ParamDescriptor()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -342,7 +320,7 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamDescriptor<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> *&#160;</td>
           <td class="paramname"><em>parent</em>&#160;</td>
         </tr>
         <tr>
@@ -377,18 +355,18 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~IParamDescriptor<
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a5af42f1caf859a871bd4e677b2247b34">catena::common::IParamDescriptor::addSubParam()</a>, and <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#abfc7265238384584b1010d38dbe174de">setOid()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#acbd43f226aa1753c32bcca3612dff9ad">addSubParam()</a>, and <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a81457e74f713979e1335cf9ea89d2590">setOid()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_a3b043f51cb65bf5642bf5965f7124cd4_cgraph.svg" width="556" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_a10aeac7b50e01ae0fb859e467c42ca79_cgraph.svg" width="552" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac399b9689cf78a01b38bd3b40e8d79a5" name="ac399b9689cf78a01b38bd3b40e8d79a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac399b9689cf78a01b38bd3b40e8d79a5">&#9670;&#160;</a></span>addSubParam()</h2>
+<a id="acbd43f226aa1753c32bcca3612dff9ad" name="acbd43f226aa1753c32bcca3612dff9ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbd43f226aa1753c32bcca3612dff9ad">&#9670;&#160;</a></span>addSubParam()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -405,7 +383,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> *&#160;</td>
           <td class="paramname"><em>item</em>&#160;</td>
         </tr>
         <tr>
@@ -416,7 +394,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -435,13 +413,16 @@ Here is the call graph for this function:</div>
   </table>
   </dd>
 </dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a5af42f1caf859a871bd4e677b2247b34">catena::common::IParamDescriptor</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_acbd43f226aa1753c32bcca3612dff9ad_icgraph.svg" width="552" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
-<a id="a7376df47ed0a1379daf14338a5de798d" name="a7376df47ed0a1379daf14338a5de798d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7376df47ed0a1379daf14338a5de798d">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="aed2c80304563784791e58602b351012a" name="aed2c80304563784791e58602b351012a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed2c80304563784791e58602b351012a">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -459,7 +440,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -472,13 +453,16 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 <p>The passed function will be executed when executeCommand is called on this param object. If this is not a command parameter, an exception will be thrown. </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#acc8c53dce75f7cabce9d2232b98294f8">catena::common::IParamDescriptor</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_aed2c80304563784791e58602b351012a_icgraph.svg" width="516" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
-<a id="a827a364fad98e4be5afea425884df9e4" name="a827a364fad98e4be5afea425884df9e4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a827a364fad98e4be5afea425884df9e4">&#9670;&#160;</a></span>executeCommand()</h2>
+<a id="a1f89d3f807dd8e0f32df333571060b4c" name="a1f89d3f807dd8e0f32df333571060b4c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f89d3f807dd8e0f32df333571060b4c">&#9670;&#160;</a></span>executeCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -496,7 +480,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -510,13 +494,16 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the response from the command implementation</dd></dl>
 <p>if executeCommand is called for a command that has not been defined, then the returned command response will be an exception with type UNIMPLEMENTED </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a720a70ca515dcde89fded564108dd4d2">catena::common::IParamDescriptor</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_a1f89d3f807dd8e0f32df333571060b4c_icgraph.svg" width="516" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
-<a id="a8c86d47f1b677bd12c3842200eaaa028" name="a8c86d47f1b677bd12c3842200eaaa028"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c86d47f1b677bd12c3842200eaaa028">&#9670;&#160;</a></span>getAllSubParams()</h2>
+<a id="a864ef1f4b779557df4fb4777bdd815e3" name="a864ef1f4b779557df4fb4777bdd815e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a864ef1f4b779557df4fb4777bdd815e3">&#9670;&#160;</a></span>getAllSubParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -525,7 +512,7 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::unordered_map&lt; std::string, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> * &gt; &amp; catena::common::ParamDescriptor::getAllSubParams </td>
+          <td class="memname">const std::unordered_map&lt; std::string, <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> * &gt; &amp; catena::common::ParamDescriptor::getAllSubParams </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -533,7 +520,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -541,12 +528,10 @@ Here is the call graph for this function:</div>
 <p>return all sub parameters </p>
 <dl class="section return"><dt>Returns</dt><dd>a map of all sub parameters </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a14a921fffd4c9d68847f37046168bcab">catena::common::IParamDescriptor</a>.</p>
-
 </div>
 </div>
-<a id="a82f28c8094816bb002621ccb19386d96" name="a82f28c8094816bb002621ccb19386d96"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a82f28c8094816bb002621ccb19386d96">&#9670;&#160;</a></span>getConstraint()</h2>
+<a id="a88a322427c672526be583b45537bcefd" name="a88a322427c672526be583b45537bcefd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88a322427c672526be583b45537bcefd">&#9670;&#160;</a></span>getSubParam()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -555,94 +540,7 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> * catena::common::ParamDescriptor::getConstraint </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get a constraint by oid </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a20824363ddc06d52cde3f06e9bb34e7a">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="ab6629d79cbf059f6144137a3d7631c34" name="ab6629d79cbf059f6144137a3d7631c34"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab6629d79cbf059f6144137a3d7631c34">&#9670;&#160;</a></span>getOid()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::string &amp; catena::common::ParamDescriptor::getOid </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the parameter oid </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a55ceeb3c4f8934314af7457b96becbc0">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="a4e267cc819e31ca4b940d9cc60a022bb" name="a4e267cc819e31ca4b940d9cc60a022bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4e267cc819e31ca4b940d9cc60a022bb">&#9670;&#160;</a></span>getScope()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::string &amp; catena::common::ParamDescriptor::getScope </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the access scope of the parameter </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a5aab77520cc047a1bc5cae11639d0588">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="a73de60d8381a45bfc2d71858ba00f647" name="a73de60d8381a45bfc2d71858ba00f647"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73de60d8381a45bfc2d71858ba00f647">&#9670;&#160;</a></span>getSubParam()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp; catena::common::ParamDescriptor::getSubParam </td>
+          <td class="memname"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html">ParamDescriptor</a> &amp; catena::common::ParamDescriptor::getSubParam </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>oid</em></td><td>)</td>
@@ -651,7 +549,7 @@ Here is the call graph for this function:</div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -659,76 +557,13 @@ Here is the call graph for this function:</div>
 <p>gets a sub parameter's paramDescriptor </p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> of the sub parameter </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a4ae36042fdac3f9b742f364b162e8cf5">catena::common::IParamDescriptor</a>.</p>
-
 </div>
 </div>
-<a id="a144abac5962ba34fa5affd26f6a93785" name="a144abac5962ba34fa5affd26f6a93785"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a144abac5962ba34fa5affd26f6a93785">&#9670;&#160;</a></span>hasTemplateOid()</h2>
+<a id="adb7dd3894cca91946bb849b4227f7bc1" name="adb7dd3894cca91946bb849b4227f7bc1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb7dd3894cca91946bb849b4227f7bc1">&#9670;&#160;</a></span>max_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::common::ParamDescriptor::hasTemplateOid </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>return true if the parameter has a template oid </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a496ebc33a50af577f907872656d0ec47">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="a71e3b0347b9c41f60333c1e796ed1f66" name="a71e3b0347b9c41f60333c1e796ed1f66"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a71e3b0347b9c41f60333c1e796ed1f66">&#9670;&#160;</a></span>isCommand()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::common::ParamDescriptor::isCommand </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>return true if this is a command parameter </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="add722f779f675431c804cabcaefb9518" name="add722f779f675431c804cabcaefb9518"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add722f779f675431c804cabcaefb9518">&#9670;&#160;</a></span>max_length()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">uint32_t catena::common::ParamDescriptor::max_length </td>
@@ -737,86 +572,23 @@ Here is the call graph for this function:</div>
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Returns the max length of the array/string parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#". </p>
 <dl class="section return"><dt>Returns</dt><dd>max_length_ </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a12a2eebee18935585154b095ae1d7958">catena::common::IParamDescriptor</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_adb7dd3894cca91946bb849b4227f7bc1_icgraph.svg" width="516" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
-<a id="add31947f6660315d28e10fd564ef75f3" name="add31947f6660315d28e10fd564ef75f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add31947f6660315d28e10fd564ef75f3">&#9670;&#160;</a></span>minimalSet()</h2>
+<a id="aa31fe849571714cd05a78b77802ae4e3" name="aa31fe849571714cd05a78b77802ae4e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa31fe849571714cd05a78b77802ae4e3">&#9670;&#160;</a></span>name()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::common::ParamDescriptor::minimalSet </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the minimal set status of the parameter </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a21ec0cb6550d0de205b050bedec26611">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="afea65cb575500e6aa77583364d5aa929" name="afea65cb575500e6aa77583364d5aa929"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afea65cb575500e6aa77583364d5aa929">&#9670;&#160;</a></span>name() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const PolyglotText::DisplayStrings &amp; catena::common::ParamDescriptor::name </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the parameter name </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ad07314cfd22650164d1a4694d0e05c01">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="a157db36f837904b8fd93db03c24e0a80" name="a157db36f837904b8fd93db03c24e0a80"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a157db36f837904b8fd93db03c24e0a80">&#9670;&#160;</a></span>name() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">const std::string &amp; catena::common::ParamDescriptor::name </td>
@@ -826,11 +598,6 @@ Here is the call graph for this function:</div>
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>get the parameter name by language </p>
@@ -842,171 +609,13 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the name in the specified language, or an empty string if the language is not found </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ad8dc2523dba79b5f6f24486e0fe5ec51">catena::common::IParamDescriptor</a>.</p>
-
 </div>
 </div>
-<a id="a1c6abbba98f0eb2e4f99ab051341c249" name="a1c6abbba98f0eb2e4f99ab051341c249"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1c6abbba98f0eb2e4f99ab051341c249">&#9670;&#160;</a></span>readOnly() <span class="overload">[1/2]</span></h2>
+<a id="a3343ab73c25d3ef01f34a68a0699cb27" name="a3343ab73c25d3ef01f34a68a0699cb27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3343ab73c25d3ef01f34a68a0699cb27">&#9670;&#160;</a></span>toProto() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool catena::common::ParamDescriptor::readOnly </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>return the readOnly status of the parameter </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a021b52cf996466aa058a6d05c460e32c">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="a318e77afa7093262a879c4228e66a5dd" name="a318e77afa7093262a879c4228e66a5dd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a318e77afa7093262a879c4228e66a5dd">&#9670;&#160;</a></span>readOnly() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::ParamDescriptor::readOnly </td>
-          <td>(</td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>flag</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>set the readOnly status of the parameter </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ab5a2bcbf52d7c442ae8ab4b3069cc125">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="a6622daa80d065a0544e1931e23def5ea" name="a6622daa80d065a0544e1931e23def5ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6622daa80d065a0544e1931e23def5ea">&#9670;&#160;</a></span>setMinimalSet()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::ParamDescriptor::setMinimalSet </td>
-          <td>(</td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>flag</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>set the minimal set status of the parameter </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a557f3d1d5685af9f21a4735c547d54f5">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="abfc7265238384584b1010d38dbe174de" name="abfc7265238384584b1010d38dbe174de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abfc7265238384584b1010d38dbe174de">&#9670;&#160;</a></span>setOid()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void catena::common::ParamDescriptor::setOid </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>oid</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>set the parameter oid </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a551914beb28d87b2d9ade3ef5fd8c2c0">catena::common::IParamDescriptor</a>.</p>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_abfc7265238384584b1010d38dbe174de_icgraph.svg" width="552" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
-</div>
-
-</div>
-</div>
-<a id="ae8a5e7c9e58775d62a71d4f38cf0873c" name="ae8a5e7c9e58775d62a71d4f38cf0873c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae8a5e7c9e58775d62a71d4f38cf0873c">&#9670;&#160;</a></span>templateOid()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::string &amp; catena::common::ParamDescriptor::templateOid </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the parameter's template oid </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#acf4689e7c5a73e1837fd53e38ebaa7b8">catena::common::IParamDescriptor</a>.</p>
-
-</div>
-</div>
-<a id="af6ad5eeb4ec1f5c901d883ebc696e5a8" name="af6ad5eeb4ec1f5c901d883ebc696e5a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af6ad5eeb4ec1f5c901d883ebc696e5a8">&#9670;&#160;</a></span>toProto() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void catena::common::ParamDescriptor::toProto </td>
@@ -1026,11 +635,6 @@ Here is the caller graph for this function:</div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>serialize param meta data in to protobuf message </p>
@@ -1043,18 +647,13 @@ Here is the caller graph for this function:</div>
 </dl>
 <p>this function will populate all non-value fields of the protobuf param message with the information from the <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a5b2d2c32685775b6d40f3145fbba1089">catena::common::IParamDescriptor</a>.</p>
-
 </div>
 </div>
-<a id="a7a1a03ff4ba15c7b1bd086d6395315db" name="a7a1a03ff4ba15c7b1bd086d6395315db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a1a03ff4ba15c7b1bd086d6395315db">&#9670;&#160;</a></span>toProto() <span class="overload">[2/2]</span></h2>
+<a id="a94d24721c91733e999ec6d09a7e14431" name="a94d24721c91733e999ec6d09a7e14431"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94d24721c91733e999ec6d09a7e14431">&#9670;&#160;</a></span>toProto() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void catena::common::ParamDescriptor::toProto </td>
@@ -1074,11 +673,6 @@ Here is the caller graph for this function:</div>
           <td></td><td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>serialize param meta data in to protobuf message </p>
@@ -1090,19 +684,19 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 <p>this function will populate all non-value fields of the protobuf param message with the information from the <a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html" title="ParamDescriptor provides information about a parameter.">ParamDescriptor</a> </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a2d37e2fb40c62467aafcac8d76d8bebb">catena::common::IParamDescriptor</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_a94d24721c91733e999ec6d09a7e14431_icgraph.svg" width="516" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+</div>
 
 </div>
 </div>
-<a id="a99eea1df94eefcdb9b67e9f56255c120" name="a99eea1df94eefcdb9b67e9f56255c120"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a99eea1df94eefcdb9b67e9f56255c120">&#9670;&#160;</a></span>total_length()</h2>
+<a id="ad3fb42e97cb4be764d4e5826034d5dfa" name="ad3fb42e97cb4be764d4e5826034d5dfa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3fb42e97cb4be764d4e5826034d5dfa">&#9670;&#160;</a></span>total_length()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::size_t catena::common::ParamDescriptor::total_length </td>
@@ -1111,46 +705,15 @@ Here is the caller graph for this function:</div>
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Returns the total length of the string_array parameter. If max length is not set in the .JSON file, then the default value of 1024 is used. The default value can also be configured with the command line argument "--default_max_length=#". </p>
 <dl class="section return"><dt>Returns</dt><dd>total_length_ </dd></dl>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ab0ec2ac672593f7081169d083379bee3">catena::common::IParamDescriptor</a>.</p>
-
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor_ad3fb42e97cb4be764d4e5826034d5dfa_icgraph.svg" width="516" height="51"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
-</div>
-<a id="a542de6f36c9ad1c127da0cbf2ea29697" name="a542de6f36c9ad1c127da0cbf2ea29697"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a542de6f36c9ad1c127da0cbf2ea29697">&#9670;&#160;</a></span>type()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">ParamType catena::common::ParamDescriptor::type </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>get the parameter type </p>
-
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac434ca64d3939e3a38ca91c5f5c648eb">catena::common::IParamDescriptor</a>.</p>
 
 </div>
 </div>
