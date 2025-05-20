@@ -9,7 +9,7 @@ var classcatena_1_1common_1_1Authorizer =
     [ "operator=", "classcatena_1_1common_1_1Authorizer.html#a4280d7fb7c5cca2f2d2493d990360323", null ],
     [ "operator=", "classcatena_1_1common_1_1Authorizer.html#a4ea746b9c22dc3a0bed7a51c3d37a2d7", null ],
     [ "readAuthz", "classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401", null ],
-    [ "readAuthz", "classcatena_1_1common_1_1Authorizer.html#a8c658a3367f9391fa04b73af262a61bb", null ],
+    [ "readAuthz", "classcatena_1_1common_1_1Authorizer.html#a8462ae9a2ba2f1d60ca459dd94b9def0", null ],
     [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#a31559d61f0d8fba890111f7a470863f1", null ],
-    [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#a649d47b35113457176ffcc7fe5e4ab9b", null ]
+    [ "writeAuthz", "classcatena_1_1common_1_1Authorizer.html#a6da90b2e5e23b8956017f713da5696c1", null ]
 ];

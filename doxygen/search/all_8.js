@@ -3,12 +3,12 @@ var searchData=
   ['handleconnection_0',['handleConnection',['../classcatena_1_1gRPC_1_1PeerInfo.html#ade7a22ac2ed97ea2bc2af6727edaa0bc',1,'catena::gRPC::PeerInfo']]],
   ['handlevalueupdate_1',['handlevalueupdate',['../classcatena_1_1gRPC_1_1PeerInfo.html#a4981f34a35cd0277b48cdc117750519e',1,'catena::gRPC::PeerInfo::handleValueUpdate()'],['../classcatena_1_1gRPC_1_1PeerManager.html#ae067001f1262686fc20f6e6259255f89',1,'catena::gRPC::PeerManager::handleValueUpdate(const ParamAccessor &amp;p, ParamIndex idx)'],['../classcatena_1_1gRPC_1_1PeerManager.html#aa0a441656fed15a724c78c9e7b951401',1,'catena::gRPC::PeerManager::handleValueUpdate(const ParamAccessor &amp;p, ParamIndex idx, const std::string &amp;peer)']]],
   ['has_2',['has',['../classcatena_1_1patterns_1_1Functory.html#ab8ad382d26910641abed046bb6cbc693',1,'catena::patterns::Functory']]],
-  ['has_5fwriter_3',['has_writer',['../classcatena_1_1gRPC_1_1PeerInfo.html#a9964e3db5c4ef5bdf7d561a5d82e6c3a',1,'catena::gRPC::PeerInfo']]],
-  ['hasauthz_4',['hasAuthz',['../classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957',1,'catena::common::Authorizer']]],
-  ['hasfield_5',['hasfield',['../classcatena_1_1REST_1_1ISocketReader.html#a6d34e20b825111130d125fd9bbc94918',1,'catena::REST::ISocketReader::hasField()'],['../classcatena_1_1REST_1_1SocketReader.html#ae670c997ccfa8dbd2054a2af37d4404f',1,'catena::REST::SocketReader::hasField()']]],
-  ['hasmore_6',['hasmore',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#af684414d5b70a6b7bf6c28653054fc54',1,'catena::common::Device::DeviceSerializer::hasMore()'],['../classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#ab35a715a8c265585c50d51e4e7aed7fd',1,'catena::common::IDevice::IDeviceSerializer::hasMore()']]],
-  ['haspeer_7',['hasPeer',['../classcatena_1_1gRPC_1_1PeerManager.html#a1bfff0f8e615ac6ce48db0057918b458',1,'catena::gRPC::PeerManager']]],
-  ['hastemplateoid_8',['hastemplateoid',['../classcatena_1_1common_1_1IParamDescriptor.html#a496ebc33a50af577f907872656d0ec47',1,'catena::common::IParamDescriptor::hasTemplateOid()'],['../classcatena_1_1common_1_1ParamDescriptor.html#a144abac5962ba34fa5affd26f6a93785',1,'catena::common::ParamDescriptor::hasTemplateOid()']]],
+  ['has_5ftemplate_5foid_3',['has_template_oid',['../classcatena_1_1common_1_1ParamDescriptor.html#a66ecd99a0574d3d765a918c1997bf173',1,'catena::common::ParamDescriptor']]],
+  ['has_5fwriter_4',['has_writer',['../classcatena_1_1gRPC_1_1PeerInfo.html#a9964e3db5c4ef5bdf7d561a5d82e6c3a',1,'catena::gRPC::PeerInfo']]],
+  ['hasauthz_5',['hasAuthz',['../classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957',1,'catena::common::Authorizer']]],
+  ['hasfield_6',['hasfield',['../classcatena_1_1REST_1_1ISocketReader.html#a6d34e20b825111130d125fd9bbc94918',1,'catena::REST::ISocketReader::hasField()'],['../classcatena_1_1REST_1_1SocketReader.html#ae670c997ccfa8dbd2054a2af37d4404f',1,'catena::REST::SocketReader::hasField()']]],
+  ['hasmore_7',['hasmore',['../classcatena_1_1common_1_1Device_1_1DeviceSerializer.html#af684414d5b70a6b7bf6c28653054fc54',1,'catena::common::Device::DeviceSerializer::hasMore()'],['../classcatena_1_1common_1_1IDevice_1_1IDeviceSerializer.html#ab35a715a8c265585c50d51e4e7aed7fd',1,'catena::common::IDevice::IDeviceSerializer::hasMore()']]],
+  ['haspeer_8',['hasPeer',['../classcatena_1_1gRPC_1_1PeerManager.html#a1bfff0f8e615ac6ce48db0057918b458',1,'catena::gRPC::PeerManager']]],
   ['hasupdate_5f_9',['hasUpdate_',['../classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c',1,'catena::common::Connect']]],
   ['homebrew_10',['Install homebrew',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2macos__toolchain.html#autotoc_md35',1,'']]]
 ];
