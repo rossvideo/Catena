@@ -79,11 +79,40 @@ void handle_signal(int sig) {
     t.join();
 }
 
+//populate assets list param with oid of asset if it doesn't already contain it
+void catenaLogoHandler(const std::string& fqoid) {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> assets = dm.getParam("/assets", err);
+    if (assets == nullptr) {
+        throw err;
+    }
+
+    auto assetsList = dynamic_cast<ParamWithValue<std::vector<std::string>>*>(assets.get());
+    if (assetsList == nullptr) {
+        throw catena::exception_with_status("assets param is not a list", catena::StatusCode::INVALID_ARGUMENT);
+    }
+
+    if (std::find(assetsList->get().begin(), assetsList->get().end(), fqoid) == assetsList->get().end()) {
+        assetsList->get().push_back(fqoid);
+        //let manager know that the assets list has changed
+    }
+    DEBUG_LOG << "Asset fqoid: " << fqoid << " requested";
+}
+
 void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
     signal(SIGKILL, handle_signal);
+    std::map<std::string, std::function<void(const std::string&)>> handlers;
+
+    // this is the "receiving end" of the asset request example
+    dm.getAssetRequest().connect([&handlers](const std::string& fqoid) {
+        if (handlers.contains(fqoid)) {
+            handlers[fqoid](fqoid);
+        }
+    });
+    handlers["/catena_logo.png"] = catenaLogoHandler;
 
     try {
         // Getting flags.

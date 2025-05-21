@@ -113,13 +113,13 @@ void RunRPCServer(std::string addr)
         std::thread cq_thread([&]() { service.processEvents(); });
 
         // Notifies the console when a value is set by the client.
-        uint32_t valueSetByClientId = dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
+        uint32_t valueSetByClientId = dm.getValueSetByClient().connect([](const std::string& oid, const IParam* p) {
             DEBUG_LOG << "*** signal received: " << oid << " has been changed by client";
         });
 
         // wait for the server to shutdown and tidy up
         server->Wait();
-        dm.valueSetByClient.disconnect(valueSetByClientId);
+        dm.getValueSetByClient().disconnect(valueSetByClientId);
 
         cq->Shutdown();
         cq_thread.join();
@@ -154,7 +154,7 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "playing";
-                    dm.valueSetByServer.emit("/state", stateParam.get());
+                    dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
                 DEBUG_LOG << "video is " << state;
                 response.mutable_no_response();
@@ -180,7 +180,7 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "paused";
-                    dm.valueSetByServer.emit("/state", stateParam.get());
+                    dm.getValueSetByServer().emit("/state", stateParam.get());
                 }
                 DEBUG_LOG << "video is " << state;
                 response.mutable_no_response();

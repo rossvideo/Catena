@@ -543,7 +543,58 @@ class Device : public IDevice {
      */
     bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const override;
 
+    /**
+     * @brief get the signal emitted when a value is set by the client.
+     * @return the signal
+     */
+    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByClient() override { return valueSetByClient; }
+
+    /**
+     * @brief get the signal emitted when a language pack is added to the device.
+     * @return the signal
+     */
+    vdk::signal<void(const ILanguagePack*)>& getLanguageAddedPushUpdate() override { return languageAddedPushUpdate; }
+
+    /**
+     * @brief get the signal emitted when a value is set by the server, or business
+     * logic.
+     * @return the signal
+     */
+    vdk::signal<void(const std::string&, const IParam*)>& getValueSetByServer() override { return valueSetByServer; }
+    
+    /**
+     * @brief get the asset request signal
+     * @return the signal
+     */
+    vdk::signal<void(const std::string&)>& getAssetRequest() override { return assetRequest; }
+
   private:
+
+    /**
+     * @brief signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient;
+
+    /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate;
+
+    /**
+     * @brief signal emitted when a value is set by the server, or business
+     * logic.
+     * Intended recipient is the connection manager.
+     */
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
+
+    /**
+     * @brief signal emitted when an asset request is made.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&)> assetRequest;
+
     uint32_t slot_;
     Device_DetailLevel detail_level_;
     std::unordered_map<std::string, catena::common::IConstraint*> constraints_;
