@@ -43,7 +43,7 @@
 #include <IParam.h>
 #include <Tags.h>
 #include <Path.h>
-#include <ParamDescriptor.h>
+#include <IParamDescriptor.h>
 #include <IDevice.h>
 #include <StructInfo.h>
 #include <PolyglotText.h>
@@ -75,7 +75,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     ParamWithValue(
         T& value,
-        ParamDescriptor& descriptor,
+        IParamDescriptor& descriptor,
         IDevice& dev,
         bool isCommand
     ) : value_{value}, descriptor_{descriptor} {
@@ -92,7 +92,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     ParamWithValue(
         T& value,
-        ParamDescriptor& descriptor
+        IParamDescriptor& descriptor
     ) : value_{value}, descriptor_{descriptor} {
         initializeTracker_(value_.get());
     }
@@ -102,7 +102,7 @@ class ParamWithValue : public catena::common::IParam {
      */
     ParamWithValue(
         T& value,
-        ParamDescriptor& descriptor,
+        IParamDescriptor& descriptor,
         std::shared_ptr<std::size_t> mSizeTracker,
         std::shared_ptr<TSizeTracker> tSizeTracker
     ) : value_{value}, descriptor_{descriptor} {
@@ -117,7 +117,7 @@ class ParamWithValue : public catena::common::IParam {
     ParamWithValue(
         const FieldInfo<FieldType, ParentType>& field, 
         ParentType& parentValue,
-        ParamDescriptor& parentDescriptor
+        IParamDescriptor& parentDescriptor
     ) : descriptor_{parentDescriptor.getSubParam(field.name)}, value_{(parentValue.*(field.memberPtr))} {
         initializeTracker_(value_.get());
     }
@@ -338,7 +338,7 @@ class ParamWithValue : public catena::common::IParam {
      * @brief get the descriptor of the parameter
      * @return the descriptor of the parameter
      */
-    const ParamDescriptor& getDescriptor() const override {
+    const IParamDescriptor& getDescriptor() const override {
         return descriptor_;
     }
 
@@ -650,7 +650,7 @@ class ParamWithValue : public catena::common::IParam {
     /**
      * @brief add a child parameter
      */
-    void addParam(const std::string& oid, ParamDescriptor* param) {
+    void addParam(const std::string& oid, IParamDescriptor* param) {
         descriptor_.addSubParam(oid, param);
     }
 
@@ -884,7 +884,7 @@ class ParamWithValue : public catena::common::IParam {
     }
 
   private:
-    ParamDescriptor& descriptor_;
+    IParamDescriptor& descriptor_;
     std::reference_wrapper<T> value_;
 
     /**

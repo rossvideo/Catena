@@ -143,7 +143,7 @@ inline std::array<const char*, 0> alternativeNames{};
  * @tparam T the type of the value
  */
 template <typename T>
-void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const Authorizer& authz);
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz);
 
 /**
  * toProto specialization to serialize an entire array of structured data to protobuf
@@ -153,7 +153,7 @@ void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const 
  * @tparam T the type of the value
  */
 template <CatenaStructArray T>
-void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const Authorizer& authz) {
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
     using structType = T::value_type;
     auto* dstArray = dst.mutable_struct_array_values();
     
@@ -174,14 +174,14 @@ void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const 
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const Authorizer& authz) {
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
     
     auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
     auto* dstFields = dst.mutable_struct_value()->mutable_fields();
 
     // lambda function to call toProto for the given field if it is authorized
     auto readField = [&](const auto& field) {
-        ParamDescriptor& subParam = pd.getSubParam(field.name);
+        IParamDescriptor& subParam = pd.getSubParam(field.name);
         if (authz.readAuthz(subParam)) {
             catena::Value* newFieldValue = (*dstFields)[field.name].mutable_value();
 
@@ -203,7 +203,7 @@ void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const 
 }
 
 template <IsVariantArray T>
-void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const Authorizer& authz) {
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
     for (const auto& item : *src) {
         catena::Value elemValue;
         toProto(elemValue, &item, pd, authz);
@@ -212,9 +212,9 @@ void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const 
 }
 
 template <meta::IsVariant T>
-void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const Authorizer& authz) {
+void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const Authorizer& authz) {
     std::string variantType = alternativeNames<T>[src->index()];
-    ParamDescriptor& subParam = pd.getSubParam(variantType);
+    IParamDescriptor& subParam = pd.getSubParam(variantType);
     std::visit([&](auto& arg) {
         catena::Value elemValue;
         toProto(elemValue, &arg, subParam, authz);
@@ -232,7 +232,7 @@ void toProto(catena::Value& dst, const T* src, const ParamDescriptor& pd, const 
  * @tparam T the type of the value
  */
 template <typename T>
-void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, const Authorizer& authz);
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz);
 
 /**
  * fromProto specialization to deserialize an entire array of structured data from protobuf
@@ -242,7 +242,7 @@ void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, cons
  * @tparam T the type of the value
  */
 template <CatenaStructArray T>
-void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, const Authorizer& authz) {
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     using structType = T::value_type;
     if (!src.has_struct_array_values()) {
         // src is not an array so it cannot be deserialized into an array
@@ -273,7 +273,7 @@ void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, cons
  * @tparam T the type of the value
  */
 template <CatenaStruct T>
-void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, const Authorizer& authz) {
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     auto fields = StructInfo<T>::fields; // get tuple of FieldInfo for this struct type
     if (!src.has_struct_value()) {
         // src is not a struct so it cannot be deserialized into a struct
@@ -283,7 +283,7 @@ void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, cons
 
     // lambda function to call fromProto for the given field if it is authorized
     auto writeField = [&](const auto& field) {
-        ParamDescriptor& subParam = pd.getSubParam(field.name);
+        IParamDescriptor& subParam = pd.getSubParam(field.name);
         if (!authz.writeAuthz(subParam)) {
             // not authorized to write to this field or the field is not in the src
             return;
@@ -312,7 +312,7 @@ void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, cons
 }
 
 template <IsVariantArray T>
-void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, const Authorizer& authz) {
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     using VariantType = T::value_type;
     if (!src.has_struct_variant_array_values()) {
         // src is not an array so it cannot be deserialized into an array
@@ -370,7 +370,7 @@ void _changeType(V& variant, const std::size_t newTypeIndex) {
 }
 
 template <meta::IsVariant T>
-void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, const Authorizer& authz) {
+void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, const Authorizer& authz) {
     if (!src.has_struct_variant_value()) {
         // src is not a variant so it cannot be deserialized into a variant
         return;
@@ -388,7 +388,7 @@ void fromProto(const catena::Value& src, T* dst, const ParamDescriptor& pd, cons
         _changeType<T, 0>(*dst, typeIndex);
     }
 
-    ParamDescriptor& subParam= pd.getSubParam(variantType);
+    IParamDescriptor& subParam= pd.getSubParam(variantType);
     std::visit([&](auto& arg) {
         fromProto(srcVariant.value(), &arg, subParam, authz);
     }, *dst); 

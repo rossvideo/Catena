@@ -33,7 +33,7 @@
 #include <Device.h>
 #include <LanguagePack.h>
 #include <ParamWithValue.h>
-#include <ParamDescriptor.h>
+#include <IParamDescriptor.h>
 #include <IMenuGroup.h> 
 #include <Menu.h>
 
