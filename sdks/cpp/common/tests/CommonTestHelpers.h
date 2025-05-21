@@ -51,7 +51,7 @@ namespace common {
  * @param isArray Whether this is an array type (defaults to false)
  * @param size The array size if it's an array type (defaults to 0)
  */
-inline void setupMockParam(MockParam* param, const std::string& oid, const ParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0) {
+inline void setupMockParam(MockParam* param, const std::string& oid, const IParamDescriptor& descriptor, bool isArray = false, uint32_t size = 0) {
     EXPECT_CALL(*param, getOid())
         .WillRepeatedly(::testing::ReturnRef(oid));
     EXPECT_CALL(*param, getDescriptor())
@@ -69,7 +69,7 @@ class ParamHierarchyBuilder {
 public:
     struct DescriptorInfo {
         std::shared_ptr<MockParamDescriptor> descriptor;
-        std::unordered_map<std::string, ParamDescriptor*> subParams;
+        std::unordered_map<std::string, IParamDescriptor*> subParams;
     };
 
     /**
@@ -80,7 +80,6 @@ public:
     static DescriptorInfo createDescriptor(const std::string& oid) {
         DescriptorInfo info;
         info.descriptor = std::make_shared<MockParamDescriptor>();
-        info.descriptor->setOid(oid);
         EXPECT_CALL(*info.descriptor, getOid())
             .WillRepeatedly(::testing::ReturnRef(oid));
         EXPECT_CALL(*info.descriptor, getAllSubParams())
@@ -95,7 +94,6 @@ public:
      * @param child The child descriptor
      */
     static void addChild(DescriptorInfo& parent, const std::string& name, DescriptorInfo& child) {
-        parent.descriptor->addSubParam(name, child.descriptor.get());
         parent.subParams[name] = child.descriptor.get();
     }
 };
