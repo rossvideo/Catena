@@ -33,7 +33,7 @@ void GetParam::proceed() {
         std::unique_ptr<IParam> param = dm_.getParam("/" + context_.fields("oid"), rc, *authz);
         if (rc.status == catena::StatusCode::OK && param) {
             ans.set_oid(param->getOid());
-            param->toProto(*ans.mutable_param(), *authz);
+            rc = param->toProto(*ans.mutable_param(), *authz);
         }
     // ERROR
     } catch (catena::exception_with_status& err) {
