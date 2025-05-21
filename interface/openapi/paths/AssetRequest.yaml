@@ -54,6 +54,18 @@ get:
         $ref: "../../../schema/catena.param_schema.json#/$defs/oid"
       example: "text_box"
 
+    - name: compression
+      in: query
+      required: false
+      description: The type of compression to use for the asset
+      schema:
+        type: string
+        enum:
+          - "UNCOMPRESSED"
+          - "GZIP"
+          - "DEFLATE"
+      example: "GZIP"
+
   responses:
     "200":
       description: A 'DataPayload' variant of the 'Value' message and a flag 

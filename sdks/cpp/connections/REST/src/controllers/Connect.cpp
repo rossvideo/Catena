@@ -33,15 +33,15 @@ void Connect::proceed() {
             this->cv_.notify_one();
         });
         // Waiting for a value set by server to be sent to execute code.
-        valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+        valueSetByServerId_ = dm_.getValueSetByServer().connect([this](const std::string& oid, const IParam* p, const int32_t idx){
             updateResponse_(oid, idx, p);
         });
         // Waiting for a value set by client to be sent to execute code.
-        valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
+        valueSetByClientId_ = dm_.getValueSetByClient().connect([this](const std::string& oid, const IParam* p, const int32_t idx){
             updateResponse_(oid, idx, p);
         });
         // Waiting for a language to be added to execute code.
-        languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
+        languageAddedId_ = dm_.getLanguageAddedPushUpdate().connect([this](const IDevice::ComponentLanguagePack& l) {
             updateResponse_(l);
         });
         // Send client an empty update with slot of the device
@@ -78,9 +78,9 @@ void Connect::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     try {
         shutdownSignal_.disconnect(shutdownSignalId_);
-        dm_.valueSetByClient.disconnect(valueSetByClientId_);
-        dm_.valueSetByServer.disconnect(valueSetByServerId_);
-        dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+        dm_.getValueSetByClient().disconnect(valueSetByClientId_);
+        dm_.getValueSetByServer().disconnect(valueSetByServerId_);
+        dm_.getLanguageAddedPushUpdate().disconnect(languageAddedId_);
     // Listener not yet initialized.
     } catch (...) {}
     // Finishing and closing the socket.

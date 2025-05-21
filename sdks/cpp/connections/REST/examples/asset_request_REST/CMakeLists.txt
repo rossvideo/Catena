@@ -30,6 +30,8 @@
 
 cmake_minimum_required(VERSION 3.20)
 
+find_package(ZLIB REQUIRED)
+
 get_filename_component(TARGET ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET} C CXX)
 
@@ -56,6 +58,7 @@ target_sources(${TARGET}
 target_link_libraries(${TARGET}
     catena_connections_REST
     absl::flags_parse
+    ZLIB::ZLIB
 )
 
 target_compile_features(${TARGET}

@@ -116,7 +116,7 @@ void RunRESTServer() {
         std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+        dm.getValueSetByClient().connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
             std::cout << "signal received: " << oid << " has been changed by client" << '\n';
 
             // make a copy of the path that we can safely pop segments from
