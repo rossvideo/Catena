@@ -107,7 +107,6 @@ message DeviceComponent {
   message ComponentParam {
     string oid = 1;
     Param param = 2;
-    repeated string sub_params = 3;
   }
 
    /* A menu.

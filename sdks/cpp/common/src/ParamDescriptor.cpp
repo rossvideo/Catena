@@ -64,15 +64,12 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
         }
     }
 
-    // auto* dstParams = param.mutable_params();
-    // for (const auto& [oid, subParam] : subParams_) {
-    //     if (authz.readAuthz(*subParam)) {
-    //         dstParams->insert({oid, catena::Param()});
-    //     }
-    //     // if (authz.readAuthz(*subParam)) {
-    //     //     subParam->toProto((*dstParams)[oid], authz);
-    //     // }
-    // }
+    auto* dstParams = param.mutable_params();
+    for (const auto& [oid, subParam] : subParams_) {
+        if (authz.readAuthz(*subParam)) {
+            subParam->toProto((*dstParams)[oid], authz);
+        }
+    }
 
     param.set_template_oid(template_oid_);
 }
