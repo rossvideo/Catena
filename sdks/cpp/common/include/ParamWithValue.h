@@ -186,12 +186,6 @@ class ParamWithValue : public catena::common::IParam {
             return catena::exception_with_status("Not authorized to read param " + descriptor_.getOid(), catena::StatusCode::PERMISSION_DENIED);
         } else {
             descriptor_.toProto(param, authz);
-            // auto* dstParams = param.mutable_params();
-            // for (const auto& [oid, subParam] : descriptor_.getAllSubParams()) {
-            //     if (authz.readAuthz(*subParam)) {
-            //         subParam->toProto((*dstParams)[oid], authz);
-            //     }
-            // }
             catena::common::toProto<T>(*param.mutable_value(), &value_.get(), descriptor_, authz);
         }
         return ans;

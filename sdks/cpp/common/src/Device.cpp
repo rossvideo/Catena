@@ -481,7 +481,7 @@ Device::DeviceSerializer Device::getDeviceSerializer(Authorizer& authz, const st
 
         // Send parameters if authorized, and either in the minimal set or if subscribed to
         if (dl != catena::Device_DetailLevel_COMMANDS) {
-             for (const auto& [name, param] : params_) {
+            for (const auto& [name, param] : params_) {
                 if (authz.readAuthz(*param) &&
                     ((dl == catena::Device_DetailLevel_FULL) ||
                      (param->getDescriptor().minimalSet()) ||

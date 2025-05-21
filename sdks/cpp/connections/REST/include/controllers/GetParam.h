@@ -127,13 +127,6 @@ class GetParam : public ICallData {
     IDevice& dm_;
 
     /**
-     * @brief Flag to determine whether to stream the response or not.
-     * 
-     * Will be replaced later once SocketReader has been updated.
-     */
-    bool stream_ = true;
-
-    /**
      * @brief ID of the GetParam object
      */
     int objectId_;
