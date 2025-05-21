@@ -78,84 +78,49 @@ void GetParam::proceed( bool ok) {
          * kFinish and notifying the responder once finished.
          */
         case CallStatus::kProcess:
+            // Used to serve other clients while processing.
             new GetParam(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
 
-            { // rc scope
+            { // var scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             std::unique_ptr<IParam> param = nullptr;
+            std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+            catena::common::Authorizer* authz;
+
             try {
                 // Creating authorizer.
                 if (service_->authorizationEnabled()) {
-                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                    authz_ = sharedAuthz_.get();
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                    authz = sharedAuthz.get();
                 } else {
-                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
                 }
                 // Getting the param.
                 std::lock_guard lg(dm_.mutex());
-                param = dm_.getParam(req_.oid(), rc, *authz_);
+                param = dm_.getParam(req_.oid(), rc, *authz);
             // ERROR
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);
             } catch (...) {
                 rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
-            // Everything went well, fall through to kWrite.
+
+            // Everything went well, writing the parameter.
             if (param && rc.status == catena::StatusCode::OK) {
-                param->toProto(*res_.mutable_param(), *authz_); // <-- Remove this to get without value.
-                pds_.push_back(&param->getDescriptor());
-                status_ = CallStatus::kWrite;
+                // param is a copy, so we don't need to lock the device again.
+                res_.set_oid(param->getOid());
+                param->toProto(*res_.mutable_param(), *authz);
+                writer_.Finish(res_, Status::OK, this);
             // Error along the way, finish call with error.
             } else {
-                status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
-                writer_.Finish(errorStatus, this);
-                break;
+                writer_.FinishWithError(errorStatus, this);
             }
-            }
+            } // var scope
 
-        /*
-         * kWrite: Writes the response to the client.
-         */
-        case CallStatus::kWrite:
-            { // rc scope
-            catena::exception_with_status rc{"", catena::StatusCode::OK};
-            // Getting and writing param descriptor.
-            const ParamDescriptor* pd = nullptr;
-            while (!pd && !pds_.empty()) {
-                pd = std::move(pds_.back());
-                pds_.pop_back();
-            }
-            // Processing the param descriptor.
-            if (pd) {
-                res_.set_oid(pd->getOid());
-                pd->toProto(*res_.mutable_param(), *authz_);
-                // If param has children, add child oids to the oids_ vector.
-                for (auto [oid, childDesc] : pd->getAllSubParams()) {
-                    if (authz_->readAuthz(*childDesc)) {
-                        pds_.push_back(childDesc);
-                        res_.add_sub_params(oid);
-                    }
-                }
-                // Write the param descriptor
-                writer_.Write(res_, this);
-                res_.Clear();
-            }
-            // If there is no more to write, change to kPostWrite.
-            if (pds_.empty()) {
-                status_ = CallStatus::kPostWrite;
-            }
-            // If pd then we wrote and can break, otherwise we fall through.
-            if (pd) { break; }
-            }
-
-        /*
-         * kPostWrite: Finish writing the response to the client.
-         */
-        case CallStatus::kPostWrite:
+            // Updating status and breaking.
             status_ = CallStatus::kFinish;
-            writer_.Finish(Status::OK, this);
             break;
 
         /*
@@ -170,6 +135,6 @@ void GetParam::proceed( bool ok) {
         default:
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
-            writer_.Finish(errorStatus, this);
+            writer_.FinishWithError(errorStatus, this);
     }
 }

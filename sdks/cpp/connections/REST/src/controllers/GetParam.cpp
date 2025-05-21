@@ -2,20 +2,12 @@
 // connections/REST
 #include <controllers/GetParam.h>
 using catena::REST::GetParam;
-using catena::common::ParamDescriptor;
 
 // Initializes the object counter for GetParam to 0.
 int GetParam::objectCounter_ = 0;
 
 GetParam::GetParam(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, context_{context}, dm_{dm} {
-    // Setting writer_ depending on if client wants stream or unary response.
-    if (stream_) {
-        writer_ = std::make_unique<catena::REST::SSEWriter>(socket, context.origin());
-    } else {
-        writer_ = std::make_unique<catena::REST::SocketWriter>(socket, context.origin());
-    }
-
+    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 }
@@ -23,9 +15,8 @@ GetParam::GetParam(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
 void GetParam::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
 
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::unique_ptr<IParam> param;
-    // Authorizer objects.
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    std::unique_ptr<IParam> param = nullptr;
     std::shared_ptr<catena::common::Authorizer> sharedAuthz;
     catena::common::Authorizer* authz;
 
@@ -37,7 +28,7 @@ void GetParam::proceed() {
         } else {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
-        // Getting the top parameter.
+        // Getting the param.
         std::lock_guard lg(dm_.mutex());
         param = dm_.getParam("/" + context_.fields("oid"), rc, *authz);
     // ERROR
@@ -47,67 +38,21 @@ void GetParam::proceed() {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
 
-    // Compiling / writing the response if above was successful.
-    if (rc.status == catena::StatusCode::OK && param) {
-        // Response proto message.
+    // Everything went well, writing the parameter.
+    if (param && rc.status == catena::StatusCode::OK) {
+        // param is a copy, so we don't need to lock the device again.
         catena::DeviceComponent_ComponentParam ans;
-        // Tracker for parameters still remaining to be processed.
-        std::vector<std::pair<const ParamDescriptor*, catena::Param*>> remainingParams;
-        // The sub param map of the parameter currently being processed.
-        auto subParams = ans.mutable_param()->mutable_params();
-
-        // Adding top parameter to the response (WITH VALUE).
         ans.set_oid(param->getOid());
-        param->toProto(*ans.mutable_param(), *authz); // <-- Remove this to get without value.
-        remainingParams.push_back(std::make_pair(&param->getDescriptor(), ans.mutable_param()));
-
-        // Processing top parameter and its sub parameters.
-        while (!remainingParams.empty()) {
-            // Getting the next parameter from remainingParams.
-            // The param descriptor of the param to process.
-            auto currentPD = remainingParams.back().first;
-            // The param in the response to update. NULLPTR if streaming.
-            auto currentParam = remainingParams.back().second;
-            remainingParams.pop_back();
-
-            // Making sure currentPD didn't get randomly deleted or smt.
-            if (currentPD) {
-                // Adding sub parameters to remainingParams tracker.
-                for (auto [oid, pd] : currentPD->getAllSubParams()) {
-                    if (authz->readAuthz(*pd)) {
-                        if (stream_) {
-                            ans.add_sub_params(oid);
-                            remainingParams.push_back(std::make_pair(pd, nullptr));
-                        } else {
-                            remainingParams.push_back(std::make_pair(pd, &(*subParams)[oid]));
-                        }
-                    }
-                }
-
-                // Stream behaviour
-                if (stream_) {
-                    // Setting and writing new response before clearing for next.
-                    ans.set_oid(currentPD->getOid());
-                    currentPD->toProto(*ans.mutable_param(), *authz);
-                    writer_->sendResponse(rc, ans);
-                    ans.Clear();
-
-                // Unary behaviour
-                } else {
-                    currentPD->toProto(*currentParam, *authz);
-                    subParams = currentParam->mutable_params();
-                }
-            }
-        }
-
-        if (!stream_) { // If not streaming, we need to send the final response.
-            writer_->sendResponse(rc, ans);
-        }
+        param->toProto(*ans.mutable_param(), *authz);
+        writer_.sendResponse(rc, ans);
+    // Error along the way, finish call with error.
+    } else {
+        writer_.sendResponse(rc);
     }
 
     // Error response in case something went wrong along the way.
     if (rc.status != catena::StatusCode::OK) {
-        writer_->sendResponse(rc);
+        writer_.sendResponse(rc);
     }
 }
 

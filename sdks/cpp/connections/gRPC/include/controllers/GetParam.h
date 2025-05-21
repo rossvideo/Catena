@@ -73,7 +73,6 @@ class GetParam : public CallData {
     void proceed(bool ok) override;
 
   private:
-
     /**
      * @brief The request payload.
      */
@@ -82,44 +81,23 @@ class GetParam : public CallData {
      * @brief The component param to write to the client.
      */
     catena::DeviceComponent_ComponentParam res_;
-
     /**
      * @brief gRPC async response writer.
      */
-    ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
-
+    ServerAsyncResponseWriter<catena::DeviceComponent_ComponentParam> writer_;
     /**
      * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
-
     /**
      * @brief The device to get the value from.
      */
     IDevice& dm_;
 
     /**
-     * @brief Shared ptr to the authorizer object so that we can maintain
-     * ownership of raw ptr throughout call lifetime without use of "new"
-     * keyword. 
-     */
-    std::shared_ptr<catena::common::Authorizer> sharedAuthz_;
-    /**
-     * @brief Ptr to the authorizer object. Raw as to not attempt to delete in
-     * case of kAuthzDisabled.
-     */
-    catena::common::Authorizer* authz_;
-
-    /**
-     * @brief A collection of param descriptors to be processed and written.
-     */
-    std::vector<const ParamDescriptor*> pds_;
-
-    /**
      * @brief The object's unique id.
      */
     int objectId_;
-
     /**
      * @brief The object's unique id counter.
      */

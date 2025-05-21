@@ -120,7 +120,7 @@ class GetParam : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    std::unique_ptr<ISocketWriter> writer_;
+    SocketWriter writer_;
     /**
      * @brief The device to set values of.
      */
