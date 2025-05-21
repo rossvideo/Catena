@@ -1,0 +1,30 @@
+
+type: STRUCT
+name: { display_strings: { en: "Struct Example" } }
+access_scope: st2138:op
+params:
+  nested_struct:
+    type: STRUCT
+    name: { display_strings: { en: "Nested Struct" } }
+    access_scope: st2158:op
+    params:
+      num_1:
+        type: INT32
+        name: { display_strings: { en: "Num 1" } }
+        access_scope: st2138:cfg
+      num_2:
+        type: INT32
+        name: { display_strings: { en: "Num 2" } }
+  text:
+    type: STRING
+    name: { display_strings: {en : Nested String Example} }
+value:
+  struct_value:
+    fields:
+      nested_struct:
+        value:
+          struct_value:
+            fields:
+              num_1: { value: { int32_value: 1 } }
+              num_2: { value: { int32_value: 2 } }
+      text: { value: { string_value: "This is the first struct in list" } }

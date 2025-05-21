@@ -1,0 +1,49 @@
+slot: 1
+multi_set_enabled: true
+detail_level: FULL
+access_scopes: ["st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"]
+default_scope: st2138:mon
+
+params:
+  number_example: 
+    type: INT32
+    value: { int32_value: 0 }
+    name: { display_strings: { en: "Int Example" } }
+  
+  float_example:
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    name: { display_strings: { en: "Float Example" } }
+    access_scope: st2138:op
+    widget: default
+    constraint:
+      type: FLOAT_RANGE
+      float_range:
+        min_value: -100.0
+        max_value: 100.0
+        step: 0.1
+    precision: 1
+  
+  string_example:
+    type: STRING
+    value: { string_value: "Hello World" }
+    name: { display_strings: { en: "String Example" } }
+    access_scope: st2138:cfg
+
+  number_array:
+    type: INT32_ARRAY
+    value: { int32_array_values: { ints: [1, 2, 3, 4] } }
+    name: { display_strings: { en: "Int Array Example" } }
+  
+  float_array:
+    type: FLOAT32_ARRAY
+    value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
+    name: { display_strings: { en: "Float Array Example" } }
+
+  string_array:
+    type: STRING_ARRAY
+    value: { string_array_values: { strings: ["one", "two", "three", "four", "five"] } }
+    name: { display_strings: { en: "String Array Example" } }
+
+  struct_example:
+    import: { file: /params/param.struct_example.yaml }
