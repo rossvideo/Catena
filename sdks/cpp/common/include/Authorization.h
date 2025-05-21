@@ -46,7 +46,7 @@
 #include <Path.h>
 #include <Enums.h>
 #include <IParam.h>
-#include <ParamDescriptor.h>
+#include <IParamDescriptor.h>
 #include <jwt-cpp/jwt.h>
 
 #include <functional>
@@ -130,7 +130,7 @@ class Authorizer {
      * @brief Check if the client has read authorization
      * @return true if the client has read authorization
      */
-    bool readAuthz(const ParamDescriptor& pd) const;
+    bool readAuthz(const IParamDescriptor& pd) const;
 
     /**
      * @brief Check if the client has write authorization
@@ -142,7 +142,7 @@ class Authorizer {
      * @brief Check if the client has write authorization
      * @return true if the client has write authorization
      */
-    bool writeAuthz(const ParamDescriptor& pd) const;
+    bool writeAuthz(const IParamDescriptor& pd) const;
 
 
   private:

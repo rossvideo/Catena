@@ -104,6 +104,7 @@ protected:
     std::unique_ptr<MockDevice> device;
     std::unique_ptr<MockParam> mockParam;
     MockParamDescriptor test_descriptor;
+    std::unordered_map<std::string, IParamDescriptor*> empty_SubParams;
     std::string test_oid = "/test/param";
     std::string array_oid = "/test/array";
 };
@@ -111,6 +112,7 @@ protected:
 // Test visiting a single parameter
 TEST_F(ParamVisitorTest, VisitSingleParam) {
     MockParamVisitor visitor;
+    EXPECT_CALL(test_descriptor, getAllSubParams).Times(1).WillOnce(::testing::ReturnRef(empty_SubParams));
     ParamVisitor::traverseParams(mockParam.get(), "/test/param", *device, visitor);
     
     EXPECT_EQ(visitor.visitedPaths.size(), 1);
@@ -129,6 +131,8 @@ TEST_F(ParamVisitorTest, VisitArrayParam) {
         .WillRepeatedly(::testing::ReturnRef(test_descriptor));
     EXPECT_CALL(*mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(array_oid));
+    EXPECT_CALL(test_descriptor, getAllSubParams)
+        .WillRepeatedly(::testing::ReturnRef(empty_SubParams));
 
     // Set up device to return array elements with proper descriptor
     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
