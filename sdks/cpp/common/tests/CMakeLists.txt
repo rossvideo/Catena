@@ -22,6 +22,7 @@ set(SOURCES
     utils_test.cpp
     subscription_manager_test.cpp
     param_visitor_test.cpp
+    Authorization_test.cpp
 )
 
 add_executable(${This} ${SOURCES})
