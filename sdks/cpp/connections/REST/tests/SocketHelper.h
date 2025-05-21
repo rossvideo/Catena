@@ -110,6 +110,42 @@ class SocketHelper {
         return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
+    // Returns SSE response from the readSocket
+    std::string readSSEResponse() {
+        boost::asio::streambuf buffer;
+        std::string response;
+        
+        try {
+            // Read headers with \r\n\r\n delimiter
+            boost::asio::read_until(*readSocket, buffer, "\r\n\r\n");
+            std::istream response_stream(&buffer);
+            
+            // Get headers
+            std::string line;
+            while (std::getline(response_stream, line) && !line.empty()) {
+                response += line + "\r\n";
+            }
+            response += "\r\n";
+            
+            // Get SSE data events
+            while (std::getline(response_stream, line)) {
+                if (line.empty()) continue;
+                // SSEWriter sends each event as "data: <json>\n\n"
+                if (line.substr(0, 6) == "data: ") {
+                    response += line + "\n\n"; 
+                }
+            }
+        } catch (const boost::system::system_error& e) {
+            if (e.code() == boost::asio::error::eof) {
+                // Socket was closed, which is expected
+                return response;
+            }
+            throw;  // Re-throw other errors
+        }
+        
+        return response;
+    }
+
     // Returns what an expect response from SocketWriter should look like.
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
@@ -141,6 +177,12 @@ class SocketHelper {
                "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
                "Access-Control-Allow-Credentials: true\r\n\r\n" +
                jsonBody;
+    }
+
+    // Debug helper to check socket status
+    std::string getSocketStatus() const {
+        return "available: " + std::to_string(readSocket->available()) + 
+               ", open: " + std::to_string(readSocket->is_open());
     }
 
     std::string origin = "*";
