@@ -134,22 +134,23 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_proceedSpecificPara
     auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
     
     // Debug output
-    std::string expectedResponse = "HTTP/1.1 400 Bad Request\r\n"
-                                 "Content-Type: text/event-stream\r\n"
-                                 "Cache-Control: no-cache\r\n"
-                                 "Connection: keep-alive\r\n"
-                                 "Access-Control-Allow-Origin: *\r\n"
-                                 "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                                 "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-                                 "Access-Control-Allow-Credentials: true\r\n"
-                                 "\r\n"
-                                 "data: {}\r\n\r\n";
+    // std::string expectedResponse = "HTTP/1.1 400 Bad Request\r\n"
+    //                              "Content-Type: text/event-stream\r\n"
+    //                              "Cache-Control: no-cache\r\n"
+    //                              "Connection: keep-alive\r\n"
+    //                              "Access-Control-Allow-Origin: *\r\n"
+    //                              "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+    //                              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
+    //                              "Access-Control-Allow-Credentials: true\r\n"
+    //                              "\r\n"
+    //                              "data: {}\r\n\r\n";
     
-    std::cerr << "Debug - Expected response:\n" << expectedResponse << "\n";
+    //std::cerr << "Debug - Expected response:\n" << expectedResponse << "\n";
+    std::cerr << "Debug - Expected response:\n" << expectedSSEResponse(rc, {jsonBody}) << "\n";
     std::cerr << "Debug - Actual response:\n" << readResponse() << "\n";
     
-    //EXPECT_EQ(readResponse(), expectedResponse(rc, {jsonBody}));
-    EXPECT_EQ(readResponse(), expectedResponse);
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, {jsonBody}));
+    //EXPECT_EQ(readResponse(), expectedResponse);
 }
  
 

@@ -110,7 +110,7 @@ class SocketHelper {
         return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
-    // Returns SSE response from the readSocket
+    // Returns SSE response from the readSocket, though I don't even think this is used.
     std::string readSSEResponse() {
         boost::asio::streambuf buffer;
         std::string response;
