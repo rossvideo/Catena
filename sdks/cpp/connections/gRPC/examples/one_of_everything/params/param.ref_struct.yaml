@@ -1,0 +1,18 @@
+
+# Without a value this is not initialized as a parameter.
+# It can instead be used as a template for other parameters.
+type: STRUCT
+name: { display_strings: { en: "Struct Example" } }
+params:
+  nested_struct:
+    type: STRUCT
+    name: { display_strings: { en: "Nested Struct" } }
+    access_scope: st2158:op
+    params:
+      num_1:
+        type: INT32
+        name: { display_strings: { en: "Num 1" } }
+        access_scope: st2138:cfg
+      num_2:
+        type: INT32
+        name: { display_strings: { en: "Num 2" } }
