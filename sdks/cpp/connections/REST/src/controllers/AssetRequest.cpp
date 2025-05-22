@@ -32,13 +32,13 @@ void AssetRequest::proceed() {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
         // Locking device and parsing object data.
-        std::cout << "sending asset: " << context_.fields("oid") <<"\n";
+        std::cout << "sending asset: " << context_.fqoid() <<"\n";
         std::string path = context_.EOPath();
-        path.append("/" + context_.fields("oid"));
+        path.append(context_.fqoid());
 
         // Check if the file exists
         if (!std::filesystem::exists(path)) {
-            std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fields("oid") + " not found\n";
+            std::string notFound = "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() + " not found\n";
             std::cout << notFound;
             throw catena::exception_with_status(notFound, catena::StatusCode::NOT_FOUND);
         }
@@ -63,5 +63,5 @@ void AssetRequest::proceed() {
 
 void AssetRequest::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    std::cout << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fields("oid") +" finished\n";
+    std::cout << "AssetRequest[" + std::to_string(objectId_) + "] for file: " + context_.fqoid() +" finished\n";
 }
