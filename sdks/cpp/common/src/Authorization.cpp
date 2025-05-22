@@ -73,12 +73,12 @@ bool Authorizer::hasAuthz(const std::string& scope) const {
  */
 bool Authorizer::readAuthz(const IParam& param) const {
     const std::string& scope = param.getScope();
-    return hasAuthz(scope) || writeAuthz(param);
+    return hasAuthz(scope) || hasAuthz(scope + ":w");
 }
 
 bool Authorizer::readAuthz(const IParamDescriptor& pd) const {
     const std::string& scope = pd.getScope();
-    return hasAuthz(scope) || writeAuthz(pd);
+    return hasAuthz(scope) || hasAuthz(scope + ":w");
 }
 
 /**

@@ -23,6 +23,7 @@ cmake_minimum_required(VERSION 3.20)
 project(CATENA_LITE_EXAMPLES C CXX)
 
 add_subdirectory("external_object_request")
+add_subdirectory("one_of_everything")
 add_subdirectory("status_update")
 add_subdirectory("structs_with_authz")
 add_subdirectory("structs_with_authz_yaml")
