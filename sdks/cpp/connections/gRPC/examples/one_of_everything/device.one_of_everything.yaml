@@ -1,3 +1,4 @@
+
 slot: 1
 multi_set_enabled: true
 detail_level: FULL
@@ -9,20 +10,11 @@ params:
     type: INT32
     value: { int32_value: 0 }
     name: { display_strings: { en: "Int Example" } }
+    minimal_set: true
   
+  # Imports the parameter from the file specified below.
   float_example:
-    type: FLOAT32
-    value: { float32_value: 0.0 }
-    name: { display_strings: { en: "Float Example" } }
-    access_scope: st2138:op
-    widget: default
-    constraint:
-      type: FLOAT_RANGE
-      float_range:
-        min_value: -100.0
-        max_value: 100.0
-        step: 0.1
-    precision: 1
+    import: { file: /params/param.float_example.yaml }
   
   string_example:
     type: STRING
@@ -35,15 +27,49 @@ params:
     value: { int32_array_values: { ints: [1, 2, 3, 4] } }
     name: { display_strings: { en: "Int Array Example" } }
   
+  # Imports the parameter from the file specified below.
   float_array:
-    type: FLOAT32_ARRAY
-    value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
-    name: { display_strings: { en: "Float Array Example" } }
+    import: { file: /params/param.float_array.yaml }
 
   string_array:
     type: STRING_ARRAY
     value: { string_array_values: { strings: ["one", "two", "three", "four", "five"] } }
     name: { display_strings: { en: "String Array Example" } }
 
+  # This is a struct reference imported from another file and used as a
+  # template oid for struct_example and struct_array.
+  ref_struct:
+    import: { file: /params/param.ref_struct.yaml }
+
+  # Imports the parameter from the file specified below.
   struct_example:
     import: { file: /params/param.struct_example.yaml }
+
+  # Imports the parameter from the file specified below.
+  struct_array:
+    import: { file: /params/param.struct_array.yaml }
+
+menu_groups:
+  status:
+    name: { display_strings: { en: "Status" } }
+    menus:
+      product:
+        name: {display_strings: { en: "Product" } }
+        param_oids:
+          - /number_example
+  config:
+    name: { display_strings: { en: "Config" } }
+    menus:
+      catena:
+        name: {display_strings: { en: "Catena" } }
+        param_oids:
+          - /float_example
+          - /string_example
+
+commands:
+  fib_start:
+    type: EMPTY
+  fib_stop:
+    type: EMPTY
+  randomize:
+    type: EMPTY

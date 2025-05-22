@@ -1,0 +1,26 @@
+
+# Uses the struct from ref_struct.yaml as a template for the structs in its
+# array and specifies the value.
+type: STRUCT_ARRAY
+name: { display_strings: { en: "Struct Array Example" } }
+template_oid: /ref_struct
+access_scope: st2138:adm
+value:
+  struct_array_values:
+    struct_values:
+      - struct_value:
+          fields:
+            nested_struct:
+              value:
+                struct_value:
+                  fields:
+                    num_1: { value: { int32_value: 1 } }
+                    num_2: { value: { int32_value: 2 } }
+      - struct_value:
+          fields:
+            nested_struct:
+              value:
+                struct_value:
+                  fields:
+                    num_1: { value: { int32_value: 3 } }
+                    num_2: { value: { int32_value: 4 } }

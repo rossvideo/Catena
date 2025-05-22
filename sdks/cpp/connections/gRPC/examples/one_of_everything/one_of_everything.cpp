@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief Example program to containing one of everyhting.
+ * @brief Example program containing one of everyhting.
  * @file one_of_everything.cpp
  * @copyright Copyright © 2025 Ross Video Ltd
  * @author Benjamin.whitten@rossvideo.com
@@ -75,7 +75,7 @@ using namespace catena::common;
 
 
 Server *globalServer = nullptr;
-std::atomic<bool> globalLoop = true;
+std::atomic<bool> globalLoop = false;
 
 // handle SIGINT
 void handle_signal(int sig) {
@@ -90,46 +90,106 @@ void handle_signal(int sig) {
     t.join();
 }
 
-// void statusUpdateExample(){   
-//     std::thread loop([]() {
-//         std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
-//         handlers["/counter"] = counterUpdateHandler;
-//         handlers["/text_box"] = text_boxUpdateHandler;
-//         handlers["/button"] = buttonUpdateHandler;
-//         handlers["/slider"] = sliderUpdateHandler;
-//         handlers["/combo_box"] = combo_boxUpdateHandler;
+void defineCommands() {
+    catena::exception_with_status err{"", catena::StatusCode::OK};
 
-//         // this is the "receiving end" of the status update example
-//         dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
-//             if (handlers.contains(oid)) {
-//                 handlers[oid](oid, p, idx);
-//             }
-//         });
+    // Use an oid to get a pointer to the command you want to define
+    // In Catena, commands have IParam type
+    std::unique_ptr<IParam> fibStart = dm.getCommand("/fib_start", err);
+    assert(fibStart != nullptr);
 
-//         catena::exception_with_status err{"", catena::StatusCode::OK};
+    /* 
+     * Define a lambda function to be executed when the command is called
+     * The lambda function must take a catena::Value as an argument and return 
+     * a catena::CommandResponse.
+     * Starts a thread which updates the number_example parameter with the next
+     * number of the Fibonacci sequence every second.
+     */
+    fibStart->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
+        
+        // If the loop is already running, return an exception.
+        if (globalLoop) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details("Already running");
+        // If the state parameter does not exist, return an exception.
+        } else if (!intParam) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details(err.what());
+        } else {
+            globalLoop = true;
+            // Detaching thread to update number_example with next number of
+            // the Fibonacci sequence every second.
+            std::thread figSeqThread([intParam = std::move(intParam)]() {
+                auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
+                uint32_t prev = 0;
+                uint32_t curr = 1;
+                while (globalLoop) {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    uint32_t next = prev + curr;
+                    prev = curr;
+                    curr = next;
+                    {
+                    std::lock_guard lg(dm.mutex());
+                    fibParam.get() = next;
+                    dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+                    }
+                }
+            });
+            figSeqThread.detach();
 
-//         // The rest is the "sending end" of the status update example
-//         std::unique_ptr<IParam> param = dm.getParam("/counter", err);
-//         if (param == nullptr) {
-//             throw err;
-//         }
+            std::cout << "Fibonacci sequence start" << std::endl;;
+            response.mutable_no_response();
+        }
+        return response;
+    });
 
-//         // downcast the IParam to a ParamWithValue<int32_t>
-//         auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
+    // This stops the looping thread in the fib_start command above.
+    std::unique_ptr<IParam> fibStop = dm.getCommand("/fib_stop", err);
+    assert(fibStop != nullptr);
+    fibStop->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        if (globalLoop) {
+            globalLoop = false;
+            std::cout << "Fibonacci sequence stop" << std::endl;
+            response.mutable_no_response();
+        } else {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details("Already stopped");
+        }
+        return response;
+    });
 
-//         while (globalLoop) {
-//             // update the counter once per second, and emit the event
-//             std::this_thread::sleep_for(std::chrono::seconds(1));
-//             {
-//                 std::lock_guard lg(dm.mutex());
-//                 counter.get()++;
-//                 std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-//                 dm.valueSetByServer.emit("/counter", &counter, 0);
-//             }
-//         }
-//     });
-//     loop.detach();
-// }
+    // This fills float_array with 128 random floats rounded to 3 decimal places.
+    std::unique_ptr<IParam> randomize = dm.getCommand("/randomize", err);
+    assert(randomize != nullptr);
+    randomize->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> floatArray = dm.getParam("/float_array", err);
+        if (!floatArray) {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details(err.what());
+        } else {
+            auto& floatArrayR = *dynamic_cast<ParamWithValue<std::vector<float>>*>(floatArray.get());
+            std::vector<float>& randomArray = floatArrayR.get();
+            randomArray.clear();
+            // Generates random floats between 0 and 80 and rounds to 3 decimal places.
+            for (int i = 0; i < floatArrayR.getDescriptor().max_length(); i++) {
+                float randomNum = static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 80);
+                randomNum = std::round(randomNum * 1000) / 1000;
+                randomArray.push_back(randomNum);
+            }
+            std::cout << "Randomized float array" << std::endl;
+            response.mutable_no_response();
+        }
+        
+        return response;
+    });
+}
 
 void RunRPCServer(std::string addr)
 {
@@ -139,12 +199,6 @@ void RunRPCServer(std::string addr)
     signal(SIGKILL, handle_signal);
 
     try {
-        // // check that static_root is a valid file path
-        // if (!std::filesystem::exists(absl::GetFlag(FLAGS_static_root))) {
-        //     std::stringstream why;
-        //     why << std::quoted(absl::GetFlag(FLAGS_static_root)) << " is not a valid file path";
-        //     throw std::invalid_argument(why.str());
-        // }
         grpc::ServerBuilder builder;
         // set some grpc options
         grpc::EnableDefaultHealthCheckService(true);
@@ -169,8 +223,6 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        // statusUpdateExample();
-
         // wait for the server to shutdown and tidy up
         server->Wait();
 
@@ -190,6 +242,9 @@ int main(int argc, char* argv[])
   
     addr = absl::StrFormat("0.0.0.0:%d", absl::GetFlag(FLAGS_port));
   
+    // commands should be defined before starting the RPC server 
+    defineCommands();
+
     std::thread catenaRpcThread(RunRPCServer, addr);
     catenaRpcThread.join();
     return 0;

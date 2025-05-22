@@ -1,0 +1,14 @@
+
+# Example FLOAT32 parameter imported into float_example param in the main file.
+type: FLOAT32
+value: { float32_value: 0.0 }
+name: { display_strings: { en: "Float Example" } }
+access_scope: st2138:op
+widget: default
+constraint:
+  type: FLOAT_RANGE
+  float_range:
+    min_value: -100.0
+    max_value: 100.0
+    step: 0.1
+precision: 1
