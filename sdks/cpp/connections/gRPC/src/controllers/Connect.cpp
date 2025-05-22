@@ -113,7 +113,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
 
                 // send client a empty update with slot of the device
                 {
-                    std::cout << "Transitioning from kProcess to kWrite" << std::endl;
                     status_ = CallStatus::kWrite;
                     catena::PushUpdates populatedSlots;
                     populatedSlots.set_slot(dm_.slot());
@@ -130,7 +129,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
          * end the process.
          */
         case CallStatus::kWrite:
-            std::cout << "In kWrite state, waiting for updates" << std::endl;
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
@@ -142,7 +140,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 break;
             // Send the client an update with the slot of the device.
             } else {
-                std::cout << "Writing update to client" << std::endl;
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
             }
