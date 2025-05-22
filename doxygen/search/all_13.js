@@ -6,7 +6,7 @@ var searchData=
   ['scopes_5fe_3',['Scopes_e',['../namespacecatena_1_1common.html#a52e17ef3ce00a51e608afb060211e3a8',1,'catena::common']]],
   ['sdk_4',['sdk',['../index.html',1,'Catena C++ SDK'],['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html',1,'Using Docker With The Catena C++ SDK']]],
   ['segment_5',['Segment',['../classcatena_1_1common_1_1Path.html#a9e26c035ad5b8f72b56c9e55d140e170',1,'catena::common::Path']]],
-  ['sendresponse_6',['sendresponse',['../classcatena_1_1REST_1_1SocketWriter.html#af02f381664cc47015fb639b691908b29',1,'catena::REST::SocketWriter::sendResponse()'],['../classcatena_1_1REST_1_1ISocketWriter.html#a063ef9d3b8e4fd04d3f9cbf8d2d3b9ff',1,'catena::REST::ISocketWriter::sendResponse()'],['../classcatena_1_1REST_1_1SSEWriter.html#a6b2e7a7c9bfd8bf4b9bd398cfd298400',1,'catena::REST::SSEWriter::sendResponse()']]],
+  ['sendresponse_6',['sendresponse',['../classcatena_1_1REST_1_1SocketWriter.html#af02f381664cc47015fb639b691908b29',1,'catena::REST::SocketWriter::sendResponse()'],['../classcatena_1_1REST_1_1ISocketWriter.html#a104cf73d8444c998b8d200ad3344a650',1,'catena::REST::ISocketWriter::sendResponse()'],['../classcatena_1_1REST_1_1SSEWriter.html#a6b2e7a7c9bfd8bf4b9bd398cfd298400',1,'catena::REST::SSEWriter::sendResponse()']]],
   ['service_20s_20with_20docker_7',['Setting up Catena Service(s) with Docker',['../md__2home_2runner_2work_2Catena_2Catena_2sdks_2cpp_2docs_2docker-cpp.html#autotoc_md15',1,'']]],
   ['service_5f_8',['service_',['../classcatena_1_1gRPC_1_1CallData.html#a2bc531135e40b2b9b3fdb321ea805c15',1,'catena::gRPC::CallData']]],
   ['service_5funavailable_9',['SERVICE_UNAVAILABLE',['../namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a9d5459e04f17b1d6afb709fcdf9e2201',1,'catena']]],
