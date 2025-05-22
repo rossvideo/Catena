@@ -80,5 +80,4 @@ install(TARGETS ${target}
 )
 
 add_subdirectory(examples)
-
-
+add_subdirectory(tests)
