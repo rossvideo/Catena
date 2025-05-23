@@ -92,7 +92,9 @@ void GetValue::proceed( bool ok) {
                 
                 status_ = CallStatus::kFinish;
                 if (rc.status == catena::StatusCode::OK) {
+                    std::cout<<"Writing..."<<std::endl;
                     responder_.Finish(ans, Status::OK, this);
+                    std::cout<<"Writing finished..."<<std::endl;
                 } else { // Error, end process.
                     responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                 }
