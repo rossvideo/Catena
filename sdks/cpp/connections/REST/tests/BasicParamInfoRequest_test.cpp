@@ -296,8 +296,8 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getEmptyTopLevelPar
     
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("", catena::StatusCode::NOT_FOUND);
-            return std::vector<std::unique_ptr<IParam>>();
+            status = catena::exception_with_status("", catena::StatusCode::OK); 
+            return std::vector<std::unique_ptr<IParam>>();  
         }));
 
     // Create a new request for this test
@@ -380,7 +380,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsPr
     catena::REST::test::ParamInfo errorParamInfo{
         .oid = "error_param",
         .type = catena::ParamType::STRING,
-        .status = catena::StatusCode::INTERNAL  // 500 maps to INTERNAL
+        .status = catena::StatusCode::INTERNAL 
     };
     catena::REST::test::setupMockParam(errorParam.get(), errorParamInfo);
         
