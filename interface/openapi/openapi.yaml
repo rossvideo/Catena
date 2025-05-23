@@ -39,8 +39,8 @@ info:
   title: Catena API
   version: '1.0'
 servers:
-  - url: https://device.catenamedia.tv:443/api/v1
-  - url: http://localhost:443/api/v1
+  - url: https://device.catenamedia.tv:443/v1
+  - url: http://localhost:443/v1
 
 # default endpoint security is that at least one read scope is required.
 # the permissions in the security array are ORed together.
@@ -59,46 +59,46 @@ paths:
   /devices:
     $ref: './paths/Devices.yaml'
 
-  /device/{slot}:
+  /{slot}:
     $ref: './paths/Device.yaml'
 
-  /device/{slot}/stream:
+  /{slot}/stream:
     $ref: './paths/DeviceStream.yaml'
 
-  /device/{slot}/command/{fqoid}:
+  /{slot}/command/{fqoid}:
     $ref: './paths/Command.yaml'
 
-  /device/{slot}/asset/{fqoid}:
+  /{slot}/asset/{fqoid}:
     $ref: './paths/Asset.yaml'
 
-  /device/{slot}/asset/{fqoid}/stream:
+  /{slot}/asset/{fqoid}/stream:
     $ref: './paths/AssetStream.yaml'
 
-  /device/{slot}/basic-param/stream/{fqoid}/stream:
+  /{slot}/basic-param/{fqoid}/stream:
     $ref: './paths/BasicParamStream.yaml'
 
-  /device/{slot}/basic-param/{fqoid}:
+  /{slot}/basic-param/{fqoid}:
     $ref: './paths/BasicParam.yaml'
 
-  /device/{slot}/value/{fqoid}:
+  /{slot}/value/{fqoid}:
     $ref: './paths/Value.yaml'
 
-  /device/{slot}/values:
+  /{slot}/values:
     $ref: './paths/Values.yaml'
 
-  /device/{slot}/subscriptions:
+  /{slot}/subscriptions:
     $ref: './paths/Subscriptions.yaml'
 
-  /device/{slot}/param/{fqoid}:
+  /{slot}/param/{fqoid}:
     $ref: './paths/Param.yaml'
 
-  /device/{slot}/connect:
+  /{slot}/connect:
     $ref: './paths/Connect.yaml'
 
-  /device/{slot}/language-pack/{language-code}:
+  /{slot}/language-pack/{language-code}:
     $ref: './paths/LanguagePack.yaml'
 
-  /device/{slot}/languages:
+  /{slot}/languages:
     $ref: './paths/Languages.yaml'
 
 components:
