@@ -87,6 +87,10 @@ class ISocketReader {
      */
     virtual uint32_t slot() const = 0;
     /**
+     * @brief Returns the fqoid of the asset to make the API call on.
+     */
+    virtual const std::string& fqoid() const = 0;
+    /**
      * @brief Returns true if the field exists in the URL, regardless of its value.
      * 
      * @param key The name of the field to check.

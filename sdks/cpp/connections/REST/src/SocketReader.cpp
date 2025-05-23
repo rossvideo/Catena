@@ -13,6 +13,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
     method_ = "";
     endpoint_ = "";
+    fqoid_ = "";
     jwsToken_ = "";
     origin_ = "";
     jsonBody_ = "";
@@ -35,13 +36,18 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     // Slot is not needed for GetPopulatedSlots and Connect.
     std::string path = u.path();
     try {
-        if (path.find("connect") != std::string::npos ||
-            path.find("get-populated-slots") != std::string::npos) {
-            endpoint_ = path;
-        } else {
-            std::size_t pos = path.find_last_of('/');
-            endpoint_ = path.substr(0, pos);
-            slot_ = std::stoi(path.substr(pos + 1));
+        std::vector<std::string> parts;
+        catena::split(parts, path, "/");
+        slot_ = std::stoi(parts.at(2));
+        endpoint_ = "/" + parts.at(3);
+
+        //parse fqoid
+        if (parts.back() == "stream") {
+            parts.pop_back();
+        }
+        
+        for (int i = 4; i < parts.size(); i++) {
+            fqoid_ += "/" + parts.at(i);
         }
     } catch (...) {
         throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);

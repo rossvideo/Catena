@@ -95,7 +95,7 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
     SocketReader socketReader{sm, EOPath};
     // Test request data
     std::string method = "PUT";
-    std::string endpoint = "/v1/test-call";
+    std::string endpoint = "/test-call";
     uint32_t slot = 1;
     std::unordered_map<std::string, std::string> fields = {
         {"testField1", "1"},
@@ -148,7 +148,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_NoSlotConnect) {
     // Connect does not require a slot specified.
-    endpoint = "/v1/connect";
+    endpoint = "/connect";
     slot = 0;
     writeRequest(method, endpoint, slot, fields,
                  jwsToken, jsonBody, dl, language);
@@ -161,7 +161,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_NoSlotConnect) {
  */
 TEST_F(RESTSocketReaderTests, SocketReader_NoSlotGetPopulatedSlots) {
     // GetPopulatedSlots does not require a slot specified.
-    endpoint = "/v1/get-populated-slots";
+    endpoint = "/get-populated-slots";
     slot = 0;
     writeRequest(method, endpoint, slot, fields,
                  jwsToken, jsonBody, dl, language);
@@ -170,11 +170,11 @@ TEST_F(RESTSocketReaderTests, SocketReader_NoSlotGetPopulatedSlots) {
 }
 
 /* 
- * TEST 6 - Reading request from socket with no slot specified (Error).
+ * TEST 6 - add /// to url to break the url parsing and throw an exception
  */
-TEST_F(RESTSocketReaderTests, SocketReader_NoSlotError) {
-    // All other calls require a slot specified.
-    slot = 0;
+TEST_F(RESTSocketReaderTests, SocketReader_MalformedRequest) {
+    endpoint = "";
+
     writeRequest(method, endpoint, slot, fields,
                  jwsToken, jsonBody, dl, language);
     ASSERT_THROW(socketReader.read(serverSocket, authz), catena::exception_with_status);
