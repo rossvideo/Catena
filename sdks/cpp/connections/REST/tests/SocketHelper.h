@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -110,42 +110,6 @@ class SocketHelper {
         return std::string(std::istreambuf_iterator<char>(response_stream), std::istreambuf_iterator<char>());
     }
 
-    // Returns SSE response from the readSocket, though I don't even think this is used.
-    std::string readSSEResponse() {
-        boost::asio::streambuf buffer;
-        std::string response;
-        
-        try {
-            // Read headers with \r\n\r\n delimiter
-            boost::asio::read_until(*readSocket, buffer, "\r\n\r\n");
-            std::istream response_stream(&buffer);
-            
-            // Get headers
-            std::string line;
-            while (std::getline(response_stream, line) && !line.empty()) {
-                response += line + "\r\n";
-            }
-            response += "\r\n";
-            
-            // Get SSE data events
-            while (std::getline(response_stream, line)) {
-                if (line.empty()) continue;
-                // SSEWriter sends each event as "data: <json>\n\n"
-                if (line.substr(0, 6) == "data: ") {
-                    response += line + "\n\n"; 
-                }
-            }
-        } catch (const boost::system::system_error& e) {
-            if (e.code() == boost::asio::error::eof) {
-                // Socket was closed, which is expected
-                return response;
-            }
-            throw;  // Re-throw other errors
-        }
-        
-        return response;
-    }
-
     // Returns what an expect response from SocketWriter should look like.
     inline std::string expectedResponse(const catena::exception_with_status& rc, const std::string& jsonBody = "") {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
@@ -165,8 +129,10 @@ class SocketHelper {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         // Compiling body response from messages.
         std::string jsonBody = "";
-        for (std::string msg : msgs) {
-            jsonBody += "data: " + msg + "\n\n";
+        if (httpStatus.first < 300) {
+            for (const std::string& msg : msgs) {
+                jsonBody += "data: " + msg + "\n\n";
+            }
         }
         return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
                "Content-Type: text/event-stream\r\n"

@@ -51,6 +51,7 @@
 #include "SocketHelper.h"
 #include "RESTMockClasses.h"
 #include "../../common/tests/CommonMockClasses.h"
+#include "RESTTestHelpers.h"
 
 // REST
 #include <controllers/BasicParamInfoRequest.h>
@@ -66,19 +67,21 @@ protected:
 
     void SetUp() override {
         // Redirecting cout to a stringstream for testing
-        // oldCout = std::cout.rdbuf(MockConsole.rdbuf());
+        oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
         // Set default actions for common mock calls
-        EXPECT_CALL(context, origin()).WillOnce(::testing::ReturnRef(origin));
-        EXPECT_CALL(context, hasField("recursive")).Times(1).WillOnce(::testing::Return(false));
-        EXPECT_CALL(context, fields("oid_prefix")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+        EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
+        EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+        EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(mockOid));
+        EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+        EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
 
         request = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
     }
 
     void TearDown() override {
-        // std::cout.rdbuf(oldCout); // Restoring cout
-        // Cleanup code here
+        std::cout.rdbuf(oldCout); // Restoring cout
+        // Cleanup code here6
         if (request) {
             delete request;
         }
@@ -100,174 +103,262 @@ protected:
  * ============================================================================
  */
 
-// Test 1: Creating a BasicParamInfoRequest object
+// Preliminary test: Creating a BasicParamInfoRequest object
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_create) {
     // Making sure BasicParamInfoRequest object is created from the SetUp step.
     ASSERT_TRUE(request);
 }
 
-// Test 2: Get specific parameter without recursion
-TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_proceedSpecificParam) {
+// Test 0.1: Authorization test with std::exceptionh
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_std_exception) {
+    catena::exception_with_status rc("Authorization setup failed: Test auth setup failure", catena::StatusCode::UNAUTHENTICATED);
+
+    // Setup mock expectations
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::Throw(std::runtime_error("Test auth setup failure")));
+
+    // Execute
+    request->proceed();
+    request->finish();
+
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+}
+
+// Test 0.2: Authorization test with invalid token
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_invalid_token) {
+    std::string mockToken = "test_token";
+    catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
+
+    // Setup mock expectations
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::ReturnRef(mockToken));
+
+    // Execute
+    request->proceed();
+    request->finish();
+
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+}
+
+// Test 0.3: Authorization test with valid token
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) {
+    // Use a valid JWT token that was borrowed from GetValue_test.cpp
+    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
+                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
+                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
+                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
+                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
+                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
+                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
+                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
+                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
+                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
+                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
+                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
     // Setup mock parameter
-    auto param = std::make_unique<MockParam>();
-    catena::BasicParamInfoResponse returnVal;
-    catena::exception_with_status rc("Invalid parameter", catena::StatusCode::INVALID_ARGUMENT);
-    
-    // Set up mock expectations for mode 2 (specific parameter)
-    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
-    
-    // First verify getParam is called correctly
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    catena::REST::test::ParamInfo paramInfo{
+        .oid = mockOid,
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(mockParam.get(), paramInfo);
+
+    // Setup mock expectations
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::ReturnRef(mockToken));
+    EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
     EXPECT_CALL(dm, getParam("/" + mockOid, ::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("Invalid parameter", catena::StatusCode::INVALID_ARGUMENT);
-            return nullptr;
+        .WillRepeatedly(::testing::Invoke([&mockParam, &rc](const std::string&, catena::exception_with_status &status, catena::common::Authorizer &) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(mockParam);
         }));
+
+    // Execute
+    request->proceed();
+    request->finish();
+
+    // Get expected and actual responses
+    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string expected = expectedSSEResponse(rc, {jsonBody});
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+}
+
+// == MODE 1 TESTS: Get all top-level parameters without recursion ==
+
+// Test 1.1: Get all top-level parameters without recursion
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParams) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+
+    // Setup mock parameters
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    auto param1 = std::make_unique<MockParam>();
+    auto param2 = std::make_unique<MockParam>();
+    
+    // Set up mock parameters 
+    catena::REST::test::ParamInfo param1_info{
+        .oid = "param1",
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::ParamInfo param2_info{
+        .oid = "param2",
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(param1.get(), param1_info);
+    catena::REST::test::setupMockParam(param2.get(), param2_info);
+    
+    top_level_params.push_back(std::move(param1));
+    top_level_params.push_back(std::move(param2));
+
+    // Setup mock expectations
+    std::string empty_prefix;
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(empty_prefix));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([&top_level_params, &rc](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
+        }));
+
+    // Create a new request for this test
+    auto topLevelRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    // Execute
+    topLevelRequest->proceed();
+    topLevelRequest->finish();
+
+    // Get expected and actual responses
+    std::vector<std::string> jsonBodies;
+    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param1_info));
+    jsonBodies.push_back(catena::REST::test::createParamInfoJson(param2_info));
+    std::string expected = expectedSSEResponse(rc, jsonBodies);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    // Cleanup
+    delete topLevelRequest;
+}
+
+
+
+// == MODE 2 TESTS: Get a specific parameter and its children if recursive ==
+
+// Test 2.1: Get specific parameter without recursion
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_proceedSpecificParam) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    
+    // Setup mock parameter with our helper
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    catena::REST::test::ParamInfo paramInfo{
+        .oid = mockOid,
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(mockParam.get(), paramInfo);
+
+    // Setup mock expectations for mode 2 (specific parameter)
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getParam("/" + mockOid, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(mockParam);
+            }
+        ));
     
     // Execute
     request->proceed();
     request->finish();
 
-    // Convert response to JSON
-    std::string jsonBody;
-    google::protobuf::util::JsonPrintOptions options;
-    auto status = google::protobuf::util::MessageToJsonString(returnVal, &jsonBody, options);
-    
-    // Debug output
-    // std::string expectedResponse = "HTTP/1.1 400 Bad Request\r\n"
-    //                              "Content-Type: text/event-stream\r\n"
-    //                              "Cache-Control: no-cache\r\n"
-    //                              "Connection: keep-alive\r\n"
-    //                              "Access-Control-Allow-Origin: *\r\n"
-    //                              "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-    //                              "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
-    //                              "Access-Control-Allow-Credentials: true\r\n"
-    //                              "\r\n"
-    //                              "data: {}\r\n\r\n";
-    
-    //std::cerr << "Debug - Expected response:\n" << expectedResponse << "\n";
-    std::cerr << "Debug - Expected response:\n" << expectedSSEResponse(rc, {jsonBody}) << "\n";
-    std::cerr << "Debug - Actual response:\n" << readResponse() << "\n";
-    
-    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, {jsonBody}));
-    //EXPECT_EQ(readResponse(), expectedResponse);
+    // Get expected and actual responses
+    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string expected = expectedSSEResponse(rc, {jsonBody});
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
 }
- 
 
-// // Test 3: Get all top-level parameters without recursion
-// TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParams) {
-//     catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-
-//     // Setup mock parameters
-//     std::vector<std::unique_ptr<IParam>> top_level_params;
-//     auto param1 = std::make_unique<MockParam>();
-//     auto param2 = std::make_unique<MockParam>();
+// Test 2.2: Get specific parameter with recursion
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getSpecificParamWithRecursion) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     
-//     top_level_params.push_back(std::move(param1));
-//     top_level_params.push_back(std::move(param2));
+    // Setup mock parameter with our helper
+    std::unique_ptr<MockParam> mockParam = std::make_unique<MockParam>();
+    catena::REST::test::ParamInfo paramInfo{
+        .oid = mockOid,
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(mockParam.get(), paramInfo);
 
-//     // Setup mock expectations
-//     std::string empty_prefix;
-//     EXPECT_CALL(context, hasField("recursive")).Times(1).WillOnce(::testing::Return(false));
-//     EXPECT_CALL(context, fields("oid_prefix")).Times(1).WillOnce(::testing::ReturnRef(empty_prefix));
-//     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    // Setup mock expectations
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
     
-//     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
-//         .Times(1)
-//         .WillOnce(::testing::Invoke([&top_level_params, &rc](catena::exception_with_status&, Authorizer&) {
-//             rc = catena::exception_with_status("", catena::StatusCode::OK);
-//             return std::move(top_level_params);
-//         }));
+    EXPECT_CALL(dm, getParam("/" + mockOid, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke(
+            [&mockParam](const std::string&, catena::exception_with_status& status, Authorizer&) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(mockParam);
+            }
+        ));
 
-//     // Execute
-//     request->proceed();
-//     EXPECT_EQ(readResponse(), expectedSSEResponse(rc));
-// }
+    // Execute
+    request->proceed();
+    request->finish();
 
-// // Test 3: Get specific parameter with recursion
-// TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getSpecificParamWithRecursion) {
-//     // Setup mock parameter
-//     auto param = std::make_unique<MockParam>();
-//     std::string mockOid = "/test_param";
+    // Get expected and actual responses
+    std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
+    std::string expected = expectedSSEResponse(rc, {jsonBody});
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+}
 
-//     // Setup mock expectations
-//     EXPECT_CALL(context, hasField("recursive")).Times(1).WillOnce(::testing::Return(true));
-//     EXPECT_CALL(context, fields("oid_prefix")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
-//     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+// Test 2.3: Error case - invalid parameter
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_invalidParam) {
+    catena::exception_with_status rc("Invalid parameter", catena::StatusCode::NOT_FOUND);
     
-//     EXPECT_CALL(dm, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-//         .WillOnce(::testing::Invoke([&param](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-//             status = catena::exception_with_status("", catena::StatusCode::OK);
-//             return std::move(param);
-//         }));
+    std::string invalid_param = "invalid_param";
 
-//     // Execute
-//     request->proceed();
-
-//     // Verify response using expectedSSEResponse
-//     expectedSSEResponse(catena::exception_with_status("", catena::StatusCode::OK));
-// }
-
-// // Test 4: Error case - invalid parameter
-// TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_invalidParam) {
-//     // Setup mock expectations
-//     std::string invalid_param = "/invalid_param";
-//     EXPECT_CALL(context, hasField("recursive")).Times(1).WillOnce(::testing::Return(false));
-//     EXPECT_CALL(context, fields("oid_prefix")).Times(1).WillOnce(::testing::ReturnRef(invalid_param));
-//     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    // Setup mock expectations
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(invalid_param));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
     
-//     EXPECT_CALL(dm, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-//         .WillOnce(::testing::Invoke([](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-//             status = catena::exception_with_status("Invalid parameter", catena::StatusCode::INVALID_ARGUMENT);
-//             return nullptr;
-//         }));
+    EXPECT_CALL(dm, getParam("/" + invalid_param, ::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("Invalid parameter", catena::StatusCode::NOT_FOUND);
+            return nullptr;
+        }));
 
-//     // Execute
-//     request->proceed();
+    // Create a new request for this test
+    auto invalidRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
 
-//     // Verify response using expectedSSEResponse
-//     expectedSSEResponse(400, "Bad Request");
-// }
+    // Execute
+    invalidRequest->proceed();
+    invalidRequest->finish();
 
-// // Test 5: Authorization enabled with valid token
-// TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authzValid) {
-//     // Setup mock parameter
-//     auto param = std::make_unique<MockParam>();
-//     std::string mockOid = "/test_param";
-//     std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTokrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
 
-//     // Setup mock expectations
-//     std::string test_param = "/test_param";
-//     EXPECT_CALL(context, hasField("recursive")).Times(1).WillOnce(::testing::Return(false));
-//     EXPECT_CALL(context, fields("oid_prefix")).Times(1).WillOnce(::testing::ReturnRef(test_param));
-//     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
-//     EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
-    
-//     EXPECT_CALL(dm, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-//         .WillOnce(::testing::Invoke([&param](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-//             status = catena::exception_with_status("", catena::StatusCode::OK);
-//             return std::move(param);
-//         }));
+    // Cleanup
+    delete invalidRequest;
+}
 
-//     // Execute
-//     request->proceed();
-
-//     // Verify response using expectedSSEResponse
-//     expectedSSEResponse(200, "OK");
-// }
-
-// // Test 6: Authorization enabled with invalid token
-// TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authzInvalid) {
-//     // Setup mock expectations
-//     std::string test_param = "/test_param";
-//     std::string invalid_token = "INVALID_TOKEN";
-//     EXPECT_CALL(context, fields("oid_prefix")).Times(1).WillOnce(::testing::ReturnRef(test_param));
-//     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
-//     EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(invalid_token));
-
-//     // Execute
-//     request->proceed();
-
-//     // Verify response using expectedSSEResponse
-//     expectedSSEResponse(401, "Unauthorized");
-// }
