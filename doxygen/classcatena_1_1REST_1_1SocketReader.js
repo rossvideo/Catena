@@ -6,7 +6,6 @@ var classcatena_1_1REST_1_1SocketReader =
     [ "endpoint", "classcatena_1_1REST_1_1SocketReader.html#a0e84dc373e33e8e94713895f3ac4d76f", null ],
     [ "EOPath", "classcatena_1_1REST_1_1SocketReader.html#a01e040f166589c9c4f26b0bc94cb9bb1", null ],
     [ "fields", "classcatena_1_1REST_1_1SocketReader.html#a326879171d92d4af9a1f773fc1e9cb81", null ],
-    [ "fqoid", "classcatena_1_1REST_1_1SocketReader.html#a4396dda4463a5ad392092c1efb8b08a5", null ],
     [ "getSubscriptionManager", "classcatena_1_1REST_1_1SocketReader.html#aabbd3d3f520c27d3e7bc579a60d331eb", null ],
     [ "hasField", "classcatena_1_1REST_1_1SocketReader.html#ae670c997ccfa8dbd2054a2af37d4404f", null ],
     [ "jsonBody", "classcatena_1_1REST_1_1SocketReader.html#a0b4655c8cf81045dd065ec6d1dca661f", null ],
