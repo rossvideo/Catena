@@ -67,7 +67,7 @@ struct ParamInfo {
     catena::ParamType type;
     // std::string template_oid = ""; // Might be irrelevant
     uint32_t array_length = 0;
-    int status = 200; // Assuming a default status code
+    catena::StatusCode status = catena::StatusCode::OK;  // Default to OK
 };
 
 /**
@@ -88,8 +88,8 @@ inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo
     EXPECT_CALL(*mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(info.oid));
     
-    // Only expect toProto if status indicates success
-    if (info.status < 300) {
+    // Only expect toProto if status indicates success (HTTP status < 300)
+    if (catena::REST::codeMap_.at(info.status).first < 300) {
         EXPECT_CALL(*mockParam, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::_))
             .WillOnce(::testing::Invoke([info](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
                 setupParamInfo(response, info);

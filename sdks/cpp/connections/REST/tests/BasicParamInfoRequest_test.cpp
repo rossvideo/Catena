@@ -380,7 +380,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsPr
     catena::REST::test::ParamInfo errorParamInfo{
         .oid = "error_param",
         .type = catena::ParamType::STRING,
-        .status = 500  // 500 maps to INTERNAL
+        .status = catena::StatusCode::INTERNAL  // 500 maps to INTERNAL
     };
     catena::REST::test::setupMockParam(errorParam.get(), errorParamInfo);
         
