@@ -51,10 +51,10 @@ void ParamDescriptor::toProto(catena::Param &param, Authorizer& authz) const {
     for (const auto& oid_alias : oid_aliases_) {
         param.add_oid_aliases(oid_alias);
     }
+
     for (const auto& [lang, text] : name_.displayStrings()) {
         (*param.mutable_name()->mutable_display_strings())[lang] = text;
     }
-    
     
     if (constraint_) {
         if (constraint_->isShared()) {

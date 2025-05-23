@@ -82,13 +82,9 @@ class SocketHelper {
                 fieldsStr += "&" + fName + "=" + fValue;
             }
         }
-        // Adding / to slot if not empty.
-        std::string slotStr = "";
-        if (!slot == 0) {
-            slotStr = "/" + std::to_string(slot);
-        }
+
         // Writing request to server.
-        std::string request = method + " " + endpoint + slotStr + fieldsStr + " HTTP/1.1\n"
+        std::string request = method + " /v1/" + std::to_string(slot) + endpoint + fieldsStr + " HTTP/1.1\n"
                               "Origin: " + origin + "\n"
                               "User-Agent: test_agent\n"
                               "Authorization: Bearer " + jwsToken + " \n"
@@ -97,6 +93,7 @@ class SocketHelper {
                               "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
                               + jsonBody + "\n"
                               "\r\n\r\n";
+                              std::cout << request << std::endl;
         boost::asio::write(*writeSocket, boost::asio::buffer(request));
     }
 

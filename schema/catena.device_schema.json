@@ -25,10 +25,20 @@
       "$ref": "#/$defs/constraint_map"
     },
     "params": {
-      "$ref": "catena.param_schema.json#/$defs/param_map"
+      "type": "object",
+      "patternProperties": {
+        "^((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)(\\/((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)){0,31}$": {
+          "$ref": "catena.param_schema.json#"
+        }
+      }
     },
     "commands": {
-      "$ref": "catena.param_schema.json#/$defs/param_map"
+      "type": "object",
+      "patternProperties": {
+        "^((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)(\\/((?![\\w.]*\\.\\d+$)[a-zA-Z][\\w.]{0,62}|\\d+|-)){0,31}$": {
+          "$ref": "catena.param_schema.json#"
+        }
+      }
     },
     "access_scopes": {
       "title": "Access Scopes",

@@ -19,6 +19,7 @@ set(SOURCES
     GetPopulatedSlots_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
+    GetParam_test.cpp
     BasicParamInfoRequest_test.cpp
 
     ../src/SocketReader.cpp
@@ -30,6 +31,7 @@ set(SOURCES
     ../src/controllers/GetPopulatedSlots.cpp
     ../src/controllers/MultiSetValue.cpp
     ../src/controllers/SetValue.cpp
+    ../src/controllers/GetParam.cpp
     ../src/controllers/BasicParamInfoRequest.cpp
 )	
 
