@@ -95,8 +95,6 @@ class GetParam : public ICallData {
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
       return new GetParam(socket, context, dm);
     }
-    
-
 
   private:
     /**

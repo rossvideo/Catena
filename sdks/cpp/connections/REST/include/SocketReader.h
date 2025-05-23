@@ -145,7 +145,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() const override { return authorizationEnabled_; };\
+    bool authorizationEnabled() const override { return authorizationEnabled_; };
 
     /**
      * @brief Returns the path to the external object.
