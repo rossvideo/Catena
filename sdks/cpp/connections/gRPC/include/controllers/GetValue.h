@@ -51,6 +51,7 @@ namespace gRPC {
 */
 class GetValue : public CallData{
   public:
+    ~GetValue() override = default;
     /**
      * @brief Constructor for the CallData class of the GetValue
      * gRPC. Calls proceed() once initialized.

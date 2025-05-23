@@ -49,6 +49,7 @@
 // Test helpers
 #include "../../common/tests/CommonMockClasses.h"
 #include "gRPCMockClasses.h"
+#include "ServerHelper.h"
 
 // gRPC
 #include "controllers/GetValue.h"
@@ -57,7 +58,7 @@ using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCGetValueTests : public ::testing::Test {
+class gRPCGetValueTests : public ::testing::Test, public ServerHelper {
   protected:
 
     void SetUp() override {
@@ -65,65 +66,27 @@ class gRPCGetValueTests : public ::testing::Test {
         // oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
         // Creating the server.
-        std::cout<<"Creating server..."<<std::endl;
-        builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
-        cq = builder.AddCompletionQueue();
-        builder.RegisterService(&service);
-        server = builder.BuildAndStart();
-        std::cout<<"Server created"<<std::endl;
-
-        // Creating the client.
-        std::cout<<"Creating client..."<<std::endl;
-        channel = grpc::CreateChannel(serverAddr, grpc::InsecureChannelCredentials());
-        stub = catena::CatenaService::NewStub(channel);
-        std::cout<<"Client created"<<std::endl;
+        createServer();
+        createClient();
 
         EXPECT_CALL(service, registerItem(::testing::_)).Times(1).WillOnce(::testing::Return());
         EXPECT_CALL(service, cq()).Times(2).WillRepeatedly(::testing::Return(cq.get()));
 
         // Creating getValue object.
-        getValue = std::make_unique<GetValue>(&service, dm, true);
+        testCall = new GetValue(&service, dm, true);
     }
 
     void TearDown() override {
-        std::cout<<"Tearing down..."<<std::endl;
         // Restoring cout
         // std::cout.rdbuf(oldCout);
-        // if (asyncObj) { delete asyncObj; }
-        std::cout<<"asyncObj deleted"<<std::endl;
-        if (server) { server->Shutdown(); }
-        std::cout<<"server shutdown"<<std::endl;
-        if (cq) { cq->Shutdown(); }
-        std::cout<<"cq shutdown"<<std::endl;
 
-        // // Cleaning up the server.
-        // server->Shutdown();
-        // server->Wait();
-        // std::cout<<"server done wait"<<std::endl;
-        // cq->Shutdown();
-        // Draining the cq
-        void* ignored_tag;
-        bool ignored_ok;
-        while (cq->Next(&ignored_tag, &ignored_ok)) {}
-        std::cout<<"cq drained"<<std::endl;
+        // Cleaning up.
+        shutdown();
     }
-
-    grpc::ServerBuilder builder;
-    std::unique_ptr<grpc::Server> server = nullptr;
-    MockServiceImpl service;
-    std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
-    std::shared_ptr<grpc::Channel> channel = nullptr;
-    std::unique_ptr<catena::CatenaService::Stub> stub = nullptr;
 
     std::stringstream MockConsole;
     std::streambuf* oldCout;
 
-    std::mutex mtx;
-    MockDevice dm;
-    std::unique_ptr<ICallData> getValue = nullptr;
-    ICallData* asyncObj = nullptr;
-
-    std::string serverAddr = "0.0.0.0:50051";
     std::string createMsg = "status: 0, ok: true";
 };
 
@@ -136,7 +99,7 @@ class gRPCGetValueTests : public ::testing::Test {
  */
 TEST_F(gRPCGetValueTests, GetValue_create) {
     // Making sure getValue is created from the SetUp step.
-    ASSERT_TRUE(getValue);
+    ASSERT_TRUE(testCall);
     // ASSERT_TRUE(MockConsole.str().find(createMsg) != std::string::npos);
 }
 
@@ -151,7 +114,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceed) {
     // new GetValue(service, dm, true);
     EXPECT_CALL(service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            asyncObj = cd; // Keep track of obj to avoid mem leak.
+            asyncCall = cd; // Keep track of obj to avoid mem leak.
         }));
     EXPECT_CALL(service, cq()).Times(2).WillRepeatedly(::testing::Return(cq.get()));
     // kProcess();
@@ -166,25 +129,22 @@ TEST_F(gRPCGetValueTests, GetValue_proceed) {
     EXPECT_CALL(service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Return());
 
     std::thread cqThread([this](){
+        // Waiting for request from completion queue before calling proceed.
         void* ignored_tag;
         bool ignored_ok;
-        std::cout<<"Calling cq->Next()..." << std::endl;
         cq->Next(&ignored_tag, &ignored_ok);
-        std::cout<<"cq->Next() done." << std::endl;
-        std::cout<<"Calling proceed()..." << std::endl;
-        getValue->proceed(true);
-        std::cout<<"Proceed() done." << std::endl;
-        std::cout<<"Calling proceed()..." << std::endl;
-        getValue->proceed(true);
-        std::cout<<"Proceed() done." << std::endl;
+        testCall->proceed(true);
+        cq->Next(&ignored_tag, &ignored_ok);
+        testCall->proceed(true);
     });
 
-    std::cout<<"Calling AsyncGetValue()..." << std::endl;
     stub->async()->GetValue(&context, &inVal, &outVal, [](grpc::Status status){ 
         std::cout<<"In the lambda function"<<std::endl;
     });
-    std::cout<<"AsyncGetValue() done." << std::endl;
-    cqThread.join();
 
+    cqThread.join();
+    std::cout<<"AsyncGetValue() done." << std::endl;
 }
+
+
 
