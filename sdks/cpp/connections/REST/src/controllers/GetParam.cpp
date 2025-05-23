@@ -30,7 +30,7 @@ void GetParam::proceed() {
         }
         // Locking device and getting the param.
         std::lock_guard lg(dm_.mutex());
-        std::unique_ptr<IParam> param = dm_.getParam("/" + context_.fields("oid"), rc, *authz);
+        std::unique_ptr<IParam> param = dm_.getParam(context_.fqoid(), rc, *authz);
         if (rc.status == catena::StatusCode::OK && param) {
             ans.set_oid(param->getOid());
             rc = param->toProto(*ans.mutable_param(), *authz);
