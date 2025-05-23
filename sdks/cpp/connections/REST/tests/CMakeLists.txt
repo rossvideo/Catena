@@ -20,6 +20,7 @@ set(SOURCES
     MultiSetValue_test.cpp
     SetValue_test.cpp
     GetParam_test.cpp
+    BasicParamInfoRequest_test.cpp
 
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
@@ -31,6 +32,7 @@ set(SOURCES
     ../src/controllers/MultiSetValue.cpp
     ../src/controllers/SetValue.cpp
     ../src/controllers/GetParam.cpp
+    ../src/controllers/BasicParamInfoRequest.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

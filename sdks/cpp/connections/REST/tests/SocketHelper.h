@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -126,8 +126,10 @@ class SocketHelper {
         http_exception_with_status httpStatus = codeMap_.at(rc.status);
         // Compiling body response from messages.
         std::string jsonBody = "";
-        for (std::string msg : msgs) {
-            jsonBody += "data: " + msg + "\n\n";
+        if (httpStatus.first < 300) {
+            for (const std::string& msg : msgs) {
+                jsonBody += "data: " + msg + "\n\n";
+            }
         }
         return "HTTP/1.1 " + std::to_string(httpStatus.first) + " " + httpStatus.second + "\r\n"
                "Content-Type: text/event-stream\r\n"
@@ -138,6 +140,12 @@ class SocketHelper {
                "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
                "Access-Control-Allow-Credentials: true\r\n\r\n" +
                jsonBody;
+    }
+
+    // Debug helper to check socket status
+    std::string getSocketStatus() const {
+        return "available: " + std::to_string(readSocket->available()) + 
+               ", open: " + std::to_string(readSocket->is_open());
     }
 
     std::string origin = "*";
