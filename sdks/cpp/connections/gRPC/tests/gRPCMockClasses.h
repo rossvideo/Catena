@@ -75,7 +75,6 @@ class MockServer {
         cq = builder.AddCompletionQueue();
         builder.RegisterService(&service);
         server = builder.BuildAndStart();
-        std::cout<<"Server created"<<std::endl;
 
         // Creating the gRPC client.
         channel = grpc::CreateChannel(serverAddr, grpc::InsecureChannelCredentials());
@@ -86,7 +85,6 @@ class MockServer {
             void* ignored_tag;
             bool ignored_ok;
             while (cq->Next(&ignored_tag, &ignored_ok)) {
-                std::cout << "Processing cq event" << std::endl;
                 if (!testCall) {
                     testCall = asyncCall;
                     asyncCall = nullptr;
@@ -106,8 +104,8 @@ class MockServer {
         cq->Shutdown();
         cqthread->join();
         // Make sure the calldata objects were destroyed.
-        EXPECT_TRUE(!testCall);
-        EXPECT_TRUE(!asyncCall);
+        EXPECT_FALSE(testCall);
+        EXPECT_FALSE(asyncCall);
     }
 
     // Address used for gRPC tests.
