@@ -68,12 +68,19 @@ class MockServiceImpl : public ICatenaServiceImpl {
 // test the various RPCs.
 class MockServer {
   public:
-    // Constructor
-    MockServer() {
+
+    /*
+     * Starts the gRPC server and client.
+     */
+    void start() {
+        // Initializing service and device.
+        service = new MockServiceImpl();
+        dm = new MockDevice();
+
         // Creating the gRPC server.
         builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
         cq = builder.AddCompletionQueue();
-        builder.RegisterService(&service);
+        builder.RegisterService(service);
         server = builder.BuildAndStart();
 
         // Creating the gRPC client.
@@ -94,8 +101,10 @@ class MockServer {
         });
     }
 
-    // Destructor.
-    ~MockServer() {
+    /*
+     * Shuts down the gRPC server and client.
+     */
+    void shutdown() {
         // Setting ok to false for still queued calls.
         ok = false;
         // Cleaning up the server.
@@ -104,8 +113,11 @@ class MockServer {
         cq->Shutdown();
         cqthread->join();
         // Make sure the calldata objects were destroyed.
-        EXPECT_FALSE(testCall);
-        EXPECT_FALSE(asyncCall);
+        ASSERT_FALSE(testCall);
+        ASSERT_FALSE(asyncCall);
+        // Deleting device and service.
+        delete dm;
+        delete service;
     }
 
     // Address used for gRPC tests.
@@ -113,9 +125,9 @@ class MockServer {
     // Server and service variables.
     grpc::ServerBuilder builder;
     std::unique_ptr<grpc::Server> server = nullptr;
-    MockServiceImpl service;
+    MockServiceImpl* service;
     std::mutex mtx;
-    MockDevice dm;
+    MockDevice* dm;
     // Completion queue variables.
     std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
     std::unique_ptr<std::thread> cqthread = nullptr;

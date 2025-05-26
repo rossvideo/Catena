@@ -55,8 +55,6 @@
 using namespace catena::common;
 using namespace catena::gRPC;
 
-MockServer* globalServer = nullptr;
-
 // Fixture
 class gRPCGetValueTests : public ::testing::Test {
   protected:
@@ -71,7 +69,7 @@ class gRPCGetValueTests : public ::testing::Test {
 
     // Makes an async RPC to the MockServer and waits for a response.
     void makeRPC() {
-        globalServer->client->async()->GetValue(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+        mockServer.client->async()->GetValue(&clientContext, &inVal, &outVal, [this](grpc::Status status){
             outRc = status;
             done = true;
             cv.notify_one();
@@ -81,6 +79,23 @@ class gRPCGetValueTests : public ::testing::Test {
 
     void TearDown() override {
         std::cout.rdbuf(oldCout); // Restoring cout
+    }
+
+    /*
+     * Called at the end of all tests, shuts down the server and cleans up.
+     */
+    static void TearDownTestSuite() {
+        // Redirecting cout to a stringstream for testing.
+        std::stringstream MockConsole;
+        std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
+        // Destroying the server.
+        EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+            delete mockServer.testCall;
+            mockServer.testCall = nullptr;
+        }));
+        mockServer.shutdown();
+        // Restoring cout
+        std::cout.rdbuf(oldCout);
     }
 
     // Console variables
@@ -98,7 +113,11 @@ class gRPCGetValueTests : public ::testing::Test {
     // Expected variables
     catena::Value expVal;
     grpc::Status expRc;
+
+    static MockServer mockServer;
 };
+
+MockServer gRPCGetValueTests::mockServer;
 
 /*
  * ============================================================================
@@ -109,15 +128,15 @@ class gRPCGetValueTests : public ::testing::Test {
  */
 TEST_F(gRPCGetValueTests, GetValue_create) {
     // Making sure getValue is created from the SetUp step.
-    globalServer = new MockServer();
+    mockServer.start();
     // Creating getValue object.
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1).WillOnce(::testing::Return());
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1).WillOnce(::testing::Return());
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
 
     // Creating getValue object.
-    globalServer->testCall = new GetValue(&globalServer->service, globalServer->dm, true);
-    EXPECT_TRUE(globalServer->testCall);
-    EXPECT_FALSE(globalServer->asyncCall);
+    mockServer.testCall = new GetValue(mockServer.service, *mockServer.dm, true);
+    EXPECT_TRUE(mockServer.testCall);
+    EXPECT_FALSE(mockServer.asyncCall);
 }
 
 /*
@@ -130,22 +149,22 @@ TEST_F(gRPCGetValueTests, GetValue_proceed) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(globalServer->dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(globalServer->mtx));
-    EXPECT_CALL(globalServer->dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -181,22 +200,22 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzValid) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(globalServer->dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(globalServer->mtx));
-    EXPECT_CALL(globalServer->dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -220,16 +239,16 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzInvalid) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -253,16 +272,16 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzJWSNotFound) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -284,22 +303,22 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrReturnCatena) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(globalServer->dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(globalServer->mtx));
-    EXPECT_CALL(globalServer->dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
         }));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -321,23 +340,23 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowCatena) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(globalServer->dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(globalServer->mtx));
-    EXPECT_CALL(globalServer->dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             value.CopyFrom(expVal);
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -359,23 +378,23 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowUnknown) {
 
     // Mocking functions.
     // new GetValue(service, dm, true);
-    EXPECT_CALL(globalServer->service, registerItem(::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, registerItem(::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this](ICallData* cd) {
-            globalServer->asyncCall = cd;
+            mockServer.asyncCall = cd;
         }));
-    EXPECT_CALL(globalServer->service, cq()).Times(2).WillRepeatedly(::testing::Return(globalServer->cq.get()));
+    EXPECT_CALL(*mockServer.service, cq()).Times(2).WillRepeatedly(::testing::Return(mockServer.cq.get()));
     // kProcess();
-    EXPECT_CALL(globalServer->service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(globalServer->dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(globalServer->mtx));
-    EXPECT_CALL(globalServer->dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             value.CopyFrom(expVal);
             throw std::runtime_error(rc.what());
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
     }));
 
     // Sending the RPC.
@@ -387,20 +406,20 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowUnknown) {
     EXPECT_EQ(outRc.error_message(), expRc.error_message());
 }
 
-/*
- * Shutdown step, seperate from gRPCGetValueTests to ensure the server is
- * shutdown regardless of the test results.
- */
-TEST(MockServerShutdown, GetValue_shutdown) {
-    // Redirecting cout to a stringstream for testing.
-    std::stringstream MockConsole;
-    std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-    // Destroying the server.
-    EXPECT_CALL(globalServer->service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete globalServer->testCall;
-        globalServer->testCall = nullptr;
-    }));
-    delete globalServer;
-    // Restoring cout
-    std::cout.rdbuf(oldCout);
-}
+// /*
+//  * Shutdown step, seperate from gRPCGetValueTests to ensure the server is
+//  * shutdown regardless of the test results.
+//  */
+// TEST_F(gRPCGetValueTests, GetValue_shutdown) {
+//     // Redirecting cout to a stringstream for testing.
+//     std::stringstream MockConsole;
+//     std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
+//     // Destroying the server.
+//     EXPECT_CALL(mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+//         delete mockServer.testCall;
+//         mockServer.testCall = nullptr;
+//     }));
+//     mockServer.shutdown();
+//     // Restoring cout
+//     std::cout.rdbuf(oldCout);
+// }
