@@ -51,7 +51,7 @@ service CatenaService {
 
   rpc UpdateSubscriptions(UpdateSubscriptionsPayload) returns (stream DeviceComponent.ComponentParam);
 
-  rpc GetParam(GetParamPayload) returns (stream DeviceComponent.ComponentParam);
+  rpc GetParam(GetParamPayload) returns (DeviceComponent.ComponentParam);
 
   /* The stream of PushUpdates is open-ended, terminating only when the
    * logical connection with the client is terminated. */

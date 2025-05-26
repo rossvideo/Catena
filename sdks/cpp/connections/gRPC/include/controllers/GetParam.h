@@ -74,30 +74,21 @@ class GetParam : public CallData {
 
   private:
     /**
-     * @brief The client's scopes.
-     */
-    std::vector<std::string> clientScopes_;
-
-    /**
      * @brief The request payload.
      */
     catena::GetParamPayload req_;
-
     /**
-     * @brief The response payload.
+     * @brief The component param to write to the client.
      */
-    catena::PushUpdates res_;
-
+    catena::DeviceComponent_ComponentParam res_;
     /**
      * @brief gRPC async response writer.
      */
-    ServerAsyncWriter<catena::DeviceComponent_ComponentParam> writer_;
-
+    ServerAsyncResponseWriter<catena::DeviceComponent_ComponentParam> writer_;
     /**
      * @brief The gRPC command's state (kCreate, kProcess, kFinish, etc.).
      */
     CallStatus status_;
-
     /**
      * @brief The device to get the value from.
      */
@@ -107,7 +98,6 @@ class GetParam : public CallData {
      * @brief The object's unique id.
      */
     int objectId_;
-
     /**
      * @brief The object's unique id counter.
      */

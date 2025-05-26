@@ -93,6 +93,10 @@ class SocketReader : public ISocketReader {
      */
     uint32_t slot() const override { return slot_; };
     /**
+     * @brief Returns the fqoid of the asset to make the API call on.
+     */
+    const std::string& fqoid() const override { return fqoid_; };
+    /**
      * @brief Returns true if the field exists in the URL, regardless of its value.
      * 
      * @param key The name of the field to check.
@@ -141,7 +145,7 @@ class SocketReader : public ISocketReader {
     /**
      * @brief Returns true if authorization is enabled.
      */
-    bool authorizationEnabled() const override { return authorizationEnabled_; };\
+    bool authorizationEnabled() const override { return authorizationEnabled_; };
 
     /**
      * @brief Returns the path to the external object.
@@ -161,6 +165,10 @@ class SocketReader : public ISocketReader {
      * @brief The slot of the device to make the API call on.
      */
     uint32_t slot_ = 0;
+    /**
+     * @brief The fqoid of the asset to make the API call on.
+     */
+    std::string fqoid_ = "";
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */

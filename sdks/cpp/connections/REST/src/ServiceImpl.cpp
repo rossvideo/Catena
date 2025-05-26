@@ -53,7 +53,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("GET/v1/connect",                    Connect::makeOne);
     router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
     router_.addProduct("PUT/v1/execute-command",            ExecuteCommand::makeOne);
-    router_.addProduct("GET/v1/asset-request",              AssetRequest::makeOne);
+    router_.addProduct("GET/v1/asset",                      AssetRequest::makeOne);
     router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
     router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);
     router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
@@ -89,7 +89,8 @@ void CatenaServiceImpl::run() {
                     // Reading from the socket.
                     SocketReader context(*subscriptionManager_, EOPath_);
                     context.read(socket, authorizationEnabled_);
-                    std::string requestKey = context.method() + context.endpoint();
+                    //TODO: remove v1 from the request key when the router options are updated
+                    std::string requestKey = context.method() + "/v1" + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
                         // Set to 204 No Content if in OPTIONS.
