@@ -41,6 +41,7 @@
 #include <gmock/gmock.h>
 #include <IDevice.h>
 #include <IParam.h>
+#include <ISubscriptionManager.h>
 #include <IParamDescriptor.h>
 #include <Status.h>
 #include <Authorization.h>
@@ -153,6 +154,14 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(void, defineCommand, (std::function<catena::CommandResponse(catena::Value)> commandImpl), (override));
     MOCK_METHOD(catena::CommandResponse, executeCommand, (catena::Value value), (override));
     MOCK_METHOD(bool, isCommand, (), (const, override));
+};
+
+class MockSubscriptionManager : public ISubscriptionManager {
+public:
+    MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
+    MOCK_METHOD(bool, removeSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
+    MOCK_METHOD(const std::set<std::string>&, getAllSubscribedOids, (IDevice& dm), (override));
+    MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
 };
 
 } // namespace common
