@@ -11,6 +11,7 @@ include_directories(../../common/tests)
 
 set(SOURCES 	
     GetValue_test.cpp
+    MultiSetValue_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
