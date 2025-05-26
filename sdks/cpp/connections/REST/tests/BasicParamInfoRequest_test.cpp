@@ -72,7 +72,6 @@ protected:
         // Set default actions for common mock calls
         ON_CALL(context, origin()).WillByDefault(::testing::ReturnRef(origin));
         ON_CALL(context, hasField("recursive")).WillByDefault(::testing::Return(false));
-        ON_CALL(context, hasField("oid_prefix")).WillByDefault(::testing::Return(true));
         ON_CALL(context, fields("oid_prefix")).WillByDefault(::testing::ReturnRef(empty_prefix));
         ON_CALL(dm, mutex()).WillByDefault(::testing::ReturnRef(mockMtx));
 
