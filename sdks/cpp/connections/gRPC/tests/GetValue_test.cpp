@@ -47,72 +47,13 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "../../common/tests/CommonMockClasses.h"
 #include "gRPCMockClasses.h"
-// #include "ServerHelper.h"
 
 // gRPC
 #include "controllers/GetValue.h"
 
 using namespace catena::common;
 using namespace catena::gRPC;
-
-// Server stuff
-class MockServer {
-  public:
-    MockServer() {
-        // Creating the mock server.
-        builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
-        cq = builder.AddCompletionQueue();
-        builder.RegisterService(&service);
-        server = builder.BuildAndStart();
-        std::cout<<"Server created"<<std::endl;
-
-        // Creating a client.
-        channel = grpc::CreateChannel(serverAddr, grpc::InsecureChannelCredentials());
-        client = catena::CatenaService::NewStub(channel);
-
-        // Deploying cq handler on a thread.
-        cqthread = std::make_unique<std::thread>([&]() {
-            void* ignored_tag;
-            bool ignored_ok;
-            while (cq->Next(&ignored_tag, &ignored_ok)) {
-                std::cout << "Processing cq event" << std::endl;
-                if (!testCall) {
-                    testCall = asyncCall;
-                    asyncCall = nullptr;
-                }
-                testCall->proceed(ok);
-            }
-        });
-    }
-
-    ~MockServer() {
-        ok = false;
-        // Cleaning up the server.
-        server->Shutdown();
-        // Cleaning the cq
-        cq->Shutdown();
-        cqthread->join();
-        // Make sure the calldata objects were destroyed.
-        EXPECT_TRUE(!testCall);
-        EXPECT_TRUE(!asyncCall);
-    }
-
-    std::string serverAddr = "0.0.0.0:50051";
-    grpc::ServerBuilder builder;
-    std::unique_ptr<grpc::Server> server = nullptr;
-    MockServiceImpl service;
-    std::mutex mtx;
-    MockDevice dm;
-    std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
-    std::unique_ptr<std::thread> cqthread = nullptr;
-    ICallData* testCall = nullptr;
-    ICallData* asyncCall = nullptr;
-    std::shared_ptr<grpc::Channel> channel = nullptr;
-    std::unique_ptr<catena::CatenaService::Stub> client = nullptr;
-    bool ok = true;
-};
 
 MockServer* globalServer = nullptr;
 

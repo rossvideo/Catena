@@ -38,6 +38,9 @@
 #pragma once
 
 #include <gmock/gmock.h>
+#include <grpcpp/grpcpp.h>
+
+#include "../../common/tests/CommonMockClasses.h"
 
 // common
 #include <ISubscriptionManager.h>
@@ -59,4 +62,70 @@ class MockServiceImpl : public ICatenaServiceImpl {
     MOCK_METHOD(const std::string&, EOPath, (), (override));
     MOCK_METHOD(void, registerItem, (ICallData* cd), (override));
     MOCK_METHOD(void, deregisterItem, (ICallData* cd), (override));
+};
+
+// When created, this calss mimics a gRPC server, allowing us to test easily
+// test the various RPCs.
+class MockServer {
+  public:
+    // Constructor
+    MockServer() {
+        // Creating the gRPC server.
+        builder.AddListeningPort(serverAddr, grpc::InsecureServerCredentials());
+        cq = builder.AddCompletionQueue();
+        builder.RegisterService(&service);
+        server = builder.BuildAndStart();
+        std::cout<<"Server created"<<std::endl;
+
+        // Creating the gRPC client.
+        channel = grpc::CreateChannel(serverAddr, grpc::InsecureChannelCredentials());
+        client = catena::CatenaService::NewStub(channel);
+
+        // Deploying cq handler on a thread.
+        cqthread = std::make_unique<std::thread>([&]() {
+            void* ignored_tag;
+            bool ignored_ok;
+            while (cq->Next(&ignored_tag, &ignored_ok)) {
+                std::cout << "Processing cq event" << std::endl;
+                if (!testCall) {
+                    testCall = asyncCall;
+                    asyncCall = nullptr;
+                }
+                testCall->proceed(ok);
+            }
+        });
+    }
+
+    // Destructor.
+    ~MockServer() {
+        // Setting ok to false for still queued calls.
+        ok = false;
+        // Cleaning up the server.
+        server->Shutdown();
+        // Cleaning the cq
+        cq->Shutdown();
+        cqthread->join();
+        // Make sure the calldata objects were destroyed.
+        EXPECT_TRUE(!testCall);
+        EXPECT_TRUE(!asyncCall);
+    }
+
+    // Address used for gRPC tests.
+    std::string serverAddr = "0.0.0.0:50051";
+    // Server and service variables.
+    grpc::ServerBuilder builder;
+    std::unique_ptr<grpc::Server> server = nullptr;
+    MockServiceImpl service;
+    std::mutex mtx;
+    MockDevice dm;
+    // Completion queue variables.
+    std::unique_ptr<grpc::ServerCompletionQueue> cq = nullptr;
+    std::unique_ptr<std::thread> cqthread = nullptr;
+    bool ok = true;
+    // Client variables.
+    std::shared_ptr<grpc::Channel> channel = nullptr;
+    std::unique_ptr<catena::CatenaService::Stub> client = nullptr;
+    // gRPC test variables.
+    ICallData* testCall = nullptr;
+    ICallData* asyncCall = nullptr;
 };
