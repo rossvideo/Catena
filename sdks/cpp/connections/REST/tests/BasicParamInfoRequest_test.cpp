@@ -74,7 +74,6 @@ protected:
         ON_CALL(context, hasField("recursive")).WillByDefault(::testing::Return(false));
         ON_CALL(context, hasField("oid_prefix")).WillByDefault(::testing::Return(true));
         ON_CALL(context, fields("oid_prefix")).WillByDefault(::testing::ReturnRef(empty_prefix));
-        ON_CALL(context, authorizationEnabled()).WillByDefault(::testing::Return(false));
         ON_CALL(dm, mutex()).WillByDefault(::testing::ReturnRef(mockMtx));
 
         request = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
@@ -83,7 +82,7 @@ protected:
 
     void TearDown() override {
         std::cout.rdbuf(oldCout); // Restoring cout
-        // Cleanup code here6
+        // Cleanup code here
         if (request) {
             delete request;
         }
@@ -120,19 +119,14 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_std_exception
     EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::Throw(std::runtime_error("Test auth setup failure")));
 
-    // Make a new request for this test
-    auto authzRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
-
     // Execute
-    authzRequest->proceed();
-    authzRequest->finish();
+    request->proceed();
+    request->finish();
 
     // Get expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
-
-    delete authzRequest;
 }
 
 // Test 0.2: Authorization test with invalid token
@@ -144,19 +138,14 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_invalid_token
     EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::ReturnRef(mockToken));
 
-    // Make a new request for this test
-    auto authzRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
-
     // Execute
-    authzRequest->proceed();
-    authzRequest->finish();
+    request->proceed();
+    request->finish();
 
     // Get expected and actual responses
     std::string expected = expectedSSEResponse(rc);
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
-
-    delete authzRequest;
 }
 
 // Test 0.3: Authorization test with valid token
@@ -197,10 +186,12 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
 
     // Make a new request for this test
     auto authzRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
-
+    
     // Execute
     authzRequest->proceed();
     authzRequest->finish();
+
+    delete authzRequest;
 
     // Get expected and actual responses
     std::string jsonBody = catena::REST::test::createParamInfoJson(paramInfo);
@@ -208,7 +199,6 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
 
-    delete authzRequest;
 }
 
 // == MODE 1 TESTS: Get all top-level parameters without recursion ==
