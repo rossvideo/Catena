@@ -415,6 +415,67 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsPr
     delete topLevelRequest;
 }
 
+// Test 1.6: Get top-level parameters with thrown catena exception
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsThrow) {
+    catena::exception_with_status rc("Error getting top-level parameters", catena::StatusCode::INTERNAL);
+    
+    // Setup mock parameters
+    std::vector<std::unique_ptr<IParam>> top_level_params;
+    auto param1 = std::make_unique<MockParam>();
+    auto param2 = std::make_unique<MockParam>();
+    
+    // Set up mock parameters 
+    catena::REST::test::ParamInfo param1_info{
+        .oid = "param1",
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::ParamInfo param2_info{
+        .oid = "param2",
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::setupMockParam(param1.get(), param1_info);
+    
+    // Set up param2 to throw during processing
+    EXPECT_CALL(*param2, getOid())
+        .WillRepeatedly(::testing::ReturnRef(param2_info.oid));
+    EXPECT_CALL(*param2, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::_))
+        .WillOnce(::testing::Invoke([](catena::BasicParamInfoResponse&, catena::common::Authorizer&) -> catena::exception_with_status {
+            throw catena::exception_with_status("Error getting top-level parameters", catena::StatusCode::INTERNAL);
+            return catena::exception_with_status("", catena::StatusCode::OK);  // This line should never be reached
+        }));
+    
+    top_level_params.push_back(std::move(param1));
+    top_level_params.push_back(std::move(param2));
+
+    // Setup mock expectations
+    std::string empty_prefix;
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(empty_prefix));
+    EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
+    
+    EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([&top_level_params](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::move(top_level_params);
+        }));
+
+    // Create a new request for this test
+    auto topLevelRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    // Execute
+    topLevelRequest->proceed();
+    topLevelRequest->finish();
+
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    EXPECT_EQ(actual, expected);
+
+    // Cleanup
+    delete topLevelRequest;
+}
+
 // The following work, but are not the focus of this branch!
 
 // == MODE 3 TESTS: Get a specific parameter and its children if recursive ==
