@@ -91,7 +91,7 @@ inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo
     // Only expect toProto if status indicates success (HTTP status < 300)
     if (catena::REST::codeMap_.at(info.status).first < 300) {
         EXPECT_CALL(*mockParam, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::_))
-            .WillOnce(::testing::Invoke([info](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
+            .WillRepeatedly(::testing::Invoke([info](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
                 setupParamInfo(response, info);
                 return catena::exception_with_status("", catena::StatusCode::OK);
             }));
