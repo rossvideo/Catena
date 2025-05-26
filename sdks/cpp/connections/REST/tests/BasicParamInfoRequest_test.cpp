@@ -250,7 +250,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParams) 
     delete topLevelRequest;
 }
 
-// Test 1.2: Get top-level parameters with error
+// Test 1.2: Get top-level parameters with error returned from getTopLevelParams
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsError) {
     catena::exception_with_status rc("Error getting top-level parameters", catena::StatusCode::INTERNAL);
     
@@ -283,7 +283,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsEr
     delete topLevelRequest;
 }
 
-// Test 1.3: Get empty top-level parameters
+// Test 1.3: Get top-level parameters with empty list returned from getTopLevelParams
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getEmptyTopLevelParams) {
     catena::exception_with_status rc("No top-level parameters found", catena::StatusCode::NOT_FOUND);
     
@@ -368,7 +368,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     delete topLevelRequest;
 }
 
-// Test 1.5: Get top-level parameters with error during processing of a parameter
+// Test 1.5: Get top-level parameters with error status in returned parameters
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsProcessingError) {
     catena::exception_with_status rc("Error processing parameter", catena::StatusCode::INTERNAL);
     
@@ -415,7 +415,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsPr
     delete topLevelRequest;
 }
 
-// Test 1.6: Get top-level parameters with thrown catena exception
+// Test 1.6: Get top-level parameters with exception thrown during parameter processing
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsThrow) {
     catena::exception_with_status rc("Error getting top-level parameters", catena::StatusCode::INTERNAL);
     
