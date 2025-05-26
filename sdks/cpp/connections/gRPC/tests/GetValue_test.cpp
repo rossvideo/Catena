@@ -405,21 +405,3 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowUnknown) {
     EXPECT_EQ(outRc.error_code(), expRc.error_code());
     EXPECT_EQ(outRc.error_message(), expRc.error_message());
 }
-
-// /*
-//  * Shutdown step, seperate from gRPCGetValueTests to ensure the server is
-//  * shutdown regardless of the test results.
-//  */
-// TEST_F(gRPCGetValueTests, GetValue_shutdown) {
-//     // Redirecting cout to a stringstream for testing.
-//     std::stringstream MockConsole;
-//     std::streambuf* oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-//     // Destroying the server.
-//     EXPECT_CALL(mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-//         delete mockServer.testCall;
-//         mockServer.testCall = nullptr;
-//     }));
-//     mockServer.shutdown();
-//     // Restoring cout
-//     std::cout.rdbuf(oldCout);
-// }
