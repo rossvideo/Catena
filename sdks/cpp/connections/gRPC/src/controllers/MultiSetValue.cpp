@@ -127,7 +127,10 @@ void MultiSetValue::proceed(bool ok) {
             std::cout << typeName << "[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
         default:
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
