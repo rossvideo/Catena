@@ -228,7 +228,7 @@
       "options": [
         "common/tests/common_unit_tests",
         "connections/gRPC/tests/grpc_unit_tests",
-        "connections/REST/tests/REST_UnitTests"
+        "connections/REST/tests/rest_unit_tests"
       ],
       "default": "common/tests/common_unit_tests"
     },
