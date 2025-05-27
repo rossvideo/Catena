@@ -118,7 +118,11 @@ void GetValue::proceed( bool ok) {
          * This should be impossible to reach.
          */
         default:
+        default:// GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
+            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
+            responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
     }
