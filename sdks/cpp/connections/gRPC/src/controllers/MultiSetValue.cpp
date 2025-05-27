@@ -136,7 +136,5 @@ void MultiSetValue::proceed(bool ok) {
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
             // GCOVR_EXCL_STOP
-            grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
-            responder_.FinishWithError(errorStatus, this);
     }
 }
