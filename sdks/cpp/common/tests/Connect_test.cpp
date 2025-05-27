@@ -88,7 +88,7 @@ protected:
     std::unique_ptr<TestConnect> connect;
 
     // Helper method to setup common expectations
-    void setupCommonExpectations(MockParam& param, MockParamDescriptor& descriptor) {
+    void setupCommonExpectations(MockParam& param, const MockParamDescriptor& descriptor) {
         
         // Setup default behavior for getScope to avoid uninteresting mock warnings
         static const std::string scope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
@@ -122,6 +122,11 @@ protected:
     }
 
     void setupMockParam(MockParam* param, const std::string& oid, const MockParamDescriptor& descriptor) {
+        // Initialize param if needed
+        if (!param) {
+            param = std::make_unique<MockParam>().get();
+        }
+
         // Setup mock param expectations
         EXPECT_CALL(*param, getOid())
             .WillRepeatedly(::testing::Invoke([&oid]() {
@@ -135,6 +140,9 @@ protected:
             .WillRepeatedly(::testing::Invoke([]() {
                 return false;
             }));
+
+        // Setup common expectations
+        setupCommonExpectations(*param, descriptor);
     }
 
     // Helper method to setup language pack test data
@@ -163,19 +171,15 @@ protected:
  * ============================================================================
  */
  
-// == Authorization Tests ==
+// == 1. Authorization Tests ==
 
 // Test 1.1: FAILURE - Parameter updateResponse readAuthz check fails
 TEST_F(ConnectTests, updateResponseReadAuthzFails) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
-    
-    // Setup common expectations
     setupCommonExpectations(param, descriptor);
     setupMockParam(&param, testOid, descriptor);
-
-    // Test authorization enabled but readAuthz fails
     connect->initAuthz_(operatorToken, true);  // Using operator token which won't have the right scope
     
     // Setup param to require monitor scope
@@ -198,8 +202,6 @@ TEST_F(ConnectTests, updateResponseAuthorizationCheckDisabled) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
-    
-    // Setup common expectations
     setupCommonExpectations(param, descriptor);
     setupMockParam(&param, testOid, descriptor);
 
@@ -220,13 +222,10 @@ TEST_F(ConnectTests, updateResponseAuthorizationCheckEnabledFails) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
-    
-    // Setup common expectations
     setupCommonExpectations(param, descriptor);
     setupMockParam(&param, testOid, descriptor);
-
-    // Test authorization enabled but fails
     connect->initAuthz_(monitorToken, true);
+
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .WillRepeatedly(::testing::Invoke([this](catena::Value& value, catena::common::Authorizer& authz) -> catena::exception_with_status {
             value.set_string_value(testOid);
@@ -242,13 +241,10 @@ TEST_F(ConnectTests, updateResponseAuthorizationCheckEnabledSucceeds) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
-    
-    // Setup common expectations
     setupCommonExpectations(param, descriptor);
     setupMockParam(&param, testOid, descriptor);
-
-    // Test authorization enabled and succeeds
     connect->initAuthz_(monitorToken, true);
+
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .WillRepeatedly(::testing::Invoke([this](catena::Value& value, catena::common::Authorizer& authz) -> catena::exception_with_status {
             value.set_string_value(testOid);
@@ -298,15 +294,13 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledSucceeds
 }
 
 
-// == Cancellation Tests ==
+// == 2. Cancellation Tests ==
 
 // Test 2.1: SUCCESS - Parameter updateResponse cancelled 
 TEST_F(ConnectTests, updateResponseCancelled) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
-    
-    // Setup common expectations
     setupCommonExpectations(param, descriptor);
     setupMockParam(&param, testOid, descriptor);
 
@@ -333,18 +327,293 @@ TEST_F(ConnectTests, updateResponseLanguagePackCancelled) {
     EXPECT_TRUE(connect->hasUpdate());  // Should be true even though we didn't set language pack data
 }
 
+// == 3. Detail Level Tests ==
 
+// Test 3.1: SUCCESS - Test updateResponse_ on FULL detail level
+TEST_F(ConnectTests, updateResponseDetailLevelFull) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_FULL;
+    connect->initAuthz_(monitorToken, true);
 
+    // Setup subscription manager mock
+    static std::set<std::string> subscribed_set{testOid};
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(subscribed_set));
 
-// == Detail Level Tests ==
+    // Setup param toProto to succeed exactly twice
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(3)
+        .WillRepeatedly(::testing::Invoke([this](catena::Value& value, catena::common::Authorizer& authz) -> catena::exception_with_status {
+            value.set_string_value(testOid);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    // Test FULL detail level lambda - should always update regardless of other conditions
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
 
-// Test 3.1 - Test updateResponse_ on FULL detail level.
+    // Verify that FULL updates even with non-minimal set
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(false));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
 
-// Test 3.2 - Test updateResponse_ on MINIMAL detail level.
+    // Verify that FULL updates even when not subscribed
+    static std::set<std::string> empty_set;
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(empty_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
+}
 
-// Test 3.3 - Test updateResponse_ on SUBSCRIPTIONS detail level.
+// Test 3.2: SUCCESS - Test updateResponse_ on MINIMAL detail level with minimal set
+TEST_F(ConnectTests, updateResponseDetailLevelMinimalWithMinimalSet) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_MINIMAL;
+    connect->initAuthz_(monitorToken, true);
 
-// Test 3.4 - Test updateResponse_ on COMMANDS detail level.
+    // Test MINIMAL detail level lambda - should update when in minimal set
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(2)
+        .WillRepeatedly(::testing::Invoke([this](catena::Value& value, catena::common::Authorizer& authz) -> catena::exception_with_status {
+            value.set_string_value(testOid);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
 
-// Test 3.5 - Test updateResponse_ on NONE detail level.
+    // Verify that MINIMAL updates even when not subscribed
+    static std::set<std::string> empty_set;
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(empty_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
+}
+
+// Test 3.3: FAILURE - Test updateResponse_ on MINIMAL detail level without minimal set
+TEST_F(ConnectTests, updateResponseDetailLevelMinimalWithoutMinimalSet) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_MINIMAL;
+    connect->initAuthz_(monitorToken, true);
+
+    // Test MINIMAL detail level lambda - should not update when not in minimal set
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(false));
+
+    // Setup param toProto to succeed (but it shouldn't be called)
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since not in minimal set
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+
+    // Verify that MINIMAL doesn't update even when subscribed
+    static std::set<std::string> subscribed_set{testOid};
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(subscribed_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
+
+// Test 3.4: SUCCESS - Test updateResponse_ on SUBSCRIPTIONS detail level with subscribed OID
+TEST_F(ConnectTests, updateResponseDetailLevelSubscriptionsWithSubscribedOid) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_SUBSCRIPTIONS;
+    connect->initAuthz_(monitorToken, true);
+
+    // Test SUBSCRIPTIONS detail level lambda - should update when subscribed
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(false));
+    static std::set<std::string> subscribed_set{testOid};
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(subscribed_set));
+
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(2)
+        .WillRepeatedly(::testing::Invoke([this](catena::Value& value, catena::common::Authorizer& authz) -> catena::exception_with_status {
+            value.set_string_value(testOid);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
+
+    // Verify that SUBSCRIPTIONS updates when in minimal set
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
+    static std::set<std::string> empty_set;
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(empty_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
+}
+
+// Test 3.5: FAILURE - Test updateResponse_ on SUBSCRIPTIONS detail level with unsubscribed OID
+TEST_F(ConnectTests, updateResponseDetailLevelSubscriptionsWithUnsubscribedOid) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_SUBSCRIPTIONS;
+    connect->initAuthz_(monitorToken, true);
+
+    // Test SUBSCRIPTIONS detail level lambda - should not update when not subscribed and not in minimal set
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(false));
+    static std::set<std::string> empty_set;
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(empty_set));
+
+    // Setup param toProto to succeed (but it shouldn't be called)
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since not subscribed and not in minimal set
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
+
+// Test 3.6: SUCCESS - Test updateResponse_ on COMMANDS detail level with command parameter
+TEST_F(ConnectTests, updateResponseDetailLevelCommandsWithCommandParam) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_COMMANDS;
+    connect->initAuthz_(monitorToken, true);
+
+    // Test COMMANDS detail level lambda - should update when isCommand is true
+    EXPECT_CALL(descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(true));
+
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(2)
+        .WillRepeatedly(::testing::Invoke([this](catena::Value& value, catena::common::Authorizer& authz) -> catena::exception_with_status {
+            value.set_string_value(testOid);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
+
+    // Verify that COMMANDS updates regardless of minimal set or subscription status
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(false));
+    static std::set<std::string> empty_set;
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(empty_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());
+}
+
+// Test 3.7: FAILURE - Test updateResponse_ on COMMANDS detail level with non-command parameter
+TEST_F(ConnectTests, updateResponseDetailLevelCommandsWithNonCommandParam) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_COMMANDS;
+    connect->initAuthz_(monitorToken, true);
+
+    // Test COMMANDS detail level lambda - should not update when isCommand is false
+    EXPECT_CALL(descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(false));
+
+    // Setup param toProto to succeed (but it shouldn't be called)
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since not a command
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+
+    // Verify that COMMANDS doesn't update even when in minimal set or subscribed
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
+    static std::set<std::string> subscribed_set{testOid};
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(subscribed_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
+
+// Test 3.8: FAILURE - Test updateResponse_ on NONE detail level
+TEST_F(ConnectTests, updateResponseDetailLevelNone) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_NONE;
+    connect->initAuthz_(monitorToken, true);
+
+    // Test NONE detail level lambda - should never update
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since detail level is NONE
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+
+    // Verify that NONE doesn't update even with all conditions met
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(true));
+    static std::set<std::string> subscribed_set{testOid};
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(subscribed_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
+
+// Test 3.9: FAILURE - Test updateResponse_ on UNSET detail level
+TEST_F(ConnectTests, updateResponseDetailLevelUnset) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_UNSET;
+
+    // Initialize authorization with monitor token
+    connect->initAuthz_(monitorToken, true);
+
+    // Test UNSET detail level lambda - should never update
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since detail level is UNSET
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+
+    // Verify that UNSET doesn't update even with all conditions met
+    EXPECT_CALL(descriptor, minimalSet())
+        .WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(descriptor, isCommand())
+        .WillRepeatedly(::testing::Return(true));
+    static std::set<std::string> subscribed_set{testOid};
+    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
+        .WillRepeatedly(::testing::ReturnRef(subscribed_set));
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
 
