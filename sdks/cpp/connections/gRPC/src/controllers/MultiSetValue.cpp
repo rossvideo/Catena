@@ -131,7 +131,6 @@ void MultiSetValue::proceed(bool ok) {
          * default: Error, end process.
          * This should be impossible to reach.
          */
-        default:
         default:// GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
