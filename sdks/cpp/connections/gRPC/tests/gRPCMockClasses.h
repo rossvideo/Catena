@@ -101,6 +101,15 @@ class MockServer {
         });
     }
 
+    // Functions to expect when creating a new CallData object.
+    void expNew() {
+        EXPECT_CALL(*service, registerItem(::testing::_)).Times(1)
+            .WillOnce(::testing::Invoke([this](ICallData* cd) {
+                asyncCall = cd;
+            }));
+        EXPECT_CALL(*service, cq()).Times(2).WillRepeatedly(::testing::Return(cq.get()));
+    }
+
     /*
      * Shuts down the gRPC server and client.
      */
