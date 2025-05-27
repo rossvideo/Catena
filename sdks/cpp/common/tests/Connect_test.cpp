@@ -165,7 +165,35 @@ protected:
  
 // == Authorization Tests ==
 
-// Test 0.1 - Parameter updateResponse authorization check when disabled
+// Test 1.1: FAILURE - Parameter updateResponse readAuthz check fails
+TEST_F(ConnectTests, updateResponseReadAuthzFails) {
+    // Setup test data
+    MockParam param;
+    MockParamDescriptor descriptor;
+    
+    // Setup common expectations
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+
+    // Test authorization enabled but readAuthz fails
+    connect->initAuthz_(operatorToken, true);  // Using operator token which won't have the right scope
+    
+    // Setup param to require monitor scope
+    static const std::string monitorScope = Scopes().getForwardMap().at(Scopes_e::kMonitor);
+    EXPECT_CALL(param, getScope())
+        .WillRepeatedly(::testing::Invoke([]() {
+            return std::ref(monitorScope);
+        }));
+
+    // Setup param toProto to succeed (but it shouldn't be called)
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since readAuthz will fail
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
+
+// Test 1.2: SUCCESS - Parameter updateResponse authorization check when disabled
 TEST_F(ConnectTests, updateResponseAuthorizationCheckDisabled) {
     // Setup test data
     MockParam param;
@@ -187,7 +215,7 @@ TEST_F(ConnectTests, updateResponseAuthorizationCheckDisabled) {
     EXPECT_TRUE(connect->hasUpdate());
 }
 
-// Test 0.2 - Parameter updateResponse authorization check when enabled but fails
+// Test 1.3: FAILURE - Parameter updateResponse authorization check when enabled but fails
 TEST_F(ConnectTests, updateResponseAuthorizationCheckEnabledFails) {
     // Setup test data
     MockParam param;
@@ -209,7 +237,7 @@ TEST_F(ConnectTests, updateResponseAuthorizationCheckEnabledFails) {
     EXPECT_FALSE(connect->hasUpdate());
 }
 
-// Test 0.3 - Parameter updateResponse authorization check when enabled and succeeds
+// Test 1.4: SUCCESS - Parameter updateResponse authorization check when enabled and succeeds
 TEST_F(ConnectTests, updateResponseAuthorizationCheckEnabledSucceeds) {
     // Setup test data
     MockParam param;
@@ -231,7 +259,7 @@ TEST_F(ConnectTests, updateResponseAuthorizationCheckEnabledSucceeds) {
     EXPECT_TRUE(connect->hasUpdate());
 }
 
-// Test 0.4 - LanguagePack updateResponse authorization check when disabled
+// Test 1.5: SUCCESS - LanguagePack updateResponse authorization check when disabled
 TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckDisabled) {
     // Setup test data
     auto languagePack = setupLanguagePack();
@@ -244,7 +272,7 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckDisabled) {
     verifyLanguagePackResponse(connect->getResponse());
 }
 
-// Test 0.5 - LanguagePack updateResponse authorization check when enabled but fails
+// Test 1.6: FAILURE - LanguagePack updateResponse authorization check when enabled but fails
 TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledFails) {
     // Setup test data
     auto languagePack = setupLanguagePack();
@@ -256,7 +284,7 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledFails) {
     EXPECT_FALSE(connect->hasUpdate());
 }
 
-// Test 0.6 - LanguagePack updateResponse authorization check when enabled and succeeds
+// Test 1.7: SUCCESS - LanguagePack updateResponse authorization check when enabled and succeeds
 TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledSucceeds) {
     // Setup test data
     auto languagePack = setupLanguagePack();
@@ -265,22 +293,45 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledSucceeds
     connect->initAuthz_(monitorToken, true);
     
     connect->updateResponse_(languagePack);
-    EXPECT_TRUE(connect->hasUpdate());
     verifyLanguagePackResponse(connect->getResponse());
+    EXPECT_TRUE(connect->hasUpdate());
 }
+
 
 // == Cancellation Tests ==
 
-// Test 1.1 - Parameter updateResponse cancelled 
+// Test 2.1: SUCCESS - Parameter updateResponse cancelled 
 TEST_F(ConnectTests, updateResponseCancelled) {
     // Setup test data
     MockParam param;
     MockParamDescriptor descriptor;
     
     // Setup common expectations
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+
+    // Set cancelled to true
+    connect->setCancelled(true);
+
+    // Setup param toProto to succeed (but it shouldn't be called)
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .Times(0);  // Should not be called since we cancelled
+    
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_TRUE(connect->hasUpdate());  // Should be true even though toProto wasn't called
 }
 
-// Test 1.2 - LanguagePack updateResponse cancelled
+// Test 2.2: SUCCESS - LanguagePack updateResponse cancelled
+TEST_F(ConnectTests, updateResponseLanguagePackCancelled) {
+    // Setup test data
+    auto languagePack = setupLanguagePack();
+    
+    // Set cancelled to true
+    connect->setCancelled(true);
+    
+    connect->updateResponse_(languagePack);
+    EXPECT_TRUE(connect->hasUpdate());  // Should be true even though we didn't set language pack data
+}
 
 
 
