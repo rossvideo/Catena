@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file is for testing the MultiSetValue.cpp file.
+ * @brief This file is for testing the AddLanguage.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/05/27
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -50,13 +50,13 @@
 #include "gRPCMockClasses.h"
 
 // gRPC
-#include "controllers/MultiSetValue.h"
+#include "controllers/AddLanguage.h"
 
 using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCMultiSetValueTests : public ::testing::Test {
+class gRPCAddLanguageTests : public ::testing::Test {
   protected:
     /*
      * Called at the start of all tests.
@@ -66,15 +66,10 @@ class gRPCMultiSetValueTests : public ::testing::Test {
         mockServer.start();
         // Setting up the inVal used across all tests.
         inVal.set_slot(1);
-        auto values = inVal.mutable_values();
-        // Adding a string value.
-        auto addedVal = values->Add();
-        addedVal->set_oid("/test_oid_1");
-        addedVal->mutable_value()->set_string_value("test_value_1");
-        // Adding an int32 value.
-        addedVal = values->Add();
-        addedVal->set_oid("/test_oid_2");
-        addedVal->mutable_value()->set_int32_value(2);
+        inVal.set_id("en");
+        auto languagePack = inVal.mutable_language_pack();
+        languagePack->set_name("English");
+        (*languagePack->mutable_words())["greeting"] = "Hello";
     }
 
     /*
@@ -83,7 +78,7 @@ class gRPCMultiSetValueTests : public ::testing::Test {
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new MultiSetValuePayload is created.
+        // We can always assume that a new AddLanguagePayload is created.
         // Either from initialization or kProceed.
         mockServer.expNew();
     }
@@ -94,7 +89,7 @@ class gRPCMultiSetValueTests : public ::testing::Test {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->MultiSetValue(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+        mockServer.client->async()->AddLanguage(&clientContext, &inVal, &outVal, [this](grpc::Status status){
             outRc = status;
             done = true;
             cv.notify_one();
@@ -139,7 +134,7 @@ class gRPCMultiSetValueTests : public ::testing::Test {
     std::condition_variable cv;
     std::mutex cv_mtx;
     std::unique_lock<std::mutex> lock{cv_mtx};
-    static catena::MultiSetValuePayload inVal;
+    static catena::AddLanguagePayload inVal;
     catena::Empty outVal;
     grpc::Status outRc;
     // Expected variables
@@ -149,51 +144,41 @@ class gRPCMultiSetValueTests : public ::testing::Test {
     static MockServer mockServer;
 };
 
-MockServer gRPCMultiSetValueTests::mockServer;
+MockServer gRPCAddLanguageTests::mockServer;
 // Static as its only used to make sure the correct obj is passed into mocked
 // functions.
-catena::MultiSetValuePayload gRPCMultiSetValueTests::inVal;
+catena::AddLanguagePayload gRPCAddLanguageTests::inVal;
 
 /*
  * ============================================================================
- *                               MultiSetValue tests
+ *                               AddLanguage tests
  * ============================================================================
  * 
- * TEST 1 - Creating a MultiSetValue object.
+ * TEST 1 - Creating a AddLanguage object.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_create) {
-    // Creating multiSetValue object.
-    new MultiSetValue(mockServer.service, *mockServer.dm, true);
+TEST_F(gRPCAddLanguageTests, AddLanguage_create) {
+    // Creating addLanguage object.
+    new AddLanguage(mockServer.service, *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }
 
 /*
- * TEST 2 - Normal case for MultiSetValue proceed().
+ * TEST 2 - Normal case for AddLanguage proceed().
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedNormal) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedNormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
-            EXPECT_EQ(ans.status, catena::StatusCode::OK);
+            EXPECT_EQ(language.SerializeAsString(), inVal.SerializeAsString());
             EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
-            ans = catena::exception_with_status(rc.what(), rc.status);
-            return true;
-        }));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Checking that function gets correct inputs.
-            EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
     EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
@@ -206,9 +191,9 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedNormal) {
 }
 
 /*
- * TEST 3 - MultiSetValue with authz on and valid token.
+ * TEST 3 - AddLanguage with authz on and valid token.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzValid) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Adding authorization mockToken metadata. This it a random RSA token.
@@ -229,22 +214,12 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
+    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
-            EXPECT_EQ(ans.status, catena::StatusCode::OK);
+            EXPECT_EQ(language.SerializeAsString(), inVal.SerializeAsString());
             EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
             // Setting the output status and returning true.
-            ans = catena::exception_with_status(rc.what(), rc.status);
-            return true;
-        }));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Checking that function gets correct inputs.
-            EXPECT_EQ(src.SerializeAsString(), inVal.SerializeAsString());
-            EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
-            // Returning status.
             return catena::exception_with_status(rc.what(), rc.status);
         }));
     EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
@@ -257,9 +232,9 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzValid) {
 }
 
 /*
- * TEST 4 - MultiSetValue with authz on and invalid token.
+ * TEST 4 - AddLanguage with authz on and invalid token.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzInvalid) {
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Not a token so it should get rejected by the authorizer.
@@ -272,18 +247,14 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
         mockServer.testCall = nullptr;
     }));
 
-    // Sending the RPC.
+    // Sending the RPC and comparing the results.
     testRPC();
-
-    // Comparing the output.
-    EXPECT_EQ(outRc.error_code(), expRc.error_code());
-    EXPECT_EQ(outRc.error_message(), expRc.error_message());
 }
 
 /*
- * TEST 5 - MultiSetValue with authz on and invalid token.
+ * TEST 5 - AddLanguage with authz on and invalid token.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzJWSNotFound) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceeedAuthzJWSNotFound) {
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     // Should not be able to find the bearer token.
@@ -301,94 +272,17 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzJWSNotFound) {
 }
 
 /*
- * TEST 6 - dm.trySetValue returns a catena::Exception_With_Status.
+ * TEST 6 - dm.addLanguage() returns a catena::exception_with_status.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryReturnCatena) {
-    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceedErrReturnCatena) {
+    catena::exception_with_status rc("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
-            // Setting the output status and returning false.
-            ans = catena::exception_with_status(rc.what(), rc.status);
-            return false;
-        }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
-    testRPC();
-}
-
-/*
- * TEST 6 - dm.trySetValue throws a catena::Exception_With_Status.
- */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
-    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
-            // Throwing error and returning true.
-            throw catena::exception_with_status(rc.what(), rc.status);
-            return true;
-        }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
-    testRPC();
-}
-
-/*
- * TEST 7 - dm.trySetValue throws a std::runtime_error.
- */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
-    catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
-            // Throwing error and returning true.
-            throw std::runtime_error(rc.what());
-            return true;
-        }));
-    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-        delete mockServer.testCall;
-        mockServer.testCall = nullptr;
-    }));
-
-    // Sending the RPC and comparing the results.
-    testRPC();
-}
-
-/*
- * TEST 8 - dm.commitSetValue returns a catena::Exception_With_Status.
- */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
-    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
-    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
-    // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Returning error status.
+    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             return catena::exception_with_status(rc.what(), rc.status);
         }));
     EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
@@ -396,24 +290,22 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
         mockServer.testCall = nullptr;
     }));
 
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 9 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 7 - dm.addLanguage() throws a catena::exception_with_status.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
-    catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceedErrThrowCatena) {
+    catena::exception_with_status rc("Language already exists", catena::StatusCode::INVALID_ARGUMENT);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Throwing error and returning ok.
+    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             throw catena::exception_with_status(rc.what(), rc.status);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -422,24 +314,22 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
         mockServer.testCall = nullptr;
     }));
 
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
 
 /*
- * TEST 10 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 8 - dm.addLanguage() throws a std::runtime_exception.
  */
-TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowUnknown) {
+TEST_F(gRPCAddLanguageTests, AddLanguage_proceedErrThrowUnknown) {
     catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
 
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Throwing error and returning ok.
+    EXPECT_CALL(*mockServer.dm, addLanguage(::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
             throw std::runtime_error(rc.what());
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
@@ -448,6 +338,6 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowUnknown) {
         mockServer.testCall = nullptr;
     }));
 
-    // Sending the RPC and comparing the results.
+    // Sending the RPC.
     testRPC();
 }
