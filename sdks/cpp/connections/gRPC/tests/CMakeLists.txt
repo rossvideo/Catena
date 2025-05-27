@@ -13,6 +13,7 @@ set(SOURCES
     GetValue_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
+    ListLanguages_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
