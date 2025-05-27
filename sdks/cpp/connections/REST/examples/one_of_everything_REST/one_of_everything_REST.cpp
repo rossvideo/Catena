@@ -69,13 +69,15 @@ using namespace catena::common;
 
 
 CatenaServiceImpl *globalApi = nullptr;
-std::atomic<bool> globalLoop = false;
+std::atomic<bool> fibLoop = false;
+std::atomic<bool> counterLoop = true;
 
 // handle SIGINT
 void handle_signal(int sig) {
     std::thread t([sig]() {
         std::cout << "Caught signal " << sig << ", shutting down" << std::endl;
-        globalLoop = false;
+        fibLoop = false;
+        counterLoop = false;
         if (globalApi != nullptr) {
             globalApi->Shutdown();
             globalApi = nullptr;
@@ -105,7 +107,7 @@ void defineCommands() {
         std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
         
         // If the loop is already running, return an exception.
-        if (globalLoop) {
+        if (fibLoop) {
             response.mutable_exception()->set_type("Invalid Command");
             response.mutable_exception()->set_details("Already running");
         // If the state parameter does not exist, return an exception.
@@ -113,14 +115,14 @@ void defineCommands() {
             response.mutable_exception()->set_type("Invalid Command");
             response.mutable_exception()->set_details(err.what());
         } else {
-            globalLoop = true;
+            fibLoop = true;
             // Detaching thread to update number_example with next number of
             // the Fibonacci sequence every second.
             std::thread figSeqThread([intParam = std::move(intParam)]() {
                 auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
                 uint32_t prev = 0;
                 uint32_t curr = 1;
-                while (globalLoop) {
+                while (fibLoop) {
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                     uint32_t next = prev + curr;
                     prev = curr;
@@ -146,13 +148,32 @@ void defineCommands() {
     fibStop->defineCommand([](catena::Value value) {
         catena::exception_with_status err{"", catena::StatusCode::OK};
         catena::CommandResponse response;
-        if (globalLoop) {
-            globalLoop = false;
+        if (fibLoop) {
+            fibLoop = false;
             std::cout << "Fibonacci sequence stop" << std::endl;
             response.mutable_no_response();
         } else {
             response.mutable_exception()->set_type("Invalid Command");
             response.mutable_exception()->set_details("Already stopped");
+        }
+        return response;
+    });
+
+    // This sets the value of number_example.
+    std::unique_ptr<IParam> fibSet = dm.getCommand("/fib_set", err);
+    assert(fibSet != nullptr);
+    fibSet->defineCommand([](catena::Value value) {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        catena::CommandResponse response;
+        std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
+        if (intParam) {
+            auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
+            fibParam.get() = value.int32_value();
+            dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+            response.mutable_no_response();
+        } else {
+            response.mutable_exception()->set_type("Invalid Command");
+            response.mutable_exception()->set_details("/number_example not found");
         }
         return response;
     });
@@ -185,6 +206,35 @@ void defineCommands() {
     });
 }
 
+// Starts a loop on a detached thread that updates the counter parameter by 1
+// every second. Resets to 0 when the counter reaches 200.
+void startCounter() {
+    std::thread loop([]() {
+        catena::exception_with_status err{"", catena::StatusCode::OK};
+        // The rest is the "sending end" of the status update example
+        std::unique_ptr<IParam> param = dm.getParam("/counter", err);
+        if (param == nullptr) {
+            throw err;
+        }
+        // downcast the IParam to a ParamWithValue<int32_t>
+        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
+        counter.get() = 0; // Initialize counter to 0
+        while (counterLoop) {
+            // update the counter once per second, and emit the event
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            {
+                std::lock_guard lg(dm.mutex());
+                if (counter.get()++ >= 200) {
+                    counter.get() = 0; // Reset counter to 0 when it reaches 200
+                }
+                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+                dm.valueSetByServer.emit("/counter", &counter, 0);
+            }
+        }
+    });
+    loop.detach();
+}
+
 void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
@@ -202,7 +252,7 @@ void RunRESTServer() {
         globalApi = &api;
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
-        
+
         api.run();
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
@@ -219,6 +269,7 @@ int main(int argc, char* argv[])
   
     // commands should be defined before starting the RPC server 
     defineCommands();
+    startCounter();
 
     std::thread catenaRestThread(RunRESTServer);
     catenaRestThread.join();

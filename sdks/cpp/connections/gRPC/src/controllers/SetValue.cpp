@@ -39,7 +39,7 @@ SetValue::SetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok)
     : MultiSetValue(service, dm, ok, objectCounter_++) {
     typeName = "SetValue";
     service_->registerItem(this);
-    proceed( ok);
+    proceed(ok);
 }
 
 void SetValue::request_() {
