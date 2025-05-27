@@ -326,7 +326,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryReturnCatena) {
 }
 
 /*
- * TEST 5 - dm.trySetValue throws a catena::Exception_With_Status.
+ * TEST 6 - dm.trySetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -351,7 +351,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowCatena) {
 }
 
 /*
- * TEST 5 - dm.trySetValue throws a std::runtime_error.
+ * TEST 7 - dm.trySetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
     catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
@@ -376,7 +376,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrTryThrowUnknown) {
 }
 
 /*
- * TEST 5 - dm.commitSetValue returns a catena::Exception_With_Status.
+ * TEST 8 - dm.commitSetValue returns a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -401,7 +401,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitReturnCatena) {
 }
 
 /*
- * TEST 5 - dm.commitSetValue throws a catena::Exception_With_Status.
+ * TEST 9 - dm.commitSetValue throws a catena::Exception_With_Status.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
     catena::exception_with_status rc("Invalid argument", catena::StatusCode::INVALID_ARGUMENT);
@@ -427,7 +427,7 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowCatena) {
 }
 
 /*
- * TEST 4 - dm.commitSetValue throws a std::runtime_error.
+ * TEST 10 - dm.commitSetValue throws a std::runtime_error.
  */
 TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedErrCommitThrowUnknown) {
     catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);

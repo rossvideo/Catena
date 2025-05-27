@@ -171,10 +171,9 @@ TEST_F(gRPCGetValueTests, GetValue_proceed) {
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.dm, getValue(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(jptr, inVal.oid());
             EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
@@ -213,10 +212,9 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzValid) {
     // Mocking kProcess and kFinish functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, getValue("/test_oid", ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.dm, getValue(inVal.oid(), ::testing::_, ::testing::_)).Times(1)
         .WillOnce(::testing::Invoke([this, &rc](const std::string& jptr, catena::Value& value, Authorizer& authz) {
             // Checking that function gets correct inputs.
-            EXPECT_EQ(jptr, inVal.oid());
             EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
             value.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
@@ -231,7 +229,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzValid) {
 }
 
 /*
- * TEST 3 - GetValue with authz on and invalid token.
+ * TEST 4 - GetValue with authz on and invalid token.
  */
 TEST_F(gRPCGetValueTests, GetValue_proceedAuthzInvalid) {
     catena::exception_with_status rc("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -251,7 +249,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzInvalid) {
 }
 
 /*
- * TEST 4 - GetValue with authz on and invalid token.
+ * TEST 5 - GetValue with authz on and invalid token.
  */
 TEST_F(gRPCGetValueTests, GetValue_proceedAuthzJWSNotFound) {
     catena::exception_with_status rc("JWS bearer token not found", catena::StatusCode::UNAUTHENTICATED);
@@ -271,7 +269,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedAuthzJWSNotFound) {
 }
 
 /*
- * TEST 5 - dm.getValue() returns a catena::exception_with_status.
+ * TEST 6 - dm.getValue() returns a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_proceedErrReturnCatena) {
     catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -294,7 +292,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrReturnCatena) {
 }
 
 /*
- * TEST 6 - dm.getValue() throws a catena::exception_with_status.
+ * TEST 7 - dm.getValue() throws a catena::exception_with_status.
  */
 TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowCatena) {
     catena::exception_with_status rc("Oid does not exist", catena::StatusCode::INVALID_ARGUMENT);
@@ -318,7 +316,7 @@ TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowCatena) {
 }
 
 /*
- * TEST 7 - dm.getValue() throws a std::runtime_exception.
+ * TEST 8 - dm.getValue() throws a std::runtime_exception.
  */
 TEST_F(gRPCGetValueTests, GetValue_proceedErrThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
