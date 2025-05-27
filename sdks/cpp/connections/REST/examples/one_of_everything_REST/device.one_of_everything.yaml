@@ -12,6 +12,12 @@ params:
     name: { display_strings: { en: "Int Example" } }
     minimal_set: true
   
+  counter: 
+    type: INT32
+    value: { int32_value: 0 }
+    name: { display_strings: { en: "Counter" } }
+    minimal_set: true
+  
   # Imports the parameter from the file specified below.
   float_example:
     import: { file: /params/param.float_example.yaml }
@@ -71,5 +77,7 @@ commands:
     type: EMPTY
   fib_stop:
     type: EMPTY
+  fib_set:
+    type: INT32
   randomize:
     type: EMPTY
