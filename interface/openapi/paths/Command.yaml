@@ -34,7 +34,7 @@
 # Date: 25/04/03
 #
 
-put:
+post:
   summary: Execute a command on a device model
   operationId: ExecuteCommand
 
@@ -84,7 +84,7 @@ put:
       application/json:
         schema:
           $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example: {float32_value: 0.5}
+        example: {value:{"float32_value": 0.5}}
 
     
   responses:

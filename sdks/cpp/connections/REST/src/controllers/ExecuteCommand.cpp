@@ -18,7 +18,7 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDev
     try {
         // Initialize the request
         req_.set_slot(context_.slot());
-        req_.set_oid("/" + context_.fields("oid"));
+        req_.set_oid(context_.fqoid());
         req_.set_respond(context_.hasField("respond"));
         req_.set_proceed(context_.hasField("proceed"));
 
@@ -29,7 +29,6 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDev
                 absl::string_view(context_.jsonBody()), 
                 &json_payload
             );
-            
             if (status.ok() && json_payload.has_value()) {
                 *req_.mutable_value() = json_payload.value();
             } else {
