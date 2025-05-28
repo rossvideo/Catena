@@ -72,7 +72,7 @@ class gRPCGetPopulatedSlotsTests : public ::testing::Test {
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new GetPopulatedSlotsPayload is created.
+        // We can always assume that a new GetPopulatedSlots obj is created.
         // Either from initialization or kProceed.
         mockServer.expNew();
     }

@@ -87,7 +87,6 @@ void GetParam::proceed( bool ok) {
             std::unique_ptr<IParam> param = nullptr;
             std::shared_ptr<catena::common::Authorizer> sharedAuthz;
             catena::common::Authorizer* authz;
-
             try {
                 // Creating authorizer.
                 if (service_->authorizationEnabled()) {
@@ -99,28 +98,26 @@ void GetParam::proceed( bool ok) {
                 // Getting the param.
                 std::lock_guard lg(dm_.mutex());
                 param = dm_.getParam(req_.oid(), rc, *authz);
+                // If we found a param update the response.
+                if (param && rc.status == catena::StatusCode::OK) {
+                    res_.set_oid(param->getOid());
+                    rc = param->toProto(*res_.mutable_param(), *authz);
+                }
             // ERROR
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);
             } catch (...) {
                 rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
-
-            // Everything went well, writing the parameter.
-            if (param && rc.status == catena::StatusCode::OK) {
-                // param is a copy, so we don't need to lock the device again.
-                res_.set_oid(param->getOid());
-                param->toProto(*res_.mutable_param(), *authz);
+            // Writing the response.
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
                 writer_.Finish(res_, Status::OK, this);
             // Error along the way, finish call with error.
             } else {
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
-                writer_.FinishWithError(errorStatus, this);
+                writer_.FinishWithError(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
             }
-            } // var scope
-
-            // Updating status and breaking.
-            status_ = CallStatus::kFinish;
+            }
             break;
 
         /*
@@ -132,9 +129,14 @@ void GetParam::proceed( bool ok) {
             service_->deregisterItem(this);
             break;
 
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }
