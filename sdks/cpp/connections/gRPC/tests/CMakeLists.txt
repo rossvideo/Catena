@@ -9,10 +9,13 @@ include_directories(../include)
 include_directories(${GTEST_INCLUDE_DIRS})	
 include_directories(../../common/tests)
 
-set(SOURCES 	
+set(SOURCES
     GetValue_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
+    ListLanguages_test.cpp
+    LanguagePackRequest_test.cpp
+    AddLanguage_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	

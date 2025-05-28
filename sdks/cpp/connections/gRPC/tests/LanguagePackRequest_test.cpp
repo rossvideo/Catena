@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file is for testing the SetValue.cpp file.
+ * @brief This file is for testing the LanguagePackRequest.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/05/27
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -50,13 +50,13 @@
 #include "gRPCMockClasses.h"
 
 // gRPC
-#include "controllers/SetValue.h"
+#include "controllers/LanguagePackRequest.h"
 
 using namespace catena::common;
 using namespace catena::gRPC;
 
 // Fixture
-class gRPCSetValueTests : public ::testing::Test {
+class gRPCLanguagePackRequestTests : public ::testing::Test {
   protected:
     /*
      * Called at the start of all tests.
@@ -66,12 +66,7 @@ class gRPCSetValueTests : public ::testing::Test {
         mockServer.start();
         // Setting up the inVal used across all tests.
         inVal.set_slot(1);
-        auto value = inVal.mutable_value();
-        value->set_oid("/test_oid");
-        value->mutable_value()->set_string_value("test_value");
-        // Converting above to multiSetValuePayload for input testing.
-        expMultiVal.set_slot(inVal.slot());
-        expMultiVal.add_values()->CopyFrom(*value);
+        inVal.set_language("en");
     }
 
     /*
@@ -91,7 +86,7 @@ class gRPCSetValueTests : public ::testing::Test {
      */
     void testRPC() {
         // Sending async RPC.
-        mockServer.client->async()->SetValue(&clientContext, &inVal, &outVal, [this](grpc::Status status){
+        mockServer.client->async()->LanguagePackRequest(&clientContext, &inVal, &outVal, [this](grpc::Status status){
             outRc = status;
             done = true;
             cv.notify_one();
@@ -136,66 +131,100 @@ class gRPCSetValueTests : public ::testing::Test {
     std::condition_variable cv;
     std::mutex cv_mtx;
     std::unique_lock<std::mutex> lock{cv_mtx};
-    static catena::SingleSetValuePayload inVal;
-    static catena::MultiSetValuePayload expMultiVal;
-    catena::Empty outVal;
+    static catena::LanguagePackRequestPayload inVal;
+    catena::DeviceComponent_ComponentLanguagePack outVal;
     grpc::Status outRc;
     // Expected variables
-    catena::Empty expVal;
+    catena::DeviceComponent_ComponentLanguagePack expVal;
     grpc::Status expRc;
 
     static MockServer mockServer;
 };
 
-MockServer gRPCSetValueTests::mockServer;
+MockServer gRPCLanguagePackRequestTests::mockServer;
 // Static as its only used to make sure the correct obj is passed into mocked
 // functions.
-catena::SingleSetValuePayload gRPCSetValueTests::inVal;
-catena::MultiSetValuePayload gRPCSetValueTests::expMultiVal;
+catena::LanguagePackRequestPayload gRPCLanguagePackRequestTests::inVal;
 
 /*
  * ============================================================================
- *                               MultiSetValue tests
+ *                               LanguagePackRequest tests
  * ============================================================================
  * 
- * TEST 1 - Creating a SetValue object. This tests request_().
+ * TEST 1 - Creating a LanguagePackRequest object.
  */
-TEST_F(gRPCSetValueTests, SetValue_create) {
-    // Creating multiSetValue object.
-    new SetValue(mockServer.service, *mockServer.dm, true);
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_create) {
+    // Creating languagePackRequest object.
+    new LanguagePackRequest(mockServer.service, *mockServer.dm, true);
     EXPECT_FALSE(mockServer.testCall);
     EXPECT_TRUE(mockServer.asyncCall);
 }
 
-/*
- * TEST 2 - Normal case for SetValue proceed().
- * This tests both create_() and toMulti_().
+/* 
+ * TEST 2 - Normal case for LanguagePackRequest proceed().
  */
-TEST_F(gRPCSetValueTests, SetValue_proceedNormal) {
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
+    // Setting up the expected values.
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-
+    expVal.set_language(inVal.language());
+    auto languagePack = expVal.mutable_language_pack();
+    languagePack->set_name("English");
+    (*languagePack->mutable_words())["greeting"] = "Hello";
+    
     // Mocking kProcess and kFinish functions
-    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockServer.dm, tryMultiSetValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::exception_with_status &ans, catena::common::Authorizer &authz) {
-            // Checking that function gets correct inputs. Mostly care about
-            // src here.
-            EXPECT_EQ(src.SerializeAsString(), expMultiVal.SerializeAsString());
-            EXPECT_EQ(ans.status, catena::StatusCode::OK);
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            // Setting the output status and returning true.
-            ans = catena::exception_with_status(rc.what(), rc.status);
-            return true;
-        }));
-    EXPECT_CALL(*mockServer.dm, commitMultiSetValue(::testing::_, ::testing::_)).Times(1)
-        .WillOnce(::testing::Invoke([this, &rc](catena::MultiSetValuePayload src, catena::common::Authorizer &authz) {
-            // Checking that function gets correct inputs.
-            EXPECT_EQ(src.SerializeAsString(), expMultiVal.SerializeAsString());
-            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-            // Returning status.
+    EXPECT_CALL(*mockServer.dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+            pack.CopyFrom(expVal);
             return catena::exception_with_status(rc.what(), rc.status);
+        }));
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
+    }));
+
+    // Sending the RPC and comparing the results.
+    testRPC();
+}
+
+/* 
+ * TEST 3 - dm.getLanguagePack returns a catena::Exception_With_Status.
+ */
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
+    // Setting up the expected values.
+    catena::exception_with_status rc("Language pack en not found", catena::StatusCode::NOT_FOUND);
+    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+    
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+            return catena::exception_with_status(rc.what(), rc.status);
+        }));
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
+    }));
+
+    // Sending the RPC and comparing the results.
+    testRPC();
+}
+
+/* 
+ * TEST 4 - dm.getLanguagePack throws a catena::Exception_With_Status.
+ */
+TEST_F(gRPCLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
+    // Setting up the expected values.
+    catena::exception_with_status rc("unknown error", catena::StatusCode::UNKNOWN);
+    expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+    
+    // Mocking kProcess and kFinish functions
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockServer.dm, getLanguagePack(inVal.language(), ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([this, &rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack){
+            throw catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status("", catena::StatusCode::OK);
         }));
     EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
         delete mockServer.testCall;

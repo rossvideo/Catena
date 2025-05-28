@@ -82,19 +82,25 @@ void GetValue::proceed( bool ok) {
             catena::Value ans;
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                // If authorization is enabled, check the client's scopes.
-                if(service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{jwsToken_()};
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.getValue(req_.oid(), ans, authz);
+                /*
+                 * Creating authorizer object. Shared ptr maintains ownership
+                 * while raw ptr ensures we don't delete kAuthzDisabled.
+                 */
+                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                catena::common::Authorizer* authz;
+                if (service_->authorizationEnabled()) {
+                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                    authz = sharedAuthz.get();
                 } else {
-                    std::lock_guard lg(dm_.mutex());
-                    rc = dm_.getValue(req_.oid(), ans, catena::common::Authorizer::kAuthzDisabled);
-                } 
-            // Likely authentication error, end process.
+                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                }
+                // Getting the value.
+                std::lock_guard lg(dm_.mutex());
+                rc = dm_.getValue(req_.oid(), ans, *authz);
+            // ERROR.
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);
-            } catch (...) { // Error, end process.
+            } catch (...) {
                 rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
             status_ = CallStatus::kFinish;
