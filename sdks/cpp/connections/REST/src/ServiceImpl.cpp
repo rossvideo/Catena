@@ -52,7 +52,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
 
     router_.addProduct("GET/v1/connect",                    Connect::makeOne);
     router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
-    router_.addProduct("PUT/v1/execute-command",            ExecuteCommand::makeOne);
+    router_.addProduct("POST/v1/command",                   ExecuteCommand::makeOne);
     router_.addProduct("GET/v1/asset",                      AssetRequest::makeOne);
     router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
     router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);

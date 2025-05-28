@@ -80,10 +80,11 @@ void MultiSetValue::proceed(bool ok) {
             // Used to serve other clients while processing.
             create_(ok);
             context_.AsyncNotifyWhenDone(this);
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
                 // Convert to MultiSetValuePayload if not already.
                 toMulti_();
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 /**
                  * Creating authorization object depending on client scopes.
                  * Shared ptr to maintain lifetime of object. Raw ptr ensures
@@ -101,25 +102,21 @@ void MultiSetValue::proceed(bool ok) {
                 std::lock_guard lg(dm_.mutex());
                 // Trying and commiting the multiSetValue.
                 if (dm_.tryMultiSetValue(reqs_, rc, *authz)) {
-                    dm_.commitMultiSetValue(reqs_, *authz);
+                    rc = dm_.commitMultiSetValue(reqs_, *authz);
                 }
-                if (rc.status == catena::StatusCode::OK) {
-                    status_ = CallStatus::kFinish;
-                    responder_.Finish(catena::Empty{}, Status::OK, this);
-                } else {
-                    errorStatus_ = Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-                    status_ = CallStatus::kFinish;
-                    responder_.Finish(::catena::Empty{}, errorStatus_, this);
-                }
-            // Likely authentication error, end process.
+            // ERROR
             } catch (catena::exception_with_status& err) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                responder_.FinishWithError(errorStatus, this);
-            } catch (...) { // Error, end process.
-                errorStatus_ = Status(grpc::StatusCode::INTERNAL, "unknown error");
-                status_ = CallStatus::kFinish;
-                responder_.Finish(::catena::Empty{}, errorStatus_, this);
+                rc = catena::exception_with_status{err.what(), err.status};
+            } catch (...) {
+                rc = catena::exception_with_status{"unknown error", catena::StatusCode::UNKNOWN};
+            }
+            // Changing state to kFinish and writing response to client.
+            status_ = CallStatus::kFinish;
+            if (rc.status == catena::StatusCode::OK) {
+                responder_.Finish(catena::Empty{}, Status::OK, this);
+            } else {
+                responder_.FinishWithError(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
         /**
@@ -130,10 +127,14 @@ void MultiSetValue::proceed(bool ok) {
             std::cout << typeName << "[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-        // default: Error, end process.
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default:// GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             responder_.FinishWithError(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }
