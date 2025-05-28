@@ -10,6 +10,8 @@ include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(../../common/tests)
 
 set(SOURCES 	
+    GetPopulatedSlots_test.cpp
+    GetParam_test.cpp
     GetValue_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
