@@ -78,7 +78,7 @@ class gRPCAddLanguageTests : public ::testing::Test {
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
-        // We can always assume that a new AddLanguagePayload is created.
+        // We can always assume that a new CallData obj is created.
         // Either from initialization or kProceed.
         mockServer.expNew();
     }
