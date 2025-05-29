@@ -37,12 +37,12 @@ RUN apt-get update --fix-missing && \
 
 COPY --chown=1000:1000 --from=builder ${PREFIX_DIR} ${PREFIX_DIR}
 COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/common/include /opt/catena-sdk/include/
-COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/build/common/examples/full_service/full_service /opt/catena-sdk/
-COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/build/common/examples/serdes/serdes /opt/catena-sdk/
-COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/build/common/examples/basic_param_access/basic_param_access /opt/catena-sdk/
-COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/build/common/tests/ParamAccessorTest /opt/catena-sdk/tests/
-COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/build/common/libcatena_common.a /opt/catena-sdk/lib/
-COPY --chown=1000:1000 --from=builder /opt/catena-sdk/sdks/cpp/build/libcatena_interface.a /opt/catena-sdk/lib/
+COPY --chown=1000:1000 --from=builder /opt/catena-sdk/build/cpp/common/examples/full_service/full_service /opt/catena-sdk/
+COPY --chown=1000:1000 --from=builder /opt/catena-sdk/build/cpp/common/examples/serdes/serdes /opt/catena-sdk/
+COPY --chown=1000:1000 --from=builder /opt/catena-sdk/build/cpp/common/examples/basic_param_access/basic_param_access /opt/catena-sdk/
+COPY --chown=1000:1000 --from=builder /opt/catena-sdk/build/cpp/common/tests/ParamAccessorTest /opt/catena-sdk/tests/
+COPY --chown=1000:1000 --from=builder /opt/catena-sdk/build/cpp/common/libcatena_common.a /opt/catena-sdk/lib/
+COPY --chown=1000:1000 --from=builder /opt/catena-sdk/build/cpp/libcatena_interface.a /opt/catena-sdk/lib/
 COPY --chown=1000:1000 --from=builder /opt/catena-sdk/example_device_models /opt/catena-sdk/example_device_models/
 COPY --chown=1000:1000 --from=builder /opt/catena-sdk/interface /opt/catena-sdk/interface/
 

@@ -5,9 +5,9 @@
         "type": "cppdbg",
         "name": "Debug api_only with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/connections/REST/examples/api_only/api_only",
+        "program": "${workspaceFolder}/build/cpp/connections/REST/examples/api_only/api_only",
         "args": [],
-        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "cwd": "${workspaceFolder}/build/cpp",
         "preLaunchTask": "",
         "externalConsole": true,
         "MIMode": "lldb"
@@ -16,9 +16,9 @@
         "type": "cppdbg",
         "name": "Debug use_structs with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/use_structs/use_structs",
+        "program": "${workspaceFolder}/build/cpp/common/examples/use_structs/use_structs",
         "args": [],
-        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "cwd": "${workspaceFolder}/build/cpp",
         "preLaunchTask": "",
         "externalConsole": true,
         "MIMode": "lldb"
@@ -27,9 +27,9 @@
         "type": "cppdbg",
         "name": "Debug start_here with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/start_here/start_here",
+        "program": "${workspaceFolder}/build/cpp/common/examples/start_here/start_here",
         "args": [],
-        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "cwd": "${workspaceFolder}/build/cpp",
         "preLaunchTask": "",
         "externalConsole": true,
         "MIMode": "lldb"
@@ -38,9 +38,9 @@
         "type": "cppdbg",
         "name": "Debug Full Service with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/full_service/full_service",
+        "program": "${workspaceFolder}/build/cpp/common/examples/full_service/full_service",
         "args": ["--device_model", "${workspaceFolder}/example_device_models/device.one_of_everything.json"],
-        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "cwd": "${workspaceFolder}/build/cpp",
         "preLaunchTask": "",
         "externalConsole": true,
         "MIMode": "lldb"
@@ -49,9 +49,9 @@
         "type": "cppdbg",
         "name": "Debug status_update with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/status_update/status_update",
+        "program": "${workspaceFolder}/build/cpp/connections/gRPC/examples/status_update/status_update",
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/status_update/static"],
-        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "cwd": "${workspaceFolder}/build/cpp",
         "preLaunchTask": "",
         "externalConsole": true,
         "MIMode": "lldb"
@@ -60,9 +60,9 @@
         "type": "cppdbg",
         "name": "Debug Basic Param Access with lldb",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/common/examples/basic_param_access/basic_param_access",
+        "program": "${workspaceFolder}/build/cpp/common/examples/basic_param_access/basic_param_access",
         "args": ["${workspaceFolder}/example_device_models/device.minimal.json"],
-        "cwd": "${workspaceFolder}/sdks/cpp/build",
+        "cwd": "${workspaceFolder}/build/cpp",
         "preLaunchTask": "",
         "externalConsole": true,
         "MIMode": "lldb"
@@ -71,7 +71,7 @@
         "name": "Debug examples with gdb",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/${input:pickExample}", // Path to the full_service executable
+        "program": "${workspaceFolder}/build/cpp/${input:pickExample}", // Path to the full_service executable
         "args": [], // Any command-line arguments go here
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
@@ -90,7 +90,7 @@
         "name": "Debug gRPC service with gdb",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sdks/cpp/build/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
+        "program": "${workspaceFolder}/build/cpp/connections/gRPC/examples/${input:pickService}/${input:pickService}", // Path to the full_service executable
         "args": ["--static_root", "${workspaceFolder}/sdks/cpp/connections/gRPC/examples/${input:pickService}/static", 
                 //  "--secure_comms", "tls",
                 "--authz"
@@ -122,7 +122,7 @@
           "--device-model",
           "${workspaceFolder}/sdks/cpp/${input:pickDeviceModel}",
           "--output",
-          "${workspaceFolder}/sdks/cpp/build/${input:pickDeviceModel}/..",
+          "${workspaceFolder}/build/cpp/${input:pickDeviceModel}/..",
           "--language",
           "cpp"
       ],
@@ -131,10 +131,10 @@
       "name": "Debug Unit Tests with GDB",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/sdks/cpp/build/${input:pickTestExecutable}",
+      "program": "${workspaceFolder}/build/cpp/${input:pickTestExecutable}",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/sdks/cpp/build",
+      "cwd": "${workspaceFolder}/build/cpp",
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
@@ -152,7 +152,7 @@
       "name": "Debug REST service with GDB",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/sdks/cpp/build/connections/REST/examples/${input:pickRestService}/${input:pickRestService}",
+      "program": "${workspaceFolder}/build/cpp/connections/REST/examples/${input:pickRestService}/${input:pickRestService}",
       "args": [
         "--static_root", "${workspaceFolder}/sdks/cpp/connections/REST/examples/${input:pickRestService}/static",
         //  "--secure_comms", "tls", // Unsure if this is functional
@@ -160,7 +160,7 @@
         "--port=6254"
       ],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/sdks/cpp/build",
+      "cwd": "${workspaceFolder}/build/cpp",
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
@@ -226,11 +226,11 @@
       "description": "Select test executable to debug",
       "type": "pickString",
       "options": [
-        "common/tests/common_unit_tests",
-        "connections/gRPC/tests/grpc_unit_tests",
-        "connections/REST/tests/REST_unit_tests"
+        "unittests/common/common_unit_tests",
+        "unittests/gRPC/gRPC_unit_tests",
+        "unittests/REST/REST_unit_tests"
       ],
-      "default": "common/tests/common_unit_tests"
+      "default": "unittests/common/tests/common_unit_tests"
     },
     {
       "id": "pickRestService",

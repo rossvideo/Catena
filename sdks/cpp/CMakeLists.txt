@@ -238,3 +238,5 @@ install(
 #
 # Build the documentation with Doxygen
 build_docs()
+
+add_subdirectory("../../unittests/cpp/" ../../build/cpp/unittests/)

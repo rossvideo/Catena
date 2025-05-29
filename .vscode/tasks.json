@@ -55,7 +55,7 @@
         {
             "label": "Run Ninja",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/sdks/cpp/build && ninja",
+            "command": "cd ${workspaceFolder}/build/cpp && ninja",
             "group": {
                 "kind": "build",
                 "isDefault": true

@@ -37,7 +37,7 @@
 
   "mounts": [
     // Mount the build directory as a volume first so that it doesn't sync back to the host
-    "source=catena-build,target=/home/${localEnv:USER}/Catena/sdks/cpp/build,type=volume", 
+    "source=catena-build,target=/home/${localEnv:USER}/Catena/build/cpp,type=volume", 
     // Then, mount the Catena directory so that we can sync other changes back to the host
     "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind",
     // the docker daemon

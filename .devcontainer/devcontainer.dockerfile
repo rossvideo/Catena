@@ -60,9 +60,9 @@ RUN mkdir -p ~/Catena \
     && git submodule update --init --recursive
 
 # Build Catena
-RUN mkdir -p ~/Catena/sdks/cpp/build \
-    && cd ~/Catena/sdks/cpp/build \
-    && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp \
+RUN mkdir -p ~/Catena/build/cpp \
+    && cd ~/Catena/build/cpp \
+    && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ~/Catena/build/cpp ~/Catena/sdks/cpp  \
     && ninja
 # cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
 RUN cd ~/Catena/ \
@@ -70,11 +70,11 @@ RUN cd ~/Catena/ \
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
-# ~/Catena/sdks/cpp/build/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
+# ~/Catena/build/cpp/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
 # #docker run -rm -v $(realpath ../):~/Catena -it catena-sdk
 VOLUME ["/home/${USER_NAME}/Catena"] 
 
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ~/Catena/sdks/cpp/build/common/examples/hello_world/hello_world || exit 1
+    CMD ~/Catena/build/cpp/common/examples/hello_world/hello_world || exit 1

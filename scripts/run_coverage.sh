@@ -18,12 +18,12 @@ check_coverage_sync() {
     return $([ "$out_of_sync" = true ])
 }
 
-cd ~/Catena/sdks/cpp/build
+cd ~/Catena/build/cpp
 
 # Check if coverage data is out of sync
-if check_coverage_sync ~/Catena/sdks/cpp/build; then
+if check_coverage_sync ~/Catena/build/cpp; then
     echo "Coverage data is out of sync. Cleaning and rebuilding..."
-    find ~/Catena/sdks/cpp/build -name "*.gcda" -delete    
+    find ~/Catena/build/cpp -name "*.gcda" -delete    
     ninja clean
 else
     echo "Coverage data is in sync. Proceeding with tests..."
