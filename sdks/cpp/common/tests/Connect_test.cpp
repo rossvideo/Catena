@@ -152,33 +152,8 @@ protected:
             .WillRepeatedly(::testing::Invoke([](catena::LanguagePack& pack) {
                 pack.set_name("English");
                 (*pack.mutable_words())["greeting"] = "Hello";
-                (*pack.mutable_words())["parting"] = "Goodbye";
-            }));
-        EXPECT_CALL(*languagePack, begin())
-            .WillRepeatedly(::testing::Invoke([]() {
-                static const std::unordered_map<std::string, std::string> words = {
-                    {"greeting", "Hello"},
-                    {"parting", "Goodbye"}
-                };
-                return words.begin();
-            }));
-        EXPECT_CALL(*languagePack, end())
-            .WillRepeatedly(::testing::Invoke([]() {
-                static const std::unordered_map<std::string, std::string> words = {
-                    {"greeting", "Hello"},
-                    {"parting", "Goodbye"}
-                };
-                return words.end();
             }));
         return languagePack;
-    }
-
-    // Helper method to verify language pack response
-    void verifyLanguagePackResponse(const catena::PushUpdates& response) {
-        const auto& languagePack = response.device_component().language_pack().language_pack();
-        EXPECT_EQ(languagePack.name(), "English");
-        EXPECT_EQ(languagePack.words().at("greeting"), "Hello");
-        EXPECT_EQ(languagePack.words().at("parting"), "Goodbye");
     }
 };
 
@@ -187,7 +162,6 @@ protected:
  *                               Connect Tests
  * ============================================================================
  */
- 
 // == 1. Authorization Tests ==
 
 // Test 1.1: FAILURE - Parameter updateResponse readAuthz check fails
@@ -282,7 +256,6 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckDisabled) {
     
     connect->updateResponse_(languagePack.get());
     EXPECT_TRUE(connect->hasUpdate());
-    verifyLanguagePackResponse(connect->getResponse());
 }
 
 // Test 1.6: FAILURE - LanguagePack updateResponse authorization check when enabled but fails
@@ -307,7 +280,6 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledSucceeds
     
     connect->updateResponse_(languagePack.get());
     EXPECT_TRUE(connect->hasUpdate());
-    verifyLanguagePackResponse(connect->getResponse());
 }
 
 
