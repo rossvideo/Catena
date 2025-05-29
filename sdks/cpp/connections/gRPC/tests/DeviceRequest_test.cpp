@@ -84,10 +84,30 @@ class gRPCDeviceRequestTests : public ::testing::Test {
     class TestRPC : public grpc::ClientReadReactor<catena::DeviceComponent> {
         public:
             /*
+             * This sets up the expected values for the RPC with one of
+             * everything. They only have their OID set, which is enough to
+             * make sure the correct obj is being passed back.
+             */
+            TestRPC() {
+                expVals.push_back(catena::DeviceComponent()); // [0] Device
+                expVals.push_back(catena::DeviceComponent()); // [1] Menu
+                expVals.push_back(catena::DeviceComponent()); // [2] Language pack
+                expVals.push_back(catena::DeviceComponent()); // [3] Constraint
+                expVals.push_back(catena::DeviceComponent()); // [4] Param
+                expVals.push_back(catena::DeviceComponent()); // [5] Comamnd
+                expVals[0].mutable_device()->set_slot(1);
+                expVals[1].mutable_menu()->set_oid("menu_test");
+                expVals[2].mutable_language_pack()->set_language("language_test");
+                expVals[3].mutable_shared_constraint()->set_oid("constraint_test");
+                expVals[4].mutable_param()->set_oid("param_test");
+                expVals[5].mutable_command()->set_oid("command_test");
+            }
+        
+            /*
              * This function makes an async RPC to the MockServer.
              */
             void MakeCall(catena::CatenaService::Stub* client, const catena::DeviceRequestPayload& inVal) {
-                client->async()->DeviceRequest(&context, &inVal, this);
+                client->async()->DeviceRequest(&clientContext, &inVal, this);
                 StartRead(&outVal);
                 StartCall();
             }
@@ -98,6 +118,8 @@ class gRPCDeviceRequestTests : public ::testing::Test {
             void OnReadDone(bool ok) override {
                 if (ok) {
                     // Test value.
+                    EXPECT_EQ(outVal.SerializeAsString(), expVals[read].SerializeAsString());
+                    read += 1;
                     StartRead(&outVal);
                 }
             }
@@ -115,18 +137,18 @@ class gRPCDeviceRequestTests : public ::testing::Test {
              * the rc with what was expected.
              */
             void Await() {
-                // std::unique_lock<std::mutex> lock{cv_mtx};
                 cv.wait(lock, [this] { return done; });
                 // Comparing the results.
                 EXPECT_EQ(outRc.error_code(), expRc.error_code());
                 EXPECT_EQ(outRc.error_message(), expRc.error_message());
             }
         
-            grpc::ClientContext context;
-            catena::DeviceComponent expVal;
+            grpc::ClientContext clientContext;
+            std::vector<catena::DeviceComponent> expVals;
             catena::DeviceComponent outVal;
             grpc::Status expRc;
             grpc::Status outRc;
+            uint32_t read = 0;
 
             bool done = false;
             std::condition_variable cv;
@@ -184,31 +206,43 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_create) {
 }
 
 /*
- * TEST 2 - Normal case for GetParam proceed().
+ * TEST 2 - Normal case for DeviceRequest proceed().
  */
 TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
     catena::DeviceRequestPayload inVal;
+    // No bearing just to make sure the currect val is being passed in.
+    inVal.set_detail_level(catena::Device_DetailLevel::Device_DetailLevel_MINIMAL);
     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
-    std::cerr <<"MockSerialer: "<<mockSerializer.get() << std::endl;
-    // testRPC.expVal.set
+    std::cerr <<"MockSerialer start of test: "<<mockSerializer<< std::endl;
 
-    // Mocking kProcess and kFinish functions
+    // Mocking kProcess functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, ::testing::_, ::testing::_)).Times(1)
+    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
         .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
+            EXPECT_TRUE(subscribedOids.empty());
             return std::move(mockSerializer);
         }));
-    EXPECT_CALL(*mockServer.dm, mutex()).Times(3).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
-    EXPECT_CALL(*mockSerializer, getNext()).Times(3)
-        .WillOnce(::testing::Return(catena::DeviceComponent()))
-        .WillOnce(::testing::Return(catena::DeviceComponent()))
-        .WillOnce(::testing::Return(catena::DeviceComponent()));
-    EXPECT_CALL(*mockSerializer, hasMore()).Times(3)
+    //Mocking kWrite functions
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockSerializer, getNext()).Times(6)
+        .WillOnce(::testing::Return(testRPC.expVals[0]))
+        .WillOnce(::testing::Return(testRPC.expVals[1]))
+        .WillOnce(::testing::Return(testRPC.expVals[2]))
+        .WillOnce(::testing::Return(testRPC.expVals[3]))
+        .WillOnce(::testing::Return(testRPC.expVals[4]))
+        .WillOnce(::testing::Return(testRPC.expVals[5]));
+    EXPECT_CALL(*mockSerializer, hasMore()).Times(6)
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(true))
         .WillOnce(::testing::Return(false));
+    // Mocking kFinish functions.
     EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
         delete mockServer.testCall;
         mockServer.testCall = nullptr;
@@ -216,11 +250,69 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
 
     testRPC.MakeCall(mockServer.client.get(), inVal);
     testRPC.Await();
+
+    std::cerr <<"MockSerialer end of test: "<<mockSerializer<< std::endl;
 }
 
 /*
- * TEST 3 - Normal case for GetParam proceed().
+ * TEST 3 - DeviceRequest with authz on and valid token.
  */
-TEST_F(gRPCDeviceRequestTests, DeviceRequest_end) {
-   
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    testRPC.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+    catena::DeviceRequestPayload inVal;
+    // No bearing just to make sure the currect val is being passed in.
+    inVal.set_detail_level(catena::Device_DetailLevel::Device_DetailLevel_MINIMAL);
+    std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+    // Adding authorization mockToken metadata. This it a random RSA token.
+    std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
+                            "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
+                            "GUiOiJzdDIxMzg6bW9uOncgc3QyMTM4Om9wOncgc3QyMTM4Om"
+                            "NmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MTUxNjIzOTAyMiw"
+                            "ibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dTo"
+                            "krEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko965"
+                            "3v0khyUT4UKeOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKH"
+                            "kWi4P3-CYWrwe-g6b4-a33Q0k6tSGI1hGf2bA9cRYr-VyQ_T3"
+                            "RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEmuIwNOVM3EcVEaL"
+                            "yISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg_w"
+                            "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
+                            "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+    testRPC.clientContext.AddMetadata("authorization", "Bearer " + mockToken);
+    std::cerr <<"MockSerialer start of test: "<<mockSerializer<< std::endl;
+
+    // Mocking kProcess functions
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+        .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            // Making sure the correct values were passed in.
+            EXPECT_FALSE(&authz == &Authorizer::kAuthzDisabled);
+            EXPECT_TRUE(subscribedOids.empty());
+            return std::move(mockSerializer);
+        }));
+    //Mocking kWrite functions
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockSerializer, getNext()).Times(6)
+        .WillOnce(::testing::Return(testRPC.expVals[0]))
+        .WillOnce(::testing::Return(testRPC.expVals[1]))
+        .WillOnce(::testing::Return(testRPC.expVals[2]))
+        .WillOnce(::testing::Return(testRPC.expVals[3]))
+        .WillOnce(::testing::Return(testRPC.expVals[4]))
+        .WillOnce(::testing::Return(testRPC.expVals[5]));
+    EXPECT_CALL(*mockSerializer, hasMore()).Times(6)
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(true))
+        .WillOnce(::testing::Return(false));
+    // Mocking kFinish functions.
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
+    }));
+
+    testRPC.MakeCall(mockServer.client.get(), inVal);
+    testRPC.Await();
+
+    std::cerr <<"MockSerialer end of test: "<<mockSerializer<< std::endl;
 }
