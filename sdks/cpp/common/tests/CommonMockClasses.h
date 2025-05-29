@@ -42,7 +42,6 @@
 #include <IDevice.h>
 #include <IParam.h>
 #include <ISubscriptionManager.h>
-#include <ISubscriptionManager.h>
 #include <rpc/IConnect.h>
 #include <IParamDescriptor.h>
 #include <Status.h>

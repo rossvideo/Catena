@@ -191,11 +191,10 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
         } else {
             // added_packs_ here to maintain ownership in device scope.
             added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
+            language_packs_[id] = added_packs_[id].get();
             language_packs_[id]->fromProto(language.language_pack());      
             // Pushing update to connect gRPC.
-            ComponentLanguagePack pack;
-            ans = getLanguagePack(id, pack);
-            languageAddedPushUpdate.emit(pack);
+            languageAddedPushUpdate.emit(language_packs_[id]);
         }
     }
     return ans;
