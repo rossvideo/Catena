@@ -200,9 +200,7 @@ class Connect : public IConnect {
             }
             // Updating res_'s device_component and pushing update.
             auto pack = this->res_.mutable_device_component()->mutable_language_pack();
-            catena::LanguagePack languagePack;
-            l->toProto(languagePack);
-            pack->mutable_language_pack()->CopyFrom(languagePack);
+            l->toProto(*pack->mutable_language_pack());
             this->hasUpdate_ = true;
             this->cv_.notify_one();
         } catch(catena::exception_with_status& why){
