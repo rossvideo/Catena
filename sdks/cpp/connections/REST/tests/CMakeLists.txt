@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)	
 
-set(This REST_UnitTests)	
+set(This REST_unit_tests)	
 
 find_package(GTest REQUIRED)	
 include_directories(../src)	
