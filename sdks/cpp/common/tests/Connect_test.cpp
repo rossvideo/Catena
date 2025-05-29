@@ -76,6 +76,7 @@ protected:
 
     void TearDown() override {
         connect.reset();
+        mockParam.reset();
     }
 
     // Common test data
@@ -86,6 +87,7 @@ protected:
     MockDevice dm;
     MockSubscriptionManager subscriptionManager;
     std::unique_ptr<TestConnect> connect;
+    std::unique_ptr<MockParam> mockParam;
 
     // Helper method to setup common expectations
     void setupCommonExpectations(MockParam& param, const MockParamDescriptor& descriptor) {
@@ -121,10 +123,12 @@ protected:
             }));
     }
 
+    // Helper method to setup mock param
     void setupMockParam(MockParam* param, const std::string& oid, const MockParamDescriptor& descriptor) {
         // Initialize param if needed
         if (!param) {
-            param = std::make_unique<MockParam>().get();
+            mockParam = std::make_unique<MockParam>();
+            param = mockParam.get();
         }
 
         // Setup mock param expectations
