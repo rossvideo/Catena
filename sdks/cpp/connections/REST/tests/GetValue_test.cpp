@@ -107,12 +107,11 @@ TEST_F(RESTGetValueTests, GetValue_proceedNormal) {
     catena::Value returnVal;
     returnVal.set_string_value("Test string");
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::string mockOid = "/test_oid";
+    std::string mockFqoid = "/test_oid";
 
     // Defining mock functions
-    // authz = false, fields("oid") = "/text_oid"
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
     // dm.getValue()
     EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
@@ -138,12 +137,12 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrReturnCatena) {
     catena::Value returnVal;
     returnVal.set_string_value("Test string");
     catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/invalid_oid";
+    std::string mockFqoid = "/invalid_oid";
 
     // Defining mock functions
     // authz = false, fields("oid") = "/text_oid"
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
     // dm.getValue()
     EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
@@ -164,7 +163,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedAuthzValid) {
     catena::Value returnVal;
     returnVal.set_string_value("Test string");
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    std::string mockOid = "/test_oid";
+    std::string mockFqoid = "/test_oid";
     /* Authz just tests for a properly encrypted token, proxy handles authz.
      * This is a random RSA token I made jwt.io it is not a security risk I
      * swear. */
@@ -185,7 +184,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedAuthzValid) {
     // authz = false, fields("oid") = "/text_oid"
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
     // dm.getValue()
     EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
@@ -219,7 +218,7 @@ TEST_F(RESTGetValueTests, GetValue_proceedAuthzInvalid) {
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
     EXPECT_CALL(context, jwsToken()).Times(1).WillOnce(::testing::ReturnRef(mockToken));
     // Should NOT make it this far.
-    EXPECT_CALL(context, fields("oid")).Times(0);
+    EXPECT_CALL(context, fqoid()).Times(0);
     EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(0);
 
     // Calling proceed() and checking written response.
@@ -235,12 +234,12 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrThrowCatena) {
     catena::Value returnVal;
     returnVal.set_string_value("Test string");
     catena::exception_with_status rc("", catena::StatusCode::INVALID_ARGUMENT);
-    std::string mockOid = "/invalid_oid";
+    std::string mockFqoid = "/invalid_oid";
 
     // Defining mock functions
     // authz = false, fields("oid") = "/text_oid"
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
     // dm.getValue()
     EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))
@@ -262,12 +261,12 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrThrowUnknown) {
     catena::Value returnVal;
     returnVal.set_string_value("Test string");
     catena::exception_with_status rc("", catena::StatusCode::UNKNOWN);
-    std::string mockOid = "/invalid_oid";
+    std::string mockFqoid = "/invalid_oid";
 
     // Defining mock functions
     // authz = false, fields("oid") = "/text_oid"
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-    EXPECT_CALL(context, fields("oid")).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
     // dm.getValue()
     EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1);
     ON_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_))

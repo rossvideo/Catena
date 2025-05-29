@@ -106,10 +106,12 @@ TEST_F(RESTSetValueTests, SetValue_create) {
 TEST_F(RESTSetValueTests, SetValue_proceedNormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::mutex mockMutex;
-    std::string jsonBody = "{\"oid\":\"/text_box\",\"value\":{\"string_value\":\"test value 1\"}}";
+    std::string mockJsonBody = "{\"value\":{\"string_value\": \"test value 1\"}}";
+    std::string mockFqoid = "/text_box";
 
     // Defining mock functions
-    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(mockJsonBody));
     EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
     EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
@@ -126,10 +128,12 @@ TEST_F(RESTSetValueTests, SetValue_proceedNormal) {
  */
 TEST_F(RESTSetValueTests, SetValue_proceedFailParse) {
     catena::exception_with_status rc("Failed to convert JSON to protobuf", catena::StatusCode::INVALID_ARGUMENT);
-    std::string jsonBody = "Not a JSON string";
+    std::string mockJsonBody = "Not a JSON string";
+    std::string mockFqoid = "";
 
     // Defining mock functions
-    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(jsonBody));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
+    EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(mockJsonBody));
     EXPECT_CALL(context, slot()).Times(1).WillOnce(::testing::Return(1));
     EXPECT_CALL(context, authorizationEnabled()).Times(0);
 

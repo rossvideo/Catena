@@ -51,13 +51,13 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     // Initializing the routes for router_.
 
     router_.addProduct("GET/v1/connect",                    Connect::makeOne);
-    router_.addProduct("GET/v1/device-request",             DeviceRequest::makeOne);
+    router_.addProduct("GET/v1",                            DeviceRequest::makeOne);
     router_.addProduct("POST/v1/command",                   ExecuteCommand::makeOne);
     router_.addProduct("GET/v1/asset",                      AssetRequest::makeOne);
     router_.addProduct("GET/v1/get-populated-slots",        GetPopulatedSlots::makeOne);
-    router_.addProduct("GET/v1/get-value",                  GetValue::makeOne);
+    router_.addProduct("GET/v1/value",                      GetValue::makeOne);
     router_.addProduct("PUT/v1/multi-set-value",            MultiSetValue::makeOne);
-    router_.addProduct("PUT/v1/set-value",                  SetValue::makeOne);
+    router_.addProduct("PUT/v1/value",                      SetValue::makeOne);
     router_.addProduct("GET/v1/get-param",                  GetParam::makeOne);
     router_.addProduct("GET/v1/language-pack-request",      LanguagePackRequest::makeOne);
     router_.addProduct("GET/v1/list-languages",             ListLanguages::makeOne);
