@@ -146,22 +146,39 @@ protected:
     }
 
     // Helper method to setup language pack test data
-    IDevice::ComponentLanguagePack setupLanguagePack() {
-        IDevice::ComponentLanguagePack languagePack;
-        languagePack.set_language("en");
-        auto* pack = languagePack.mutable_language_pack();
-        pack->set_name("English");
-        (*pack->mutable_words())["greeting"] = "Hello";
-        (*pack->mutable_words())["parting"] = "Goodbye";
+    std::unique_ptr<ILanguagePack> setupLanguagePack() {
+        auto languagePack = std::make_unique<MockLanguagePack>();
+        EXPECT_CALL(*languagePack, toProto(::testing::_))
+            .WillRepeatedly(::testing::Invoke([](catena::LanguagePack& pack) {
+                pack.set_name("English");
+                (*pack.mutable_words())["greeting"] = "Hello";
+                (*pack.mutable_words())["parting"] = "Goodbye";
+            }));
+        EXPECT_CALL(*languagePack, begin())
+            .WillRepeatedly(::testing::Invoke([]() {
+                static const std::unordered_map<std::string, std::string> words = {
+                    {"greeting", "Hello"},
+                    {"parting", "Goodbye"}
+                };
+                return words.begin();
+            }));
+        EXPECT_CALL(*languagePack, end())
+            .WillRepeatedly(::testing::Invoke([]() {
+                static const std::unordered_map<std::string, std::string> words = {
+                    {"greeting", "Hello"},
+                    {"parting", "Goodbye"}
+                };
+                return words.end();
+            }));
         return languagePack;
     }
 
     // Helper method to verify language pack response
     void verifyLanguagePackResponse(const catena::PushUpdates& response) {
-        EXPECT_EQ(response.device_component().language_pack().language(), "en");
-        EXPECT_EQ(response.device_component().language_pack().language_pack().name(), "English");
-        EXPECT_EQ(response.device_component().language_pack().language_pack().words().at("greeting"), "Hello");
-        EXPECT_EQ(response.device_component().language_pack().language_pack().words().at("parting"), "Goodbye");
+        const auto& languagePack = response.device_component().language_pack().language_pack();
+        EXPECT_EQ(languagePack.name(), "English");
+        EXPECT_EQ(languagePack.words().at("greeting"), "Hello");
+        EXPECT_EQ(languagePack.words().at("parting"), "Goodbye");
     }
 };
 
@@ -263,7 +280,7 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckDisabled) {
     // Test authorization disabled - should allow update
     connect->initAuthz_("", false);
     
-    connect->updateResponse_(languagePack);
+    connect->updateResponse_(languagePack.get());
     EXPECT_TRUE(connect->hasUpdate());
     verifyLanguagePackResponse(connect->getResponse());
 }
@@ -276,7 +293,7 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledFails) {
     // Test authorization enabled but fails - no monitor scope
     connect->initAuthz_(operatorToken, true);
     
-    connect->updateResponse_(languagePack);
+    connect->updateResponse_(languagePack.get());
     EXPECT_FALSE(connect->hasUpdate());
 }
 
@@ -288,9 +305,9 @@ TEST_F(ConnectTests, updateResponseLanguagePackAuthorizationCheckEnabledSucceeds
     // Test authorization enabled and succeeds - with monitor scope
     connect->initAuthz_(monitorToken, true);
     
-    connect->updateResponse_(languagePack);
-    verifyLanguagePackResponse(connect->getResponse());
+    connect->updateResponse_(languagePack.get());
     EXPECT_TRUE(connect->hasUpdate());
+    verifyLanguagePackResponse(connect->getResponse());
 }
 
 
@@ -323,7 +340,7 @@ TEST_F(ConnectTests, updateResponseLanguagePackCancelled) {
     // Set cancelled to true
     connect->setCancelled(true);
     
-    connect->updateResponse_(languagePack);
+    connect->updateResponse_(languagePack.get());
     EXPECT_TRUE(connect->hasUpdate());  // Should be true even though we didn't set language pack data
 }
 
@@ -615,5 +632,45 @@ TEST_F(ConnectTests, updateResponseDetailLevelUnset) {
         .WillRepeatedly(::testing::ReturnRef(subscribed_set));
     connect->updateResponse_(testOid, testIdx, &param);
     EXPECT_FALSE(connect->hasUpdate());
+}
+
+// == 4. Exception Handling Tests ==
+
+// Test 4.1: FAILURE - If toProto throws, no update is pushed to the client
+TEST_F(ConnectTests, updateResponse_ExceptionInToProto_NoUpdatePushed) {
+    MockParam param;
+    MockParamDescriptor descriptor;
+    setupCommonExpectations(param, descriptor);
+    setupMockParam(&param, testOid, descriptor);
+    connect->detailLevel_ = catena::Device_DetailLevel_FULL;
+    connect->initAuthz_(monitorToken, true);
+
+    // Make toProto throw an exception
+    EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
+        .WillOnce(::testing::Invoke([](catena::Value&, catena::common::Authorizer&) -> catena::exception_with_status {
+            throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
+        }));
+
+    connect->updateResponse_(testOid, testIdx, &param);
+    EXPECT_FALSE(connect->hasUpdate());
+}
+
+// Test 4.2: FAILURE - If any exception is thrown inside updateResponse_ (language pack), no update is pushed to the client
+TEST_F(ConnectTests, updateResponseLanguagePack_ExceptionInside_NoUpdatePushed) {
+    // Create a language pack that will throw when accessed
+    auto languagePack = std::make_unique<MockLanguagePack>();
+    
+    // Make the language pack throw when its data is accessed
+    EXPECT_CALL(*languagePack, toProto(::testing::_))
+        .WillOnce(::testing::Invoke([](catena::LanguagePack&) {
+            throw catena::exception_with_status("Test exception", catena::StatusCode::INTERNAL);
+        }));
+    
+    // Create a test connect instance
+    auto testConnect = std::make_unique<TestConnect>(dm, subscriptionManager);
+    testConnect->initAuthz_(monitorToken, true);
+    
+    testConnect->updateResponse_(languagePack.get());
+    EXPECT_FALSE(testConnect->hasUpdate());
 }
 

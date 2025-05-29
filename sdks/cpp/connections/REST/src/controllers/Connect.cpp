@@ -1,6 +1,6 @@
-
 // connections/REST
 #include <controllers/Connect.h>
+#include <LanguagePack.h>
 using catena::REST::Connect;
 
 // Initializes the object counter for Connect to 0.
@@ -42,7 +42,9 @@ void Connect::proceed() {
         });
         // Waiting for a language to be added to execute code.
         languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
-            updateResponse_(l);
+            catena::common::LanguagePack pack(l.language(), l.language_pack().name(), {}, dm_);
+            pack.fromProto(l.language_pack());
+            updateResponse_(&pack);
         });
         // Send client an empty update with slot of the device
         catena::PushUpdates populatedSlots;

@@ -43,6 +43,7 @@
 #include <IParam.h>
 #include <ISubscriptionManager.h>
 #include <ISubscriptionManager.h>
+#include <rpc/IConnect.h>
 #include <IParamDescriptor.h>
 #include <Status.h>
 #include <Authorization.h>
@@ -158,11 +159,19 @@ class MockParamDescriptor : public IParamDescriptor {
 };
 
 class MockSubscriptionManager : public ISubscriptionManager {
-public:
-    MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
-    MOCK_METHOD(bool, removeSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
-    MOCK_METHOD(const std::set<std::string>&, getAllSubscribedOids, (IDevice& dm), (override));
-    MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
+  public:
+      MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
+      MOCK_METHOD(bool, removeSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
+      MOCK_METHOD(const std::set<std::string>&, getAllSubscribedOids, (IDevice& dm), (override));
+      MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
+};
+
+class MockLanguagePack : public ILanguagePack {
+  public:
+      MOCK_METHOD(void, toProto, (catena::LanguagePack&), (const, override));
+      MOCK_METHOD(void, fromProto, (const catena::LanguagePack&), (override));
+      MOCK_METHOD(const_iterator, begin, (), (const, override));
+      MOCK_METHOD(const_iterator, end, (), (const, override));
 };
 
 } // namespace common
