@@ -20,9 +20,9 @@ void GetValue::proceed() {
         // Getting value at oid from device.
         if (context_.authorizationEnabled()) {
             catena::common::Authorizer authz(context_.jwsToken());
-            rc = dm_.getValue("/" + context_.fqoid(), ans, authz);
+            rc = dm_.getValue(context_.fqoid(), ans, authz);
         } else {
-            rc = dm_.getValue("/" + context_.fqoid(), ans, catena::common::Authorizer::kAuthzDisabled);
+            rc = dm_.getValue(context_.fqoid(), ans, catena::common::Authorizer::kAuthzDisabled);
         }
 
     // ERROR
