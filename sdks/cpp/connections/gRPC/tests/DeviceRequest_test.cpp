@@ -254,53 +254,46 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
 /*
  * TEST 3 - DeviceRequest proceed() with detail_level subscriptions.
  */
-// TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
-//     catena::exception_with_status rc("", catena::StatusCode::OK);
-//     testRPC.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
-//     catena::DeviceRequestPayload inVal;
-//     std::set<std::string> subscribedOids{"oid_test_1", "oid_test_2", "oid_test_3"};
-//     inVal.set_detail_level(catena::Device_DetailLevel::Device_DetailLevel_SUBSCRIPTIONS);
-//     inVal.add_subscribed_oids("oid_test_1");
-//     inVal.add_subscribed_oids("oid_test_2");
-//     inVal.add_subscribed_oids("oid_test_3");
-//     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
+TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedSubscriptions) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    testRPC.expRc = grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what());
+    catena::DeviceRequestPayload inVal;
+    std::set<std::string> subscribedTestOids{"oid_test_1", "oid_test_2", "oid_test_3"};
+    inVal.set_detail_level(catena::Device_DetailLevel::Device_DetailLevel_SUBSCRIPTIONS);
+    inVal.add_subscribed_oids("oid_test_1");
+    inVal.add_subscribed_oids("oid_test_2");
+    inVal.add_subscribed_oids("oid_test_3");
+    MockSubscriptionManager mockSubManager;
+    std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
 
-//     // Mocking kProcess functions
-//     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
-//     EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
-//         .WillOnce(::testing::Invoke([&mockSerializer](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
-//             // Making sure the correct values were passed in.
-//             EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
-//             EXPECT_TRUE(subscribedOids.contains("oid_test_1"));
-//             EXPECT_TRUE(subscribedOids.contains("oid_test_2"));
-//             EXPECT_TRUE(subscribedOids.contains("oid_test_3"));
-//             return std::move(mockSerializer);
-//         }));
-//     //Mocking kWrite functions
-//     EXPECT_CALL(*mockServer.dm, mutex()).Times(6).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
-//     EXPECT_CALL(*mockSerializer, getNext()).Times(6)
-//         .WillOnce(::testing::Return(testRPC.expVals[0]))
-//         .WillOnce(::testing::Return(testRPC.expVals[1]))
-//         .WillOnce(::testing::Return(testRPC.expVals[2]))
-//         .WillOnce(::testing::Return(testRPC.expVals[3]))
-//         .WillOnce(::testing::Return(testRPC.expVals[4]))
-//         .WillOnce(::testing::Return(testRPC.expVals[5]));
-//     EXPECT_CALL(*mockSerializer, hasMore()).Times(6)
-//         .WillOnce(::testing::Return(true))
-//         .WillOnce(::testing::Return(true))
-//         .WillOnce(::testing::Return(true))
-//         .WillOnce(::testing::Return(true))
-//         .WillOnce(::testing::Return(true))
-//         .WillOnce(::testing::Return(false));
-//     // Mocking kFinish functions.
-//     EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
-//         delete mockServer.testCall;
-//         mockServer.testCall = nullptr;
-//     }));
+    // Mocking kProcess functions
+    EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(*mockServer.service, getSubscriptionManager()).Times(4).WillRepeatedly(::testing::ReturnRef(mockSubManager));
+    EXPECT_CALL(mockSubManager, addSubscription("oid_test_1", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(mockSubManager, addSubscription("oid_test_2", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(mockSubManager, addSubscription("oid_test_3", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Return(true));
+    EXPECT_CALL(mockSubManager, getAllSubscribedOids(::testing::_)).Times(1).WillOnce(::testing::ReturnRef(subscribedTestOids));
 
-//     testRPC.MakeCall(mockServer.client.get(), inVal);
-//     testRPC.Await();
-// }
+    EXPECT_CALL(*mockServer.dm, getComponentSerializer(::testing::_, ::testing::_, inVal.detail_level(), true)).Times(1)
+        .WillOnce(::testing::Invoke([&mockSerializer, &subscribedTestOids](catena::common::Authorizer &authz, const std::set<std::string> &subscribedOids, catena::Device_DetailLevel dl, bool shallow){
+            // Making sure the correct values were passed in.
+            EXPECT_EQ(&authz, &Authorizer::kAuthzDisabled);
+            EXPECT_EQ(subscribedOids, subscribedTestOids);
+            return std::move(mockSerializer);
+        }));
+    //Mocking kWrite functions
+    EXPECT_CALL(*mockServer.dm, mutex()).Times(1).WillRepeatedly(::testing::ReturnRef(mockServer.mtx));
+    EXPECT_CALL(*mockSerializer, getNext()).Times(1).WillOnce(::testing::Return(testRPC.expVals[0]));
+    EXPECT_CALL(*mockSerializer, hasMore()).Times(1).WillOnce(::testing::Return(false));
+    // Mocking kFinish functions.
+    EXPECT_CALL(*mockServer.service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([]() {
+        delete mockServer.testCall;
+        mockServer.testCall = nullptr;
+    }));
+
+    testRPC.MakeCall(mockServer.client.get(), inVal);
+    testRPC.Await();
+}
 
 /*
  * TEST 4 - DeviceRequest with authz on and valid token.
