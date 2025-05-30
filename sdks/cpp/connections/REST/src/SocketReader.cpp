@@ -38,14 +38,18 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     try {
         std::vector<std::string> parts;
         catena::split(parts, path, "/");
-        slot_ = std::stoi(parts.at(2));
-        endpoint_ = "/" + parts.at(3);
+        if (parts.size() > 2) {
+            slot_ = std::stoi(parts.at(2));
+        }
+
+        if (parts.size() > 3) {
+            endpoint_ = "/" + parts.at(3);
+        }
 
         //parse fqoid
         if (parts.back() == "stream") {
             parts.pop_back();
         }
-        
         for (int i = 4; i < parts.size(); i++) {
             fqoid_ += "/" + parts.at(i);
         }

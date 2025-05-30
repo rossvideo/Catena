@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)	
 
-set(This REST_UnitTests)	
+set(This REST_unit_tests)	
 
 find_package(GTest REQUIRED)	
 include_directories(../src)	
@@ -20,6 +20,7 @@ set(SOURCES
     MultiSetValue_test.cpp
     SetValue_test.cpp
     GetParam_test.cpp
+    BasicParamInfoRequest_test.cpp
 
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
@@ -31,6 +32,7 @@ set(SOURCES
     ../src/controllers/MultiSetValue.cpp
     ../src/controllers/SetValue.cpp
     ../src/controllers/GetParam.cpp
+    ../src/controllers/BasicParamInfoRequest.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
