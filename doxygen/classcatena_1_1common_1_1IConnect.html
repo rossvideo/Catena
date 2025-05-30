@@ -127,9 +127,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:ae1663d3f7fa33ed154d5fa0ef90d9611" id="r_ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#ae1663d3f7fa33ed154d5fa0ef90d9611">updateResponse_</a> (const std::string &amp;oid, size_t idx, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p)=0</td></tr>
 <tr class="memdesc:ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
 <tr class="separator:ae1663d3f7fa33ed154d5fa0ef90d9611"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19c4f6ad5535ef773d3852f0cd20a95b" id="r_a19c4f6ad5535ef773d3852f0cd20a95b"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a19c4f6ad5535ef773d3852f0cd20a95b">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l)=0</td></tr>
-<tr class="memdesc:a19c4f6ad5535ef773d3852f0cd20a95b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
-<tr class="separator:a19c4f6ad5535ef773d3852f0cd20a95b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60e207c3bf77638a792eedb998c5e77c" id="r_a60e207c3bf77638a792eedb998c5e77c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a60e207c3bf77638a792eedb998c5e77c">updateResponse_</a> (const catena::DeviceComponent_ComponentLanguagePack &amp;l)=0</td></tr>
+<tr class="memdesc:a60e207c3bf77638a792eedb998c5e77c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a ComponentLanguagePack and handles authorization checks.  <br /></td></tr>
+<tr class="separator:a60e207c3bf77638a792eedb998c5e77c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02ef98650e356794414eb781a552fddb" id="r_a02ef98650e356794414eb781a552fddb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IConnect.html#a02ef98650e356794414eb781a552fddb">initAuthz_</a> (const std::string &amp;jwsToken, bool authz=false)=0</td></tr>
 <tr class="memdesc:a02ef98650e356794414eb781a552fddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the authorizer object with the jwsToken.  <br /></td></tr>
 <tr class="separator:a02ef98650e356794414eb781a552fddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -218,8 +218,8 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a id="a19c4f6ad5535ef773d3852f0cd20a95b" name="a19c4f6ad5535ef773d3852f0cd20a95b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a19c4f6ad5535ef773d3852f0cd20a95b">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
+<a id="a60e207c3bf77638a792eedb998c5e77c" name="a60e207c3bf77638a792eedb998c5e77c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60e207c3bf77638a792eedb998c5e77c">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -230,7 +230,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">virtual void catena::common::IConnect::updateResponse_ </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *&#160;</td>
+          <td class="paramtype">const catena::DeviceComponent_ComponentLanguagePack &amp;&#160;</td>
           <td class="paramname"><em>l</em></td><td>)</td>
           <td></td>
         </tr>
@@ -242,15 +242,15 @@ Here is the caller graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Updates the response message with a <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks. </p>
+<p>Updates the response message with a ComponentLanguagePack and handles authorization checks. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">l</td><td>The added <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> emitted by device. </td></tr>
+    <tr><td class="paramname">l</td><td>The added ComponentLanguagePack emitted by device. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#ab0762ce0d7bc1691e328f305eec2ace5">catena::common::Connect</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1Connect.html#a08776752e0acd2ba9946b83d4ff38bff">catena::common::Connect</a>.</p>
 
 </div>
 </div>

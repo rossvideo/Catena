@@ -143,9 +143,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a11240b1de8befc4e8c1711130987364b" id="r_a11240b1de8befc4e8c1711130987364b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a11240b1de8befc4e8c1711130987364b">updateResponse_</a> (const std::string &amp;oid, size_t idx, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p) override</td></tr>
 <tr class="memdesc:a11240b1de8befc4e8c1711130987364b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
 <tr class="separator:a11240b1de8befc4e8c1711130987364b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0762ce0d7bc1691e328f305eec2ace5" id="r_ab0762ce0d7bc1691e328f305eec2ace5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#ab0762ce0d7bc1691e328f305eec2ace5">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l) override</td></tr>
-<tr class="memdesc:ab0762ce0d7bc1691e328f305eec2ace5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
-<tr class="separator:ab0762ce0d7bc1691e328f305eec2ace5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08776752e0acd2ba9946b83d4ff38bff" id="r_a08776752e0acd2ba9946b83d4ff38bff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a08776752e0acd2ba9946b83d4ff38bff">updateResponse_</a> (const IDevice::ComponentLanguagePack &amp;l) override</td></tr>
+<tr class="memdesc:a08776752e0acd2ba9946b83d4ff38bff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with a ComponentLanguagePack and handles authorization checks.  <br /></td></tr>
+<tr class="separator:a08776752e0acd2ba9946b83d4ff38bff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0040e4b363a858cdee334dd1e36d904" id="r_aa0040e4b363a858cdee334dd1e36d904"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#aa0040e4b363a858cdee334dd1e36d904">initAuthz_</a> (const std::string &amp;jwsToken, bool authz=false) override</td></tr>
 <tr class="memdesc:aa0040e4b363a858cdee334dd1e36d904"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the authorizer object with the jwsToken.  <br /></td></tr>
 <tr class="separator:aa0040e4b363a858cdee334dd1e36d904"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -312,8 +312,8 @@ catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><b
 
 </div>
 </div>
-<a id="ab0762ce0d7bc1691e328f305eec2ace5" name="ab0762ce0d7bc1691e328f305eec2ace5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab0762ce0d7bc1691e328f305eec2ace5">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
+<a id="a08776752e0acd2ba9946b83d4ff38bff" name="a08776752e0acd2ba9946b83d4ff38bff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08776752e0acd2ba9946b83d4ff38bff">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -324,7 +324,7 @@ catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><b
         <tr>
           <td class="memname">void catena::common::Connect::updateResponse_ </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *&#160;</td>
+          <td class="paramtype">const IDevice::ComponentLanguagePack &amp;&#160;</td>
           <td class="paramname"><em>l</em></td><td>)</td>
           <td></td>
         </tr>
@@ -336,21 +336,21 @@ catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><b
 </table>
 </div><div class="memdoc">
 
-<p>Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks. </p>
+<p>Updates the response message with a ComponentLanguagePack and handles authorization checks. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">l</td><td>The added <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> emitted by device. </td></tr>
+    <tr><td class="paramname">l</td><td>The added ComponentLanguagePack emitted by device. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a19c4f6ad5535ef773d3852f0cd20a95b">catena::common::IConnect</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a60e207c3bf77638a792eedb998c5e77c">catena::common::IConnect</a>.</p>
 
-<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957">catena::common::Authorizer::hasAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">catena::common::Authorizer::kAuthzDisabled</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>, and <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html#a3e6a4f733927ce286195246e666f8c9f">catena::common::ILanguagePack::toProto()</a>.</p>
+<p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a888e960c8e58b0dc2674c05cf2085957">catena::common::Authorizer::hasAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">catena::common::Authorizer::kAuthzDisabled</a>, and <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_ab0762ce0d7bc1691e328f305eec2ace5_cgraph.svg" width="458" height="179"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a08776752e0acd2ba9946b83d4ff38bff_cgraph.svg" width="458" height="115"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
