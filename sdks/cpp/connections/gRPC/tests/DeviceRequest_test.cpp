@@ -215,7 +215,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
     // No bearing just to make sure the currect val is being passed in.
     inVal.set_detail_level(catena::Device_DetailLevel::Device_DetailLevel_MINIMAL);
     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
-    std::cerr <<"MockSerialer start of test: "<<mockSerializer<< std::endl;
 
     // Mocking kProcess functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
@@ -250,9 +249,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
 
     testRPC.MakeCall(mockServer.client.get(), inVal);
     testRPC.Await();
-
-    std::cerr <<"MockSerialer end of test: "<<mockSerializer<< std::endl;
-    // std::cerr <<"MockSerialerPtr end of test: "<<mockSerializerPtr<< std::endl;
 }
 
 /*
@@ -268,7 +264,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
 //     inVal.add_subscribed_oids("oid_test_2");
 //     inVal.add_subscribed_oids("oid_test_3");
 //     std::unique_ptr<MockDevice::MockDeviceSerializer> mockSerializer = std::make_unique<MockDevice::MockDeviceSerializer>();
-//     std::cerr <<"MockSerialer start of test: "<<mockSerializer<< std::endl;
 
 //     // Mocking kProcess functions
 //     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
@@ -305,9 +300,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedNormal) {
 
 //     testRPC.MakeCall(mockServer.client.get(), inVal);
 //     testRPC.Await();
-
-//     std::cerr <<"MockSerialer end of test: "<<mockSerializer<< std::endl;
-//     // std::cerr <<"MockSerialerPtr end of test: "<<mockSerializerPtr<< std::endl;
 // }
 
 /*
@@ -334,7 +326,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
                             "bOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9M"
                             "dvJH-cx1s146M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
     testRPC.clientContext.AddMetadata("authorization", "Bearer " + mockToken);
-    std::cerr <<"MockSerialer start of test: "<<mockSerializer<< std::endl;
 
     // Mocking kProcess functions
     EXPECT_CALL(*mockServer.service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
@@ -369,8 +360,6 @@ TEST_F(gRPCDeviceRequestTests, DeviceRequest_proceedAuthzValid) {
 
     testRPC.MakeCall(mockServer.client.get(), inVal);
     testRPC.Await();
-
-    std::cerr <<"MockSerialer end of test: "<<mockSerializer<< std::endl;
 }
 
 /*
