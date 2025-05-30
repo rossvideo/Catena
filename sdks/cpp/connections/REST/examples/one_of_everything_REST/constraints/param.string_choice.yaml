@@ -1,0 +1,10 @@
+# STRING_CHOICE constraint example
+type: STRING
+value: { string_value: "a" }
+constraint:
+  type: STRING_CHOICE
+  string_choice:
+    choices:
+      - a
+      - b
+    strict: true
