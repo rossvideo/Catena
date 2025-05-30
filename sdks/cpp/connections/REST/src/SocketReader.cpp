@@ -13,6 +13,7 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     // Resetting variables.
     method_ = "";
     endpoint_ = "";
+    stream_ = false;
     fqoid_ = "";
     jwsToken_ = "";
     origin_ = "";

@@ -70,9 +70,30 @@ class SocketHelper {
     }
 
     // Writes a request to the writeSocket which can later be read by SocketReader.
-    void writeRequest(const std::string& method, const std::string& endpoint, uint32_t slot,
-                      const std::unordered_map<std::string, std::string> fields, const std::string& jwsToken,
-                      const std::string& jsonBody, const std::string& detailLevel, const std::string& language) {
+    void writeRequest(const std::string& method,
+                      uint32_t slot,
+                      const std::string& endpoint,
+                      const std::string& fqoid,
+                      bool stream,
+                      const std::unordered_map<std::string, std::string>& fields,
+                      const std::string& jwsToken,
+                      const std::string& origin,
+                      const std::string& detailLevel,
+                      const std::string& language,
+                      const std::string& jsonBody) {
+        // Compiling path:
+        std::string request = "";
+        request += method + " /v1";
+        if (slot != 0) {
+            request += "/" + std::to_string(slot);
+        }
+        request += endpoint;
+        if (!fqoid.empty()) {
+            request += fqoid;
+        }
+        if (stream) {
+            request += "/stream";
+        }
         // compiling fields:
         std::string fieldsStr = "";
         for (auto [fName, fValue] : fields) {
@@ -82,18 +103,17 @@ class SocketHelper {
                 fieldsStr += "&" + fName + "=" + fValue;
             }
         }
-
-        // Writing request to server.
-        std::string request = method + " /v1/" + std::to_string(slot) + endpoint + fieldsStr + " HTTP/1.1\n"
-                              "Origin: " + origin + "\n"
-                              "User-Agent: test_agent\n"
-                              "Authorization: Bearer " + jwsToken + " \n"
-                              "Detail-Level: " + detailLevel + " \n"
-                              "Language: " + language + " \n"
-                              "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
-                              + jsonBody + "\n"
-                              "\r\n\r\n";
-                              std::cout << request << std::endl;
+        request += fieldsStr;
+        // Compiling headers and jsonBody:
+        request += " HTTP/1.1\n"
+                   "Origin: " + origin + "\n"
+                   "User-Agent: test_agent\n"
+                   "Authorization: Bearer " + jwsToken + " \n"
+                   "Detail-Level: " + detailLevel + " \n"
+                   "Language: " + language + " \n"
+                   "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
+                   + jsonBody + "\n"
+                   "\r\n\r\n";
         boost::asio::write(*writeSocket, boost::asio::buffer(request));
     }
 

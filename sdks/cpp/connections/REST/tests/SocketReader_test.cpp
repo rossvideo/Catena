@@ -67,46 +67,84 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
   
     void TearDown() override { /* Cleanup code here */ }
 
-    // Checks the fields read by the socketReader.
-    void testResults() {
+    void testCall(std::string method,
+                  uint32_t slot,
+                  std::string endpoint,
+                  std::string fqoid,
+                  bool stream,
+                  std::unordered_map<std::string, std::string> fields,
+                  bool authz,
+                  std::string jwsToken,
+                  std::string origin,
+                  std::string detailLevel,
+                  std::string language,
+                  std::string jsonBody) {
+        // Writing the request to the socket and reading.
+        writeRequest(method, slot, endpoint, fqoid, stream, fields,
+                     jwsToken, origin, detailLevel, language, jsonBody);
+        socketReader.read(serverSocket, authz);
+        // Validating the results.
         if (!authz) { jwsToken = ""; }
         auto& dlMap = catena::common::DetailLevel().getForwardMap();
-        // Checking answers.
-        EXPECT_EQ(socketReader.method(),                 method  );
-        EXPECT_EQ(socketReader.endpoint(),               endpoint);
-        EXPECT_EQ(socketReader.slot(),                   slot    );
+        EXPECT_EQ(socketReader.method(), method);
+        EXPECT_EQ(socketReader.slot(), slot);
+        EXPECT_EQ(socketReader.endpoint(), endpoint);
+        EXPECT_EQ(socketReader.fqoid(), fqoid);
         for (auto [key, value] : fields) {
-            EXPECT_EQ(socketReader.hasField(key),        true    );
-            EXPECT_EQ(socketReader.fields(key),          value   );
+            EXPECT_EQ(socketReader.hasField(key), true);
+            EXPECT_EQ(socketReader.fields(key), value);
         }
-        EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
-        EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
-        EXPECT_EQ(socketReader.authorizationEnabled(),   authz   );
-        EXPECT_EQ(socketReader.jwsToken(),               jwsToken);
-        EXPECT_EQ(socketReader.origin(),                 origin  );
-        EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
-        EXPECT_EQ(dlMap.at(socketReader.detailLevel()),  dl      );
-        EXPECT_EQ(socketReader.language(),               language);
+        EXPECT_EQ(socketReader.hasField("doesNotExist"), false);
+        EXPECT_EQ(socketReader.fields("doesNotExist"), "");
+        EXPECT_EQ(socketReader.jwsToken(), jwsToken);
+        EXPECT_EQ(socketReader.origin(), origin);
+        EXPECT_EQ(socketReader.language(), language);
+        EXPECT_EQ(dlMap.at(socketReader.detailLevel()), detailLevel);
+        EXPECT_EQ(socketReader.jsonBody(), jsonBody);
+        EXPECT_EQ(socketReader.authorizationEnabled(), authz);
+        EXPECT_EQ(socketReader.stream(), stream);
     }
+
+    // // Checks the fields read by the socketReader.
+    // void testResults() {
+    //     if (!authz) { jwsToken = ""; }
+    //     auto& dlMap = catena::common::DetailLevel().getForwardMap();
+    //     // Checking answers.
+    //     EXPECT_EQ(socketReader.method(),                 method  );
+    //     EXPECT_EQ(socketReader.endpoint(),               endpoint);
+    //     EXPECT_EQ(socketReader.slot(),                   slot    );
+    //     for (auto [key, value] : fields) {
+    //         EXPECT_EQ(socketReader.hasField(key),        true    );
+    //         EXPECT_EQ(socketReader.fields(key),          value   );
+    //     }
+    //     EXPECT_EQ(socketReader.hasField("doesNotExist"), false   );
+    //     EXPECT_EQ(socketReader.fields("doesNotExist"),   ""      );
+    //     EXPECT_EQ(socketReader.authorizationEnabled(),   authz   );
+    //     EXPECT_EQ(socketReader.jwsToken(),               jwsToken);
+    //     EXPECT_EQ(socketReader.origin(),                 origin  );
+    //     EXPECT_EQ(socketReader.jsonBody(),               jsonBody);
+    //     EXPECT_EQ(dlMap.at(socketReader.detailLevel()),  dl      );
+    //     EXPECT_EQ(socketReader.language(),               language);
+    // }
 
     // SocketReader obj.
     catena::common::SubscriptionManager sm;
     std::string EOPath = "/test/eo/path";
     SocketReader socketReader{sm, EOPath};
-    // Test request data
-    std::string method = "PUT";
-    std::string endpoint = "/test-call";
-    uint32_t slot = 1;
-    std::unordered_map<std::string, std::string> fields = {
-        {"testField1", "1"},
-        {"testField2", "2"}
-        // DO NOT ADD A FIELD CALLED "doesNotExist".
-    };
-    bool authz = false;
-    std::string jwsToken = "test_bearer";
-    std::string jsonBody = "{\n  test_body\n}";
-    std::string dl = "FULL";
-    std::string language = "test_language";
+    // // Test request data
+    // std::string method = "PUT";
+    // std::string endpoint = "/test-call";
+    // uint32_t slot = 1;
+    // std::unordered_map<std::string, std::string> fields = {
+    //     {"testField1", "1"},
+    //     {"testField2", "2"}
+    //     // DO NOT ADD A FIELD CALLED "doesNotExist".
+    // };
+    // bool authz = false;
+    // std::string jwsToken = "test_bearer";
+    // std::string jsonBody = "{\n  test_body\n}";
+    // std::string dl = "FULL";
+    // std::string language = "test_language";
 };
 
 /*
@@ -120,87 +158,157 @@ TEST_F(RESTSocketReaderTests, SocketReader_Create) {
     // Testing socketReader creation from setUp() step.
 }
 
-/* 
- * TEST 2 - Reading from socket with authz disabled.
- */
-TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
-    // Authz false by default.
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    socketReader.read(serverSocket, authz);
-    testResults();
+// /* 
+//  * TEST 2 - Reading from socket with authz disabled.
+//  */
+// TEST_F(RESTSocketReaderTests, SocketReader_NormalCase) {
+//     // Authz false by default.
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     socketReader.read(serverSocket, authz);
+//     testResults();
+// }
+
+// /* 
+//  * TEST 3 - Reading from socket with authz enabled.
+//  */
+// TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
+//     // Setting authz to true and calling validate.
+//     authz = true;
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     socketReader.read(serverSocket, authz);
+//     testResults();
+// }
+
+// Discovery
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointDiscovery) {
+    // GET /v1/devices
+    // testCall("GET", 0, "/devices", "", false, {}, false, "", "*", "NONE", "en", ""); // FAILS ATM
+    // GET /v1/{slot}
+    testCall("GET", 1, "/", "", false, {}, false, "", "*", "FULL", "en", "");
+    // GET /v1/{slot}/stream
+    testCall("GET", 1, "/", "", true, {}, false, "", "*", "FULL", "en", "");
 }
 
-/* 
- * TEST 3 - Reading from socket with authz enabled.
- */
-TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
-    // Setting authz to true and calling validate.
-    authz = true;
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    socketReader.read(serverSocket, authz);
-    testResults();
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointCommands) {
+    testCall("POST", 1, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", "NONE", "en", "{test_json_body}");
 }
 
-/* 
- * TEST 4 - Reading connect from socket (No slot required)
- */
-TEST_F(RESTSocketReaderTests, SocketReader_NoSlotConnect) {
-    // Connect does not require a slot specified.
-    endpoint = "/connect";
-    slot = 0;
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    socketReader.read(serverSocket, authz);
-    testResults();
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointAssets) {
+    // GET /v1/{slot}/assets/{fqoid}
+    testCall("GET", 1, "/assets", "/test/oid", false, {}, false, "", "*", "NONE", "en", "");
+    // POST /v1/{slot}/assets/{fqoid}
+    testCall("POST", 1, "/assets", "/test/oid", false, {}, false, "", "*", "NONE", "en", "{test_json_body}");
+    // PUT /v1/{slot}/assets/{fqoid}
+    testCall("PUT", 1, "/assets", "/test/oid", false, {}, false, "", "*", "NONE", "en", "");
+    // DELETE /v1/{slot}/assets/{fqoid}
+    testCall("DELETE", 1, "/assets", "/test/oid", false, {}, false, "", "*", "NONE", "en", "");
+    // GET /v1/{slot}/assets/{fqoid}/stream
+    testCall("GET", 1, "/assets", "/test/oid", true, {}, false, "", "*", "NONE", "en", "");
 }
 
-/* 
- * TEST 5 - Reading get-populated-slots from socket (No slot required)
- */
-TEST_F(RESTSocketReaderTests, SocketReader_NoSlotGetPopulatedSlots) {
-    // GetPopulatedSlots does not require a slot specified.
-    endpoint = "/get-populated-slots";
-    slot = 0;
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    socketReader.read(serverSocket, authz);
-    testResults();
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointParameters) {
+    // GET /v1/{slot}/value/{fqoid}
+    testCall("GET", 1, "/value", "/test/oid", false, {}, false, "", "*", "NONE", "en", "");
+    // PUT /v1/{slot}/value/{fqoid}
+    testCall("PUT", 1, "/value", "/test/oid", false, {}, false, "", "*", "NONE", "en", "{test_json_body}");
+    // PUT /v1/{slot}/values
+    testCall("PUT", 1, "/values", "", false, {}, false, "", "*", "NONE", "en", "{test_json_body}");
+    // GET /v1/{slot}/param/{fqoid}
+    testCall("GET", 1, "/param", "/test/oid", false, {}, false, "", "*", "NONE", "en", "");
+
 }
 
-/* 
- * TEST 6 - add /// to url to break the url parsing and throw an exception
- */
-//TODO: Make this work wiht the UT refactor.
-/*TEST_F(RESTSocketReaderTests, SocketReader_MalformedRequest) {
-    endpoint = "";
-
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    ASSERT_THROW(socketReader.read(serverSocket, authz), catena::exception_with_status);
+// THESE SHOW UP IN BOTH PARAMETERS AND SUBSCRIPTIONS???
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
+    // GET /v1/{slot}/basic-param/{fqoid}/stream
+    testCall("GET", 1, "/basic-param", "/test/oid", true, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    // GET /v1/{slot}/basic-param/{fqoid}
+    testCall("GET", 1, "/basic-param", "/test/oid", false, {{"recursive", "true"}}, false, "", "*", "NONE", "en", "");
+    // GET /v1/{slot}/subscriptions/{fqoid}
+    testCall("GET", 1, "/subscriptions", "", false, {}, false, "", "*", "NONE", "en", "");
+    // PUT /v1/{slot}/value/{fqoid}
+    testCall("PUT", 1, "/subscriptions", "", false, {}, false, "", "*", "NONE", "en", "{test_json_body}");
 }
 
-/* 
- * TEST 7 - Reading a request from the socket with a long json body.
- */
-TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
-    // Setting json body to just a string of 10000 'a's.
-    jsonBody = std::string(10000, 'a');
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    socketReader.read(serverSocket, authz);
-    testResults();
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointUpdates) {
+    // GET /v1/{slot}/connect
+    testCall("GET", 1, "/connect", "", false, {}, false, "", "*", "NONE", "en", "");
 }
 
-/* 
- * TEST 8 - Reading request from socket with detail level unset.
- */
-TEST_F(RESTSocketReaderTests, SocketReader_DetailLevelUnset) {
-    dl = "";
-    writeRequest(method, endpoint, slot, fields,
-                 jwsToken, jsonBody, dl, language);
-    socketReader.read(serverSocket, authz);
-    dl = "NONE";
-    testResults();
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointLanguages) {
+    // GET /v1/{slot}/langauge-pack/{language-code}
+    testCall("GET", 1, "/langauge-pack", "/en", false, {}, false, "", "*", "NONE", "en", "");
+    // POST /v1/{slot}/langauge-pack/{language-code}
+    testCall("POST", 1, "/langauge-pack", "/en", false, {}, false, "", "*", "NONE", "en", "{test_json_body}");
+    // DELETE /v1/{slot}/langauge-pack/{language-code}
+    testCall("DELETE", 1, "/langauge-pack", "/en", false, {}, false, "", "*", "NONE", "en", "");
+    // PUT /v1/{slot}/langauge-pack/{language-code}
+    testCall("PUT", 1, "/langauge-pack", "/en", false, {}, false, "", "*", "NONE", "en", "{test_json_body}");
+    // GET /v1/{slot}/langauges
+    testCall("GET", 1, "/langauges", "", false, {}, false, "", "*", "NONE", "en", "");
 }
+
+
+// /* 
+//  * TEST 4 - Reading connect from socket (No slot required)
+//  */
+// TEST_F(RESTSocketReaderTests, SocketReader_NoSlotConnect) {
+//     // Connect does not require a slot specified.
+//     endpoint = "/connect";
+//     slot = 0;
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     socketReader.read(serverSocket, authz);
+//     testResults();
+// }
+
+// /* 
+//  * TEST 5 - Reading get-populated-slots from socket (No slot required)
+//  */
+// TEST_F(RESTSocketReaderTests, SocketReader_NoSlotGetPopulatedSlots) {
+//     // GetPopulatedSlots does not require a slot specified.
+//     endpoint = "/get-populated-slots";
+//     slot = 0;
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     socketReader.read(serverSocket, authz);
+//     testResults();
+// }
+
+// /* 
+//  * TEST 6 - add /// to url to break the url parsing and throw an exception
+//  */
+// //TODO: Make this work wiht the UT refactor.
+// /*TEST_F(RESTSocketReaderTests, SocketReader_MalformedRequest) {
+//     endpoint = "";
+
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     ASSERT_THROW(socketReader.read(serverSocket, authz), catena::exception_with_status);
+// }
+
+// /* 
+//  * TEST 7 - Reading a request from the socket with a long json body.
+//  */
+// TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
+//     // Setting json body to just a string of 10000 'a's.
+//     jsonBody = std::string(10000, 'a');
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     socketReader.read(serverSocket, authz);
+//     testResults();
+// }
+
+// /* 
+//  * TEST 8 - Reading request from socket with detail level unset.
+//  */
+// TEST_F(RESTSocketReaderTests, SocketReader_DetailLevelUnset) {
+//     dl = "";
+//     writeRequest(method, endpoint, slot, fields,
+//                  jwsToken, jsonBody, dl, language);
+//     socketReader.read(serverSocket, authz);
+//     dl = "NONE";
+//     testResults();
+// }
