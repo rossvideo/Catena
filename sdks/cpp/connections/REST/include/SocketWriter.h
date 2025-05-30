@@ -69,7 +69,7 @@ class SocketWriter : public ISocketWriter {
      * @param socket The socket to write to.
      * @param origin The origin of the request.
      */
-    SocketWriter(tcp::socket& socket, const std::string& origin = "*") : socket_{socket}, origin_{origin} {}
+    SocketWriter(tcp::socket& socket, const std::string& origin = "*", bool buffer = false) : socket_{socket}, origin_{origin}, buffer_{buffer} {}
 
     /**
      * @brief Finishes writing the HTTP response.
@@ -87,6 +87,15 @@ class SocketWriter : public ISocketWriter {
      * @brief The origin of the request.
      */
     std::string origin_;
+
+    /**
+     * @brief flag to indicate whether to buffer a multi-message response.
+     */
+    bool buffer_;
+    /**
+     * @brief The json body of the response to write to the client.
+     */
+    std::string jsonBody_ = "";
 };
 
 /**
