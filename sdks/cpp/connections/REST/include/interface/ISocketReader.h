@@ -128,6 +128,10 @@ class ISocketReader {
      * @brief Returns true if authorization is enabled.
      */
     virtual bool authorizationEnabled() const = 0;
+    /**
+     * @brief Returns true if the client wants a stream response.
+     */
+    virtual bool stream() const = 0;
 
     /**
      * @brief Returns the path to the external object.

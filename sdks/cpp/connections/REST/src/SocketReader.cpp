@@ -42,14 +42,15 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
             slot_ = std::stoi(parts.at(2));
         }
 
+        if (parts.back() == "stream") {
+            parts.pop_back();
+            stream_ = true;
+        }
+
         if (parts.size() > 3) {
             endpoint_ = "/" + parts.at(3);
         }
-
-        //parse fqoid
-        if (parts.back() == "stream") {
-            parts.pop_back();
-        }
+        
         for (int i = 4; i < parts.size(); i++) {
             fqoid_ += "/" + parts.at(i);
         }

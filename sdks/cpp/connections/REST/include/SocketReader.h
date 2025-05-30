@@ -146,6 +146,10 @@ class SocketReader : public ISocketReader {
      * @brief Returns true if authorization is enabled.
      */
     bool authorizationEnabled() const override { return authorizationEnabled_; };
+    /**
+     * @brief Returns true if the client wants a stream response.
+     */
+    bool stream() const override { return stream_; }
 
     /**
      * @brief Returns the path to the external object.
@@ -206,6 +210,10 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
+    /**
+     * @brief Flag indicating whether the client wants a stream response.
+     */
+    bool stream_ = false;
     /**
      * @brief The path to the external object.
      */

@@ -41,7 +41,7 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
         response << "HTTP/1.1 " << httpStatus.first << " " << httpStatus.second << "\r\n"
                  << "Content-Type: application/json\r\n"
                  << "Connection: close\r\n"
-                 << "Content-Length: " << jsonOutput.length() << "\r\n"
+                 << "Content-Length: " << jsonBody_.length() << "\r\n"
                  << "Access-Control-Allow-Origin: " << origin_ << "\r\n"
                  << "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
                  << "Access-Control-Allow-Headers: Content-Type, Authorization, accept, Origin, X-Requested-With, Language, Detail-Level\r\n"
