@@ -52,7 +52,6 @@
 
 #include <string>
 #include <condition_variable>
-#include <iostream>
 
 namespace catena {
 namespace common {

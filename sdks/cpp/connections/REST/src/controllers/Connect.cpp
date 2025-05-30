@@ -1,6 +1,5 @@
 // connections/REST
 #include <controllers/Connect.h>
-#include <ILanguagePack.h>
 using catena::REST::Connect;
 using catena::common::ILanguagePack;
 

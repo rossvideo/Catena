@@ -30,7 +30,6 @@
 
 // connections/gRPC
 #include <controllers/Connect.h>
-#include <ILanguagePack.h>
 using catena::gRPC::Connect;
 using catena::common::ILanguagePack;
 
