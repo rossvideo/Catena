@@ -68,6 +68,7 @@ class SocketWriter : public ISocketWriter {
      * @brief Constructs a SocketWriter.
      * @param socket The socket to write to.
      * @param origin The origin of the request.
+     * @param buffer Flag indicating whether to buffer a multi-message response.
      */
     SocketWriter(tcp::socket& socket, const std::string& origin = "*", bool buffer = false) : socket_{socket}, origin_{origin}, buffer_{buffer} {}
 
