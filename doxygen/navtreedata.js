@@ -130,12 +130,12 @@ var NAVTREEINDEX =
 [
 "AssetRequest_8h.html",
 "classcatena_1_1REST_1_1BasicParamInfoRequest.html#a5ecab815da15e684730e068b888fda32",
-"classcatena_1_1common_1_1Authorizer.html#afc70628c3d7fb1b6b2d1a9e2dddf7f5c",
-"classcatena_1_1common_1_1IParam.html#a0524a3a6faa1200e946ebdaa32db3d70",
-"classcatena_1_1common_1_1ParamDescriptor.html#a82f28c8094816bb002621ccb19386d96",
-"classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a63be827f9b558e6ec477712fef5970c5",
-"classcatena_1_1patterns_1_1Functory.html#aa333d5d7c050a89861ecce4ed09ce8d6",
-"namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a8604cf55a79d6bfdcb30f77d1622839b"
+"classcatena_1_1common_1_1Connect.html#a017fd071366adf86a7e0d90c64aa10d2",
+"classcatena_1_1common_1_1IParam.html#a27bcdbf5ce0f692b975c82f8f5683ee3",
+"classcatena_1_1common_1_1ParamDescriptor.html#a89547069e148e6b87f272f36ac20600f",
+"classcatena_1_1gRPC_1_1CatenaServiceImpl.html#a7b0aa3a6c2d6057617a730883e0108b0",
+"classcatena_1_1patterns_1_1Functory.html#ac481dae378af565531ba187987f856f1",
+"namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009ad3ac0ba447a9859ad2db8e498056429f"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
