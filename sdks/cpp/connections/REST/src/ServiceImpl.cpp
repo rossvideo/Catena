@@ -96,6 +96,10 @@ void CatenaServiceImpl::run() {
                         // Set to 204 No Content if in OPTIONS.
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
                         SocketWriter(socket, context.origin()).sendResponse(rc);
+                    // Sending an empty 200 OK response for health check.
+                    } else if (requestKey == "GET/v1/health") {
+                        rc = catena::exception_with_status("", catena::StatusCode::OK);
+                        SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
                         std::unique_ptr<ICallData> request = router_.makeProduct(requestKey, socket, context, dm_);
@@ -118,7 +122,7 @@ void CatenaServiceImpl::run() {
                     rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
             } else {
-                rc = catena::exception_with_status{"Service shutdown", catena::StatusCode::CANCELLED};
+                rc = catena::exception_with_status{"Service unavailable", catena::StatusCode::UNAVAILABLE};
             }
             // Writing to socket if there was an error.
             if (rc.status != catena::StatusCode::OK) {
