@@ -104,14 +104,19 @@ class SocketHelper {
             }
         }
         request += fieldsStr;
-        // Compiling headers and jsonBody:
+        // Compiling headers:
         request += " HTTP/1.1\n"
                    "Origin: " + origin + "\n"
                    "User-Agent: test_agent\n"
-                   "Authorization: Bearer " + jwsToken + " \n"
-                   "Detail-Level: " + detailLevel + " \n"
-                   "Language: " + language + " \n"
-                   "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
+                   "Authorization: Bearer " + jwsToken + " \n";
+        if (!detailLevel.empty()) {
+            request += "Detail-Level: " + detailLevel + " \n";
+        }
+        if (!language.empty()) {
+            request += "Language: " + language + " \n";
+        }
+        // Adding jsonBody.
+        request += "Content-Length: " + std::to_string(jsonBody.length()) + "\r\n\r\n"
                    + jsonBody + "\n"
                    "\r\n\r\n";
         boost::asio::write(*writeSocket, boost::asio::buffer(request));
