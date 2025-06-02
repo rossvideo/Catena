@@ -149,7 +149,15 @@ TEST_F(RESTSocketReaderTests, SocketReader_AuthzCase) {
 }
 
 /* 
- * TEST 5 - Testing parsing of discovery endpoints.
+ * TEST 5 - Testing parsing of health endpoint.
+ */
+TEST_F(RESTSocketReaderTests, SocketReader_EndpointHealth) {
+    // GET /v1/health
+    testCall("GET", 0, "/health", "", false, {}, false, "", "*", "NONE", "en", "");
+}
+
+/* 
+ * TEST 6 - Testing parsing of discovery endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointDiscovery) {
     // GET /v1/devices
@@ -161,14 +169,14 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointDiscovery) {
 }
 
 /* 
- * TEST 6 - Testing parsing of commands endpoint.
+ * TEST 7 - Testing parsing of commands endpoint.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointCommands) {
     testCall("POST", 1, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", "NONE", "en", "{test_json_body}");
 }
 
 /* 
- * TEST 7 - Testing parsing of assets endpoints.
+ * TEST 8 - Testing parsing of assets endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointAssets) {
     // GET /v1/{slot}/assets/{fqoid}
@@ -184,7 +192,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointAssets) {
 }
 
 /* 
- * TEST 8 - Testing parsing of parameters endpoints.
+ * TEST 9 - Testing parsing of parameters endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointParameters) {
     // GET /v1/{slot}/value/{fqoid}
@@ -198,9 +206,8 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointParameters) {
 
 }
 
-// THESE SHOW UP IN BOTH PARAMETERS AND SUBSCRIPTIONS???
 /* 
- * TEST 9 - Testing parsing of subscriptions endpoints.
+ * TEST 10 - Testing parsing of subscriptions endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
     // GET /v1/{slot}/basic-param/{fqoid}/stream
@@ -214,7 +221,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointSubscriptions) {
 }
 
 /* 
- * TEST 10 - Testing parsing of updates endpoint.
+ * TEST 11 - Testing parsing of updates endpoint.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointUpdates) {
     // GET /v1/{slot}/connect
@@ -222,7 +229,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointUpdates) {
 }
 
 /* 
- * TEST 11 - Testing parsing of languages endpoints.
+ * TEST 12 - Testing parsing of languages endpoints.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointLanguages) {
     // GET /v1/{slot}/langauge-pack/{language-code}
@@ -238,7 +245,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointLanguages) {
 }
 
 /* 
- * TEST 12 - Testing with a long json body.
+ * TEST 13 - Testing with a long json body.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
     // SocketReader should be able to handle json bodies of any length.
@@ -246,7 +253,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
 }
 
 /* 
- * TEST 13 - Testing with unset headers.
+ * TEST 14 - Testing with unset headers.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_HeadersUnset) {
     testCall("GET", 1, "/test-call", "/test/oid", false, {}, false, "", "*", "", "", "");
