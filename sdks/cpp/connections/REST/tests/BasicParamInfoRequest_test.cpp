@@ -431,85 +431,118 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsTh
 
 // == MODE 2 TESTS: Get all top-level parameters with recursion ==
 
-// Test 2.1: Get all top-level parameters with recursion
-TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithRecursion) {
+// Test 2.1: Get top-level parameters with recursion and deep nesting
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithDeepNesting) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
 
     // Setup mock parameters
     std::vector<std::unique_ptr<IParam>> top_level_params;
-    auto parentParam = std::make_unique<MockParam>();
-    auto childParam = std::make_unique<MockParam>();
+    auto level1 = std::make_unique<MockParam>();
+    auto level2 = std::make_unique<MockParam>();
+    auto level3 = std::make_unique<MockParam>();
     
     // Set up mock parameters 
-    catena::REST::test::ParamInfo parent_info{
-        .oid = "parent",
+    catena::REST::test::ParamInfo level1_info{
+        .oid = "level1",
         .type = catena::ParamType::STRING
     };
-    catena::REST::test::ParamInfo child_info{
-        .oid = "child",
+    catena::REST::test::ParamInfo level2_info{
+        .oid = "level2",
+        .type = catena::ParamType::STRING
+    };
+    catena::REST::test::ParamInfo level3_info{
+        .oid = "level3",
         .type = catena::ParamType::STRING
     };
 
-    std::string parentOid = parent_info.oid;
-    std::string childOid = child_info.oid;
-    std::string nested_oid = "/" + parent_info.oid + "/" + child_info.oid;
+    std::string level1Oid = level1_info.oid;
+    std::string level2Oid = level2_info.oid;
+    std::string level3Oid = level3_info.oid;
+    std::string level2Path = "/" + level1Oid + "/" + level2Oid;
+    std::string level3Path = level2Path + "/" + level3Oid;
 
     // Set up parameter hierarchy using ParamHierarchyBuilder
-    auto parentDesc = ParamHierarchyBuilder::createDescriptor("/" + parent_info.oid);
-    auto nestedDesc = ParamHierarchyBuilder::createDescriptor(nested_oid);
-    ParamHierarchyBuilder::addChild(parentDesc, child_info.oid, nestedDesc);
+    auto level1Desc = ParamHierarchyBuilder::createDescriptor("/" + level1Oid);
+    auto level2Desc = ParamHierarchyBuilder::createDescriptor(level2Path);
+    auto level3Desc = ParamHierarchyBuilder::createDescriptor(level3Path);
+    
+    ParamHierarchyBuilder::addChild(level1Desc, level2Oid, level2Desc);
+    ParamHierarchyBuilder::addChild(level2Desc, level3Oid, level3Desc);
 
     // Set up mock parameters with their descriptors
-    setupMockParam(parentParam.get(), parent_info.oid, *parentDesc.descriptor);
-    setupMockParam(childParam.get(), nested_oid, *nestedDesc.descriptor);
+    setupMockParam(level1.get(), level1Oid, *level1Desc.descriptor);
+    setupMockParam(level2.get(), level2Path, *level2Desc.descriptor);
+    setupMockParam(level3.get(), level3Path, *level3Desc.descriptor);
 
     // Set up mock expectations for getDescriptor
-    EXPECT_CALL(*parentParam, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(*parentDesc.descriptor));
-    EXPECT_CALL(*childParam, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(*nestedDesc.descriptor));
+    EXPECT_CALL(*level1, getDescriptor())
+        .WillRepeatedly(::testing::ReturnRef(*level1Desc.descriptor));
+    EXPECT_CALL(*level2, getDescriptor())
+        .WillRepeatedly(::testing::ReturnRef(*level2Desc.descriptor));
+    EXPECT_CALL(*level3, getDescriptor())
+        .WillRepeatedly(::testing::ReturnRef(*level3Desc.descriptor));
 
     // Add expectations for isArrayType
-    EXPECT_CALL(*parentParam, isArrayType())
+    EXPECT_CALL(*level1, isArrayType())
         .WillRepeatedly(::testing::Return(false));
-    EXPECT_CALL(*childParam, isArrayType())
+    EXPECT_CALL(*level2, isArrayType())
+        .WillRepeatedly(::testing::Return(false));
+    EXPECT_CALL(*level3, isArrayType())
         .WillRepeatedly(::testing::Return(false));
 
     // Add expectations for toProto
-    EXPECT_CALL(*parentParam, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([parentOid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
-            response.mutable_info()->set_oid(parentOid);
+    EXPECT_CALL(*level1, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
+        .WillRepeatedly(::testing::Invoke([level1Oid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
+            response.mutable_info()->set_oid(level1Oid);
             response.mutable_info()->set_type(catena::ParamType::STRING);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
 
-    EXPECT_CALL(*childParam, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([childOid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
-            response.mutable_info()->set_oid(childOid);
+    EXPECT_CALL(*level2, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
+        .WillRepeatedly(::testing::Invoke([level2Oid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
+            response.mutable_info()->set_oid(level2Oid);
             response.mutable_info()->set_type(catena::ParamType::STRING);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
 
-    // Add expectation for getAllSubParams to return the child
-    std::unordered_map<std::string, IParamDescriptor*> subParams;
-    subParams[child_info.oid] = nestedDesc.descriptor.get();
-    EXPECT_CALL(*parentDesc.descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(subParams));
+    EXPECT_CALL(*level3, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
+        .WillRepeatedly(::testing::Invoke([level3Oid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
+            response.mutable_info()->set_oid(level3Oid);
+            response.mutable_info()->set_type(catena::ParamType::STRING);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
 
-    // Add expectation for getSubParam to return the child descriptor
-    EXPECT_CALL(*parentDesc.descriptor, getSubParam(childOid))
-        .WillRepeatedly(::testing::ReturnRef(*nestedDesc.descriptor));
+    // Add expectations for getAllSubParams
+    std::unordered_map<std::string, IParamDescriptor*> level1SubParams;
+    level1SubParams[level2Oid] = level2Desc.descriptor.get();
+    EXPECT_CALL(*level1Desc.descriptor, getAllSubParams())
+        .WillRepeatedly(::testing::ReturnRef(level1SubParams));
 
-    // Add expectation for getOid on parent descriptor
-    EXPECT_CALL(*parentDesc.descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(parentOid));
+    std::unordered_map<std::string, IParamDescriptor*> level2SubParams;
+    level2SubParams[level3Oid] = level3Desc.descriptor.get();
+    EXPECT_CALL(*level2Desc.descriptor, getAllSubParams())
+        .WillRepeatedly(::testing::ReturnRef(level2SubParams));
+
+    // Add expectations for getSubParam
+    EXPECT_CALL(*level1Desc.descriptor, getSubParam(level2Oid))
+        .WillRepeatedly(::testing::ReturnRef(*level2Desc.descriptor));
+    EXPECT_CALL(*level2Desc.descriptor, getSubParam(level3Oid))
+        .WillRepeatedly(::testing::ReturnRef(*level3Desc.descriptor));
+
+    // Add expectations for getOid
+    EXPECT_CALL(*level1Desc.descriptor, getOid())
+        .WillRepeatedly(::testing::ReturnRef(level1Oid));
+    EXPECT_CALL(*level2Desc.descriptor, getOid())
+        .WillRepeatedly(::testing::ReturnRef(level2Path));
+    EXPECT_CALL(*level3Desc.descriptor, getOid())
+        .WillRepeatedly(::testing::ReturnRef(level3Path));
     
-    top_level_params.push_back(std::move(parentParam));
+    top_level_params.push_back(std::move(level1));
 
     // Enable recursion
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
 
-    // Setup mock expectations for getTopLevelParams
+    // Setup mock expectations
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke([&top_level_params, &rc](catena::exception_with_status& status, Authorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
@@ -518,48 +551,36 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
 
     // Setup mock expectations for getParam to handle child traversal
     EXPECT_CALL(dm, getParam(::testing::An<const std::string&>(), ::testing::An<catena::exception_with_status&>(), ::testing::An<Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([&childParam, &nestedDesc, nested_oid, childOid](const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
+        .WillRepeatedly(::testing::Invoke([&level2, &level3, &level2Desc, &level3Desc, level2Path, level3Path]
+            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
             catena::common::Path path(fqoid);
-            if (path.fqoid() == nested_oid) {
-                auto param = std::make_unique<MockParam>();
-                setupMockParam(param.get(), fqoid, *nestedDesc.descriptor);
-                
-                // Set up all necessary expectations for the child parameter
-                EXPECT_CALL(*param, getDescriptor())
-                    .WillRepeatedly(::testing::ReturnRef(*nestedDesc.descriptor));
-                EXPECT_CALL(*param, isArrayType())
-                    .WillRepeatedly(::testing::Return(false));
-                EXPECT_CALL(*param, getOid())
-                    .WillRepeatedly(::testing::ReturnRef(fqoid));
-                EXPECT_CALL(*param, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-                    .WillRepeatedly(::testing::Invoke([childOid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
-                        response.mutable_info()->set_oid(childOid);
-                        response.mutable_info()->set_type(catena::ParamType::STRING);
-                        return catena::exception_with_status("", catena::StatusCode::OK);
-                    }));
-                
+            if (path.fqoid() == level2Path) {
                 status = catena::exception_with_status("", catena::StatusCode::OK);
-                return param;
+                return std::move(level2);
+            } else if (path.fqoid() == level3Path) {
+                status = catena::exception_with_status("", catena::StatusCode::OK);
+                return std::move(level3);
             }
             status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
             return nullptr;
         }));
 
     // Create a new request after setting up all expectations
-    auto topRecursionRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+    auto deepNestingRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
 
     // Execute
-    topRecursionRequest->proceed();
-    topRecursionRequest->finish();
+    deepNestingRequest->proceed();
+    deepNestingRequest->finish();
 
     // Get expected and actual responses
     std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(parent_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(child_info));
+    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level1_info));
+    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level2_info));
+    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level3_info));
     std::string expected = expectedSSEResponse(rc, jsonBodies);
     std::string actual = readResponse();
     
-    delete topRecursionRequest;
+    delete deepNestingRequest;
 
     EXPECT_EQ(actual, expected);
 }
@@ -820,160 +841,6 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     std::string actual = readResponse();
     
     delete errorRequest;
-
-    EXPECT_EQ(actual, expected);
-}
-
-// Test 2.4: Get top-level parameters with recursion and deep nesting
-TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithDeepNesting) {
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-
-    // Setup mock parameters
-    std::vector<std::unique_ptr<IParam>> top_level_params;
-    auto level1 = std::make_unique<MockParam>();
-    auto level2 = std::make_unique<MockParam>();
-    auto level3 = std::make_unique<MockParam>();
-    
-    // Set up mock parameters 
-    catena::REST::test::ParamInfo level1_info{
-        .oid = "level1",
-        .type = catena::ParamType::STRING
-    };
-    catena::REST::test::ParamInfo level2_info{
-        .oid = "level2",
-        .type = catena::ParamType::STRING
-    };
-    catena::REST::test::ParamInfo level3_info{
-        .oid = "level3",
-        .type = catena::ParamType::STRING
-    };
-
-    std::string level1Oid = level1_info.oid;
-    std::string level2Oid = level2_info.oid;
-    std::string level3Oid = level3_info.oid;
-    std::string level2Path = "/" + level1Oid + "/" + level2Oid;
-    std::string level3Path = level2Path + "/" + level3Oid;
-
-    // Set up parameter hierarchy using ParamHierarchyBuilder
-    auto level1Desc = ParamHierarchyBuilder::createDescriptor("/" + level1Oid);
-    auto level2Desc = ParamHierarchyBuilder::createDescriptor(level2Path);
-    auto level3Desc = ParamHierarchyBuilder::createDescriptor(level3Path);
-    
-    ParamHierarchyBuilder::addChild(level1Desc, level2Oid, level2Desc);
-    ParamHierarchyBuilder::addChild(level2Desc, level3Oid, level3Desc);
-
-    // Set up mock parameters with their descriptors
-    setupMockParam(level1.get(), level1Oid, *level1Desc.descriptor);
-    setupMockParam(level2.get(), level2Path, *level2Desc.descriptor);
-    setupMockParam(level3.get(), level3Path, *level3Desc.descriptor);
-
-    // Set up mock expectations for getDescriptor
-    EXPECT_CALL(*level1, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(*level1Desc.descriptor));
-    EXPECT_CALL(*level2, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(*level2Desc.descriptor));
-    EXPECT_CALL(*level3, getDescriptor())
-        .WillRepeatedly(::testing::ReturnRef(*level3Desc.descriptor));
-
-    // Add expectations for isArrayType
-    EXPECT_CALL(*level1, isArrayType())
-        .WillRepeatedly(::testing::Return(false));
-    EXPECT_CALL(*level2, isArrayType())
-        .WillRepeatedly(::testing::Return(false));
-    EXPECT_CALL(*level3, isArrayType())
-        .WillRepeatedly(::testing::Return(false));
-
-    // Add expectations for toProto
-    EXPECT_CALL(*level1, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([level1Oid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
-            response.mutable_info()->set_oid(level1Oid);
-            response.mutable_info()->set_type(catena::ParamType::STRING);
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-
-    EXPECT_CALL(*level2, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([level2Oid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
-            response.mutable_info()->set_oid(level2Oid);
-            response.mutable_info()->set_type(catena::ParamType::STRING);
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-
-    EXPECT_CALL(*level3, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([level3Oid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
-            response.mutable_info()->set_oid(level3Oid);
-            response.mutable_info()->set_type(catena::ParamType::STRING);
-            return catena::exception_with_status("", catena::StatusCode::OK);
-        }));
-
-    // Add expectations for getAllSubParams
-    std::unordered_map<std::string, IParamDescriptor*> level1SubParams;
-    level1SubParams[level2Oid] = level2Desc.descriptor.get();
-    EXPECT_CALL(*level1Desc.descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(level1SubParams));
-
-    std::unordered_map<std::string, IParamDescriptor*> level2SubParams;
-    level2SubParams[level3Oid] = level3Desc.descriptor.get();
-    EXPECT_CALL(*level2Desc.descriptor, getAllSubParams())
-        .WillRepeatedly(::testing::ReturnRef(level2SubParams));
-
-    // Add expectations for getSubParam
-    EXPECT_CALL(*level1Desc.descriptor, getSubParam(level2Oid))
-        .WillRepeatedly(::testing::ReturnRef(*level2Desc.descriptor));
-    EXPECT_CALL(*level2Desc.descriptor, getSubParam(level3Oid))
-        .WillRepeatedly(::testing::ReturnRef(*level3Desc.descriptor));
-
-    // Add expectations for getOid
-    EXPECT_CALL(*level1Desc.descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(level1Oid));
-    EXPECT_CALL(*level2Desc.descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(level2Path));
-    EXPECT_CALL(*level3Desc.descriptor, getOid())
-        .WillRepeatedly(::testing::ReturnRef(level3Path));
-    
-    top_level_params.push_back(std::move(level1));
-
-    // Enable recursion
-    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
-
-    // Setup mock expectations
-    EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
-        .WillOnce(::testing::Invoke([&top_level_params, &rc](catena::exception_with_status& status, Authorizer&) {
-            status = catena::exception_with_status("", catena::StatusCode::OK);
-            return std::move(top_level_params);
-        }));
-
-    // Setup mock expectations for getParam to handle child traversal
-    EXPECT_CALL(dm, getParam(::testing::An<const std::string&>(), ::testing::An<catena::exception_with_status&>(), ::testing::An<Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([&level2, &level3, &level2Desc, &level3Desc, level2Path, level3Path]
-            (const std::string& fqoid, catena::exception_with_status& status, Authorizer&) -> std::unique_ptr<IParam> {
-            catena::common::Path path(fqoid);
-            if (path.fqoid() == level2Path) {
-                status = catena::exception_with_status("", catena::StatusCode::OK);
-                return std::move(level2);
-            } else if (path.fqoid() == level3Path) {
-                status = catena::exception_with_status("", catena::StatusCode::OK);
-                return std::move(level3);
-            }
-            status = catena::exception_with_status("Parameter not found", catena::StatusCode::NOT_FOUND);
-            return nullptr;
-        }));
-
-    // Create a new request after setting up all expectations
-    auto deepNestingRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
-
-    // Execute
-    deepNestingRequest->proceed();
-    deepNestingRequest->finish();
-
-    // Get expected and actual responses
-    std::vector<std::string> jsonBodies;
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level1_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level2_info));
-    jsonBodies.push_back(catena::REST::test::createParamInfoJson(level3_info));
-    std::string expected = expectedSSEResponse(rc, jsonBodies);
-    std::string actual = readResponse();
-    
-    delete deepNestingRequest;
 
     EXPECT_EQ(actual, expected);
 }
