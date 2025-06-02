@@ -12,11 +12,12 @@ void SocketWriter::sendResponse(const catena::exception_with_status& err, const 
         google::protobuf::util::JsonPrintOptions options; // Default options
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
-        if (!status.ok()) {
+        if (!status.ok()) { // GCOVR_EXCL_START
             /* If conversion fails, this error maps to bad request.
              * This should be impossible to get to without failing on function
              * call first*/
             httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
+            // GCOVR_EXCL_STOP
         } else { // Otherwise add the output to response.
             if (jsonBody_.empty()) {
                 jsonBody_ = jsonOutput;
@@ -61,12 +62,13 @@ void SSEWriter::sendResponse(const catena::exception_with_status& err, const goo
         google::protobuf::util::JsonPrintOptions options; // Default options
         auto status = MessageToJsonString(msg, &jsonOutput, options);
 
-        if (!status.ok()) {
+        if (!status.ok()) { // GCOVR_EXCL_START
             /* If conversion fails, this error maps to bad request.
              * This should be impossible to get to without failing on function
              * call first*/
             httpStatus = codeMap_.at(catena::StatusCode::INVALID_ARGUMENT);
             jsonOutput = "";
+            // GCOVR_EXCL_STOP
         }
     }
 

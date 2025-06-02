@@ -246,7 +246,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_LongJsonBody) {
 }
 
 /* 
- * TEST 12 - Testing with unset headers.
+ * TEST 13 - Testing with unset headers.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_HeadersUnset) {
     testCall("GET", 1, "/test-call", "/test/oid", false, {}, false, "", "*", "", "", "");
