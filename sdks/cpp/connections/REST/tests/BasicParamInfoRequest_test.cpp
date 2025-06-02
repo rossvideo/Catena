@@ -585,7 +585,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     EXPECT_EQ(actual, expected);
 }
 
-// Test 2.2: Get top-level parameters with recursion and array children
+// Test 2.2: Get top-level parameters with recursion and arrays
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithRecursionAndArrays) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
 
@@ -597,7 +597,8 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     // Set up mock parameters 
     catena::REST::test::ParamInfo parent_info{
         .oid = "parent",
-        .type = catena::ParamType::STRING
+        .type = catena::ParamType::STRING_ARRAY,
+        .array_length = 5
     };
     catena::REST::test::ParamInfo arrayChild_info{
         .oid = "array_child",
@@ -626,7 +627,9 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
 
     // Add expectations for isArrayType
     EXPECT_CALL(*parentParam, isArrayType())
-        .WillRepeatedly(::testing::Return(false));
+        .WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(*parentParam, size())
+        .WillRepeatedly(::testing::Return(parent_info.array_length));
     EXPECT_CALL(*arrayChild, isArrayType())
         .WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(*arrayChild, size())
@@ -634,9 +637,10 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
 
     // Add expectations for toProto
     EXPECT_CALL(*parentParam, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::An<catena::common::Authorizer&>()))
-        .WillRepeatedly(::testing::Invoke([parentOid](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
+        .WillRepeatedly(::testing::Invoke([parentOid, parent_info](catena::BasicParamInfoResponse& response, catena::common::Authorizer&) {
             response.mutable_info()->set_oid(parentOid);
-            response.mutable_info()->set_type(catena::ParamType::STRING);
+            response.mutable_info()->set_type(catena::ParamType::STRING_ARRAY);
+            response.set_array_length(parent_info.array_length);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
 
@@ -647,14 +651,6 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
             response.set_array_length(arrayChild_info.array_length);
             return catena::exception_with_status("", catena::StatusCode::OK);
         }));
-
-    // // Add expectation for updateArrayLengths_ to be called
-    // EXPECT_CALL(*arrayRequest, updateArrayLengths_(childOid, arrayChild_info.array_length))
-    //     .Times(1);
-
-    // // Add expectation for addParamToResponses_ to be called
-    // EXPECT_CALL(*arrayRequest, addParamToResponses_(::testing::_, ::testing::_))
-    //     .Times(2);
 
     // Add expectation for getAllSubParams to return the child
     std::unordered_map<std::string, IParamDescriptor*> subParams;
@@ -841,6 +837,62 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     std::string actual = readResponse();
     
     delete errorRequest;
+
+    EXPECT_EQ(actual, expected);
+}
+
+// Test 2.5: Get top-level parameters with error status from getTopLevelParams
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithErrorStatus) {
+    catena::exception_with_status rc("Error getting parameters", catena::StatusCode::INTERNAL);
+
+    // Setup mock expectations
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
+            return std::vector<std::unique_ptr<IParam>>();
+        }));
+
+    // Create a new request after setting up all expectations
+    auto errorStatusRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    // Execute
+    errorStatusRequest->proceed();
+    errorStatusRequest->finish();
+
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    
+    delete errorStatusRequest;
+
+    EXPECT_EQ(actual, expected);
+}
+
+// Test 2.6: Get top-level parameters with empty list and recursion
+TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithEmptyListAndRecursion) {
+    catena::exception_with_status rc("No top-level parameters found", catena::StatusCode::NOT_FOUND);
+
+    // Setup mock expectations
+    EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
+        .WillOnce(::testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return std::vector<std::unique_ptr<IParam>>();
+        }));
+
+    // Create a new request after setting up all expectations
+    auto emptyListRequest = BasicParamInfoRequest::makeOne(serverSocket, context, dm);
+
+    // Execute
+    emptyListRequest->proceed();
+    emptyListRequest->finish();
+
+    // Get expected and actual responses
+    std::string expected = expectedSSEResponse(rc);
+    std::string actual = readResponse();
+    
+    delete emptyListRequest;
 
     EXPECT_EQ(actual, expected);
 }
