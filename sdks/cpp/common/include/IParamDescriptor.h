@@ -40,7 +40,7 @@
 
 //common
 #include <Tags.h>
-#include <IParam.h>
+// #include <IParam.h>
 #include <PolyglotText.h>
 
 namespace catena {
@@ -211,6 +211,20 @@ class IParamDescriptor {
      */
     virtual const catena::common::IConstraint* getConstraint() const = 0;
 
+    class ICommandResponder {
+      public:
+        ICommandResponder() = default;
+
+        ICommandResponder(const ICommandResponder&) = delete;
+        ICommandResponder& operator=(const ICommandResponder&) = delete;
+        
+        virtual ~ICommandResponder() = default;
+
+        virtual inline bool hasMore() const = 0;
+
+        virtual catena::CommandResponse getNext() = 0;
+    };
+
     /**
      * @brief define the command implementation
      * @param commandImpl a function that takes a Value and returns a CommandResponse
@@ -219,6 +233,7 @@ class IParamDescriptor {
      * If this is not a command parameter, an exception will be thrown.
      */
     virtual void defineCommand(std::function<catena::CommandResponse(catena::Value)> commandImpl) = 0;
+    virtual void defineCommandNew(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) = 0;
 
     /**
      * @brief execute the command
@@ -229,6 +244,7 @@ class IParamDescriptor {
      * command response will be an exception with type UNIMPLEMENTED
      */
     virtual catena::CommandResponse executeCommand(catena::Value value) = 0;
+    virtual std::unique_ptr<ICommandResponder> executeCommandNew(catena::Value value) = 0;
 
     /**
      * @brief return true if this is a command parameter

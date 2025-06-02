@@ -6,6 +6,7 @@
 
 using catena::REST::ExecuteCommand;
 using catena::common::IParam;
+using catena::common::IParamDescriptor;
 
 // Initializes the object counter for ExecuteCommand to 0.
 int ExecuteCommand::objectCounter_ = 0;
@@ -43,11 +44,11 @@ ExecuteCommand::ExecuteCommand(tcp::socket& socket, ISocketReader& context, IDev
 
 void ExecuteCommand::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
-
+    { // rc scope
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     try {
         // Get the command and execute it
         std::unique_ptr<IParam> command = nullptr;
-        catena::exception_with_status rc("", catena::StatusCode::OK);
         
         if (context_.authorizationEnabled()) {
             catena::common::Authorizer authz{context_.jwsToken()};
@@ -57,29 +58,26 @@ void ExecuteCommand::proceed() {
         }
 
         // If the command is not found, return an error
-        if (command == nullptr) {
-            if (req_.respond()) {
-                writer_.sendResponse(rc);
+        if (command != nullptr) {
+            // Execute the command and write response if respond = true.
+            std::unique_ptr<IParamDescriptor::ICommandResponder> responder = command->executeCommandNew(req_.value());
+            while (responder->hasMore()) {
+                writeConsole_(CallStatus::kWrite, socket_.is_open());
+                catena::CommandResponse res = responder->getNext();
+                if (req_.respond()) {
+                    writer_.sendResponse(rc, res);
+                }
             }
-            return;
-        }
-
-        // Execute the command
-        catena::CommandResponse res = command->executeCommand(req_.value());
-
-        // Only write response if respond is true
-        if (req_.respond()) {
-            writer_.sendResponse(rc, res);
         }
     } catch (catena::exception_with_status& err) {
-        if (req_.respond()) {
-            writer_.sendResponse(err);
-        }
+        rc = catena::exception_with_status(err.what(), err.status);
     } catch (...) {
-        if (req_.respond()) {
-            catena::exception_with_status err("Unknown error", catena::StatusCode::UNKNOWN);
-            writer_.sendResponse(err);
-        }
+        rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    }
+    // Writing final code if respond = false or an error occured.
+    if (rc.status != catena::StatusCode::OK || !req_.respond()) {
+        writer_.sendResponse(rc);
+    }
     }
 }
 

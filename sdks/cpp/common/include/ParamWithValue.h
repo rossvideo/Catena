@@ -290,12 +290,18 @@ class ParamWithValue : public catena::common::IParam {
     void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) override {
         descriptor_.defineCommand(command);
     }
+    void defineCommandNew(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl) {
+        descriptor_.defineCommandNew(commandImpl);
+    }
 
     /**
      * @brief execute the command for the parameter
      */
     catena::CommandResponse executeCommand(const catena::Value& value) const override {
         return descriptor_.executeCommand(value);
+    }
+    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommandNew(const catena::Value& value) const override {
+        return descriptor_.executeCommandNew(value);
     }
 
     /**

@@ -40,7 +40,7 @@
 
 //common
 #include <Tags.h>
-#include <IParam.h>
+// #include <IParam.h>
 #include <IConstraint.h>
 #include <PolyglotText.h>
 #include <IParamDescriptor.h>
@@ -276,6 +276,73 @@ class ParamDescriptor : public IParamDescriptor {
       return constraint_;
     }
 
+    class CommandResponder : public ICommandResponder {
+      public:
+        struct promise_type; // forward declaration
+
+      private:
+        using handle_type = std::coroutine_handle<promise_type>;
+        handle_type handle_;
+
+      public:
+        struct promise_type {
+            inline CommandResponder get_return_object() { 
+              return CommandResponder(handle_type::from_promise(*this)); 
+            }
+
+            inline std::suspend_always initial_suspend() { return {}; }
+
+            inline std::suspend_always final_suspend() noexcept { return {}; }
+
+            inline std::suspend_always yield_value(catena::CommandResponse& component) { 
+              responseMessage = component;
+              return {}; 
+            }
+
+            inline void return_value(catena::CommandResponse component) { this->responseMessage = component; }
+
+            inline void unhandled_exception() {
+              exception_ = std::current_exception();
+            }
+
+            inline void rethrow_if_exception() {
+              if (exception_) std::rethrow_exception(exception_);
+            }
+
+            catena::CommandResponse responseMessage{};
+            std::exception_ptr exception_; 
+        };
+
+        CommandResponder(handle_type h) : handle_(h) {}
+
+        CommandResponder(const CommandResponder&) = delete;
+        CommandResponder& operator=(const CommandResponder&) = delete;
+
+        CommandResponder(CommandResponder&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
+        CommandResponder& operator=(CommandResponder&& other) { 
+          if (this != &other) {
+            if (handle_) handle_.destroy();
+            handle_ = other.handle_; 
+            other.handle_ = nullptr; 
+          }
+          return *this; 
+        } 
+
+        ~CommandResponder() { 
+          if (handle_) handle_.destroy();  
+        }
+
+        inline bool hasMore() const override { return handle_ && !handle_.done(); }
+
+        catena::CommandResponse getNext() override {
+          if (hasMore()) {
+            handle_.resume();
+            handle_.promise().rethrow_if_exception();
+          }
+          return std::move(handle_.promise().responseMessage); 
+        }
+    };
+
     /**
      * @brief define the command implementation
      * @param commandImpl a function that takes a Value and returns a CommandResponse
@@ -290,6 +357,13 @@ class ParamDescriptor : public IParamDescriptor {
       commandImpl_ = commandImpl;
     }
 
+    void defineCommandNew(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) override {
+      if (!isCommand_) {
+        throw std::runtime_error("Cannot define a command on a non-command parameter");
+      }
+      commandImplNewNew_ = commandImpl;
+    }
+
     /**
      * @brief execute the command
      * @param value the value to pass to the command implementation
@@ -300,6 +374,11 @@ class ParamDescriptor : public IParamDescriptor {
      */
     catena::CommandResponse executeCommand(catena::Value value) override {
       return commandImpl_(value);
+    }
+
+    std::unique_ptr<ICommandResponder> executeCommandNew(catena::Value value) override {
+      return commandImplNewNew_(value);
+      // return std::make_unique<CommandResponder>(commandImplNew_(value));
     }
 
     /**
@@ -335,6 +414,22 @@ class ParamDescriptor : public IParamDescriptor {
       response.mutable_exception()->set_type("UNIMPLEMENTED");
       response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
       return response;
+    };
+
+    std::function<CommandResponder(catena::Value)> commandImplNew_ = [](catena::Value value) -> CommandResponder { 
+      catena::CommandResponse response;
+      response.mutable_exception()->set_type("UNIMPLEMENTED");
+      response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
+      co_return response;
+    };
+
+    std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImplNewNew_ = [](catena::Value value) -> std::unique_ptr<ICommandResponder> { 
+      return std::make_unique<CommandResponder>([value]() -> CommandResponder {
+        catena::CommandResponse response;
+        response.mutable_exception()->set_type("UNIMPLEMENTED");
+        response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
+        co_return response;
+      }());
     };
 };
 
