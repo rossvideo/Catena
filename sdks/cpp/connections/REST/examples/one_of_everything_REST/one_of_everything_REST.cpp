@@ -42,6 +42,7 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <ParamDescriptor.h>
 
 // REST
 #include <ServiceImpl.h>
@@ -101,108 +102,154 @@ void defineCommands() {
      * Starts a thread which updates the number_example parameter with the next
      * number of the Fibonacci sequence every second.
      */
-    fibStart->defineCommand([](catena::Value value) {
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        catena::CommandResponse response;
-        std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
-        
-        // If the loop is already running, return an exception.
-        if (fibLoop) {
-            response.mutable_exception()->set_type("Invalid Command");
-            response.mutable_exception()->set_details("Already running");
-        // If the state parameter does not exist, return an exception.
-        } else if (!intParam) {
-            response.mutable_exception()->set_type("Invalid Command");
-            response.mutable_exception()->set_details(err.what());
-        } else {
-            fibLoop = true;
-            // Detaching thread to update number_example with next number of
-            // the Fibonacci sequence every second.
-            std::thread figSeqThread([intParam = std::move(intParam)]() {
-                auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
-                uint32_t prev = 0;
-                uint32_t curr = 1;
-                while (fibLoop) {
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                    uint32_t next = prev + curr;
-                    prev = curr;
-                    curr = next;
-                    {
-                    std::lock_guard lg(dm.mutex());
-                    fibParam.get() = next;
-                    dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+    fibStart->defineCommandNew([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
+            
+            // If the loop is already running, return an exception.
+            if (fibLoop) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details("Already running");
+            // If the state parameter does not exist, return an exception.
+            } else if (!intParam) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details(err.what());
+            } else {
+                fibLoop = true;
+                // Detaching thread to update number_example with next number of
+                // the Fibonacci sequence every second.
+                std::thread figSeqThread([intParam = std::move(intParam)]() {
+                    auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
+                    uint32_t prev = 0;
+                    uint32_t curr = 1;
+                    while (fibLoop) {
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        uint32_t next = prev + curr;
+                        prev = curr;
+                        curr = next;
+                        {
+                        std::lock_guard lg(dm.mutex());
+                        fibParam.get() = next;
+                        dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+                        }
                     }
-                }
-            });
-            figSeqThread.detach();
+                });
+                figSeqThread.detach();
 
-            std::cout << "Fibonacci sequence start" << std::endl;;
-            response.mutable_no_response();
-        }
-        return response;
+                std::cout << "Fibonacci sequence start" << std::endl;;
+                response.mutable_no_response();
+            }
+            co_return response;
+        }());
     });
 
     // This stops the looping thread in the fib_start command above.
     std::unique_ptr<IParam> fibStop = dm.getCommand("/fib_stop", err);
     assert(fibStop != nullptr);
-    fibStop->defineCommand([](catena::Value value) {
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        catena::CommandResponse response;
-        if (fibLoop) {
-            fibLoop = false;
-            std::cout << "Fibonacci sequence stop" << std::endl;
-            response.mutable_no_response();
-        } else {
-            response.mutable_exception()->set_type("Invalid Command");
-            response.mutable_exception()->set_details("Already stopped");
-        }
-        return response;
+    fibStop->defineCommandNew([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            if (fibLoop) {
+                fibLoop = false;
+                std::cout << "Fibonacci sequence stop" << std::endl;
+                response.mutable_no_response();
+            } else {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details("Already stopped");
+            }
+            co_return response;
+        }());
     });
 
     // This sets the value of number_example.
     std::unique_ptr<IParam> fibSet = dm.getCommand("/fib_set", err);
     assert(fibSet != nullptr);
-    fibSet->defineCommand([](catena::Value value) {
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        catena::CommandResponse response;
-        std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
-        if (intParam) {
-            auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
-            fibParam.get() = value.int32_value();
-            dm.valueSetByServer.emit("/number_example", &fibParam, 0);
-            response.mutable_no_response();
-        } else {
-            response.mutable_exception()->set_type("Invalid Command");
-            response.mutable_exception()->set_details("/number_example not found");
-        }
-        return response;
+    fibSet->defineCommandNew([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            std::unique_ptr<IParam> intParam = dm.getParam("/number_example", err);
+            if (intParam) {
+                auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
+                fibParam.get() = value.int32_value();
+                dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+                response.mutable_no_response();
+            } else {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details("/number_example not found");
+            }
+            co_return response;
+        }());
     });
 
     // This fills float_array with 128 random floats rounded to 3 decimal places.
     std::unique_ptr<IParam> randomize = dm.getCommand("/randomize", err);
     assert(randomize != nullptr);
-    randomize->defineCommand([](catena::Value value) {
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        catena::CommandResponse response;
-        std::unique_ptr<IParam> floatArray = dm.getParam("/float_array", err);
-        if (!floatArray) {
-            response.mutable_exception()->set_type("Invalid Command");
-            response.mutable_exception()->set_details(err.what());
-        } else {
-            auto& floatArrayR = *dynamic_cast<ParamWithValue<std::vector<float>>*>(floatArray.get());
-            std::vector<float>& randomArray = floatArrayR.get();
-            randomArray.clear();
-            // Generates random floats between 0 and 80 and rounds to 3 decimal places.
-            for (int i = 0; i < floatArrayR.getDescriptor().max_length(); i++) {
-                float randomNum = static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 80);
-                randomNum = std::round(randomNum * 1000) / 1000;
-                randomArray.push_back(randomNum);
+    randomize->defineCommandNew([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            std::unique_ptr<IParam> floatArray = dm.getParam("/float_array", err);
+            if (!floatArray) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details(err.what());
+            } else {
+                auto& floatArrayR = *dynamic_cast<ParamWithValue<std::vector<float>>*>(floatArray.get());
+                std::vector<float>& randomArray = floatArrayR.get();
+                randomArray.clear();
+                // Generates random floats between 0 and 80 and rounds to 3 decimal places.
+                for (int i = 0; i < floatArrayR.getDescriptor().max_length(); i++) {
+                    float randomNum = static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 80);
+                    randomNum = std::round(randomNum * 1000) / 1000;
+                    randomArray.push_back(randomNum);
+                }
+                std::cout << "Randomized float array" << std::endl;
+                response.mutable_no_response();
             }
-            std::cout << "Randomized float array" << std::endl;
-            response.mutable_no_response();
-        }
-        
-        return response;
+            
+            co_return response;
+        }());
+    });
+
+    // This simulates a tape bot and returns a stream of responses.
+    std::unique_ptr<IParam> tapeBot = dm.getCommand("/tape_bot", err);
+    assert(tapeBot != nullptr);
+    tapeBot->defineCommandNew([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            // Locating
+            std::cout << "Locating tape..." << std::endl;
+            response.mutable_response()->set_string_value("Locating tape...");
+            co_yield response;
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            // Loading
+            std::cout << "Tape found, loading..." << std::endl;
+            response.Clear();
+            response.mutable_response()->set_string_value("Tape found, loading...");
+            co_yield response;
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            // Seeking
+            std::cout << "Tape loaded, seeking..." << std::endl;
+            response.Clear();
+            response.mutable_response()->set_string_value("Tape loaded, seeking...");
+            co_yield response;
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            // Reading
+            std::cout << "File loaded, reading..." << std::endl;
+            response.Clear();
+            response.mutable_response()->set_string_value("File loaded, reading...");
+            co_yield response;
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            // Done
+            std::cout << "File loaded." << std::endl;
+            response.Clear();
+            response.mutable_response()->set_string_value("File loaded.");
+            co_return response;
+        }());
     });
 }
 

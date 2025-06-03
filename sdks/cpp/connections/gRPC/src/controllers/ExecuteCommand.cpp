@@ -135,7 +135,7 @@ void ExecuteCommand::proceed(bool ok) {
                     }
                 }
             // Looping required if we aren't writing to the client.
-            } while (!req_.respond() && status_ == CallStatus::kWrite);
+            } while (!req_.respond() && rc.status == catena::StatusCode::OK && status_ == CallStatus::kWrite);
             // Writing to the client.
             if (rc.status == catena::StatusCode::OK) {
                 if (req_.respond()) {
