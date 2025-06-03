@@ -92,7 +92,6 @@ void ExecuteCommand::proceed(bool ok) {
                 }
                 // Executing the command if found.
                 if (command != nullptr) {
-                    // res_ = command->executeCommand(req_.value());
                     responder_ = command->executeCommand(req_.value());
                     status_ = CallStatus::kWrite; 
                 }
@@ -100,7 +99,7 @@ void ExecuteCommand::proceed(bool ok) {
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);
             } catch (...) {
-                rc = catena::exception_with_status("unknown error", catena::StatusCode::INTERNAL);
+                rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
             }
             // Ending process if an error occured, falling through otherwise.
             if (rc.status != catena::StatusCode::OK) {
@@ -165,10 +164,14 @@ void ExecuteCommand::proceed(bool ok) {
             service_->deregisterItem(this);
             break;
 
-        // Throws an error if the state is not recognized
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }
