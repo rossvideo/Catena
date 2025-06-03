@@ -91,7 +91,6 @@ $(document).ready(function(){initNavTree('classcatena_1_1common_1_1ParamDescript
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classcatena_1_1common_1_1ParamDescriptor-members.html">List of all members</a>  </div>
@@ -114,12 +113,6 @@ Collaboration diagram for catena::common::ParamDescriptor:</div>
 <div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1ParamDescriptor__coll__graph.svg" width="262" height="110"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html">CommandResponder</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html" title="CommandResponder is a coroutine that allows commands to return multiple responses throughout its exec...">CommandResponder</a> is a coroutine that allows commands to return multiple responses throughout its execution's lifetime.  <a href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:a12153cc8e62e51e5b3cb5ab090829964" id="r_a12153cc8e62e51e5b3cb5ab090829964"><td class="memItemLeft" align="right" valign="top"><a id="a12153cc8e62e51e5b3cb5ab090829964" name="a12153cc8e62e51e5b3cb5ab090829964"></a>
@@ -215,12 +208,12 @@ virtual&#160;</td><td class="memItemRight" valign="bottom"><b>~ParamDescriptor</
 <tr class="memitem:a82f28c8094816bb002621ccb19386d96" id="r_a82f28c8094816bb002621ccb19386d96"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classcatena_1_1common_1_1IConstraint.html">catena::common::IConstraint</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a82f28c8094816bb002621ccb19386d96">getConstraint</a> () const override</td></tr>
 <tr class="memdesc:a82f28c8094816bb002621ccb19386d96"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a constraint by oid  <br /></td></tr>
 <tr class="separator:a82f28c8094816bb002621ccb19386d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabfdc70cffeeb1e83b992c3cd4bbc2de" id="r_aabfdc70cffeeb1e83b992c3cd4bbc2de"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#aabfdc70cffeeb1e83b992c3cd4bbc2de">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(catena::Value)&gt; commandImpl) override</td></tr>
-<tr class="memdesc:aabfdc70cffeeb1e83b992c3cd4bbc2de"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
-<tr class="separator:aabfdc70cffeeb1e83b992c3cd4bbc2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade95adaad7bbfc7e553086f0342d6d0c" id="r_ade95adaad7bbfc7e553086f0342d6d0c"><td class="memItemLeft" align="right" valign="top">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#ade95adaad7bbfc7e553086f0342d6d0c">executeCommand</a> (catena::Value value) override</td></tr>
-<tr class="memdesc:ade95adaad7bbfc7e553086f0342d6d0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
-<tr class="separator:ade95adaad7bbfc7e553086f0342d6d0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7376df47ed0a1379daf14338a5de798d" id="r_a7376df47ed0a1379daf14338a5de798d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a7376df47ed0a1379daf14338a5de798d">defineCommand</a> (std::function&lt; catena::CommandResponse(catena::Value)&gt; commandImpl) override</td></tr>
+<tr class="memdesc:a7376df47ed0a1379daf14338a5de798d"><td class="mdescLeft">&#160;</td><td class="mdescRight">define the command implementation  <br /></td></tr>
+<tr class="separator:a7376df47ed0a1379daf14338a5de798d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a827a364fad98e4be5afea425884df9e4" id="r_a827a364fad98e4be5afea425884df9e4"><td class="memItemLeft" align="right" valign="top">catena::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a827a364fad98e4be5afea425884df9e4">executeCommand</a> (catena::Value value) override</td></tr>
+<tr class="memdesc:a827a364fad98e4be5afea425884df9e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command  <br /></td></tr>
+<tr class="separator:a827a364fad98e4be5afea425884df9e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71e3b0347b9c41f60333c1e796ed1f66" id="r_a71e3b0347b9c41f60333c1e796ed1f66"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1ParamDescriptor.html#a71e3b0347b9c41f60333c1e796ed1f66">isCommand</a> () const override</td></tr>
 <tr class="memdesc:a71e3b0347b9c41f60333c1e796ed1f66"><td class="mdescLeft">&#160;</td><td class="mdescRight">return true if this is a command parameter  <br /></td></tr>
 <tr class="separator:a71e3b0347b9c41f60333c1e796ed1f66"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -447,8 +440,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="aabfdc70cffeeb1e83b992c3cd4bbc2de" name="aabfdc70cffeeb1e83b992c3cd4bbc2de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aabfdc70cffeeb1e83b992c3cd4bbc2de">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="a7376df47ed0a1379daf14338a5de798d" name="a7376df47ed0a1379daf14338a5de798d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7376df47ed0a1379daf14338a5de798d">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -459,7 +452,7 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">void catena::common::ParamDescriptor::defineCommand </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt;(catena::Value)&gt;&#160;</td>
+          <td class="paramtype">std::function&lt; catena::CommandResponse(catena::Value)&gt;&#160;</td>
           <td class="paramname"><em>commandImpl</em></td><td>)</td>
           <td></td>
         </tr>
@@ -474,18 +467,18 @@ Here is the call graph for this function:</div>
 <p>define the command implementation </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">commandImpl</td><td>a function that takes a Value and returns a <a class="el" href="classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html" title="CommandResponder is a coroutine that allows commands to return multiple responses throughout its exec...">CommandResponder</a></td></tr>
+    <tr><td class="paramname">commandImpl</td><td>a function that takes a Value and returns a CommandResponse</td></tr>
   </table>
   </dd>
 </dl>
 <p>The passed function will be executed when executeCommand is called on this param object. If this is not a command parameter, an exception will be thrown. </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ada5f851f25172c7354ee5c1481088501">catena::common::IParamDescriptor</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#acc8c53dce75f7cabce9d2232b98294f8">catena::common::IParamDescriptor</a>.</p>
 
 </div>
 </div>
-<a id="ade95adaad7bbfc7e553086f0342d6d0c" name="ade95adaad7bbfc7e553086f0342d6d0c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ade95adaad7bbfc7e553086f0342d6d0c">&#9670;&#160;</a></span>executeCommand()</h2>
+<a id="a827a364fad98e4be5afea425884df9e4" name="a827a364fad98e4be5afea425884df9e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a827a364fad98e4be5afea425884df9e4">&#9670;&#160;</a></span>executeCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -494,7 +487,7 @@ Here is the call graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">ICommandResponder</a> &gt; catena::common::ParamDescriptor::executeCommand </td>
+          <td class="memname">catena::CommandResponse catena::common::ParamDescriptor::executeCommand </td>
           <td>(</td>
           <td class="paramtype">catena::Value&#160;</td>
           <td class="paramname"><em>value</em></td><td>)</td>
@@ -515,10 +508,10 @@ Here is the call graph for this function:</div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>the responser from the command implementation</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>the response from the command implementation</dd></dl>
 <p>if executeCommand is called for a command that has not been defined, then the returned command response will be an exception with type UNIMPLEMENTED </p>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#aa895e32b34b8f077e13e609fde61e8da">catena::common::IParamDescriptor</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a720a70ca515dcde89fded564108dd4d2">catena::common::IParamDescriptor</a>.</p>
 
 </div>
 </div>
