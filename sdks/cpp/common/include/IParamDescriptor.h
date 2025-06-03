@@ -211,17 +211,24 @@ class IParamDescriptor {
      */
     virtual const catena::common::IConstraint* getConstraint() const = 0;
 
+    /**
+     * @brief CommandResponder is a coroutine that allows commands to return
+     * multiple responses throughout its execution's lifetime.
+     */
     class ICommandResponder {
       public:
         ICommandResponder() = default;
-
         ICommandResponder(const ICommandResponder&) = delete;
         ICommandResponder& operator=(const ICommandResponder&) = delete;
-        
         virtual ~ICommandResponder() = default;
 
+        /**
+         * @brief Returns true if the coroutine has not finished execution.
+         */
         virtual inline bool hasMore() const = 0;
-
+        /**
+         * @brief Resumes the coroutine and returns a CommandResponse object.
+         */
         virtual catena::CommandResponse getNext() = 0;
     };
 
@@ -232,8 +239,7 @@ class IParamDescriptor {
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    virtual void defineCommand(std::function<catena::CommandResponse(catena::Value)> commandImpl) = 0;
-    virtual void defineCommandNew(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) = 0;
+    virtual void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) = 0;
 
     /**
      * @brief execute the command
@@ -243,8 +249,7 @@ class IParamDescriptor {
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    virtual catena::CommandResponse executeCommand(catena::Value value) = 0;
-    virtual std::unique_ptr<ICommandResponder> executeCommandNew(catena::Value value) = 0;
+    virtual std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) = 0;
 
     /**
      * @brief return true if this is a command parameter

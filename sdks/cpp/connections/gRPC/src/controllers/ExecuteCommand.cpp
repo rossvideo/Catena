@@ -93,7 +93,7 @@ void ExecuteCommand::proceed(bool ok) {
                 // Executing the command if found.
                 if (command != nullptr) {
                     // res_ = command->executeCommand(req_.value());
-                    responder_ = command->executeCommandNew(req_.value());
+                    responder_ = command->executeCommand(req_.value());
                     status_ = CallStatus::kWrite; 
                 }
             // ERROR

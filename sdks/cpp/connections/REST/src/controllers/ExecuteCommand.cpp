@@ -48,7 +48,7 @@ void ExecuteCommand::proceed() {
             // If the command is not found, return an error
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
-                std::unique_ptr<IParamDescriptor::ICommandResponder> responder = command->executeCommandNew(val);
+                std::unique_ptr<IParamDescriptor::ICommandResponder> responder = command->executeCommand(val);
                 while (responder->hasMore()) {
                     writeConsole_(CallStatus::kWrite, socket_.is_open());
                     catena::CommandResponse res = responder->getNext();

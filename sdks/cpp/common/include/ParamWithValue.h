@@ -285,23 +285,20 @@ class ParamWithValue : public catena::common::IParam {
     }
 
     /**
-     * @brief define a command for the parameter
-     */
-    void defineCommand(std::function<catena::CommandResponse(catena::Value)> command) override {
-        descriptor_.defineCommand(command);
-    }
-    void defineCommandNew(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl) {
-        descriptor_.defineCommandNew(commandImpl);
+     * @brief define the command implementation
+     * @param commandImpl a function that takes a Value and returns a CommandResponder
+     */ 
+    void defineCommand(std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl) {
+        descriptor_.defineCommand(commandImpl);
     }
 
     /**
      * @brief execute the command for the parameter
+     * @param value the value to pass to the command implementation
+     * @return the responser from the command implementation
      */
-    catena::CommandResponse executeCommand(const catena::Value& value) const override {
+    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommand(const catena::Value& value) const override {
         return descriptor_.executeCommand(value);
-    }
-    std::unique_ptr<IParamDescriptor::ICommandResponder> executeCommandNew(const catena::Value& value) const override {
-        return descriptor_.executeCommandNew(value);
     }
 
     /**
