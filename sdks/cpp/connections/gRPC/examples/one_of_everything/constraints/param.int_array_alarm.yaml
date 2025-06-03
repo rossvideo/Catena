@@ -1,0 +1,22 @@
+# INT_ALARM constraint example with an array [NOT YET IMPLEMENTED]
+type: INT32_ARRAY
+value: { int32_array_values: { ints: [0, 1, 2, 3, 4] } }
+constraint:
+  type: ALARM_TABLE
+  alarm_table:
+    alarms:
+      - bit_value: 0
+        severity: INFO
+        description: { display_strings: { en: "Info" } }
+      - bit_value: 1
+        severity: WARNING
+        description: { display_strings: { en: "Warning" } }
+      - bit_value: 2
+        severity: SEVERE
+        description: { display_strings: { en: "Severe" } }
+      - bit_value: 3
+        severity: UNKNOWN
+        description: { display_strings: { en: "Unknown" } }
+      - bit_value: 4
+        severity: REFUSED
+        description: { display_strings: { en: "Refused" } }

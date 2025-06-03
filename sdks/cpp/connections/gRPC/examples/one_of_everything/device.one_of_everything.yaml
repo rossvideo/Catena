@@ -20,7 +20,12 @@ params:
   
   # Imports the parameter from the file specified below.
   float_example:
-    import: { file: /params/param.float_example.yaml }
+    type: FLOAT32
+    value: { float32_value: 0.0 }
+    name: { display_strings: { en: "Float Example" } }
+    access_scope: st2138:op
+    widget: default
+    precision: 1
   
   string_example:
     type: STRING
@@ -35,7 +40,11 @@ params:
   
   # Imports the parameter from the file specified below.
   float_array:
-    import: { file: /params/param.float_array.yaml }
+    type: FLOAT32_ARRAY
+    value: { float32_array_values: { floats: [1.1, 2.2, 3.3, 4.4] } }
+    name: { display_strings: { en: "Float Array Example" } }
+    max_length: 128
+    precision: 3
 
   string_array:
     type: STRING_ARRAY
@@ -54,6 +63,10 @@ params:
   # Imports the parameter from the file specified below.
   struct_array:
     import: { file: /params/param.struct_array.yaml }
+
+  # This is a struct param containing examples of various constraints.
+  constraint_examples:
+    import: { file: /constraints/param.constraint_examples.yaml }
 
 menu_groups:
   status:

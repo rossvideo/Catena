@@ -1,0 +1,5 @@
+# max_length and total_length example with an array
+type: STRING_ARRAY
+value: { string_array_values: { strings: [a, b, c, d, e, f, g, h, i, j] } }
+max_length: 10    # Array cannot have more than this many strings.
+total_length: 100 # Sum of all string lengths must be less than this.

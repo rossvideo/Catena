@@ -1,0 +1,11 @@
+# INT_RANGE constraint example with an array
+type: INT32_ARRAY
+value: { int32_array_values: { ints: [0, 2, 4, 6, 8, 10] } }
+constraint:
+  type: INT_RANGE
+  int32_range:
+    min_value: 0
+    max_value: 10
+    display_min: 2
+    display_max: 8
+    step: 2
