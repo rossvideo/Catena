@@ -93,12 +93,10 @@ void CatenaServiceImpl::run() {
                     std::string requestKey = context.method() + "/v1" + context.endpoint();
                     // Returning empty response with options to the client if required.
                     if (context.method() == "OPTIONS") {
-                        // Set to 204 No Content if in OPTIONS.
                         rc = catena::exception_with_status("", catena::StatusCode::NO_CONTENT);
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Sending an empty 200 OK response for health check.
                     } else if (requestKey == "GET/v1/health") {
-                        rc = catena::exception_with_status("", catena::StatusCode::OK);
                         SocketWriter(socket, context.origin()).sendResponse(rc);
                     // Otherwise routing to request.
                     } else if (router_.canMake(requestKey)) {
@@ -111,7 +109,7 @@ void CatenaServiceImpl::run() {
                     }
                 // ERROR
                 } catch (const catena::exception_with_status& e) {
-                    rc = std::move(catena::exception_with_status(e.what(), e.status)); 
+                    rc = catena::exception_with_status(e.what(), e.status); 
                 } catch (const std::invalid_argument& e) {
                     rc = catena::exception_with_status(e.what(), catena::StatusCode::INVALID_ARGUMENT);
                 } catch (const std::runtime_error& e) {
