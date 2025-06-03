@@ -678,7 +678,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     EXPECT_EQ(actual, expected);
 }
 
-// Test 2.5: Get top-level parameters with error status from getTopLevelParams
+// Test 2.4: Get top-level parameters with error status from getTopLevelParams
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithErrorStatus) {
     catena::exception_with_status rc("Error getting parameters", catena::StatusCode::INTERNAL);
 
@@ -706,7 +706,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     EXPECT_EQ(actual, expected);
 }
 
-// Test 2.6: Get top-level parameters with empty list and recursion
+// Test 2.5: Get top-level parameters with empty list and recursion
 TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWithEmptyListAndRecursion) {
     catena::exception_with_status rc("No top-level parameters found", catena::StatusCode::NOT_FOUND);
 
