@@ -49,15 +49,17 @@ void ExecuteCommand::proceed() {
             if (command != nullptr) {
                 // Execute the command and write response if respond = true.
                 std::unique_ptr<IParamDescriptor::ICommandResponder> responder = command->executeCommand(val);
-                while (responder->hasMore()) {
-                    writeConsole_(CallStatus::kWrite, socket_.is_open());
-                    catena::CommandResponse res = responder->getNext();
-                    if (respond) {
-                        writer_.sendResponse(rc, res);
+                if (!responder) {
+                    rc = catena::exception_with_status("Illegal state", catena::StatusCode::INTERNAL);
+                } else {
+                    while (responder->hasMore()) {
+                        writeConsole_(CallStatus::kWrite, socket_.is_open());
+                        catena::CommandResponse res = responder->getNext();
+                        if (respond) {
+                            writer_.sendResponse(rc, res);
+                        }
                     }
                 }
-            } else {
-                rc = catena::exception_with_status("Command not found", catena::StatusCode::NOT_FOUND);
             }
         }
     } catch (catena::exception_with_status& err) {
