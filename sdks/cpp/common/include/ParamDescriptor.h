@@ -278,8 +278,6 @@ class ParamDescriptor : public IParamDescriptor {
     /**
      * @brief CommandResponder is a coroutine that allows commands to return
      * multiple responses throughout its execution's lifetime.
-     * This struct manages the state and lifetime of the coroutine. It also
-     * provides the interface for resuming the coroutine.
      */
     class CommandResponder : public ICommandResponder {
       public:
