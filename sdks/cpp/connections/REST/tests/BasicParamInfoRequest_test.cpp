@@ -121,7 +121,6 @@ protected:
     MockSocketReader context;
     MockDevice dm;
     catena::REST::ICallData* request = nullptr;
-    std::string mockOid = "test_param";
     std::string empty_prefix;
 };
 
@@ -194,10 +193,10 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
     // Setup mock parameter
     auto param = std::make_unique<MockParam>();
     catena::REST::test::ParamInfo param_info{
-        .oid = mockOid,
+        .oid = "test_param",
         .type = catena::ParamType::STRING
     };
-    auto desc = ParamHierarchyBuilder::createDescriptor("/" + mockOid);
+    auto desc = ParamHierarchyBuilder::createDescriptor("/" + param_info.oid);
     catena::REST::test::setupMockParam(param.get(), param_info, desc.descriptor.get());
 
     // Add isArrayType expectation
@@ -207,8 +206,8 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
     EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::ReturnRef(mockToken));
     
-    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(mockOid));
-    EXPECT_CALL(dm, getParam("/" + mockOid, ::testing::_, ::testing::_))
+    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(param_info.oid));
+    EXPECT_CALL(dm, getParam("/" + param_info.oid, ::testing::_, ::testing::_))
        .WillRepeatedly(::testing::Invoke([&param, &rc](const std::string&, catena::exception_with_status &status, catena::common::Authorizer &) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(param);
@@ -224,10 +223,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
     delete authzRequest;
 
     // Get expected and actual responses
-    std::string jsonBody = catena::REST::test::createParamInfoJson(catena::REST::test::ParamInfo{
-        .oid = mockOid,
-        .type = catena::ParamType::STRING
-    });
+    std::string jsonBody = catena::REST::test::createParamInfoJson(param_info);
     std::string expected = expectedSSEResponse(rc, {jsonBody});
     std::string actual = readResponse();
     EXPECT_EQ(actual, expected);
