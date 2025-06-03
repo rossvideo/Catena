@@ -10,6 +10,7 @@ ARG IMAGE_VERSION
 ARG IMAGE_VENDOR
 ARG CMAKE_BUILD_TYPE
 ARG CONNECTIONS
+ARG BUILD_TARGET
 
 # Use build arguments for labels
 LABEL org.opencontainers.image.title=${IMAGE_TITLE}
@@ -22,6 +23,7 @@ ENV USER_GID=${USER_GID}
 ENV USER_NAME=${USER_NAME}
 ENV CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 ENV CONNECTIONS=${CONNECTIONS}
+ENV BUILD_TARGET=${BUILD_TARGET}
 
 RUN if getent passwd $USER_UID > /dev/null; then userdel $(getent passwd $USER_UID | cut -d: -f1); fi
 
@@ -60,9 +62,9 @@ RUN mkdir -p ~/Catena \
     && git submodule update --init --recursive
 
 # Build Catena
-RUN mkdir -p ~/Catena/build/cpp \
-    && cd ~/Catena/build/cpp \
-    && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ~/Catena/build/cpp ~/Catena/sdks/cpp  \
+RUN mkdir -p ~/Catena/${BUILD_TARGET} \
+    && cd ~/Catena/${BUILD_TARGET} \
+    && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ~/Catena/${BUILD_TARGET} ~/Catena/sdks/cpp  \
     && ninja
 # cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
 RUN cd ~/Catena/ \
@@ -70,11 +72,11 @@ RUN cd ~/Catena/ \
 # Set the working directory
 WORKDIR /home/${USER_NAME}/Catena
 
-# ~/Catena/build/cpp/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
+# ~/Catena/${BUILD_TARGET}/connections/gRPC/examples/status_update/status_update --static_root ../connections/gRPC/examples/status_update/static
 # #docker run -rm -v $(realpath ../):~/Catena -it catena-sdk
 VOLUME ["/home/${USER_NAME}/Catena"] 
 
 ENTRYPOINT ["/bin/sh", "-c", "/bin/bash"]
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ~/Catena/build/cpp/common/examples/hello_world/hello_world || exit 1
+    CMD ~/Catena/${BUILD_TARGET}/common/examples/hello_world/hello_world || exit 1

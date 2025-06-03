@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 set(This REST_unit_tests)	
 
-find_package(GTest REQUIRED)	
-include_directories(../../src)	
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
 
-include_directories(${GTEST_INCLUDE_DIRS})	
+include_directories(${CATENA_CPP_ROOT_DIR}/common/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(mocks)
-include_directories(${CATENA_UNITTESTS_DIR}/common)
-include_directories(${CATENA_UNITTESTS_DIR}/common/mocks)
+include_directories(${CATENA_UNITTESTS_DIR}/cpp/common)
+include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 
 set(SOURCES 	
     tests/SocketReader_test.cpp
@@ -40,7 +40,7 @@ set(SOURCES
 add_executable(${This} ${SOURCES})	
 
 target_link_libraries(${This}	
-    PUBLIC	
+    PUBLIC
         catena_proto_common
         catena_connections_REST
         pthread	

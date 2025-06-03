@@ -25,44 +25,44 @@ jobs:
 
             - name: Make a build directory, run CMake and Ninja to build Doxygen files
               run: |
-                  mkdir -p build/cpp
-                  cd build/cpp
-                  cmake -DONLY_DOCS=ON -G Ninja ../ .
+                  mkdir -p $BUILD_TARGET
+                  cd $BUILD_TARGET
+                  cmake -DONLY_DOCS=ON -G Ninja -B ~/work/Catena/Catena/$BUILD_TARGET -S ~/work/Catena/Catena/sdks/cpp
                   ninja doxygen
 
             # Copy Doxygen files to a "doxygen" subdirectory for GitHub Pages
             - name: Prepare Doxygen files for GitHub Pages
               run: |
-                  mkdir -p build/cpp/github-pages/doxygen
-                  cp -r build/cpp/doxygen/html/* build/cpp/github-pages/doxygen
+                  mkdir -p $BUILD_TARGET/github-pages/doxygen
+                  cp -r$BUILD_TARGET/doxygen/html/* $BUILD_TARGET/github-pages/doxygen
 
             # Convert Markdown files to HTML and store in a "docs" subdirectory
             - name: Convert Markdown to HTML
               run: |
                   for file in docs/*.md; do
                       filename=$(basename "$file" .md)
-                      pandoc "$file" -o "build/cpp/github-pages/$filename.html"
+                      pandoc "$file" -o "$BUILD_TARGET/github-pages/$filename.html"
                   done
                   for file in docs/gRPC/*.md; do
                       filename=$(basename "$file" .md)
-                      pandoc "$file" -o "build/cpp/github-pages/$filename.html"
+                      pandoc "$file" -o "$BUILD_TARGET/github-pages/$filename.html"
                   done
-                  mkdir -p build/cpp/github-pages/images
+                  mkdir -p $BUILD_TARGET/github-pages/images
                   for file in docs/images/*; do
-                      cp "$file" "build/cpp/github-pages/images"
+                      cp "$file" "$BUILD_TARGET/github-pages/images"
                   done
 
             # # Create a root index.html to link to Doxygen and Markdown documentation
             # - name: Create root index.html
             #   run: |
-            #       echo '<html><body><h1>Documentation</h1>' > build/cpp/github-pages/index.html
-            #       echo '<ul>' >> build/cpp/github-pages/index.html
-            #       echo '<li><a href="doxygen/index.html">Doxygen Documentation</a></li>' >> build/cpp/github-pages/index.html
-            #       echo '<li><a href="docs/Index.html">Markdown Documentation</a></li>' >> build/cpp/github-pages/index.html
-            #       echo '</ul></body></html>' >> build/cpp/github-pages/index.html
+            #       echo '<html><body><h1>Documentation</h1>' > ${BUILD_TARGET}/github-pages/index.html
+            #       echo '<ul>' >> ${BUILD_TARGET}/github-pages/index.html
+            #       echo '<li><a href="doxygen/index.html">Doxygen Documentation</a></li>' >> ${BUILD_TARGET}/github-pages/index.html
+            #       echo '<li><a href="docs/Index.html">Markdown Documentation</a></li>' >> ${BUILD_TARGET}/github-pages/index.html
+            #       echo '</ul></body></html>' >> ${BUILD_TARGET}/github-pages/index.html
 
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v4
               with:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
-                publish_dir: ./build/cpp/github-pages
+                publish_dir: ./$BUILD_TARGET/github-pages

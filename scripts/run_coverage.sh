@@ -1,33 +1,21 @@
 #!/bin/bash
 
-check_coverage_sync() {
-    local build_dir="$1"
-    local out_of_sync=false
-    
-    # Find all .gcda files and check their timestamps against corresponding .gcno files
-    while IFS= read -r gcda_file; do
-        gcno_file="${gcda_file%.gcda}.gcno"
-        if [ -f "$gcno_file" ]; then
-            if [ "$gcno_file" -nt "$gcda_file" ]; then
-                echo "Coverage data out of sync: $gcda_file is older than $gcno_file"
-                out_of_sync=true
-            fi
-        fi
-    done < <(find "$build_dir" -name "*.gcda")
-    
-    return $([ "$out_of_sync" = true ])
-}
+cd ~/Catena/${BUILD_TARGET}
+echo ~/Catena/${BUILD_TARGET}
+clean=false
+for arg in "$@"; do
+  if [[ "$arg" == "-C"  || "$arg" == "--clean"  || "$arg" == "-c" ]]; then
+    clean=true
+    break
+  fi
+done
 
-cd ~/Catena/build/cpp
-
-# Check if coverage data is out of sync
-if check_coverage_sync ~/Catena/build/cpp; then
-    echo "Coverage data is out of sync. Cleaning and rebuilding..."
-    find ~/Catena/build/cpp -name "*.gcda" -delete    
-    ninja clean
-else
-    echo "Coverage data is in sync. Proceeding with tests..."
+if [ "$clean" = true ]; then
+  echo "Cleaning build directory..."
+  ninja clean
+  echo "Build directory cleaned."
 fi
+
 ninja
 # Check for -V argument
 verbose=false

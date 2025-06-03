@@ -1,14 +1,14 @@
 {
     "C_Cpp.default.cppStandard": "c++20",
     "cmake.sourceDirectory": "${workspaceFolder}/sdks/cpp",
-    "cmake.buildDirectory": "${workspaceFolder}/build/cpp",
+    "cmake.buildDirectory": "${workspaceFolder}/${env:BUILD_TARGET}",
     "cmake.buildBeforeRun": false,
     "cmake.configureSettings": {
         "CONNECTIONS": ["gRPC", "REST"],
         "CATENA_MODEL": ["lite"]
     },
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/build/cpp/**",
+        "${workspaceFolder}/${env:BUILD_TARGET}/**",
         "${env:HOME}/.local/include",
         "${workspaceFolder}/sdks/cpp/common/**",
         "${workspaceFolder}/sdks/cpp/connections/**",

@@ -62,6 +62,6 @@ RUN git clone --recurse-submodules -b ${GPRC_VERSION} --depth 1 --shallow-submod
 # catena-sdk
 COPY . "${CATENA_SDK}/"
 
-WORKDIR "${CATENA_SDK}/build/cpp"
-RUN cmake -S "${CATENA_SDK}/sdks/cpp" -B "${CATENA_SDK}/build/cpp" && \
-    make -C "${CATENA_SDK}/build/cpp" -j "${NPROC:-$(nproc)}"
+WORKDIR "${CATENA_SDK}/${BUILD_TARGET}"
+RUN cmake -S "${CATENA_SDK}/sdks/cpp" -B "${CATENA_SDK}/${BUILD_TARGET}" && \
+    make -C "${CATENA_SDK}/${BUILD_TARGET}" -j "${NPROC:-$(nproc)}"

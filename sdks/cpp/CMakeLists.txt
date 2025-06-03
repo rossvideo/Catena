@@ -35,10 +35,10 @@ set(CATENA_CPP_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 add_compile_options(--coverage)
 add_link_options(--coverage)
 
+option(UNIT_TESTING "Build the unit tests" ON)
+
 # enable testing
 enable_testing()
-
-
 
 # set up the CATENA_CPP_VERSION and CATENA_CPP_TIMESTAMP variables for use
 # in the rest of the build.
@@ -136,6 +136,8 @@ foreach(conn ${CONNECTIONS})
     message(FATAL_ERROR "Error: '${conn}' is not a valid connection type. Allowed types are ${ALLOWED_CONNECTIONS}.")
   endif()
 endforeach()
+
+message(STATUS "UNIT_TESTING: ${UNIT_TESTING}")
 
 # create enabled flags for gRPC, REST and WSS to indicate which connections are enabled
 message(STATUS "Connections: ${CONNECTIONS}")
@@ -239,4 +241,7 @@ install(
 # Build the documentation with Doxygen
 build_docs()
 
-add_subdirectory("../../unittests/cpp/" ../../build/cpp/unittests/)
+if (UNIT_TESTING)
+  set(CATENA_UNITTESTS_DIR $ENV{HOME}/Catena/unittests)
+  add_subdirectory("${CATENA_UNITTESTS_DIR}/cpp/" $ENV{HOME}/Catena/$ENV{BUILD_TARGET}/unittests/)
+endif (UNIT_TESTING)

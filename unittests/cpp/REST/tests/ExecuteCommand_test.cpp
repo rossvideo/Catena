@@ -61,9 +61,9 @@ using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
-class RESTExecuteCommandTests : public ::testing::Test, public SocketHelper {
+class RESTExecuteCommandTests : public ::testing::Test, public RESTTest {
   protected:
-    RESTExecuteCommandTests() : SocketHelper(&serverSocket, &clientSocket) {}
+    RESTExecuteCommandTests() : RESTTest(&serverSocket, &clientSocket) {}
 
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.

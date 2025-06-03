@@ -4,10 +4,10 @@ set(This gRPC_unit_tests)
 
 find_package(GTest REQUIRED)	
 
-include_directories(${GTEST_INCLUDE_DIRS})	
+include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(mocks)
-include_directories(${CATENA_UNITTESTS_DIR}/common/mocks)
+include_directories(${CATENA_UNITTESTS_DIR}/cpp/common/mocks)
 
 set(SOURCES 	
     tests/AddLanguage_test.cpp

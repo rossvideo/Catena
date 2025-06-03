@@ -5,7 +5,7 @@ set(This common_unit_tests)
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CATENA_UNITTESTS_DIR}/REST/mocks)
+include_directories(${CATENA_UNITTESTS_DIR}/cpp/REST/mocks)
 include_directories(mocks)
 
 # set up link libs, prefer gRPC if enabled

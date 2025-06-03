@@ -55,7 +55,7 @@ using namespace catena::REST;
 // Fixture
 class RESTSocketWriterTests : public ::testing::Test, public RESTTest {
   protected:
-    RESTSocketWriterTests() : SocketHelper(&serverSocket, &clientSocket) {
+    RESTSocketWriterTests() : RESTTest(&serverSocket, &clientSocket) {
         origin = "test-origin.com";
     }
   
