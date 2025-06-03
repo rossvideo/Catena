@@ -27,7 +27,7 @@ jobs:
               run: |
                   mkdir -p build/cpp
                   cd build/cpp
-                  cmake -DONLY_DOCS=ON -G Ninja ..
+                  cmake -DONLY_DOCS=ON -G Ninja ../ .
                   ninja doxygen
 
             # Copy Doxygen files to a "doxygen" subdirectory for GitHub Pages
