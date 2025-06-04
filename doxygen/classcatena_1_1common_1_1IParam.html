@@ -185,12 +185,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ace2807e50e373d9dc5c02452876a9d8e" id="r_ace2807e50e373d9dc5c02452876a9d8e"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#ace2807e50e373d9dc5c02452876a9d8e">getScope</a> () const =0</td></tr>
 <tr class="memdesc:ace2807e50e373d9dc5c02452876a9d8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the parameter access scope  <br /></td></tr>
 <tr class="separator:ace2807e50e373d9dc5c02452876a9d8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3710b84c84cf4d68ec82044d4dbc532" id="r_af3710b84c84cf4d68ec82044d4dbc532"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#af3710b84c84cf4d68ec82044d4dbc532">defineCommand</a> (std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(catena::Value)&gt; commandImpl)=0</td></tr>
-<tr class="memdesc:af3710b84c84cf4d68ec82044d4dbc532"><td class="mdescLeft">&#160;</td><td class="mdescRight">define a command for the parameter  <br /></td></tr>
-<tr class="separator:af3710b84c84cf4d68ec82044d4dbc532"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af643741278593143c06c154c93327952" id="r_af643741278593143c06c154c93327952"><td class="memItemLeft" align="right" valign="top">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#af643741278593143c06c154c93327952">executeCommand</a> (const catena::Value &amp;value) const =0</td></tr>
-<tr class="memdesc:af643741278593143c06c154c93327952"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
-<tr class="separator:af643741278593143c06c154c93327952"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35c63b79b4d2a60d82484d45c97d75fa" id="r_a35c63b79b4d2a60d82484d45c97d75fa"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a35c63b79b4d2a60d82484d45c97d75fa">defineCommand</a> (std::function&lt; catena::CommandResponse(catena::Value)&gt; command)=0</td></tr>
+<tr class="memdesc:a35c63b79b4d2a60d82484d45c97d75fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">define a command for the parameter  <br /></td></tr>
+<tr class="separator:a35c63b79b4d2a60d82484d45c97d75fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cb9eb3d2d0ad955764c5e6284186c7e" id="r_a9cb9eb3d2d0ad955764c5e6284186c7e"><td class="memItemLeft" align="right" valign="top">virtual catena::CommandResponse&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a9cb9eb3d2d0ad955764c5e6284186c7e">executeCommand</a> (const catena::Value &amp;value) const =0</td></tr>
+<tr class="memdesc:a9cb9eb3d2d0ad955764c5e6284186c7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">execute the command for the parameter  <br /></td></tr>
+<tr class="separator:a9cb9eb3d2d0ad955764c5e6284186c7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9111464c2fc6f68b29db19d10610ac31" id="r_a9111464c2fc6f68b29db19d10610ac31"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html">IParamDescriptor</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31">getDescriptor</a> () const =0</td></tr>
 <tr class="memdesc:a9111464c2fc6f68b29db19d10610ac31"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the descriptor of the parameter  <br /></td></tr>
 <tr class="separator:a9111464c2fc6f68b29db19d10610ac31"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -283,8 +283,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="af3710b84c84cf4d68ec82044d4dbc532" name="af3710b84c84cf4d68ec82044d4dbc532"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af3710b84c84cf4d68ec82044d4dbc532">&#9670;&#160;</a></span>defineCommand()</h2>
+<a id="a35c63b79b4d2a60d82484d45c97d75fa" name="a35c63b79b4d2a60d82484d45c97d75fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35c63b79b4d2a60d82484d45c97d75fa">&#9670;&#160;</a></span>defineCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -295,8 +295,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void catena::common::IParam::defineCommand </td>
           <td>(</td>
-          <td class="paramtype">std::function&lt; std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt;(catena::Value)&gt;&#160;</td>
-          <td class="paramname"><em>commandImpl</em></td><td>)</td>
+          <td class="paramtype">std::function&lt; catena::CommandResponse(catena::Value)&gt;&#160;</td>
+          <td class="paramname"><em>command</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -309,12 +309,12 @@ Public Member Functions</h2></td></tr>
 
 <p>define a command for the parameter </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a9aff72ff83ca4655a9dde696beaa180c">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#ac847671a24dc48644bfc6b6a960bffc0">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
-<a id="af643741278593143c06c154c93327952" name="af643741278593143c06c154c93327952"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af643741278593143c06c154c93327952">&#9670;&#160;</a></span>executeCommand()</h2>
+<a id="a9cb9eb3d2d0ad955764c5e6284186c7e" name="a9cb9eb3d2d0ad955764c5e6284186c7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9cb9eb3d2d0ad955764c5e6284186c7e">&#9670;&#160;</a></span>executeCommand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -323,7 +323,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual std::unique_ptr&lt; <a class="el" href="classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html">IParamDescriptor::ICommandResponder</a> &gt; catena::common::IParam::executeCommand </td>
+          <td class="memname">virtual catena::CommandResponse catena::common::IParam::executeCommand </td>
           <td>(</td>
           <td class="paramtype">const catena::Value &amp;&#160;</td>
           <td class="paramname"><em>value</em></td><td>)</td>
@@ -339,7 +339,7 @@ Public Member Functions</h2></td></tr>
 
 <p>execute the command for the parameter </p>
 
-<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#a802c94962512c276f4f28012a4b04d10">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1common_1_1ParamWithValue.html#af83823666f87a2ba9843b75a10e393e9">catena::common::ParamWithValue&lt; T &gt;</a>.</p>
 
 </div>
 </div>
