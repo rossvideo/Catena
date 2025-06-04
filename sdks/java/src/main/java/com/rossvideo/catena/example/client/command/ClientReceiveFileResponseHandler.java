@@ -3,7 +3,6 @@ package com.rossvideo.catena.example.client.command;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.protobuf.Empty;
 import com.rossvideo.catena.datapayload.AbstractFilePayloadReceiver.ProceedResponse;
 import com.rossvideo.catena.datapayload.FilePayloadReceiver;
 
@@ -11,6 +10,7 @@ import catena.core.parameter.CommandResponse;
 import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.Value;
+import catena.core.parameter.Empty;
 import io.grpc.stub.StreamObserver;
 
 public class ClientReceiveFileResponseHandler implements StreamObserver<CommandResponse>

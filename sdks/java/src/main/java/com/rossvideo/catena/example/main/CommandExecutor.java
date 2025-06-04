@@ -73,24 +73,24 @@ final class CommandExecutor {
         client.executeCommand("reverse", slotNumber, "hello world", false);
         Thread.sleep(250);
         
-        System.out.println("TEST: Push file to server");
-        client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("files/sample-1.jpg"));
+        // System.out.println("TEST: Push file to server");
+        // client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("files/sample-1.jpg"));
         
-        System.out.println("TEST: Push same file to server");
-        client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("files/sample-1.jpg"));
+        // System.out.println("TEST: Push same file to server");
+        // client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("files/sample-1.jpg"));
         
-        System.out.println("TEST: Push multiple files to server");
-        client.pushFile("file-receive", slotNumber, new URL[] {
-                CommandExecutor.class.getResource("files/sample-1.jpg"),
-                CommandExecutor.class.getResource("files/sample-2.jpg"),
-                CommandExecutor.class.getResource("files/sample-3.jpg"),
-                CommandExecutor.class.getResource("files/sample-4.jpg"),
-                CommandExecutor.class.getResource("files/sample-5.jpg"),
-                CommandExecutor.class.getResource("files/sample-6.jpg")
-        });
+        // System.out.println("TEST: Push multiple files to server");
+        // client.pushFile("file-receive", slotNumber, new URL[] {
+        //         CommandExecutor.class.getResource("files/sample-1.jpg"),
+        //         CommandExecutor.class.getResource("files/sample-2.jpg"),
+        //         CommandExecutor.class.getResource("files/sample-3.jpg"),
+        //         CommandExecutor.class.getResource("files/sample-4.jpg"),
+        //         CommandExecutor.class.getResource("files/sample-5.jpg"),
+        //         CommandExecutor.class.getResource("files/sample-6.jpg")
+        // });
         
-        System.out.println("TEST: Push file from server");
-        client.receiveFile("file-transmit", slotNumber, "sample-file.jpg");
+        // System.out.println("TEST: Push file from server");
+        // client.receiveFile("file-transmit", slotNumber, "sample-file.jpg");
         
         // Tests for getDevice
         System.out.println("TEST: GetDevice for slot: " + slotNumber);

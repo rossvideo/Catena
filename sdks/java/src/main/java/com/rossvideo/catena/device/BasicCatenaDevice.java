@@ -2,7 +2,6 @@ package com.rossvideo.catena.device;
 
 import java.util.Map;
 
-import com.google.protobuf.Empty;
 import com.rossvideo.catena.device.impl.CommandManager;
 import com.rossvideo.catena.device.impl.MenuGroupManager;
 import com.rossvideo.catena.device.impl.ParamManager;
@@ -20,6 +19,7 @@ import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.Param;
 import catena.core.parameter.SetValuePayload;
 import catena.core.parameter.Value;
+import catena.core.parameter.Empty;
 import io.grpc.stub.StreamObserver;
 
 public class BasicCatenaDevice implements CatenaDevice

@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.protobuf.Empty;
 import com.rossvideo.catena.command.BidirectionalDelegatingStreamObserver;
 import com.rossvideo.catena.command.BidirectionalStreamObserverFactory;
 
@@ -21,6 +20,7 @@ import catena.core.externalobject.ExternalObjectRequestPayload;
 import catena.core.language.AddLanguagePayload;
 import catena.core.language.LanguageList;
 import catena.core.language.LanguagePackRequestPayload;
+import catena.core.language.Slot;
 import catena.core.parameter.BasicParamInfoRequestPayload;
 import catena.core.parameter.BasicParamInfoResponse;
 import catena.core.parameter.CommandResponse;
@@ -29,15 +29,16 @@ import catena.core.parameter.GetParamPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.MultiSetValuePayload;
 import catena.core.parameter.SetValuePayload;
+import catena.core.parameter.SingleSetValuePayload;
 import catena.core.parameter.UpdateSubscriptionsPayload;
 import catena.core.parameter.Value;
+import catena.core.parameter.Empty;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceImplBase;
-import catena.core.service.EmptyRequest;
 import io.grpc.Context;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 
-public class CatenaServer extends CatenaServiceImplBase implements BidirectionalStreamObserverFactory<ExecuteCommandPayload, CommandResponse>
+public class CatenaServer extends CatenaServiceImplBase //implements BidirectionalStreamObserverFactory<ExecuteCommandPayload, CommandResponse>
 {
     public static final Context.Key<Map<String, Object>> KEY_CLAIMS = Context.key("claims");
     
@@ -97,16 +98,16 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
         }
     }
 
-    @Override
-    public StreamObserver<ExecuteCommandPayload> createStreamObserver(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream)
-    {
-        CatenaDevice device = getDevice(firstMessage.getSlot());
-        if (device != null)
-        {
-            return device.executeCommand(firstMessage, responseStream, getClaims());
-        }
-        return null;
-    }
+    // @Override
+    // public StreamObserver<ExecuteCommandPayload> createStreamObserver(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream)
+    // {
+    //     CatenaDevice device = getDevice(firstMessage.getSlot());
+    //     if (device != null)
+    //     {
+    //         return device.executeCommand(firstMessage, responseStream, getClaims());
+    //     }
+    //     return null;
+    // }
     
     private CatenaDevice getDevice(int slot)
     {
@@ -149,8 +150,8 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
     }
     
     @Override
-    public StreamObserver<ExecuteCommandPayload> executeCommand(StreamObserver<CommandResponse> responseObserver) {
-        return new BidirectionalDelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
+    public void executeCommand(ExecuteCommandPayload request, StreamObserver<CommandResponse> responseObserver) {
+        // return new BidirectionalDelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
     }
     
     @Override
@@ -168,12 +169,12 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
     }
 
     @Override
-    public void setValue(SetValuePayload request, StreamObserver<Empty> responseObserver)
+    public void setValue(SingleSetValuePayload request, StreamObserver<Empty> responseObserver)
     {
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
         {
-            device.setValue(request, responseObserver, getClaims());
+            device.setValue(request.getValue(), responseObserver, getClaims());
         }
         else
         {
@@ -240,10 +241,19 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
     @Override
     public void multiSetValue(MultiSetValuePayload request, StreamObserver<Empty> responseObserver)
     {
-        //TODO implement add multiSetValue that passes the correct subset to each slot as a multi-set
-        for (SetValuePayload setValuePayload : request.getValuesList()) {
-            setValue(setValuePayload, responseObserver);
+        CatenaDevice device = getDevice(request.getSlot());
+        if (device != null)
+        {
+            //TODO implement add multiSetValue that passes the correct subset to each slot as a multi-set
+            for (SetValuePayload setValuePayload : request.getValuesList()) {
+                device.setValue(setValuePayload, responseObserver, getClaims());
+            }
         }
+        else
+        {
+            notifyNoDeviceAtSlot(responseObserver, request.getSlot());
+        }
+        
     }
 
     @Override
@@ -289,7 +299,7 @@ public class CatenaServer extends CatenaServiceImplBase implements Bidirectional
     }
 
     @Override
-    public void listLanguages(EmptyRequest request, StreamObserver<LanguageList> responseObserver)
+    public void listLanguages(Slot request, StreamObserver<LanguageList> responseObserver)
     {
         CatenaDevice device = getDevice(request.getSlot());
         if (device != null)
