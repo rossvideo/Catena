@@ -75,12 +75,12 @@ class IConnect {
     virtual void updateResponse_(const std::string& oid, size_t idx, const IParam* p) = 0;
     
     /**
-     * @brief Updates the response message with a ComponentLanguagePack and
+     * @brief Updates the response message with a ILanguagePack and
      * handles authorization checks.
      * 
-     * @param l The added ComponentLanguagePack emitted by device.
+     * @param l The added ILanguagePack emitted by device.
      */
-    virtual void updateResponse_(const catena::DeviceComponent_ComponentLanguagePack& l) = 0;
+    virtual void updateResponse_(const ILanguagePack* l) = 0;
     
     /**
      * @brief Sets up the authorizer object with the jwsToken.

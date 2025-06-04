@@ -1,0 +1,10 @@
+# FLOAT_RANGE constraint example with an array
+type: FLOAT32_ARRAY
+constraint:
+  type: FLOAT_RANGE
+  float_range:
+    min_value: 0.0
+    max_value: 100.0
+    display_min: 10.0
+    display_max: 90.0
+    step: 0.5

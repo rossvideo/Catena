@@ -45,6 +45,7 @@
 
 // common
 #include <rpc/Connect.h>
+#include <ILanguagePack.h>
 #include <Enums.h>
 
 // std
