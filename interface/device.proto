@@ -158,18 +158,18 @@ message RemoveComponents {
   }
 
 	oneof kind {
-    IdList param = 3;
+    IdList params = 3;
     /* The oid is relative to the "constraints" child of the device's top-level
      * "types" object. */
-    IdList shared_constraint = 4;
+    IdList shared_constraints = 4;
     /* Note that menus are grouped into menu groups. They are uniquely identified
      * by the json_pointer field which is relative to the Device's top-level
      * menu-groups object thus: menu-group-name/menu-name.
      * example: status/vendor_info */
-    IdList menu = 5;
-    IdList command = 6;
+    IdList menus = 5;
+    IdList commands = 6;
     // This should be the language code that identifies the language e.g. en-uk
-    IdList language_pack = 7;
+    IdList language_packs = 7;
   }
 }
 
