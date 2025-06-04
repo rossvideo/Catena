@@ -700,14 +700,7 @@
       "type": "object",
       "patternProperties": {
         "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/field_value"
-            },
-            {
-              "$ref": "#"
-            }
-          ]
+          "$ref": "#/$defs/field_value"
         }
       },
       "additionalProperties": false
