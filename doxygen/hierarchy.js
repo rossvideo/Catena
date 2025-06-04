@@ -59,6 +59,9 @@ var hierarchy =
       ] ],
       [ "catena::REST::UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", null ]
     ] ],
+    [ "catena::common::IParamDescriptor::ICommandResponder", "classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html", [
+      [ "catena::common::ParamDescriptor::CommandResponder", "classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html", null ]
+    ] ],
     [ "catena::common::IConnect", "classcatena_1_1common_1_1IConnect.html", [
       [ "catena::common::Connect", "classcatena_1_1common_1_1Connect.html", [
         [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
@@ -120,6 +123,7 @@ var hierarchy =
     [ "catena::meta::PopFrontT< L >", "classcatena_1_1meta_1_1PopFrontT.html", null ],
     [ "catena::meta::PopFrontT< TypeList< Head, Tail... > >", "classcatena_1_1meta_1_1PopFrontT_3_01TypeList_3_01Head_00_01Tail_8_8_8_01_4_01_4.html", null ],
     [ "catena::common::Device::DeviceSerializer::promise_type", "structcatena_1_1common_1_1Device_1_1DeviceSerializer_1_1promise__type.html", null ],
+    [ "catena::common::ParamDescriptor::CommandResponder::promise_type", "structcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder_1_1promise__type.html", null ],
     [ "catena::patterns::Singleton< T >::Protector", "structcatena_1_1patterns_1_1Singleton_1_1Protector.html", null ],
     [ "catena::meta::PushFrontT< L, T >", "classcatena_1_1meta_1_1PushFrontT.html", null ],
     [ "catena::meta::PushFrontT< TypeList< Ts... >, T >", "classcatena_1_1meta_1_1PushFrontT_3_01TypeList_3_01Ts_8_8_8_01_4_00_01T_01_4.html", null ],

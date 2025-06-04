@@ -181,16 +181,14 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2ExecuteCom
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <span class="keywordtype">int</span> objectId_;</div>
 <div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    tcp::socket&amp; socket_;</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    SocketWriter writer_;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    SSEWriter writer_;</div>
 <div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>    ISocketReader&amp; context_;</div>
 <div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>    IDevice&amp; dm_;</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    catena::ExecuteCommandPayload req_;</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>    std::string oid_;</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>};</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>};</div>
 </div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>} <span class="comment">// namespace REST</span></div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>} <span class="comment">// namespace catena </span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span> </div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>} <span class="comment">// namespace REST</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>} <span class="comment">// namespace catena </span></div>
 <div class="ttc" id="aDevice_8h_html"><div class="ttname"><a href="Device_8h.html">Device.h</a></div><div class="ttdoc">Device class definition.</div></div>
 <div class="ttc" id="aIParam_8h_html"><div class="ttname"><a href="IParam_8h.html">IParam.h</a></div><div class="ttdoc">Interface for parameters.</div></div>
 <div class="ttc" id="aISocketReader_8h_html"><div class="ttname"><a href="ISocketReader_8h.html">ISocketReader.h</a></div><div class="ttdoc">Interface for the SocketReader class.</div></div>
