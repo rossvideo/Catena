@@ -699,7 +699,7 @@
       "description": "holds struct data fields or params",
       "type": "object",
       "patternProperties": {
-        "(^[A-Za-z]{1}[\\w]{0,62}$)": {
+        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
           "oneOf": [
             {
               "$ref": "#/$defs/field_value"
@@ -813,7 +813,7 @@
       "title": "Object ID",
       "description": "An object ID unique within it's branch of the device model (params, commands, external objects, constraints)",
       "type": "string",
-      "pattern": "(^[A-Za-z]{1}[\\w]{0,62}$)"
+      "pattern": "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)"
     },
     "polyglot_text": {
       "title": "Polyglot Text",
@@ -985,7 +985,7 @@
       "type": "object",
       "$comment": "patternProperties regex must be same as that defined in oid schema",
       "patternProperties": {
-        "(^[A-Za-z]{1}[\\w]{0,62}$)": {
+        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
           "ref_oid": {
             "type": "string",
             "format": "json-pointer"
@@ -1185,7 +1185,7 @@
       "type": "object",
       "$comment": "patternProperties regex must be same as that defined in oid schema",
       "patternProperties": {
-        "(^[A-Za-z]{1}[\\w]{0,62}$)": {
+        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
           "$ref": "#"
         }
       },

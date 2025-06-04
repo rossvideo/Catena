@@ -172,7 +172,7 @@
       "type": "object",
       "$comment": "patternProperties regex must be same as that defined in oid schema",
       "patternProperties": {
-        "(^[A-Za-z]{1}[\\w]{0,62}$)": {
+        "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
           "$ref": "catena.param_schema.json#/$defs/constraint"
         }
       },
