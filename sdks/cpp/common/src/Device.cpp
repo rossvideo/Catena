@@ -170,23 +170,21 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
 catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
 
-    if (languageId.empty()) {
-        ans = catena::exception_with_status("Language ID is empty", catena::StatusCode::INVALID_ARGUMENT);
-    } else {
-        try {
-            if (!language_packs_.contains(languageId)) {
-                ans = catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
-            } else {
-                pack.set_language(languageId);
-                auto languagePack = pack.mutable_language_pack();
-                language_packs_.at(languageId)->toProto(*languagePack);
-                ans = catena::exception_with_status("", catena::StatusCode::OK);
-            }
-        } catch (const std::exception& e) {
-            ans = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
-        } catch (...) {
-            ans = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+    try {
+        if (languageId.empty()) {
+            ans = catena::exception_with_status("Language ID is empty", catena::StatusCode::INVALID_ARGUMENT);
+        } else if (!language_packs_.contains(languageId)) {
+            ans = catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+        } else {
+            pack.set_language(languageId);
+            auto languagePack = pack.mutable_language_pack();
+            language_packs_.at(languageId)->toProto(*languagePack);
+            ans = catena::exception_with_status("", catena::StatusCode::OK);
         }
+    } catch (const std::exception& e) {
+        ans = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+    } catch (...) {
+        ans = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     return ans;
 }
@@ -215,19 +213,18 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
 
 std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) const {
     // The Path constructor will throw an exception if the json pointer is invalid, so we use a try catch block to catch it.
+    std::unique_ptr<IParam> result = nullptr;
     try {
         catena::common::Path path(fqoid);
-        return getParam(path, status, authz);
+        result = getParam(path, status, authz);
     } catch (const catena::exception_with_status& why) {
         status = catena::exception_with_status(why.what(), why.status);
-        return nullptr;
     } catch (const std::exception& e) {
         status = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
-        return nullptr;
     } catch (...) {
         status = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
-        return nullptr;
     }
+    return result;
 }
 
 std::unique_ptr<IParam> Device::getParam(catena::common::Path& path, catena::exception_with_status& status, Authorizer& authz) const {
