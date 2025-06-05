@@ -18,6 +18,7 @@ set(SOURCES
     ListLanguages_test.cpp
     LanguagePackRequest_test.cpp
     AddLanguage_test.cpp
+    DeviceRequest_test.cpp
     ExecuteCommand_test.cpp
 )	
 
