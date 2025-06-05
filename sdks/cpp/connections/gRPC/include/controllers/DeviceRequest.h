@@ -62,7 +62,7 @@ class DeviceRequest : public CallData {
      * @param ok flag to check if request is successful 
      */
     DeviceRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
-      /**
+    /**
      * @brief Manages gRPC request through a state machine
      *
      * @param service the service to which the request is made

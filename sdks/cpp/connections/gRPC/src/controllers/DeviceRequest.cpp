@@ -76,9 +76,11 @@ void DeviceRequest::proceed(bool ok) {
         case CallStatus::kProcess:
             new DeviceRequest(service_, dm_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
+
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
                 
                 // Setting up authorizer object.
                 if (service_->authorizationEnabled()) {
@@ -96,7 +98,10 @@ void DeviceRequest::proceed(bool ok) {
                 if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
                     // Add new subscriptions to both the manager and our tracking list
                     for (const auto& oid : req_.subscribed_oids()) {
-                        service_->getSubscriptionManager().addSubscription(oid, dm_, rc);
+                        // Ignore the rc because it's annoying when it throws
+                        // an error for dublicate adds.
+                        catena::exception_with_status tmpRc{"", catena::StatusCode::OK};
+                        service_->getSubscriptionManager().addSubscription(oid, dm_, tmpRc);
                     }
                     // Get service subscriptions from the manager
                     subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
@@ -107,17 +112,19 @@ void DeviceRequest::proceed(bool ok) {
 
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
-                status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(static_cast<grpc::StatusCode>(err.status), err.what());
-                writer_.Finish(errorStatus, this);
-                break;
+                rc = catena::exception_with_status{err.what(), err.status};
             } catch (...) {
+                rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
+            }
+            // Updating status and writing to client if there was an error.
+            if (rc.status == catena::StatusCode::OK) {
+                status_ = CallStatus::kWrite;
+            } else {
                 status_ = CallStatus::kFinish;
-                grpc::Status errorStatus(grpc::StatusCode::UNKNOWN, "unknown error");
-                writer_.Finish(errorStatus, this);
+                writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
                 break;
             }
-            status_ = CallStatus::kWrite;
+            }
             // fall thru to start writing
         
         /**
@@ -125,32 +132,34 @@ void DeviceRequest::proceed(bool ok) {
          * then continues to kPostWrite or kFinish
          */
         case CallStatus::kWrite:
-            {   
-                if (!serializer_) {
-                    // It should not be possible to get here
-                    status_ = CallStatus::kFinish;
-                    grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
-                    writer_.Finish(errorStatus, this);
-                    break;
-                } 
-                
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            catena::DeviceComponent component{};
+
+            if (!serializer_) {
+                // It should not be possible to get here
+                rc = catena::exception_with_status{"Illegal state", catena::StatusCode::INTERNAL};
+            } else {
+                // Getting the next component.
                 try {     
-                    catena::DeviceComponent component{};
-                    {
-                        std::lock_guard lg(dm_.mutex());
-                        component = serializer_->getNext();
-                    }
+                    std::lock_guard lg(dm_.mutex());
+                    component = serializer_->getNext();
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
-                    writer_.Write(component, this); 
-                //Exception occured, finish the process
-                } catch (catena::exception_with_status &e) {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status(static_cast<grpc::StatusCode>(e.status), e.what()), this);
-                //Catch all other exceptions and finish the process
+                // ERROR
+                } catch (catena::exception_with_status &err) {
+                    rc = catena::exception_with_status{err.what(), err.status};
                 } catch (...) {
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(Status::CANCELLED, this);
+                    rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
                 }
+            }
+
+            // Writing to the client.
+            if (rc.status == catena::StatusCode::OK) {
+                writer_.Write(component, this);
+            } else {
+                status_ = CallStatus::kFinish;
+                writer_.Finish(Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
+            }
             }
             break;
 
@@ -169,10 +178,14 @@ void DeviceRequest::proceed(bool ok) {
             service_->deregisterItem(this);
             break;
 
-        // Throws an error if the state is not recognized
-        default:
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
+        default: // GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");
             writer_.Finish(errorStatus, this);
+            // GCOVR_EXCL_STOP
     }
 }

@@ -205,7 +205,7 @@ class IDevice {
         IDeviceSerializer(const IDeviceSerializer&) = delete;
         IDeviceSerializer& operator=(const IDeviceSerializer&) = delete;
         
-        ~IDeviceSerializer() = default;
+        virtual ~IDeviceSerializer() = default;
 
         /**
          * @brief returns true if there are more DeviceComponents to be
