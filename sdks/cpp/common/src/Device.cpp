@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -147,8 +147,8 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
     try {
         catena::common::Path path(jptr);
         if (path.back_is_index() && path.back_as_index() == catena::common::Path::kEnd) {
-                // Index is "-"
-                ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
+            // Index is "-"
+            ans = catena::exception_with_status("Index out of bounds in path " + jptr, catena::StatusCode::OUT_OF_RANGE);
         } else {
             std::unique_ptr<IParam> param = getParam(path, ans, authz);
             // we expect this to be a parameter name
@@ -159,20 +159,34 @@ catena::exception_with_status Device::getValue (const std::string& jptr, catena:
         }
     } catch (const catena::exception_with_status& why) {
         ans = catena::exception_with_status(why.what(), why.status);
+    } catch (const std::exception& e) {
+        ans = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+    } catch (...) {
+        ans = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
     return ans;
 }
 
 catena::exception_with_status Device::getLanguagePack(const std::string& languageId, ComponentLanguagePack& pack) const {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
-    // Check if language pack exists.
-    if (!language_packs_.contains(languageId)) {
-        ans = catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+
+    if (languageId.empty()) {
+        ans = catena::exception_with_status("Language ID is empty", catena::StatusCode::INVALID_ARGUMENT);
     } else {
-        // Setting the code and transferring language pack info.
-        pack.set_language(languageId);
-        auto languagePack = pack.mutable_language_pack();
-        language_packs_.at(languageId)->toProto(*languagePack);
+        try {
+            if (!language_packs_.contains(languageId)) {
+                ans = catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+            } else {
+                pack.set_language(languageId);
+                auto languagePack = pack.mutable_language_pack();
+                language_packs_.at(languageId)->toProto(*languagePack);
+                ans = catena::exception_with_status("", catena::StatusCode::OK);
+            }
+        } catch (const std::exception& e) {
+            ans = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+        } catch (...) {
+            ans = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
+        }
     }
     return ans;
 }
@@ -206,6 +220,12 @@ std::unique_ptr<IParam> Device::getParam(const std::string& fqoid, catena::excep
         return getParam(path, status, authz);
     } catch (const catena::exception_with_status& why) {
         status = catena::exception_with_status(why.what(), why.status);
+        return nullptr;
+    } catch (const std::exception& e) {
+        status = catena::exception_with_status(e.what(), catena::StatusCode::INTERNAL);
+        return nullptr;
+    } catch (...) {
+        status = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
         return nullptr;
     }
 }
@@ -259,8 +279,6 @@ std::vector<std::unique_ptr<IParam>> Device::getTopLevelParams(catena::exception
                 auto param_ptr = getParam(path.toString(true), status, authz);  
                 if (param_ptr) {
                     result.push_back(std::move(param_ptr));
-                } else {
-                    std::cout << "Failed to get param: " << status.what() << std::endl;
                 }
             }
         }

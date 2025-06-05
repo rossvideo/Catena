@@ -31,6 +31,7 @@
 #
 # OpenAPI documentation of the RPCs for the Catena REST API
 # Author: benjamin.whitten@rossvideo.com
+# Author: john.naylor@rossvideo.com
 # Date: 25/04/03
 #
 
@@ -107,43 +108,21 @@ components:
 
     "NotFound": # 404
       description: The requested resource was not found
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "The requested resource was not found"
+
+    "BadRequest": # 400
+      description: Bad Request - Invalid input parameters or malformed request
 
     "Unauthorized": # 401
       description: Unauthorized, access token is either missing or invalid
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "Access token is either missing or invalid, is user authenticated?"
 
     "Forbidden": # 403
       description: Forbidden, insufficient permission for access
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "Permission denied"
 
     "InternalServerError": # 500
       description: An error occurred while processing the request
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "An error occurred while processing the request"
 
     "ServiceUnavailable": # 503
       description: The service is temporarily unavailable
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: "The service is temporarily unavailable"
 
   securitySchemes:
     oauth2:

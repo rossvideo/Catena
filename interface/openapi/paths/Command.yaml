@@ -84,7 +84,7 @@ post:
       application/json:
         schema:
           $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example: {value:{"float32_value": 0.5}}
+        example: {"value": {"float32_value": 0.5}}
 
     
   responses:
@@ -108,6 +108,9 @@ post:
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'

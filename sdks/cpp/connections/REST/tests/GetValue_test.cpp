@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -281,11 +281,37 @@ TEST_F(RESTGetValueTests, GetValue_proceedErrThrowUnknown) {
 }
 
 /* 
- * TEST 8 - Writing to console with GetValue finish().
+ * TEST 8 - dm.getValue() throws a non-standard exception (e.g., int) to cover catch(...)
+ */
+TEST_F(RESTGetValueTests, GetValue_proceedErrThrowUnknownType) {
+    catena::Value returnVal;
+    returnVal.set_string_value("Test string");
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+    std::string mockFqoid = "/invalid_oid";
+
+    // Defining mock functions
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockFqoid));
+    // dm.getValue() throws a non-std exception (e.g., int)
+    EXPECT_CALL(dm, getValue(::testing::_, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([](const std::string&, catena::Value&, Authorizer&) -> catena::exception_with_status {
+            throw 42; // Throw an int to trigger catch(...)
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+
+    // Calling proceed() and checking written response.
+    getValue->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 9 - Writing to console with GetValue finish().
  */
 TEST_F(RESTGetValueTests, GetValue_finish) {
     // Calling finish and expecting the console output.
     getValue->finish();
     // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("GetValue[7] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("GetValue[8] finished\n") != std::string::npos);
 }
+
+

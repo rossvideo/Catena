@@ -356,11 +356,34 @@ TEST_F(RESTAddLanguageTests, AddLanguage_proceedFailParse) {
 }
 
 /* 
- * TEST 12 - Writing to console with AddLanguage finish().
+ * TEST 12 - AddLanguage->proceed() throws an unknown exception type.
+ */
+TEST_F(RESTAddLanguageTests, AddLanguage_proceedThrowUnknownType) {
+    // Setting up the returnVal to test with.
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+
+    // Defining mock functions
+    expectedProceedCalls();
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, addLanguage(::testing::_, ::testing::_)).Times(1);
+    ON_CALL(dm, addLanguage(::testing::_, ::testing::_))
+        .WillByDefault(::testing::Invoke([](catena::AddLanguagePayload &language, catena::common::Authorizer &authz) {
+            throw 42; // Throw an int, which will be caught by catch-all
+            return catena::exception_with_status("", catena::StatusCode::OK); // Here to ignore errors.
+        }));
+
+    // Calling proceed() and checking written response.
+    addLanguage->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 13 - Writing to console with AddLanguage finish().
  */
 TEST_F(RESTAddLanguageTests, AddLanguage_finish) {
     // Calling finish and expecting the console output.
     addLanguage->finish();
     // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("AddLanguage[11] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("AddLanguage[12] finished\n") != std::string::npos);
 }

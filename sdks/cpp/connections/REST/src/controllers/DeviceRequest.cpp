@@ -24,9 +24,16 @@ void DeviceRequest::proceed() {
         
         // Setting up authorizer object.
         if (context_.authorizationEnabled()) {
-            // Authorizer throws an error if invalid jws token so no need to handle rc.
-            sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
-            authz = sharedAuthz.get();
+            try {
+                // Authorizer throws an error if invalid jws token
+                sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
+                authz = sharedAuthz.get();
+            } catch (const catena::exception_with_status& err) {
+                throw; // Re-throw auth errors to preserve status code
+            } catch (const std::exception& e) {
+                throw catena::exception_with_status(std::string("Authorization setup failed: ") + e.what(), 
+                                                  catena::StatusCode::UNAUTHENTICATED);
+            }
         } else {
             authz = &catena::common::Authorizer::kAuthzDisabled;
         }
@@ -45,21 +52,28 @@ void DeviceRequest::proceed() {
 
         // Getting each component and writing to the stream.
         while (serializer_->hasMore()) {
+            if (!socket_.is_open()) {
+                throw catena::exception_with_status("Connection closed by client", 
+                                                  catena::StatusCode::CANCELLED);
+            }
             writeConsole_(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
-            std::lock_guard lg(dm_.mutex());
-            component = serializer_->getNext();
+                std::lock_guard lg(dm_.mutex());
+                component = serializer_->getNext();
             }
             writer_.sendResponse(rc, component);
         }
         
-    // ERROR: Write to stream and end call.
+    // ERROR: Let ServiceImpl handle the response
     } catch (catena::exception_with_status& err) {
-        writer_.sendResponse(err);
+        throw std::move(err); // Move the error to preserve its status code and message
+    } catch (const std::exception& e) {
+        throw catena::exception_with_status(std::string("Device request failed: ") + e.what(), 
+                                          catena::StatusCode::INTERNAL);
     } catch (...) {
-        catena::exception_with_status err{"Unknown error", catena::StatusCode::UNKNOWN};
-        writer_.sendResponse(err);
+        throw catena::exception_with_status("Unknown error during device request", 
+                                          catena::StatusCode::UNKNOWN);
     }
 }
 

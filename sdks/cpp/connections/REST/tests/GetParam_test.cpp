@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -388,10 +388,35 @@ TEST_F(RESTGetParamTests, GetParam_toProtoErrThrowUnknown) {
 }
 
 /*
- * TEST 11 - Writing to console with GetParam finish().
+ * TEST 11 - dm.getParam() throws a non-standard exception.
+ */
+TEST_F(RESTGetParamTests, GetParam_getParamErrThrowUnknownType) {
+    // Test status
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+    std::string mockOid = "/test_oid";
+
+    // Defining mock functions
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMtx));
+    EXPECT_CALL(context, fqoid()).Times(1).WillOnce(::testing::ReturnRef(mockOid));
+    // Defining Device.getParam() to throw a non-std exception (e.g., int)
+    EXPECT_CALL(dm, getParam(mockOid, ::testing::_, ::testing::_)).Times(1)
+        .WillOnce(::testing::Invoke([](const std::string&, catena::exception_with_status&, catena::common::Authorizer&) -> std::unique_ptr<IParam> {
+            throw 42; // Throw an int to trigger catch(...)
+            return nullptr;
+        }));
+
+    // Calling proceed() and checking written response.
+    getParam->proceed();
+
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/*
+ * TEST 12 - Writing to console with GetParam finish().
  */
 TEST_F(RESTGetParamTests, GetParam_finish) {
     // Calling finish and expecting the console output.
     getParam->finish();
-    ASSERT_TRUE(MockConsole.str().find("GetParam[10] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("GetParam[11] finished\n") != std::string::npos);
 }

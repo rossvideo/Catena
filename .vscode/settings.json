@@ -137,7 +137,8 @@
         "coroutine": "cpp",
         "future": "cpp",
         "print": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "*.inc": "cpp"
     },
     "java.compile.nullAnalysis.mode": "disabled"
 }
