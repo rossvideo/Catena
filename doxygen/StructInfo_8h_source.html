@@ -208,7 +208,7 @@ $(document).ready(function(){initNavTree('StructInfo_8h_source.html',''); initRe
 <div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    <span class="keyword">auto</span> readField = [&amp;](<span class="keyword">const</span> <span class="keyword">auto</span>&amp; field) {</div>
 <div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>        IParamDescriptor&amp; subParam = pd.getSubParam(field.name);</div>
 <div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        <span class="keywordflow">if</span> (authz.readAuthz(subParam)) {</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>            catena::Value* newFieldValue = &amp;(*dstFields)[field.name];</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>            catena::Value* newFieldValue = (*dstFields)[field.name].mutable_value();</div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
 <div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>            <a class="code hl_function" href="namespacecatena_1_1common.html#a808638c5bbee6910c5f824dac8d57220">toProto</a>(*newFieldValue, &amp;(src-&gt;*(field.memberPtr)), subParam, authz);</div>
 <div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>        }</div>
@@ -289,7 +289,7 @@ $(document).ready(function(){initNavTree('StructInfo_8h_source.html',''); initRe
 <div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>            <span class="comment">// field not found in src so it is not being updated</span></div>
 <div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>            <span class="keywordflow">return</span>;</div>
 <div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>        }</div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>        <span class="keyword">const</span> catena::Value&amp; fieldValue = srcFields.at(field.name);</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>        <span class="keyword">const</span> catena::Value&amp; fieldValue = srcFields.at(field.name).value();</div>
 <div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span> </div>
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>        <a class="code hl_function" href="namespacecatena_1_1common.html#aef1e68c390d1dc8fe830b92c1517cf7f">fromProto</a>(fieldValue, &amp;(dst-&gt;*(field.memberPtr)), subParam, authz);</div>
 <div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>    };</div>
