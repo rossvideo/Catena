@@ -12,23 +12,13 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
     
-    try {
-        // Parsing fields and assigning to respective variables.
-        userAgent_ = context.fields("user_agent");
-        forceConnection_ = context.hasField("force_connection");
+    // Parsing fields and assigning to respective variables.
+    userAgent_ = context.fields("user_agent");
+    forceConnection_ = context.hasField("force_connection");
 
-        // Set detail level from context
-        detailLevel_ = context_.detailLevel();
-        dm_.detail_level(detailLevel_);
-    } catch (const catena::exception_with_status& err) {
-        throw; // Re-throw to preserve original status code
-    } catch (const std::exception& e) {
-        throw catena::exception_with_status(std::string("Failed to parse connection fields: ") + e.what(), 
-                                          catena::StatusCode::INVALID_ARGUMENT);
-    } catch (...) {
-        throw catena::exception_with_status("Unknown error while parsing connection fields", 
-                                          catena::StatusCode::UNKNOWN);
-    }
+    // Set detail level from context
+    detailLevel_ = context_.detailLevel();
+
 }
 
 void Connect::proceed() {
@@ -80,54 +70,13 @@ void Connect::proceed() {
         cv_.wait(lock, [this] { return hasUpdate_; });
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
-        
-        if (!socket_.is_open() || shutdown_) {
-            lock.unlock();
-            break;
-        }
 
-        try {
-            res_.set_slot(dm_.slot());
-            writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
-        } catch (const std::exception& e) {
-            // For errors, just send the status code without a response body
-            try {
-                writer_.sendResponse(catena::exception_with_status(
-                    std::string("Failed to send update: ") + e.what(), 
-                    catena::StatusCode::INTERNAL));
-            } catch (...) {
-                // If we can't send the error response, then the socket is truly dead
-            }
-            socket_.close();
-            break;
-        } catch (...) {
-            // For errors, just send the status code without a response body
-            try {
-                writer_.sendResponse(catena::exception_with_status(
-                    "Unknown error while sending update", 
-                    catena::StatusCode::UNKNOWN));
-            } catch (...) {
-                // If we can't send the error response, then the socket is truly dead
-            }
-            socket_.close();
-            break;
-        }
+        res_.set_slot(dm_.slot());
+        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
         lock.unlock();
     }
 
-    // If we get here, the connection is ending
-    if (socket_.is_open()) {
-        try {
-            // Only try to send a final response if this was a clean shutdown
-            if (shutdown_) {
-                writer_.sendResponse(catena::exception_with_status("Connection closed by server", 
-                                                                 catena::StatusCode::OK));
-            }
-        } catch (...) {
-            // Ignore errors on final response - we're closing anyway
-        }
-        socket_.close();
-    }
+    socket_.close();
 }
 
 void Connect::finish() {
@@ -139,15 +88,5 @@ void Connect::finish() {
         dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
     // Listener not yet initialized.
     } catch (...) {}
-    
-    // Only attempt to send response if socket is still open
-    if (socket_.is_open()) {
-        try {
-            writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
-        } catch (...) {
-            // If we can't send the response, just close the socket
-        }
-        socket_.close();
-    }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

@@ -30,12 +30,9 @@ void LanguagePackRequest::proceed() {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
 
-    // Only send the language pack response if there is no error
-    if (rc.status == catena::StatusCode::OK) {
-        writer_.sendResponse(rc, ans);
-    } else {
-        writer_.sendResponse(rc);
-    }
+    // Finish by writing answer to client.
+    writer_.sendResponse(rc, ans);
+
 }
 
 void LanguagePackRequest::finish() {

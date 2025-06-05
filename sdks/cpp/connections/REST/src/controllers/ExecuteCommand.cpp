@@ -54,17 +54,9 @@ void ExecuteCommand::proceed() {
                 } else {
                     while (responder->hasMore()) {
                         writeConsole_(CallStatus::kWrite, socket_.is_open());
-                        try {
-                            catena::CommandResponse res = responder->getNext();
-                            if (respond) {
-                                writer_.sendResponse(rc, res);
-                            }
-                        } catch (const catena::exception_with_status& err) {
-                            rc = catena::exception_with_status(err.what(), err.status);
-                            break;
-                        } catch (...) {
-                            rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
-                            break;
+                        catena::CommandResponse res = responder->getNext();
+                        if (respond) {
+                            writer_.sendResponse(rc, res);
                         }
                     }
                 }
