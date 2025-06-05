@@ -152,14 +152,16 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));
     MOCK_METHOD((const std::unordered_map<std::string, IParamDescriptor*>&), getAllSubParams, (), (const, override));
     MOCK_METHOD(const catena::common::IConstraint*, getConstraint, (), (const, override));
-    class MockCommandResponder : public ICommandResponder {
-      public:
-        MOCK_METHOD(bool, hasMore, (), (const, override));
-        MOCK_METHOD(catena::CommandResponse, getNext, (), (override));
-    };
     MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl), (override));
     MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (catena::Value value), (override));
     MOCK_METHOD(bool, isCommand, (), (const, override));
+};
+
+// Mock implemenetation of ICommandResponder for testing commands.
+class MockCommandResponder : public IParamDescriptor::ICommandResponder {
+  public:
+    MOCK_METHOD(bool, hasMore, (), (const, override));
+    MOCK_METHOD(catena::CommandResponse, getNext, (), (override));
 };
 
 class MockSubscriptionManager : public ISubscriptionManager {

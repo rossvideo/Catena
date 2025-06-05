@@ -40,7 +40,6 @@
 
 //common
 #include <Tags.h>
-// #include <IParam.h>
 #include <PolyglotText.h>
 
 namespace catena {

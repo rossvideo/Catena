@@ -281,14 +281,6 @@ class ParamDescriptor : public IParamDescriptor {
      */
     class CommandResponder : public ICommandResponder {
       public:
-        struct promise_type; // forward declaration
-
-      private:
-        // The coroutine handle is a pointer to the coroutine state
-        using handle_type = std::coroutine_handle<promise_type>;
-        handle_type handle_;
-
-      public:
         /** 
          * @brief Defines the execution behaviour of the coroutine
          */
@@ -297,7 +289,7 @@ class ParamDescriptor : public IParamDescriptor {
              * @brief Creates the coroutine handle when created.
              */
             inline CommandResponder get_return_object() { 
-              return CommandResponder(handle_type::from_promise(*this)); 
+              return CommandResponder(std::coroutine_handle<promise_type>::from_promise(*this)); 
             }
             /**
              * @brief Pauses the coroutine after creation until getNext() is
@@ -337,7 +329,7 @@ class ParamDescriptor : public IParamDescriptor {
             std::exception_ptr exception_; 
         };
 
-        CommandResponder(handle_type h) : handle_(h) {}
+        CommandResponder(std::coroutine_handle<promise_type> h) : handle_(h) {}
         CommandResponder(const CommandResponder&) = delete;
         CommandResponder& operator=(const CommandResponder&) = delete;
         CommandResponder(CommandResponder&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
@@ -367,6 +359,9 @@ class ParamDescriptor : public IParamDescriptor {
           }
           return std::move(handle_.promise().responseMessage); 
         }
+
+        private:
+          std::coroutine_handle<promise_type> handle_;
     };
 
     /**

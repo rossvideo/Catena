@@ -202,7 +202,7 @@ class gRPCExecuteCommandTests : public ::testing::Test {
     static MockServer mockServer;
 
     std::unique_ptr<MockParam> mockCommand = std::make_unique<MockParam>();
-    std::unique_ptr<MockParamDescriptor::MockCommandResponder> mockResponder = std::make_unique<MockParamDescriptor::MockCommandResponder>();
+    std::unique_ptr<MockCommandResponder> mockResponder = std::make_unique<MockCommandResponder>();
 };
 
 MockServer gRPCExecuteCommandTests::mockServer;
