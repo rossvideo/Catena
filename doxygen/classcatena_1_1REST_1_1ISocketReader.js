@@ -14,6 +14,5 @@ var classcatena_1_1REST_1_1ISocketReader =
     [ "method", "classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97", null ],
     [ "origin", "classcatena_1_1REST_1_1ISocketReader.html#a861883ac9aa268d15940886780aff1b3", null ],
     [ "read", "classcatena_1_1REST_1_1ISocketReader.html#a6e3b104b6494845a0fe4dcb2df09d605", null ],
-    [ "slot", "classcatena_1_1REST_1_1ISocketReader.html#a7e0b91f0e2cf951eca9e3018ede398c0", null ],
-    [ "stream", "classcatena_1_1REST_1_1ISocketReader.html#afa2b511fab5a7b26754671a12d6225e1", null ]
+    [ "slot", "classcatena_1_1REST_1_1ISocketReader.html#a7e0b91f0e2cf951eca9e3018ede398c0", null ]
 ];
