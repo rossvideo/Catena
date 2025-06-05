@@ -48,7 +48,7 @@ using namespace catena::REST;
 // Mocking the ISocketReader interface
 class MockSocketReader : public ISocketReader {
   public:
-    MOCK_METHOD(void, read, (tcp::socket& socket, bool authz), (override));
+    MOCK_METHOD(void, read, (tcp::socket& socket, bool authz, const std::string& version), (override));
     MOCK_METHOD(const std::string&, method, (), (const, override));
     MOCK_METHOD(const std::string&, endpoint, (), (const, override));
     MOCK_METHOD(uint32_t, slot, (), (const, override));
@@ -57,7 +57,6 @@ class MockSocketReader : public ISocketReader {
     MOCK_METHOD(const std::string&, fields, (const std::string& key), (const, override));
     MOCK_METHOD(const std::string&, jwsToken, (), (const, override));
     MOCK_METHOD(const std::string&, origin, (), (const, override));
-    MOCK_METHOD(const std::string&, language, (), (const, override));
     MOCK_METHOD(catena::Device_DetailLevel, detailLevel, (), (const, override));
     MOCK_METHOD(const std::string&, jsonBody, (), (const, override));
     MOCK_METHOD(catena::common::ISubscriptionManager&, getSubscriptionManager, (), (override));

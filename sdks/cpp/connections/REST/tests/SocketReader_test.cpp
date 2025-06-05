@@ -99,7 +99,6 @@ class RESTSocketReaderTests : public ::testing::Test, public SocketHelper {
         EXPECT_EQ(socketReader.fields("doesNotExist"), "");
         EXPECT_EQ(socketReader.jwsToken(), jwsToken);
         EXPECT_EQ(socketReader.origin(), origin);
-        EXPECT_EQ(socketReader.language(), language);
         EXPECT_EQ(dlMap.at(socketReader.detailLevel()), detailLevel);
         EXPECT_EQ(socketReader.jsonBody(), jsonBody);
         EXPECT_EQ(socketReader.authorizationEnabled(), authz);

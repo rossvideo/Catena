@@ -42,6 +42,7 @@
 #include <Status.h>
 #include <Enums.h>
 #include <ISubscriptionManager.h>
+#include <Path.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -79,7 +80,7 @@ class SocketReader : public ISocketReader {
      * @param socket The socket to read from.
      * @param authz Flag to indicate if authorization is enabled.
      */
-    void read(tcp::socket& socket, bool authz = false) override;
+    void read(tcp::socket& socket, bool authz = false, const std::string& version = "v1") override;
     /**
      * @brief Returns the HTTP method of the request.
      */
@@ -126,10 +127,6 @@ class SocketReader : public ISocketReader {
      */
     const std::string& origin() const override { return origin_; }
     /**
-     * @brief Returns the language to return the resposne in.
-     */
-    const std::string& language() const override { return language_; };
-    /**
      * @brief Returns the detail level to return the response in.
      */
     catena::Device_DetailLevel detailLevel() const override { return detailLevel_; };
@@ -162,17 +159,29 @@ class SocketReader : public ISocketReader {
      */
     std::string method_ = "";
     /**
-     * @brief The REST endpoint being accessed (/v1/GetValue, etc.)
-     */
-    std::string endpoint_ = "";
-    /**
      * @brief The slot of the device to make the API call on.
      */
     uint32_t slot_ = 0;
     /**
+     * @brief The REST endpoint being accessed (/v1/GetValue, etc.)
+     */
+    std::string endpoint_ = "";
+    /**
      * @brief The fqoid of the asset to make the API call on.
      */
     std::string fqoid_ = "";
+    /**
+     * @brief Flag indicating whether the client wants a stream response.
+     */
+    bool stream_ = false;
+    /**
+     * @brief The origin of the request. Required for CORS headers.
+     */
+    std::string origin_ = "";
+    /**
+     * @brief The detail level to return the response in.
+     */
+    catena::Device_DetailLevel detailLevel_;
     /**
      * @brief The client's jws token (empty if authorization is disabled).
      */
@@ -182,21 +191,9 @@ class SocketReader : public ISocketReader {
      */
     std::string jsonBody_ = "";
     /**
-     * @brief The origin of the request. Required for CORS headers.
-     */
-    std::string origin_ = "";
-    /**
-     * @brief The language to return the response in.
-     */
-    std::string language_ = "";
-    /**
      * @brief The subscription manager for handling parameter subscriptions
      */
     catena::common::ISubscriptionManager& subscriptionManager_;
-    /**
-     * @brief The detail level to return the response in.
-     */
-    catena::Device_DetailLevel detailLevel_;
     /**
      * @brief A map of fields queried from the URL.
      */
@@ -210,10 +207,6 @@ class SocketReader : public ISocketReader {
      * @brief True if authorization is enabled.
      */
     bool authorizationEnabled_ = false;
-    /**
-     * @brief Flag indicating whether the client wants a stream response.
-     */
-    bool stream_ = false;
     /**
      * @brief The path to the external object.
      */
