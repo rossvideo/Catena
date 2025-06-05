@@ -47,6 +47,7 @@
 #include <Status.h>
 #include <IParam.h>
 #include <IDevice.h>
+#include <ILanguagePack.h>
 #include <utils.h>
 #include <Authorization.h>
 #include <SubscriptionManager.h>

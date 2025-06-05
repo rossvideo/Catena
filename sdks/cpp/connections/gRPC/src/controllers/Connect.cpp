@@ -31,6 +31,7 @@
 // connections/gRPC
 #include <controllers/Connect.h>
 using catena::gRPC::Connect;
+using catena::common::ILanguagePack;
 
 // Initializes the object counter for Connect to 0.
 int catena::gRPC::Connect::objectCounter_ = 0;
@@ -103,7 +104,7 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 });
 
                 // Waiting for a language to be added to execute code.
-                languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const IDevice::ComponentLanguagePack& l) {
+                languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const ILanguagePack* l) {
                     updateResponse_(l);
                 });
 

@@ -40,7 +40,6 @@
 
 //common
 #include <Tags.h>
-#include <IParam.h>
 #include <IConstraint.h>
 #include <PolyglotText.h>
 #include <IParamDescriptor.h>
@@ -277,13 +276,102 @@ class ParamDescriptor : public IParamDescriptor {
     }
 
     /**
+     * @brief CommandResponder is a coroutine that allows commands to return
+     * multiple responses throughout its execution's lifetime.
+     */
+    class CommandResponder : public ICommandResponder {
+      public:
+        /** 
+         * @brief Defines the execution behaviour of the coroutine
+         */
+        struct promise_type {
+            /**
+             * @brief Creates the coroutine handle when created.
+             */
+            inline CommandResponder get_return_object() { 
+              return CommandResponder(std::coroutine_handle<promise_type>::from_promise(*this)); 
+            }
+            /**
+             * @brief Pauses the coroutine after creation until getNext() is
+             * called.
+             */
+            inline std::suspend_always initial_suspend() { return {}; }
+            /**
+             * @brief Pauses the coroutine before destruction.
+             */
+            inline std::suspend_always final_suspend() noexcept { return {}; }
+            /**
+             * @brief Returns a CommandResponse object when co_yield is called
+             * and suspends the coroutine until getNext() is called.
+             */
+            inline std::suspend_always yield_value(catena::CommandResponse& component) { 
+              responseMessage = component;
+              return {}; 
+            }
+            /**
+             * @brief Finishes the coroutine and returns a CommandResponse.
+             */
+            inline void return_value(catena::CommandResponse component) { this->responseMessage = component; }
+            /**
+             * @brief handles exceptions that occur during execution.
+             */
+            inline void unhandled_exception() {
+              exception_ = std::current_exception();
+            }
+            /**
+             * @brief Rethrows exception caught by unhandled_exception().
+             */
+            inline void rethrow_if_exception() {
+              if (exception_) std::rethrow_exception(exception_);
+            }
+
+            catena::CommandResponse responseMessage{};
+            std::exception_ptr exception_; 
+        };
+
+        CommandResponder(std::coroutine_handle<promise_type> h) : handle_(h) {}
+        CommandResponder(const CommandResponder&) = delete;
+        CommandResponder& operator=(const CommandResponder&) = delete;
+        CommandResponder(CommandResponder&& other) : handle_(other.handle_) { other.handle_ = nullptr; }
+        CommandResponder& operator=(CommandResponder&& other) { 
+          if (this != &other) {
+            if (handle_) handle_.destroy();
+            handle_ = other.handle_; 
+            other.handle_ = nullptr; 
+          }
+          return *this; 
+        } 
+        ~CommandResponder() { 
+          if (handle_) handle_.destroy();  
+        }
+
+        /**
+         * @brief Returns true if the coroutine has not finished execution.
+         */
+        inline bool hasMore() const override { return handle_ && !handle_.done(); }
+        /**
+         * @brief Resumes the coroutine and returns a CommandResponse object.
+         */
+        catena::CommandResponse getNext() override {
+          if (hasMore()) {
+            handle_.resume();
+            handle_.promise().rethrow_if_exception();
+          }
+          return std::move(handle_.promise().responseMessage); 
+        }
+
+        private:
+          std::coroutine_handle<promise_type> handle_;
+    };
+
+    /**
      * @brief define the command implementation
-     * @param commandImpl a function that takes a Value and returns a CommandResponse
+     * @param commandImpl a function that takes a Value and returns a CommandResponder
      * 
      * The passed function will be executed when executeCommand is called on this param object.
      * If this is not a command parameter, an exception will be thrown.
      */
-    void defineCommand(std::function<catena::CommandResponse(catena::Value)> commandImpl) override {
+    void defineCommand(std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl) override {
       if (!isCommand_) {
         throw std::runtime_error("Cannot define a command on a non-command parameter");
       }
@@ -293,12 +381,12 @@ class ParamDescriptor : public IParamDescriptor {
     /**
      * @brief execute the command
      * @param value the value to pass to the command implementation
-     * @return the response from the command implementation
+     * @return the responser from the command implementation
      * 
      * if executeCommand is called for a command that has not been defined, then the returned
      * command response will be an exception with type UNIMPLEMENTED
      */
-    catena::CommandResponse executeCommand(catena::Value value) override {
+    std::unique_ptr<ICommandResponder> executeCommand(catena::Value value) override {
       return commandImpl_(value);
     }
 
@@ -330,11 +418,13 @@ class ParamDescriptor : public IParamDescriptor {
     bool minimal_set_;
 
     // default command implementation
-    std::function<catena::CommandResponse(catena::Value)> commandImpl_ = [](catena::Value value) { 
-      catena::CommandResponse response;
-      response.mutable_exception()->set_type("UNIMPLEMENTED");
-      response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
-      return response;
+    std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl_ = [](catena::Value value) -> std::unique_ptr<ICommandResponder> { 
+      return std::make_unique<CommandResponder>([value]() -> CommandResponder {
+        catena::CommandResponse response;
+        response.mutable_exception()->set_type("UNIMPLEMENTED");
+        response.mutable_exception()->mutable_error_message()->mutable_display_strings()->insert({"en", "Command not implemented"});
+        co_return response;
+      }());
     };
 };
 

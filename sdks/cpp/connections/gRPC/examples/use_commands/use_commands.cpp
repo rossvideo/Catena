@@ -28,6 +28,7 @@
 #include <utils.h>
 #include <Device.h>
 #include <ParamWithValue.h>
+#include <ParamDescriptor.h>
 
 // connections/gRPC
 #include <ServiceImpl.h>
@@ -147,54 +148,54 @@ void defineCommands() {
 
     // Define a lambda function to be executed when the command is called
     // The lambda function must take a catena::Value as an argument and return a catena::CommandResponse
-    playCommand->defineCommand([](catena::Value value) {
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        catena::CommandResponse response;
-        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
-        
-        // If the state parameter does not exist, return an exception
-        if (stateParam == nullptr) {
-            response.mutable_exception()->set_type("Invalid Command");
-            response.mutable_exception()->set_details(err.what());
-            return response;
-        }
-
-        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
-        {
-            std::lock_guard lg(dm.mutex());
-            state = "playing";
-            dm.valueSetByServer.emit("/state", stateParam.get(), 0);
-        }
-        
-
-        std::cout << "video is " << state << "\n";
-        response.mutable_no_response();
-        return response;
+    playCommand->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
+            
+            // If the state parameter does not exist, return an exception
+            if (stateParam == nullptr) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details(err.what());
+            } else {
+                std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
+                {
+                    std::lock_guard lg(dm.mutex());
+                    state = "playing";
+                    dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+                }
+                std::cout << "video is " << state << "\n";
+                response.mutable_no_response();
+            }
+            co_return response;
+        }());
     });
 
     std::unique_ptr<IParam> pauseCommand = dm.getCommand("/pause", err);
     assert(pauseCommand != nullptr);
-    pauseCommand->defineCommand([](catena::Value value) {
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-        catena::CommandResponse response;
-        std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
-
-        if (stateParam == nullptr) {
-            response.mutable_exception()->set_type("Invalid Command");
-            response. mutable_exception()->set_details(err.what());
-            return response;
-        }
-
-        std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
-        {
-            std::lock_guard lg(dm.mutex());
-            state = "paused";
-            dm.valueSetByServer.emit("/state", stateParam.get(), 0);
-        }
-
-        std::cout << "video is " << state << "\n";
-        response.mutable_no_response();
-        return response;
+    pauseCommand->defineCommand([](catena::Value value) -> std::unique_ptr<IParamDescriptor::ICommandResponder> { 
+        return std::make_unique<ParamDescriptor::CommandResponder>([value]() -> ParamDescriptor::CommandResponder {
+            catena::exception_with_status err{"", catena::StatusCode::OK};
+            catena::CommandResponse response;
+            std::unique_ptr<IParam> stateParam = dm.getParam("/state", err);
+            
+            // If the state parameter does not exist, return an exception
+            if (stateParam == nullptr) {
+                response.mutable_exception()->set_type("Invalid Command");
+                response.mutable_exception()->set_details(err.what());
+            } else {
+                std::string& state = dynamic_cast<ParamWithValue<std::string>*>(stateParam.get())->get();
+                {
+                    std::lock_guard lg(dm.mutex());
+                    state = "paused";
+                    dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+                }
+                std::cout << "video is " << state << "\n";
+                response.mutable_no_response();
+            }
+            co_return response;
+        }());
     });
 }
 

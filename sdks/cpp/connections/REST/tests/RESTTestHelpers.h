@@ -83,11 +83,29 @@ inline void setupParamInfo(catena::BasicParamInfoResponse& response, const Param
 
 /**
  * @brief Sets up a mock parameter to return a BasicParamInfoResponse
+ *        Also sets up getDescriptor, isArrayType, and size for array types if descriptor is provided.
  */
-inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo& info) {
+inline void setupMockParam(catena::common::MockParam* mockParam, const ParamInfo& info, const catena::common::IParamDescriptor* descriptor = nullptr) {
     EXPECT_CALL(*mockParam, getOid())
         .WillRepeatedly(::testing::ReturnRef(info.oid));
-    
+
+    // Set up getDescriptor if provided
+    if (descriptor) {
+        EXPECT_CALL(*mockParam, getDescriptor())
+            .WillRepeatedly(::testing::ReturnRef(*descriptor));
+    }
+
+    // Set up isArrayType and size if array_length > 0
+    if (info.array_length > 0) {
+        EXPECT_CALL(*mockParam, isArrayType())
+            .WillRepeatedly(::testing::Return(true));
+        EXPECT_CALL(*mockParam, size())
+            .WillRepeatedly(::testing::Return(info.array_length));
+    } else {
+        EXPECT_CALL(*mockParam, isArrayType())
+            .WillRepeatedly(::testing::Return(false));
+    }
+
     // Only expect toProto if status indicates success (HTTP status < 300)
     if (catena::REST::codeMap_.at(info.status).first < 300) {
         EXPECT_CALL(*mockParam, toProto(::testing::An<catena::BasicParamInfoResponse&>(), ::testing::_))
