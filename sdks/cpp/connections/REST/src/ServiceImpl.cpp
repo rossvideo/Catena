@@ -63,7 +63,7 @@ CatenaServiceImpl::CatenaServiceImpl(IDevice& dm, std::string& EOPath, bool auth
     router_.addProduct("GET/v1/languages",                  ListLanguages::makeOne);
     router_.addProduct("POST/v1/language-pack",             AddLanguage::makeOne);
     router_.addProduct("GET/v1/basic-param",                BasicParamInfoRequest::makeOne);
-    router_.addProduct("PUT/v1/update-subscriptions",       UpdateSubscriptions::makeOne);
+    router_.addProduct("PUT/v1/subscriptions",              UpdateSubscriptions::makeOne);
 }
 
 // Initializing the shutdown signal for all open connections.

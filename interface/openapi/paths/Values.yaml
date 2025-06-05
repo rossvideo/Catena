@@ -102,6 +102,9 @@ put:
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
+
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
