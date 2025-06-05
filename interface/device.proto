@@ -153,43 +153,23 @@ message DeviceComponent {
 }
 
 message RemoveComponents {
-  message RemoveParams {
-    repeated string oids = 1;
-  }
-
-   /* A menu.
-    * Note that menus are grouped into menu groups. They are uniquely identified
-    * by the json_pointer field which is relative to the Device's top-level
-    * menu-groups object thus: menu-group-name/menu-name.
-    * example: status/vendor_info */
-  message RemoveMenus {
-    repeated string oids = 1;
-  }
-
-   /* A constraint descriptor.
-    * The oid is relative to the "constraints" child of the device's top-level
-    * "types" object. */
-  message RemoveConstraints {
-    repeated string oids = 1;
-  }
-
-  /* A command descriptor.
-   * Defines a command to be mapped to device.commands.oid */
-  message RemoveCommands {
-    repeated string oids = 1;
-  }
-
-  /* A language pack. */
-  message RemoveLanguagePacks {
-    repeated string languages = 1; // Language string is the language code that identifies the language e.g. en-uk
+  message IdList {
+    repeated string oids = 1; // A list of object ids (OIDs) to remove
   }
 
 	oneof kind {
-    RemoveParams param = 3;
-    RemoveConstraints shared_constraint = 4;
-    RemoveMenus menu = 5;
-    RemoveCommands command = 6;
-    RemoveLanguagePacks language_pack = 7;
+    IdList params = 3;
+    /* The oid is relative to the "constraints" child of the device's top-level
+     * "types" object. */
+    IdList shared_constraints = 4;
+    /* Note that menus are grouped into menu groups. They are uniquely identified
+     * by the json_pointer field which is relative to the Device's top-level
+     * menu-groups object thus: menu-group-name/menu-name.
+     * example: status/vendor_info */
+    IdList menus = 5;
+    IdList commands = 6;
+    // This should be the language code that identifies the language e.g. en-uk
+    IdList language_packs = 7;
   }
 }
 

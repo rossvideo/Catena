@@ -178,18 +178,9 @@ message Float32List { repeated float floats = 1; }
 
 message StringList { repeated string strings = 1; }
 
-/* Structured object comprising named fields that map to dynamically typed Values.
- * Needed for the STRUCT_ARRAY param type because proto doesn't
- * support repeated maps, or for maps to appear in oneof unions. */
-message StructField {
-  oneof kind {
-    Value value = 1;
-    Param param = 2;
-  }
-}
 /* Structured object comprising named fields that map to dynamically typed values */
 message StructValue {
-	map<string, StructField> fields = 1;
+	map<string, Value> fields = 1;
 }
 
 message Empty {}

@@ -57,7 +57,7 @@ int main() {
 
     // this line is for demonstrating the fromProto method
     // this should never be done in a real device
-    value.mutable_struct_array_values()->mutable_struct_values()->at(2).mutable_fields()->at("eq_list").mutable_value()->mutable_struct_array_values()->mutable_struct_values()->at(1).mutable_fields()->at("q_factor").mutable_value()->set_float32_value(2.5);
+    value.mutable_struct_array_values()->mutable_struct_values()->at(2).mutable_fields()->at("eq_list").mutable_struct_array_values()->mutable_struct_values()->at(1).mutable_fields()->at("q_factor").set_float32_value(2.5);
     ip->fromProto(value, Authorizer::kAuthzDisabled);
 
     ip = dm.getParam("/audio_deck/2", err);
