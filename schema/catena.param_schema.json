@@ -696,7 +696,7 @@
     },
     "struct_fields": {
       "title": "struct definition",
-      "description": "holds struct data fields or params",
+      "description": "holds struct data fields",
       "type": "object",
       "patternProperties": {
         "(^(?!_)(?!\\d)(?![\\w\\.]*\\.\\d+?$)[\\w\\.]+$)": {
