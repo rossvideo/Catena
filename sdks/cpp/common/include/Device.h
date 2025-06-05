@@ -230,22 +230,6 @@ class Device : public IDevice {
      */
     class DeviceSerializer : public IDeviceSerializer {
       public:
-        struct promise_type; // forward declaration
-
-      private:
-        /**
-         * The coroutine handle is a pointer to the coroutine state
-         * 
-         * The coroutine handle provides the following operations:
-         * resume() - resumes the coroutine from where it was suspended
-         * destroy() - destroys the coroutine
-         * done() - returns true if the coroutine has completed (i.e. co_return
-         * has been called)
-         */
-        using handle_type = std::coroutine_handle<promise_type>;
-        handle_type handle_;
-
-      public:
         /** 
          * @brief Defines the execution behaviour of the coroutine
          * 
@@ -261,7 +245,7 @@ class Device : public IDevice {
              * the coroutine and returns the DeviceSerializer object.
              */
             inline DeviceSerializer get_return_object() { 
-              return DeviceSerializer(handle_type::from_promise(*this)); 
+              return DeviceSerializer(std::coroutine_handle<promise_type>::from_promise(*this)); 
             }
 
             /**
@@ -319,7 +303,7 @@ class Device : public IDevice {
             std::exception_ptr exception_; 
         };
 
-        DeviceSerializer(handle_type h) : handle_(h) {}
+        DeviceSerializer(std::coroutine_handle<promise_type> h) : handle_(h) {}
 
         DeviceSerializer(const DeviceSerializer&) = delete;
         DeviceSerializer& operator=(const DeviceSerializer&) = delete;
@@ -352,6 +336,18 @@ class Device : public IDevice {
          * serialize then an empty DeviceComponent is returned.
          */
         catena::DeviceComponent getNext() override;
+
+      private:
+        /**
+         * The coroutine handle is a pointer to the coroutine state
+         * 
+         * The coroutine handle provides the following operations:
+         * resume() - resumes the coroutine from where it was suspended
+         * destroy() - destroys the coroutine
+         * done() - returns true if the coroutine has completed (i.e. co_return
+         * has been called)
+         */
+        std::coroutine_handle<promise_type> handle_;
     };
     /**
      * @brief get a serializer for the device

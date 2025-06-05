@@ -125,7 +125,7 @@ class ExecuteCommand : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SocketWriter writer_;
+    SSEWriter writer_;
     /**
      * @brief The ISocketReader object.
      */
@@ -134,14 +134,6 @@ class ExecuteCommand : public ICallData {
      * @brief The device to connect to.
      */
     IDevice& dm_;
-    /**
-     * @brief The payload of the request.
-     */
-    catena::ExecuteCommandPayload req_;
-    /**
-     * @brief The OID of the parameter to connect to.
-     */
-    std::string oid_;
 };
 
 } // namespace REST
