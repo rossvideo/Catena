@@ -1,6 +1,5 @@
 
 #include <SocketReader.h>
-#include "ServiceImpl.h"
 using catena::REST::SocketReader;
 
 namespace catena {
@@ -20,12 +19,9 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     detailLevel_ = Device_DetailLevel_UNSET;
     jwsToken_ = "";
     jsonBody_ = "";
-    
     authorizationEnabled_ = authz;
 
-    catena::exception_with_status rc("", catena::StatusCode::OK);
-
-    // Reading the headers.
+    // Reading from the socket.
     boost::asio::streambuf buffer;
     boost::asio::read_until(socket, buffer, "\r\n\r\n");
     std::istream header_stream(&buffer);
@@ -37,8 +33,6 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     std::istringstream(header) >> method_ >> url >> httpVersion;
     url_view u(url);
 
-    
-    // std::string path = u.path();
     try {
         std::vector<std::string> path;
         catena::split(path, u.path(), "/");
@@ -55,14 +49,19 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
                 path.pop_back();
                 stream_ = true;
             }
+            // Lastly getting the endpoint (if not already set) and the fqoid.
             if (path.size() > 4) {
+                // First segment after "api/v1/slot" is the endpoint.
                 if (endpoint_.empty()) {
                     endpoint_ = "/" + path[4];
                 }
+                // Everything after the endpoint is the fqoid.
                 for (int i = 5; i < path.size(); i++) {
                     fqoid_ += "/" + path.at(i);
                 }
             }
+        } else {
+            throw;
         }
     } catch (...) {
         throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);

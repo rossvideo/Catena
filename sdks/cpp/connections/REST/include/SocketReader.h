@@ -43,6 +43,7 @@
 #include <Enums.h>
 #include <ISubscriptionManager.h>
 #include <Path.h>
+#include <utils.h>
 
 // connections/REST
 #include "interface/ISocketReader.h"
@@ -55,7 +56,6 @@ using boost::asio::ip::tcp;
 using namespace boost::urls;
 
 #include <string>
-#include <iostream>
 
 namespace catena {
 namespace REST {
