@@ -258,7 +258,6 @@ message BasicParamInfoRequestPayload {
 
 message SetValuePayload {
   string oid = 1;           // Uniquely identifies the param at device scope
-  uint32 element_index = 2; // When setting single elements of array parameters, the element in the array to update
   Value value = 3;          // The value to apply
 }
 
@@ -270,7 +269,6 @@ message SingleSetValuePayload {
 message GetValuePayload {
   uint32 slot = 1;          // Uniquely identifies the device at node scope.
   string oid = 2;           // Uniquely identifies the param at device scope
-  uint32 element_index = 3; // When requesting single elements of array parameters, the element in the array to get
 }
 
 message MultiSetValuePayload {

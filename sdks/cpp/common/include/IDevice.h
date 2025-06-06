@@ -371,7 +371,7 @@ class IDevice {
      * @brief signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByClient;
 
     /**
      * @brief signal emitted when a language pack is added to the device.
@@ -384,7 +384,7 @@ class IDevice {
      * logic.
      * Intended recipient is the connection manager.
      */
-    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
+    vdk::signal<void(const std::string&, const IParam*)> valueSetByServer;
 };
 
 }  // namespace common

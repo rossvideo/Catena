@@ -94,13 +94,13 @@ void catena::gRPC::Connect::proceed(bool ok) {
                     this->cv_.notify_one();
                 });
                 // Waiting for a value set by server to be sent to execute code.
-                valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                    updateResponse_(oid, idx, p);
+                valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p){
+                    updateResponse_(oid, p);
                 });
 
                 // Waiting for a value set by client to be sent to execute code.
-                valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
-                    updateResponse_(oid, idx, p);
+                valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p){
+                    updateResponse_(oid, p);
                 });
 
                 // Waiting for a language to be added to execute code.

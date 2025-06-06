@@ -81,7 +81,7 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void audioDeckUpdateHandler(const std::string& jptr, const IParam* p, const int32_t idx) {
+void audioDeckUpdateHandler(const std::string& jptr, const IParam* p) {
     Path oid(jptr);
     if(oid.empty()){
         std::cout << "*** Whole struct array was updated" << '\n';
@@ -113,10 +113,10 @@ void RunRESTServer() {
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
-        std::map<std::string, std::function<void(const std::string&, const IParam*, const int32_t)>> handlers;
+        std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
         handlers["audio_deck"] = audioDeckUpdateHandler;
 
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p) {
             std::cout << "signal received: " << oid << " has been changed by client" << '\n';
 
             // make a copy of the path that we can safely pop segments from
@@ -124,7 +124,7 @@ void RunRESTServer() {
             std::string front = jptr.front_as_string();
             jptr.pop();
 
-            handlers[front](jptr.toString(), p, idx);
+            handlers[front](jptr.toString(), p);
         });
         
         api.run();

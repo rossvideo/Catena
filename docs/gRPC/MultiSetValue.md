@@ -15,9 +15,6 @@ message MultiSetValuePayload {
 
 message SetValuePayload {
   string oid = 1;           // Uniquely identifies the param at device scope.
-  uint32 element_index = 2; /* (UNUSED) When setting single elements of array
-                             * parameters, the element in the array to update.
-                             */
   Value value = 3;          // The value to apply
 }
 ```
