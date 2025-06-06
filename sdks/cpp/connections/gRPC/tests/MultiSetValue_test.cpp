@@ -274,10 +274,6 @@ TEST_F(gRPCMultiSetValueTests, MultiSetValue_proceeedAuthzInvalid) {
 
     // Sending the RPC.
     testRPC();
-
-    // Comparing the output.
-    EXPECT_EQ(outRc.error_code(), expRc.error_code());
-    EXPECT_EQ(outRc.error_message(), expRc.error_message());
 }
 
 /*

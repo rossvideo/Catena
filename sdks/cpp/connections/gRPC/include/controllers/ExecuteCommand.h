@@ -73,9 +73,9 @@ class ExecuteCommand : public CallData {
      */
     catena::ExecuteCommandPayload req_;
     /**
-     * @brief Response payload for command
+     * @brief Response coroutine for command
      */
-    catena::CommandResponse res_;
+    std::unique_ptr<IParamDescriptor::ICommandResponder> responder_;
     /**
      * @brief gRPC async response writer.
      */

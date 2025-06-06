@@ -41,6 +41,8 @@
 #include <gmock/gmock.h>
 #include <IDevice.h>
 #include <IParam.h>
+#include <ISubscriptionManager.h>
+#include <rpc/IConnect.h>
 #include <IParamDescriptor.h>
 #include <Status.h>
 #include <Authorization.h>
@@ -118,8 +120,8 @@ public:
     MOCK_METHOD(catena::exception_with_status, popBack, (Authorizer& authz), (override));
     MOCK_METHOD(const IConstraint*, getConstraint, (), (const, override));
     MOCK_METHOD(const std::string&, getScope, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<catena::CommandResponse(catena::Value)> command), (override));
-    MOCK_METHOD(catena::CommandResponse, executeCommand, (const catena::Value& value), (const, override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<IParamDescriptor::ICommandResponder>(catena::Value)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<IParamDescriptor::ICommandResponder>, executeCommand, (const catena::Value& value), (const, override));
     MOCK_METHOD(const IParamDescriptor&, getDescriptor, (), (const, override));
     MOCK_METHOD(bool, isArrayType, (), (const, override));
     MOCK_METHOD(bool, validateSetValue, (const catena::Value& value, Path::Index index, Authorizer& authz, catena::exception_with_status& ans), (override));
@@ -150,9 +152,32 @@ class MockParamDescriptor : public IParamDescriptor {
     MOCK_METHOD(IParamDescriptor&, getSubParam, (const std::string& oid), (const, override));
     MOCK_METHOD((const std::unordered_map<std::string, IParamDescriptor*>&), getAllSubParams, (), (const, override));
     MOCK_METHOD(const catena::common::IConstraint*, getConstraint, (), (const, override));
-    MOCK_METHOD(void, defineCommand, (std::function<catena::CommandResponse(catena::Value)> commandImpl), (override));
-    MOCK_METHOD(catena::CommandResponse, executeCommand, (catena::Value value), (override));
+    MOCK_METHOD(void, defineCommand, (std::function<std::unique_ptr<ICommandResponder>(catena::Value)> commandImpl), (override));
+    MOCK_METHOD(std::unique_ptr<ICommandResponder>, executeCommand, (catena::Value value), (override));
     MOCK_METHOD(bool, isCommand, (), (const, override));
+};
+
+// Mock implemenetation of ICommandResponder for testing commands.
+class MockCommandResponder : public IParamDescriptor::ICommandResponder {
+  public:
+    MOCK_METHOD(bool, hasMore, (), (const, override));
+    MOCK_METHOD(catena::CommandResponse, getNext, (), (override));
+};
+
+class MockSubscriptionManager : public ISubscriptionManager {
+  public:
+      MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
+      MOCK_METHOD(bool, removeSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
+      MOCK_METHOD(const std::set<std::string>&, getAllSubscribedOids, (IDevice& dm), (override));
+      MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
+};
+
+class MockLanguagePack : public ILanguagePack {
+  public:
+      MOCK_METHOD(void, toProto, (catena::LanguagePack&), (const, override));
+      MOCK_METHOD(void, fromProto, (const catena::LanguagePack&), (override));
+      MOCK_METHOD(const_iterator, begin, (), (const, override));
+      MOCK_METHOD(const_iterator, end, (), (const, override));
 };
 
 } // namespace common

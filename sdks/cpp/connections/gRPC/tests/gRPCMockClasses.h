@@ -112,6 +112,25 @@ class MockServer {
         EXPECT_CALL(*service, cq()).Times(2).WillRepeatedly(::testing::Return(cq.get()));
     }
 
+    void expectAuthz(grpc::ClientContext* clientContext = nullptr, const std::string& mockToken = "") {
+        // Authorization is enabled
+        if (clientContext) {
+            clientContext->AddMetadata("authorization", mockToken);
+            EXPECT_CALL(*service, authorizationEnabled()).Times(2).WillRepeatedly(::testing::Return(true));
+        // Authorization is disabled
+        } else {
+            EXPECT_CALL(*service, authorizationEnabled()).Times(1).WillOnce(::testing::Return(false));
+        }
+    }
+
+    void expectkFinish() {
+        // kFinish
+        EXPECT_CALL(*service, deregisterItem(::testing::_)).Times(1).WillOnce(::testing::Invoke([this]() {
+            delete testCall;
+            testCall = nullptr;
+        }));
+    }
+
     /*
      * Shuts down the gRPC server and client.
      */

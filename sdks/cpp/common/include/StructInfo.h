@@ -183,7 +183,7 @@ void toProto(catena::Value& dst, const T* src, const IParamDescriptor& pd, const
     auto readField = [&](const auto& field) {
         IParamDescriptor& subParam = pd.getSubParam(field.name);
         if (authz.readAuthz(subParam)) {
-            catena::Value* newFieldValue = (*dstFields)[field.name].mutable_value();
+            catena::Value* newFieldValue = &(*dstFields)[field.name];
 
             /**
              * &(src->*(field.memberPtr)) will pass the address of the corresponding field 
@@ -292,7 +292,7 @@ void fromProto(const catena::Value& src, T* dst, const IParamDescriptor& pd, con
             // field not found in src so it is not being updated
             return;
         }
-        const catena::Value& fieldValue = srcFields.at(field.name).value();
+        const catena::Value& fieldValue = srcFields.at(field.name);
 
         /**
          * &(dst->*(field.memberPtr)) will pass the address of the corresponding value field
