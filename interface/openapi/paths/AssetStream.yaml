@@ -61,16 +61,16 @@ get:
     
   responses:
     "200":
-      description: The server's response will be a stream of ExternalObjectPayload  objects
-        'respond' is false
+      description: |
+        The server's response will be a stream of ExternalObjectPayload
+        objects
       content:
         text/event-stream:
           schema:
             type: string
             example: |
-              <fqoid of asset 1>: <stringified ExternalObjectPayload>
-              <fqoid of asset n>: <stringified ExternalObjectPayload>
-              done
+              data: <stringified ExternalObjectPayload>
+              data: <stringified ExternalObjectPayload>
       # ExternalObjectPayload doesn't yet have a schema, todo!
           
     "401":

@@ -45,7 +45,7 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to request language pack from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
    
@@ -113,7 +113,7 @@ post:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to add a language pack to
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
   
@@ -181,7 +181,7 @@ delete:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to delete a language pack from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
@@ -229,7 +229,9 @@ put:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: |
+        The slot of the device model to containing the language pack to
+        overwrite
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 

@@ -69,14 +69,16 @@ get:
             $ref: "../../../schema/catena.device_schema.json"
   
           example: 
-            { 
-              "device": {  
-                "slot": 1,  
-                "multiSetEnabled": true,
-                "subscriptions": true,
-                "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
-                "defaultScope": "st2138:op"
-              }
+            {
+              "data": [
+                "device": {  
+                  "slot": 1,  
+                  "multiSetEnabled": true,
+                  "subscriptions": true,
+                  "accessScopes": [ "st2138:mon", "st2138:op", "st2138:cfg", "st2138:adm"],
+                  "defaultScope": "st2138:op"
+                }
+              ]
             }
     
     "500":

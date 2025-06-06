@@ -41,6 +41,12 @@ get:
   # default security is read-only
 
   parameters:
+    - name: slot
+      in: path
+      required: true
+      description: The slot of the device model to connect to
+      schema:
+        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
     - name: Detail-Level
       in: header
@@ -75,13 +81,12 @@ get:
           schema:
             type: string
             example: |
-              value: <stringified Value object>
-              exception: <stringified Exception object>
-              device_component: <stringified DeviceComponent object>
-              invalidated_external_object_id: <stringified invalidated_external_object_id object>
-              trap_message: <stringified TrapMessage object>
-              invalidate_device_model: <boolean>
-              remove_components: <stringified RemoveComponents object>
-              slots_added: <stringified SlotList object>
-              slots_removed: <stringified SlotList object>
-              done
+              data: <stringified Value object>
+              data: <stringified Exception object>
+              data: <stringified DeviceComponent object>
+              data: <stringified invalidated_external_object_id object>
+              data: <stringified TrapMessage object>
+              data: <boolean>
+              data: <stringified RemoveComponents object>
+              data: <stringified SlotList object>
+              data: <stringified SlotList object>

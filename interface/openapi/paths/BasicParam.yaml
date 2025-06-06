@@ -66,7 +66,7 @@ get:
   responses:
     "200":
       description: |
-        Returns a the information about the parameter specified by the fqoid.
+        Returns information about the parameter specified by the fqoid.
         
       content:
         application/json:

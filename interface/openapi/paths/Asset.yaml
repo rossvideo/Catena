@@ -61,16 +61,17 @@ get:
     
   responses:
     "200":
-      description: The server's response will either be a 'Value' or nothing if 
-        'respond' is false
+      description: |
+        The server's response will be one or more 'ExternalObjectPayloads'.
       content:
-        text/event-stream:
+        application/json:
           schema:
-            type: string
-            example: |
-              <fqoid of asset 1>: <stringified ExternalObjectPayload>
-              <fqoid of asset n>: <stringified ExternalObjectPayload>
-              done
+            example: {
+                data: [
+                  {ExternalObjectPayload},
+                  {ExternalObjectPayload}
+                ]
+              }
       # ExternalObjectPayload doesn't yet have a schema, todo!
           
     "401":

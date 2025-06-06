@@ -71,10 +71,9 @@ get:
             type: string
   
           example: |
-            param: <stringified ComponentParam>
-            constraint: <stringified ComponentConstraint>
-            etc: <more DeviceComponents>
-            done
+            data: <stringified ComponentParam>
+            data: <stringified ComponentConstraint>
+            data: <more DeviceComponents>
     
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'

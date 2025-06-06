@@ -53,7 +53,7 @@ get:
     - name: slot
       in: path
       required: true
-      description: slot number
+      description: The slot of the device model to get language codes from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
       example: 1  

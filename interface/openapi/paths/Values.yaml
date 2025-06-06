@@ -80,19 +80,19 @@ put:
                 schema:
                   $ref: "../../../schema/catena.param_schema.json#/$defs/value"
         example:
-          - fqoid: "/ipv4"
+          - oid: "/ipv4"
             value:
               string_value: "192.168.1.1"
-          - fqoid: "/gateway"
+          - oid: "/gateway"
             value:
               string_value: "192.168.1.254"
-          - fqoid: "/subnet"
+          - oid: "/subnet"
             value:
               string_value: "255.255.255.0"
-          - fqoid: "/dns"
+          - oid: "/dns"
             value:
               string_value: "8.8.8.8"
-          - fqoid: "/dns_alt"
+          - oid: "/dns_alt"
             value:
               string_value: "8.8.4.4"
 
