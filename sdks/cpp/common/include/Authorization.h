@@ -50,6 +50,8 @@
 #include <jwt-cpp/jwt.h>
 
 #include <functional>
+#include <chrono>
+#include <set>
 
 /**
  * @brief top level namespace for Catena. Functionality at this scope includes
@@ -71,7 +73,7 @@ class Authorizer {
     /**
      * @brief The scopes of the object
      */
-    using Scopes = std::vector<std::string>;
+    using Scopes = std::set<std::string>;
   public:
     /**
      * @brief Special Authorizer object that disables authorization
@@ -144,6 +146,11 @@ class Authorizer {
      */
     bool writeAuthz(const IParamDescriptor& pd) const;
 
+    /**
+     * @brief Check if the token is expired
+     * @return true if the token is expired, false otherwise
+     */
+    bool isExpired() const;
 
   private:
 	  /**
@@ -154,6 +161,14 @@ class Authorizer {
      * @brief Client scopes extracted from a valid JWS token.
      */
   	Scopes clientScopes_;
+    /**
+     * @brief Not Before time, 0 means no restriction
+     */
+    double nbf_{0};
+    /**
+     * @brief Expiration time, 0 means no restriction
+     */
+    double exp_{0};
 };
 
 } // namespace common

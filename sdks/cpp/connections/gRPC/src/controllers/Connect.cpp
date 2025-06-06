@@ -66,7 +66,6 @@ void catena::gRPC::Connect::proceed(bool ok) {
         status_ = CallStatus::kFinish;
     }
 
-    std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
     switch (status_) {
         /** 
          * kCreate: Updates status to kProcess and requests the Connect command
@@ -85,8 +84,10 @@ void catena::gRPC::Connect::proceed(bool ok) {
             new Connect(service_, dm_, ok);
             context_.AsyncNotifyWhenDone(this);
             try {
-                catena::exception_with_status rc{"", catena::StatusCode::OK};
+                // Initializing the authorizer.
                 initAuthz_(jwsToken_(), service_->authorizationEnabled());
+
+                // Setting signals.
                 // Cancels all open connections if shutdown signal is sent.
                 shutdownSignalId_ = shutdownSignal_.connect([this](){
                     context_.TryCancel();
@@ -97,12 +98,10 @@ void catena::gRPC::Connect::proceed(bool ok) {
                 valueSetByServerId_ = dm_.valueSetByServer.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                     updateResponse_(oid, idx, p);
                 });
-
                 // Waiting for a value set by client to be sent to execute code.
                 valueSetByClientId_ = dm_.valueSetByClient.connect([this](const std::string& oid, const IParam* p, const int32_t idx){
                     updateResponse_(oid, idx, p);
                 });
-
                 // Waiting for a language to be added to execute code.
                 languageAddedId_ = dm_.languageAddedPushUpdate.connect([this](const ILanguagePack* l) {
                     updateResponse_(l);
@@ -110,42 +109,47 @@ void catena::gRPC::Connect::proceed(bool ok) {
 
                 // Set detail level from request
                 detailLevel_ = req_.detail_level();
-                dm_.detail_level(req_.detail_level());
 
                 // send client a empty update with slot of the device
-                {
-                    status_ = CallStatus::kWrite;
-                    catena::PushUpdates populatedSlots;
-                    populatedSlots.set_slot(dm_.slot());
-                    writer_.Write(populatedSlots, this);
-                }
+                status_ = CallStatus::kWrite;
+                hasUpdate_ = true;
+            
+            // ERROR
             } catch (catena::exception_with_status& rc) {
                 status_ = CallStatus::kFinish;
                 grpc::Status errorStatus(static_cast<grpc::StatusCode>(rc.status), rc.what());
                 writer_.Finish(errorStatus, this);
+                break;
             }
-            break;
         /**
          * kWrite: Waits until an update to either set res to device's slot or
          * end the process.
          */
         case CallStatus::kWrite:
+            { // rc scope
+            catena::exception_with_status rc{"", catena::StatusCode::OK};
+            std::unique_lock<std::mutex> lock{mtx_, std::defer_lock};
             lock.lock();
             cv_.wait(lock, [this] { return hasUpdate_; });
             hasUpdate_ = false;
-            // If connect was cancelled finish the process.
+            // Set rc is the context was cancelled or the token expired.
             if (context_.IsCancelled()) {
-                status_ = CallStatus::kFinish;
-                std::cout << "Connection[" << objectId_ << "] cancelled\n";
-                writer_.Finish(Status::CANCELLED, this);
-                break;
-            // Send the client an update with the slot of the device.
-            } else {
+                rc = catena::exception_with_status{"Connect cancelled", catena::StatusCode::CANCELLED};
+            } else if (authz_->isExpired()) {
+                rc = catena::exception_with_status{"JWS Token Expired", catena::StatusCode::UNAUTHENTICATED};
+            }
+            // Send the client an update with the slot of the device if rc OK.
+            if (rc.status == catena::StatusCode::OK) {
                 res_.set_slot(dm_.slot());
                 writer_.Write(res_, this);
+            // Finish rpc if rc is not OK.
+            } else {
+                status_ = CallStatus::kFinish;;
+                writer_.Finish(grpc::Status(static_cast<grpc::StatusCode>(rc.status), rc.what()), this);
             }
             lock.unlock();
             break;
+            }
         /**
          * kFinish: Ends the connection.
          */

@@ -26,6 +26,8 @@ void Connect::proceed() {
     try {
         // Setting up the client's authorizer.
         initAuthz_(context_.jwsToken(), context_.authorizationEnabled());
+
+        // Setting signals.
         // Cancels all open connections if shutdown signal is sent.
         shutdownSignalId_ = shutdownSignal_.connect([this](){
             shutdown_ = true;
@@ -45,10 +47,9 @@ void Connect::proceed() {
             updateResponse_(l);
         });
         // Send client an empty update with slot of the device
-        catena::PushUpdates populatedSlots;
-        populatedSlots.set_slot(dm_.slot());
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), populatedSlots);
-    // Used to catch the authz error.
+        hasUpdate_ = true;
+
+    // ERROR
     } catch (catena::exception_with_status& err) {
         writer_.sendResponse(err);
         shutdown_ = true;
@@ -62,7 +63,10 @@ void Connect::proceed() {
         hasUpdate_ = false;
         writeConsole_(CallStatus::kWrite, true);
         try {
-            if (socket_.is_open() && !shutdown_) {
+            if (authz_->isExpired()) {
+                writer_.sendResponse(catena::exception_with_status("JWS Token Expired", catena::StatusCode::UNAUTHENTICATED));
+                shutdown_ = true;
+            } else if (socket_.is_open() && !shutdown_) {
                 res_.set_slot(dm_.slot());
                 writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK), res_);
             }
@@ -83,10 +87,5 @@ void Connect::finish() {
         dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
     // Listener not yet initialized.
     } catch (...) {}
-    // Finishing and closing the socket.
-    if (socket_.is_open()) {
-        writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
-        socket_.close();
-    }
     std::cout << "Connect[" << objectId_ << "] finished\n";
 }

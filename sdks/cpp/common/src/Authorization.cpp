@@ -36,6 +36,7 @@ using catena::common::Authorizer;
 Authorizer Authorizer::kAuthzDisabled;
 
 Authorizer::Authorizer(const std::string& JWSToken) {
+    // Constructor decodes the JWS token and extracts scopes, nbf, and exp.
     try {
         // Decoding the token and extracting scopes.
         jwt::decoded_jwt<jwt::traits::kazuho_picojson> decodedToken = jwt::decode(JWSToken);
@@ -46,10 +47,16 @@ Authorizer::Authorizer(const std::string& JWSToken) {
                 std::string scopeClaim = it->second.get<std::string>();
                 std::istringstream iss(scopeClaim);
                 while (std::getline(iss, scopeClaim, ' ')) {
-                    clientScopes_.push_back(scopeClaim);
+                    clientScopes_.insert(scopeClaim);
                 }
+            // Extracting nbf and exp if they're present.
+            } else if (it->first == "nbf") {
+                nbf_ = it->second.get<double>();
+            } else if (it->first == "exp") {
+                exp_ = it->second.get<double>();
             }
         }
+
     // Catch error.
     } catch (...) {
         throw catena::exception_with_status("Invalid JWS Token", catena::StatusCode::UNAUTHENTICATED);
@@ -57,48 +64,56 @@ Authorizer::Authorizer(const std::string& JWSToken) {
 }
 
 bool Authorizer::hasAuthz(const std::string& scope) const {
+    // Checks if the client has the specified authorization scope.
+    bool authorized = false;
+    // no authorization required
     if (this == &kAuthzDisabled) {
-        return true; // no authorization required
+        authorized = true;
+    // Token contains the scope.
+    } else if (clientScopes_.contains(scope)) {
+        authorized = true;
     }
-
-    if (std::find(clientScopes_.begin(), clientScopes_.end(), scope) == clientScopes_.end()) {
-        return false;
-    }
-    return true;
+    return authorized;
 }
 
-/**
- * @brief Check if the client has read authorization
- * @return true if the client has read authorization
- */
 bool Authorizer::readAuthz(const IParam& param) const {
+    // Checks if the client has read authorization for the param.
     const std::string& scope = param.getScope();
     return hasAuthz(scope) || hasAuthz(scope + ":w");
 }
 
 bool Authorizer::readAuthz(const IParamDescriptor& pd) const {
+    // Checks if the client has read authorization for the param descriptor.
     const std::string& scope = pd.getScope();
     return hasAuthz(scope) || hasAuthz(scope + ":w");
 }
 
-/**
- * @brief Check if the client has write authorization
- * @return true if the client has write authorization
- */
 bool Authorizer::writeAuthz(const IParam& param) const {
-    if (param.readOnly()) {
-        return false;
+    // Checks if the client has write authorization for the param.
+    bool authorized = false;
+    if (!param.readOnly()) {
+        authorized = hasAuthz(param.getScope() + ":w");
     }
-
-    const std::string scope = param.getScope() + ":w";
-    return hasAuthz(scope);
+    return authorized;
 }
 
 bool Authorizer::writeAuthz(const IParamDescriptor& pd) const {
-    if (pd.readOnly()) {
-        return false;
+    // Checks if the client has write authorization for the param descriptor.
+    bool authorized = false;
+    if (!pd.readOnly()) {
+        authorized = hasAuthz(pd.getScope() + ":w");
     }
+    return authorized;
+}
 
-    const std::string scope = pd.getScope() + ":w";
-    return hasAuthz(scope);
+bool Authorizer::isExpired() const {
+    // Checks if the token is expired given the nbf and exp values.
+    bool expired = false;
+    if (this != &kAuthzDisabled) {
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::cout<<"Time: "<<time<<std::endl; // TEMP
+        expired = (nbf_ > 0 && nbf_ > time) || (exp_ > 0 && exp_ < time);
+    }
+    return expired;
 }
