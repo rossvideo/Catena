@@ -35,6 +35,6 @@ var classcatena_1_1common_1_1IDevice =
     [ "toProto", "classcatena_1_1common_1_1IDevice.html#a87aeb86d17cd61768f1868531d70d607", null ],
     [ "tryMultiSetValue", "classcatena_1_1common_1_1IDevice.html#ab152733e66bbdf4e0486fb69956f0f91", null ],
     [ "languageAddedPushUpdate", "classcatena_1_1common_1_1IDevice.html#ae5382de470c68d7b91307267b017ff08", null ],
-    [ "valueSetByClient", "classcatena_1_1common_1_1IDevice.html#a5883fe4192ce2646f2322598e0b670f9", null ],
-    [ "valueSetByServer", "classcatena_1_1common_1_1IDevice.html#a465b1d568c090e5486e2dfce6b00b35f", null ]
+    [ "valueSetByClient", "classcatena_1_1common_1_1IDevice.html#a82bdd242af55b872dece8c193e18f7d8", null ],
+    [ "valueSetByServer", "classcatena_1_1common_1_1IDevice.html#aba2be3e452ebab8089babf28b9e3f411", null ]
 ];
