@@ -102,10 +102,9 @@ post:
             type: string
           
           example: |
-            <stringified {"no_response":{}}>
-            <stringified {"response":{"string_value":"Command executed successfully"}}>
-            <stringified {"exception":{"type":"Invalid Command","error_message":"Error message","details":"Something went wrong"}}>
-            done
+            data: <stringified {"no_response":{}}>
+            data: <stringified {"response":{"string_value":"Command executed successfully"}}>
+            data: <stringified {"exception":{"type":"Invalid Command","error_message":"Error message","details":"Something went wrong"}}>
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
