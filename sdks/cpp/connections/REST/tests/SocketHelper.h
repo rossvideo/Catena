@@ -83,7 +83,7 @@ class SocketHelper {
                       const std::string& jsonBody) {
         // Compiling path:
         std::string request = "";
-        request += method + " /api/v1";
+        request += method + " /st2138-api/v1";
         if (slot != 0) {
             request += "/" + std::to_string(slot);
         }

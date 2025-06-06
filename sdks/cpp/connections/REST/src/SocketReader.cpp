@@ -36,8 +36,8 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
     try {
         std::vector<std::string> path;
         catena::split(path, u.path(), "/");
-        // Checking the url starts with "api/v1/"
-        if (path.size() >= 4 && path[1] == "api" && path[2] == version) {
+        // Checking the url starts with "st2138-api/v1/"
+        if (path.size() >= 4 && path[1] == "st2138-api" && path[2] == version) {
             // If not "devices" or "health" then next segment should be a slot number.
             if (path[3] == "devices" || path[3] == "health") {
                 endpoint_ = "/" + path[3];
@@ -61,7 +61,7 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
                 }
             }
         } else {
-            throw;
+            throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);
         }
     } catch (...) {
         throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);
