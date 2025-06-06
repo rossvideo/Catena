@@ -303,7 +303,6 @@ message ExecuteCommandPayload {
   string oid = 2;   // The object id of the command to execute relative to device.commands
   Value value = 3;  // The command's parameter value, if any
   bool respond = 4; // False if client wants to surpress response from server
-  bool proceed = 5; // Used to short circuit sending payloads 
 }
 
 message Exception {
