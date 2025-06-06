@@ -12,6 +12,9 @@ style="width: 100%;" alt="Catena Logo" />
 <pre><code>message GetValuePayload {
   uint32 slot = 1;          // Uniquely identifies the device at node scope.
   string oid = 2;           // Uniquely identifies the param at device scope
+  uint32 element_index = 3; /* (UNUSED) When requesting single elements of
+                             * array parameters, the element in the array to
+                             * get */
 }</code></pre>
 <h3 id="out">OUT</h3>
 <p>The value of the specified parameter.</p>
