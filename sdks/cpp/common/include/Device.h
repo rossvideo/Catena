@@ -526,6 +526,25 @@ class Device : public IDevice {
      */
     bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const override;
 
+    /**
+     * @brief returns a signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)>& valueSetByClient() override { return valueSetByClient_; };
+
+    /**
+     * @brief Returns a signal emitted when a language pack is added to the
+     * device. Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ILanguagePack*)>& languageAddedPushUpdate() override { return languageAddedPushUpdate_; };
+
+    /**
+     * @brief Returns a signal emitted when a value is set by the server or
+     * business logic.
+     * Intended recipient is the connection manager.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)>& valueSetByServer() override { return valueSetByServer_; };
+
   private:
     uint32_t slot_;
     Device_DetailLevel detail_level_;
@@ -542,6 +561,25 @@ class Device : public IDevice {
     bool subscriptions_;
     uint32_t default_max_length_ = 0;
     uint32_t default_total_length_ = 0;
+
+    /**
+     * @brief signal emitted when a value is set by the client.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient_;
+
+    /**
+     * @brief signal emitted when a language pack is added to the device.
+     * Intended recipient is the business logic.
+     */
+    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate_;
+
+    /**
+     * @brief signal emitted when a value is set by the server, or business
+     * logic.
+     * Intended recipient is the connection manager.
+     */
+    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer_;
 
     mutable std::mutex mutex_;
 

@@ -368,23 +368,23 @@ class IDevice {
     virtual bool shouldSendParam(const IParam& param, bool is_subscribed, Authorizer& authz) const = 0;
 
     /**
-     * @brief signal emitted when a value is set by the client.
+     * @brief returns a signal emitted when a value is set by the client.
      * Intended recipient is the business logic.
      */
-    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByClient;
+    virtual vdk::signal<void(const std::string&, const IParam*, const int32_t)>& valueSetByClient() = 0;
 
     /**
-     * @brief signal emitted when a language pack is added to the device.
-     * Intended recipient is the business logic.
+     * @brief Returns a signal emitted when a language pack is added to the
+     * device. Intended recipient is the business logic.
      */
-    vdk::signal<void(const ILanguagePack*)> languageAddedPushUpdate;
+    virtual vdk::signal<void(const ILanguagePack*)>& languageAddedPushUpdate() = 0;
 
     /**
-     * @brief signal emitted when a value is set by the server, or business
-     * logic.
+     * @brief Returns a signal emitted when a value is set by the server or
+     * business logic.
      * Intended recipient is the connection manager.
      */
-    vdk::signal<void(const std::string&, const IParam*, const int32_t)> valueSetByServer;
+    virtual vdk::signal<void(const std::string&, const IParam*, const int32_t)>& valueSetByServer() = 0;
 };
 
 }  // namespace common

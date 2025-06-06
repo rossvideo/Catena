@@ -112,7 +112,7 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
             }
             // Setting value and emitting signal.
             ans = param->fromProto(setValuePayload.value(), authz);
-            valueSetByClient.emit(setValuePayload.oid(), param.get(), 0);
+            valueSetByClient_.emit(setValuePayload.oid(), param.get(), 0);
             // Resetting trackers to match new value.
             if (parent) { parent->resetValidate();
             } else { param->resetValidate(); }
@@ -193,7 +193,7 @@ catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& l
             added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
             language_packs_[id]->fromProto(language.language_pack());      
             // Pushing update to connect gRPC.
-            languageAddedPushUpdate.emit(language_packs_[id]);
+            languageAddedPushUpdate_.emit(language_packs_[id]);
         }
     }
     return ans;

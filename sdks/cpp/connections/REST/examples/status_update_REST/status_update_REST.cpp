@@ -129,7 +129,7 @@ void statusUpdateExample(){
         handlers["/combo_box"] = combo_boxUpdateHandler;
 
         // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
+        dm.valueSetByClient().connect([&handlers](const std::string& oid, const IParam* p, const int32_t idx) {
             if (handlers.contains(oid)) {
                 handlers[oid](oid, p, idx);
             }
@@ -153,7 +153,7 @@ void statusUpdateExample(){
                 std::lock_guard lg(dm.mutex());
                 counter.get()++;
                 std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &counter, 0);
+                dm.valueSetByServer().emit("/counter", &counter, 0);
             }
         }
     });

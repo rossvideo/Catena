@@ -88,6 +88,9 @@ class MockDevice : public IDevice {
     MOCK_METHOD(exception_with_status, setValue, (const std::string& jptr, Value& src, Authorizer& authz), (override));
     MOCK_METHOD(exception_with_status, getValue, (const std::string& jptr, Value& value, Authorizer& authz), (const, override));
     MOCK_METHOD(bool, shouldSendParam, (const IParam& param, bool is_subscribed, Authorizer& authz), (const, override));
+    MOCK_METHOD(vdk::signal<void(const std::string&, const IParam*, const int32_t)>&, valueSetByClient, (), (override));
+    MOCK_METHOD(vdk::signal<void(const ILanguagePack*)>&, languageAddedPushUpdate, (), (override));
+    MOCK_METHOD(vdk::signal<void(const std::string&, const IParam*, const int32_t)>&, valueSetByServer, (), (override));
 };
 
 // Mock IParam for testing
