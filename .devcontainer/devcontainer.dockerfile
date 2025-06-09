@@ -64,7 +64,7 @@ RUN mkdir -p ~/Catena/sdks/cpp/build \
     && cd ~/Catena/sdks/cpp/build \
     && cmake -G Ninja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DCONNECTIONS=$CONNECTIONS -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp \
     && ninja
-
+# cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS='gRPC;REST' -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage" -DCMAKE_EXE_LINKER_FLAGS="--coverage"  -DCMAKE_INSTALL_PREFIX=/usr/local/.local ~/Catena/sdks/cpp
 RUN cd ~/Catena/ \
     && ./scripts/run_coverage.sh --html --verbose
 # Set the working directory
