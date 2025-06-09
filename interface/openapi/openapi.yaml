@@ -98,7 +98,7 @@ paths:
   /{slot}/param/{fqoid}:
     $ref: './paths/Param.yaml'
 
-  /{slot}/connect:
+  /connect:
     $ref: './paths/Connect.yaml'
 
   /{slot}/language-pack/{language-code}:

@@ -42,13 +42,6 @@ get:
   # default security is read-only
 
   parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model to connect to
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-
     - name: Detail-Level
       in: header
       required: false
