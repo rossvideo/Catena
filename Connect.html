@@ -29,7 +29,8 @@ message PushUpdates {
 
   message PushValue {
     string oid = 1;
-      Value value = 3;
+    int32 element_index = 2;
+    Value value = 3;
   }
 
   uint32 slot = 1;
