@@ -98,6 +98,8 @@ namespace gRPC {
  */
 class CatenaServiceImpl : public ICatenaServiceImpl {
   public:
+    using SlotMap = std::unordered_map<uint32_t, IDevice*>;
+
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.
@@ -105,7 +107,7 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      * @param EOPath The path to the external object.
      * @param authz Flag to enable authorization.
      */
-    CatenaServiceImpl(ServerCompletionQueue* cq, IDevice& dm, std::string& EOPath, bool authz);  
+    CatenaServiceImpl(ServerCompletionQueue* cq, SlotMap dms, std::string& EOPath, bool authz);  
     /**
      * @brief Creates the CallData objects for each gRPC command.
      */
@@ -163,9 +165,11 @@ class CatenaServiceImpl : public ICatenaServiceImpl {
      */
     ServerCompletionQueue* cq_; 
     /**
-     * @brief The device to implement Catena services to
+     * @brief Map of slot numbers to device pointers.
+     * 
+     * Devices are global objects so raw ptrs should be safe.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief The path to the external object
      */

@@ -35,9 +35,9 @@ using catena::gRPC::CatenaServiceImpl;
 // Defining the port flag from SharedFlags.h
 ABSL_FLAG(uint16_t, port, 6254, "Catena gRPC service port");
 
-CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std::string& EOPath, bool authz)
+CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, SlotMap dms, std::string& EOPath, bool authz)
         : cq_{cq}, 
-          dm_{dm}, 
+          dms_{dms}, 
           EOPath_{EOPath}, 
           authorizationEnabled_{authz},
           subscriptionManager_{std::make_unique<catena::common::SubscriptionManager>()} {}
@@ -46,20 +46,20 @@ CatenaServiceImpl::CatenaServiceImpl(ServerCompletionQueue *cq, IDevice& dm, std
  * Creates the CallData objects for each gRPC command.
  */
 void CatenaServiceImpl::init() {
-    new catena::gRPC::GetPopulatedSlots(this, dm_, true);
-    new catena::gRPC::GetValue(this, dm_, true);
-    new catena::gRPC::SetValue(this, dm_, true);
-    new catena::gRPC::MultiSetValue(this, dm_, true);
-    new catena::gRPC::Connect(this, dm_, true);
-    new catena::gRPC::DeviceRequest(this, dm_, true);
-    new catena::gRPC::ExternalObjectRequest(this, dm_, true);
-    new catena::gRPC::BasicParamInfoRequest(this, dm_, true);
-    new catena::gRPC::GetParam(this, dm_, true);
-    new catena::gRPC::ExecuteCommand(this, dm_, true);
-    new catena::gRPC::AddLanguage(this, dm_, true);
-    new catena::gRPC::ListLanguages(this, dm_, true);
-    new catena::gRPC::LanguagePackRequest(this, dm_, true);
-    new catena::gRPC::UpdateSubscriptions(this, dm_, true);
+    new catena::gRPC::GetPopulatedSlots(this, *dms_[0], true);
+    new catena::gRPC::GetValue(this, *dms_[0], true);
+    new catena::gRPC::SetValue(this, *dms_[0], true);
+    new catena::gRPC::MultiSetValue(this, *dms_[0], true);
+    new catena::gRPC::Connect(this, *dms_[0], true);
+    new catena::gRPC::DeviceRequest(this, *dms_[0], true);
+    new catena::gRPC::ExternalObjectRequest(this, *dms_[0], true);
+    new catena::gRPC::BasicParamInfoRequest(this, *dms_[0], true);
+    new catena::gRPC::GetParam(this, *dms_[0], true);
+    new catena::gRPC::ExecuteCommand(this, *dms_[0], true);
+    new catena::gRPC::AddLanguage(this, *dms_[0], true);
+    new catena::gRPC::ListLanguages(this, *dms_[0], true);
+    new catena::gRPC::LanguagePackRequest(this, *dms_[0], true);
+    new catena::gRPC::UpdateSubscriptions(this, *dms_[0], true);
 }
 
 // Initializing the shutdown signal for all open connections.
