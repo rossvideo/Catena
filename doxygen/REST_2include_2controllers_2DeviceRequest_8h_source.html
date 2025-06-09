@@ -178,7 +178,7 @@ $(document).ready(function(){initNavTree('REST_2include_2controllers_2DeviceRequ
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    }</div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    tcp::socket&amp; socket_;</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    ISocketReader&amp; context_;</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    SSEWriter writer_;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    std::unique_ptr&lt;ISocketWriter&gt; writer_ = <span class="keyword">nullptr</span>;</div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    IDevice&amp; dm_;</div>
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    std::set&lt;std::string&gt; subscribedOids_;</div>
