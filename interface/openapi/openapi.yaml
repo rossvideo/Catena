@@ -56,6 +56,9 @@ security:
     - st2138:mon
 
 paths:
+  /health:
+    $ref: './paths/Health.yaml'
+
   /devices:
     $ref: './paths/Devices.yaml'
 
