@@ -57,7 +57,7 @@ class LanguagePackRequest : public CallData {
      * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    LanguagePackRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    LanguagePackRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the LanguagePackRequest command through
      * the state variable status.
@@ -80,9 +80,9 @@ class LanguagePackRequest : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief The device containing the language we are requesting.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief The object's unique id.
      */

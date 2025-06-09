@@ -60,7 +60,7 @@ class UpdateSubscriptions : public CallData {
      * @param dm The device model
      * @param ok Flag indicating if initialization was successful
      */
-    UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    UpdateSubscriptions(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
 
     /**
      * @brief Manages the steps of the UpdateSubscriptions gRPC command
@@ -119,9 +119,13 @@ class UpdateSubscriptions : public CallData {
     CallStatus status_;
 
     /**
-     * @brief The device to get the value from.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
+    /**
+     * @brief The device we are updating the subscriptions for.
+     */
+    IDevice* dm_ = nullptr;
 
     /**
      * @brief The object's unique id counter.

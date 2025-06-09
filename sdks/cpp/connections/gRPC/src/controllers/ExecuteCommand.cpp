@@ -39,8 +39,8 @@ int ExecuteCommand::objectCounter_ = 0;
  * Constructor which initializes and registers the current ExecuteCommand
  * object, then starts the process
  */
-ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, writer_(&context_),
+ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, writer_(&context_),
       status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;
@@ -77,23 +77,33 @@ void ExecuteCommand::proceed(bool ok) {
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new ExecuteCommand(service_, dm_, ok); // to serve other clients
+            new ExecuteCommand(service_, dms_, ok); // to serve other clients
             context_.AsyncNotifyWhenDone(this);
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
-                std::unique_ptr<IParam> command = nullptr;
-                // Getting the command.
-                if (service_->authorizationEnabled()) {
-                    catena::common::Authorizer authz{jwsToken_()};
-                    command = dm_.getCommand(req_.oid(), rc, authz);
-                } else {
-                    command = dm_.getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                IDevice* dm = nullptr;
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
                 }
-                // Executing the command if found.
-                if (command != nullptr) {
-                    responder_ = command->executeCommand(req_.value());
-                    status_ = CallStatus::kWrite; 
+                // Making sure the device exists.
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                } else {
+                    std::unique_ptr<IParam> command = nullptr;
+                    // Getting the command.
+                    if (service_->authorizationEnabled()) {
+                        catena::common::Authorizer authz{jwsToken_()};
+                        command = dm->getCommand(req_.oid(), rc, authz);
+                    } else {
+                        command = dm->getCommand(req_.oid(), rc, catena::common::Authorizer::kAuthzDisabled);
+                    }
+                    // Executing the command if found.
+                    if (command != nullptr) {
+                        responder_ = command->executeCommand(req_.value());
+                        status_ = CallStatus::kWrite; 
+                    }
                 }
             // ERROR
             } catch (catena::exception_with_status& err) {

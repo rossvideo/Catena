@@ -39,7 +39,7 @@ int GetValue::objectCounter_ = 0;
  * Constructor which initializes and registers the current GetValue object, 
  * then starts the process.
  */
-GetValue::GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok) : CallData(service), dm_{dm}, responder_(&context_), 
+GetValue::GetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok) : CallData(service), dms_{dms}, responder_(&context_), 
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     objectId_ = objectCounter_++;
     service_->registerItem(this);
@@ -75,28 +75,37 @@ void GetValue::proceed( bool ok) {
          */
         case CallStatus::kProcess:
             // Used to serve other clients while processing.
-            new GetValue(service_, dm_, ok);
+            new GetValue(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
 
             { // var scope
             catena::Value ans;
             catena::exception_with_status rc{"", catena::StatusCode::OK};
+            IDevice* dm = nullptr;
             try {
-                /*
-                 * Creating authorizer object. Shared ptr maintains ownership
-                 * while raw ptr ensures we don't delete kAuthzDisabled.
-                 */
-                std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                catena::common::Authorizer* authz;
-                if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                    authz = sharedAuthz.get();
-                } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm = dms_.at(req_.slot());
                 }
-                // Getting the value.
-                std::lock_guard lg(dm_.mutex());
-                rc = dm_.getValue(req_.oid(), ans, *authz);
+                if (!dm) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                } else {
+                    /*
+                    * Creating authorizer object. Shared ptr maintains ownership
+                    * while raw ptr ensures we don't delete kAuthzDisabled.
+                    */
+                    std::shared_ptr<catena::common::Authorizer> sharedAuthz;
+                    catena::common::Authorizer* authz;
+                    if (service_->authorizationEnabled()) {
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                        authz = sharedAuthz.get();
+                    } else {
+                        authz = &catena::common::Authorizer::kAuthzDisabled;
+                    }
+                    // Getting the value.
+                    std::lock_guard lg(dm->mutex());
+                    rc = dm->getValue(req_.oid(), ans, *authz);
+                }
             // ERROR.
             } catch (catena::exception_with_status& err) {
                 rc = catena::exception_with_status(err.what(), err.status);

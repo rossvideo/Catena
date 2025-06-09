@@ -59,7 +59,7 @@ class GetValue : public CallData{
      * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    GetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the GetValue gRPC command
      * through the state variable status. Returns the value of the
@@ -88,9 +88,9 @@ class GetValue : public CallData{
      */
     CallStatus status_;
     /**
-     * @brief The device to get the value from.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief The object's unique id.
      */

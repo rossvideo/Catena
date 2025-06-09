@@ -98,8 +98,6 @@ namespace gRPC {
  */
 class CatenaServiceImpl : public ICatenaServiceImpl {
   public:
-    using SlotMap = std::unordered_map<uint32_t, IDevice*>;
-
     /**
      * @brief Constructor for the CatenaServiceImpl class.
      * @param cq The completion queue for the server.

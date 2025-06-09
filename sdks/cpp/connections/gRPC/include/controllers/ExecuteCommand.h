@@ -58,7 +58,7 @@ class ExecuteCommand : public CallData {
      * @param dm the device to execute the command to
      * @param ok flag to check if command was successfully executed 
      */
-    ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    ExecuteCommand(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages gRPC command execution through a state machine
      *
@@ -86,9 +86,9 @@ class ExecuteCommand : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief Reference to the device to execute the command to
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief Unique identifier for command object
      */

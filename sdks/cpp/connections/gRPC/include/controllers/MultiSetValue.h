@@ -61,7 +61,7 @@ class MultiSetValue : public CallData {
      * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Manages the steps of the SetValue and MultiSetValue gRPC
      * commands through the state variable status.
@@ -81,7 +81,7 @@ class MultiSetValue : public CallData {
      * @param ok Flag to check if the command was successfully executed.
      * @param objectId objectCounter_ + 1
      */ 
-    MultiSetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok, int objectId);
+    MultiSetValue(ICatenaServiceImpl *service, SlotMap& dms, bool ok, int objectId);
     /**
      * @brief Requests Multi Set Value from the system and sets the
      * request to the MultiSetValuePayload.
@@ -130,9 +130,9 @@ class MultiSetValue : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief The device containing the value to set.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * The status of the transaction for use in responder.finish functions.
      */

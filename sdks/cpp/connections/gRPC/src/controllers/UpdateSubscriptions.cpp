@@ -34,8 +34,8 @@ using catena::gRPC::UpdateSubscriptions;
 
 int UpdateSubscriptions::objectCounter_ = 0;
 
-UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, writer_(&context_),
+UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;
@@ -66,60 +66,68 @@ void UpdateSubscriptions::proceed(bool ok) {
             break;
 
         case CallStatus::kProcess:
-            new UpdateSubscriptions(service_, dm_, ok);
+            new UpdateSubscriptions(service_, dms_, ok);
             context_.AsyncNotifyWhenDone(this);
             
             try {
                 catena::exception_with_status rc{"", catena::StatusCode::OK};
                 catena::common::Authorizer* authz;
                 std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-                if (service_->authorizationEnabled()) {
-                    sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                    authz = sharedAuthz.get();
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm_ = dms_.at(req_.slot());
+                }
+                if (!dm_) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
-                    authz = &catena::common::Authorizer::kAuthzDisabled;
-                }
-                
-                // Clear any existing responses
-                responses_.clear();
-                current_response_ = 0;
-                
-                // Process removed OIDs
-                for (const auto& oid : req_.removed_oids()) {     
-                    if (!service_->getSubscriptionManager().removeSubscription(oid, dm_, rc)) {
-                        throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
-                    }
-                }
-                
-                // Process added OIDs
-                for (const auto& oid : req_.added_oids()) {
-                    std::cout << "Adding subscription for OID: " << oid << std::endl;
-                    
-                    if (!service_->getSubscriptionManager().addSubscription(oid, dm_, rc)) {
-                        throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                    if (service_->authorizationEnabled()) {
+                        sharedAuthz = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                        authz = sharedAuthz.get();
+                    } else {
+                        authz = &catena::common::Authorizer::kAuthzDisabled;
                     }
                     
-                }
-                
-                // Now that all subscriptions are processed, send current values for all subscribed parameters
-                try {
-                    sendSubscribedParameters_(*authz);
-                } catch (const catena::exception_with_status& e) {
-                    std::cout << "Error getting subscribed parameters: " << e.what() << std::endl;
-                    // Don't throw here - we still want to finish the request successfully
+                    // Clear any existing responses
                     responses_.clear();
-                }
+                    current_response_ = 0;
+                    
+                    // Process removed OIDs
+                    for (const auto& oid : req_.removed_oids()) {     
+                        if (!service_->getSubscriptionManager().removeSubscription(oid, *dm_, rc)) {
+                            throw catena::exception_with_status(std::string("Failed to remove subscription: ") + rc.what(), rc.status);
+                        }
+                    }
+                    
+                    // Process added OIDs
+                    for (const auto& oid : req_.added_oids()) {
+                        std::cout << "Adding subscription for OID: " << oid << std::endl;
+                        
+                        if (!service_->getSubscriptionManager().addSubscription(oid, *dm_, rc)) {
+                            throw catena::exception_with_status(std::string("Failed to add subscription: ") + rc.what(), rc.status);
+                        }
+                        
+                    }
+                    
+                    // Now that all subscriptions are processed, send current values for all subscribed parameters
+                    try {
+                        sendSubscribedParameters_(*authz);
+                    } catch (const catena::exception_with_status& e) {
+                        std::cout << "Error getting subscribed parameters: " << e.what() << std::endl;
+                        // Don't throw here - we still want to finish the request successfully
+                        responses_.clear();
+                    }
 
-                // If we have responses, start writing them
-                if (!responses_.empty()) {
-                    writer_lock_.lock();
-                    status_ = CallStatus::kWrite;
-                    writer_.Write(responses_[current_response_], this);
-                    writer_lock_.unlock();
-                } else {
-                    std::cout << "No responses to send, finishing..." << std::endl;
-                    status_ = CallStatus::kFinish;
-                    writer_.Finish(grpc::Status::OK, this);
+                    // If we have responses, start writing them
+                    if (!responses_.empty()) {
+                        writer_lock_.lock();
+                        status_ = CallStatus::kWrite;
+                        writer_.Write(responses_[current_response_], this);
+                        writer_lock_.unlock();
+                    } else {
+                        std::cout << "No responses to send, finishing..." << std::endl;
+                        status_ = CallStatus::kFinish;
+                        writer_.Finish(grpc::Status::OK, this);
+                    }
                 }
                 
             } catch (const catena::exception_with_status& e) {
@@ -179,7 +187,7 @@ void UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& 
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     
     // Get all subscribed OIDs from the manager
-    const auto& subscribedOids = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
+    const auto& subscribedOids = service_->getSubscriptionManager().getAllSubscribedOids(*dm_);
     std::cout << "Got " << subscribedOids.size() << " subscribed OIDs" << std::endl;
     
     // Process each subscribed OID
@@ -187,8 +195,8 @@ void UpdateSubscriptions::sendSubscribedParameters_(catena::common::Authorizer& 
         std::cout << "Processing subscribed OID: " << oid << std::endl;
         std::unique_ptr<IParam> param;
         {
-            std::lock_guard lg(dm_.mutex());
-            param = dm_.getParam(oid, rc);
+            std::lock_guard lg(dm_->mutex());
+            param = dm_->getParam(oid, rc);
         }
         
         if (rc.status != catena::StatusCode::OK) {

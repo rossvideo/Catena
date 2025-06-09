@@ -58,7 +58,7 @@ class ExternalObjectRequest : public CallData {
      * @param dm the device for which the request is made
      * @param ok flag to check if request is successful 
      */
-    ExternalObjectRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    ExternalObjectRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
      * @brief Destrutor for ExternalObjectRequest, although it isn't used.
      */
@@ -86,9 +86,9 @@ class ExternalObjectRequest : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief Reference to the device to which the request is made
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief Unique identifier for command object
      */

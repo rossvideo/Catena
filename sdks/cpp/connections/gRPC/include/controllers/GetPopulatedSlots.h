@@ -59,7 +59,7 @@ class GetPopulatedSlots : public CallData{
      * @param dm - Address of the device to get the populated slots of.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    GetPopulatedSlots(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
     /**
     * @brief Manages the steps of the GetPopulatedSlots gRPC command
     * through the state variable status. Returns the number of populated
@@ -89,9 +89,9 @@ class GetPopulatedSlots : public CallData{
      */
     CallStatus status_;
     /**
-     * @brief The device to get the populated slots of.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
     /**
      * @brief The object's unique id.
      */

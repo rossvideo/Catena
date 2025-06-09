@@ -60,7 +60,7 @@ class GetParam : public CallData {
      * @param dm - Address of the device to get the value from.
      * @param ok - Flag to check if the command was successfully executed.
      */ 
-    GetParam(ICatenaServiceImpl *service, IDevice& dm, bool ok);
+    GetParam(ICatenaServiceImpl *service, SlotMap& dms, bool ok);
 
     /**
      * @brief Manages the steps of the GetParam gRPC command
@@ -90,9 +90,9 @@ class GetParam : public CallData {
      */
     CallStatus status_;
     /**
-     * @brief The device to get the value from.
+     * @brief Map of slot numbers to device pointers.
      */
-    IDevice& dm_;
+    SlotMap dms_;
 
     /**
      * @brief The object's unique id.

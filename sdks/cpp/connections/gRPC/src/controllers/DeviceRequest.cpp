@@ -39,8 +39,8 @@ int DeviceRequest::objectCounter_ = 0;
  * Constructor which initializes and registers the current DeviceRequest
  * object, then starts the process
  */
-DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, IDevice& dm, bool ok)
-    : CallData(service), dm_{dm}, writer_(&context_),
+DeviceRequest::DeviceRequest(ICatenaServiceImpl *service, SlotMap& dms, bool ok)
+    : CallData(service), dms_{dms}, writer_(&context_),
         status_{ok ? CallStatus::kCreate : CallStatus::kFinish} {
     service_->registerItem(this);
     objectId_ = objectCounter_++;
@@ -74,41 +74,51 @@ void DeviceRequest::proceed(bool ok) {
          * and transitioning to kRead
          */
         case CallStatus::kProcess:
-            new DeviceRequest(service_, dm_, ok);  // to serve other clients
+            new DeviceRequest(service_, dms_, ok);  // to serve other clients
             context_.AsyncNotifyWhenDone(this);
 
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             try {
                 bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-                
-                // Setting up authorizer object.
-                if (service_->authorizationEnabled()) {
-                    // Authorizer throws an error if invalid jws token so no need to handle rc.
-                    sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
-                    authz_ = sharedAuthz_.get();
+
+                // Getting device at specified slot.
+                if (dms_.contains(req_.slot())) {
+                    dm_ = dms_.at(req_.slot());
+                }
+                // Making sure the device exists.
+                if (!dm_) {
+                    rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
-                    authz_ = &catena::common::Authorizer::kAuthzDisabled;
-                }
-
-                // req_.detail_level defaults to FULL
-                catena::Device_DetailLevel dl = req_.detail_level();
-
-                // Getting subscribed oids if dl == SUBSCRIPTIONS.
-                if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
-                    // Add new subscriptions to both the manager and our tracking list
-                    for (const auto& oid : req_.subscribed_oids()) {
-                        // Ignore the rc because it's annoying when it throws
-                        // an error for dublicate adds.
-                        catena::exception_with_status tmpRc{"", catena::StatusCode::OK};
-                        service_->getSubscriptionManager().addSubscription(oid, dm_, tmpRc);
+                
+                    // Setting up authorizer object.
+                    if (service_->authorizationEnabled()) {
+                        // Authorizer throws an error if invalid jws token so no need to handle rc.
+                        sharedAuthz_ = std::make_shared<catena::common::Authorizer>(jwsToken_());
+                        authz_ = sharedAuthz_.get();
+                    } else {
+                        authz_ = &catena::common::Authorizer::kAuthzDisabled;
                     }
-                    // Get service subscriptions from the manager
-                    subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(dm_);
-                }
 
-                // Getting the serializer object.
-                serializer_ = dm_.getComponentSerializer(*authz_, subscribedOids_, dl, shallowCopy);
+                    // req_.detail_level defaults to FULL
+                    catena::Device_DetailLevel dl = req_.detail_level();
+
+                    // Getting subscribed oids if dl == SUBSCRIPTIONS.
+                    if (dl == catena::Device_DetailLevel_SUBSCRIPTIONS) {
+                        // Add new subscriptions to both the manager and our tracking list
+                        for (const auto& oid : req_.subscribed_oids()) {
+                            // Ignore the rc because it's annoying when it throws
+                            // an error for dublicate adds.
+                            catena::exception_with_status tmpRc{"", catena::StatusCode::OK};
+                            service_->getSubscriptionManager().addSubscription(oid, *dm_, tmpRc);
+                        }
+                        // Get service subscriptions from the manager
+                        subscribedOids_ = service_->getSubscriptionManager().getAllSubscribedOids(*dm_);
+                    }
+
+                    // Getting the serializer object.
+                    serializer_ = dm_->getComponentSerializer(*authz_, subscribedOids_, dl, shallowCopy);
+                }
 
             // Likely authentication error, end process.
             } catch (catena::exception_with_status& err) {
@@ -142,7 +152,7 @@ void DeviceRequest::proceed(bool ok) {
             } else {
                 // Getting the next component.
                 try {     
-                    std::lock_guard lg(dm_.mutex());
+                    std::lock_guard lg(dm_->mutex());
                     component = serializer_->getNext();
                     status_ = serializer_->hasMore() ? CallStatus::kWrite : CallStatus::kPostWrite;
                 // ERROR

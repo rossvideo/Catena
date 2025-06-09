@@ -56,6 +56,8 @@
 namespace catena {
 namespace common {
 
+using SlotMap = std::unordered_map<uint32_t, IDevice*>;
+
 /**
  * @brief Interface class for Device.
  */
