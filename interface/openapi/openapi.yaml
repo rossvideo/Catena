@@ -68,6 +68,9 @@ paths:
   /{slot}/command/{fqoid}:
     $ref: './paths/Command.yaml'
 
+  /{slot}/command/{fqoid}/stream:
+    $ref: './paths/CommandStream.yaml'
+
   /{slot}/asset/{fqoid}:
     $ref: './paths/Asset.yaml'
 
