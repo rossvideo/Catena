@@ -171,7 +171,7 @@ TEST_F(RESTSocketReaderTests, SocketReader_EndpointDiscovery) {
  * TEST 7 - Testing parsing of commands endpoint.
  */
 TEST_F(RESTSocketReaderTests, SocketReader_EndpointCommands) {
-    testCall("POST", 1, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", "NONE", "en", "{test_json_body}");
+    testCall("POST", 0, "/commands", "/play", false, {{"respond", "true"}}, false, "", "*", "NONE", "en", "{test_json_body}");
 }
 
 /* 

@@ -38,11 +38,10 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
         catena::split(path, u.path(), "/");
         // Checking the url starts with "st2138-api/v1/"
         if (path.size() >= 4 && path[1] == "st2138-api" && path[2] == version) {
-            // If not "devices" or "health" then next segment should be a slot number.
-            if (path[3] == "devices" || path[3] == "health") {
-                endpoint_ = "/" + path[3];
-            } else {
+            try {
                 slot_ = std::stoi(path[3]);
+            } catch(...) {
+                endpoint_ = "/" + path[3];
             }
             // If the stream flag was added pop it from the path.
             if (path.back() == "stream") {
@@ -51,12 +50,14 @@ void SocketReader::read(tcp::socket& socket, bool authz, const std::string& vers
             }
             // Lastly getting the endpoint (if not already set) and the fqoid.
             if (path.size() > 4) {
+                uint32_t i = 4;
                 // First segment after "api/v1/slot" is the endpoint.
                 if (endpoint_.empty()) {
-                    endpoint_ = "/" + path[4];
+                    endpoint_ = "/" + path[i];
+                    i++;
                 }
                 // Everything after the endpoint is the fqoid.
-                for (int i = 5; i < path.size(); i++) {
+                for (i; i < path.size(); i++) {
                     fqoid_ += "/" + path.at(i);
                 }
             }
