@@ -30,91 +30,59 @@
 
 // connections/REST
 #include <controllers/UpdateSubscriptions.h>
+using catena::REST::UpdateSubscriptions;
 
-// type aliases
-using catena::common::ParamTag;
-using catena::common::Path;
-
-#include <iostream>
-#include <thread>
-#include <fstream>
-#include <vector>
-#include <iterator>
-#include <filesystem>
-#include <map>
-
-namespace catena::REST {
-
+// Initializes the object counter for UpdateSubscriptions to 0.
 int UpdateSubscriptions::objectCounter_ = 0;
 
 UpdateSubscriptions::UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm)
     : socket_(socket),
       context_(context),
       dm_(dm),
-      writer_(socket, context.origin()),
-      rc_("", catena::StatusCode::OK) {
+      writer_(socket, context.origin()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
-    try {
-        // Parse JSON body if present
-        if (!context_.jsonBody().empty()) {
-            absl::Status status = google::protobuf::util::JsonStringToMessage(
-                absl::string_view(context_.jsonBody()), &req_);
-            if (!status.ok()) {
-                rc_ = catena::exception_with_status("Failed to parse UpdateSubscriptionsPayload: " + status.ToString(), catena::StatusCode::INVALID_ARGUMENT);
-                finish();
-                return;
-            }
-        }
-    } catch (...) {
-        rc_ = catena::exception_with_status("Failed to parse fields", catena::StatusCode::INVALID_ARGUMENT);
-        finish();
-        return;
-    }
 }
 
 void UpdateSubscriptions::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
 
     try {
-        //I don't think authz is currently used in this controller
-        catena::common::Authorizer* authz;
-        std::shared_ptr<catena::common::Authorizer> sharedAuthz;
-        if (context_.authorizationEnabled()) {
-            sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
-            authz = sharedAuthz.get();
+        // Parsing JSON body.
+        catena::UpdateSubscriptionsPayload req;
+        absl::Status status = google::protobuf::util::JsonStringToMessage(
+        absl::string_view(context_.jsonBody()), &req);
+        if (!status.ok()) {
+            rc = catena::exception_with_status("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
         } else {
-            authz = &catena::common::Authorizer::kAuthzDisabled;
-        }
+            // Supressing errors.
+            catena::exception_with_status supressErr{"", catena::StatusCode::OK};
 
-        // Process removed OIDs
-        for (const auto& oid : req_.removed_oids()) {     
-            if (!context_.getSubscriptionManager().removeSubscription(oid, dm_, rc_)) {
-                break;
+            // Processing removed OIDs
+            for (const auto& oid : req.removed_oids()) {     
+                context_.getSubscriptionManager().removeSubscription(oid, dm_, supressErr);
+            }
+
+            // Processing added OIDs
+            for (const auto& oid : req.added_oids()) {
+                context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr);
             }
         }
-
-        // Process added OIDs
-        for (const auto& oid : req_.added_oids()) {
-            if (!context_.getSubscriptionManager().addSubscription(oid, dm_, rc_)) {
-                break;
-            }
-        }
-
-    } catch (const catena::exception_with_status& e) {
-        rc_ = catena::exception_with_status(e.what(), e.status);
-    } catch (const std::exception& e) {
-        rc_ = catena::exception_with_status(e.what(), catena::StatusCode::UNKNOWN);
+    // ERROR
+    } catch (const catena::exception_with_status& err) {
+        rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& err) {
+        rc = catena::exception_with_status(err.what(), catena::StatusCode::UNKNOWN);
+    } catch (...) {
+        rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
 
-    finish();
+    // Finishing by writing rc to client.
+    writer_.sendResponse(rc);
 }
 
 void UpdateSubscriptions::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
     std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
-    writer_.sendResponse(rc_);
-    socket_.close();
 }
-
-} // namespace catena::REST 

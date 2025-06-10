@@ -112,10 +112,11 @@ class UpdateSubscriptions : public CallData {
     catena::common::Authorizer* authz_;
     /**
      * @brief The set of currently subscribed OIDs from sub manager.
-     * 
-     * Used similarly to a stack in the kwrite step.
      */
     std::set<std::string> subbedOids_{};
+    /**
+     * @brief Iterator for the set of subscribed OIDs.
+     */
     std::set<std::string>::iterator it_;
 
     /**

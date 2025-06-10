@@ -94,19 +94,6 @@ public:
 
 private:
     /**
-     * @brief Helper method to process a subscription
-     * @param baseOid The base OID 
-     * @param authz The authorizer to use for access control
-     */
-    void processSubscription_(const std::string& baseOid, catena::common::Authorizer& authz);
-
-    /**
-     * @brief Helper method to send all currently subscribed parameters
-     * @param authz The authorizer to use for access control
-     */
-    void sendSubscribedParameters_(catena::common::Authorizer& authz);
-
-    /**
      * @brief Helper function to write status messages to the API console.
      * 
      * @param status The current state of the RPC (kCreate, kFinish, etc.)
@@ -123,66 +110,27 @@ private:
      * @brief The socket to write the response to.
      */
     tcp::socket& socket_;
-
     /**
      * @brief The ISocketReader object.
      */
     ISocketReader& context_;
-
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
-
+    SocketWriter writer_;
     /**
-     * @brief The request payload
-     */
-    catena::UpdateSubscriptionsPayload req_;
-
-    /**
-     * @brief The response payload for a single response
-     */
-    catena::DeviceComponent_ComponentParam res_;
-
-    /**
-     * @brief Vector to store all responses to be sent
-     */
-    std::vector<catena::DeviceComponent_ComponentParam> responses_;
-
-    /**
-     * @brief Current response index being processed
-     */
-    uint32_t current_response_{0};
-
-    /**
-     * @brief The object's unique id counter
-     */
-    static int objectCounter_;
-
-    /**
-     * @brief The object's unique id
-     */
-    int objectId_;
-
-    /**
-     * @brief The mutex for the writer lock
-     */
-    std::mutex mtx_;
-
-    /**
-     * @brief The writer lock
-     */
-    std::unique_lock<std::mutex> writer_lock_{mtx_, std::defer_lock};
-
-    /**
-     * @brief The device model
+     * @brief The device to set subscriptions of.
      */
     IDevice& dm_;
-    
+
     /**
-     * @brief The error status
+     * @brief ID of the UpdateSubscriptions object
      */
-    catena::exception_with_status rc_;
+    int objectId_;
+    /**
+     * @brief The total # of UpdateSubscriptions objects.
+     */
+    static int objectCounter_;
 };
 
 } // namespace REST 
