@@ -94,17 +94,6 @@ public class CatenaServer extends CatenaServiceImplBase
             }
         }
     }
-
-    // @Override
-    // public StreamObserver<ExecuteCommandPayload> createStreamObserver(ExecuteCommandPayload firstMessage, StreamObserver<CommandResponse> responseStream)
-    // {
-    //     CatenaDevice device = getDevice(firstMessage.getSlot());
-    //     if (device != null)
-    //     {
-    //         return device.executeCommand(firstMessage, responseStream, getClaims());
-    //     }
-    //     return null;
-    // }
     
     private CatenaDevice getDevice(int slot)
     {
