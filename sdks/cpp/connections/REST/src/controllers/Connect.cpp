@@ -17,7 +17,6 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
 
     // Set detail level from context
     detailLevel_ = context_.detailLevel();
-    dm_.detail_level(detailLevel_);
 }
 
 void Connect::proceed() {

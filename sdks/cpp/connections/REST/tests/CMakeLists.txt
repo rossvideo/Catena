@@ -22,19 +22,7 @@ set(SOURCES
     GetParam_test.cpp
     BasicParamInfoRequest_test.cpp
     ExecuteCommand_test.cpp
-
-    ../src/SocketReader.cpp
-    ../src/SocketWriter.cpp
-    ../src/controllers/GetValue.cpp
-    ../src/controllers/AddLanguage.cpp
-    ../src/controllers/LanguagePackRequest.cpp
-    ../src/controllers/ListLanguages.cpp
-    ../src/controllers/GetPopulatedSlots.cpp
-    ../src/controllers/MultiSetValue.cpp
-    ../src/controllers/SetValue.cpp
-    ../src/controllers/GetParam.cpp
-    ../src/controllers/BasicParamInfoRequest.cpp
-    ../src/controllers/ExecuteCommand.cpp
+    Connect_test.cpp
 )	
 
 add_executable(${This} ${SOURCES})	
