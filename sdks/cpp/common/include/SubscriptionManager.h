@@ -86,7 +86,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    const std::set<std::string>& getAllSubscribedOids(IDevice& dm) override;
+    std::set<std::string> getAllSubscribedOids(IDevice& dm) override;
 
     /**
      * @brief Check if an OID is a wildcard subscription

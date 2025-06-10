@@ -168,7 +168,7 @@ class MockSubscriptionManager : public ISubscriptionManager {
   public:
       MOCK_METHOD(bool, addSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
       MOCK_METHOD(bool, removeSubscription, (const std::string& oid, IDevice& dm, exception_with_status& rc), (override));
-      MOCK_METHOD(const std::set<std::string>&, getAllSubscribedOids, (IDevice& dm), (override));
+      MOCK_METHOD(std::set<std::string>, getAllSubscribedOids, (IDevice& dm), (override));
       MOCK_METHOD(bool, isWildcard, (const std::string& oid), (override));
 };
 

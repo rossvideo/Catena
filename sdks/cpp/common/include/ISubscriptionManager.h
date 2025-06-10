@@ -80,7 +80,7 @@ public:
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    virtual const std::set<std::string>& getAllSubscribedOids(IDevice& dm) = 0;
+    virtual std::set<std::string> getAllSubscribedOids(IDevice& dm) = 0;
 
     /**
      * @brief Check if an OID is a wildcard subscription
