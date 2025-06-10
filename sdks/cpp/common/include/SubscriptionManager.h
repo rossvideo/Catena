@@ -102,11 +102,6 @@ private:
     mutable std::mutex mtx_;
 
     /**
-     * @brief Lock for protecting subscription data access
-     */
-    mutable std::unique_lock<std::mutex> subscriptionLock_{mtx_, std::defer_lock};
-
-    /**
      * @brief Visitor class for collecting subscribed OIDs
      */
     class SubscriptionVisitor : public catena::common::IParamVisitor {

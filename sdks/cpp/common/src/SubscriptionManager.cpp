@@ -44,72 +44,69 @@ namespace common {
 
 // Add a subscription (unique or wildcard)
 bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) {
-    subscriptionLock_.lock();
+    std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
-    
-    // First check if the OID exists in the device model
-    std::unique_ptr<IParam> param;
-    {
-        std::lock_guard lg(dm.mutex());
-        param = dm.getParam(oid, rc);
-    }
-    
-    if (!param) {
-        rc = catena::exception_with_status("OID not found: " + oid, 
-                                         catena::StatusCode::NOT_FOUND);
-        subscriptionLock_.unlock();
-        return false;
-    }
+    bool wildcard = isWildcard(oid);
+    std::string baseOid;
+    std::unique_ptr<IParam> param = nullptr;
 
-    // Check for duplicate subscription
-    if (!isWildcard(oid) && subscriptions_.find(oid) != subscriptions_.end()) {
-        rc = catena::exception_with_status("Subscription already exists for OID: " + oid,
-                                         catena::StatusCode::ALREADY_EXISTS);
-        subscriptionLock_.unlock();
-        return false;
-    }
-
-    if (isWildcard(oid)) {
-        // Expand wildcard and add all matching OIDs
-        std::string basePath = oid.substr(0, oid.length() - 2);
-        if (param->getOid() == basePath) {
-            SubscriptionVisitor visitor(subscriptions_);
-            ParamVisitor::traverseParams(param.get(), basePath, dm, visitor);
-        } else {
-            std::vector<std::unique_ptr<IParam>> allParams;
-            {
-                std::lock_guard lg(dm.mutex());
-                allParams = dm.getTopLevelParams(rc);
-            }
-            for (auto& param : allParams) {
-                std::string paramOid = param->getOid();
-                if (paramOid.find(basePath) == 0) {
-                    if (paramOid.length() == basePath.length() || 
-                        paramOid[basePath.length()] == '/') {
-                        SubscriptionVisitor visitor(subscriptions_);
-                        ParamVisitor::traverseParams(param.get(), paramOid, dm, visitor);
-                    }
-                }
-            }
-        }
+    // Getting base Oid if wildcard.
+    if (wildcard) {
+        baseOid = oid.substr(0, oid.length() - 2);
     } else {
-        subscriptions_.insert(oid);
+        baseOid = oid;
     }
-    subscriptionLock_.unlock();
-    return true;
+
+    // Making sure the oid exists unless client is subbing to all params.
+    if (!wildcard || oid != "/*") {
+        std::lock_guard lg(dm.mutex());
+        param = dm.getParam(baseOid, rc);
+    }
+
+    // Normal case.
+    if (!wildcard && param) {
+        // Add the subscription if it doesn't already exist.
+        if (!subscriptions_.contains(baseOid)) {
+            subscriptions_.insert(baseOid);
+        // Subscription already exists.
+        } else {
+            rc = catena::exception_with_status("Subscription already exists for OID: " + baseOid, catena::StatusCode::ALREADY_EXISTS);
+        }
+    
+    // Add all sub params case.
+    } else if (wildcard && param) {
+        SubscriptionVisitor visitor(subscriptions_);
+        ParamVisitor::traverseParams(param.get(), baseOid, dm, visitor);
+
+    // Add all params case.
+    } else if (wildcard && oid == "/*") {
+        std::vector<std::unique_ptr<IParam>> allParams;
+        {
+            std::lock_guard lg(dm.mutex());
+            allParams = dm.getTopLevelParams(rc);
+        }
+        for (auto& param : allParams) {
+            SubscriptionVisitor visitor(subscriptions_);
+            ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor);
+        }
+    }
+
+    return rc.status == catena::StatusCode::OK;
 }
 
-// Remove a subscription (either unique or wildcard)
 bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm, catena::exception_with_status& rc) {
-    subscriptionLock_.lock();
+    // Remove a subscription (either unique or wildcard)
+    std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
+
+    // Wildcard case.
     if (isWildcard(oid)) {
         // Expand wildcard and remove all matching OIDs
         std::string basePath = oid.substr(0, oid.length() - 2);
         bool found = false;
         auto it = subscriptions_.begin();
         while (it != subscriptions_.end()) {
-            if (it->find(basePath) == 0) {
+            if (it->starts_with(basePath)) {
                 it = subscriptions_.erase(it);
                 found = true;
             } else {
@@ -117,25 +114,19 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm
             }
         }
         if (!found) {
-            rc = catena::exception_with_status("Subscription not found for OID: " + oid, 
-                                             catena::StatusCode::NOT_FOUND);
-            subscriptionLock_.unlock();
-            return false;
+            rc = catena::exception_with_status("Subscription not found for OID: " + oid, catena::StatusCode::NOT_FOUND);
         }
-        subscriptionLock_.unlock();
-        return true;
+    // Normal case.
     } else {
-        auto ait = subscriptions_.find(oid);
-        if (ait != subscriptions_.end()) {
-            subscriptions_.erase(ait);
-            subscriptionLock_.unlock();
-            return true;
+        auto it = subscriptions_.find(oid);
+        if (it != subscriptions_.end()) {
+            subscriptions_.erase(it);
+        } else {
+            rc = catena::exception_with_status("Subscription not found for OID: " + oid, catena::StatusCode::NOT_FOUND);
         }
-        rc = catena::exception_with_status("Subscription not found for OID: " + oid, 
-                                         catena::StatusCode::NOT_FOUND);
-        subscriptionLock_.unlock();
-        return false;
     }
+
+    return rc.status == catena::StatusCode::OK;
 }
 
 // Get all subscribed OIDs
