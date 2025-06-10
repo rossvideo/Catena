@@ -114,9 +114,9 @@ Collaboration diagram for catena::REST::SocketWriter:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a24ac760e7dc534056d4b33516090b99b" id="r_a24ac760e7dc534056d4b33516090b99b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#a24ac760e7dc534056d4b33516090b99b">SocketWriter</a> (tcp::socket &amp;socket, const std::string &amp;origin=&quot;*&quot;, bool buffer=false)</td></tr>
-<tr class="memdesc:a24ac760e7dc534056d4b33516090b99b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a>.  <br /></td></tr>
-<tr class="separator:a24ac760e7dc534056d4b33516090b99b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab76d5dd1228f6f4a8b16c8b0a13bcd9a" id="r_ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#ab76d5dd1228f6f4a8b16c8b0a13bcd9a">SocketWriter</a> (tcp::socket &amp;socket, const std::string &amp;origin=&quot;*&quot;)</td></tr>
+<tr class="memdesc:ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a <a class="el" href="classcatena_1_1REST_1_1SocketWriter.html" title="Helper class used to write a unary response to a socket using boost.">SocketWriter</a>.  <br /></td></tr>
+<tr class="separator:ab76d5dd1228f6f4a8b16c8b0a13bcd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af02f381664cc47015fb639b691908b29" id="r_af02f381664cc47015fb639b691908b29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1SocketWriter.html#af02f381664cc47015fb639b691908b29">sendResponse</a> (const <a class="el" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> &amp;err, const google::protobuf::Message &amp;msg=catena::Empty()) override</td></tr>
 <tr class="memdesc:af02f381664cc47015fb639b691908b29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finishes writing the HTTP response.  <br /></td></tr>
 <tr class="separator:af02f381664cc47015fb639b691908b29"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,8 +142,8 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><p>Helper class used to write a unary response to a socket using boost. </p>
 <p>This writer buffers the response until a call to finish() is made. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a24ac760e7dc534056d4b33516090b99b" name="a24ac760e7dc534056d4b33516090b99b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24ac760e7dc534056d4b33516090b99b">&#9670;&#160;</a></span>SocketWriter()</h2>
+<a id="ab76d5dd1228f6f4a8b16c8b0a13bcd9a" name="ab76d5dd1228f6f4a8b16c8b0a13bcd9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab76d5dd1228f6f4a8b16c8b0a13bcd9a">&#9670;&#160;</a></span>SocketWriter()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,13 +161,7 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>origin</em> = <code>&quot;*&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>buffer</em> = <code>false</code>&#160;</td>
+          <td class="paramname"><em>origin</em> = <code>&quot;*&quot;</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -187,7 +181,6 @@ Public Member Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">socket</td><td>The socket to write to. </td></tr>
     <tr><td class="paramname">origin</td><td>The origin of the request. </td></tr>
-    <tr><td class="paramname">buffer</td><td>Flag indicating whether to buffer a multi-message response. </td></tr>
   </table>
   </dd>
 </dl>
