@@ -121,9 +121,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7392a7e99a6fbccbad470a0faafaac55" id="r_a7392a7e99a6fbccbad470a0faafaac55"><td class="memItemLeft" align="right" valign="top"><a id="a7392a7e99a6fbccbad470a0faafaac55" name="a7392a7e99a6fbccbad470a0faafaac55"></a>
 <a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a> &amp;&amp;)=default</td></tr>
 <tr class="separator:a7392a7e99a6fbccbad470a0faafaac55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e3b104b6494845a0fe4dcb2df09d605" id="r_a6e3b104b6494845a0fe4dcb2df09d605"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a6e3b104b6494845a0fe4dcb2df09d605">read</a> (tcp::socket &amp;socket, bool authz=false)=0</td></tr>
-<tr class="memdesc:a6e3b104b6494845a0fe4dcb2df09d605"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
-<tr class="separator:a6e3b104b6494845a0fe4dcb2df09d605"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ac83c85296cc1ef23d62dd51a409802" id="r_a5ac83c85296cc1ef23d62dd51a409802"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a5ac83c85296cc1ef23d62dd51a409802">read</a> (tcp::socket &amp;socket, bool authz=false, const std::string &amp;version=&quot;v1&quot;)=0</td></tr>
+<tr class="memdesc:a5ac83c85296cc1ef23d62dd51a409802"><td class="mdescLeft">&#160;</td><td class="mdescRight">Populates variables using information read from the inputted socket.  <br /></td></tr>
+<tr class="separator:a5ac83c85296cc1ef23d62dd51a409802"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2324ffe58b754f328bc3402fb73b9e97" id="r_a2324ffe58b754f328bc3402fb73b9e97"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97">method</a> () const =0</td></tr>
 <tr class="memdesc:a2324ffe58b754f328bc3402fb73b9e97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the HTTP method of the request.  <br /></td></tr>
 <tr class="separator:a2324ffe58b754f328bc3402fb73b9e97"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,9 +148,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a861883ac9aa268d15940886780aff1b3" id="r_a861883ac9aa268d15940886780aff1b3"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a861883ac9aa268d15940886780aff1b3">origin</a> () const =0</td></tr>
 <tr class="memdesc:a861883ac9aa268d15940886780aff1b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the origin of the request.  <br /></td></tr>
 <tr class="separator:a861883ac9aa268d15940886780aff1b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5314331e7d51be708fe40354e5beaf0c" id="r_a5314331e7d51be708fe40354e5beaf0c"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a5314331e7d51be708fe40354e5beaf0c">language</a> () const =0</td></tr>
-<tr class="memdesc:a5314331e7d51be708fe40354e5beaf0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the language to return the response in.  <br /></td></tr>
-<tr class="separator:a5314331e7d51be708fe40354e5beaf0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73e5c7392324c163c6053c62594738dd" id="r_a73e5c7392324c163c6053c62594738dd"><td class="memItemLeft" align="right" valign="top">virtual catena::Device_DetailLevel&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a73e5c7392324c163c6053c62594738dd">detailLevel</a> () const =0</td></tr>
 <tr class="memdesc:a73e5c7392324c163c6053c62594738dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the detail level to return the response in.  <br /></td></tr>
 <tr class="separator:a73e5c7392324c163c6053c62594738dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -160,6 +157,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0f8e7c0c63daa9870a48ce65c7e579a1" id="r_a0f8e7c0c63daa9870a48ce65c7e579a1"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a0f8e7c0c63daa9870a48ce65c7e579a1">authorizationEnabled</a> () const =0</td></tr>
 <tr class="memdesc:a0f8e7c0c63daa9870a48ce65c7e579a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if authorization is enabled.  <br /></td></tr>
 <tr class="separator:a0f8e7c0c63daa9870a48ce65c7e579a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa2b511fab5a7b26754671a12d6225e1" id="r_afa2b511fab5a7b26754671a12d6225e1"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#afa2b511fab5a7b26754671a12d6225e1">stream</a> () const =0</td></tr>
+<tr class="memdesc:afa2b511fab5a7b26754671a12d6225e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the client wants a stream response.  <br /></td></tr>
+<tr class="separator:afa2b511fab5a7b26754671a12d6225e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f5c47bbccfa97b9333eab154844ea84" id="r_a2f5c47bbccfa97b9333eab154844ea84"><td class="memItemLeft" align="right" valign="top">virtual const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1REST_1_1ISocketReader.html#a2f5c47bbccfa97b9333eab154844ea84">EOPath</a> () const =0</td></tr>
 <tr class="memdesc:a2f5c47bbccfa97b9333eab154844ea84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the path to the external object.  <br /></td></tr>
 <tr class="separator:a2f5c47bbccfa97b9333eab154844ea84"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -475,35 +475,6 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5314331e7d51be708fe40354e5beaf0c" name="a5314331e7d51be708fe40354e5beaf0c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5314331e7d51be708fe40354e5beaf0c">&#9670;&#160;</a></span>language()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual const std::string &amp; catena::REST::ISocketReader::language </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns the language to return the response in. </p>
-
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a59e5e35b9b9d421e186252caf9bd552b">catena::REST::SocketReader</a>.</p>
-
-</div>
-</div>
 <a id="a2324ffe58b754f328bc3402fb73b9e97" name="a2324ffe58b754f328bc3402fb73b9e97"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2324ffe58b754f328bc3402fb73b9e97">&#9670;&#160;</a></span>method()</h2>
 
@@ -562,8 +533,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6e3b104b6494845a0fe4dcb2df09d605" name="a6e3b104b6494845a0fe4dcb2df09d605"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6e3b104b6494845a0fe4dcb2df09d605">&#9670;&#160;</a></span>read()</h2>
+<a id="a5ac83c85296cc1ef23d62dd51a409802" name="a5ac83c85296cc1ef23d62dd51a409802"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5ac83c85296cc1ef23d62dd51a409802">&#9670;&#160;</a></span>read()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -581,7 +552,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>authz</em> = <code>false</code>&#160;</td>
+          <td class="paramname"><em>authz</em> = <code>false</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>version</em> = <code>&quot;v1&quot;</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -605,7 +582,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#af2bcedddfd452f6c746058477dd3258c">catena::REST::SocketReader</a>.</p>
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#a706a463ec32c41305a1c8da137a7ce70">catena::REST::SocketReader</a>.</p>
 
 </div>
 </div>
@@ -635,6 +612,35 @@ Public Member Functions</h2></td></tr>
 <p>Returns the slot of the device to make the API call on. </p>
 
 <p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#aa77a5dcf3caf0ae527fa88e73dc3fdf1">catena::REST::SocketReader</a>.</p>
+
+</div>
+</div>
+<a id="afa2b511fab5a7b26754671a12d6225e1" name="afa2b511fab5a7b26754671a12d6225e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa2b511fab5a7b26754671a12d6225e1">&#9670;&#160;</a></span>stream()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool catena::REST::ISocketReader::stream </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns true if the client wants a stream response. </p>
+
+<p>Implemented in <a class="el" href="classcatena_1_1REST_1_1SocketReader.html#ab8e5d7003da0cf636e385a81a72a41cb">catena::REST::SocketReader</a>.</p>
 
 </div>
 </div>
