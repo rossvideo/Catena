@@ -1,6 +1,5 @@
 
 #include <SocketReader.h>
-#include "ServiceImpl.h"
 using catena::REST::SocketReader;
 
 namespace catena {
@@ -9,18 +8,20 @@ namespace REST {
 SocketReader::SocketReader(catena::common::ISubscriptionManager& subscriptionManager, const std::string& EOPath) 
     : subscriptionManager_(subscriptionManager), EOPath_(EOPath) {}
 
-void SocketReader::read(tcp::socket& socket, bool authz) {
+void SocketReader::read(tcp::socket& socket, bool authz, const std::string& version) {
     // Resetting variables.
     method_ = "";
+    slot_ = 0;
     endpoint_ = "";
     fqoid_ = "";
-    jwsToken_ = "";
+    stream_ = false;
     origin_ = "";
-    jsonBody_ = "";
     detailLevel_ = Device_DetailLevel_UNSET;
+    jwsToken_ = "";
+    jsonBody_ = "";
     authorizationEnabled_ = authz;
 
-    // Reading the headers.
+    // Reading from the socket.
     boost::asio::streambuf buffer;
     boost::asio::read_until(socket, buffer, "\r\n\r\n");
     std::istream header_stream(&buffer);
@@ -32,26 +33,36 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
     std::istringstream(header) >> method_ >> url >> httpVersion;
     url_view u(url);
 
-    // Extracting endpoint_ and slot_ from the url (ex: v1/GetValue/{slot}).
-    // Slot is not needed for GetPopulatedSlots and Connect.
-    std::string path = u.path();
     try {
-        std::vector<std::string> parts;
-        catena::split(parts, path, "/");
-        if (parts.size() > 2) {
-            slot_ = std::stoi(parts.at(2));
-        }
-
-        if (parts.size() > 3) {
-            endpoint_ = "/" + parts.at(3);
-        }
-
-        //parse fqoid
-        if (parts.back() == "stream") {
-            parts.pop_back();
-        }
-        for (int i = 4; i < parts.size(); i++) {
-            fqoid_ += "/" + parts.at(i);
+        std::vector<std::string> path;
+        catena::split(path, u.path(), "/");
+        // Checking the url starts with "st2138-api/v1/"
+        if (path.size() >= 4 && path[1] == "st2138-api" && path[2] == version) {
+            try {
+                slot_ = std::stoi(path[3]);
+            } catch(...) {
+                endpoint_ = "/" + path[3];
+            }
+            // If the stream flag was added pop it from the path.
+            if (path.back() == "stream") {
+                path.pop_back();
+                stream_ = true;
+            }
+            // Lastly getting the endpoint (if not already set) and the fqoid.
+            if (path.size() > 4) {
+                uint32_t i = 4;
+                // First segment after "api/v1/slot" is the endpoint.
+                if (endpoint_.empty()) {
+                    endpoint_ = "/" + path[i];
+                    i++;
+                }
+                // Everything after the endpoint is the fqoid.
+                for (i; i < path.size(); i++) {
+                    fqoid_ += "/" + path.at(i);
+                }
+            }
+        } else {
+            throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);
         }
     } catch (...) {
         throw catena::exception_with_status("Invalid URL", catena::StatusCode::INVALID_ARGUMENT);
@@ -75,11 +86,6 @@ void SocketReader::read(tcp::socket& socket, bool authz) {
         // Getting origin
         else if (origin_.empty() && header.starts_with("Origin: ")) {
             origin_ = header.substr(std::string("Origin: ").length());
-        }
-        // Getting language
-        else if (language_.empty() && header.starts_with("Language: ")) {
-            language_ = header.substr(std::string("Language: ").length());
-            language_.erase(language_.length() - 1); // Removing newline.
         }
         // Getting detail level from header
         else if (detailLevel_ == Device_DetailLevel_UNSET && header.starts_with("Detail-Level: ")) {
