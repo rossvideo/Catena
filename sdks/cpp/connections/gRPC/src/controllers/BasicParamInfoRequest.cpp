@@ -43,18 +43,13 @@ BasicParamInfoRequest::BasicParamInfoRequest(ICatenaServiceImpl *service, IDevic
 }
 
 void BasicParamInfoRequest::proceed(bool ok) {
-    if (!service_)
-        return;
-
     std::cout << "BasicParamInfoRequest proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
               << std::endl;
 
-    if(!ok) {
+    if(!ok){
         std::cout << "BasicParamInfoRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
-        service_->deregisterItem(this);
-        return;
     }
 
     switch (status_) {

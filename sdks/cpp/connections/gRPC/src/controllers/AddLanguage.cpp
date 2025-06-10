@@ -48,6 +48,7 @@ void AddLanguage::proceed(bool ok) {
               << std::boolalpha << ok << std::endl;
     
     if(!ok){
+        std::cout << "AddLanguage[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
     

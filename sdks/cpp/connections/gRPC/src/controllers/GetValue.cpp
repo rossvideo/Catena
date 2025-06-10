@@ -53,6 +53,7 @@ void GetValue::proceed( bool ok) {
                 << std::endl;
 
     if(!ok){
+        std::cout << "GetValue[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
 

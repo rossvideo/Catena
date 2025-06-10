@@ -53,6 +53,7 @@ void GetPopulatedSlots::proceed( bool ok) {
                 << std::endl;
 
     if(!ok){
+        std::cout << "GetPopulatedSlots[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
 

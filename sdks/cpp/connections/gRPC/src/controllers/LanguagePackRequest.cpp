@@ -47,8 +47,10 @@ void LanguagePackRequest::proceed(bool ok) {
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
     if(!ok){
+        std::cout << "LanguagePackRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
+
     switch(status_){
         /** 
          * kCreate: Updates status to kProcess and requests the

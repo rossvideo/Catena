@@ -103,6 +103,7 @@ class Connect : public ICallData, public catena::common::Connect {
      * open connections to be shut down.
      */
     static vdk::signal<void()> shutdownSignal_;
+    
   private:
     /**
      * @brief Helper function to write status messages to the API console.

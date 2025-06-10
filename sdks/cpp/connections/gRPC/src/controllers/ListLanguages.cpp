@@ -47,6 +47,7 @@ void ListLanguages::proceed(bool ok) {
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
     if(!ok){
+        std::cout << "ListLanguages[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
     switch(status_){

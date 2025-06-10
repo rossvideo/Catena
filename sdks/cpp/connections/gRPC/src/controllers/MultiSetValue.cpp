@@ -60,6 +60,7 @@ void MultiSetValue::proceed(bool ok) {
                 << std::endl;
     
     if(!ok){
+        std::cout << typeName << "[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
     
