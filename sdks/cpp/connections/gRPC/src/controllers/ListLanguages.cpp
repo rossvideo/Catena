@@ -69,14 +69,16 @@ void ListLanguages::proceed(bool ok) {
             { // rc scope
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             catena::LanguageList ans;
-            try { // Getting and returning languages.
+            try {
                 IDevice* dm = nullptr;
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
                 }
+                // Making sure the device exists.
                 if (!dm) {
                     rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+                // Getting and returning languages.
                 } else {
                     std::lock_guard lg(dm->mutex());
                     dm->toProto(ans);

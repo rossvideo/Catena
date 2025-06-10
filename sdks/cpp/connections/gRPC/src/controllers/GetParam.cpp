@@ -93,8 +93,11 @@ void GetParam::proceed( bool ok) {
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
                 }
+                
+                // Making sure the device exists.
                 if (!dm) {
                     rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
                 } else {
                     // Creating authorizer.
                     if (service_->authorizationEnabled()) {

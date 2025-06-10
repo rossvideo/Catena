@@ -70,14 +70,17 @@ void LanguagePackRequest::proceed(bool ok) {
             catena::exception_with_status rc{"", catena::StatusCode::OK};
             catena::DeviceComponent_ComponentLanguagePack ans;
             IDevice* dm = nullptr;
-            // Getting and returning the requested language.
             try {
                 // Getting device at specified slot.
                 if (dms_.contains(req_.slot())) {
                     dm = dms_.at(req_.slot());
                 }
+
+                // Making sure the device exists.
                 if (!dm) {
                     rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
+                // Getting and returning the requested language.
                 } else {
                     std::lock_guard lg(dm->mutex());
                     rc = dm->getLanguagePack(req_.language(), ans);

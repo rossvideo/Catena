@@ -89,8 +89,8 @@ void DeviceRequest::proceed(bool ok) {
                 // Making sure the device exists.
                 if (!dm_) {
                     rc = catena::exception_with_status("device not found in slot " + std::to_string(req_.slot()), catena::StatusCode::NOT_FOUND);
+
                 } else {
-                
                     // Setting up authorizer object.
                     if (service_->authorizationEnabled()) {
                         // Authorizer throws an error if invalid jws token so no need to handle rc.

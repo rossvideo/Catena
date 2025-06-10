@@ -90,6 +90,7 @@ void MultiSetValue::proceed(bool ok) {
                 if (dms_.contains(reqs_.slot())) {
                     dm = dms_.at(reqs_.slot());
                 }
+                // Making sure the device exists.
                 if (!dm) {
                     rc = catena::exception_with_status("device not found in slot " + std::to_string(reqs_.slot()), catena::StatusCode::NOT_FOUND);
                 } else {
