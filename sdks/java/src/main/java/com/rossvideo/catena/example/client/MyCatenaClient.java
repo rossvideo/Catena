@@ -2,15 +2,17 @@ package com.rossvideo.catena.example.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Iterator;
 
 import javax.net.ssl.SSLException;
 
-//import com.rossvideo.catena.example.client.command.ClientPushFileResponseHandler;
-//import com.rossvideo.catena.example.client.command.ClientReceiveFileResponseHandler;
-//import com.rossvideo.catena.example.client.command.CommandResponseHandler;
+import com.rossvideo.catena.datapayload.DataPayloadBuilder;
 
 import catena.core.device.DeviceRequestPayload;
+import catena.core.parameter.CommandResponse;
+import catena.core.parameter.DataPayload;
 import catena.core.parameter.ExecuteCommandPayload;
 import catena.core.parameter.GetValuePayload;
 import catena.core.parameter.SetValuePayload;
@@ -18,7 +20,6 @@ import catena.core.parameter.SingleSetValuePayload;
 import catena.core.parameter.Value;
 import catena.core.service.CatenaServiceGrpc;
 import catena.core.service.CatenaServiceGrpc.CatenaServiceBlockingStub;
-import catena.core.service.CatenaServiceGrpc.CatenaServiceStub;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -27,22 +28,22 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
-import io.grpc.stub.StreamObserver;
 
 public class MyCatenaClient implements AutoCloseable {
     private final String hostname;
     private final int port;
     private CatenaServiceBlockingStub blockingStub; // Used for unary and server side streaming calls
-    private CatenaServiceStub asyncStub; // Used for client-side and bi-directional streaming calls
     private ManagedChannel channel;
     private File workingDirectory;
     private boolean secure;
+    private CommandResponseHandler commandResponseHandler;
 
     public MyCatenaClient(String hostname, int port, File workingDirectory, boolean secure) {
         this.hostname = hostname;
         this.port = port;
         this.secure = secure;
         setWorkingDirectory(workingDirectory);
+        commandResponseHandler = new CommandResponseHandler(workingDirectory);
     }
     
     public void setWorkingDirectory(File workingDirectory)
@@ -64,7 +65,6 @@ public class MyCatenaClient implements AutoCloseable {
 
             
             blockingStub = CatenaServiceGrpc.newBlockingStub(channel);
-            asyncStub = CatenaServiceGrpc.newStub(channel);
         }
     }
 
@@ -103,7 +103,6 @@ public class MyCatenaClient implements AutoCloseable {
         }
         channel = null;
         blockingStub = null;
-        asyncStub = null;
     }
 
     public void setValue(String oid, int slotNumber, int value) {
@@ -128,41 +127,71 @@ public class MyCatenaClient implements AutoCloseable {
     }
 
     public void executeCommand(String oid, int slot, int value, boolean respond) {
-        executeCommand(oid, slot, Value.newBuilder().setInt32Value(value).build(), respond);
+        try {
+            Value requestValue = Value.newBuilder().setInt32Value(value).build();
+            Iterator<CommandResponse>  responses = executeCommand(oid, slot, requestValue, respond);
+            responses.forEachRemaining(commandResponseHandler::printCommandResponse);
+        } catch (StatusRuntimeException exception) {
+            printStatusRuntimeException("executeCommand", exception);
+        }
     }
 
     public void executeCommand(String oid, int slot, float value, boolean respond) {
-        executeCommand(oid, slot, Value.newBuilder().setFloat32Value(value).build(), respond);
+        try {
+            Value requestValue = Value.newBuilder().setFloat32Value(value).build();
+            Iterator<CommandResponse>  responses = executeCommand(oid, slot, requestValue, respond);
+            responses.forEachRemaining(commandResponseHandler::printCommandResponse);
+        } catch (StatusRuntimeException exception) {
+            printStatusRuntimeException("executeCommand", exception);
+        }
     }
 
     public void executeCommand(String oid, int slot, String value, boolean respond) {
-        executeCommand(oid, slot, Value.newBuilder().setStringValue(value).build(), respond);
+        try {
+            Value requestValue = Value.newBuilder().setStringValue(value).build();
+            Iterator<CommandResponse>  responses = executeCommand(oid, slot, requestValue, respond);
+            responses.forEachRemaining(commandResponseHandler::printCommandResponse);
+        } catch (StatusRuntimeException exception) {
+            printStatusRuntimeException("executeCommand", exception);
+        }
     }
 
-    public void executeCommand(String oid, int slot, Value value, boolean respond) {
-        // StreamObserver<ExecuteCommandPayload> commandPayloadStream = asyncStub
-        //         .executeCommand(new CommandResponseHandler());
-
-        // try {
-        //     // TODO: use a for-loop if you have more than one ExecuteCommandPayload to send.
-        //     commandPayloadStream.onNext(ExecuteCommandPayload.newBuilder().setOid(oid).setSlot(slot).setValue(value)
-        //             .setRespond(respond).build());
-        //     commandPayloadStream.onCompleted();
-        // } catch (StatusRuntimeException e) {
-        //     printStatusRuntimeException("executeCommand", e);
-        //     commandPayloadStream.onError(e);
-        // }
+    public void receiveFile(String oid, int slotNumber, String filename) {
+        try {
+            Value requestValue = Value.newBuilder().setStringValue(filename).build();
+            Iterator<CommandResponse> responses = executeCommand(oid, slotNumber, requestValue, true);
+            commandResponseHandler.receiveFile(responses);
+        } catch (StatusRuntimeException exception) {
+            printStatusRuntimeException("receiveFile", exception);
+        }
     }
-    
-    // public void receiveFile(String oid, int slotNumber, String filename) throws InterruptedException, IOException {
-    //     ClientReceiveFileResponseHandler receiveHandler = new ClientReceiveFileResponseHandler(oid, slotNumber, getWorkingDirectory(), this);
-    //     synchronized (this)
-    //     {
-    //         //StreamObserver<ExecuteCommandPayload> commandPayloadStream = asyncStub.executeCommand(receiveHandler);
-    //         receiveHandler.setTxStream(commandPayloadStream);
-    //         this.wait(60000);
-    //     }
-    // }
+
+    public void pushFile(String oid, int slot, URL file) {
+        try {
+            InputStream in = file.openStream();
+            DataPayloadBuilder dataPayloadBuilder = new DataPayloadBuilder(in, getName(file), "image/jpeg");
+            DataPayload dataPayload = dataPayloadBuilder.createCompleteFileDataPayload();      
+            Value requestValue = Value.newBuilder().setDataPayload(dataPayload).build();
+            Iterator<CommandResponse> responses = executeCommand(oid, slot, requestValue, false);
+            responses.forEachRemaining((CommandResponse) -> {
+                // No response expected, just consume the stream
+            });
+        } catch (IOException e) {
+            System.err.println("CLIENT: Error creating file value: " + e.getMessage());
+        } catch (StatusRuntimeException exception) {
+            printStatusRuntimeException("pushFile", exception);
+        }
+    }
+
+    private Iterator<CommandResponse>  executeCommand(String oid, int slot, Value value, boolean respond) throws StatusRuntimeException {
+        return blockingStub.executeCommand(
+                ExecuteCommandPayload.newBuilder()
+                .setOid(oid)
+                .setSlot(slot)
+                .setValue(value)
+                .setRespond(respond)
+                .build());
+    }
     
     private File getWorkingDirectory() throws IOException
     {
@@ -179,26 +208,17 @@ public class MyCatenaClient implements AutoCloseable {
         workingDirectory.mkdirs();
     }
 
-    // public void pushFile(String oid, int slot, URL file) throws InterruptedException {
-    //     pushFile(oid, slot, new URL[] { file });
-    // }
+    private static String getName(URL url)
+    {
+        String path = url.getPath();
+        int index = path.lastIndexOf('/');
+        if (index >= 0)
+        {
+            path = path.substring(index + 1);
+        }
+        return path;
+    }
     
-    // public void pushFile(String oid, int slot, URL[] files) throws InterruptedException {
-    //     ClientPushFileResponseHandler push = new ClientPushFileResponseHandler(slot, oid, files, this);
-    //     synchronized (this)
-    //     {
-    //         StreamObserver<ExecuteCommandPayload> commandPayloadStream = asyncStub.executeCommand(push);
-    //         try
-    //         {
-    //             push.setTxStream(commandPayloadStream);
-    //         }
-    //         catch (IOException e)
-    //         {
-    //             e.printStackTrace();
-    //         }
-    //         this.wait(60000);
-    //     }
-    // }
 
     public Value getValue(String oid, int slotNumber) {
         try {

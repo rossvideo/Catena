@@ -5,9 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.rossvideo.catena.command.BidirectionalDelegatingStreamObserver;
-import com.rossvideo.catena.command.BidirectionalStreamObserverFactory;
-
 import catena.core.device.ConnectPayload;
 import catena.core.device.DeviceComponent;
 import catena.core.device.DeviceComponent.ComponentLanguagePack;
@@ -38,7 +35,7 @@ import io.grpc.Context;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 
-public class CatenaServer extends CatenaServiceImplBase //implements BidirectionalStreamObserverFactory<ExecuteCommandPayload, CommandResponse>
+public class CatenaServer extends CatenaServiceImplBase
 {
     public static final Context.Key<Map<String, Object>> KEY_CLAIMS = Context.key("claims");
     
@@ -151,7 +148,15 @@ public class CatenaServer extends CatenaServiceImplBase //implements Bidirection
     
     @Override
     public void executeCommand(ExecuteCommandPayload request, StreamObserver<CommandResponse> responseObserver) {
-        // return new BidirectionalDelegatingStreamObserver<ExecuteCommandPayload, CommandResponse>(this, responseObserver);
+        CatenaDevice device = getDevice(request.getSlot());
+        if (device != null)
+        {
+            device.executeCommand(request, responseObserver, getClaims());
+        }
+        else
+        {
+            notifyNoDeviceAtSlot(responseObserver, request.getSlot());
+        }
     }
     
     @Override
