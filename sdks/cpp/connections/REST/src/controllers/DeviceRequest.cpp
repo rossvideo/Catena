@@ -7,8 +7,14 @@ using catena::REST::DeviceRequest;
 int DeviceRequest::objectCounter_ = 0;
 
 DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
-    socket_{socket}, writer_{socket, context.origin()}, context_{context}, dm_{dm} {
+    socket_{socket}, context_{context}, dm_{dm} {
     objectId_ = objectCounter_++;
+    // Initializing the writer depending on if the response is stream or unary.
+    if (context.stream()) {
+        writer_ = std::make_unique<catena::REST::SSEWriter>(socket, context.origin());
+    } else {
+        writer_ = std::make_unique<catena::REST::SocketWriter>(socket, context.origin(), true);
+    }
     writeConsole_(CallStatus::kCreate, socket_.is_open());
 
     //slot_ = context_.slot(); // Slots are unimplemented
@@ -16,9 +22,9 @@ DeviceRequest::DeviceRequest(tcp::socket& socket, ISocketReader& context, IDevic
 
 void DeviceRequest::proceed() {
     writeConsole_(CallStatus::kProcess, socket_.is_open());
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
     try {
         bool shallowCopy = true; // controls whether shallow copy or deep copy is used
-        catena::exception_with_status rc{"", catena::StatusCode::OK};
         std::shared_ptr<catena::common::Authorizer> sharedAuthz;
         catena::common::Authorizer* authz;
         
@@ -51,19 +57,20 @@ void DeviceRequest::proceed() {
                 std::lock_guard lg(dm_.mutex());
                 component = serializer_->getNext();
             }
-            writer_.sendResponse(rc, component);
+            writer_->sendResponse(rc, component);
         }
         
-    // ERROR: Write to stream to end call
+    // ERROR: Update rc.
     } catch (catena::exception_with_status& err) {
-        writer_.sendResponse(err);
+        rc = catena::exception_with_status{err.what(), err.status};
     } catch (const std::exception& e) {
-        writer_.sendResponse(catena::exception_with_status(std::string("Device request failed: ") + e.what(), 
-                                          catena::StatusCode::INTERNAL));
+        rc = catena::exception_with_status{std::string("Device request failed: ") + e.what(), 
+                                          catena::StatusCode::INTERNAL};
     } catch (...) {
-        writer_.sendResponse(catena::exception_with_status("Unknown error", 
-                                          catena::StatusCode::UNKNOWN));
+        rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     }
+    // empty msg signals unary to send response. Does nothing for stream.
+    writer_->sendResponse(rc);
 }
 
 void DeviceRequest::finish() {

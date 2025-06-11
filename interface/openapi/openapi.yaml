@@ -40,8 +40,8 @@ info:
   title: Catena API
   version: '1.0'
 servers:
-  - url: https://device.catenamedia.tv:443/v1
-  - url: http://localhost:443/v1
+  - url: https://device.catenamedia.tv:443/st2138-api/v1
+  - url: http://localhost:443/st2138-api/v1
 
 # default endpoint security is that at least one read scope is required.
 # the permissions in the security array are ORed together.
@@ -93,7 +93,7 @@ paths:
   /{slot}/param/{fqoid}:
     $ref: './paths/Param.yaml'
 
-  /{slot}/connect:
+  /connect:
     $ref: './paths/Connect.yaml'
 
   /{slot}/language-pack/{language-code}:
