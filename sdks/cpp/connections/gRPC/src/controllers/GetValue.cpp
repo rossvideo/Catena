@@ -49,10 +49,11 @@ GetValue::GetValue(ICatenaServiceImpl *service, IDevice& dm, bool ok) : CallData
 // Manages gRPC command execution process using the state variable status.
 void GetValue::proceed( bool ok) {
     std::cout << "GetValue::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+                << " status: " << static_cast<int>(status_) << ", ok: "
+                << std::boolalpha << ok << std::endl;
 
-    if(!ok){
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "GetValue[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }

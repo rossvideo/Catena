@@ -48,11 +48,12 @@ GetPopulatedSlots::GetPopulatedSlots(ICatenaServiceImpl *service, IDevice& dm, b
 
 // Manages gRPC command execution process using the state variable status.
 void GetPopulatedSlots::proceed( bool ok) {
-    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+    std::cout << "GetPopulatedSlots::proceed[" << objectId_ << "]: "
+              << timeNow() << " status: " << static_cast<int>(status_)
+              << ", ok: " << std::boolalpha << ok << std::endl;
 
-    if(!ok){
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "GetPopulatedSlots[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }

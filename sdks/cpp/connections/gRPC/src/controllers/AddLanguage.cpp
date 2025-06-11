@@ -46,8 +46,9 @@ void AddLanguage::proceed(bool ok) {
     std::cout << "AddLanguage::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
-    
-    if(!ok){
+
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "AddLanguage[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }

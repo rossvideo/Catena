@@ -43,11 +43,12 @@ UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& d
 }
 
 void UpdateSubscriptions::proceed(bool ok) {
-    std::cout << "UpdateSubscriptions proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-              << std::endl;
+    std::cout << "UpdateSubscriptions proceed[" << objectId_ << "]: "
+              << timeNow() << " status: " << static_cast<int>(status_)
+              << ", ok: " << std::boolalpha << ok << std::endl;
 
-    if(!ok){
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "UpdateSubscriptions[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }

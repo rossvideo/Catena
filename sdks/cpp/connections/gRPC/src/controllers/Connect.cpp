@@ -52,14 +52,14 @@ catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, IDevice& dm, bool ok
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
     std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+                << " status: " << static_cast<int>(status_) << ", ok: "
+                << std::boolalpha << ok << std::endl;
 
     /**
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
-    if(!ok){
+    if (!ok && status_ != CallStatus::kFinish) {
         std::cout << "Connect[" << objectId_ << "] cancelled\n";
         std::cout << "Cancelling all open connections" << std::endl;
         shutdownSignal_.emit();

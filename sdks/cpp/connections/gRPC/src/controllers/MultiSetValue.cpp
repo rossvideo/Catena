@@ -56,10 +56,11 @@ void MultiSetValue::create_(bool ok) {
 
 void MultiSetValue::proceed(bool ok) { 
     std::cout << typeName << "::proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
-    
-    if(!ok){
+                << " status: " << static_cast<int>(status_) << ", ok: "
+                << std::boolalpha << ok << std::endl;
+
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << typeName << "[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
