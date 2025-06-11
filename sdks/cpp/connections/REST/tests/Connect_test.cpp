@@ -350,3 +350,95 @@ TEST_F(ConnectTest, HandlesLanguage) {
     proceed_thread.join();
 }
 
+// --- 2. FINISH TESTS ---
+
+// Test 2.1: Test normal finish behavior
+TEST_F(ConnectTest, FinishClosesConnection) {
+    static const std::string empty_token;
+    // Set up expectations for valid authorization
+    EXPECT_CALL(*socket_reader_, authorizationEnabled())
+        .WillOnce(Return(false));  // No auth needed for this test
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(ReturnRef(empty_token));  // Empty token since auth is disabled
+    
+    // Run proceed() in a separate thread
+    std::thread proceed_thread([this]() {
+        connect_->proceed();
+    });
+
+    // Give proceed() time to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    // Call finish
+    connect_->finish();
+
+    // Verify socket is closed
+    EXPECT_FALSE(serverSocket.is_open());
+
+    // Clean up
+    proceed_thread.join();
+}
+
+// Test 2.2: Test finish with active signal handlers
+TEST_F(ConnectTest, FinishDisconnectsSignalHandlers) {
+    static const std::string empty_token;
+    // Set up expectations for valid authorization
+    EXPECT_CALL(*socket_reader_, authorizationEnabled())
+        .WillOnce(Return(false));
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(ReturnRef(empty_token));  // Empty token since auth is disabled
+    
+    // Run proceed() in a separate thread
+    std::thread proceed_thread([this]() {
+        connect_->proceed();
+    });
+
+    // Give proceed() time to start and set up signal handlers
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    // Call finish
+    connect_->finish();
+
+    // Verify socket is closed
+    EXPECT_FALSE(serverSocket.is_open());
+
+    // Verify signal handlers are disconnected by attempting to emit signals
+    // These should not cause any updates since handlers are disconnected
+    auto param = std::make_unique<MockParam>();
+    device_->valueSetByServer.emit("test_oid", param.get(), 0);
+    device_->valueSetByClient.emit("test_oid", param.get(), 0);
+    
+    // No response should be received since handlers are disconnected
+    EXPECT_EQ(readResponse(), "");
+
+    // Clean up
+    proceed_thread.join();
+}
+
+// Test 2.3: Test finish sends final OK response
+TEST_F(ConnectTest, FinishSendsFinalResponse) {
+    static const std::string empty_token;
+    // Set up expectations for valid authorization
+    EXPECT_CALL(*socket_reader_, authorizationEnabled())
+        .WillOnce(Return(false));
+    EXPECT_CALL(*socket_reader_, jwsToken())
+        .WillOnce(ReturnRef(empty_token));  // Empty token since auth is disabled
+    
+    // Run proceed() in a separate thread
+    std::thread proceed_thread([this]() {
+        connect_->proceed();
+    });
+
+    // Give proceed() time to start
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    // Call finish
+    connect_->finish();
+
+    // Verify final OK response is sent
+    catena::exception_with_status rc("", catena::StatusCode::OK);
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc));
+
+    // Clean up
+    proceed_thread.join();
+}
