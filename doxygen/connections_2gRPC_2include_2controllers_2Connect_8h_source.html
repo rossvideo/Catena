@@ -159,18 +159,18 @@ $(document).ready(function(){initNavTree('connections_2gRPC_2include_2controller
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    std::mutex mtx_;</div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="keywordtype">int</span> objectId_;</div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> pushUpdatesId_;</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> valueSetByClientId_;</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> valueSetByServerId_;</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> languageAddedId_;</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span> </div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    <span class="keyword">static</span> vdk::signal&lt;void()&gt; shutdownSignal_;</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> shutdownSignalId_;</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>};</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> valueSetByClientId_ = 0;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> valueSetByServerId_ = 0;</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> languageAddedId_ = 0;</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>    <span class="keyword">static</span> vdk::signal&lt;void()&gt; shutdownSignal_;</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> shutdownSignalId_ = 0;</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>};</div>
 </div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span> </div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>}; <span class="comment">// namespace gRPC</span></div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>}; <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>}; <span class="comment">// namespace gRPC</span></div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>}; <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aCallData_8h_html"><div class="ttname"><a href="CallData_8h.html">CallData.h</a></div><div class="ttdoc">Base class for gRPC CallData classes which defines getJWSToken_().</div></div>
 <div class="ttc" id="aEnums_8h_html"><div class="ttname"><a href="Enums_8h.html">Enums.h</a></div><div class="ttdoc">tools for using EnumDecorators.</div></div>
 <div class="ttc" id="aILanguagePack_8h_html"><div class="ttname"><a href="ILanguagePack_8h.html">ILanguagePack.h</a></div><div class="ttdoc">Interface for language packs.</div></div>
@@ -190,7 +190,7 @@ $(document).ready(function(){initNavTree('connections_2gRPC_2include_2controller
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_1ee1c825a28454f120fade4d126590ba.html">sdks</a></li><li class="navelem"><a class="el" href="dir_c3a31ef84dfd90f7312278dbc4734bdb.html">cpp</a></li><li class="navelem"><a class="el" href="dir_01181b2e4bcbd5d200324c852c35719a.html">connections</a></li><li class="navelem"><a class="el" href="dir_ad1bc33ffc0c46262e23d259a6a8b800.html">gRPC</a></li><li class="navelem"><a class="el" href="dir_88e8bbaad8f68d13e1eb0d923c3ba96f.html">include</a></li><li class="navelem"><a class="el" href="dir_467cfab7fe529c5f74c4e969b5759866.html">controllers</a></li><li class="navelem"><a class="el" href="connections_2gRPC_2include_2controllers_2Connect_8h.html">Connect.h</a></li>
+    <li class="navelem"><a class="el" href="dir_fe4d27d711cdd425ac4e99b8adff8f95.html">connections</a></li><li class="navelem"><a class="el" href="dir_4d575b2314895a9897e217c911f77677.html">gRPC</a></li><li class="navelem"><a class="el" href="dir_456f7cb32f9a8ed997a9bd57dae946e2.html">include</a></li><li class="navelem"><a class="el" href="dir_519836f31fc59570ec243b9114264c7a.html">controllers</a></li><li class="navelem"><a class="el" href="connections_2gRPC_2include_2controllers_2Connect_8h.html">Connect.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
