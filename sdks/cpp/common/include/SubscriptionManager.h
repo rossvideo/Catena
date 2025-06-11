@@ -70,7 +70,7 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
+    bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) override;
 
     /**
      * @brief Remove an OID subscription

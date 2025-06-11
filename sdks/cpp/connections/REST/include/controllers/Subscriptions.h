@@ -31,8 +31,8 @@
  */
 
 /**
- * @file UpdateSubscriptions.h
- * @brief Implements Catena REST UpdateSubscriptions
+ * @file Subscriptions.h
+ * @brief Implements Catena REST Subscriptions
  * @author zuhayr.sarker@rossvideo.com
  * @date 2025-04-28
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -54,30 +54,30 @@ namespace catena {
 namespace REST {
 
 /**
- * @brief ICallData class for the UpdateSubscriptions REST controller.
+ * @brief ICallData class for the Subscriptions REST controller.
  */
-class UpdateSubscriptions : public ICallData {
+class Subscriptions : public ICallData {
 public:
     // Specifying which Device and IParam to use (defaults to catena::...)
     using IDevice = catena::common::IDevice;
     using IParam = catena::common::IParam;
 
     /**
-     * @brief Constructor for the UpdateSubscriptions controller.
+     * @brief Constructor for the Subscriptions controller.
      *
      * @param socket The socket to write the response to.
      * @param context The ISocketReader object.
      * @param dm The device to update subscriptions on.
      */ 
-    UpdateSubscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
+    Subscriptions(tcp::socket& socket, ISocketReader& context, IDevice& dm);
     
     /**
-     * @brief UpdateSubscriptions's main process.
+     * @brief Subscriptions's main process.
      */
     void proceed() override;
     
     /**
-     * @brief Finishes the UpdateSubscriptions process.
+     * @brief Finishes the Subscriptions process.
      */
     void finish() override;
     
@@ -89,7 +89,7 @@ public:
      * @param dm The device to connect to.
      */
     static ICallData* makeOne(tcp::socket& socket, ISocketReader& context, IDevice& dm) {
-        return new UpdateSubscriptions(socket, context, dm);
+        return new Subscriptions(socket, context, dm);
     }
 
 private:
@@ -100,7 +100,7 @@ private:
      * @param ok The status of the RPC (open or closed).
      */
     inline void writeConsole_(CallStatus status, bool ok) const override {
-        std::cout << "UpdateSubscriptions::proceed[" << objectId_ << "]: "
+        std::cout << context_.method() << " Subscriptions::proceed[" << objectId_ << "]: "
                   << catena::common::timeNow() << " status: "
                   << static_cast<int>(status) <<", ok: "<< std::boolalpha << ok
                   << std::endl;
@@ -117,18 +117,18 @@ private:
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SocketWriter writer_;
+    std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
      * @brief The device to set subscriptions of.
      */
     IDevice& dm_;
 
     /**
-     * @brief ID of the UpdateSubscriptions object
+     * @brief ID of the Subscriptions object
      */
     int objectId_;
     /**
-     * @brief The total # of UpdateSubscriptions objects.
+     * @brief The total # of Subscriptions objects.
      */
     static int objectCounter_;
 };

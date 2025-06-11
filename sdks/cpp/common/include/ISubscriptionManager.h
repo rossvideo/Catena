@@ -49,6 +49,7 @@ namespace common {
 
 using catena::common::IDevice;
 using catena::common::IParam;
+using catena::common::Authorizer;
 
 /**
  * @brief Interface for managing parameter subscriptions in Catena
@@ -64,7 +65,7 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was added, false if it already existed
      */
-    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) = 0;
+    virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;
 
     /**
      * @brief Remove an OID subscription

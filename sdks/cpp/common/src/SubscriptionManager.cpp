@@ -43,7 +43,7 @@ namespace catena {
 namespace common {
 
 // Add a subscription (unique or wildcard)
-bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) {
+bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz) {
     std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
     bool wildcard = isWildcard(oid);
@@ -60,7 +60,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     // Making sure the oid exists unless client is subbing to all params.
     if (!wildcard || oid != "/*") {
         std::lock_guard lg(dm.mutex());
-        param = dm.getParam(baseOid, rc);
+        param = dm.getParam(baseOid, rc, authz);
     }
 
     // Normal case.
@@ -86,8 +86,10 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
             allParams = dm.getTopLevelParams(rc);
         }
         for (auto& param : allParams) {
-            SubscriptionVisitor visitor(subscriptions_);
-            ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor);
+            if (authz.readAuthz(*param)) {
+                SubscriptionVisitor visitor(subscriptions_);
+                ParamVisitor::traverseParams(param.get(), "/" + param->getOid(), dm, visitor);
+            }
         }
     }
 
