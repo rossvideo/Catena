@@ -171,9 +171,9 @@ jobs:
         echo "Run, Build Application using Ninja"
         cd ~
         cd ./work/Catena/Catena/
-        mkdir -p $BUILD_TARGET
-        cd $BUILD_TARGET
-        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODEL="lite" -G Ninja -B ~/work/Catena/Catena/$BUILD_TARGET -S ~/work/Catena/Catena/sdks/cpp
+        mkdir -p build/cpp
+        cd build/cpp
+        cmake -DUNIT_TESTING=OFF -DBUILD_DOC=OFF -DCONNECTIONS=gRPC -DCATENA_MODEL="lite" -G Ninja -B ~/work/Catena/Catena/build/cpp -S ~/work/Catena/Catena/sdks/cpp
         ninja
 
     - name: Perform CodeQL Analysis
