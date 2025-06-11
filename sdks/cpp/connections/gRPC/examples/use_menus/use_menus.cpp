@@ -139,12 +139,12 @@ void RunRPCServer(std::string addr)
         service.init();
         std::thread cq_thread([&]() { service.processEvents(); });
 
-        std::thread loop(statusUpdateExample);
+        std::thread counterLoop(statusUpdateExample);
 
         // wait for the server to shutdown and tidy up
         server->Wait();
 
-        loop.join();
+        counterLoop.join();
 
         cq->Shutdown();
         cq_thread.join();

@@ -131,11 +131,11 @@ void RunRESTServer() {
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
-        std::thread loop(statusUpdateExample);
+        std::thread counterLoop(statusUpdateExample);
 
         api.run();
 
-        loop.join();
+        counterLoop.join();
 
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
