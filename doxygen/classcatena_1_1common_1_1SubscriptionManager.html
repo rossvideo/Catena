@@ -119,15 +119,15 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SubscriptionManager</b> ()=default</td></tr>
 <tr class="memdesc:a9efb56ebfe6712d9b08b71f0ff57350b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br /></td></tr>
 <tr class="separator:a9efb56ebfe6712d9b08b71f0ff57350b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ceb1e4a68377276123b3a6e582a1ec3" id="r_a4ceb1e4a68377276123b3a6e582a1ec3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a4ceb1e4a68377276123b3a6e582a1ec3">addSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc) override</td></tr>
-<tr class="memdesc:a4ceb1e4a68377276123b3a6e582a1ec3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
-<tr class="separator:a4ceb1e4a68377276123b3a6e582a1ec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05ee1896dea3bc75589ef2769e25bc18" id="r_a05ee1896dea3bc75589ef2769e25bc18"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a05ee1896dea3bc75589ef2769e25bc18">addSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc, <a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;authz=<a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a>) override</td></tr>
+<tr class="memdesc:a05ee1896dea3bc75589ef2769e25bc18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an OID subscription.  <br /></td></tr>
+<tr class="separator:a05ee1896dea3bc75589ef2769e25bc18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad74e22560836e1aae2609ed57d939675" id="r_ad74e22560836e1aae2609ed57d939675"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#ad74e22560836e1aae2609ed57d939675">removeSubscription</a> (const std::string &amp;oid, <a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm, <a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;rc) override</td></tr>
 <tr class="memdesc:ad74e22560836e1aae2609ed57d939675"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an OID subscription.  <br /></td></tr>
 <tr class="separator:ad74e22560836e1aae2609ed57d939675"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5e1956605616c5d8497e5b835f09444" id="r_aa5e1956605616c5d8497e5b835f09444"><td class="memItemLeft" align="right" valign="top">const std::set&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#aa5e1956605616c5d8497e5b835f09444">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm) override</td></tr>
-<tr class="memdesc:aa5e1956605616c5d8497e5b835f09444"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
-<tr class="separator:aa5e1956605616c5d8497e5b835f09444"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fd339a5c1e9a73afc5cc06236758d2e" id="r_a9fd339a5c1e9a73afc5cc06236758d2e"><td class="memItemLeft" align="right" valign="top">std::set&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a9fd339a5c1e9a73afc5cc06236758d2e">getAllSubscribedOids</a> (<a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;dm) override</td></tr>
+<tr class="memdesc:a9fd339a5c1e9a73afc5cc06236758d2e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all subscribed OIDs, including expanding wildcard subscriptions.  <br /></td></tr>
+<tr class="separator:a9fd339a5c1e9a73afc5cc06236758d2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a596b1976e0ecccf834f8f7ade92a92f4" id="r_a596b1976e0ecccf834f8f7ade92a92f4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1SubscriptionManager.html#a596b1976e0ecccf834f8f7ade92a92f4">isWildcard</a> (const std::string &amp;oid) override</td></tr>
 <tr class="memdesc:a596b1976e0ecccf834f8f7ade92a92f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if an OID is a wildcard subscription.  <br /></td></tr>
 <tr class="separator:a596b1976e0ecccf834f8f7ade92a92f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,8 +135,8 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class for managing parameter subscriptions in Catena. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4ceb1e4a68377276123b3a6e582a1ec3" name="a4ceb1e4a68377276123b3a6e582a1ec3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ceb1e4a68377276123b3a6e582a1ec3">&#9670;&#160;</a></span>addSubscription()</h2>
+<a id="a05ee1896dea3bc75589ef2769e25bc18" name="a05ee1896dea3bc75589ef2769e25bc18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05ee1896dea3bc75589ef2769e25bc18">&#9670;&#160;</a></span>addSubscription()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -160,7 +160,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structcatena_1_1exception__with__status.html">exception_with_status</a> &amp;&#160;</td>
-          <td class="paramname"><em>rc</em>&#160;</td>
+          <td class="paramname"><em>rc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1Authorizer.html">Authorizer</a> &amp;&#160;</td>
+          <td class="paramname"><em>authz</em> = <code><a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">Authorizer::kAuthzDisabled</a></code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -181,17 +187,18 @@ Public Member Functions</h2></td></tr>
     <tr><td class="paramname">oid</td><td>The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*") </td></tr>
     <tr><td class="paramname">dm</td><td>The device model to use </td></tr>
     <tr><td class="paramname">rc</td><td>The status code to return if the operation fails </td></tr>
+    <tr><td class="paramname">authz</td><td>The authorizer to use for checking permissions </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>true if the subscription was added, false if it already existed </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#aa19f9478c082691639e58623e7df433d">catena::common::ISubscriptionManager</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a86952cbef9d7428bfde4ec19b278a827">catena::common::ISubscriptionManager</a>.</p>
 
 </div>
 </div>
-<a id="aa5e1956605616c5d8497e5b835f09444" name="aa5e1956605616c5d8497e5b835f09444"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa5e1956605616c5d8497e5b835f09444">&#9670;&#160;</a></span>getAllSubscribedOids()</h2>
+<a id="a9fd339a5c1e9a73afc5cc06236758d2e" name="a9fd339a5c1e9a73afc5cc06236758d2e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fd339a5c1e9a73afc5cc06236758d2e">&#9670;&#160;</a></span>getAllSubscribedOids()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -200,7 +207,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::set&lt; std::string &gt; &amp; catena::common::SubscriptionManager::getAllSubscribedOids </td>
+          <td class="memname">std::set&lt; std::string &gt; catena::common::SubscriptionManager::getAllSubscribedOids </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> &amp;&#160;</td>
           <td class="paramname"><em>dm</em></td><td>)</td>
@@ -223,7 +230,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Reference to the vector of all subscribed OIDs </dd></dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#ab5d55752a99c745909efca91f2931987">catena::common::ISubscriptionManager</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#a7f760651efc5d501195e07ef398720ed">catena::common::ISubscriptionManager</a>.</p>
 
 </div>
 </div>

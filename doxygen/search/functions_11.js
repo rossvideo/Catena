@@ -21,5 +21,5 @@ var searchData=
   ['stream_5fif_5fpossible_18',['stream_if_possible',['../namespacecatena_1_1meta.html#a5c3dc782e536317ef49293910ba24bb2',1,'catena::meta']]],
   ['subs_19',['subs',['../namespacecatena.html#a9034cc95074df53a45e81ee00fa754ad',1,'catena']]],
   ['subscriptionmanager_20',['SubscriptionManager',['../classcatena_1_1common_1_1SubscriptionManager.html#a9efb56ebfe6712d9b08b71f0ff57350b',1,'catena::common::SubscriptionManager']]],
-  ['subscriptions_21',['subscriptions',['../classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff',1,'catena::common::Device::subscriptions()'],['../classcatena_1_1common_1_1IDevice.html#ac454e174a9eec56c688eddff4a9029d8',1,'catena::common::IDevice::subscriptions()']]]
+  ['subscriptions_21',['subscriptions',['../classcatena_1_1REST_1_1Subscriptions.html#a76b60523b4908572acb93e4db487ec42',1,'catena::REST::Subscriptions::Subscriptions()'],['../classcatena_1_1common_1_1Device.html#acc0eb46301cab4a128ff88b7543918ff',1,'catena::common::Device::subscriptions()'],['../classcatena_1_1common_1_1IDevice.html#ac454e174a9eec56c688eddff4a9029d8',1,'catena::common::IDevice::subscriptions()']]]
 ];
