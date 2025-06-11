@@ -63,6 +63,7 @@ public:
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
+     * @param authz The authorizer to use for checking permissions
      * @return true if the subscription was added, false if it already existed
      */
     virtual bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) = 0;

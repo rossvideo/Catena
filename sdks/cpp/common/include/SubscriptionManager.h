@@ -34,18 +34,21 @@
  * @file SubscriptionManager.h
  * @brief Centralized manager for parameter subscriptions in Catena
  * @author zuhayr.sarker@rossvideo.com
- * @date 2025-04-02
+ * @author benjamin.whitten@rossvideo.com
+ * @date 2025-06-11
  * @copyright Copyright © 2025 Ross Video Ltd
  */
 
-#include <set>
-#include <string>
-#include <vector>
-#include <memory>
+
+// common
 #include <IDevice.h>
 #include <IParam.h>
 #include <ParamVisitor.h>
 #include <ISubscriptionManager.h>
+
+// std
+#include <set>
+#include <string>
 
 namespace catena {
 namespace common {
@@ -68,6 +71,7 @@ public:
      * @param oid The OID to subscribe to (can be either a unique OID like "/param" or a wildcard like "/param/*")
      * @param dm The device model to use 
      * @param rc The status code to return if the operation fails
+     * @param authz The authorizer to use for checking permissions
      * @return true if the subscription was added, false if it already existed
      */
     bool addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz = Authorizer::kAuthzDisabled) override;

@@ -29,18 +29,7 @@
  */
 
 #include <SubscriptionManager.h>
-#include <IDevice.h>
-#include <IParam.h>
-#include <Status.h>
-
-// Use the correct namespaces
-using catena::common::IDevice;
-using catena::common::IParam;
-using catena::common::Path;
-using catena::common::ParamVisitor;
-
-namespace catena {
-namespace common {
+using catena::common::SubscriptionManager;
 
 // Add a subscription (unique or wildcard)
 bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc, Authorizer& authz) {
@@ -96,8 +85,8 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
     return rc.status == catena::StatusCode::OK;
 }
 
+// Remove a subscription (either unique or wildcard)
 bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm, catena::exception_with_status& rc) {
-    // Remove a subscription (either unique or wildcard)
     std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
@@ -141,6 +130,3 @@ std::set<std::string> SubscriptionManager::getAllSubscribedOids(IDevice& dm) {
 bool SubscriptionManager::isWildcard(const std::string& oid) {
     return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
 }
-
-} // namespace common
-} // namespace catena 
