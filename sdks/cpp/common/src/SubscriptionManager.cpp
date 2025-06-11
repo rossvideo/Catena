@@ -133,6 +133,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm
 
 // Get all subscribed OIDs
 std::set<std::string> SubscriptionManager::getAllSubscribedOids(IDevice& dm) {
+    std::lock_guard sg(mtx_);
     return subscriptions_;
 }
 
