@@ -83,14 +83,14 @@ public:
      * @param rc The status code to return if the operation fails
      * @return true if the subscription was removed, false if it didn't exist
      */
-    bool removeSubscription(const std::string& oid, IDevice& dm, exception_with_status& rc) override;
+    bool removeSubscription(const std::string& oid, const IDevice& dm, exception_with_status& rc) override;
 
     /**
      * @brief Get all subscribed OIDs, including expanding wildcard subscriptions
      * @param dm The device model to use 
      * @return Reference to the vector of all subscribed OIDs
      */
-    std::set<std::string> getAllSubscribedOids(IDevice& dm) override;
+    std::set<std::string> getAllSubscribedOids(const IDevice& dm) override;
 
     /**
      * @brief Check if an OID is a wildcard subscription
@@ -98,6 +98,14 @@ public:
      * @return true if the OID is greater than or equal to 2 characters and ends with "/*"
      */
     bool isWildcard(const std::string& oid) override;
+
+    /**
+     * @brief Check if an OID is subscribed to
+     * @param dm The device model to use 
+     * @param oid The OID to check
+     * @return true if the OID is already subscribed to
+     */
+    bool isSubscribed(const std::string& oid, const IDevice& dm) override;
 
 private:
     /**

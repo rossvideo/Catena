@@ -86,7 +86,7 @@ bool SubscriptionManager::addSubscription(const std::string& oid, IDevice& dm, e
 }
 
 // Remove a subscription (either unique or wildcard)
-bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm, catena::exception_with_status& rc) {
+bool SubscriptionManager::removeSubscription(const std::string& oid, const IDevice& dm, catena::exception_with_status& rc) {
     std::lock_guard sg(mtx_);
     rc = catena::exception_with_status{"", catena::StatusCode::OK};
 
@@ -121,7 +121,7 @@ bool SubscriptionManager::removeSubscription(const std::string& oid, IDevice& dm
 }
 
 // Get all subscribed OIDs
-std::set<std::string> SubscriptionManager::getAllSubscribedOids(IDevice& dm) {
+std::set<std::string> SubscriptionManager::getAllSubscribedOids(const IDevice& dm) {
     std::lock_guard sg(mtx_);
     return subscriptions_;
 }
@@ -129,4 +129,9 @@ std::set<std::string> SubscriptionManager::getAllSubscribedOids(IDevice& dm) {
 // Returns true if the OID ends with "/*", indicating it's a wildcard subscription
 bool SubscriptionManager::isWildcard(const std::string& oid) {
     return oid.length() >= 2 && oid.substr(oid.length() - 2) == "/*";
+}
+
+bool SubscriptionManager:: isSubscribed(const std::string& oid, const IDevice& dm) {
+    std::lock_guard sg(mtx_);
+    return subscriptions_.contains(oid);
 }

@@ -115,9 +115,9 @@ protected:
 
         // Setup subscription manager expectations
         static std::set<std::string> subscribed_set{testOid};
-        EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-            .WillRepeatedly(::testing::Invoke([](const IDevice&) -> std::set<std::string> {
-                return subscribed_set;
+        EXPECT_CALL(subscriptionManager, isSubscribed(::testing::_, ::testing::Ref(dm)))
+            .WillRepeatedly(::testing::Invoke([this](const std::string& oid, const IDevice&) {
+                return oid == testOid;
             }));
     }
 
@@ -324,11 +324,6 @@ TEST_F(ConnectTests, updateResponseLODFull) {
     connect->detailLevel_ = catena::Device_DetailLevel_FULL;
     connect->initAuthz_(monitorToken, true);
 
-    // Setup subscription manager mock
-    static std::set<std::string> subscribed_set{testOid};
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(subscribed_set));
-
     // Setup param toProto to succeed exactly twice
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(3)
@@ -408,9 +403,6 @@ TEST_F(ConnectTests, updateResponseLODMinimalNoMinimalSet) {
     EXPECT_FALSE(connect->hasUpdate());
 
     // Verify that MINIMAL doesn't update even when subscribed
-    static std::set<std::string> subscribed_set{testOid};
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(subscribed_set));
     connect->updateResponse_(testOid, testIdx, &param);
     EXPECT_FALSE(connect->hasUpdate());
 }
@@ -428,9 +420,6 @@ TEST_F(ConnectTests, updateResponseLODSubscriptionsSubscribedOid) {
     // Test SUBSCRIPTIONS detail level lambda - should update when subscribed
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(false));
-    static std::set<std::string> subscribed_set{testOid};
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(subscribed_set));
 
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
         .Times(2)
@@ -466,8 +455,8 @@ TEST_F(ConnectTests, updateResponseLODSubscriptionsUnsubscribedOid) {
     EXPECT_CALL(descriptor, minimalSet())
         .WillRepeatedly(::testing::Return(false));
     static std::set<std::string> empty_set;
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(empty_set));
+    EXPECT_CALL(subscriptionManager, isSubscribed(::testing::_, ::testing::Ref(dm)))
+        .WillRepeatedly(::testing::Return(false));
 
     // Setup param toProto to succeed (but it shouldn't be called)
     EXPECT_CALL(param, toProto(::testing::An<catena::Value&>(), ::testing::An<catena::common::Authorizer&>()))
@@ -534,10 +523,7 @@ TEST_F(ConnectTests, updateResponseLODCommandsNonCommandParam) {
 
     // Verify that COMMANDS doesn't update even when in minimal set or subscribed
     EXPECT_CALL(descriptor, minimalSet())
-        .WillRepeatedly(::testing::Return(true));
-    static std::set<std::string> subscribed_set{testOid};
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(subscribed_set));
+        .WillRepeatedly(::testing::Return(true));;
     connect->updateResponse_(testOid, testIdx, &param);
     EXPECT_FALSE(connect->hasUpdate());
 }
@@ -564,9 +550,6 @@ TEST_F(ConnectTests, updateResponseLODNone) {
         .WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(descriptor, isCommand())
         .WillRepeatedly(::testing::Return(true));
-    static std::set<std::string> subscribed_set{testOid};
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(subscribed_set));
     connect->updateResponse_(testOid, testIdx, &param);
     EXPECT_FALSE(connect->hasUpdate());
 }
@@ -595,9 +578,6 @@ TEST_F(ConnectTests, updateResponseLODUnset) {
         .WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(descriptor, isCommand())
         .WillRepeatedly(::testing::Return(true));
-    static std::set<std::string> subscribed_set{testOid};
-    EXPECT_CALL(subscriptionManager, getAllSubscribedOids(::testing::Ref(dm)))
-        .WillRepeatedly(::testing::Return(subscribed_set));
     connect->updateResponse_(testOid, testIdx, &param);
     EXPECT_FALSE(connect->hasUpdate());
 }
