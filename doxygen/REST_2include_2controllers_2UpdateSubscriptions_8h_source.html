@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>cpp-v0.0.8-147: /home/runner/work/Catena/Catena/sdks/cpp/connections/REST/include/controllers/Subscriptions.h Source File</title>
+<title>cpp-v0.0.8-147: /home/runner/work/Catena/Catena/sdks/cpp/connections/REST/include/controllers/UpdateSubscriptions.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,7 +69,7 @@ $(document).ready(function() { init_codefold(0); });
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(document).ready(function(){initNavTree('Subscriptions_8h_source.html',''); initResizable(); });
+$(document).ready(function(){initNavTree('REST_2include_2controllers_2UpdateSubscriptions_8h_source.html',''); initResizable(); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -95,10 +95,10 @@ $(document).ready(function(){initNavTree('Subscriptions_8h_source.html',''); ini
 </div>
 
 <div class="header">
-  <div class="headertitle"><div class="title">Subscriptions.h</div></div>
+  <div class="headertitle"><div class="title">UpdateSubscriptions.h</div></div>
 </div><!--header-->
 <div class="contents">
-<a href="Subscriptions_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
+<a href="REST_2include_2controllers_2UpdateSubscriptions_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">/*</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment"> * Copyright 2025 Ross Video Ltd</span></div>
@@ -146,44 +146,66 @@ $(document).ready(function(){initNavTree('Subscriptions_8h_source.html',''); ini
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keyword">namespace </span>REST {</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
 <div class="foldopen" id="foldopen00059" data-start="{" data-end="};">
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1Subscriptions.html">   59</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1REST_1_1Subscriptions.html">Subscriptions</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> {</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1UpdateSubscriptions.html">   59</a></span><span class="keyword">class </span><a class="code hl_class" href="classcatena_1_1REST_1_1UpdateSubscriptions.html">UpdateSubscriptions</a> : <span class="keyword">public</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a> {</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keyword">public</span>:</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="comment">// Specifying which Device and IParam to use (defaults to catena::...)</span></div>
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a> = <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a>;</div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    <span class="keyword">using </span><a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">IParam</a> = <a class="code hl_class" href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a>;</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1Subscriptions.html#a76b60523b4908572acb93e4db487ec42">   72</a></span>    <a class="code hl_function" href="classcatena_1_1REST_1_1Subscriptions.html#a76b60523b4908572acb93e4db487ec42">Subscriptions</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a26edf2a7b5298c3124f8f0d4580fc392">   72</a></span>    <a class="code hl_function" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a26edf2a7b5298c3124f8f0d4580fc392">UpdateSubscriptions</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm);</div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1Subscriptions.html#af0be4c4ec9f61eed13edc4f1ec8b69a4">   77</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1Subscriptions.html#af0be4c4ec9f61eed13edc4f1ec8b69a4">proceed</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a3b68399808c85571e728b8e9ea5363ed">   77</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a3b68399808c85571e728b8e9ea5363ed">proceed</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    </div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1Subscriptions.html#a3057a366ae686ca2e4b56da9541e608e">   82</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1Subscriptions.html#a3057a366ae686ca2e4b56da9541e608e">finish</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#aec09be7ea1b1a3e1596e7239a72433ab">   82</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#aec09be7ea1b1a3e1596e7239a72433ab">finish</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    </div>
 <div class="foldopen" id="foldopen00091" data-start="{" data-end="}">
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1Subscriptions.html#a9db62544d45d37449cf239e61baa2b25">   91</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a>* <a class="code hl_function" href="classcatena_1_1REST_1_1Subscriptions.html#a9db62544d45d37449cf239e61baa2b25">makeOne</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm) {</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code hl_class" href="classcatena_1_1REST_1_1Subscriptions.html">Subscriptions</a>(socket, context, dm);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno"><a class="line" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a0798e969b1a44234221aa301fcb29fea">   91</a></span>    <span class="keyword">static</span> <a class="code hl_class" href="classcatena_1_1REST_1_1ICallData.html">ICallData</a>* <a class="code hl_function" href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a0798e969b1a44234221aa301fcb29fea">makeOne</a>(tcp::socket&amp; socket, <a class="code hl_class" href="classcatena_1_1REST_1_1ISocketReader.html">ISocketReader</a>&amp; context, <a class="code hl_class" href="classcatena_1_1common_1_1IDevice.html">IDevice</a>&amp; dm) {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code hl_class" href="classcatena_1_1REST_1_1UpdateSubscriptions.html">UpdateSubscriptions</a>(socket, context, dm);</div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    }</div>
 </div>
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> writeConsole_(<a class="code hl_enumeration" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, <span class="keywordtype">bool</span> ok)<span class="keyword"> const override </span>{</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        std::cout &lt;&lt; context_.<a class="code hl_function" href="classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97">method</a>() &lt;&lt; <span class="stringliteral">&quot; Subscriptions::proceed[&quot;</span> &lt;&lt; objectId_ &lt;&lt; <span class="stringliteral">&quot;]: &quot;</span></div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>                  &lt;&lt; <a class="code hl_function" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a>() &lt;&lt; <span class="stringliteral">&quot; status: &quot;</span></div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>                  &lt;&lt; <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(status) &lt;&lt;<span class="stringliteral">&quot;, ok: &quot;</span>&lt;&lt; std::boolalpha &lt;&lt; ok</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>                  &lt;&lt; std::endl;</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    }</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <span class="keywordtype">void</span> processSubscription_(<span class="keyword">const</span> std::string&amp; baseOid, <a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>&amp; authz);</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    <span class="keywordtype">void</span> sendSubscribedParameters_(<a class="code hl_class" href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a>&amp; authz);</div>
 <div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    tcp::socket&amp; socket_;</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>    ISocketReader&amp; context_;</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    std::unique_ptr&lt;ISocketWriter&gt; writer_ = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    IDevice&amp; dm_;</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>    <span class="keywordtype">int</span> objectId_;</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>};</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> writeConsole_(<a class="code hl_enumeration" href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">CallStatus</a> status, <span class="keywordtype">bool</span> ok)<span class="keyword"> const override </span>{</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        std::cout &lt;&lt; <span class="stringliteral">&quot;UpdateSubscriptions::proceed[&quot;</span> &lt;&lt; objectId_ &lt;&lt; <span class="stringliteral">&quot;]: &quot;</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>                  &lt;&lt; <a class="code hl_function" href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a>() &lt;&lt; <span class="stringliteral">&quot; status: &quot;</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>                  &lt;&lt; <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(status) &lt;&lt;<span class="stringliteral">&quot;, ok: &quot;</span>&lt;&lt; std::boolalpha &lt;&lt; ok</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>                  &lt;&lt; std::endl;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    }</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>    tcp::socket&amp; socket_;</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>    ISocketReader&amp; context_;</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span> </div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>    SSEWriter writer_;</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>    catena::UpdateSubscriptionsPayload req_;</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    catena::DeviceComponent_ComponentParam res_;</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>    std::vector&lt;catena::DeviceComponent_ComponentParam&gt; responses_;</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>    uint32_t current_response_{0};</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span> </div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> objectCounter_;</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span> </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>    <span class="keywordtype">int</span> objectId_;</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span> </div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>    std::mutex mtx_;</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span> </div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>    std::unique_lock&lt;std::mutex&gt; writer_lock_{mtx_, std::defer_lock};</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>    IDevice&amp; dm_;</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>    </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <a class="code hl_struct" href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a> rc_;</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>};</div>
 </div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>} <span class="comment">// namespace REST </span></div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>} <span class="comment">// namespace catena</span></div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>} <span class="comment">// namespace REST </span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>} <span class="comment">// namespace catena</span></div>
 <div class="ttc" id="aIDevice_8h_html"><div class="ttname"><a href="IDevice_8h.html">IDevice.h</a></div><div class="ttdoc">Interface for device.</div></div>
 <div class="ttc" id="aISocketReader_8h_html"><div class="ttname"><a href="ISocketReader_8h.html">ISocketReader.h</a></div><div class="ttdoc">Interface for the SocketReader class.</div></div>
 <div class="ttc" id="aISubscriptionManager_8h_html"><div class="ttname"><a href="ISubscriptionManager_8h.html">ISubscriptionManager.h</a></div><div class="ttdoc">Interface for managing parameter subscriptions in Catena.</div></div>
@@ -191,23 +213,24 @@ $(document).ready(function(){initNavTree('Subscriptions_8h_source.html',''); ini
 <div class="ttc" id="aTimeNow_8h_html"><div class="ttname"><a href="TimeNow_8h.html">TimeNow.h</a></div><div class="ttdoc">Contains a function which returns the current time as a string.</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ICallData_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ICallData.html">catena::REST::ICallData</a></div><div class="ttdoc">Interface class for REST API controllers.</div><div class="ttdef"><b>Definition</b> ICallData.h:67</div></div>
 <div class="ttc" id="aclasscatena_1_1REST_1_1ISocketReader_html"><div class="ttname"><a href="classcatena_1_1REST_1_1ISocketReader.html">catena::REST::ISocketReader</a></div><div class="ttdoc">Interface for the SocketReader class.</div><div class="ttdef"><b>Definition</b> ISocketReader.h:61</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1ISocketReader_html_a2324ffe58b754f328bc3402fb73b9e97"><div class="ttname"><a href="classcatena_1_1REST_1_1ISocketReader.html#a2324ffe58b754f328bc3402fb73b9e97">catena::REST::ISocketReader::method</a></div><div class="ttdeci">virtual const std::string &amp; method() const =0</div><div class="ttdoc">Returns the HTTP method of the request.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1Subscriptions_html"><div class="ttname"><a href="classcatena_1_1REST_1_1Subscriptions.html">catena::REST::Subscriptions</a></div><div class="ttdoc">ICallData class for the Subscriptions REST controller.</div><div class="ttdef"><b>Definition</b> Subscriptions.h:59</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1Subscriptions_html_a3057a366ae686ca2e4b56da9541e608e"><div class="ttname"><a href="classcatena_1_1REST_1_1Subscriptions.html#a3057a366ae686ca2e4b56da9541e608e">catena::REST::Subscriptions::finish</a></div><div class="ttdeci">void finish() override</div><div class="ttdoc">Finishes the Subscriptions process.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1Subscriptions_html_a76b60523b4908572acb93e4db487ec42"><div class="ttname"><a href="classcatena_1_1REST_1_1Subscriptions.html#a76b60523b4908572acb93e4db487ec42">catena::REST::Subscriptions::Subscriptions</a></div><div class="ttdeci">Subscriptions(tcp::socket &amp;socket, ISocketReader &amp;context, IDevice &amp;dm)</div><div class="ttdoc">Constructor for the Subscriptions controller.</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1Subscriptions_html_a9db62544d45d37449cf239e61baa2b25"><div class="ttname"><a href="classcatena_1_1REST_1_1Subscriptions.html#a9db62544d45d37449cf239e61baa2b25">catena::REST::Subscriptions::makeOne</a></div><div class="ttdeci">static ICallData * makeOne(tcp::socket &amp;socket, ISocketReader &amp;context, IDevice &amp;dm)</div><div class="ttdoc">Creates a new controller object for use with GenericFactory.</div><div class="ttdef"><b>Definition</b> Subscriptions.h:91</div></div>
-<div class="ttc" id="aclasscatena_1_1REST_1_1Subscriptions_html_af0be4c4ec9f61eed13edc4f1ec8b69a4"><div class="ttname"><a href="classcatena_1_1REST_1_1Subscriptions.html#af0be4c4ec9f61eed13edc4f1ec8b69a4">catena::REST::Subscriptions::proceed</a></div><div class="ttdeci">void proceed() override</div><div class="ttdoc">Subscriptions's main process.</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1UpdateSubscriptions_html"><div class="ttname"><a href="classcatena_1_1REST_1_1UpdateSubscriptions.html">catena::REST::UpdateSubscriptions</a></div><div class="ttdoc">ICallData class for the UpdateSubscriptions REST controller.</div><div class="ttdef"><b>Definition</b> UpdateSubscriptions.h:59</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1UpdateSubscriptions_html_a0798e969b1a44234221aa301fcb29fea"><div class="ttname"><a href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a0798e969b1a44234221aa301fcb29fea">catena::REST::UpdateSubscriptions::makeOne</a></div><div class="ttdeci">static ICallData * makeOne(tcp::socket &amp;socket, ISocketReader &amp;context, IDevice &amp;dm)</div><div class="ttdoc">Creates a new controller object for use with GenericFactory.</div><div class="ttdef"><b>Definition</b> UpdateSubscriptions.h:91</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1UpdateSubscriptions_html_a26edf2a7b5298c3124f8f0d4580fc392"><div class="ttname"><a href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a26edf2a7b5298c3124f8f0d4580fc392">catena::REST::UpdateSubscriptions::UpdateSubscriptions</a></div><div class="ttdeci">UpdateSubscriptions(tcp::socket &amp;socket, ISocketReader &amp;context, IDevice &amp;dm)</div><div class="ttdoc">Constructor for the UpdateSubscriptions controller.</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1UpdateSubscriptions_html_a3b68399808c85571e728b8e9ea5363ed"><div class="ttname"><a href="classcatena_1_1REST_1_1UpdateSubscriptions.html#a3b68399808c85571e728b8e9ea5363ed">catena::REST::UpdateSubscriptions::proceed</a></div><div class="ttdeci">void proceed() override</div><div class="ttdoc">UpdateSubscriptions's main process.</div></div>
+<div class="ttc" id="aclasscatena_1_1REST_1_1UpdateSubscriptions_html_aec09be7ea1b1a3e1596e7239a72433ab"><div class="ttname"><a href="classcatena_1_1REST_1_1UpdateSubscriptions.html#aec09be7ea1b1a3e1596e7239a72433ab">catena::REST::UpdateSubscriptions::finish</a></div><div class="ttdeci">void finish() override</div><div class="ttdoc">Finishes the UpdateSubscriptions process.</div></div>
+<div class="ttc" id="aclasscatena_1_1common_1_1Authorizer_html"><div class="ttname"><a href="classcatena_1_1common_1_1Authorizer.html">catena::common::Authorizer</a></div><div class="ttdoc">Class for handling authorization information.</div><div class="ttdef"><b>Definition</b> Authorization.h:69</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IDevice_html"><div class="ttname"><a href="classcatena_1_1common_1_1IDevice.html">catena::common::IDevice</a></div><div class="ttdoc">Interface class for Device.</div><div class="ttdef"><b>Definition</b> IDevice.h:62</div></div>
 <div class="ttc" id="aclasscatena_1_1common_1_1IParam_html"><div class="ttname"><a href="classcatena_1_1common_1_1IParam.html">catena::common::IParam</a></div><div class="ttdoc">IParam is the interface for business logic and connection logic to interact with parameters.</div><div class="ttdef"><b>Definition</b> IParam.h:50</div></div>
 <div class="ttc" id="anamespacecatena_1_1REST_html_a58c70401164afb6c66bd561a88da4009"><div class="ttname"><a href="namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009">catena::REST::CallStatus</a></div><div class="ttdeci">CallStatus</div><div class="ttdoc">CallData states for status messages.</div><div class="ttdef"><b>Definition</b> ICallData.h:62</div></div>
 <div class="ttc" id="anamespacecatena_1_1common_html_aaf7051c03c402f50294ffebece8d0cfb"><div class="ttname"><a href="namespacecatena_1_1common.html#aaf7051c03c402f50294ffebece8d0cfb">catena::common::timeNow</a></div><div class="ttdeci">std::string timeNow()</div><div class="ttdoc">Returns the current time as a string including microseconds.</div><div class="ttdef"><b>Definition</b> TimeNow.h:50</div></div>
 <div class="ttc" id="anamespacecatena_html"><div class="ttname"><a href="namespacecatena.html">catena</a></div><div class="ttdoc">top level namespace for Catena. Functionality at this scope includes the protoc generated classes....</div><div class="ttdef"><b>Definition</b> Authorization.h:59</div></div>
+<div class="ttc" id="astructcatena_1_1exception__with__status_html"><div class="ttname"><a href="structcatena_1_1exception__with__status.html">catena::exception_with_status</a></div><div class="ttdoc">A std::runtime_error with a gRPC StatusCode. This struct cannot be copied.</div><div class="ttdef"><b>Definition</b> Status.h:209</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_fe4d27d711cdd425ac4e99b8adff8f95.html">connections</a></li><li class="navelem"><a class="el" href="dir_94c770116cc371e021b8f057e5d05c6e.html">REST</a></li><li class="navelem"><a class="el" href="dir_e48bd7b024357ff76ed70b8fa8f2f2bf.html">include</a></li><li class="navelem"><a class="el" href="dir_954add30464b4aec8762ca12115d6425.html">controllers</a></li><li class="navelem"><a class="el" href="Subscriptions_8h.html">Subscriptions.h</a></li>
+    <li class="navelem"><a class="el" href="dir_fe4d27d711cdd425ac4e99b8adff8f95.html">connections</a></li><li class="navelem"><a class="el" href="dir_94c770116cc371e021b8f057e5d05c6e.html">REST</a></li><li class="navelem"><a class="el" href="dir_e48bd7b024357ff76ed70b8fa8f2f2bf.html">include</a></li><li class="navelem"><a class="el" href="dir_954add30464b4aec8762ca12115d6425.html">controllers</a></li><li class="navelem"><a class="el" href="REST_2include_2controllers_2UpdateSubscriptions_8h.html">UpdateSubscriptions.h</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
   </ul>
 </div>
