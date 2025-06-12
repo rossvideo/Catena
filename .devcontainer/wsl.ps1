@@ -118,7 +118,7 @@ Run-WSLCommand 18 "enable docker.service" "sudo systemctl enable docker.service"
 Run-WSLCommand 19 "enable containerd.service" "sudo systemctl enable containerd.service"
 Run-WSLCommand 20 "Start Docker" "sudo service docker start"
 
-Run-WSLCommand 21 "Build Catena build dir" "mkdir -p ~/Catena/sdks/cpp/build"
+Run-WSLCommand 21 "Build Catena build dir" "mkdir -p ~/Catena/${BUILD_TARGET}"
 
 
 Run-WSLCommand 22 "Pull Catena repo" "mkdir -p ~/Catena && cd ~/Catena && git init && git remote add origin https://github.com/rossvideo/Catena.git && git pull origin develop && git checkout develop"
