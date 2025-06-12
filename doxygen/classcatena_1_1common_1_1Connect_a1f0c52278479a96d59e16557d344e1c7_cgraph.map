@@ -1,13 +1,13 @@
 <map id="catena::common::Connect::updateResponse_" name="catena::common::Connect::updateResponse_">
 <area shape="rect" id="Node000001" title="Updates the response message with parameter values and handles authorization checks." alt="" coords="5,197,197,237"/>
-<area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1ISubscriptionManager.html#ab5d55752a99c745909efca91f2931987" title="Get all subscribed OIDs, including expanding wildcard subscriptions." alt="" coords="258,5,483,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,196,164,126,201,88,244,55,256,49,258,53,247,60,205,92,168,130,117,199"/>
-<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31" title="get the descriptor of the parameter" alt="" coords="279,69,463,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="125,195,178,156,244,119,264,111,266,116,246,124,181,161,128,199"/>
-<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" title="Returns true if the call has been canceled." alt="" coords="273,133,469,173"/>
+<area shape="rect" id="Node000002" href="$classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31" title="get the descriptor of the parameter" alt="" coords="279,5,463,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,196,164,126,201,88,244,55,264,45,267,50,247,60,205,92,168,130,117,199"/>
+<area shape="rect" id="Node000003" href="$classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd" title="Returns true if the call has been canceled." alt="" coords="273,69,469,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="125,195,178,156,244,119,263,111,265,116,246,124,181,161,128,199"/>
+<area shape="rect" id="Node000004" href="$classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028" title="return true if this is a command parameter" alt="" coords="245,133,496,173"/>
 <area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="186,195,272,174,273,179,187,200"/>
-<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028" title="return true if this is a command parameter" alt="" coords="245,197,496,237"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="197,215,232,215,232,220,197,220"/>
+<area shape="rect" id="Node000005" href="$classcatena_1_1common_1_1ISubscriptionManager.html#a2306837ba01d990d283dbbed75b0a992" title="Check if an OID is subscribed to." alt="" coords="259,197,482,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="197,215,245,215,245,220,197,220"/>
 <area shape="rect" id="Node000006" href="$classcatena_1_1common_1_1IParamDescriptor.html#a21ec0cb6550d0de205b050bedec26611" title="get the minimal set status of the parameter" alt="" coords="245,261,496,301"/>
 <area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="187,235,273,256,272,261,186,240"/>
 <area shape="rect" id="Node000007" href="$classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401" title="Check if the client has read authorization." alt="" coords="267,325,474,365"/>
