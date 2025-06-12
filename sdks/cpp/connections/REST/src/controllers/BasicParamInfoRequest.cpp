@@ -55,8 +55,8 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader&
     
     // Parsing fields and assigning to respective variables.
     try {
-        // Get recursive from query parameters - presence means true
-        recursive_ = context_.hasField("recursive");
+        // Get recursive from query parameters - presence means true unless explicitly set to false
+        recursive_ = context_.hasField("recursive") && context_.fields("recursive") != "false";
 
         // Get oid_prefix from query parameters
         std::string oid_prefix_value = context_.fields("oid_prefix");

@@ -52,11 +52,14 @@ get:
     - name: recursive
       in: query
       required: false
-      description: Optional flag to recursively get info for all children.
+      description: Optional flag to recursively get info for all children. The 
+        presence of this parameter enables recursion, regardless of its value. 
+        (The value is ignored; any value such as "true" will have the same 
+        effect.)
       schema:
         type: string
-        enum: ["true", "false"]
-        default: "false" # because protobuf defaults to false
+        enum: ["true"]
+        default: ""
    
     - name: fqoid
       in: path
