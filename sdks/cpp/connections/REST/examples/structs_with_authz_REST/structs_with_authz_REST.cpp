@@ -124,7 +124,9 @@ void RunRESTServer() {
             std::string front = jptr.front_as_string();
             jptr.pop();
 
-            handlers[front](jptr.toString(), p, idx);
+            if (handlers.contains(front)) {
+                handlers[front](jptr.toString(), p, idx);
+            }
         });
         
         api.run();
