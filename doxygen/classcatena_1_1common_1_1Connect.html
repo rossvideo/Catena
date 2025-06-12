@@ -140,9 +140,9 @@ Protected Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>~Connect</b> ()=default</td></tr>
 <tr class="memdesc:afa1a5e9a2bce4cac9a6c362f66eacdb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br /></td></tr>
 <tr class="separator:afa1a5e9a2bce4cac9a6c362f66eacdb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11240b1de8befc4e8c1711130987364b" id="r_a11240b1de8befc4e8c1711130987364b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a11240b1de8befc4e8c1711130987364b">updateResponse_</a> (const std::string &amp;oid, size_t idx, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p) override</td></tr>
-<tr class="memdesc:a11240b1de8befc4e8c1711130987364b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
-<tr class="separator:a11240b1de8befc4e8c1711130987364b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f0c52278479a96d59e16557d344e1c7" id="r_a1f0c52278479a96d59e16557d344e1c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#a1f0c52278479a96d59e16557d344e1c7">updateResponse_</a> (const std::string &amp;oid, const <a class="el" href="classcatena_1_1common_1_1IParam.html">IParam</a> *p) override</td></tr>
+<tr class="memdesc:a1f0c52278479a96d59e16557d344e1c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with parameter values and handles authorization checks.  <br /></td></tr>
+<tr class="separator:a1f0c52278479a96d59e16557d344e1c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0762ce0d7bc1691e328f305eec2ace5" id="r_ab0762ce0d7bc1691e328f305eec2ace5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcatena_1_1common_1_1Connect.html#ab0762ce0d7bc1691e328f305eec2ace5">updateResponse_</a> (const <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html">ILanguagePack</a> *l) override</td></tr>
 <tr class="memdesc:ab0762ce0d7bc1691e328f305eec2ace5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the response message with an <a class="el" href="classcatena_1_1common_1_1ILanguagePack.html" title="Interface for Language Packs.">ILanguagePack</a> and handles authorization checks.  <br /></td></tr>
 <tr class="separator:ab0762ce0d7bc1691e328f305eec2ace5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -355,8 +355,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a11240b1de8befc4e8c1711130987364b" name="a11240b1de8befc4e8c1711130987364b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11240b1de8befc4e8c1711130987364b">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[2/2]</span></h2>
+<a id="a1f0c52278479a96d59e16557d344e1c7" name="a1f0c52278479a96d59e16557d344e1c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f0c52278479a96d59e16557d344e1c7">&#9670;&#160;</a></span>updateResponse_() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -369,12 +369,6 @@ Here is the call graph for this function:</div>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>oid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>idx</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -399,19 +393,18 @@ Here is the call graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">oid</td><td>- The OID of the value to update </td></tr>
-    <tr><td class="paramname">idx</td><td>- The index of the value to update </td></tr>
     <tr><td class="paramname">p</td><td>- The parameter to update </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#ae1663d3f7fa33ed154d5fa0ef90d9611">catena::common::IConnect</a>.</p>
+<p>Implements <a class="el" href="classcatena_1_1common_1_1IConnect.html#a2a058696007b25b45e2c7d4ecfd0c5c7">catena::common::IConnect</a>.</p>
 
 <p class="reference">References <a class="el" href="classcatena_1_1common_1_1Connect.html#aa8bc272574ef3b115d24b7ad925013d6">authz_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a17d6b5ab4a8216b5cc199be23eb1e7cd">cv_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a7a879b1ef16b80e48af3a923012bd28b">detailLevel_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a953f719fae8bdae4bf6153e9bf664cad">dm_</a>, <a class="el" href="classcatena_1_1common_1_1ISubscriptionManager.html#ab5d55752a99c745909efca91f2931987">catena::common::ISubscriptionManager::getAllSubscribedOids()</a>, <a class="el" href="classcatena_1_1common_1_1IParam.html#a9111464c2fc6f68b29db19d10610ac31">catena::common::IParam::getDescriptor()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#aeb08058009d6f93da96fc9c72ba6c99c">hasUpdate_</a>, <a class="el" href="classcatena_1_1common_1_1IConnect.html#a9e16530ff77a84dcb7c2b78d94dc88cd">catena::common::IConnect::isCancelled()</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#ac8fa8aef0a96605c1bdd1d6172312028">catena::common::IParamDescriptor::isCommand()</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a6342ecbe639d7aeefe576755b5966703">catena::common::Authorizer::kAuthzDisabled</a>, <a class="el" href="classcatena_1_1common_1_1IParamDescriptor.html#a21ec0cb6550d0de205b050bedec26611">catena::common::IParamDescriptor::minimalSet()</a>, <a class="el" href="namespacecatena.html#a8883f03e942ef610b66860d5b52f8d85a3f044eadb5d99ba7f40dd2fee2ca98bb">catena::OK</a>, <a class="el" href="classcatena_1_1common_1_1Authorizer.html#a2d0c5c9888480653d5c189c102513401">catena::common::Authorizer::readAuthz()</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a758621bfebc66d9e0439e3b9484351c5">res_</a>, <a class="el" href="classcatena_1_1common_1_1Connect.html#a1d1530db5d58c723f6067e5090e43db9">subscriptionManager_</a>, and <a class="el" href="classcatena_1_1common_1_1IParam.html#ae3c3913a84701762afa87ba3f4e551ff">catena::common::IParam::toProto()</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a11240b1de8befc4e8c1711130987364b_cgraph.svg" width="502" height="435"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
+<div class="center"><iframe scrolling="no" frameborder="0" src="classcatena_1_1common_1_1Connect_a1f0c52278479a96d59e16557d344e1c7_cgraph.svg" width="502" height="435"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 </div>
 
 </div>
