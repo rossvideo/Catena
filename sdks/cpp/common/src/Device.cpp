@@ -179,22 +179,44 @@ catena::exception_with_status Device::getLanguagePack(const std::string& languag
 
 catena::exception_with_status Device::addLanguage (catena::AddLanguagePayload& language, Authorizer& authz) {
     catena::exception_with_status ans{"", catena::StatusCode::OK};
+    auto& name = language.language_pack().name();
+    auto& id = language.id();
     // Admin scope required.
     if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
         ans = catena::exception_with_status("Not authorized to add language", catena::StatusCode::PERMISSION_DENIED);
+    // Making sure LanguagePack is properly formatted.
+    } else if (name.empty() || id.empty()) {
+        ans = catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
+    // Cannot overwrite non-field upgrade language packs.
+    } else if (language_packs_.contains(id) && !added_packs_.contains(id)) {
+        ans = catena::exception_with_status("Cannot overwrite language pack shipped with device", catena::StatusCode::PERMISSION_DENIED);
+    // Adding the language pack.
     } else {
-        auto& name = language.language_pack().name();
-        auto& id = language.id();
-        // Making sure LanguagePack is properly formatted.
-        if (name.empty() || id.empty()) {
-            ans = catena::exception_with_status("Invalid language pack", catena::StatusCode::INVALID_ARGUMENT);
-        } else {
-            // added_packs_ here to maintain ownership in device scope.
-            added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
-            language_packs_[id]->fromProto(language.language_pack());      
-            // Pushing update to connect gRPC.
-            languageAddedPushUpdate.emit(language_packs_[id]);
-        }
+        // added_packs_ here to maintain ownership in device scope.
+        added_packs_[id] = std::make_shared<LanguagePack>(id, name, LanguagePack::ListInitializer{}, *this);
+        language_packs_[id]->fromProto(language.language_pack());      
+        // Pushing update to connect gRPC.
+        languageAddedPushUpdate.emit(language_packs_[id]);
+    }
+    return ans;
+}
+
+catena::exception_with_status Device::removeLanguage(const std::string& languageId, Authorizer& authz) {
+    catena::exception_with_status ans{"", catena::StatusCode::OK};
+    // Admin scope required.
+    if (!authz.hasAuthz(Scopes().getForwardMap().at(Scopes_e::kAdmin) + ":w")) {
+        ans = catena::exception_with_status("Not authorized to delete language", catena::StatusCode::PERMISSION_DENIED);
+    // Cannot change shipped language packs.
+    } else if (language_packs_.contains(languageId) && !added_packs_.contains(languageId)) {
+        ans = catena::exception_with_status("Cannot delete language pack shipped with device", catena::StatusCode::PERMISSION_DENIED);
+    // Nothing to delete
+    } else if (!language_packs_.contains(languageId)) {
+        ans = catena::exception_with_status("Language pack '" + languageId + "' not found", catena::StatusCode::NOT_FOUND);
+    // Removing the language pack.
+    } else {
+        added_packs_.erase(languageId);
+        language_packs_.erase(languageId);
+        // Push update???
     }
     return ans;
 }

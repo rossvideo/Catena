@@ -43,9 +43,8 @@ set(sources
     "src/controllers/MultiSetValue.cpp"
     "src/controllers/SetValue.cpp"
     "src/controllers/GetParam.cpp"
-    "src/controllers/AddLanguage.cpp"
-    "src/controllers/LanguagePackRequest.cpp"
-    "src/controllers/ListLanguages.cpp"
+    "src/controllers/LanguagePack.cpp"
+    "src/controllers/Languages.cpp"
     "src/controllers/BasicParamInfoRequest.cpp"
     "src/controllers/UpdateSubscriptions.cpp"
 )

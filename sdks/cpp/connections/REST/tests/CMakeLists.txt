@@ -13,9 +13,8 @@ set(SOURCES
     SocketReader_test.cpp
     SocketWriter_test.cpp    
     GetValue_test.cpp
-    AddLanguage_test.cpp
-    LanguagePackRequest_test.cpp
-    ListLanguages_test.cpp
+    LanguagePack_test.cpp
+    Languages_test.cpp
     GetPopulatedSlots_test.cpp
     MultiSetValue_test.cpp
     SetValue_test.cpp
@@ -26,9 +25,8 @@ set(SOURCES
     ../src/SocketReader.cpp
     ../src/SocketWriter.cpp
     ../src/controllers/GetValue.cpp
-    ../src/controllers/AddLanguage.cpp
-    ../src/controllers/LanguagePackRequest.cpp
-    ../src/controllers/ListLanguages.cpp
+    ../src/controllers/LanguagePack.cpp
+    ../src/controllers/Languages.cpp
     ../src/controllers/GetPopulatedSlots.cpp
     ../src/controllers/MultiSetValue.cpp
     ../src/controllers/SetValue.cpp

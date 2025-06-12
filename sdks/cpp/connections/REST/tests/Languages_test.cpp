@@ -29,7 +29,7 @@
  */
 
 /**
- * @brief This file is for testing the LanguagePackRequest.cpp file.
+ * @brief This file is for testing the Languages.cpp file.
  * @author benjamin.whitten@rossvideo.com
  * @date 25/05/13
  * @copyright Copyright © 2025 Ross Video Ltd
@@ -52,80 +52,74 @@
 #include "../../common/tests/CommonMockClasses.h"
 
 // REST
-#include "controllers/LanguagePackRequest.h"
+#include "controllers/Languages.h"
 #include "SocketWriter.h"
 
 using namespace catena::common;
 using namespace catena::REST;
 
 // Fixture
-class RESTLanguagePackRequestTests : public ::testing::Test, public SocketHelper {
+class RESTLanguagesTests : public ::testing::Test, public SocketHelper {
   protected:
-    RESTLanguagePackRequestTests() : SocketHelper(&serverSocket, &clientSocket) {}
+    RESTLanguagesTests() : SocketHelper(&serverSocket, &clientSocket) {}
 
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
         oldCout = std::cout.rdbuf(MockConsole.rdbuf());
 
-        // Creating LanguagePackRequest object.
+        // Creating Languages object.
         EXPECT_CALL(context, origin()).Times(1).WillOnce(::testing::ReturnRef(origin));
-        languagePackRequest = LanguagePackRequest::makeOne(serverSocket, context, dm);
+        getLanguages = Languages::makeOne(serverSocket, context, dm);
     }
 
     void TearDown() override {
         std::cout.rdbuf(oldCout); // Restoring cout
         // Cleanup code here
-        if (languagePackRequest) {
-            delete languagePackRequest;
+        if (getLanguages) {
+            delete getLanguages;
         }
     }
     std::stringstream MockConsole;
     std::streambuf* oldCout;
-
-    std::string language = "en";
     
     MockSocketReader context;
     MockDevice dm;
     std::mutex mockMutex;
-    catena::REST::ICallData* languagePackRequest = nullptr;
+    catena::REST::ICallData* getLanguages = nullptr;
 };
 
 /*
  * ============================================================================
- *                               LanguagePackRequest tests
+ *                               Languages tests
  * ============================================================================
  * 
- * TEST 1 - Creating a LanguagePackRequest object with makeOne.
+ * TEST 1 - Creating a Languages object with makeOne.
  */
-TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_create) {
-    // Making sure languagePackRequest is created from the SetUp step.
-    ASSERT_TRUE(languagePackRequest);
+TEST_F(RESTLanguagesTests, Languages_create) {
+    ASSERT_TRUE(getLanguages);
 }
 
 /* 
- * TEST 2 - Normal case for LanguagePackRequest proceed().
+ * TEST 2 - Normal case for Languages proceed().
  */
-TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
+TEST_F(RESTLanguagesTests, Languages_proceedNormal) {
     // Setting up the returnVal to test with.
-    catena::DeviceComponent_ComponentLanguagePack returnVal;
+    catena::LanguageList returnVal;
     catena::exception_with_status rc("", catena::StatusCode::OK);
-    returnVal.set_language("en");
-    catena::LanguagePack *pack = returnVal.mutable_language_pack();
-    pack->set_name("English");
-    pack->mutable_words()->insert({"Hello", "Goodbye"});
+    returnVal.add_languages("en");
+    returnVal.add_languages("fr");
+    returnVal.add_languages("es");
 
     // Defining mock fuctions
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(context, fields("language")).Times(1).WillOnce(::testing::ReturnRef(language));
-    EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([&rc, &returnVal](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
-            pack.CopyFrom(returnVal);
-            return catena::exception_with_status(rc.what(), rc.status);
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
+    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
+        .WillByDefault(::testing::Invoke([&returnVal](catena::LanguageList& list) {
+            list.CopyFrom(returnVal);
         }));
 
     // Calling proceed() and checking written response.
-    languagePackRequest->proceed();
+    getLanguages->proceed();
 
     std::string jsonBody;
     google::protobuf::util::JsonPrintOptions options; // Default options
@@ -134,56 +128,32 @@ TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedNormal) {
 }
 
 /* 
- * TEST 3 - dm.getLanguagePack() returns an error.
+ * TEST 3 - dm.toProto() throws an error.
  */
-TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrReturn) {
-    // Setting up the returnVal to test with.
-    catena::exception_with_status rc("Language pack not found", catena::StatusCode::NOT_FOUND);
-
-    // Defining mock fuctions
-    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(context, fields("language")).Times(1).WillOnce(::testing::ReturnRef(language));
-    EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([&rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
-            return catena::exception_with_status(rc.what(), rc.status);
-        }));
-
-    // Calling proceed() and checking written response.
-    languagePackRequest->proceed();
-
-    EXPECT_EQ(readResponse(), expectedResponse(rc));
-}
-
-/* 
- * TEST 4 - dm.getLanguagePack() throws an error.
- */
-TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_proceedErrThrow) {
-    // Setting up the returnVal to test with.
+TEST_F(RESTLanguagesTests, Languages_proceedErr) {
+    // Setting up the rc to test with.
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
 
     // Defining mock fuctions
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
-    EXPECT_CALL(context, fields("language")).Times(1).WillOnce(::testing::ReturnRef(language));
-    EXPECT_CALL(dm, getLanguagePack(::testing::_, ::testing::_)).Times(1);
-    ON_CALL(dm, getLanguagePack(::testing::_, ::testing::_))
-        .WillByDefault(::testing::Invoke([&rc](const std::string &languageId, catena::DeviceComponent_ComponentLanguagePack &pack) {
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
+    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
+        .WillByDefault(::testing::Invoke([&rc](catena::LanguageList& list) {
             throw catena::exception_with_status(rc.what(), rc.status);
-            return catena::exception_with_status("", catena::StatusCode::OK); // Here to ignore errors.
         }));
 
     // Calling proceed() and checking written response.
-    languagePackRequest->proceed();
+    getLanguages->proceed();
 
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 5 - Writing to console with LanguagePackRequest finish().
+ * TEST 4 - Writing to console with Languages finish().
  */
-TEST_F(RESTLanguagePackRequestTests, LanguagePackRequest_finish) {
+TEST_F(RESTLanguagesTests, Languages_finish) {
     // Calling finish and expecting the console output.
-    languagePackRequest->finish();
+    getLanguages->finish();
     // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("LanguagePackRequest[4] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("Languages[3] finished\n") != std::string::npos);
 }
