@@ -166,28 +166,29 @@ TEST_F(SubscriptionManagerTest, GetAllSubscribedOids) {
 // ======= BASIC WILDCARD TESTS =======   
 
 // Test adding a wildcard subscription
-// BROKEN :/
-// TEST_F(SubscriptionManagerTest, AddWildcardSubscription) {
-//     catena::exception_with_status rc("", catena::StatusCode::OK);
+TEST_F(SubscriptionManagerTest, AddWildcardSubscription) {
+    catena::exception_with_status rc("", catena::StatusCode::OK);
     
-//     // Set up mock behavior for getParam
-//     EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
-//         .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
-//             auto param = std::make_unique<MockParam>();
-//             EXPECT_CALL(*param, getDescriptor())
-//                 .WillRepeatedly(::testing::ReturnRef(test_descriptor));
-//             EXPECT_CALL(*param, isArrayType())
-//                 .WillRepeatedly(::testing::Return(false));
-//             EXPECT_CALL(*param, getOid())
-//                 .WillRepeatedly(::testing::ReturnRef(fqoid));
-//             status = catena::exception_with_status("", catena::StatusCode::OK);
-//             return param;
-//         }));
+    // Set up mock behavior for getParam
+    EXPECT_CALL(*device, getParam(::testing::Matcher<const std::string&>(::testing::_), ::testing::_, ::testing::_))
+        .WillRepeatedly(::testing::Invoke([this](const std::string& fqoid, catena::exception_with_status& status, Authorizer& authz) -> std::unique_ptr<IParam> {
+            auto param = std::make_unique<MockParam>();
+            EXPECT_CALL(*param, getDescriptor())
+                .WillRepeatedly(::testing::ReturnRef(test_descriptor));
+            EXPECT_CALL(*param, isArrayType())
+                .WillRepeatedly(::testing::Return(false));
+            EXPECT_CALL(*param, getOid())
+                .WillRepeatedly(::testing::ReturnRef(fqoid));
+            EXPECT_CALL(test_descriptor, getAllSubParams())
+                .WillRepeatedly(::testing::ReturnRefOfCopy(std::unordered_map<std::string, IParamDescriptor*>()));
+            status = catena::exception_with_status("", catena::StatusCode::OK);
+            return param;
+        }));
     
-//     // Test adding a wildcard subscription
-//     EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
-//     EXPECT_EQ(rc.status, catena::StatusCode::OK);
-// }
+    // Test adding a wildcard subscription
+    EXPECT_TRUE(manager->addSubscription("/test/*", *device, rc));
+    EXPECT_EQ(rc.status, catena::StatusCode::OK);
+}
 
 // Test isWildcard function
 TEST_F(SubscriptionManagerTest, IsWildcard) {
