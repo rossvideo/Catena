@@ -173,6 +173,13 @@
       ],
       "preLaunchTask": "",
       "miDebuggerPath": "/usr/bin/gdb"
+    },
+    {
+      "type": "java",
+      "name": "Debug Java ServerMain",
+      "request": "launch",
+      "mainClass": "com.rossvideo.catena.example.main.ServerMain",
+      "args": "-d tmp/serverDir -device ../../example_device_models/device.minimal.json"
     }
   ],
   "inputs": [
