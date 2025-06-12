@@ -53,11 +53,11 @@ ExecuteCommand::ExecuteCommand(ICatenaServiceImpl *service, IDevice& dm, bool ok
  */
 void ExecuteCommand::proceed(bool ok) {
     std::cout << "ExecuteCommand proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+              << " status: " << static_cast<int>(status_) << ", ok: "
+              << std::boolalpha << ok << std::endl;
 
     // If the process is cancelled, finish the process
-    if(!ok){
+    if (!ok) {
         std::cout << "ExecuteCommand[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }

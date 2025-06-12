@@ -121,7 +121,7 @@ class DeviceRequest : public ICallData {
     /**
      * @brief The SocketWriter object for writing to socket_.
      */
-    SSEWriter writer_;
+    std::unique_ptr<ISocketWriter> writer_ = nullptr;
     /**
      * @brief The device to get components from.
      */

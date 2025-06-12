@@ -90,9 +90,6 @@ void audioDeckUpdateHandler(const std::string& jptr, const IParam* p, const int3
 
 }
 
-
-        
-
 void RunRPCServer(std::string addr)
 {
     // install signal handlers
@@ -139,7 +136,9 @@ void RunRPCServer(std::string addr)
             std::string front = jptr.front_as_string();
             jptr.pop();
 
-            handlers[front](jptr.toString(), p, idx);
+            if (handlers.contains(front)) {
+                handlers[front](jptr.toString(), p, idx);
+            }
         });
 
         // wait for the server to shutdown and tidy up

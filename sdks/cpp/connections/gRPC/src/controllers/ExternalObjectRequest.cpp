@@ -71,7 +71,7 @@ void ExternalObjectRequest::proceed(bool ok) {
                 << std::endl;
     
     // If the process is cancelled, finish the process
-    if(!ok){
+    if (!ok) {
         std::cout << "ExternalObjectRequest[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }

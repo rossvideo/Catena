@@ -76,13 +76,11 @@ void Connect::proceed() {
 
 void Connect::finish() {
     writeConsole_(CallStatus::kFinish, socket_.is_open());
-    try {
-        shutdownSignal_.disconnect(shutdownSignalId_);
-        dm_.valueSetByClient.disconnect(valueSetByClientId_);
-        dm_.valueSetByServer.disconnect(valueSetByServerId_);
-        dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
-    // Listener not yet initialized.
-    } catch (...) {}
+    // Disconnecting all initialized listeners.
+    if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+    if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
+    if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
+    if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
     // Finishing and closing the socket.
     if (socket_.is_open()) {
         writer_.sendResponse(catena::exception_with_status("", catena::StatusCode::OK));
