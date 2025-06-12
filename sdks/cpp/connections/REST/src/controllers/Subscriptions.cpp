@@ -71,7 +71,7 @@ void Subscriptions::proceed() {
                 authz = &catena::common::Authorizer::kAuthzDisabled;
             }
 
-            // GET subscriptions - Get and write all subscribed OIDs.
+            // GET/subscriptions - Get and write all subscribed OIDs.
             if (context_.method() == "GET") {
                 auto subbedOids = context_.getSubscriptionManager().getAllSubscribedOids(dm_);
                 for (auto oid : subbedOids) {
@@ -90,7 +90,7 @@ void Subscriptions::proceed() {
                     }
                 }
 
-            // PUT subscriptions - Add/remove subscriptions.
+            // PUT/subscriptions - Add/remove subscriptions.
             } else if (context_.method() == "PUT") {
                 // Parsing JSON body.
                 catena::UpdateSubscriptionsPayload req;
@@ -108,6 +108,10 @@ void Subscriptions::proceed() {
                         context_.getSubscriptionManager().addSubscription(oid, dm_, supressErr, *authz);
                     }
                 }
+
+            // Invalid method.
+            } else {
+                rc = catena::exception_with_status("", catena::StatusCode::INVALID_ARGUMENT);
             }
         } else {
             rc = catena::exception_with_status("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
