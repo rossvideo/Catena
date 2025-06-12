@@ -1,3 +1,4 @@
+#
 # Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,80 +29,21 @@
 #
 
 #
-# OpenAPI documentation of the Catena REST API's value endpoint
+# OpenAPI documentation of the Catena REST API's streamed command endpoint
 # Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/05/14
+# Date: 25/06/09
 #
 
-get:
-  summary: Get a parameter's value
+post:
+  summary: Execute a command on a device model
+  operationId: ExecuteCommandStream
 
-  operationId: GetValue
-
-  # default security is read-only
-
-  parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameters to get info for
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-   
-    - name: fqoid
-      in: path
-      required: true
-      description: Fully qualified OID of the parameter to get info for
-      schema:
-        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
-
-  tags:
-    - Parameters
-
-  responses:
-    "200":
-      description: The parameter value
-        
-      content:
-        application/json:
-          schema:
-            $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-          
-          example:
-            {
-              "string_value": "Hello, World!"
-            }
-
-    "400":
-      $ref: '../openapi.yaml#/components/responses/BadRequest'
-          
-    "401":
-      $ref: '../openapi.yaml#/components/responses/Unauthorized'
-
-    "403":
-      $ref: '../openapi.yaml#/components/responses/Forbidden'
-
-    "404":
-      $ref: '../openapi.yaml#/components/responses/NotFound'
-
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
-
-    "503":
-      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-
-put:
-  summary: Set a parameter's value
-
-  operationId: SetValue
-
-  # at least one scope with write access is required.
+  # Override default security, at least one scope with write access is required.
   security:
     - oauth2:
       - st2138:op:w
-    - oauth2:
+    - oauth2: 
       - st2138:cfg:w
     - oauth2:
       - st2138:adm:w
@@ -112,40 +54,62 @@ put:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
+
     - name: fqoid
       in: path
       required: true
-      description: Fully qualified OID of the parameter to get info for
+      description: The fully qualified object ID of the command to execute
       schema:
         $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-      default: ""
+      default: "pause"
+    
+    - name: respond
+      in: query
+      required: false
+      description: flag to suppress the server's response unless set to true
+      schema:
+        type: string
+        enum: ["true"]
+        default: "true" # because protobuf defaults to false
 
   tags:
-    - Parameters
-
+    - Commands
+    
   requestBody:
-    required: true
+    required: false
+    description: Optional value to pass to the command if required
     content:
       application/json:
         schema:
           $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          {
-            "string_value": "Hello, World!"
-          }
+        example: {"float32_value":0.5}
+
 
   responses:
-
-    "204":
-      description: Empty response - everything is OK
+    "200":
+      description: |
+        If 'respond' is true, the server's response will be a stream of command
+        responses. If 'respond' is false, the server will not respond with
+        content, just the status code.
+        The response is a sequence of stringified JSON objects, each containing
+        a single command response.
+        Each object in the stream has the following structure:
+      content:
+        text/event-stream:
+          schema:
+            type: string
           
-    "400":
-      $ref: '../openapi.yaml#/components/responses/BadRequest'
+          example: |
+            data: <stringified {"no_response":{}}>
+            data: <stringified {"response":{"string_value":"Command executed successfully"}}>
+            data: <stringified {"exception":{"type":"Invalid Command","error_message":"Error message","details":"Something went wrong"}}>
 
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+          
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
@@ -155,9 +119,5 @@ put:
     "404":
       $ref: '../openapi.yaml#/components/responses/NotFound'
 
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
-
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-  

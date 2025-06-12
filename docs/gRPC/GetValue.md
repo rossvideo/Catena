@@ -10,9 +10,6 @@ Gets the value of a parameter within a device model.
 message GetValuePayload {
   uint32 slot = 1;          // Uniquely identifies the device at node scope.
   string oid = 2;           // Uniquely identifies the param at device scope
-  uint32 element_index = 3; /* (UNUSED) When requesting single elements of
-                             * array parameters, the element in the array to
-                             * get */
 }
 ```
 

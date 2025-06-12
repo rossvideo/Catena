@@ -78,6 +78,10 @@ void CatenaServiceImpl::processEvents() {
                 std::thread(&ICallData::proceed, static_cast<ICallData *>(tag), ok).detach();
                 break;
             case ServerCompletionQueue::SHUTDOWN:
+                // Waiting until all events are processed to exit.
+                while (registry_.size() > 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
                 return;
             case ServerCompletionQueue::TIMEOUT:
                 break;

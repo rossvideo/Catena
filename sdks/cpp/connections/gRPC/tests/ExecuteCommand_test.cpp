@@ -160,12 +160,11 @@ class gRPCExecuteCommandTests : public ::testing::Test {
     /*
      * Streamlines the creation of executeCommandPayloads. 
      */
-    catena::ExecuteCommandPayload createPayload(const std::string& oid, const std::string& value, bool respond = true, bool proceed = true) {
+    catena::ExecuteCommandPayload createPayload(const std::string& oid, const std::string& value, bool respond = true) {
         catena::ExecuteCommandPayload inVal;
         inVal.set_oid(oid);
         inVal.mutable_value()->set_string_value(value);
         inVal.set_respond(respond);
-        inVal.set_proceed(proceed);
         return inVal;
     }
 
@@ -229,7 +228,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
     testRPC.expResponse("test_response_1");
     testRPC.expResponse("test_response_2");
     testRPC.expResponse("test_response_3");
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
 
     // Mocking kProcess functions
     mockServer.expectAuthz();
@@ -266,7 +265,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalResponse) {
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expNoResponse();
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
 
     // Mocking kProcess functions
     mockServer.expectAuthz();
@@ -297,7 +296,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_NormalException) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expException("test_exception_type", "test_exception_details");
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
 
     // Mocking kProcess functions
     mockServer.expectAuthz();
@@ -331,7 +330,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
     testRPC.expResponse("test_response_1");
     testRPC.expResponse("test_response_2");
     testRPC.expResponse("test_response_3");
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false);
 
     // Mocking kProcess functions
     mockServer.expectAuthz();
@@ -365,7 +364,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_RespondFalse) {
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_AuthzValid) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     testRPC.expNoResponse();
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", true);
     // Adding authorization mockToken metadata. This it a random RSA token.
     std::string mockToken = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
                             "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
@@ -548,7 +547,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false);
 
     // Mocking kProcess functions
     mockServer.expectAuthz();
@@ -576,7 +575,7 @@ TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
  */
 TEST_F(gRPCExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false, true);
+    catena::ExecuteCommandPayload inVal = createPayload("test_command", "test_value", false);
 
     // Mocking kProcess functions
     mockServer.expectAuthz();

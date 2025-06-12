@@ -109,7 +109,7 @@ class CallData : public ICallData {
     /**
      * @brief Pointer to CatenaServiceImpl
      */
-    ICatenaServiceImpl *service_;
+    ICatenaServiceImpl* service_;
 };
 
 };

@@ -29,9 +29,10 @@
 #
 
 #
-# OpenAPI documentation of the GetParam RPC for the Catena REST API
+# OpenAPI documentation of the Catena REST API's param endpoint
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/04/03
+# Date: 25/06/09
 #
 
 get:
@@ -71,7 +72,7 @@ get:
               "oid": "/text_box",
               "param": {
                 "name": {
-                  "displayStrings": {
+                  "display_strings": {
                     "en": "Text Box",
                     "es": "Caja de Texto",
                     "fr": "Boîte de Texte"

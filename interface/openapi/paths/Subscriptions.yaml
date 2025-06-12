@@ -28,10 +28,10 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
-# Author: benjamin.whitten@rossvideo.com
+# OpenAPI documentation of the Catena REST API's subscriptions endpoint
+# Author: john.naylor@rossvideo.com
 # Author: zuhayr.sarker@rossvideo.com
-# Date: 25/04/22
+# Date: 25/05/14
 #
 
 get:
@@ -45,7 +45,7 @@ get:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model containing the subscriptions to get
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
 
@@ -55,27 +55,50 @@ get:
 
   responses:
     "200":
-      description: Current subscriptions
+      description: A component param for each parameter the speicfied device is
+        subscribed to
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              oids:
-                type: array
-                items:
-                  type: string
-                  schema:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-            additionalProperties: false 
-            example:
-              {
-                "oids": [
-                  "/ipv4",
-                  "/gateway",
-                  "/dns"
-                ]
-              }
+            $ref: "./Messages.yaml#/$defs/component_param"
+          example:
+            {
+              "data" : [
+                {
+                  "oid": "text_box",
+                  "param": {
+                    "oid_aliases": [],
+                    "client_hints": {},
+                    "commands": {},
+                    "params": {},
+                    "name": {
+                      "display_strings": {
+                        "fr": "Boîte de Texte",
+                        "en": "Text Box",
+                        "es": "Caja de Texto"
+                      }
+                    },
+                    "type": "STRING",
+                    "read_only": false,
+                    "widget": "",
+                    "precision": 0,
+                    "value": {
+                      "string_value": "Hello, World!"
+                    },
+                    "constraint": null,
+                    "max_length": 0,
+                    "total_length": 0,
+                    "access_scope": "",
+                    "response": false,
+                    "help": null,
+                    "import": null,
+                    "minimal_set": false,
+                    "stateless": false,
+                    "template_oid": ""
+                  }
+                }
+              ]
+            }
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
@@ -109,7 +132,7 @@ put:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model containing the subscriptions to update
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
   
