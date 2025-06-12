@@ -43,6 +43,7 @@ var hierarchy =
       ] ]
     ] ],
     [ "catena::REST::ICallData", "classcatena_1_1REST_1_1ICallData.html", [
+      [ "catena::REST::AddLanguage", "classcatena_1_1REST_1_1AddLanguage.html", null ],
       [ "catena::REST::AssetRequest", "classcatena_1_1REST_1_1AssetRequest.html", null ],
       [ "catena::REST::BasicParamInfoRequest", "classcatena_1_1REST_1_1BasicParamInfoRequest.html", null ],
       [ "catena::REST::Connect", "classcatena_1_1REST_1_1Connect.html", null ],
@@ -51,12 +52,12 @@ var hierarchy =
       [ "catena::REST::GetParam", "classcatena_1_1REST_1_1GetParam.html", null ],
       [ "catena::REST::GetPopulatedSlots", "classcatena_1_1REST_1_1GetPopulatedSlots.html", null ],
       [ "catena::REST::GetValue", "classcatena_1_1REST_1_1GetValue.html", null ],
-      [ "catena::REST::LanguagePack", "classcatena_1_1REST_1_1LanguagePack.html", null ],
-      [ "catena::REST::Languages", "classcatena_1_1REST_1_1Languages.html", null ],
+      [ "catena::REST::LanguagePackRequest", "classcatena_1_1REST_1_1LanguagePackRequest.html", null ],
+      [ "catena::REST::ListLanguages", "classcatena_1_1REST_1_1ListLanguages.html", null ],
       [ "catena::REST::MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", [
         [ "catena::REST::SetValue", "classcatena_1_1REST_1_1SetValue.html", null ]
       ] ],
-      [ "catena::REST::UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", null ]
+      [ "catena::REST::Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", null ]
     ] ],
     [ "catena::common::IParamDescriptor::ICommandResponder", "classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html", [
       [ "catena::common::ParamDescriptor::CommandResponder", "classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html", null ]
