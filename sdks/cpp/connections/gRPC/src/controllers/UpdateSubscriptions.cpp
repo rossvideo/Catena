@@ -43,11 +43,12 @@ UpdateSubscriptions::UpdateSubscriptions(ICatenaServiceImpl *service, IDevice& d
 }
 
 void UpdateSubscriptions::proceed(bool ok) {
-    std::cout << "UpdateSubscriptions proceed[" << objectId_ << "]: " << timeNow()
-              << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-              << std::endl;
+    std::cout << "UpdateSubscriptions proceed[" << objectId_ << "]: "
+              << timeNow() << " status: " << static_cast<int>(status_)
+              << ", ok: " << std::boolalpha << ok << std::endl;
 
-    if(!ok) {
+    // If the process is cancelled, finish the process
+    if (!ok) {
         std::cout << "UpdateSubscriptions[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
@@ -163,7 +164,10 @@ void UpdateSubscriptions::proceed(bool ok) {
             std::cout << "UpdateSubscriptions[" << objectId_ << "] finished\n";
             service_->deregisterItem(this);
             break;
-
+        /*
+         * default: Error, end process.
+         * This should be impossible to reach.
+         */
         default:// GCOVR_EXCL_START
             status_ = CallStatus::kFinish;
             grpc::Status errorStatus(grpc::StatusCode::INTERNAL, "illegal state");

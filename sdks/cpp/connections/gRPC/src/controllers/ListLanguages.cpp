@@ -46,9 +46,13 @@ void ListLanguages::proceed(bool ok) {
     std::cout << "ListLanguages::proceed[" << objectId_ << "]: " << timeNow()
               << " status: " << static_cast<int>(status_) << ", ok: "
               << std::boolalpha << ok << std::endl;
-    if(!ok){
+    
+    // If the process is cancelled, finish the process
+    if (!ok) {
+        std::cout << "ListLanguages[" << objectId_ << "] cancelled\n";
         status_ = CallStatus::kFinish;
     }
+
     switch(status_){
         /** 
          * kCreate: Updates status to kProcess and requests the ListLanguages
