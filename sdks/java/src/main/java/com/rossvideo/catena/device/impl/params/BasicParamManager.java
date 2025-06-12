@@ -545,7 +545,7 @@ public class BasicParamManager implements ParamManager
     }
 
     @Override
-    public Value getValue(String oid, Integer index)
+    public Value getValue(String oid)
     {
       //TODO handle arrays and inefficient creation of values
         Value v = uncommittedValues.get(oid);
@@ -572,7 +572,7 @@ public class BasicParamManager implements ParamManager
     }
 
     @Override
-    public void setValue(String oid, Integer index, Value value)
+    public void setValue(String oid, Value value)
     {
         //TODO handle arrays
         uncommittedValues.put(oid, value);

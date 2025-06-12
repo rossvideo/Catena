@@ -61,8 +61,8 @@ public interface ParamManager
 
     public Param.Builder setWidgetHint(Param.Builder param, String widgetHint);
 
-    public Value getValue(String oid, Integer index);
+    public Value getValue(String oid);
 
-    public void setValue(String oid, Integer index, Value value);
+    public void setValue(String oid, Value value);
 
 }

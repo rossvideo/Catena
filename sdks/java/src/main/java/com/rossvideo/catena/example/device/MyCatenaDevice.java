@@ -102,7 +102,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
     
     private void updateTime()
     {
-        Value clockOn = getParamManager().getValue(CLOCK_ON_OID, 0);
+        Value clockOn = getParamManager().getValue(CLOCK_ON_OID);
         boolean shouldUpdate = clockOn == null ? false : clockOn.getInt32Value() != 0;
         if (!shouldUpdate)
         {
@@ -122,7 +122,7 @@ public class MyCatenaDevice extends BasicCatenaDevice {
         String time = getTime();
         try
         {
-            setValue(DATE_AND_TIME_OID, 0, Value.newBuilder().setStringValue(time).build());
+            setValue(DATE_AND_TIME_OID, Value.newBuilder().setStringValue(time).build());
         }
         catch (UnknownOidException ex)
         {
