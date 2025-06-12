@@ -120,44 +120,41 @@ void combo_boxUpdateHandler(const std::string& oid, const IParam* p) {
 }
 
 void statusUpdateExample(){   
-    std::thread loop([]() {
-        std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
-        handlers["/counter"] = counterUpdateHandler;
-        handlers["/text_box"] = text_boxUpdateHandler;
-        handlers["/button"] = buttonUpdateHandler;
-        handlers["/slider"] = sliderUpdateHandler;
-        handlers["/combo_box"] = combo_boxUpdateHandler;
+    std::map<std::string, std::function<void(const std::string&, const IParam*)>> handlers;
+    handlers["/counter"] = counterUpdateHandler;
+    handlers["/text_box"] = text_boxUpdateHandler;
+    handlers["/button"] = buttonUpdateHandler;
+    handlers["/slider"] = sliderUpdateHandler;
+    handlers["/combo_box"] = combo_boxUpdateHandler;
 
-        // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p) {
-            if (handlers.contains(oid)) {
-                handlers[oid](oid, p);
-            }
-        });
-
-        catena::exception_with_status err{"", catena::StatusCode::OK};
-
-        // The rest is the "sending end" of the status update example
-        std::unique_ptr<IParam> param = dm.getParam("/counter", err);
-        if (param == nullptr) {
-            throw err;
-        }
-
-        // downcast the IParam to a ParamWithValue<int32_t>
-        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
-
-        while (globalLoop) {
-            // update the counter once per second, and emit the event
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            {
-                std::lock_guard lg(dm.mutex());
-                counter.get()++;
-                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &counter);
-            }
+    // this is the "receiving end" of the status update example
+    dm.valueSetByClient.connect([&handlers](const std::string& oid, const IParam* p) {
+        if (handlers.contains(oid)) {
+            handlers[oid](oid, p);
         }
     });
-    loop.detach();
+
+    catena::exception_with_status err{"", catena::StatusCode::OK};
+
+    // The rest is the "sending end" of the status update example
+    std::unique_ptr<IParam> param = dm.getParam("/counter", err);
+    if (param == nullptr) {
+        throw err;
+    }
+
+    // downcast the IParam to a ParamWithValue<int32_t>
+    auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param.get());
+
+    while (globalLoop) {
+        // update the counter once per second, and emit the event
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        {
+            std::lock_guard lg(dm.mutex());
+            counter.get()++;
+            std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+            dm.valueSetByServer.emit("/counter", &counter);
+        }
+    }
 }
 
 void RunRESTServer() {
@@ -178,9 +175,11 @@ void RunRESTServer() {
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
-        statusUpdateExample();
-        
+        std::thread counterLoop(statusUpdateExample);
+
         api.run();
+
+        counterLoop.join();
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
     }

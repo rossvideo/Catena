@@ -52,14 +52,14 @@ catena::gRPC::Connect::Connect(ICatenaServiceImpl *service, IDevice& dm, bool ok
 // Manages gRPC command execution process using the state variable status.
 void catena::gRPC::Connect::proceed(bool ok) {
     std::cout << "Connect proceed[" << objectId_ << "]: " << timeNow()
-                << " status: " << static_cast<int>(status_) << ", ok: " << std::boolalpha << ok
-                << std::endl;
+                << " status: " << static_cast<int>(status_) << ", ok: "
+                << std::boolalpha << ok << std::endl;
 
     /**
      * The newest connect object (the one that has not yet been attached to a
      * client request) will send shutdown signal to cancel all open connections
      */
-    if(!ok && status_ != CallStatus::kFinish){
+    if (!ok && status_ != CallStatus::kFinish) {
         std::cout << "Connect[" << objectId_ << "] cancelled\n";
         std::cout << "Cancelling all open connections" << std::endl;
         shutdownSignal_.emit();
@@ -151,10 +151,11 @@ void catena::gRPC::Connect::proceed(bool ok) {
          */
         case CallStatus::kFinish:
             std::cout << "Connect[" << objectId_ << "] finished\n";
-            shutdownSignal_.disconnect(shutdownSignalId_);
-            dm_.valueSetByClient.disconnect(valueSetByClientId_);
-            dm_.valueSetByServer.disconnect(valueSetByServerId_);
-            dm_.languageAddedPushUpdate.disconnect(languageAddedId_);
+            // Disconnecting all initialized listeners.
+            if (shutdownSignalId_ != 0) { shutdownSignal_.disconnect(shutdownSignalId_); }
+            if (valueSetByClientId_ != 0) { dm_.valueSetByClient.disconnect(valueSetByClientId_); }
+            if (valueSetByServerId_ != 0) { dm_.valueSetByServer.disconnect(valueSetByServerId_); }
+            if (languageAddedId_ != 0) { dm_.languageAddedPushUpdate.disconnect(languageAddedId_); }
             service_->deregisterItem(this);
             break;
         // default: Error, end process.

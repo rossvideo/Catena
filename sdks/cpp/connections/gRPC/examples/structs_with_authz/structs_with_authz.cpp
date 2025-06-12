@@ -139,7 +139,9 @@ void RunRPCServer(std::string addr)
             std::string front = jptr.front_as_string();
             jptr.pop();
 
-            handlers[front](jptr.toString(), p);
+            if (handlers.contains(front)) {
+                handlers[front](jptr.toString(), p);
+            }
         });
 
         // wait for the server to shutdown and tidy up

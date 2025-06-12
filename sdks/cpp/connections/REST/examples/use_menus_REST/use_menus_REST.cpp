@@ -83,37 +83,34 @@ void handle_signal(int sig) {
 }
 
 void statusUpdateExample(){   
-    std::thread loop([]() {
-        // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
-            // all we do here is print out the oid of the parameter that was changed
-            // your biz logic would do something _even_more_ interesting!
-            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
-        });
-
-        // The rest is the "sending end" of the status update example
-        IParam* param = dm.getItem<ParamTag>("counter");
-        if (param == nullptr) {
-            std::stringstream why;
-            why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
-            throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
-        }
-
-        // downcast the IParam to a ParamWithValue<int32_t>
-        auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param);
-
-        while (globalLoop) {
-            // update the counter once per second, and emit the event
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            {
-                std::lock_guard lg(dm.mutex());
-                counter.get()++;
-                std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-                dm.valueSetByServer.emit("/counter", &counter);
-            }
-        }
+    // this is the "receiving end" of the status update example
+    dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
+        // all we do here is print out the oid of the parameter that was changed
+        // your biz logic would do something _even_more_ interesting!
+        std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
     });
-    loop.detach();
+
+    // The rest is the "sending end" of the status update example
+    IParam* param = dm.getItem<ParamTag>("counter");
+    if (param == nullptr) {
+        std::stringstream why;
+        why << __PRETTY_FUNCTION__ << "\nparam 'counter' not found";
+        throw catena::exception_with_status(why.str(), catena::StatusCode::NOT_FOUND);
+    }
+
+    // downcast the IParam to a ParamWithValue<int32_t>
+    auto& counter = *dynamic_cast<ParamWithValue<int32_t>*>(param);
+
+    while (globalLoop) {
+        // update the counter once per second, and emit the event
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        {
+            std::lock_guard lg(dm.mutex());
+            counter.get()++;
+            std::cout << counter.getOid() << " set to " << counter.get() << '\n';
+            dm.valueSetByServer.emit("/counter", &counter);
+        }
+    }
 }
 
 void RunRESTServer() {
@@ -134,9 +131,12 @@ void RunRESTServer() {
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
-        statusUpdateExample();
-        
+        std::thread counterLoop(statusUpdateExample);
+
         api.run();
+
+        counterLoop.join();
+
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
     }
