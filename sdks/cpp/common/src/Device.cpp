@@ -112,7 +112,7 @@ catena::exception_with_status Device::commitMultiSetValue (catena::MultiSetValue
             }
             // Setting value and emitting signal.
             ans = param->fromProto(setValuePayload.value(), authz);
-            valueSetByClient.emit(setValuePayload.oid(), param.get(), 0);
+            valueSetByClient.emit(setValuePayload.oid(), param.get());
             // Resetting trackers to match new value.
             if (parent) { parent->resetValidate();
             } else { param->resetValidate(); }

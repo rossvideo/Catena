@@ -1,3 +1,4 @@
+#
 # Copyright 2025 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,23 +29,22 @@
 #
 
 #
-# OpenAPI documentation of the Catena REST API's values endpoint
+# OpenAPI documentation of the Catena REST API's streamed command endpoint
 # Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/06/09
 #
 
-put:
-  summary: Sets the values of multiple parameters idempotently - i.e. either all are set or none are
+post:
+  summary: Execute a command on a device model
+  operationId: ExecuteCommandStream
 
-  operationId: SetValues
-
-  # at least one scope with write access is required.
+  # Override default security, at least one scope with write access is required.
   security:
     - oauth2:
       - st2138:op:w
-    - oauth2:
-      - st2138:cfg:w  
+    - oauth2: 
+      - st2138:cfg:w
     - oauth2:
       - st2138:adm:w
     - oauth2:
@@ -54,51 +54,58 @@ put:
     - name: slot
       in: path
       required: true
-      description: The slot of the device model containing the parameters to get info for
+      description: The slot of the device model to get the value from
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
-  tags:
-    - Parameters
 
+    - name: fqoid
+      in: path
+      required: true
+      description: The fully qualified object ID of the command to execute
+      schema:
+        $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+      default: "pause"
+    
+    - name: respond
+      in: query
+      required: false
+      description: flag to suppress the server's response unless set to true
+      schema:
+        type: string
+        enum: ["true"]
+        default: "true" # because protobuf defaults to false
+
+  tags:
+    - Commands
+    
   requestBody:
-    required: true
+    required: false
+    description: Optional value to pass to the command if required
     content:
       application/json:
         schema:
-          type: array
-          items:
-            type: object
-            properties:
-              fqoid:
-                type: string
-                description: Fully qualified OID of the parameter to get info for
-                schema: 
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-              value:
-                type: object
-                schema:
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          - oid: "/ipv4"
-            value:
-              string_value: "192.168.1.1"
-          - oid: "/gateway"
-            value:
-              string_value: "192.168.1.254"
-          - oid: "/subnet"
-            value:
-              string_value: "255.255.255.0"
-          - oid: "/dns"
-            value:
-              string_value: "8.8.8.8"
-          - oid: "/dns_alt"
-            value:
-              string_value: "8.8.4.4"
+          $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+        example: {"float32_value":0.5}
+
 
   responses:
-    "204":
-      description: Empty response - everything is OK
+    "200":
+      description: |
+        If 'respond' is true, the server's response will be a stream of command
+        responses. If 'respond' is false, the server will not respond with
+        content, just the status code.
+        The response is a sequence of stringified JSON objects, each containing
+        a single command response.
+        Each object in the stream has the following structure:
+      content:
+        text/event-stream:
+          schema:
+            type: string
+          
+          example: |
+            data: <stringified {"no_response":{}}>
+            data: <stringified {"response":{"string_value":"Command executed successfully"}}>
+            data: <stringified {"exception":{"type":"Invalid Command","error_message":"Error message","details":"Something went wrong"}}>
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
@@ -114,6 +121,3 @@ put:
 
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-
-
-  

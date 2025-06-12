@@ -91,11 +91,10 @@ class RESTExecuteCommandTests : public ::testing::Test, public SocketHelper {
     /*
      * Streamlines the creation of executeCommandPayloads. 
      */
-    void setInVal(const std::string& oid, const std::string& value, bool respond = true, bool proceed = true) {
+    void setInVal(const std::string& oid, const std::string& value, bool respond = true) {
         inVal.set_oid(oid);
         inVal.mutable_value()->set_string_value(value);
         inVal.set_respond(respond);
-        inVal.set_proceed(proceed);
         auto status = google::protobuf::util::MessageToJsonString(inVal.value(), &inValJsonBody);
     }
     /*
@@ -111,7 +110,6 @@ class RESTExecuteCommandTests : public ::testing::Test, public SocketHelper {
      */
     void expContext() {
         EXPECT_CALL(context, hasField("respond")).Times(1).WillOnce(::testing::Return(inVal.respond()));
-        EXPECT_CALL(context, hasField("proceed")).Times(1).WillOnce(::testing::Return(inVal.proceed()));
         if (inValJsonBody.empty()) {
             EXPECT_CALL(context, jsonBody()).Times(1).WillOnce(::testing::ReturnRef(inValJsonBody));
         } else {
@@ -185,7 +183,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expResponse("test_response_1");
     expResponse("test_response_2");
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -222,7 +220,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalResponse) {
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expNoResponse();
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -256,7 +254,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalNoResponse) {
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_NormalException) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expException("test_exception_type", "test_exception_details");
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -292,7 +290,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
     // We should not read these in the asyncReader.
     expResponse("test_response_1");
     expResponse("test_response_2");
-    setInVal("test_command", "test_value", false, true);
+    setInVal("test_command", "test_value", false);
 
     // Mocking kProcess functions
     expContext();
@@ -326,7 +324,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_RespondFalse) {
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzValid) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     expNoResponse();
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
     // Adding authorization mockToken metadata. This it a random RSA token.
     std::string mockToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIi"
                             "OiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2Nvc"
@@ -385,7 +383,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_AuthzInvalid) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
     catena::exception_with_status rc("Failed to parse JSON body", catena::StatusCode::INVALID_ARGUMENT);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
     inValJsonBody = "THIS SHOULD NOT PARSE"; // Invalid JSON body.
 
     // Mocking kProcess functions
@@ -399,7 +397,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_InvalidJsonBody) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
     catena::exception_with_status rc("Command not found", catena::StatusCode::INVALID_ARGUMENT);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -419,7 +417,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandReturnError) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -439,7 +437,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowCatena) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -456,7 +454,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetCommandThrowUnknown) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
     catena::exception_with_status rc("Illegal state", catena::StatusCode::INTERNAL);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -477,7 +475,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandReturnError) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -502,7 +500,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowCatena) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -527,7 +525,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_ExecuteCommandThrowUnknown) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
     catena::exception_with_status rc("Threw error", catena::StatusCode::INVALID_ARGUMENT);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();
@@ -557,7 +555,7 @@ TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowCatena) {
  */
 TEST_F(RESTExecuteCommandTests, ExecuteCommand_GetNextThrowUnknown) {
     catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
-    setInVal("test_command", "test_value", true, true);
+    setInVal("test_command", "test_value", true);
 
     // Mocking kProcess functions
     expContext();

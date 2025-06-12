@@ -133,7 +133,7 @@ void defineCommands() {
                         {
                         std::lock_guard lg(dm.mutex());
                         fibParam.get() = next;
-                        dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+                        dm.valueSetByServer.emit("/number_example", &fibParam);
                         }
                     }
                 });
@@ -177,7 +177,7 @@ void defineCommands() {
             if (intParam) {
                 auto& fibParam = *dynamic_cast<ParamWithValue<int32_t>*>(intParam.get());
                 fibParam.get() = value.int32_value();
-                dm.valueSetByServer.emit("/number_example", &fibParam, 0);
+                dm.valueSetByServer.emit("/number_example", &fibParam);
                 response.mutable_no_response();
             } else {
                 response.mutable_exception()->set_type("Invalid Command");
@@ -276,7 +276,7 @@ void startCounter() {
                 counter.get() = 0; // Reset counter to 0 when it reaches 200
             }
             std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-            dm.valueSetByServer.emit("/counter", &counter, 0);
+            dm.valueSetByServer.emit("/counter", &counter);
         }
     }
 }

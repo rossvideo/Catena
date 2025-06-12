@@ -28,27 +28,19 @@
 #
 
 #
-# OpenAPI documentation of the Catena REST API's values endpoint
+# OpenAPI documentation of the Catena REST API's streaned subscriptions endpoint
 # Author: john.naylor@rossvideo.com
+# Author: zuhayr.sarker@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
-# Date: 25/06/09
+# Date: 25/06/11
 #
 
-put:
-  summary: Sets the values of multiple parameters idempotently - i.e. either all are set or none are
+get:
+  summary: Get the current subscriptions
 
-  operationId: SetValues
+  operationId: GetSubscriptionsStream
 
-  # at least one scope with write access is required.
-  security:
-    - oauth2:
-      - st2138:op:w
-    - oauth2:
-      - st2138:cfg:w  
-    - oauth2:
-      - st2138:adm:w
-    - oauth2:
-      - st2138:mon:w
+  # default security is read-only
 
   parameters:
     - name: slot
@@ -57,48 +49,24 @@ put:
       description: The slot of the device model containing the parameters to get info for
       schema:
         $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
+
   tags:
+    - Subscriptions
     - Parameters
 
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              fqoid:
-                type: string
-                description: Fully qualified OID of the parameter to get info for
-                schema: 
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-              value:
-                type: object
-                schema:
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          - oid: "/ipv4"
-            value:
-              string_value: "192.168.1.1"
-          - oid: "/gateway"
-            value:
-              string_value: "192.168.1.254"
-          - oid: "/subnet"
-            value:
-              string_value: "255.255.255.0"
-          - oid: "/dns"
-            value:
-              string_value: "8.8.8.8"
-          - oid: "/dns_alt"
-            value:
-              string_value: "8.8.4.4"
-
   responses:
-    "204":
-      description: Empty response - everything is OK
+    "200":
+      description: A stream of component params which the speicfied device is
+        subscribed to. These updates are sent as server-sent events and have
+        stringified JSON in their data field.
+      content:
+        text/event-stream:
+          schema:
+            type: string
+          example: |
+            data: <stringified ComponentParam>
+            data: <stringified ComponentParam>
+            data: <stringified ComponentParam>
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
@@ -114,6 +82,3 @@ put:
 
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-
-
-  
