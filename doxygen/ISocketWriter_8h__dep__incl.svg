@@ -46,7 +46,7 @@
   </g>
 </defs>
 <script type="application/ecmascript">
-var viewWidth = 3190;
+var viewWidth = 3225;
 var viewHeight = 291;
 var sectionId = 'dynsection-1';
 </script>
@@ -332,10 +332,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000015" class="node">
 <title>Node15</title>
 <g id="a_Node000015"><a xlink:href="REST_2include_2controllers_2MultiSetValue_8h.html" target="_top" xlink:title="Implements REST MultiSetValue controller.">
-<polygon fill="white" stroke="#666666" points="3181.51,-123.5 2964.51,-123.5 2964.51,-82.5 3181.51,-82.5 3181.51,-123.5"/>
-<text text-anchor="start" x="2972.51" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2972.51" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3073.01" y="-89.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/MultiSetValue.h</text>
+<polygon fill="white" stroke="#666666" points="3216.51,-123.5 2999.51,-123.5 2999.51,-82.5 3216.51,-82.5 3216.51,-123.5"/>
+<text text-anchor="start" x="3007.51" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3007.51" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="3108.01" y="-89.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/MultiSetValue.h</text>
 </a>
 </g>
 </g>
@@ -343,19 +343,19 @@ var sectionId = 'dynsection-1';
 <g id="edge14_Node000002_Node000015" class="edge">
 <title>Node2&#45;&gt;Node15</title>
 <g id="a_edge14_Node000002_Node000015"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1599.05,-183.06C1873.75,-178.4 2691.68,-162.06 2956.01,-129 2967.14,-127.61 2978.78,-125.69 2990.22,-123.53"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1598.67,-179.57 1588.73,-183.24 1598.78,-186.57 1598.67,-179.57"/>
+<path fill="none" stroke="#63b8ff" d="M1598.81,-183.14C1877.59,-178.64 2718.68,-162.57 2990.01,-129 3001.23,-127.61 3012.97,-125.7 3024.51,-123.54"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1598.68,-179.64 1588.74,-183.3 1598.79,-186.64 1598.68,-179.64"/>
 </a>
 </g>
 </g>
 <!-- Node17 -->
 <g id="Node000017" class="node">
 <title>Node17</title>
-<g id="a_Node000017"><a xlink:href="Subscriptions_8h.html" target="_top" xlink:title="Implements Catena REST Subscriptions.">
-<polygon fill="white" stroke="#666666" points="2946.51,-123.5 2731.51,-123.5 2731.51,-82.5 2946.51,-82.5 2946.51,-123.5"/>
-<text text-anchor="start" x="2739.51" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2739.51" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="2839.01" y="-89.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/Subscriptions.h</text>
+<g id="a_Node000017"><a xlink:href="REST_2include_2controllers_2UpdateSubscriptions_8h.html" target="_top" xlink:title="Implements Catena REST UpdateSubscriptions.">
+<polygon fill="white" stroke="#666666" points="2981.01,-123.5 2731.01,-123.5 2731.01,-82.5 2981.01,-82.5 2981.01,-123.5"/>
+<text text-anchor="start" x="2739.01" y="-111.5" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="2739.01" y="-100.5" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="2856.01" y="-89.5" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/UpdateSubscriptions.h</text>
 </a>
 </g>
 </g>
@@ -363,8 +363,8 @@ var sectionId = 'dynsection-1';
 <g id="edge16_Node000002_Node000017" class="edge">
 <title>Node2&#45;&gt;Node17</title>
 <g id="a_edge16_Node000002_Node000017"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M1598.78,-182.29C1842.05,-176.06 2504.89,-156.97 2722.01,-129 2733.03,-127.58 2744.56,-125.66 2755.89,-123.52"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="1598.46,-178.8 1588.56,-182.55 1598.64,-185.8 1598.46,-178.8"/>
+<path fill="none" stroke="#63b8ff" d="M1598.86,-184.64C1801.27,-184.02 2304.33,-177.27 2722.01,-129 2734.47,-127.56 2747.52,-125.64 2760.37,-123.51"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="1598.57,-181.14 1588.58,-184.67 1598.59,-188.14 1598.57,-181.14"/>
 </a>
 </g>
 </g>
@@ -392,10 +392,10 @@ var sectionId = 'dynsection-1';
 <g id="Node000016" class="node">
 <title>Node16</title>
 <g id="a_Node000016"><a xlink:href="REST_2include_2controllers_2SetValue_8h.html" target="_top" xlink:title="Implements REST SetValue controller.">
-<polygon fill="white" stroke="#666666" points="3169.01,-41 2977.01,-41 2977.01,0 3169.01,0 3169.01,-41"/>
-<text text-anchor="start" x="2985.01" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
-<text text-anchor="start" x="2985.01" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
-<text text-anchor="middle" x="3073.01" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/SetValue.h</text>
+<polygon fill="white" stroke="#666666" points="3204.01,-41 3012.01,-41 3012.01,0 3204.01,0 3204.01,-41"/>
+<text text-anchor="start" x="3020.01" y="-29" font-family="Helvetica,sans-Serif" font-size="10.00">/home/runner/work/Catena</text>
+<text text-anchor="start" x="3020.01" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">/Catena/sdks/cpp/connections</text>
+<text text-anchor="middle" x="3108.01" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">/REST/include/controllers/SetValue.h</text>
 </a>
 </g>
 </g>
@@ -403,8 +403,8 @@ var sectionId = 'dynsection-1';
 <g id="edge15_Node000015_Node000016" class="edge">
 <title>Node15&#45;&gt;Node16</title>
 <g id="a_edge15_Node000015_Node000016"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M3073.01,-71.87C3073.01,-61.6 3073.01,-50.4 3073.01,-41.17"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="3069.51,-72.1 3073.01,-82.1 3076.51,-72.1 3069.51,-72.1"/>
+<path fill="none" stroke="#63b8ff" d="M3108.01,-71.87C3108.01,-61.6 3108.01,-50.4 3108.01,-41.17"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="3104.51,-72.1 3108.01,-82.1 3111.51,-72.1 3104.51,-72.1"/>
 </a>
 </g>
 </g>
