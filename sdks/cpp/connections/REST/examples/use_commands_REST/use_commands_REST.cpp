@@ -81,18 +81,6 @@ void handle_signal(int sig) {
     t.join();
 }
 
-void statusUpdate(){   
-    std::thread loop([]() {
-        // this is the "receiving end" of the status update example
-        dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
-            // all we do here is print out the oid of the parameter that was changed
-            // your biz logic would do something _even_more_ interesting!
-            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
-        });
-    });
-    loop.detach();
-}
-
 void RunRESTServer() {
     // install signal handlers
     signal(SIGINT, handle_signal);
@@ -111,9 +99,14 @@ void RunRESTServer() {
         std::cout << "API Version: " << api.version() << std::endl;
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
-        statusUpdate();
-        
+        // Notifies the console when a value is set by the client.
+        uint32_t valueSetByClientId = dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
+            std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
+        });
+
         api.run();
+        dm.valueSetByClient.disconnect(valueSetByClientId);
+
     } catch (std::exception &why) {
         std::cerr << "Problem: " << why.what() << '\n';
     }
@@ -144,7 +137,7 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "playing";
-                    dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+                    dm.valueSetByServer.emit("/state", stateParam.get());
                 }
                 std::cout << "video is " << state << "\n";
                 response.mutable_no_response();
@@ -170,7 +163,7 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "paused";
-                    dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+                    dm.valueSetByServer.emit("/state", stateParam.get());
                 }
                 std::cout << "video is " << state << "\n";
                 response.mutable_no_response();

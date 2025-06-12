@@ -29,10 +29,12 @@
 #
 
 #
-# OpenAPI documentation of the BasicParamInfoRequest Request Handler for the Catena REST API
+# OpenAPI documentation of the Catena REST API's streamed basic-param endpoint
+# API
+# Author: john.naylor@rossvideo.com
 # Author: benjamin.whitten@rossvideo.com
 # Author: zuhayr.sarker@rossvideo.com
-# Date: 25/04/22
+# Date: 25/06/09
 #
 
 get:
@@ -55,8 +57,8 @@ get:
       description: Optional flag to recursively get info for all children.
       schema:
         type: string
-        enum: ["true", "false"]
-        default: "false" # because protobuf defaults to false
+        enum: ["true"]
+        default: ""
    
     - name: fqoid
       in: path
@@ -83,10 +85,9 @@ get:
             type: string
           
           example: |
-            <stringified {info: BasicParamInfo, array_length: 0}>
-            <stringified {info: BasicParamInfo, array_length: 1}>
-            <stringified {info: BasicParamInfo, array_length: 2}>
-            done
+            data: <stringified {info: BasicParamInfo, array_length: 0}>
+            data: <stringified {info: BasicParamInfo, array_length: 1}>
+            data: <stringified {info: BasicParamInfo, array_length: 2}>
 
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
