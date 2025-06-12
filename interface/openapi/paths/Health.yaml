@@ -1,4 +1,5 @@
-# Copyright 2025 Ross Video Ltd
+#
+# Copyright 2024 Ross Video Ltd
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -28,78 +29,26 @@
 #
 
 #
-# OpenAPI documentation of the Catena REST API's values endpoint
-# Author: john.naylor@rossvideo.com
+# OpenAPI documentation of the Catena REST API's health endpoint
 # Author: benjamin.whitten@rossvideo.com
 # Date: 25/06/09
 #
 
-put:
-  summary: Sets the values of multiple parameters idempotently - i.e. either all are set or none are
+get:
+  summary: Checks the health of a Catena REST service
 
-  operationId: SetValues
+  operationId: Health
 
-  # at least one scope with write access is required.
-  security:
-    - oauth2:
-      - st2138:op:w
-    - oauth2:
-      - st2138:cfg:w  
-    - oauth2:
-      - st2138:adm:w
-    - oauth2:
-      - st2138:mon:w
+  # default security is read-only
 
-  parameters:
-    - name: slot
-      in: path
-      required: true
-      description: The slot of the device model containing the parameters to get info for
-      schema:
-        $ref: "../../../schema/catena.device_schema.json#/$defs/slot"
-  
   tags:
-    - Parameters
-
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              fqoid:
-                type: string
-                description: Fully qualified OID of the parameter to get info for
-                schema: 
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-              value:
-                type: object
-                schema:
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          - oid: "/ipv4"
-            value:
-              string_value: "192.168.1.1"
-          - oid: "/gateway"
-            value:
-              string_value: "192.168.1.254"
-          - oid: "/subnet"
-            value:
-              string_value: "255.255.255.0"
-          - oid: "/dns"
-            value:
-              string_value: "8.8.8.8"
-          - oid: "/dns_alt"
-            value:
-              string_value: "8.8.4.4"
+    - Discovery
 
   responses:
-    "204":
-      description: Empty response - everything is OK
-
+    "200":
+      description: Indicates that the Catena REST service is healthy
+      # No content is returned.
+    
     "500":
       $ref: '../openapi.yaml#/components/responses/InternalServerError'
           
@@ -114,6 +63,4 @@ put:
 
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
-
-
   
