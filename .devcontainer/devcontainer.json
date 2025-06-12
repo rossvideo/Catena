@@ -12,7 +12,8 @@
         "IMAGE_VERSION": "1.0.0",
         "IMAGE_VENDOR": "Ross Video",
         "CMAKE_BUILD_TYPE": "Debug",
-        "CONNECTIONS": "gRPC"
+        "CONNECTIONS": "gRPC",
+        "BUILD_TARGET": "build/cpp" 
       }
   },
   "postCreateCommand": "sudo groupdel docker || true && DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) && sudo groupadd -forg $DOCKER_GID docker && sudo usermod -aG docker ${USER_NAME} && echo 'Docker setup complete, please restart the dev container!'",
@@ -37,7 +38,7 @@
 
   "mounts": [
     // Mount the build directory as a volume first so that it doesn't sync back to the host
-    "source=catena-build,target=/home/${localEnv:USER}/Catena/sdks/cpp/build,type=volume", 
+    "source=catena-build,target=/home/${localEnv:USER}/Catena/build/cpp,type=volume", 
     // Then, mount the Catena directory so that we can sync other changes back to the host
     "source=/home/${localEnv:USER}/Catena,target=/home/${localEnv:USER}/Catena,type=bind",
     // the docker daemon
