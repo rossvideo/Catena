@@ -84,7 +84,7 @@ void handle_signal(int sig) {
 
 void statusUpdateExample(){   
     // this is the "receiving end" of the status update example
-    dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+    dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
         // all we do here is print out the oid of the parameter that was changed
         // your biz logic would do something _even_more_ interesting!
         std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
@@ -108,7 +108,7 @@ void statusUpdateExample(){
             std::lock_guard lg(dm.mutex());
             counter.get()++;
             std::cout << counter.getOid() << " set to " << counter.get() << '\n';
-            dm.valueSetByServer.emit("/counter", &counter, 0);
+            dm.valueSetByServer.emit("/counter", &counter);
         }
     }
 }

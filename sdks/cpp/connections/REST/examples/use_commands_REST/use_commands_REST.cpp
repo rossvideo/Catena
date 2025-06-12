@@ -100,7 +100,7 @@ void RunRESTServer() {
         std::cout << "REST on 0.0.0.0:" << port << std::endl;
         
         // Notifies the console when a value is set by the client.
-        uint32_t valueSetByClientId = dm.valueSetByClient.connect([](const std::string& oid, const IParam* p, const int32_t idx) {
+        uint32_t valueSetByClientId = dm.valueSetByClient.connect([](const std::string& oid, const IParam* p) {
             std::cout << "*** signal received: " << oid << " has been changed by client" << '\n';
         });
 
@@ -137,7 +137,7 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "playing";
-                    dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+                    dm.valueSetByServer.emit("/state", stateParam.get());
                 }
                 std::cout << "video is " << state << "\n";
                 response.mutable_no_response();
@@ -163,7 +163,7 @@ void defineCommands() {
                 {
                     std::lock_guard lg(dm.mutex());
                     state = "paused";
-                    dm.valueSetByServer.emit("/state", stateParam.get(), 0);
+                    dm.valueSetByServer.emit("/state", stateParam.get());
                 }
                 std::cout << "video is " << state << "\n";
                 response.mutable_no_response();
