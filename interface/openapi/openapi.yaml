@@ -80,11 +80,11 @@ paths:
   /{slot}/asset/{fqoid}/stream:
     $ref: './paths/AssetStream.yaml'
 
-  /{slot}/basic-param/{fqoid}/stream:
-    $ref: './paths/BasicParamStream.yaml'
-
   /{slot}/basic-param/{fqoid}:
     $ref: './paths/BasicParam.yaml'
+  
+  /{slot}/basic-param/{fqoid}/stream:
+    $ref: './paths/BasicParamStream.yaml'
 
   /{slot}/value/{fqoid}:
     $ref: './paths/Value.yaml'
@@ -94,6 +94,9 @@ paths:
 
   /{slot}/subscriptions:
     $ref: './paths/Subscriptions.yaml'
+
+  /{slot}/subscriptions/stream:
+    $ref: './paths/SubscriptionsStream.yaml'
 
   /{slot}/param/{fqoid}:
     $ref: './paths/Param.yaml'
