@@ -47,11 +47,11 @@
 #include <google/protobuf/util/json_util.h>
 
 // Test helpers
-#include "SocketHelper.h"
-#include "RESTMockClasses.h"
+#include "RESTTest.h"
+#include "MockSocketReader.h"
 #include "MockDevice.h"
-#include "MockParam.h"
 #include "MockCommandResponder.h"
+#include "MockParam.h"
 
 // REST
 #include "controllers/ExecuteCommand.h"

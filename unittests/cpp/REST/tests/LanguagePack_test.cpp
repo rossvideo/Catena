@@ -61,7 +61,7 @@ using namespace catena::REST;
 // Fixture
 class RESTLanguagePackTests : public ::testing::Test, public RESTTest {
   protected:
-    RESTLanguagePackTests() : SocketHelper(&serverSocket, &clientSocket) {}
+    RESTLanguagePackTests() : RESTTest(&serverSocket, &clientSocket) {}
 
     void SetUp() override {
         // Redirecting cout to a stringstream for testing.
