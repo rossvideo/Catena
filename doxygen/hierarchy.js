@@ -57,7 +57,7 @@ var hierarchy =
       [ "catena::REST::MultiSetValue", "classcatena_1_1REST_1_1MultiSetValue.html", [
         [ "catena::REST::SetValue", "classcatena_1_1REST_1_1SetValue.html", null ]
       ] ],
-      [ "catena::REST::Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", null ]
+      [ "catena::REST::UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", null ]
     ] ],
     [ "catena::common::IParamDescriptor::ICommandResponder", "classcatena_1_1common_1_1IParamDescriptor_1_1ICommandResponder.html", [
       [ "catena::common::ParamDescriptor::CommandResponder", "classcatena_1_1common_1_1ParamDescriptor_1_1CommandResponder.html", null ]
