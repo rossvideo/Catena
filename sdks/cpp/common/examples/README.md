@@ -7,7 +7,7 @@
 Setup docker environment following steps outlined [here](https://github.com/rossvideo/Catena/blob/develop/.devcontainer/README.md).
 From inside the WSL shell in docker container
 ```sh
-cd  ~/Catena/sdk/cpp/build
+cd  ~/Catena/sdk/build/cpp
 ninja clean
 ninja
 ```
@@ -16,7 +16,7 @@ ninja
 
 From inside the WSL shell in docker container
 ```sh
-cd  ~/Catena/sdk/cpp/build
+cd  ~/Catena/sdk/build/cpp
 common/examples/hello_world/hello_world
 ```
 
