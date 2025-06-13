@@ -21,7 +21,7 @@ var namespacecatena_1_1REST =
     [ "SocketReader", "classcatena_1_1REST_1_1SocketReader.html", "classcatena_1_1REST_1_1SocketReader" ],
     [ "SocketWriter", "classcatena_1_1REST_1_1SocketWriter.html", "classcatena_1_1REST_1_1SocketWriter" ],
     [ "SSEWriter", "classcatena_1_1REST_1_1SSEWriter.html", "classcatena_1_1REST_1_1SSEWriter" ],
-    [ "UpdateSubscriptions", "classcatena_1_1REST_1_1UpdateSubscriptions.html", "classcatena_1_1REST_1_1UpdateSubscriptions" ],
+    [ "Subscriptions", "classcatena_1_1REST_1_1Subscriptions.html", "classcatena_1_1REST_1_1Subscriptions" ],
     [ "CallStatus", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009", [
       [ "kCreate", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009ab9bd4b7bbc4fbe61cec6edd5bad6496d", null ],
       [ "kProcess", "namespacecatena_1_1REST.html#a58c70401164afb6c66bd561a88da4009a3fc05876acd3bdfabc21ceefddf8846c", null ],
