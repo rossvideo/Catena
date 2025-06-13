@@ -1,7 +1,6 @@
 package com.rossvideo.catena.datapayload;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,11 +12,6 @@ import catena.core.parameter.DataPayload;
 
 public abstract class AbstractFilePayloadReceiver
 {
-    public enum ProceedResponse
-    {
-        PROCEED, SKIP, NONE
-    }
-    
     private File currentFile;
     private FileOutputStream fileOutputStream;
     private int fileCount;
@@ -67,10 +61,11 @@ public abstract class AbstractFilePayloadReceiver
         return fileName != null || (digest != null && digest.size() > 0) || currentFile == null;
     }
     
-    public ProceedResponse init(DataPayload dataPayload) throws IOException
+    public void init(DataPayload dataPayload) throws IOException
     {
         closeRx();
         
+        // TODO: use digest to verify the file integrity
         ByteString digest = dataPayload.getDigest();
         File file = getFileFor(dataPayload.getMetadataOrDefault(DataPayloadBuilder.METADATA_FILE_NAME, null));
         if (file == null)
@@ -78,40 +73,30 @@ public abstract class AbstractFilePayloadReceiver
             throw new IOException("Unable to determine file to write to");
         }
         
-        if (!file.getParentFile().exists())
-        {
-            file.getParentFile().mkdirs();
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
         }
         
-        ProceedResponse proceed = shouldReceiveFile(file, digest != null ? digest.toByteArray() : null);
-        if (proceed == ProceedResponse.PROCEED || proceed == ProceedResponse.NONE)
+        try
         {
-            try
+            if (dataPayload.getPayloadEncoding() == DataPayload.PayloadEncoding.UNCOMPRESSED)
             {
-                if (dataPayload.getPayloadEncoding() == DataPayload.PayloadEncoding.UNCOMPRESSED)
-                {
-                    fileOutputStream = new FileOutputStream(file);
-                    currentFile = file;
-                    fileCount++;
-                }
-                else
-                {
-                    throw new UnsupportedEncodingException("Unsupported payload encoding: " + dataPayload.getPayloadEncoding() +". Currently only uncompressed is supported.");
-                }
+                fileOutputStream = new FileOutputStream(file);
+                currentFile = file;
+                fileCount++;
             }
-            catch (FileNotFoundException | UnsupportedEncodingException e)
+            else
             {
-                throw new IOException("Unable to open " + file.getName() + " for writing", e);
+                throw new UnsupportedEncodingException("Unsupported payload encoding: " + dataPayload.getPayloadEncoding() +". Currently only uncompressed is supported.");
             }
-            
-            writePayload(dataPayload);
         }
-        else
+        catch (FileNotFoundException | UnsupportedEncodingException e)
         {
-            skipCount++;
+            throw new IOException("Unable to open " + file.getName() + " for writing", e);
         }
         
-        return proceed;
+        writePayload(dataPayload);
     }
     
     public void writePayload(DataPayload dataPayload) throws IOException
@@ -120,6 +105,7 @@ public abstract class AbstractFilePayloadReceiver
         {
             try
             {
+                System.out.println("Writing to file: " + currentFile.getName() + ", size: " + dataPayload.getPayload().size());
                 fileOutputStream.write(dataPayload.getPayload().toByteArray());
             }
             catch (IOException e)
@@ -128,35 +114,4 @@ public abstract class AbstractFilePayloadReceiver
             }
         }
     }
-
-    protected ProceedResponse shouldReceiveFile(File file, byte[] digest)
-    {
-        if (digest != null)
-        {
-            try (FileInputStream fis = new FileInputStream(file))
-            {
-                byte[] fileDigest = Sha256DigestCalculator.getInstance().calculate(fis);
-                if (fileDigest != null && fileDigest.length == digest.length)
-                {
-                    for (int i = 0; i < fileDigest.length; i++)
-                    {
-                        if (fileDigest[i] != digest[i])
-                        {
-                            return ProceedResponse.PROCEED;
-                        }
-                    }
-                    
-                    //If we got here the file is the same
-                    return ProceedResponse.SKIP;
-                }
-            }
-            catch (Exception e)
-            {
-                return ProceedResponse.PROCEED;
-            }
-        }
-        
-        return ProceedResponse.NONE;
-    }
-    
 }
