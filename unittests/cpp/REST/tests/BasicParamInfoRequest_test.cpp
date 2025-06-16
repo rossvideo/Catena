@@ -469,8 +469,9 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     std::vector<std::unique_ptr<IParam>> top_level_params;
     top_level_params.push_back(std::move(level1));
 
-    // Enable recursion
+    // Enable recursion and stream
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, stream()).WillRepeatedly(::testing::Return(true));
 
     // Setup mock expectations
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
@@ -556,8 +557,9 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     std::vector<std::unique_ptr<IParam>> top_level_params;
     top_level_params.push_back(std::move(parentParam));
 
-    // Enable recursion
+    // Enable recursion and stream
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, stream()).WillRepeatedly(::testing::Return(true));
 
     // Setup mock expectations for getTopLevelParams
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
@@ -642,8 +644,9 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
     std::vector<std::unique_ptr<IParam>> top_level_params;
     top_level_params.push_back(std::move(parentParam));
 
-    // Enable recursion
+    // Enable recursion and stream
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, stream()).WillRepeatedly(::testing::Return(true));
 
     // Setup mock expectations for getTopLevelParams
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
@@ -686,6 +689,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
 
     // Setup mock expectations
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, stream()).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
             status = catena::exception_with_status("Error getting parameters", catena::StatusCode::INTERNAL);
@@ -714,6 +718,7 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_getTopLevelParamsWi
 
     // Setup mock expectations
     EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(true));
+    EXPECT_CALL(context, stream()).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(dm, getTopLevelParams(::testing::_, ::testing::_))
         .WillOnce(::testing::Invoke([](catena::exception_with_status& status, Authorizer&) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
