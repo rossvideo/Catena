@@ -66,20 +66,22 @@ put:
     content:
       application/json:
         schema:
-          values:
-            type: array
-            items:
-              type: object
-              properties:
-                fqoid:
-                  type: string
-                  description: Fully qualified OID of the parameter to get info for
-                  schema: 
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-                value:
-                  type: object
-                  schema:
-                    $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+          type: object
+          properties:
+            values:
+              type: array
+              items:
+                type: object
+                properties:
+                  fqoid:
+                    type: string
+                    description: Fully qualified OID of the parameter to get info for
+                    schema: 
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+                  value:
+                    type: object
+                    schema:
+                      $ref: "../../../schema/catena.param_schema.json#/$defs/value"
         example: 
           {
             "values": [
