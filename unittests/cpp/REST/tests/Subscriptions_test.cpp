@@ -88,9 +88,6 @@ class RESTSubscriptionsTests : public ::testing::Test, public RESTTest {
         EXPECT_CALL(dm, subscriptions()).WillRepeatedly(::testing::Return(true));
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMutex));
 
-        // Creating subscriptions object.
-        endpoint = Subscriptions::makeOne(serverSocket, context, dm);
-
         // Initializing test values.
         for (size_t i = 0; i < oids.size(); ++i) {
             // Adding variables to the back of the vectors.
@@ -103,6 +100,7 @@ class RESTSubscriptionsTests : public ::testing::Test, public RESTTest {
             auto status = google::protobuf::util::MessageToJsonString(responses.back(), &responsesJson.back());
             EXPECT_TRUE(status.ok());
             // Setting default behaviours.
+            // GET calls
             EXPECT_CALL(dm, getParam(oids[i], ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
                 [this, i](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
                     // Make sure authz is correctly passed in.
@@ -125,7 +123,44 @@ class RESTSubscriptionsTests : public ::testing::Test, public RESTTest {
                     param.CopyFrom(responses[i].param());
                     return catena::exception_with_status("", catena::StatusCode::OK);
                 }));
+
+            // PUT calls
+            EXPECT_CALL(subManager, removeSubscription(oids[i], ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+                [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
+                    // Make sure device is passed in.
+                    EXPECT_EQ(&dm, &this->dm);
+                    this->removed_oids++;
+                    return true;
+                }));
+            EXPECT_CALL(subManager, addSubscription(oids[i], ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+                [this](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+                    // Make sure authz is correctly passed in.
+                    if (authzEnabled) {
+                        EXPECT_FALSE(&authz == &catena::common::Authorizer::kAuthzDisabled);
+                    } else {
+                        EXPECT_EQ(&authz, &catena::common::Authorizer::kAuthzDisabled);
+                    }
+                    // Make sure device is passed in.
+                    EXPECT_EQ(&dm, &this->dm);
+                    this->added_oids++;
+                    return true;
+                }));
         }
+    }
+
+    void initPayload(const std::vector<std::string> &addOids, const std::vector<std::string> &remOids) {
+        catena::UpdateSubscriptionsPayload payload;
+        // Adding addOids.
+        for (const auto& oid : addOids) {
+            payload.add_added_oids(oid);
+        }
+        // Adding remOids.
+        for (const auto& oid : remOids) {
+            payload.add_removed_oids(oid);
+        }
+        // Converting to JSON body.
+        auto status = google::protobuf::util::MessageToJsonString(payload, &testJsonBody);
+        EXPECT_TRUE(status.ok());
     }
 
     void TearDown() override {
@@ -156,12 +191,16 @@ class RESTSubscriptionsTests : public ::testing::Test, public RESTTest {
     std::vector<std::unique_ptr<MockParam>> params;
     std::vector<catena::DeviceComponent_ComponentParam> responses;
     std::vector<std::string> responsesJson;
+
+    uint32_t added_oids = 0;
+    uint32_t removed_oids = 0;
 };
 
 /* 
  * TEST 0.1 - Creating a Subscriptions object with makeOne.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_create) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     // Making sure subscriptions is created from the SetUp step.
     ASSERT_TRUE(endpoint);
 }
@@ -170,6 +209,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_create) {
  * TEST 0.2 - Writing to console with Subscriptions finish().
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_Finish) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     // Calling finish and expecting the console output.
     endpoint->finish();
     ASSERT_TRUE(MockConsole.str().find("Subscriptions[1] finished\n") != std::string::npos);
@@ -179,6 +219,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_Finish) {
  * TEST 0.3 - Subscriptions with a device which does not support them.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc("Subscriptions are not enabled for this device", catena::StatusCode::FAILED_PRECONDITION);
 
     // Setting expectations.
@@ -194,6 +235,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_NotSupported) {
  * TEST 0.4 - Subscriptions with an invalid token.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc("", catena::StatusCode::UNAUTHENTICATED);
     testToken = "Invalid token";
 
@@ -211,6 +253,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_AuthzInalid) {
  * TEST 0.5 - Subscriptions with an invalid method.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc("Bad method", catena::StatusCode::INVALID_ARGUMENT);
     testMethod = "BAD_METHOD";
 
@@ -230,7 +273,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_BadMethod) {
  * 
  * TEST 1.1 - GET Subscriptions normal case.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetNormal) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETNormal) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"", catena::StatusCode::OK};
 
     // Setting expectations.
@@ -244,12 +288,11 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetNormal) {
 /* 
  * TEST 1.2 - GET Stream normal case.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetStream) {
-    catena::exception_with_status rc{"", catena::StatusCode::OK};
-    // Delete non-stream endpoint and remake with stream = true.
-    delete endpoint;
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETStream) {
+    // Create endpoint with stream enabled.
     EXPECT_CALL(context, stream()).WillOnce(::testing::Return(true));
     endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
 
     // Setting expectations.
     EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
@@ -262,7 +305,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetStream) {
 /* 
  * TEST 1.3 - GET Subscriptions with a valid token.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetAuthzValid) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETAuthzValid) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     authzEnabled = true;
     testToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
@@ -286,7 +330,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetAuthzValid) {
 /* 
  * TEST 1.4 - GET Subscriptions fail to retrieve a param.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamReturnErr) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamReturnErr) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     oids.insert(oids.begin(), "errParam");
 
@@ -304,7 +349,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamReturnErr) {
 /* 
  * TEST 1.5 - GET Subscriptions call to GetParam throws a catena::exception_with_status.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamThrowCatena) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamThrowCatena) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"Param not found", catena::StatusCode::NOT_FOUND};
     oids.insert(oids.begin(), "errParam");
 
@@ -322,7 +368,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamThrowCatena) {
 /* 
  * TEST 1.6 - GET Subscriptions call to GetParam throws an std::runtime_error.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamThrowUnknown) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETGetParamThrowUnknown) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"Unknown error", catena::StatusCode::UNKNOWN};
     oids.insert(oids.begin(), "errParam");
 
@@ -340,7 +387,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamThrowUnknown) {
 /* 
  * TEST 1.7 - GET Subscriptions fails to convert param to proto.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoReturnErr) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoReturnErr) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     oids.insert(oids.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
@@ -364,7 +412,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoReturnErr) {
 /* 
  * TEST 1.8 - GET Subscriptions call to toProto throws an catena::exception_with_status.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoThrowCatena) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowCatena) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"Param not found", catena::StatusCode::NOT_FOUND};
     oids.insert(oids.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
@@ -388,7 +437,8 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoThrowCatena) {
 /* 
  * TEST 1.9 - GET Subscriptions call to toProto throws an std::runtime_error.
  */
-TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoThrowUnknown) {
+TEST_F(RESTSubscriptionsTests, Subscriptions_GETToProtoThrowUnknown) {
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
     catena::exception_with_status rc{"Unknown error", catena::StatusCode::UNKNOWN};
     oids.insert(oids.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
@@ -408,4 +458,206 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoThrowUnknown) {
     // Calling proceed() and checking written response.
     endpoint->proceed();
     EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/*
+ * ============================================================================
+ *                              PUT Subscriptions tests
+ * ============================================================================
+ * 
+ * TEST 2.1 - PUT Subscriptions normal case.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTNormal) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    initPayload({"param1", "param2"}, {"param1", "param2"});
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 2); // Check if two oids were added
+    EXPECT_EQ(removed_oids, 2); // Check if two oids were removed
+}
+
+/* 
+ * TEST 2.2 - PUT Subscriptions with a valid token.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAuthzValid) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    initPayload({"param1", "param2"}, {"param1", "param2"});
+    authzEnabled = true;
+    testToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzdWIiOiIxMjM0NTY3"
+                "ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwic2NvcGUiOiJzdDIxMzg6bW9uOncgc"
+                "3QyMTM4Om9wOncgc3QyMTM4OmNmZzp3IHN0MjEzODphZG06dyIsImlhdCI6MT"
+                "UxNjIzOTAyMiwibmJmIjoxNzQwMDAwMDAwLCJleHAiOjE3NTAwMDAwMDB9.dT"
+                "okrEPi_kyety6KCsfJdqHMbYkFljL0KUkokutXg4HN288Ko9653v0khyUT4UK"
+                "eOMGJsitMaSS0uLf_Zc-JaVMDJzR-0k7jjkiKHkWi4P3-CYWrwe-g6b4-a33Q"
+                "0k6tSGI1hGf2bA9cRYr-VyQ_T3RQyHgGb8vSsOql8hRfwqgvcldHIXjfT5wEm"
+                "uIwNOVM3EcVEaLyISFj8L4IDNiarVD6b1x8OXrL4vrGvzesaCeRwP8bxg4zlg"
+                "_wbOSA8JaupX9NvB4qssZpyp_20uHGh8h_VC10R0k9NKHURjs9MdvJH-cx1s1"
+                "46M27UmngWUCWH6dWHaT2au9en2zSFrcWHw";
+
+    EXPECT_CALL(context, authorizationEnabled()).Times(1).WillOnce(::testing::Return(true));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 2); // Check if two oids were added
+    EXPECT_EQ(removed_oids, 2); // Check if two oids were removed
+}
+
+/* 
+ * TEST 2.3 - PUT Subscriptions normal case.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTFailParse) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc("Failed to parse JSON Body", catena::StatusCode::INVALID_ARGUMENT);
+    testJsonBody = "Not a JSON string";
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 0); // No oids should be added.
+    EXPECT_EQ(removed_oids, 0); // No oids should be removed.
+}
+
+/* 
+ * TEST 2.4 - PUT Subscriptions add and remove return an error.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTReturnErr) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    initPayload({"errParam", "param1", "param2"}, {"errParam", "param1", "param2"});
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    EXPECT_CALL(subManager, removeSubscription("errParam", ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
+            // Simulating an error in removing subscription.
+            rc = catena::exception_with_status("Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT);
+            return false;
+        }));
+    EXPECT_CALL(subManager, addSubscription("errParam", ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+            // Simulating an error in adding subscription.
+            rc = catena::exception_with_status("Failed to add subscription", catena::StatusCode::INVALID_ARGUMENT);
+            return false;
+        }));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 2); // Check if two oids were added
+    EXPECT_EQ(removed_oids, 2); // Check if two oids were removed
+}
+
+/* 
+ * TEST 2.5 - PUT Subscriptions remove throws a catena::exception_with_status.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowCatena) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT};
+    initPayload({}, {"errParam", "param1", "param2"});
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    EXPECT_CALL(subManager, removeSubscription("errParam", ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [testRc = &rc](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
+            // Simulating an error in removing subscription.
+            throw catena::exception_with_status(testRc->what(), testRc->status);
+            return false;
+        }));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 0); // No oids should be added.
+    EXPECT_EQ(removed_oids, 0); // No oids should be removed.
+}
+
+/* 
+ * TEST 2.6 - PUT Subscriptions remove throws a std::runtime_error.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTRemThrowUnknown) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"Unknown error", catena::StatusCode::UNKNOWN};
+    initPayload({}, {"errParam", "param1", "param2"});
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    EXPECT_CALL(subManager, removeSubscription("errParam", ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [testRc = &rc](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc) {
+            // Simulating an error in removing subscription.
+            throw std::runtime_error(testRc->what());
+            return false;
+        }));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 0); // No oids should be added.
+    EXPECT_EQ(removed_oids, 0); // No oids should be removed.
+}
+
+/* 
+ * TEST 2.7 - PUT Subscriptions add throws a catena::exception_with_status.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowCatena) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"Failed to remove subscription", catena::StatusCode::INVALID_ARGUMENT};
+    initPayload({"errParam", "param1", "param2"}, {});
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    EXPECT_CALL(subManager, addSubscription("errParam", ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [testRc = &rc](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+            // Simulating an error in adding subscription.
+            throw catena::exception_with_status(testRc->what(), testRc->status);
+            return false;
+        }));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 0); // No oids should be added.
+    EXPECT_EQ(removed_oids, 0); // No oids should be removed.
+}
+
+/* 
+ * TEST 2.8 - PUT Subscriptions add throws a std::runtime_error.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_PUTAddThrowUnknown) {
+    testMethod = "PUT";
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+    catena::exception_with_status rc{"Unknown error", catena::StatusCode::UNKNOWN};
+    initPayload({"errParam", "param1", "param2"}, {});
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+    EXPECT_CALL(subManager, addSubscription("errParam", ::testing::_, ::testing::_, ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [testRc = &rc](const std::string& oid, const catena::common::IDevice& dm, catena::exception_with_status& rc, catena::common::Authorizer& authz) {
+            // Simulating an error in adding subscription.
+            throw std::runtime_error(testRc->what());
+            return false;
+        }));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+    EXPECT_EQ(added_oids, 0); // No oids should be added.
+    EXPECT_EQ(removed_oids, 0); // No oids should be removed.
 }

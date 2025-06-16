@@ -119,8 +119,6 @@ void Subscriptions::proceed() {
     // ERROR
     } catch (const catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
-    } catch (const std::exception& err) {
-        rc = catena::exception_with_status(err.what(), catena::StatusCode::UNKNOWN);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
