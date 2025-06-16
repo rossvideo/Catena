@@ -66,7 +66,7 @@ void ExecuteCommand::proceed() {
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
-    // Writing final code if respond = false or an error occured.
+    // Writing final code if respond = false or an error occurred.
     if (rc.status != catena::StatusCode::OK || !respond) {
         writer_.sendResponse(rc);
     }

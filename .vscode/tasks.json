@@ -66,21 +66,19 @@
             "label": "Fresh Build",
             "type": "shell",
             // Command breakdown:
-            // 1. Change to the cpp directory
-            // 2. If build.ninja exists in the build directory:
-            //    - Change to build directory
+            // 1. If build.ninja exists in the build target directory:
+            //    - Change to build target directory
             //    - Run ninja clean to clean the build
-            // 3. If build directory doesn't exist:
+            // 2. If build target directory doesn't exist:
             //    - Create it
-            // 4. Change to build directory
-            // 5. Run CMake to generate build files with:
+            // 3. Run CMake to generate build files with:
             //    - Ninja as the generator
             //    - Build type from CMAKE_BUILD_TYPE env var
             //    - Connections from CONNECTIONS env var
             //    - Install prefix set to /usr/local/.local
             //    - Coverage flags set for C++ and C
-            // 6. Run ninja to build the project
-            "command": "cd ${workspaceFolder}/sdks/cpp && if [ -f build/build.ninja ]; then (cd build && ninja clean); fi && if [ ! -d build ]; then mkdir build; fi && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCONNECTIONS=\"gRPC;REST\" -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local .. && ninja",
+            // 4. Run ninja to build the project
+            "command": "if [ -f ${workspaceFolder}/${env:BUILD_TARGET}/build.ninja ]; then (cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja clean); fi && if [ ! -d ${workspaceFolder}/${env:BUILD_TARGET} ]; then mkdir -p ${workspaceFolder}/${env:BUILD_TARGET}; fi && cmake -G Ninja -DCMAKE_BUILD_TYPE=${env:CMAKE_BUILD_TYPE} -DCONNECTIONS=${env:CONNECTIONS} -DCMAKE_CXX_FLAGS=\"--coverage\" -DCMAKE_C_FLAGS=\"--coverage\" -DCMAKE_EXE_LINKER_FLAGS=\"--coverage\" -DCMAKE_INSTALL_PREFIX=/usr/local/.local -B ${workspaceFolder}/${env:BUILD_TARGET} ${workspaceFolder}/sdks/cpp && cd ${workspaceFolder}/${env:BUILD_TARGET} && ninja",
             "group": {
                 "kind": "build",
                 "isDefault": true

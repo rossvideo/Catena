@@ -11,13 +11,14 @@ Connect::Connect(tcp::socket& socket, ISocketReader& context, IDevice& dm) :
     catena::common::Connect(dm, context.getSubscriptionManager()) {
     objectId_ = objectCounter_++;
     writeConsole_(CallStatus::kCreate, socket_.is_open());
+    
     // Parsing fields and assigning to respective variables.
     userAgent_ = context.fields("user_agent");
     forceConnection_ = context.hasField("force_connection");
 
     // Set detail level from context
     detailLevel_ = context_.detailLevel();
-    dm_.detail_level(detailLevel_);
+
 }
 
 void Connect::proceed() {
@@ -51,6 +52,14 @@ void Connect::proceed() {
     // Used to catch the authz error.
     } catch (catena::exception_with_status& err) {
         writer_.sendResponse(err);
+        shutdown_ = true;
+    } catch (const std::exception& e) {
+        writer_.sendResponse(catena::exception_with_status(std::string("Connection setup failed: ") + e.what(), 
+                                                         catena::StatusCode::INTERNAL));
+        shutdown_ = true;
+    } catch (...) {
+        writer_.sendResponse(catena::exception_with_status("Unknown error during connection setup", 
+                                                         catena::StatusCode::UNKNOWN));
         shutdown_ = true;
     }
 

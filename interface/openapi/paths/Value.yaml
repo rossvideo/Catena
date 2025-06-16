@@ -74,8 +74,8 @@ get:
               "string_value": "Hello, World!"
             }
 
-    "500":
-      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
           
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
@@ -85,6 +85,9 @@ get:
 
     "404":
       $ref: '../openapi.yaml#/components/responses/NotFound'
+
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
 
     "503":
       $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'
@@ -140,6 +143,9 @@ put:
     "204":
       description: Empty response - everything is OK
           
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
+
     "401":
       $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
