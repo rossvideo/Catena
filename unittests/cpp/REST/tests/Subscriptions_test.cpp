@@ -242,7 +242,25 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetNormal) {
 }
 
 /* 
- * TEST 1.2 - GET Subscriptions with a valid token.
+ * TEST 1.2 - GET Stream normal case.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetStream) {
+    catena::exception_with_status rc{"", catena::StatusCode::OK};
+    // Delete non-stream endpoint and remake with stream = true.
+    delete endpoint;
+    EXPECT_CALL(context, stream()).WillOnce(::testing::Return(true));
+    endpoint = Subscriptions::makeOne(serverSocket, context, dm);
+
+    // Setting expectations.
+    EXPECT_CALL(context, jwsToken()).Times(0); // Authz false
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedSSEResponse(rc, responsesJson));
+}
+
+/* 
+ * TEST 1.3 - GET Subscriptions with a valid token.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_GetAuthzValid) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -266,7 +284,7 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetAuthzValid) {
 }
 
 /* 
- * TEST 1.3 - GET Subscriptions fail to retrieve a param.
+ * TEST 1.4 - GET Subscriptions fail to retrieve a param.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamReturnErr) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
@@ -284,15 +302,49 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamReturnErr) {
 }
 
 /* 
- * TEST 1.4 - GET Subscriptions fails to convert param to proto.
+ * TEST 1.5 - GET Subscriptions call to GetParam throws a catena::exception_with_status.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamThrowCatena) {
+    catena::exception_with_status rc{"Param not found", catena::StatusCode::NOT_FOUND};
+    oids.insert(oids.begin(), "errParam");
+
+    EXPECT_CALL(dm, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [&rc](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+            throw catena::exception_with_status(rc.what(), rc.status);
+            return nullptr; // Simulating an error.
+        }));
+
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 1.6 - GET Subscriptions call to GetParam throws an std::runtime_error.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetGetParamThrowUnknown) {
+    catena::exception_with_status rc{"Unknown error", catena::StatusCode::UNKNOWN};
+    oids.insert(oids.begin(), "errParam");
+
+    EXPECT_CALL(dm, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+            throw std::runtime_error("Unknown error occurred");
+            return nullptr; // Simulating an error.
+        }));
+    
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 1.7 - GET Subscriptions fails to convert param to proto.
  */
 TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoReturnErr) {
     catena::exception_with_status rc{"", catena::StatusCode::OK};
     oids.insert(oids.begin(), "errParam");
     std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
 
-    EXPECT_CALL(subManager, getAllSubscribedOids(::testing::_))
-        .WillOnce(::testing::Return(std::set<std::string>(oids.begin(), oids.end())));
     EXPECT_CALL(dm, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
         [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
             return std::move(errParam);
@@ -309,4 +361,51 @@ TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoReturnErr) {
     EXPECT_EQ(readResponse(), expectedResponse(rc, responsesJson));
 }
 
+/* 
+ * TEST 1.8 - GET Subscriptions call to toProto throws an catena::exception_with_status.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoThrowCatena) {
+    catena::exception_with_status rc{"Param not found", catena::StatusCode::NOT_FOUND};
+    oids.insert(oids.begin(), "errParam");
+    std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
 
+    EXPECT_CALL(dm, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+            return std::move(errParam);
+        }));
+    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(::testing::ReturnRef(oids[0]));
+    EXPECT_CALL(*errParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [&rc](catena::Param &param, catena::common::Authorizer &authz) {
+            throw catena::exception_with_status(rc.what(), rc.status);
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 1.9 - GET Subscriptions call to toProto throws an std::runtime_error.
+ */
+TEST_F(RESTSubscriptionsTests, Subscriptions_GetToProtoThrowUnknown) {
+    catena::exception_with_status rc{"Unknown error", catena::StatusCode::UNKNOWN};
+    oids.insert(oids.begin(), "errParam");
+    std::unique_ptr<MockParam> errParam = std::make_unique<MockParam>();
+
+    EXPECT_CALL(dm, getParam("errParam", ::testing::_, ::testing::_)).Times(1).WillOnce(::testing::Invoke(
+        [&errParam](const std::string& oid, catena::exception_with_status& status, catena::common::Authorizer& authz) {
+            return std::move(errParam);
+        }));
+    EXPECT_CALL(*errParam, getOid()).WillRepeatedly(::testing::ReturnRef(oids[0]));
+    EXPECT_CALL(*errParam, toProto(::testing::An<catena::Param&>(), ::testing::_)).WillRepeatedly(::testing::Invoke(
+        [](catena::Param &param, catena::common::Authorizer &authz) {
+            // Simulating an error in conversion.
+            throw std::runtime_error("Unknown error");
+            return catena::exception_with_status("", catena::StatusCode::OK);
+        }));
+    
+    // Calling proceed() and checking written response.
+    endpoint->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
