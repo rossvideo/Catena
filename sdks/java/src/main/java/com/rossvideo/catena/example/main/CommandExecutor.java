@@ -1,7 +1,6 @@
 package com.rossvideo.catena.example.main;
 
 import java.io.IOException;
-import java.net.URL;
 
 import com.rossvideo.catena.example.client.MyCatenaClient;
 import com.rossvideo.catena.example.device.MyCatenaDevice;
@@ -74,22 +73,12 @@ final class CommandExecutor {
         Thread.sleep(250);
         
         System.out.println("TEST: Push file to server");
-        client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("files/sample-1.jpg"));
+        client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("/files/sample-1.jpg"));
         
         System.out.println("TEST: Push same file to server");
-        client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("files/sample-1.jpg"));
+        client.pushFile("file-receive", slotNumber, CommandExecutor.class.getResource("/files/sample-1.jpg"));
         
-        System.out.println("TEST: Push multiple files to server");
-        client.pushFile("file-receive", slotNumber, new URL[] {
-                CommandExecutor.class.getResource("files/sample-1.jpg"),
-                CommandExecutor.class.getResource("files/sample-2.jpg"),
-                CommandExecutor.class.getResource("files/sample-3.jpg"),
-                CommandExecutor.class.getResource("files/sample-4.jpg"),
-                CommandExecutor.class.getResource("files/sample-5.jpg"),
-                CommandExecutor.class.getResource("files/sample-6.jpg")
-        });
-        
-        System.out.println("TEST: Push file from server");
+        System.out.println("TEST: Recieve file from server");
         client.receiveFile("file-transmit", slotNumber, "sample-file.jpg");
         
         // Tests for getDevice

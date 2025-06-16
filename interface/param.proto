@@ -69,7 +69,7 @@ message DataPayload {
   }
 
   map<string, string> metadata = 1; //information about the payload to be interpreted by the client (e.g. mime-type, filename, etc.)
-  bytes digest = 2; // SHA-256 digest of the payload - flags the recipient to respond with proceed flag set to true/false to resume or cancel payload data
+  bytes digest = 2; // SHA-256 digest of the payload - used to verify the integrity of the payload
   PayloadEncoding payload_encoding = 3;
 
   oneof kind {

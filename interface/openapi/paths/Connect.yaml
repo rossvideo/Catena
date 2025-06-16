@@ -84,3 +84,16 @@ get:
               data: <stringified RemoveComponents object>
               data: <stringified SlotList object>
               data: <stringified SlotList object>
+              done
+    "400":
+      $ref: '../openapi.yaml#/components/responses/BadRequest'
+    "401":
+      $ref: '../openapi.yaml#/components/responses/Unauthorized'
+    "403":
+      $ref: '../openapi.yaml#/components/responses/Forbidden'
+    "404":
+      $ref: '../openapi.yaml#/components/responses/NotFound'
+    "500":
+      $ref: '../openapi.yaml#/components/responses/InternalServerError'
+    "503":
+      $ref: '../openapi.yaml#/components/responses/ServiceUnavailable'

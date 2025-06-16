@@ -3,6 +3,8 @@ package com.rossvideo.catena.example.main;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
@@ -154,8 +156,13 @@ public class ServerMain {
             return new SimpleOAuthConfig();
         }
         
-        URLOAuthConfig config = new URLOAuthConfig();
-        config.initFrom(new URL(oauthRealm), oauthClient, true);
-        return config;
+        try {
+            URLOAuthConfig config = new URLOAuthConfig();
+            URL url = new URI(oauthRealm).toURL(); // Use URI for validation, then convert to URL
+            config.initFrom(url, oauthClient, true);
+            return config;
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid OAuth realm URI: " + oauthRealm, e);
+        }
     }
 }

@@ -15,7 +15,7 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * RE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -128,13 +128,54 @@ TEST_F(RESTLanguagesTests, Languages_proceedNormal) {
 }
 
 /* 
- * TEST 3 - dm.toProto() throws an error.
+ * TEST 3 - Empty language list case.
  */
-TEST_F(RESTLanguagesTests, Languages_proceedErr) {
-    // Setting up the rc to test with.
-    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+TEST_F(RESTLanguagesTests, Languages_proceedEmptyList) {
+    // Setting up empty language list
+    catena::LanguageList returnVal;
+    catena::exception_with_status rc("No languages found", catena::StatusCode::NOT_FOUND);
 
-    // Defining mock fuctions
+    // Defining mock functions
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
+    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
+        .WillByDefault(::testing::Invoke([&returnVal](catena::LanguageList& list) {
+            list.CopyFrom(returnVal);
+        }));
+
+    // Calling proceed() and checking written response.
+    getLanguages->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 4 - Standard exception case.
+ */
+TEST_F(RESTLanguagesTests, Languages_proceedStdException) {
+    // Setting up the rc to test with.
+    catena::exception_with_status rc("Standard error", catena::StatusCode::INTERNAL);
+
+    // Defining mock functions
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
+    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
+        .WillByDefault(::testing::Invoke([&rc](catena::LanguageList& list) {
+            throw std::runtime_error(rc.what());
+        }));
+
+    // Calling proceed() and checking written response.
+    getLanguages->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 5 - Catena exception with status case.
+ */
+TEST_F(RESTLanguagesTests, Languages_proceedCatenaException) {
+    // Setting up the rc to test with.
+    catena::exception_with_status rc("Device not found", catena::StatusCode::NOT_FOUND);
+
+    // Defining mock functions
     EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
     EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
     ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
@@ -144,16 +185,35 @@ TEST_F(RESTLanguagesTests, Languages_proceedErr) {
 
     // Calling proceed() and checking written response.
     getLanguages->proceed();
-
     EXPECT_EQ(readResponse(), expectedResponse(rc));
 }
 
 /* 
- * TEST 4 - Writing to console with Languages finish().
+ * TEST 6 - Unknown exception case.
+ */
+TEST_F(RESTLanguagesTests, Languages_proceedUnknownErr) {
+    // Setting up the rc to test with.
+    catena::exception_with_status rc("Unknown error", catena::StatusCode::UNKNOWN);
+
+    // Defining mock functions
+    EXPECT_CALL(dm, mutex()).Times(1).WillOnce(::testing::ReturnRef(mockMutex));
+    EXPECT_CALL(dm, toProto(::testing::An<catena::LanguageList&>())).Times(1);
+    ON_CALL(dm, toProto(::testing::An<catena::LanguageList&>()))
+        .WillByDefault(::testing::Invoke([](catena::LanguageList& list) {
+            throw "Unknown error type";
+        }));
+
+    // Calling proceed() and checking written response.
+    getLanguages->proceed();
+    EXPECT_EQ(readResponse(), expectedResponse(rc));
+}
+
+/* 
+ * TEST 7 - Writing to console with Languages finish().
  */
 TEST_F(RESTLanguagesTests, Languages_finish) {
     // Calling finish and expecting the console output.
     getLanguages->finish();
     // Idk why I cant use .contains() here :/
-    ASSERT_TRUE(MockConsole.str().find("Languages[3] finished\n") != std::string::npos);
+    ASSERT_TRUE(MockConsole.str().find("Languages[6] finished\n") != std::string::npos);
 }

@@ -30,7 +30,7 @@ void DeviceRequest::proceed() {
         
         // Setting up authorizer object.
         if (context_.authorizationEnabled()) {
-            // Authorizer throws an error if invalid jws token so no need to handle rc.
+            // Authorizer throws an error if invalid jws token
             sharedAuthz = std::make_shared<catena::common::Authorizer>(context_.jwsToken());
             authz = sharedAuthz.get();
         } else {
@@ -54,8 +54,8 @@ void DeviceRequest::proceed() {
             writeConsole_(CallStatus::kWrite, socket_.is_open());
             catena::DeviceComponent component{};
             {
-            std::lock_guard lg(dm_.mutex());
-            component = serializer_->getNext();
+                std::lock_guard lg(dm_.mutex());
+                component = serializer_->getNext();
             }
             writer_->sendResponse(rc, component);
         }
@@ -63,6 +63,9 @@ void DeviceRequest::proceed() {
     // ERROR: Update rc.
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status{err.what(), err.status};
+    } catch (const std::exception& e) {
+        rc = catena::exception_with_status{std::string("Device request failed: ") + e.what(), 
+                                          catena::StatusCode::INTERNAL};
     } catch (...) {
         rc = catena::exception_with_status{"Unknown error", catena::StatusCode::UNKNOWN};
     }

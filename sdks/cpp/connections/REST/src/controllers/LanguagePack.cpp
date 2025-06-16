@@ -73,6 +73,8 @@ void LanguagePack::proceed() {
     // ERROR
     } catch (catena::exception_with_status& err) {
         rc = catena::exception_with_status(err.what(), err.status);
+    } catch (const std::exception& e) {
+        rc = catena::exception_with_status(std::string("Error processing request: ") + e.what(), catena::StatusCode::INTERNAL);
     } catch (...) {
         rc = catena::exception_with_status("Unknown error", catena::StatusCode::UNKNOWN);
     }
