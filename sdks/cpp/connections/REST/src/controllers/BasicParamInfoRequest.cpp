@@ -56,18 +56,13 @@ BasicParamInfoRequest::BasicParamInfoRequest(tcp::socket& socket, ISocketReader&
     // Parsing fields and assigning to respective variables.
     try {
         // Get recursive from query parameters - presence means true unless explicitly set to false
-
-        std::string temp = context_.fqoid();
-
-        recursive_ = context_.hasField("recursive") && context_.fields("recursive") != "false";
+        recursive_ = context_.hasField("recursive");
 
         // Get oid_prefix from query parameters
         oid_prefix_ = context_.fqoid();
-        // if (oid_prefix_value == "%7B%7D" || oid_prefix_value == "%7Boid_prefix%7D" || oid_prefix_value.empty()) {
-        //     oid_prefix_ = "";
-        // } else {
-        //     oid_prefix_ = "/" + oid_prefix_value;
-        // }
+        if (oid_prefix_ == "%7B%7D" || oid_prefix_ == "%7Boid_prefix%7D" || oid_prefix_.empty()) {
+            oid_prefix_ = "";
+        }
     } catch (const catena::exception_with_status& err) {
         rc_ = catena::exception_with_status(err.what(), err.status);
     } catch (const std::exception& e) {

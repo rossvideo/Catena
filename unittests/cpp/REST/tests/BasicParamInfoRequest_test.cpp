@@ -75,7 +75,7 @@ protected:
         // Set default actions for common mock calls
         EXPECT_CALL(context, origin()).WillRepeatedly(::testing::ReturnRef(origin));
         EXPECT_CALL(context, hasField("recursive")).WillRepeatedly(::testing::Return(false));
-        EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(empty_prefix));
+        EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(empty_prefix));
         EXPECT_CALL(dm, mutex()).WillRepeatedly(::testing::ReturnRef(mockMtx));
         EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(false));
 
@@ -208,8 +208,8 @@ TEST_F(RESTBasicParamInfoRequestTests, BasicParamInfoRequest_authz_valid_token) 
     EXPECT_CALL(context, authorizationEnabled()).WillRepeatedly(::testing::Return(true));
     EXPECT_CALL(context, jwsToken()).WillRepeatedly(::testing::ReturnRef(mockToken));
     
-    EXPECT_CALL(context, fields("oid_prefix")).WillRepeatedly(::testing::ReturnRef(param_info.oid));
-    EXPECT_CALL(dm, getParam("/" + param_info.oid, ::testing::_, ::testing::_))
+    EXPECT_CALL(context, fqoid()).WillRepeatedly(::testing::ReturnRef(param_info.oid));
+    EXPECT_CALL(dm, getParam(param_info.oid, ::testing::_, ::testing::_))
        .WillRepeatedly(::testing::Invoke([&param, &rc](const std::string&, catena::exception_with_status &status, catena::common::Authorizer &) {
             status = catena::exception_with_status("", catena::StatusCode::OK);
             return std::move(param);
