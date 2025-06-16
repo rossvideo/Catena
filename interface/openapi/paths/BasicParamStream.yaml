@@ -59,9 +59,9 @@ get:
         (The value is ignored; any value such as "true" will have the same 
         effect.)
       schema:
-        type: string
-        enum: ["true"]
-        default: ""
+        type: boolean
+      style: form
+      explode: false
    
     - name: fqoid
       in: path
