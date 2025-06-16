@@ -106,7 +106,7 @@ TEST_F(RESTSetValueTests, SetValue_create) {
 TEST_F(RESTSetValueTests, SetValue_proceedNormal) {
     catena::exception_with_status rc("", catena::StatusCode::OK);
     std::mutex mockMutex;
-    std::string mockJsonBody = "{\"value\":{\"string_value\": \"test value 1\"}}";
+    std::string mockJsonBody = "{\"string_value\": \"test value 1\"}";
     std::string mockFqoid = "/text_box";
 
     // Defining mock functions
