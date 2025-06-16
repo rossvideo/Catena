@@ -66,35 +66,45 @@ put:
     content:
       application/json:
         schema:
-          type: array
-          items:
-            type: object
-            properties:
-              fqoid:
-                type: string
-                description: Fully qualified OID of the parameter to get info for
-                schema: 
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
-              value:
-                type: object
-                schema:
-                  $ref: "../../../schema/catena.param_schema.json#/$defs/value"
-        example:
-          - oid: "/ipv4"
-            value:
-              string_value: "192.168.1.1"
-          - oid: "/gateway"
-            value:
-              string_value: "192.168.1.254"
-          - oid: "/subnet"
-            value:
-              string_value: "255.255.255.0"
-          - oid: "/dns"
-            value:
-              string_value: "8.8.8.8"
-          - oid: "/dns_alt"
-            value:
-              string_value: "8.8.4.4"
+          values:
+            type: array
+            items:
+              type: object
+              properties:
+                fqoid:
+                  type: string
+                  description: Fully qualified OID of the parameter to get info for
+                  schema: 
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/fqoid"
+                value:
+                  type: object
+                  schema:
+                    $ref: "../../../schema/catena.param_schema.json#/$defs/value"
+        example: 
+          {
+            "values": [
+              {
+                oid: "/ipv4",
+                value: { string_value: "192.168.1.1" }
+              },
+              {
+                oid: "/gateway",
+                value: { string_value: "192.168.1.254" }
+              },
+              {
+                oid: "/subnet",
+                value: { string_value: "255.255.255.0" }
+              },
+              {
+                oid: "/dns",
+                value: { string_value: "8.8.8.8" }
+              },
+              {
+                oid: "/dns_alt",
+                value: { string_value: "8.8.4.4" }
+              }
+            ]
+          }
 
   responses:
     "204":
